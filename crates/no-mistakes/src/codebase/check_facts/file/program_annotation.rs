@@ -22,10 +22,18 @@ pub(super) fn collect(
             .collect()
     });
     let relative = crate::codebase::ts_source::relative_slash_path(root, path);
+    let array_prototype_exposed =
+        plan.defer_query_annotation && query_annotation::array_prototype_exposed(program);
     options
         .into_iter()
         .map(|options| {
-            let mut facts = query_annotation::collect(program, source, &options);
+            let mut facts = if plan.defer_query_annotation {
+                query_annotation::QueryAnnotationFileFacts::annotation_scope(
+                    array_prototype_exposed,
+                )
+            } else {
+                query_annotation::collect(program, source, &options)
+            };
             facts.in_scope = plan.query_annotation_options.as_ref().and_then(|_| {
                 plan.embedded_sql_rule_ids.get(&options).map(|scans| {
                     scans
@@ -33,6 +41,13 @@ pub(super) fn collect(
                         .any(|scan| scan.annotation_seed && scan.paths.includes(&relative))
                 })
             });
+            if plan.defer_query_annotation {
+                facts.syntax_in_scope = plan.annotation_scans().get(&options).map(|scans| {
+                    scans
+                        .iter()
+                        .any(|scan| scan.includes_annotation(path, &relative))
+                });
+            }
             (options, facts)
         })
         .collect()

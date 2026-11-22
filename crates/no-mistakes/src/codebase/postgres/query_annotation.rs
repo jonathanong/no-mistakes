@@ -19,8 +19,9 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Clone, Debug, Default)]
 pub(crate) struct QueryAnnotationFileFacts {
     pub(crate) in_scope: Option<bool>,
+    pub(crate) syntax_in_scope: Option<bool>,
     pub(crate) precise_records: bool,
-    pub(super) array_prototype_exposed: bool,
+    array_prototype_exposed: bool,
     pub(super) globals: BTreeMap<String, Expr>,
     pub(super) roots: Vec<Step>,
     pub(super) unmodeled_calls: Vec<Expr>,
@@ -135,12 +136,30 @@ pub(crate) fn collect(
     source: &str,
     options: &super::EmbeddedSqlOptions,
 ) -> QueryAnnotationFileFacts {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.annotation.syntax_collections", 1);
+    }
     statements::collect(program, source, options)
+}
+
+pub(crate) fn array_prototype_exposed(program: &oxc_ast::ast::Program<'_>) -> bool {
+    trust::array_prototype_exposed(program)
 }
 
 mod module_ids;
 
 impl QueryAnnotationFileFacts {
+    pub(crate) fn annotation_scope(array_prototype_exposed: bool) -> Self {
+        Self {
+            array_prototype_exposed,
+            ..Self::default()
+        }
+    }
+
+    pub(crate) fn exposes_array_prototype(&self) -> bool {
+        self.array_prototype_exposed
+    }
+
     pub(crate) fn trusts_loop_tag(&self, name: &str) -> bool {
         self.trusted_tags.contains(name)
     }

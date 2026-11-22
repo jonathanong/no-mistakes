@@ -1,6 +1,7 @@
 mod accepted_bounds;
 pub use accepted_bounds::AcceptedStatementBound;
 mod aggregate;
+mod annotation_scope;
 mod batch;
 mod collect;
 mod collect_helpers;
@@ -119,6 +120,7 @@ pub use family_scope::{
 pub(crate) use file::is_mdx_file;
 pub use map::{CheckFactMap, SqlApplicationFacts, SqlFactContext};
 pub(crate) use map::{CheckFileFacts, PlaywrightTestFilesByProject};
+pub(crate) use plan::merge_embedded_sql_rule_ids;
 pub use plan::CheckFactPlan;
 pub(crate) use playwright_facts::PlaywrightTestFacts;
 pub use playwright_plan::PlaywrightFactPlan;

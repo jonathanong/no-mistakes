@@ -8,7 +8,7 @@ use crate::codebase::check_facts::{
 use crate::codebase::postgres::EmbeddedSqlOptions;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::FileIdMap;
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -20,16 +20,13 @@ pub(super) struct Profile<'a> {
     pub failed_sources: Arc<FailedSqlSources>,
 }
 
-pub(super) fn profiles<'a>(
-    files: &'a FileIdMap<CheckFileFacts>,
-    resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
-) -> Vec<Profile<'a>> {
-    let failed_files = files
-        .into_iter()
-        .filter(|(_, file)| source_error(file).is_some())
-        .map(|(path, _)| path)
-        .collect::<Vec<_>>();
-    let empty_failures = Arc::<FailedSqlSources>::default();
+pub(crate) struct Catalog {
+    pub(super) options: Vec<EmbeddedSqlOptions>,
+    modules: FxHashMap<PathBuf, Arc<Module>>,
+    pub(super) syntax_roots: FxHashMap<EmbeddedSqlOptions, FxHashSet<PathBuf>>,
+}
+
+pub(super) fn catalog(files: &FileIdMap<CheckFileFacts>) -> Catalog {
     let mut profiles = files
         .into_iter()
         .flat_map(|(_, file)| {
@@ -40,16 +37,12 @@ pub(super) fn profiles<'a>(
         .collect::<Vec<_>>();
     profiles.sort();
     profiles.dedup();
-    let observer = crate::diagnostics::current();
     let module_ids = Arc::new(super::super::module_ids::ModuleIds::new(
         files
             .into_iter()
             .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
             .map(|(path, _)| normalize_path(path)),
     ));
-    if let Some(observer) = &observer {
-        observer.increment("postgres.annotation.profiles", profiles.len() as u64);
-    }
     let modules = crate::perf_trace::trace("postgres.annotation.prepare.modules", || {
         files
             .into_iter()
@@ -64,8 +57,33 @@ pub(super) fn profiles<'a>(
             })
             .collect::<FxHashMap<_, _>>()
     });
-    profiles
+    Catalog {
+        options: profiles,
+        modules,
+        syntax_roots: FxHashMap::default(),
+    }
+}
+
+pub(super) fn profiles_with_catalog<'a>(
+    files: &'a FileIdMap<CheckFileFacts>,
+    resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
+    catalog: &Catalog,
+    potential_roots: bool,
+) -> Vec<Profile<'a>> {
+    let failed_files = files
         .into_iter()
+        .filter(|(_, file)| source_error(file).is_some())
+        .map(|(path, _)| path)
+        .collect::<Vec<_>>();
+    let empty_failures = Arc::<FailedSqlSources>::default();
+    let observer = crate::diagnostics::current();
+    if let Some(observer) = observer.as_ref().filter(|_| !potential_roots) {
+        observer.increment("postgres.annotation.profiles", catalog.options.len() as u64);
+    }
+    catalog
+        .options
+        .iter()
+        .cloned()
         .map(|options| {
             let failed_sources = if failed_files.is_empty() {
                 Arc::clone(&empty_failures)
@@ -97,7 +115,7 @@ pub(super) fn profiles<'a>(
                     Some((
                         normalize_path(path),
                         File {
-                            module: Arc::clone(&modules[path]),
+                            module: Arc::clone(&catalog.modules[path]),
                             facts,
                             executors: embedded.call_spans.iter().copied().collect(),
                         },
@@ -106,15 +124,26 @@ pub(super) fn profiles<'a>(
                 .collect::<FxHashMap<_, _>>();
             let untrusted_array_intrinsics = collected
                 .values()
-                .any(|file| file.facts.array_prototype_exposed);
-            let roots = crate::perf_trace::trace("postgres.annotation.prepare.roots", || {
-                demand::roots(&collected, resolve)
-            });
-            if let Some(observer) = &observer {
+                .any(|file| file.facts.exposes_array_prototype());
+            let roots = if potential_roots {
+                demand::potential_roots(&collected, resolve)
+            } else {
+                crate::perf_trace::trace("postgres.annotation.prepare.roots", || {
+                    let allowed = catalog.syntax_roots.get(&options);
+                    if allowed.is_some_and(FxHashSet::is_empty) {
+                        return Vec::new();
+                    }
+                    let mut roots = demand::roots(&collected, resolve);
+                    if let Some(allowed) = allowed {
+                        roots.retain(|path| allowed.contains(*path));
+                    }
+                    roots
+                })
+            };
+            if let Some(observer) = observer.as_ref().filter(|_| !potential_roots) {
                 observer.increment("postgres.annotation.roots", roots.len() as u64);
                 super::work::roots(observer, &collected, &roots, resolve);
             }
-
             let roots = roots.into_iter().map(Path::to_path_buf).collect();
             Profile {
                 options,
@@ -125,4 +154,12 @@ pub(super) fn profiles<'a>(
             }
         })
         .collect()
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+pub(super) fn profiles<'a>(
+    files: &'a FileIdMap<CheckFileFacts>,
+    resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
+) -> Vec<Profile<'a>> {
+    profiles_with_catalog(files, resolve, &catalog(files), false)
 }

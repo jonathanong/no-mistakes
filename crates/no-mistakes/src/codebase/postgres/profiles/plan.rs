@@ -60,7 +60,6 @@ pub fn configure_prepared_postgres_plan(
             let declared_factories = postgres_effects
                 .map(|effects| effects.returned_executors.as_slice())
                 .unwrap_or_default();
-            // Low facts follow the same configured test/helper scope as the rule.
             let include = super::scans::include(&rule.rule, &options);
             let scan =
                 crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
@@ -79,9 +78,10 @@ pub fn configure_prepared_postgres_plan(
                 .push(scan);
         }
     }
-    let (_, annotation_options, _) = super::configured_embedded_sql_options_with_annotation(
+    let (_, annotation_options, annotation_scans) = super::collect::configured_at_root(
         config,
         &["postgres-require-query-annotation"],
+        Some(root),
     )?;
     plan.query_annotation_heads |= super::annotation_effort::low_requested(config)?;
     let evaluated_annotation = !annotation_options.is_empty();
@@ -92,8 +92,15 @@ pub fn configure_prepared_postgres_plan(
                 existing.sort();
                 existing.dedup();
             }
+            if let Some(scans) = &mut plan.query_annotation_scans {
+                crate::codebase::check_facts::merge_embedded_sql_rule_ids(
+                    Arc::make_mut(scans),
+                    annotation_scans,
+                );
+            }
         } else {
             plan.query_annotation_options = Some(annotation_options);
+            plan.query_annotation_scans = Some(Arc::new(annotation_scans));
         }
         plan.query_annotation = true;
     }
@@ -189,6 +196,5 @@ pub fn configure_prepared_postgres_plan(
 }
 mod write_patterns;
 pub(super) use write_patterns::write_patterns;
-
 mod projections;
 pub(super) use projections::grouping_requested;

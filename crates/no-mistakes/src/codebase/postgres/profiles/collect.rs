@@ -4,6 +4,14 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
     config: &NoMistakesConfig,
     rule_ids: &[&str],
 ) -> Result<AnnotatedSqlProfiles> {
+    configured_at_root(config, rule_ids, None)
+}
+
+pub(super) fn configured_at_root(
+    config: &NoMistakesConfig,
+    rule_ids: &[&str],
+    root: Option<&Path>,
+) -> Result<AnnotatedSqlProfiles> {
     let mut grouped = scans::EmbeddedSqlRuleScans::new();
     let mut annotation_profiles = Vec::new();
     for rule_id in rule_ids {
@@ -68,7 +76,14 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 if annotation_seed {
                     annotation_profiles.push(profile.clone());
                 }
-                scans::record(&mut grouped, profile, rule_id, &options, annotation_seed)?;
+                scans::record(
+                    &mut grouped,
+                    profile,
+                    rule_id,
+                    &options,
+                    annotation_seed,
+                    root.map(|root| (root, config, rule)),
+                )?;
             }
         }
     }

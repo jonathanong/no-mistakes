@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include:
+      - query.mts
+    options:
+      effort: max
+      importSpecifier: "@bench/db"
+      executorNames: [query]
+      unanalyzableSql: advise

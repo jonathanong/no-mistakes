@@ -47,6 +47,43 @@ fn cached_parse_errors_are_available_without_reparsing() {
 }
 
 #[test]
+fn existing_program_projects_only_successful_standard_parses() {
+    let cache = ParsedProgramCache::default();
+    let valid = Path::new("source.mts");
+    let invalid = Path::new("invalid.ts");
+    let unsupported = Path::new("unsupported.runner-config");
+    let text = "export const value = 1;";
+    assert!(cache
+        .with_existing_program(valid, |_, _| unreachable!())
+        .is_none());
+    cache
+        .with_legacy_symbols_program_observed(valid, source(text), || {}, |_, _, _| ())
+        .unwrap();
+    assert!(cache
+        .with_existing_program(valid, |_, _| unreachable!())
+        .is_none());
+    cache.with_program(valid, source(text), |_, _| ()).unwrap();
+    assert_eq!(
+        cache.with_existing_program(Path::new("./source.mts"), |program, source| {
+            (program.body.len(), source.to_owned())
+        }),
+        Some((1, text.to_owned()))
+    );
+    assert!(cache
+        .with_program(invalid, source("const = ;"), |_, _| ())
+        .is_err());
+    assert!(cache
+        .with_program(unsupported, source(""), |_, _| ())
+        .is_err());
+    for unavailable in [invalid, unsupported] {
+        assert!(cache
+            .with_existing_program(unavailable, |_, _| unreachable!())
+            .is_none());
+    }
+    assert_eq!(len(&cache), 4);
+}
+
+#[test]
 fn legacy_symbols_share_only_ordinary_typescript_cache_entries() {
     for path in ["source.ts", "source.tsx"] {
         assert!(

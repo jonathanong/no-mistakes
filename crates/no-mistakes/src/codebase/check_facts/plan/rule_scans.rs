@@ -1,4 +1,4 @@
-pub(super) fn merge_embedded_sql_rule_ids(
+pub(crate) fn merge_embedded_sql_rule_ids(
     existing: &mut crate::codebase::postgres::EmbeddedSqlRuleScans,
     additional: crate::codebase::postgres::EmbeddedSqlRuleScans,
 ) {

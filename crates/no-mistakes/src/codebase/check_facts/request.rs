@@ -6,12 +6,16 @@ use std::path::Path;
 pub(crate) struct FactRequest<'a> {
     pub(crate) session: &'a AnalysisSession,
     pub(crate) discovery: &'a FamilyPathScope,
+    pub(super) projected_executor_scopes: Option<u32>,
+    pub(super) batch_collected: bool,
 }
 
 impl<'a> FactRequest<'a> {
     pub(crate) fn prepared(session: &'a AnalysisSession, plan: &CheckFactPlan) -> Self {
         Self {
             session,
+            projected_executor_scopes: None,
+            batch_collected: false,
             discovery: if plan.integration {
                 session.integration_fact_discovery()
             } else {
@@ -29,6 +33,8 @@ impl<'a> From<&'a AnalysisSession> for FactRequest<'a> {
     fn from(session: &'a AnalysisSession) -> Self {
         Self {
             session,
+            projected_executor_scopes: None,
+            batch_collected: false,
             discovery: &FamilyPathScope::All,
         }
     }

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [query]
+      executorFactoryNames: [createReader, createWriter]
+      executorTypeNames: [Reader, Writer, Replica, Archive]
+      effort: max
+      unanalyzableSql: advise

@@ -107,13 +107,15 @@ fn collect_check_facts_inner(
         .values()
         .filter(|facts| facts.parse_error.is_some())
         .count();
-    let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
-        session.session,
-        root,
-        &sources,
-        plan.query_annotation_catalog.as_deref(),
-        &mut ts,
-    );
+    let unproven_member_query_sql = session.projected_executor_scopes.unwrap_or_else(|| {
+        super::relative_scope::project_relative_executor_scopes(
+            session.session,
+            root,
+            &sources,
+            plan.query_annotation_catalog.as_deref(),
+            &mut ts,
+        )
+    });
     let postgres_schema_catalogs = crate::codebase::postgres::load_schema_catalogs(
         root,
         &sources,

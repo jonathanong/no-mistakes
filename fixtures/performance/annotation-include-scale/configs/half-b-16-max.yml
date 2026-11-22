@@ -1,0 +1,28 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include:
+      - src/module-0016.mts
+      - src/module-0017.mts
+      - src/module-0018.mts
+      - src/module-0019.mts
+      - src/module-0020.mts
+      - src/module-0021.mts
+      - src/module-0022.mts
+      - src/module-0023.mts
+      - src/module-0024.mts
+      - src/module-0025.mts
+      - src/module-0026.mts
+      - src/module-0027.mts
+      - src/module-0028.mts
+      - src/module-0029.mts
+      - src/module-0030.mts
+      - src/module-0031.mts
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [query]
+      executorFactoryNames: [createReader, createWriter]
+      executorTypeNames: [Reader, Writer, Replica, Archive]
+      effort: max
+      unanalyzableSql: advise

@@ -64,3 +64,44 @@ fn test_state_profile_reuses_only_explicit_test_and_helper_scope() {
     assert!(!scans[0].paths.includes("src/production.ts"));
     assert!(!scans[0].paths.includes("migrations/001.sql"));
 }
+
+#[test]
+fn annotation_scan_restricts_explicit_roots_and_leaves_framework_inference_to_dispatch() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-facts/family-scope-nextjs")
+        .canonicalize()
+        .unwrap();
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "web".into(),
+        crate::config::v2::schema::Project {
+            type_: Some(crate::config::v2::schema::ProjectType::Nextjs),
+            ..Default::default()
+        },
+    );
+    config.rules.push(RuleDef {
+        rule: "postgres-require-query-annotation".into(),
+        projects: vec!["web".into()],
+        options: serde_yaml::from_str(
+            "effort: max\nimportSpecifier: '@app/db'\nexecutorNames: [query]",
+        )
+        .unwrap(),
+        ..Default::default()
+    });
+    let outside = "backend/provider.ts";
+    for (project_root, allowed) in [(None, true), (Some("web".to_owned()), false)] {
+        config.projects.get_mut("web").unwrap().root = project_root;
+        let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
+        configure_prepared_postgres_plan(&root, &config, &mut plan).unwrap();
+        let scans = plan.query_annotation_scans.as_ref().unwrap();
+        let [scan] = scans.values().next().unwrap().as_slice() else {
+            panic!("one annotation application");
+        };
+        assert_eq!(scan.annotation_unrestricted(), allowed);
+        assert_eq!(
+            scan.includes_annotation(&root.join(outside), outside),
+            allowed
+        );
+        assert!(scan.includes_annotation(&root.join("web/src/selected.ts"), "web/src/selected.ts"));
+    }
+}

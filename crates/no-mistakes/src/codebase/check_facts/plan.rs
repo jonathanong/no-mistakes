@@ -68,6 +68,8 @@ pub struct CheckFactPlan {
     pub embedded_sql: bool,
     /// Owned helper/callback summaries for the annotation-only projection.
     pub query_annotation: bool,
+    #[doc(hidden)]
+    pub defer_query_annotation: bool,
     /// Syntactic leading-name proofs for low-effort annotation, without helper evaluation.
     pub query_annotation_heads: bool,
     /// Low-effort SQL identifier projections; never invokes JavaScript evaluation.
@@ -75,6 +77,8 @@ pub struct CheckFactPlan {
     /// Explicit annotation-only profiles. `None` preserves the direct fact
     /// API's request for annotation on every embedded SQL profile.
     pub query_annotation_options: Option<Vec<crate::codebase::postgres::EmbeddedSqlOptions>>,
+    #[doc(hidden)]
+    pub query_annotation_scans: Option<Arc<crate::codebase::postgres::EmbeddedSqlRuleScans>>,
     /// The owning request's ordinary importer catalog, including explicit overrides.
     #[doc(hidden)]
     pub query_annotation_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
@@ -124,3 +128,13 @@ mod head_calls_only;
 mod tests;
 
 mod lint_suppressions;
+
+impl CheckFactPlan {
+    pub(super) fn annotation_scans(&self) -> &crate::codebase::postgres::EmbeddedSqlRuleScans {
+        self.query_annotation_scans
+            .as_deref()
+            .unwrap_or(&self.embedded_sql_rule_ids)
+    }
+}
+
+pub(crate) use rule_scans::merge_embedded_sql_rule_ids;

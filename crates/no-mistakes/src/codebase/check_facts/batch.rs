@@ -46,6 +46,12 @@ pub(in crate::codebase::check_facts) fn collect_check_fact_batch_with_sql_seeds(
     }
     let mut demands = demands_by_path(&requests);
     let mut collected = super::sql_scope::collect(session, &requests, &mut demands, sql_seeds);
+    let scoped_annotation = super::annotation_scope::collect(session, &requests, &mut demands);
+    let mut projected_annotation = None;
+    if let Some((id, files, projected, remaining)) = scoped_annotation {
+        collected.extend(remaining);
+        projected_annotation = Some((id, files, projected));
+    }
     let cache = crate::ast::current_request_parse_cache();
     let demands = demands
         .into_iter()
@@ -92,14 +98,24 @@ pub(in crate::codebase::check_facts) fn collect_check_fact_batch_with_sql_seeds(
             }
         }
     }
+    let mut projection = None;
+    if let Some((id, files, projected)) = projected_annotation {
+        precollected[id] = files;
+        projection = Some((id, projected));
+    }
     requests
         .into_iter()
         .zip(precollected)
-        .map(|(request, facts)| {
+        .enumerate()
+        .map(|(id, (request, facts))| {
             super::collect::collect_check_facts_with_precollected_file_facts(
                 super::FactRequest {
                     session,
                     discovery: &request.integration_discovery,
+                    batch_collected: true,
+                    projected_executor_scopes: projection
+                        .filter(|(owner, _)| *owner == id)
+                        .map(|(_, count)| count),
                 },
                 &request.root,
                 (request.files, request.graph_files),

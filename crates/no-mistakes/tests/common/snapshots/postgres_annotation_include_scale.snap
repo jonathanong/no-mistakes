@@ -1,0 +1,99 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "generic-include-source-prerequisite": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-require-query-annotation",
+          "file": "broken.mts",
+          "message": "parsing broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 25, end: 26 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "global-intrinsics": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query.mts",
+          "line": 4,
+          "message": "query.mts:4: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const result = query(statement);",
+          "target": "leading-annotation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "option-include-source-prerequisite": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "small-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/module-0007.mts",
+          "line": 16,
+          "message": "src/module-0007.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(\"SELECT id FROM records WHERE id = 7\"); // expected-finding",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "small-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/module-0007.mts",
+          "line": 16,
+          "message": "src/module-0007.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(\"SELECT id FROM records WHERE id = 7\"); // expected-finding",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -46,6 +46,21 @@ impl CheckFactPlan {
         }
         if other.query_annotation {
             if self.query_annotation {
+                self.query_annotation_scans = match (
+                    self.query_annotation_scans.take(),
+                    other.query_annotation_scans,
+                ) {
+                    (Some(mut existing), Some(additional)) => {
+                        if !Arc::ptr_eq(&existing, &additional) {
+                            merge_embedded_sql_rule_ids(
+                                Arc::make_mut(&mut existing),
+                                Arc::unwrap_or_clone(additional),
+                            );
+                        }
+                        Some(existing)
+                    }
+                    _ => None,
+                };
                 self.query_annotation_options = match (
                     self.query_annotation_options.take(),
                     other.query_annotation_options,
@@ -60,6 +75,7 @@ impl CheckFactPlan {
                 };
             } else {
                 self.query_annotation_options = other.query_annotation_options;
+                self.query_annotation_scans = other.query_annotation_scans;
             }
             self.query_annotation = true;
         }

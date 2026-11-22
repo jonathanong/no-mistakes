@@ -42,7 +42,15 @@ pub(super) fn collect_with_scope(
     } else {
         None
     };
-    if let Some(sql_seeds) = sql_seeds {
+    let scoped_annotation = !session.batch_collected
+        && precollected.is_empty()
+        && supplemental_call_sites.is_empty()
+        && crate::codebase::check_facts::annotation_scope::eligible(&plan, playwright.as_ref())
+        && session
+            .existing_sources_for(root)
+            .is_some_and(|existing| Arc::ptr_eq(&existing, &sources))
+        && crate::codebase::check_facts::annotation_scope::has_excluded_file(root, &files, &plan);
+    if sql_seeds.is_some() || scoped_annotation {
         let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_sql_seeds(
             session.session,
             vec![crate::codebase::check_facts::batch::BatchCheckFactRequest {
@@ -54,7 +62,7 @@ pub(super) fn collect_with_scope(
                 playwright,
                 sources,
             }],
-            Some(sql_seeds),
+            sql_seeds,
         )
         .pop()
         .expect("one requested fact map");

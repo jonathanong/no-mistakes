@@ -79,18 +79,6 @@ impl ParsedProgramCache {
         })
     }
 
-    pub(crate) fn clear(&self) {
-        self.entries.borrow_mut().clear();
-        self.interned_paths.borrow_mut().clear();
-    }
-
-    pub(crate) fn remove_path(&self, path: &Path) {
-        let path = crate::codebase::ts_resolver::normalize_path(path);
-        self.entries
-            .borrow_mut()
-            .retain(|(cached, _), _| cached.as_ref() != path.as_path());
-    }
-
     pub(crate) fn entry_count(&self) -> usize {
         self.entries.borrow().len()
     }

@@ -619,12 +619,27 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 Detailed mutation and invocation behavior is described in
 [advanced helper semantics](../postgres-query-annotation/advanced-helper-semantics.md).
 
-At max effort, only executor sites selected by evaluated annotation applications'
-`include` and `exclude` seed annotation demand. Other rules sharing executor
-settings do not widen those seeds. Excluded modules that cannot reach a scoped
-executor are never evaluated as roots. Reverse-reachable callers remain roots
+At max effort, generic rule and project filters intersect with option-level
+filters to select the annotation syntax closure. Other rules sharing executor
+settings do not widen that selection. Option-level filters retain their separate
+meaning for evaluator executor seeds. Reverse-reachable callers remain roots
 when needed to preserve SQL arguments flowing into scoped helpers, including
-through cyclic re-exports. Binding-only slicing of those callers is not yet implemented.
+through cyclic re-exports. An included caller can also retain failed-source
+evidence from an excluded executor helper. Binding-only slicing of those callers
+is not yet implemented.
+
+Scoped max-effort requests without runner discovery or legacy-symbol consumers
+retain each parsed program on its owning worker until runtime reachability is
+known. Full annotation summaries are then lowered only for the selected roots
+and their runtime dependencies. Shared imports, executor classification, source
+failures, and global Array-prototype safety facts remain available across the
+project. Broad requests and parser combinations that cannot preserve worker
+ownership keep the streaming collector. Demand planning does not repeat framework
+root discovery: when a project root is inferred, its option-level filters remain
+a conservative scope until normal rule dispatch applies the project filter.
+The saved [include-scale workload](../../fixtures/performance/annotation-include-scale/README.md)
+covers a small include within a larger project, including excluded callers and
+cyclic providers.
 
 Each root retains its own contextual module initialization. A shared scalar
 initialization cache was removed after downstream validation found higher CPU

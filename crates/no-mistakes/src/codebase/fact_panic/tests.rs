@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 
@@ -8,23 +8,43 @@ macro_rules! inject_fact_panic {
     };
 }
 
-static INJECTED: LazyLock<Mutex<BTreeSet<PathBuf>>> = LazyLock::new(Mutex::default);
+static INJECTED: LazyLock<Mutex<BTreeMap<PathBuf, Option<usize>>>> = LazyLock::new(Mutex::default);
 
 pub(super) fn inject(path: &Path) {
-    let injected = INJECTED.lock().unwrap().contains(path);
+    let injected = match INJECTED.lock().unwrap().get_mut(path) {
+        Some(Some(attempt)) if *attempt > 0 => {
+            *attempt -= 1;
+            *attempt == 0
+        }
+        Some(None) => true,
+        _ => false,
+    };
     if injected {
         panic!("injected fact extraction failure");
     }
 }
 
 pub(crate) fn with_injected_panic<T>(path: &Path, run: impl FnOnce() -> T) -> T {
+    with_injected_attempt(path, None, run)
+}
+
+#[cfg(any(nm_shard_all, nm_shard_0))]
+pub(crate) fn with_injected_panic_on_attempt<T>(
+    path: &Path,
+    attempt: usize,
+    run: impl FnOnce() -> T,
+) -> T {
+    with_injected_attempt(path, Some(attempt), run)
+}
+
+fn with_injected_attempt<T>(path: &Path, attempt: Option<usize>, run: impl FnOnce() -> T) -> T {
     struct Reset(PathBuf);
     impl Drop for Reset {
         fn drop(&mut self) {
             INJECTED.lock().unwrap().remove(&self.0);
         }
     }
-    INJECTED.lock().unwrap().insert(path.to_path_buf());
+    INJECTED.lock().unwrap().insert(path.to_path_buf(), attempt);
     let _reset = Reset(path.to_path_buf());
     run()
 }
