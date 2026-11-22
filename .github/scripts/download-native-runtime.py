@@ -21,6 +21,7 @@ OVERALL_SECONDS = 300
 DOWNLOAD_ATTEMPTS = 3
 # Timeouts and connection drops. HTTP failures (22) and range rejection (33) are separate.
 TRANSIENT_CURL_EXITS = {6, 7, 18, 28, 35, 52, 55, 56}
+HTTP_ERROR = 22
 RANGE_UNSUPPORTED = 33
 
 
@@ -84,7 +85,7 @@ def download_command(url, archive, resume):
     # Each attempt is a new process so resume works before curl 8.17.
     if resume:
         command.extend(["--continue-at", "-"])
-    command.extend(["--output", str(archive), url])
+    command.extend(["--write-out", "%{http_code}", "--output", str(archive), url])
     return command
 
 
@@ -100,16 +101,25 @@ def download(repo, artifact, token, archive, deadline):
         transfer(url, archive, config, deadline, resume=False)
 
 
+def is_transient_transfer_error(error):
+    return error.returncode in TRANSIENT_CURL_EXITS or (
+        error.returncode == HTTP_ERROR
+        and re.fullmatch(r"5[0-9]{2}", error.stdout or "") is not None
+    )
+
+
 def transfer(url, archive, config, deadline, resume):
     for attempt in range(DOWNLOAD_ATTEMPTS):
         try:
             subprocess.run(
                 download_command(url, archive, resume),
-                input=config, text=True, check=True, timeout=deadline.remaining())
+                input=config, text=True, stdout=subprocess.PIPE, check=True,
+                timeout=deadline.remaining())
             return
         except subprocess.CalledProcessError as error:
-            if error.returncode not in TRANSIENT_CURL_EXITS or attempt + 1 == DOWNLOAD_ATTEMPTS:
+            if attempt + 1 == DOWNLOAD_ATTEMPTS or not is_transient_transfer_error(error):
                 raise
+            time.sleep(min(2 ** attempt, deadline.remaining()))
 
 
 def verify(archive, expected, deadline):
