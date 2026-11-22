@@ -82,7 +82,17 @@ fn run_gap(
         ..CheckFactMap::default()
     };
     insert(&mut facts, columns, producer());
-    insert(&mut facts, extend, consumer(&source, start, end));
+    let mut extend_facts = consumer(&source, start, end);
+    extend_facts
+        .imported_bindings
+        .push(crate::codebase::dependencies::extract::ImportedBinding {
+            specifier: "./wide".to_owned(),
+            local: "widgetNote".to_owned(),
+            imported: "widgetNote".to_owned(),
+            kind: crate::codebase::dependencies::extract::ImportedBindingKind::Named,
+            is_type_only: false,
+        });
+    insert(&mut facts, extend, extend_facts);
     insert(&mut facts, wide, exhausted());
     let session = AnalysisSession::disabled();
     session.enable_partial_checks();

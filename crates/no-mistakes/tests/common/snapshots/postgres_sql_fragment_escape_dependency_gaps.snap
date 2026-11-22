@@ -1,0 +1,44 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "reached": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "created-broken.ts",
+          "message": "`created-broken.ts` has a fatal parse error, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the syntax error and rerun the check."
+        },
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "query-broken.ts",
+          "message": "`query-broken.ts` has a fatal parse error, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the syntax error and rerun the check."
+        },
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "transitive-broken.ts",
+          "message": "`transitive-broken.ts` has a fatal parse error, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the syntax error and rerun the check."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fragment.ts",
+          "import": "columns.ts",
+          "line": 5,
+          "message": "exported SQL fragment `COLS` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(\"state\");",
+          "target": "COLS"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

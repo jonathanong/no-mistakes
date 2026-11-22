@@ -229,3 +229,57 @@ fn postgres_sql_fragment_escape_relevance_snapshot() {
         .iter()
         .all(|gap| gap["message"].as_str().unwrap().contains("`./missing`")));
 }
+
+#[test]
+fn postgres_sql_fragment_escape_module_gap_candidates_snapshot() {
+    let root = rules_path(
+        "postgres-sql-fragment-escape",
+        "fixtures",
+        "gap-module-candidates",
+    );
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_module_gap_candidates",
+        &[("candidates", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["candidates"]["report"];
+    let gaps = report["incomplete"].as_array().expect("incomplete");
+    assert_eq!(gaps.len(), 1, "{gaps:?}");
+    assert_eq!(gaps[0]["file"], "known-local.ts");
+    assert!(gaps[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("`./missing.server`"));
+    assert!(report["rules"].as_array().unwrap().iter().any(|row| {
+        row["file"] == "packages/local/mapped.ts" && row["target"] == "COLS"
+    }));
+}
+
+#[test]
+fn postgres_sql_fragment_escape_dependency_gaps_snapshot() {
+    let root = rules_path("postgres-sql-fragment-escape", "fixtures", "dependency-gaps");
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_dependency_gaps",
+        &[("reached", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["reached"]["report"];
+    let gaps = report["incomplete"].as_array().expect("incomplete");
+    let files = gaps
+        .iter()
+        .map(|gap| gap["file"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        files,
+        ["created-broken.ts", "query-broken.ts", "transitive-broken.ts"]
+    );
+    assert!(gaps.iter().all(|gap| gap["message"]
+        .as_str()
+        .unwrap()
+        .contains("has a fatal parse error")));
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0]["file"], "fragment.ts");
+}

@@ -120,6 +120,10 @@ fn renamed_namespace_and_default_factories_record_literal_loads() {
             ),
         ]
     );
+    assert_eq!(
+        facts.namespaces.created_require_specifiers,
+        ["../widget.cjs", "../defaults.cjs"],
+    );
     assert!(require_imports(&facts).is_empty());
 }
 

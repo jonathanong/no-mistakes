@@ -1,6 +1,6 @@
 use super::fragments::{Catalog, Fragment};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::extract::{ImportedBinding, ImportedBindingKind};
+use crate::codebase::dependencies::extract::{is_indexable, ImportedBinding, ImportedBindingKind};
 use crate::codebase::dependencies::graph::{DepGraph, ImportTarget};
 use std::path::{Path, PathBuf};
 
@@ -14,7 +14,7 @@ pub(super) fn module_file(
     module_lookup(graph, catalog, importer, specifier, true)
 }
 
-fn module_lookup(
+pub(super) fn module_lookup(
     graph: Option<&DepGraph>,
     catalog: &Catalog<'_>,
     importer: &Path,
@@ -27,31 +27,30 @@ fn module_lookup(
     }
     let recorded = graph.and_then(|graph| graph.import_target(importer, specifier));
     if let Some(ImportTarget::File(path)) = recorded {
-        return Some(path.clone());
+        return is_indexable(path).then(|| path.clone());
     }
     let relative = specifier.starts_with('.') || Path::new(specifier).is_absolute();
+    if relative
+        && crate::codebase::ts_resolver::has_explicit_non_source_extension(Path::new(specifier))
+    {
+        return None;
+    }
     let trusted = catalog.tags.iter().any(|tag| {
         !tag.module.is_empty()
             && !tag.name.is_empty()
             && super::tags::module_matches(specifier, &tag.module)
     });
     let ambient = catalog.ambient_files(specifier);
-    let resolution = if matches!(recorded, Some(ImportTarget::Ambiguous)) {
-        // A recorded ambiguity may only use the resolver to classify the
-        // spelling. It cannot prove a unique module.
-        catalog
-            .resolution
-            .and_then(|resolution| {
-                resolution.resolve(specifier, importer, relative || (trusted && record_gap))
-            })
-            .map(|_| None)
-    } else {
-        catalog.resolution.and_then(|resolution| {
-            resolution.resolve(specifier, importer, relative || (trusted && record_gap))
-        })
-    };
+    let resolution = catalog.resolution.and_then(|resolution| {
+        resolution.resolve(specifier, importer, relative || (trusted && record_gap))
+    });
     if let Some(Some(path)) = &resolution {
-        return Some(path.clone());
+        if !is_indexable(path) {
+            return None;
+        }
+        if recorded != Some(&ImportTarget::Ambiguous) {
+            return Some(path.clone());
+        }
     }
     if recorded != Some(&ImportTarget::Ambiguous) {
         if relative && catalog.resolution.is_none() {
@@ -64,7 +63,7 @@ fn module_lookup(
             return ambient.into_iter().next();
         }
     }
-    if record_gap && (relative || trusted || !ambient.is_empty() || resolution.is_some()) {
+    if record_gap && (relative || !ambient.is_empty() || resolution.is_some()) {
         catalog.record_unresolved(importer, specifier);
     }
     None

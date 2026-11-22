@@ -161,23 +161,62 @@ fn unreadable_consumer_still_reports_a_recorded_append() {
 }
 
 #[test]
-fn missing_prepared_facts_for_a_graph_file_produce_a_gap() {
+fn only_reached_missing_facts_and_operational_failures_produce_gaps() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/absence-gap"),
+            .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/dependency-gaps"),
     );
-    let file = root.join("relative-escape.ts");
-    assert!(file.is_file());
-    let facts = CheckFactMap {
+    let reached = root.join("query-broken.ts");
+    let unrelated = root.join("unrelated-broken.ts");
+    let operational = root.join("transitive-broken.ts");
+    let unrelated_operational = root.join("shadowed-broken.ts");
+    let mut facts = CheckFactMap {
         graph_files_complete: true,
-        graph_files: vec![file.clone(), root.join("tsconfig.json")],
+        graph_files: vec![reached.clone(), unrelated, root.join("tsconfig.json")],
         ..CheckFactMap::default()
     };
+    let mut producer = fragment_facts(&[("COLS", 10)]);
+    producer.imported_bindings.push(import(
+        "./query-broken",
+        "first",
+        "first",
+        ImportedBindingKind::Named,
+    ));
+    producer.imported_bindings.push(import(
+        "./transitive-broken",
+        "second",
+        "second",
+        ImportedBindingKind::Named,
+    ));
+    insert(&mut facts, root.join("columns.ts"), producer);
+    for file in [&operational, &unrelated_operational] {
+        insert(
+            &mut facts,
+            file.to_path_buf(),
+            crate::codebase::ts_source::facts::TsFileFacts {
+                operational_error: Some("prepared reader failed".to_owned()),
+                ..Default::default()
+            },
+        );
+    }
     let report = scan::scan(&root, &[sql_tag()], None, &facts, None, None);
     assert!(report.findings.is_empty());
-    assert_eq!(report.gaps.len(), 1);
-    assert_eq!(report.gaps[0].file.as_deref(), Some(file.as_path()));
-    assert!(report.gaps[0]
-        .message
-        .contains("missing prepared TypeScript facts"));
+    assert_eq!(report.gaps.len(), 3, "{:?}", report.gaps);
+    assert!(report
+        .gaps
+        .iter()
+        .any(|gap| gap.file.as_deref() == Some(reached.as_path())
+            && gap.message.contains("missing prepared TypeScript facts")));
+    assert!(report
+        .gaps
+        .iter()
+        .any(|gap| gap.file.as_deref() == Some(operational.as_path())
+            && gap
+                .message
+                .contains("operational error (prepared reader failed)")));
+    assert!(report
+        .gaps
+        .iter()
+        .any(|gap| gap.file.as_deref() == Some(operational.as_path())
+            && gap.message.contains("could not be read")));
 }

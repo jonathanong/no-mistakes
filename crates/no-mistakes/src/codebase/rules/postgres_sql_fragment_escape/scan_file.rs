@@ -1,7 +1,7 @@
 use super::fact_reads::export_site;
 use super::fragments::Fragment;
 use super::resolve::{binding_fragments, call_fragments, name_fragments, FileCtx};
-use super::scan::ScanReport;
+use super::scan::FileScan;
 use super::source_text::file_text;
 use super::RULE_ID;
 use crate::codebase::check_facts::CheckFactMap;
@@ -22,14 +22,14 @@ pub(super) fn one(
     sources: Option<&crate::codebase::ts_source::SourceStore>,
     catalog: &super::fragments::Catalog<'_>,
     file: &Path,
-) -> Option<ScanReport> {
+) -> Option<FileScan> {
     let Some(ts) = facts.get_ts_facts(file) else {
         return super::scan::missing_facts(root, file);
     };
     let relative = relative_slash_path(root, file);
-    let mut gaps = Vec::new();
+    let mut coverage_gaps = Vec::new();
     if let Some(reason) = &ts.operational_error {
-        gaps.push(gap(
+        coverage_gaps.push(gap(
             file,
             format!(
                 "`{relative}` has an operational error ({reason}), so a write, rebind, or escape of an exported SQL fragment may be missing. Fix that error and rerun the check."
@@ -37,7 +37,7 @@ pub(super) fn one(
         ));
     }
     if ts.fatal_parse_error {
-        gaps.push(gap(
+        coverage_gaps.push(gap(
             file,
             format!(
                 "`{relative}` has a fatal parse error, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the syntax error and rerun the check."
@@ -45,7 +45,7 @@ pub(super) fn one(
         ));
     }
     if let Some(reason) = &ts.value_flow.incomplete_reason {
-        gaps.push(gap(
+        coverage_gaps.push(gap(
             file,
             format!(
                 "`{relative}` value flow is incomplete ({reason}), so a write, rebind, or escape of an exported SQL fragment may be missing. Simplify the file so value flow finishes, then rerun the check."
@@ -54,7 +54,7 @@ pub(super) fn one(
     }
     let owned = file_text(ts, sources, file);
     if owned.is_none() {
-        gaps.push(gap(
+        coverage_gaps.push(gap(
             file,
             format!(
                 "`{relative}` could not be read, so a write, rebind, or escape of an exported SQL fragment in this file may be missing. Restore a readable source file and rerun the check."
@@ -122,7 +122,11 @@ pub(super) fn one(
             &name_fragments(&ctx, &export.local),
         );
     }
-    Some(ScanReport { findings, gaps })
+    Some(FileScan {
+        findings,
+        coverage_gaps,
+        gaps: Vec::new(),
+    })
 }
 
 fn gap(file: &Path, message: String) -> CheckFailure {

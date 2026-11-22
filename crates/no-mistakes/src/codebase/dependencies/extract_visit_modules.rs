@@ -100,6 +100,8 @@ fn record_runtime_require_import(
         // name that callee. The literal span is the specifier fact.
         if shared_edge {
             collector.push(&specifier, kind, call.span.start as usize);
+        } else if kind == ImportKind::Require {
+            collector.namespace.facts.created_require_specifiers.push(specifier);
         }
         return;
     }

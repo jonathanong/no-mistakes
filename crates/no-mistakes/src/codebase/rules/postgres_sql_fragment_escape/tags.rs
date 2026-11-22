@@ -1,5 +1,5 @@
 use crate::codebase::dependencies::extract::{
-    ImportedBinding, ImportedBindingKind, ValueBinding, ValueExpression,
+    ImportedBinding, ImportedBindingKind, ValueBinding, ValueCall, ValueExpression,
 };
 use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::codebase::ts_source::facts::TsFileFacts;
@@ -15,28 +15,34 @@ pub(super) fn is_fragment_binding(
     let ValueExpression::Call(start, end) = binding.value else {
         return false;
     };
-    trusted_tag_call(ts, tags, start, end)
+    ts.value_flow.tagged_templates.contains_key(&(start, end))
+        && ts
+            .value_flow
+            .calls
+            .iter()
+            .find(|call| call.offset == start && call.end == end)
+            .is_some_and(|call| call.arguments.len() == 1 && trusted_tag_call(ts, tags, call))
 }
 
-fn trusted_tag_call(ts: &TsFileFacts, tags: &[TrustedSqlTag], start: u32, end: u32) -> bool {
-    if !ts.value_flow.tagged_templates.contains_key(&(start, end)) {
-        return false;
-    }
-    let Some(call) = ts
-        .value_flow
-        .calls
-        .iter()
-        .find(|call| call.offset == start && call.end == end)
-    else {
-        return false;
-    };
-    if call.arguments.len() != 1 {
-        return false;
-    }
-    let ValueExpression::Named { name, .. } = &call.callee else {
+pub(super) fn has_tagged_query(ts: &TsFileFacts, tags: &[TrustedSqlTag]) -> bool {
+    !ts.value_flow.tagged_templates.is_empty()
+        && ts
+            .value_flow
+            .calls
+            .iter()
+            .any(|call| trusted_tag_call(ts, tags, call))
+}
+
+fn trusted_tag_call(ts: &TsFileFacts, tags: &[TrustedSqlTag], call: &ValueCall) -> bool {
+    let ValueExpression::Named { name, scope, .. } = &call.callee else {
         return false;
     };
-    tags.iter().any(|tag| tag_matches(ts, name, tag))
+    scope.is_none_or(|scope| scope == 0)
+        && ts
+            .value_flow
+            .tagged_templates
+            .contains_key(&(call.offset, call.end))
+        && binding_is_tag(ts, tags, name)
 }
 
 fn tag_matches(ts: &TsFileFacts, local: &str, tag: &TrustedSqlTag) -> bool {

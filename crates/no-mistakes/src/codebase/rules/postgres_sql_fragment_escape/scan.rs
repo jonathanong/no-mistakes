@@ -16,6 +16,12 @@ pub(super) struct ScanReport {
     pub gaps: Vec<CheckFailure>,
 }
 
+pub(super) struct FileScan {
+    pub findings: Vec<RuleFinding>,
+    pub coverage_gaps: Vec<CheckFailure>,
+    pub gaps: Vec<CheckFailure>,
+}
+
 pub(super) fn scan(
     root: &Path,
     tags: &[TrustedSqlTag],
@@ -31,27 +37,33 @@ pub(super) fn scan(
         };
     }
     let mut catalog = Catalog::build(facts, tags, sources, resolution);
-    let mut rows: Vec<ScanReport> = facts
+    let rows: Vec<_> = facts
         .graph_file_universe()
         .par_iter()
         .filter_map(|file| one(root, tags, graph, facts, sources, &catalog, file))
         .collect();
-    rows.sort_by(|left, right| {
-        left.findings
-            .cmp(&right.findings)
-            .then(left.gaps.cmp(&right.gaps))
-    });
     let mut findings = Vec::new();
     let mut gaps = Vec::new();
+    let mut coverage_gaps = Vec::new();
     for row in rows {
         findings.extend(row.findings);
         gaps.extend(row.gaps);
+        coverage_gaps.extend(row.coverage_gaps);
     }
     findings.sort();
     findings.dedup();
-    let unresolved = catalog.take_unresolved();
     let proved: crate::fx::FxHashSet<&str> =
         findings.iter().map(|item| item.file.as_str()).collect();
+    let unresolved = catalog.take_unresolved();
+    if !coverage_gaps.is_empty() {
+        let relevant =
+            super::gap_reachability::relevant_files(root, &catalog, graph, facts, &proved);
+        gaps.extend(coverage_gaps.into_iter().filter(|gap| {
+            gap.file
+                .as_ref()
+                .is_some_and(|file| relevant.contains(file))
+        }));
+    }
     gaps.extend(unresolved.into_iter().filter_map(|(file, specifier)| {
         let relative = relative_slash_path(root, &file);
         if !proved.contains(relative.as_str())
@@ -73,12 +85,13 @@ pub(super) fn scan(
     ScanReport { findings, gaps }
 }
 
-pub(super) fn missing_facts(root: &Path, file: &Path) -> Option<ScanReport> {
+pub(super) fn missing_facts(root: &Path, file: &Path) -> Option<FileScan> {
     is_indexable(file).then(|| {
         let relative = relative_slash_path(root, file);
-        ScanReport {
+        FileScan {
             findings: Vec::new(),
-            gaps: vec![CheckFailure {
+            gaps: Vec::new(),
+            coverage_gaps: vec![CheckFailure {
                 consumer: super::RULE_ID.to_string(),
                 file: Some(file.to_path_buf()),
                 property: None,

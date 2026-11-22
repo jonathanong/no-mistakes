@@ -106,8 +106,8 @@ fn incomplete_value_flow_keeps_fragment_escape_without_sibling_findings() {
             .all(|finding| !finding.message.contains("WidgetError")),
         "{findings:?}"
     );
-    assert!(session.check_failures().iter().any(|gap| {
-        gap.consumer == "postgres-sql-fragment-escape" && gap.message.contains("wide.ts")
+    assert!(session.check_failures().iter().all(|gap| {
+        gap.consumer != "postgres-sql-fragment-escape" || !gap.message.contains("wide.ts")
     }));
 }
 

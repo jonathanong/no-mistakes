@@ -16,6 +16,7 @@ include!("ts_resolver/resolver_types.rs");
 include!("ts_resolver/resolver_impl.rs");
 include!("ts_resolver/resolver_builders.rs");
 include!("ts_resolver/resolver_cache_impl.rs");
+include!("ts_resolver/resolver_extensions.rs");
 include!("ts_resolver/resolver_paths.rs");
 include!("ts_resolver/resolver_candidates.rs");
 include!("ts_resolver/path.rs");

@@ -171,18 +171,6 @@ fn emitted_fallback_candidates(extension: &str) -> &'static [&'static str] {
         _ => &[],
     }
 }
-const EXPLICIT_EXTENSIONS: &[&str] = &[
-    "mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts", "json", "css", "scss", "sass", "less",
-    "svg", "png", "jpg", "jpeg", "gif", "webp", "avif", "txt", "wasm",
-];
-
-fn has_explicit_extension(path: &Path) -> bool {
-    path.extension()
-        .and_then(|ext| ext.to_str())
-        .map(|ext| EXPLICIT_EXTENSIONS.contains(&ext))
-        .unwrap_or(false)
-}
-
 /// Load a `TsConfig` from `--tsconfig` if given, else search upward from `root`,
 /// else return an empty config anchored at `root`.
 ///

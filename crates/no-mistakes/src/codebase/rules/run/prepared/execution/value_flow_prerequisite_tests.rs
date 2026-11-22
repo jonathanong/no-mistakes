@@ -42,7 +42,7 @@ fn exhausted_value_flow_preserves_previous_graph_prerequisite_failures() {
 }
 
 #[test]
-fn only_fragments_with_tags_inherit_graph_prerequisite_failures() {
+fn fragment_coverage_is_scoped_by_the_rule_and_global_graph_errors_still_propagate() {
     let fixtures = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases");
     let root = crate::codebase::ts_resolver::normalize_path(
         &fixtures.join("codebase-analysis/foreign-receiver-work-budget/fixture"),
@@ -70,15 +70,25 @@ fn only_fragments_with_tags_inherit_graph_prerequisite_failures() {
 
         let session = AnalysisSession::disabled();
         register_value_flow_failures(&config, &shared, &session);
-        assert_eq!(
-            session.check_consumer_ready(postgres_sql_fragment_escape::RULE_ID),
-            !demands_analysis
-        );
+        assert!(session.check_consumer_ready(postgres_sql_fragment_escape::RULE_ID));
         assert!(!session.check_consumer_ready(UNCONSTRUCTED_ERROR_CLASS));
         assert!(matches!(
             session.check_prerequisite("codebase.canonical-graph"),
             Some(Prerequisite::Failed(_))
         ));
+
+        let session = AnalysisSession::disabled();
+        graph_failed(
+            &config,
+            &session,
+            &crate::codebase::check_outcome::CheckInputFailure::source(
+                root.join("src/shared-2048.mts"),
+                "missing graph facts".to_owned(),
+            )
+            .into(),
+        );
+        assert!(session.check_consumer_ready(postgres_sql_fragment_escape::RULE_ID));
+        assert!(!session.check_consumer_ready(UNCONSTRUCTED_ERROR_CLASS));
 
         let session = AnalysisSession::disabled();
         graph_failed(&config, &session, &anyhow::anyhow!("graph failed"));

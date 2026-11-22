@@ -3,6 +3,7 @@ mod alias;
 mod dynamic;
 mod fact_reads;
 mod fragments;
+mod gap_reachability;
 mod import_resolution;
 pub(crate) use import_resolution::FragmentImportResolution;
 mod modules;

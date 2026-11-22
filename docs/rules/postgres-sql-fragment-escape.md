@@ -39,19 +39,18 @@ file that appends it. Another file can still call `.append` on the fragment,
 rebind it, re-export it, or pass the module namespace to `Object.assign`,
 `Object.values`, or `Reflect`. A single-file lint cannot see that escape.
 Enable this rule next to the adapter lint when exported SQL constants are
-shared across files. A file whose prepared facts include an operational error,
-a fatal parse error, an incomplete value-flow, or unreadable source is still
-checked from those facts. A fragment binding or a write that those facts still
-record is reported. The same file is listed on the check result's `incomplete`
-field. A TypeScript or JavaScript file in the graph scope with missing
-prepared facts also appears there. The message names the file and says a write, rebind, or escape that
-lived only in the missing text may be absent. One such file does not drop
-findings from files whose facts are complete. This rule does not change the
-shared canonical graph. When value flow is incomplete, the canonical-graph
-prerequisite stays failed, and every other graph rule keeps the same readiness
-and output as a run that does not configure this rule. An ESLint-only run does
-not report these cross-file escapes. Set `trustedSqlTags` here, or this rule
-reports nothing. An empty tag list adds no graph or catalog demand.
+shared across files. Operational errors, incomplete value flow, unreadable
+source, and missing prepared facts can add `incomplete` entries within the
+runtime dependency closure of a file that reaches a fragment or uses a
+configured SQL tag. When parsing yields no usable facts, a file can enter
+that closure only through an import from a relevant file. A tag import
+alone does not establish relevance. Usable prepared facts can still establish
+a finding and keep that file in scope for a gap.
+
+When value flow is incomplete, graph-dependent sibling rules keep the
+canonical graph prerequisite and their own diagnostics. An ESLint-only setup
+omits this cross-file check. An empty `trustedSqlTags` list produces no
+findings and adds no graph or catalog demand.
 
 ## What it catches
 
@@ -93,12 +92,15 @@ scope. This also covers path aliases and workspace packages when the
 canonical graph is unavailable. A unique ambient declaration can identify a
 module.
 
-A failed or ambiguous local import can add one `incomplete` entry per file
-when the file otherwise reaches a proven exported SQL fragment. The entry
-identifies the unresolved specifier. Built-in Node modules and ordinary
-external packages outside `trustedSqlTags` are outside this search. A use of
-the trusted tag itself stays silent. `check` exits 1 when the report contains
-an incomplete entry, even if the report has zero findings.
+A failed or ambiguous local code import can add one `incomplete` entry per
+file when the file otherwise reaches a proven exported SQL fragment. The
+entry identifies the unresolved specifier. Built-in Node modules, external
+packages (including external trusted-tag modules and their subpaths), and
+resolved non-code files are outside this search. Relative JSON and asset
+specifiers with extensions recognized by the TypeScript resolver also stay
+outside the search. A module in the project can supply a fragment through a
+path alias or workspace mapping. `check` exits 1 when the report contains an incomplete entry, even
+if the report has zero findings.
 
 ## Valid example
 

@@ -55,6 +55,13 @@ impl FragmentResolver for FragmentImportResolution<'_> {
             .record_work("postgres_sql_fragment_escape.module_candidates", 1);
         let classification =
             resolver.classify_import(specifier, importer, self.workspace, &self.files);
+        if classification.is_unresolved_external()
+            && !alias
+            && !specifier.starts_with('.')
+            && !Path::new(specifier).is_absolute()
+        {
+            return None;
+        }
         let resolved = classification
             .resolver_path()
             .and_then(|target| self.files.visible_path(target))

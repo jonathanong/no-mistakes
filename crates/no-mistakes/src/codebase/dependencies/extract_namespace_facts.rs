@@ -76,6 +76,8 @@ pub struct NamespaceFacts {
     /// Literal `import()`, `require()`, or type-position `import("...")`
     /// specifiers keyed by the `import` or `require` keyword.
     pub literal_import_spans: Vec<(u32, String)>,
+    /// Literal module loads through created require bindings, separate from dependency edges.
+    pub(crate) created_require_specifiers: Vec<String>,
     /// A runtime load through a created require without a literal specifier.
     pub computed_created_require: bool,
     /// Classes in an ambient declaration or in a module block that is not a

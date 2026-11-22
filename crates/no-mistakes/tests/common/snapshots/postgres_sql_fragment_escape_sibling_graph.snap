@@ -14,16 +14,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
         },
         {
-          "consumer": "postgres-sql-fragment-escape",
-          "file": "wide.ts",
-          "message": "`wide.ts` value flow is incomplete (value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations), so a write, rebind, or escape of an exported SQL fragment may be missing. Simplify the file so value flow finishes, then rerun the check."
-        },
-        {
-          "consumer": "postgres-sql-fragment-escape",
-          "file": "wide.ts",
-          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
-        },
-        {
           "consumer": "unconstructed-error-class",
           "file": "wide.ts",
           "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
