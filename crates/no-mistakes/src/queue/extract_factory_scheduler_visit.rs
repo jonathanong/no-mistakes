@@ -1,4 +1,5 @@
 use super::{Collector, ScopeKind};
+use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, BlockStatement, CatchClause, Expression,
     ForInStatement, ForOfStatement, ForStatement, Function, FunctionType, Program, Statement,
@@ -7,18 +8,17 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 
-pub(super) fn stored_expr<'a>(expr: &Expression<'a>) -> Option<&'a Expression<'a>> {
-    let peeled = crate::codebase::ts_source::unwrap_ts_wrappers(arena_expr(expr));
-    match peeled {
-        Expression::ObjectExpression(_) | Expression::Identifier(_) => Some(peeled),
+pub(super) fn stored_expr<'a>(
+    expr: &Expression<'_>,
+    allocator: &'a Allocator,
+) -> Option<&'a Expression<'a>> {
+    let expr = crate::codebase::ts_source::unwrap_ts_wrappers(expr);
+    match expr {
+        Expression::ObjectExpression(_) | Expression::Identifier(_) => {
+            Some(allocator.alloc(expr.clone_in(allocator)))
+        }
         _ => None,
     }
-}
-
-fn arena_expr<'a>(expr: &Expression<'a>) -> &'a Expression<'a> {
-    // SAFETY: oxc allocates this node in the program arena. The visitor lends a
-    // shorter borrow of that same node, and the binding list ends with the program.
-    unsafe { &*(expr as *const Expression<'a>) }
 }
 
 pub(super) fn bind_pattern<'a>(

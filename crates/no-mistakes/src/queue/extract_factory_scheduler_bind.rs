@@ -1,3 +1,4 @@
+use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     BindingPattern, Expression, FormalParameters, Program, VariableDeclarationKind,
     VariableDeclarator,
@@ -26,8 +27,12 @@ struct Scope {
     kind: ScopeKind,
 }
 
-pub fn collect_object_bindings<'a>(program: &'a Program<'a>) -> Vec<ObjectBinding<'a>> {
+pub fn collect_object_bindings<'a>(
+    program: &'a Program<'a>,
+    allocator: &'a Allocator,
+) -> Vec<ObjectBinding<'a>> {
     let mut collector = Collector {
+        allocator,
         bindings: Vec::new(),
         scopes: Vec::new(),
     };
@@ -35,11 +40,11 @@ pub fn collect_object_bindings<'a>(program: &'a Program<'a>) -> Vec<ObjectBindin
     collector.bindings
 }
 
-pub(super) fn lookup<'a>(
-    bindings: &'a [ObjectBinding<'a>],
+pub(super) fn lookup<'bindings, 'a>(
+    bindings: &'bindings [ObjectBinding<'a>],
     name: &str,
     at: u32,
-) -> Option<&'a ObjectBinding<'a>> {
+) -> Option<&'bindings ObjectBinding<'a>> {
     let mut best: Option<&ObjectBinding<'_>> = None;
     for binding in bindings {
         if binding.name != name || at < binding.scope_start || at >= binding.scope_end {
@@ -54,6 +59,7 @@ pub(super) fn lookup<'a>(
 }
 
 struct Collector<'a> {
+    allocator: &'a Allocator,
     bindings: Vec<ObjectBinding<'a>>,
     scopes: Vec<Scope>,
 }
@@ -140,9 +146,10 @@ impl<'a> Collector<'a> {
         };
         let value = if kind == VariableDeclarationKind::Const {
             match &declarator.id {
-                BindingPattern::BindingIdentifier(_) => {
-                    declarator.init.as_ref().and_then(visit::stored_expr)
-                }
+                BindingPattern::BindingIdentifier(_) => declarator
+                    .init
+                    .as_ref()
+                    .and_then(|expr| visit::stored_expr(expr, self.allocator)),
                 _ => None,
             }
         } else {

@@ -1,6 +1,7 @@
 mod cycles;
 pub(crate) mod extract;
 mod extract_factory;
+mod extract_factory_scheduler_bind;
 mod extract_helpers;
 mod extract_job_id;
 mod extract_model;
@@ -17,6 +18,7 @@ mod graph_model;
 mod graph_related;
 mod graph_resolution;
 mod lang;
+mod lazy_object_bindings;
 mod outcomes;
 mod rate_limit;
 mod resolver;

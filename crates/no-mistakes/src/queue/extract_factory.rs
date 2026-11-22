@@ -193,8 +193,7 @@ mod index;
 mod job_scope;
 #[path = "extract_factory_scope.rs"]
 mod scope;
-
-pub(super) use calls::{collect_object_bindings, note_factory_call, note_wait, ObjectBinding};
+pub(super) use calls::{note_factory_call, note_wait};
 pub(super) use dedup::{note_self_dedup, visit_variable_declaration};
 pub(super) use index::processor_spans;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};

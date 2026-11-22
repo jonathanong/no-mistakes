@@ -143,7 +143,8 @@ fn invalid_job_id_respects_queues_check_directives() {
 #[test]
 fn invalid_job_id_uses_the_lexical_const_and_resolved_queue_receiver() {
     let root = fixture("invalid-job-id");
-    let rows = invalid_rows(&root);
+    let report = analyze_project(&root, None, &[]).unwrap();
+    let rows = invalid_rows(&root, &report.check);
     let scoped = rows
         .iter()
         .filter(|row| row["file"] == "scoped-enqueue.ts")

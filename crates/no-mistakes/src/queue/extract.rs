@@ -1,3 +1,4 @@
+use super::lazy_object_bindings::LazyObjectBindings;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
@@ -32,6 +33,30 @@ pub(crate) fn extract_program_with_scoping(
     record_waits: bool,
     scoping: Option<&Scoping>,
 ) -> FileFacts {
+    let binding_allocator = oxc_allocator::Allocator::default();
+    let bindings = LazyObjectBindings::new(program, &binding_allocator);
+    extract_with_bindings(
+        path,
+        source,
+        factory_names,
+        roles,
+        record_waits,
+        scoping,
+        bindings,
+    )
+    .facts
+}
+
+fn extract_with_bindings<'a>(
+    path: &'a Path,
+    source: &'a str,
+    factory_names: &'a [String],
+    roles: &'a crate::config::v2::schema::QueueFactoryRoles,
+    record_waits: bool,
+    scoping: Option<&'a Scoping>,
+    bindings: LazyObjectBindings<'a>,
+) -> QueueVisitor<'a> {
+    let program = bindings.program;
     let mut visitor = QueueVisitor {
         path,
         source,
@@ -51,7 +76,7 @@ pub(crate) fn extract_program_with_scoping(
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
         scheduler_factories: HashMap::new(),
-        object_bindings: super::extract_factory::collect_object_bindings(program),
+        object_bindings: bindings,
         job_frames: Vec::new(),
         record_waits,
         scoping,
@@ -70,8 +95,11 @@ pub(crate) fn extract_program_with_scoping(
     visitor.visit_program(program);
     super::extract_job_id::finish(&mut visitor);
     super::extract_processor::finish(&mut visitor);
-    visitor.facts
+    visitor
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests;
 
 #[path = "wait_scope.rs"]
 mod wait_scope;

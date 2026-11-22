@@ -8,8 +8,6 @@ mod enqueue;
 #[path = "extract_factory_scheduler.rs"]
 mod scheduler;
 
-pub use scheduler::{collect_object_bindings, ObjectBinding};
-
 pub(crate) fn note_factory_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
     scheduler::note_scheduler(visitor, call);
     let Expression::Identifier(id) = &call.callee else {

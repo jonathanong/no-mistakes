@@ -1,13 +1,8 @@
 use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
+use crate::queue::lazy_object_bindings::LazyObjectBindings;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
-
-#[path = "extract_factory_scheduler_bind.rs"]
-mod bind;
-
-use bind::lookup;
-pub use bind::{collect_object_bindings, ObjectBinding};
 
 const KIND: &str = "scheduler-template-option";
 
@@ -83,12 +78,12 @@ struct Found<'a> {
     at: u32,
 }
 
-fn resolve<'a>(
-    expr: &'a Expression<'a>,
-    bindings: &'a [ObjectBinding<'a>],
+fn resolve<'expr, 'arena: 'expr>(
+    expr: &'expr Expression<'expr>,
+    bindings: &'expr LazyObjectBindings<'arena>,
     at: u32,
     depth: u8,
-) -> Option<Found<'a>> {
+) -> Option<Found<'expr>> {
     if depth > 8 {
         return None;
     }
@@ -96,7 +91,7 @@ fn resolve<'a>(
     match expr {
         Expression::ObjectExpression(object) => Some(Found { object, at }),
         Expression::Identifier(id) => {
-            let binding = lookup(bindings, id.name.as_str(), at)?;
+            let binding = bindings.lookup(id.name.as_str(), at)?;
             resolve(binding.value?, bindings, binding.resolve_at, depth + 1)
         }
         _ => None,
@@ -106,7 +101,7 @@ fn resolve<'a>(
 fn collect(
     object: &ObjectExpression<'_>,
     source: &str,
-    bindings: &[ObjectBinding<'_>],
+    bindings: &LazyObjectBindings<'_>,
     at: u32,
     template: bool,
 ) -> Option<Vec<(String, usize)>> {
