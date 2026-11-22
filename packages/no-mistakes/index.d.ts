@@ -1,13 +1,13 @@
 import type { TypeScriptModulesOptions, TypeScriptModulesReport } from "./typescript-module-types";
 export type * from "./typescript-module-types";
 /** Analyze selected TS/JS modules asynchronously with source-local binding semantics. */
-
 import type { PostgresSqlSource, PostgresSqlFacts } from "./postgres-source-types";
 export { extractExecutedPostgresSql } from "./executed-postgres-sql-types";
 export * from "./postgres-source-types";
 /** Parse SQL on the native async worker without repository I/O or a database. */
 export function parsePostgresSql(source: PostgresSqlSource): Promise<PostgresSqlFacts>;
 export function parsePostgresSql(sources: PostgresSqlSource[]): Promise<PostgresSqlFacts[]>;
+
 import type {
   CheckReport,
   AnalyzeProjectOptions,
@@ -70,10 +70,10 @@ import type {
   WritePlanningImpactArtifactsOptions,
   PlanningImpactArtifacts,
 } from "./types";
-
 export type { QueueWaitFindingKind } from "./queue-report-types";
 export * from "./types";
 export * from "./index-ci-infra";
+export * from "./index-postgres-lock-inventory";
 
 export function dependencies(
   options: WithInvocationOptions<TraversePathsOptions>,

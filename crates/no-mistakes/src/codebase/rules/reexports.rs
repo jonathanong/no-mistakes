@@ -1,3 +1,4 @@
+pub use super::advisory_rules::ADVISORY_RULE_IDS;
 pub use super::filesystem_dispatch::{
     run_filesystem_rules, run_filesystem_rules_with_config,
     run_filesystem_rules_with_config_and_snapshot,

@@ -62,6 +62,7 @@ pub use super::postgres_idempotent_insert::RULE_ID as POSTGRES_IDEMPOTENT_INSERT
 pub use super::postgres_identifier_length::RULE_ID as POSTGRES_IDENTIFIER_LENGTH;
 pub use super::postgres_json_relation_ids::RULE_ID as POSTGRES_JSON_RELATION_IDS;
 pub use super::postgres_key_column_types::RULE_ID as POSTGRES_KEY_COLUMN_TYPES;
+pub use super::postgres_lock_inventory::RULE_ID as POSTGRES_LOCK_INVENTORY;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_lock_written_rows_only::RULE_ID as POSTGRES_LOCK_WRITTEN_ROWS_ONLY;
 pub use super::postgres_materialized_view_shape::RULE_ID as POSTGRES_MATERIALIZED_VIEW_SHAPE;

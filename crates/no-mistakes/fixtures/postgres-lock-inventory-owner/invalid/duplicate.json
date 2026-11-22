@@ -1,0 +1,4 @@
+{"version": 1, "sites": [
+  {"file": "queries.sql", "category": "for-update", "key": "example#1"},
+  {"file": "queries.sql", "category": "for-update", "key": "example#1"}
+]}

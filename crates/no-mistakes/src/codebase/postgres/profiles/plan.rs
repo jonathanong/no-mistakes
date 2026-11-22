@@ -129,6 +129,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-no-test-state-mutation",
         "postgres-idempotent-insert",
         "postgres-required-predicates",
+        "postgres-lock-inventory",
         "postgres-no-offset",
         "postgres-no-transformed-uuid-predicates",
         "postgres-generated-column-predicates",

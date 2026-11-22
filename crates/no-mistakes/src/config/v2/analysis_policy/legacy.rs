@@ -61,6 +61,7 @@ pub(in super::super) fn sql_policy_rule(rule: &str) -> bool {
             | "postgres-grouping-not-aggregation"
             | "postgres-idempotent-insert"
             | "postgres-lock-ordering"
+            | "postgres-lock-inventory"
             | "postgres-lock-written-rows-only"
             | "postgres-no-generated-column-writes"
             | "postgres-no-offset"

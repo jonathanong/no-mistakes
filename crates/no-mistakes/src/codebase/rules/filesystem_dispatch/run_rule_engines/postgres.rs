@@ -15,6 +15,7 @@ use schema::{
     column_check_constraints, column_requires_trigger, conflict_ordering, duplicate_function_body,
     lock_ordering, required_comments,
 };
+mod lock_inventory;
 mod no_offset;
 
 use naming::{
@@ -47,8 +48,7 @@ pub(super) fn run(
             findings.extend(crate::codebase::rules::postgres_unmatched_executors::check(
                 root, config, rule_id, files, sources, facts,
             )?);
-            // Both producers have already deduplicated their own findings.
-            // Equal public DTOs can name distinct physical variant columns.
+            // Deduplicated DTOs can still identify distinct physical variant columns.
             findings.sort();
         }
         Ok(findings)
@@ -105,6 +105,7 @@ fn run_schema_rules(
                 root, config, files, sources,
             ),
         },
+        POSTGRES_LOCK_INVENTORY => lock_inventory::run(root, config, files, sources, facts),
         POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
         POSTGRES_IDENTIFIER_LENGTH => {
             prepared_schema::identifier_length(root, config, files, sources, facts)
@@ -195,6 +196,5 @@ fn run_naming_and_query_rules(
         _ => return None,
     })
 }
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
