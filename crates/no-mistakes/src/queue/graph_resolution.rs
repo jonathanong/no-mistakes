@@ -24,23 +24,20 @@ pub(super) fn resolve_producers<R: ImportResolverFacade>(
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalProducer> {
     let mut out = Vec::new();
+    let mut opaque = Vec::new();
     let mut checks = Vec::new();
     for (path, file) in facts.iter() {
         let local = local_queues(path, file, queue_defs, definitions, resolver, remapper);
-        let resolve = |binding: &str| {
-            local.get(binding).cloned().or_else(|| {
-                crate::queue::factory_resolve::binding_queue(
-                    facts,
-                    resolver,
-                    remapper,
-                    path,
-                    binding,
-                    definitions,
-                )
-            })
-        };
         for site in &file.producers {
-            let queue = resolve(&site.binding);
+            let queue = resolved_binding(
+                &local,
+                facts,
+                resolver,
+                remapper,
+                path,
+                &site.binding,
+                definitions,
+            );
             out.push(InternalProducer {
                 site: site.clone(),
                 queue,
@@ -48,7 +45,16 @@ pub(super) fn resolve_producers<R: ImportResolverFacade>(
         }
         for (binding, check) in &file.job_id_sites {
             let resolved = match binding {
-                JobIdQueue::Named(binding) => resolve(binding).is_some(),
+                JobIdQueue::Named(binding) => resolved_binding(
+                    &local,
+                    facts,
+                    resolver,
+                    remapper,
+                    path,
+                    binding,
+                    definitions,
+                )
+                .is_some(),
                 JobIdQueue::Namespace { source, exported } => lookup_export(
                     facts,
                     resolver,
@@ -64,6 +70,30 @@ pub(super) fn resolve_producers<R: ImportResolverFacade>(
                 checks.push((path.clone(), check.clone()));
             }
         }
+        let queues = file
+            .opaque_priority_bindings
+            .iter()
+            .filter_map(|binding| {
+                resolved_binding(
+                    &local,
+                    facts,
+                    resolver,
+                    remapper,
+                    path,
+                    binding,
+                    definitions,
+                )
+            })
+            .map(|queue| (queue.queue_file, queue.queue_name))
+            .collect::<Vec<_>>();
+        if !queues.is_empty() {
+            opaque.push((path.clone(), queues));
+        }
+    }
+    for (path, queues) in opaque {
+        if let Some(file) = facts.get_mut(&path) {
+            file.opaque_priority_queues = queues;
+        }
     }
     for (path, check) in checks {
         if let Some(file) = facts.get_mut(&path) {
@@ -71,6 +101,27 @@ pub(super) fn resolve_producers<R: ImportResolverFacade>(
         }
     }
     out
+}
+
+fn resolved_binding<R: ImportResolverFacade>(
+    local: &HashMap<String, QueueKey>,
+    facts: &HashMap<PathBuf, FileFacts>,
+    resolver: &R,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
+    path: &Path,
+    binding: &str,
+    definitions: &HashMap<String, PathBuf>,
+) -> Option<QueueKey> {
+    local.get(binding).cloned().or_else(|| {
+        crate::queue::factory_resolve::binding_queue(
+            facts,
+            resolver,
+            remapper,
+            path,
+            binding,
+            definitions,
+        )
+    })
 }
 
 pub(super) fn resolve_workers<R: ImportResolverFacade>(

@@ -29,3 +29,4 @@ export const blocksWorker = new Worker("blocks", async () => {});
 export const boxesWorker = new Worker("boxes", async () => {});
 export const classesWorker = new Worker("classes", async () => {});
 export const copiesWorker = new Worker("copies", async () => {});
+export const bundlesWorker = new Worker("bundles", async () => {});

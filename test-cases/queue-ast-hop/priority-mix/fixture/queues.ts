@@ -28,3 +28,4 @@ export const blocks = new Queue("blocks");
 export const boxes = new Queue("boxes");
 export const classes = new Queue("classes");
 export const copies = new Queue("copies");
+export const bundles = new Queue("bundles");

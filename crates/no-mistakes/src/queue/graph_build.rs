@@ -79,7 +79,7 @@ fn build_report_and_relationships(
         crate::queue::rate_limit::findings(root, &producers, &workers, facts);
     check.extend(dedup_checks);
     check.extend(crate::queue::priority_mix::mixed_priority_findings(
-        root, &producers,
+        root, &producers, facts,
     ));
     let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
     report_diagnostics.extend(dedup_diagnostics);

@@ -93,10 +93,11 @@ hides an outer `const` inside the class and not after it.
 The check abstains for the whole queue when any producer priority is not one
 of those two forms. That includes a trailing spread, a spread before the
 options argument, an `addBulk` argument that is not an array of object
-literals, an `addBulk` object item with no literal `name`, a computed key that
-may overwrite `priority` or `opts`, a
-non-integer, a negative number, a `let` or `var` binding, an imported number,
-and any other dynamic expression. Flow `children` are not producers, so this
+literals, an `addBulk` object item with no literal `name` (the whole queue
+abstains, including when the other producers are in another file), a computed
+key that may overwrite `priority` or `opts`, a non-integer, a negative
+number, a `let` or `var` binding, an imported number, and any other dynamic
+expression. Flow `children` are not producers, so this
 check does not read them. An unresolved queue is not grouped with a resolved
 one. Give every producer on the queue priority 0, or give every producer a
 priority greater than 0.

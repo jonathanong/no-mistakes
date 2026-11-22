@@ -1,14 +1,17 @@
+use crate::queue::extract::FileFacts;
 use crate::queue::extract_model::EnqueuePriority;
 use crate::queue::graph_model::{CheckFinding, InternalProducer};
 use crate::queue::source::relative_string;
 use crate::queue::types::QueueKey;
-use std::collections::HashMap;
-use std::path::Path;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 pub(super) fn mixed_priority_findings(
     root: &Path,
     producers: &[InternalProducer],
+    facts: &HashMap<PathBuf, FileFacts>,
 ) -> Vec<CheckFinding> {
+    let opaque = opaque_queues(facts);
     let mut groups: HashMap<&QueueKey, Vec<&InternalProducer>> = HashMap::new();
     for producer in producers {
         let Some(queue) = producer.queue.as_ref() else {
@@ -18,9 +21,23 @@ pub(super) fn mixed_priority_findings(
     }
     let mut findings = Vec::new();
     for (queue, group) in groups {
+        if opaque.contains(queue) {
+            continue;
+        }
         findings.extend(report_queue(root, queue, &group));
     }
     findings
+}
+
+fn opaque_queues(facts: &HashMap<PathBuf, FileFacts>) -> HashSet<QueueKey> {
+    facts
+        .values()
+        .flat_map(|file| &file.opaque_priority_queues)
+        .map(|(queue_file, queue_name)| QueueKey {
+            queue_file: queue_file.clone(),
+            queue_name: queue_name.clone(),
+        })
+        .collect()
 }
 
 fn report_queue(root: &Path, queue: &QueueKey, group: &[&InternalProducer]) -> Vec<CheckFinding> {

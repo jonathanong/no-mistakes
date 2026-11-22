@@ -63,6 +63,7 @@ fn mixed_literal_priorities_report_the_minority_form() {
         "heads",
         "classes",
         "copies",
+        "bundles",
     ] {
         assert!(queue(&findings, name).is_empty(), "{name} should abstain");
     }

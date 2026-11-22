@@ -99,4 +99,6 @@ pub(crate) struct FileFacts {
     pub const_numbers: HashMap<String, u32>,
     /// Bindings whose bulk enqueue list was not a closed list of object literals.
     pub opaque_priority_bindings: HashSet<String>,
+    /// Resolved `(queue file, queue name)` pairs filled after binding resolution.
+    pub opaque_priority_queues: Vec<(PathBuf, String)>,
 }
