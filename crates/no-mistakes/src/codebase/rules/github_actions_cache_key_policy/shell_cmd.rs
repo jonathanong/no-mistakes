@@ -6,6 +6,17 @@ mod redirect;
 pub(super) use heredoc::heredoc_at;
 pub(super) use redirect::{mask_output_redirects, redirect_targets};
 
+pub(super) fn redirects_stdout(chars: &[(usize, char)], gt: usize) -> bool {
+    let mut start = gt;
+    while start > 0 && chars[start - 1].1.is_ascii_digit() {
+        start -= 1;
+    }
+    if start == gt || (start > 0 && !is_boundary(chars[start - 1].1)) {
+        return true;
+    }
+    chars[gt - 1].1 == '1' && chars[start..gt - 1].iter().all(|(_, ch)| *ch == '0')
+}
+
 struct Piece<'a> {
     text: &'a str,
     piped: bool,
@@ -178,4 +189,12 @@ fn starts(chars: &[(usize, char)], index: usize, prefix: &[char]) -> bool {
             .get(index + offset)
             .is_some_and(|(_, ch)| ch == expected)
     })
+}
+
+fn is_boundary(ch: char) -> bool {
+    ch.is_whitespace() || is_meta(ch)
+}
+
+fn is_meta(ch: char) -> bool {
+    matches!(ch, '>' | '<' | '|' | '&' | ';' | '(' | ')')
 }

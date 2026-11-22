@@ -49,10 +49,12 @@ The key must also prove a digest of the configured lockfile, in either of these 
   may share a line with the last command. The closing `}` must be its own command, including
   after `;` or a background `&`. A later pipe discards
   the group unless standard output is redirected to a file before that pipe, and a pipe inside
-  `$(...)` or backticks stays in that substitution. Redirecting only standard error does not
-  write the digest, and the last standard-output redirect is the group's destination. A digit
-  run is a descriptor only when it is its own word, so `ignored2>/tmp/orders` redirects
-  standard output. `>=` sends standard output to a file named `=`. An unquoted heredoc counts
+  `$(...)` or backticks stays in that substitution. A redirect such as `2>` or `3>>` leaves
+  standard output alone, so redirecting only those descriptors does not write the digest.
+  The last standard-output redirect is the group's destination. A digit run is a descriptor
+  only when it is its own word, so `1>> "$GITHUB_OUTPUT"` explicitly redirects standard
+  output and `ignored2>/tmp/orders` redirects standard output implicitly. `>=` sends standard
+  output to a file named `=`. An unquoted heredoc counts
   only when the command's last standard-output redirect, or the group's, is the output file.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
   copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to

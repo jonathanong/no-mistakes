@@ -57,6 +57,10 @@ fn incomplete_redirects_leave_the_lockfile_visible() {
         "sha256sum widgets.lock 2>out\" orders.lock\"",
         "widgets.lock"
     ));
+    assert!(!text::command_hashes_lockfile(
+        "sha256sum orders.lock 2>widgets.lock",
+        "widgets.lock"
+    ));
 }
 
 #[test]
@@ -81,6 +85,24 @@ fn incomplete_redirect_fixtures_still_prove_the_lockfile() {
         "digit-suffix.yml",
         &["does not prove a digest of `widgets.lock`"],
     );
+}
+
+#[test]
+fn only_stdout_file_descriptors_prove_workflow_outputs() {
+    let findings = super::rows("policy", "policy");
+    for file in [
+        "stderr-redirect.yml",
+        "stderr-append.yml",
+        "fd-three-redirect.yml",
+        "fd-three-append.yml",
+    ] {
+        super::assert_needles(
+            &findings,
+            file,
+            &["does not prove a digest of `widgets.lock`"],
+        );
+    }
+    super::assert_silent(&findings, "stdout-append.yml");
 }
 
 fn proven(script: &str) -> Vec<String> {
@@ -263,6 +285,7 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "(\n  echo \"digest=$digest\" # )\n  echo \"say \\\"hi\\\"\" ) >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" $((1 + 2)) >> \"$GITHUB_OUTPUT\"; }",
         "{ echo \"digest=$digest\"; } 1>> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } 01>> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\"; } > /tmp/orders >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\"; } 2>> /tmp/orders >> \"$GITHUB_OUTPUT\"",
         "{\n  cat <<EOF >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
@@ -285,6 +308,9 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "{ echo \"digest=$digest\" >&1widgets.lock; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >&2 > /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\"; } 2>> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } 2> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } 3> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } 4294967296> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\" > /tmp/orders",
         "{ echo \"digest=$digest\" ignored2>/tmp/orders; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >= /tmp/orders; } >> \"$GITHUB_OUTPUT\"",

@@ -1,3 +1,4 @@
+use super::super::super::shell_cmd::redirects_stdout;
 use super::super::writes_output;
 use crate::fx::{fx_set, FxHashSet};
 
@@ -50,7 +51,7 @@ pub(super) fn stdout_binding(line: &str, outputs: &FxHashSet<String>) -> Stdout 
             index += 1;
             continue;
         }
-        if ch == '>' && fd_before(&chars, index) == 1 {
+        if ch == '>' && redirects_stdout(&chars, index) {
             let amp = chars.get(index + 1).is_some_and(|(_, next)| *next == '&');
             let fd = amp
                 .then_some(index + 2)
@@ -113,18 +114,6 @@ fn redirect_word(line: &str, chars: &[(usize, char)], gt: usize) -> (String, usi
         .map(|(offset, _)| *offset)
         .unwrap_or(line.len());
     (line[byte..end].to_string(), at)
-}
-
-fn fd_before(chars: &[(usize, char)], gt: usize) -> u32 {
-    let mut index = gt;
-    while index > 0 && chars[index - 1].1.is_ascii_digit() {
-        index -= 1;
-    }
-    if index == gt || (index > 0 && !boundary(chars[index - 1].1)) {
-        return 1;
-    }
-    let text: String = chars[index..gt].iter().map(|(_, ch)| *ch).collect();
-    text.parse().unwrap_or(1)
 }
 
 fn fd_number(chars: &[(usize, char)], mut at: usize) -> Option<u32> {
