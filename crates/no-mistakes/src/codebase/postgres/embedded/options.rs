@@ -1,4 +1,7 @@
 use serde::{Deserialize, Serialize};
+
+mod executor_selection;
+
 const DEFAULT_EXECUTOR_NAMES: &[&str] = &["query", "read", "write"];
 
 /// A named import the user asserts is a parameterized SQL tag.
@@ -58,30 +61,11 @@ pub struct EmbeddedSqlOptions {
     pub track_share_lock_writes: bool,
     #[serde(skip)]
     pub track_redundant_prelocks: bool,
+    #[doc(hidden)]
+    #[serde(skip)]
+    pub exact_constant_origins: bool,
 }
 impl EmbeddedSqlOptions {
-    pub(crate) fn is_callable_export(&self, name: &str) -> bool {
-        DEFAULT_EXECUTOR_NAMES.contains(&name)
-            || self
-                .executor_names
-                .iter()
-                .any(|candidate| candidate == name)
-            || self
-                .executor_factory_names
-                .iter()
-                .any(|candidate| candidate == name)
-    }
-
-    pub(crate) fn uses_legacy_executor_defaults(&self) -> bool {
-        self.executor_names.is_empty() && self.exclude_executor_names.is_empty()
-    }
-
-    pub(crate) fn selects_executors(&self) -> bool {
-        !self.executor_names.is_empty()
-            || !self.executor_factory_names.is_empty()
-            || !self.executor_type_names.is_empty()
-    }
-
     /// A configured module enables standard executor names. Without a module,
     /// names must be explicit and may match named imports from any module.
     pub fn configured(import_specifier: &str, executor_names: &[String]) -> Self {
@@ -110,6 +94,7 @@ impl EmbeddedSqlOptions {
             track_transaction_helpers: false,
             track_share_lock_writes: false,
             track_redundant_prelocks: false,
+            exact_constant_origins: false,
         }
     }
 
@@ -179,6 +164,11 @@ impl EmbeddedSqlOptions {
         self.raw_sql_tags = tags.to_vec();
         self.raw_sql_tags.sort();
         self.raw_sql_tags.dedup();
+        self
+    }
+
+    pub(crate) fn with_exact_constant_origins(mut self) -> Self {
+        self.exact_constant_origins = true;
         self
     }
 

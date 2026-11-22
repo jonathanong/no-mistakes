@@ -79,10 +79,13 @@ pub(crate) fn prepare(
 ) -> Result<PreparedFactDemand> {
     let needs_other_facts =
         graph_configured || playwright_configured || super::enabled::plan_requests_facts(plan);
-    let files =
+    let mut files =
         no_mistakes::codebase::rules::finite_set_consistency::try_required_call_site_fact_files(
             root, config,
         )?;
+    files.extend(plan.call_site_paths.iter().cloned());
+    files.sort();
+    files.dedup();
     plan.require_call_site_paths(&files);
     plan.vitest_default_exclude_paths =
         no_mistakes::codebase::rules::vitest_default_excludes::required_files(root, config)?;

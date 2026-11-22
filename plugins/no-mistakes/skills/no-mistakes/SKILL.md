@@ -251,6 +251,8 @@ groups, limits, diffs, and deleted-file behavior.
   explain output, and runner commands.
 - [playwright.md](references/playwright.md): selector, route, and assertion
   coverage commands.
+- [postgres-lock-inventory.md](references/postgres-lock-inventory.md): review
+  added lock sites and tighten an opt-in baseline.
 - [postgres-source.md](references/postgres-source.md): pure async SQL source
   facts, partial diagnostics, and dependency completeness.
 - [impact-recipes.md](references/impact-recipes.md): selector, API shape,

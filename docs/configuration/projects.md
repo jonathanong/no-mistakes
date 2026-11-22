@@ -111,7 +111,11 @@ non-failing advisories. Project `ignore` suppresses only SQL diagnostic advice;
 proven grouping advisories remain. A rule's canonical `options.unanalyzable`
 can override the inherited policy; restating the legacy project key on the rule
 is still a configuration error.
-Every key is optional. An embedded-SQL rule still needs a non-empty
+[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) does not
+inherit uncertainty policies: inventory gaps always produce findings. It can
+use an empty project import specifier with explicit `executorNames: []` for
+SQL-only inventory, or with configured helper names for helper-only inventory.
+Every key is optional. Other embedded-SQL rules still need a non-empty
 `executors.importSpecifier` on the project; an empty specifier does not select
 every `.query` call. `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `factoryNames`, and `typeNames` are
 copied. A receiver type imported from the configured module but missing from

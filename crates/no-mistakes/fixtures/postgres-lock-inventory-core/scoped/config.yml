@@ -1,0 +1,19 @@
+version: 2
+rules:
+  - rule: postgres-lock-inventory
+    name: app-helpers
+    scope: repository
+    include: ["*.ts"]
+    options:
+      exclude: ["excluded.ts"]
+      helpers: [reserveJob]
+      baseline: helpers.json
+  - rule: postgres-lock-inventory
+    name: native-locks
+    scope: repository
+    options:
+      include: ["*.sql"]
+      exclude: ["excluded.sql"]
+      sqlInclude: ["*.sql"]
+      executorNames: []
+      baselineFile: native.json

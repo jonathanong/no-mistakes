@@ -1,0 +1,24 @@
+version: 2
+unanalyzable: ignore
+projects:
+  app:
+    postgres:
+      unanalyzableSql: advise
+      executors:
+        importSpecifier: "@example/db"
+  schema:
+    postgres:
+      sqlInclude: ["db/*.sql"]
+      executors:
+        executorNames: []
+rules:
+  - rule: postgres-lock-inventory
+    name: app-locks
+    projects: [app]
+  - rule: postgres-no-offset
+    projects: [app]
+  - rule: postgres-lock-inventory
+    name: schema-locks
+    projects: [schema]
+    options:
+      baselineFile: schema-locks.json

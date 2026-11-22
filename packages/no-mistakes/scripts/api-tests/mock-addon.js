@@ -121,6 +121,8 @@ function createMockAddon(collectionGap) {
       ),
     generatePostgresCatalogJson: async (json) =>
       JSON.stringify({ command: "generatePostgresCatalog", options: JSON.parse(json) }),
+    postgresLockInventoryJson: async (json) =>
+      JSON.stringify({ command: "postgresLockInventory", options: JSON.parse(json) }),
     infraOutputsJson: async (json) =>
       JSON.stringify({ command: "infraOutputs", options: JSON.parse(json) }),
     infraTestForJson: async (json) =>

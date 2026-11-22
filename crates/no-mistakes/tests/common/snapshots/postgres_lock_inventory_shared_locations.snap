@@ -1,0 +1,76 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "with_inventory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 20,
+          "message": "app.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "app.ts",
+          "line": 20,
+          "message": "app.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "app.ts",
+          "line": 8,
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(prepared);",
+          "target": "helper"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "without_inventory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "app.ts",
+          "line": 14,
+          "message": "directive names disabled or out-of-scope rule `postgres-lock-inventory`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-inventory",
+          "target": "postgres-lock-inventory"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 20,
+          "message": "app.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "app.ts",
+          "line": 20,
+          "message": "app.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

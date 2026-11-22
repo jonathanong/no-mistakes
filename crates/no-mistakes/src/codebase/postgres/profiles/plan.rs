@@ -119,6 +119,9 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_exact_locations |= !config
         .rule_applications("postgres-lock-ordering")
         .is_empty();
+    plan.postgres_exact_locations |= !config
+        .rule_applications("postgres-lock-inventory")
+        .is_empty();
     plan.postgres_conflict_locations |= !config
         .rule_applications("postgres-conflict-ordering")
         .is_empty();
@@ -129,6 +132,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-no-test-state-mutation",
         "postgres-idempotent-insert",
         "postgres-required-predicates",
+        "postgres-lock-inventory",
         "postgres-no-offset",
         "postgres-no-transformed-uuid-predicates",
         "postgres-generated-column-predicates",

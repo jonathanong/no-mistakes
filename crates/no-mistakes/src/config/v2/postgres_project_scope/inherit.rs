@@ -35,6 +35,9 @@ pub(super) fn apply(config: &mut NoMistakesConfig) -> Result<bool> {
         let rule_name = config.rules[index].rule.clone();
         let options = ensure_mapping(&mut config.rules[index].options, &rule_name)?;
         write_scope(&rule_name, options, &scope, keep_rule_sql);
+        if rule_name == "postgres-lock-inventory" {
+            config.rules[index].try_rule_options::<Value>()?;
+        }
     }
     Ok(applied)
 }
@@ -52,6 +55,7 @@ fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<(Scope,
     let keep_rule_sql = narrow(rule, &scope)?;
     if postgres_executors::RULE_IDS.contains(&rule.rule.as_str())
         && scope.import_specifier.is_empty()
+        && rule.rule != "postgres-lock-inventory"
     {
         bail!(
             "{} references a postgres project without a non-empty executors.importSpecifier; set it on the project (the rule cannot restate executor options)",
@@ -186,7 +190,7 @@ fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope, kee
     if !scope.schema_catalog_path.is_empty() {
         set_string(options, "schemaCatalogPath", &scope.schema_catalog_path);
     }
-    if !scope.unanalyzable_sql.is_empty() {
+    if !scope.unanalyzable_sql.is_empty() && rule != "postgres-lock-inventory" {
         super::yaml::set_unanalyzable(options, rule, &scope.unanalyzable_sql);
     }
     if !keep_rule_sql {

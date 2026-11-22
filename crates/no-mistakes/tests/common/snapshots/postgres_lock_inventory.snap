@@ -1,0 +1,407 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "added": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "new PostgreSQL lock site (helper, 0f9a5ed25b78d6f62695ae18dbb9e3b6#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "await lockAccountRow(id);",
+          "target": "helper"
+        },
+        {
+          "file": "app.ts",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-share, 4d0180a6099bb40b75b29b5efe7e8f6d#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(\"SELECT id FROM accounts FOR SHARE\");",
+          "target": "for-share"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "new PostgreSQL lock site (for-update, 1adfe6c2cd0799f6311b0c7d3f6acc6a#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
+          "target": "for-update"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "new PostgreSQL lock site (nowait, c8944fb40d2263c02720f659d3c6595e#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
+          "target": "nowait"
+        },
+        {
+          "file": "locks.sql",
+          "line": 2,
+          "message": "new PostgreSQL lock site (for-no-key-update, d9361fa8e542d5bac2a2e2c516809a09#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR NO KEY UPDATE SKIP LOCKED;",
+          "target": "for-no-key-update"
+        },
+        {
+          "file": "locks.sql",
+          "line": 2,
+          "message": "new PostgreSQL lock site (skip-locked, 1d1f94d6c07aacf9f6f0d6685e8d47bb#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR NO KEY UPDATE SKIP LOCKED;",
+          "target": "skip-locked"
+        },
+        {
+          "file": "locks.sql",
+          "line": 3,
+          "message": "new PostgreSQL lock site (for-share, fac855ce0c104da9e8552cf78f6d4dd4#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR SHARE;",
+          "target": "for-share"
+        },
+        {
+          "file": "locks.sql",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-key-share, 4ce725cc98960652e4647f0f9c170763#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR KEY SHARE;",
+          "target": "for-key-share"
+        },
+        {
+          "file": "locks.sql",
+          "line": 5,
+          "message": "new PostgreSQL lock site (advisory-lock, f83a9a191c4ada5596a78b1907e88d18#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT pg_advisory_lock(42), pg_try_advisory_xact_lock(43);",
+          "target": "advisory-lock"
+        },
+        {
+          "file": "locks.sql",
+          "line": 5,
+          "message": "new PostgreSQL lock site (advisory-lock, f83a9a191c4ada5596a78b1907e88d18#2). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT pg_advisory_lock(42), pg_try_advisory_xact_lock(43);",
+          "target": "advisory-lock"
+        },
+        {
+          "file": "locks.sql",
+          "line": 6,
+          "message": "new PostgreSQL lock site (lock-table, b56adc1ea73e695e0b72f6f08a9d8a91#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "LOCK TABLE jobs IN SHARE MODE;",
+          "target": "lock-table"
+        },
+        {
+          "file": "locks.sql",
+          "line": 7,
+          "message": "new PostgreSQL lock site (for-update, 1adfe6c2cd0799f6311b0c7d3f6acc6a#2). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
+          "target": "for-update"
+        },
+        {
+          "file": "locks.sql",
+          "line": 7,
+          "message": "new PostgreSQL lock site (nowait, c8944fb40d2263c02720f659d3c6595e#2). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
+          "target": "nowait"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "callbacks": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries.ts",
+          "line": 12,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "await tx.query(\"SELECT id FROM jobs WHERE id = 3 FOR SHARE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "queries.ts",
+          "line": 5,
+          "message": "new PostgreSQL lock site (for-update, 9986df5be0f5d388f7d435478b63142a#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "await tx.query(\"SELECT id FROM jobs WHERE id = 1 FOR UPDATE\");",
+          "target": "for-update"
+        }
+      ],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
+  "clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "gap-multiplicity": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "export function unresolved(left: string, right: string) { query(left); query(right); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "export function unresolved(left: string, right: string) { query(left); query(right); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "app.ts",
+          "line": 7,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(flag ? `${malformed} SELECT 1;` : `${malformed} SELECT 2;`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "imported.ts",
+          "line": 5,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "query(`${first}`); return query(`${second}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "imported.ts",
+          "line": 5,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "query(`${first}`); return query(`${second}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???; SELECT FROM ???;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???; SELECT FROM ???;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 1,
+          "message": "new PostgreSQL lock site (helper, b807adfdcb49e575f9a0a9ebcc62256c#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "lockAccountRow(1);",
+          "target": "helper"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported-alternatives": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 5,
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(flag ? `${first}` : `${second}`);",
+          "target": "helper"
+        },
+        {
+          "file": "app.ts",
+          "line": 5,
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#2). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(flag ? `${first}` : `${second}`);",
+          "target": "helper"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported-helper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 8,
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or reuse an existing locking path",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(prepared);",
+          "target": "helper"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "moved": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "removed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "baseline.json",
+          "line": 1,
+          "message": "stale PostgreSQL lock baseline contains 1 removed site(s). Run `no-mistakes postgres lock-inventory --write-baseline` after removing any new sites",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "{",
+          "target": "stale-baseline"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "routine": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 4,
+          "message": "incomplete PostgreSQL lock inventory (stored routine body could not be resolved). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(`CREATE FUNCTION reserve_account() RETURNS bigint LANGUAGE sql AS $body$",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (stored routine body could not be resolved). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "CREATE FUNCTION reserve_job() RETURNS bigint LANGUAGE sql AS $body$",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 2,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "export function reserve(sql: string) { return query(sql); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

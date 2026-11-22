@@ -66,6 +66,59 @@ fn replacement_and_extension_conflict_even_when_empty_for_every_executor_rule() 
 }
 
 #[test]
+fn lock_inventory_requires_scope_but_allows_helper_only_configuration() {
+    let bare: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/config/postgres-executor-names/lock-inventory-bare.yml"
+    )))
+    .unwrap();
+    let error = bare.rules[0]
+        .try_rule_options::<Value>()
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("postgres-lock-inventory"), "{error}");
+    assert!(error.contains("executorNames: []"), "{error}");
+
+    let helper_only: crate::config::v2::NoMistakesConfig =
+        serde_yaml::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/config/postgres-executor-names/lock-inventory-helper-only.yml"
+        )))
+        .unwrap();
+    assert!(helper_only.rules[0].try_rule_options::<Value>().is_ok());
+}
+
+#[test]
+fn lock_inventory_inherits_executor_scope_and_keeps_reporting_uncertainty() {
+    use crate::config::v2::{load_v2_config, Unanalyzable};
+
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/config/postgres-executor-names");
+    let config = load_v2_config(&root, Some(&root.join("lock-inventory-inherited.yml"))).unwrap();
+    let [app, offset, schema] = config.rules.as_slice() else {
+        panic!("expected three rule applications");
+    };
+    assert_eq!(app.options["importSpecifier"], "@example/db");
+    assert_eq!(
+        schema.options["executorNames"].as_sequence().unwrap().len(),
+        0
+    );
+    assert_eq!(config.unanalyzable, Some(Unanalyzable::Ignore));
+    for rule in [app, schema] {
+        assert!(rule.options.get("unanalyzableSql").is_none());
+        assert_eq!(
+            config.requested_rule_analysis(rule).unwrap().unanalyzable,
+            Unanalyzable::Report
+        );
+    }
+    assert_eq!(offset.options["unanalyzableSql"], "advise");
+    assert_eq!(
+        config.requested_rule_analysis(offset).unwrap().unanalyzable,
+        Unanalyzable::Advise
+    );
+}
+
+#[test]
 fn executor_validation_covers_every_prepared_public_rule() {
     let ids = |values: &[&str]| {
         values

@@ -23,6 +23,11 @@ pub(crate) fn prepare_rule_sql_facts(
     let low_annotation = rule_ids.contains(&"postgres-require-query-annotation")
         && super::annotation_effort::low_requested(config)?;
     let patterns = sql_patterns(config, rule_ids)?;
+    let lock_inventory_helpers = if rule_ids.contains(&"postgres-lock-inventory") {
+        super::helper_call_site_files(root, config, files)?
+    } else {
+        Vec::new()
+    };
     let low_ids = [
         "postgres-no-offset",
         "postgres-explicit-columns",
@@ -38,7 +43,7 @@ pub(crate) fn prepare_rule_sql_facts(
                     .is_ok_and(|policy| policy.effort == crate::config::v2::Effort::Low)
             })
     });
-    let selected = if profiles.is_empty() && !low_sql {
+    let mut selected = if profiles.is_empty() && !low_sql {
         crate::codebase::postgres::postgres_sql_paths(
             root,
             files,
@@ -50,6 +55,9 @@ pub(crate) fn prepare_rule_sql_facts(
     } else {
         files.to_vec()
     };
+    selected.extend(lock_inventory_helpers.iter().cloned());
+    selected.sort();
+    selected.dedup();
     let mut low_plan = crate::codebase::check_facts::CheckFactPlan::default();
     if low_sql {
         let mut scoped = config.clone();
@@ -58,78 +66,84 @@ pub(crate) fn prepare_rule_sql_facts(
         });
         super::plan::configure_prepared_postgres_plan(root, &scoped, &mut low_plan)?;
     }
+    let mut fact_plan = crate::codebase::check_facts::CheckFactPlan {
+        raw_source: low_plan.raw_source,
+        sql_identifier_profiles: low_plan.sql_identifier_profiles,
+        postgres_schema: rule_ids.iter().any(|id| {
+            !matches!(
+                *id,
+                "postgres-no-test-state-mutation"
+                    | "postgres-lock-inventory"
+                    | "postgres-sql-shape-policy"
+                    | "postgres-require-query-annotation"
+                    | "postgres-lock-ordering"
+                    | "postgres-lock-written-rows-only"
+                    | "postgres-conflict-ordering"
+            )
+        }),
+        postgres_dml: (rule_ids.contains(&"postgres-lock-inventory")
+            && !config
+                .rule_applications("postgres-lock-inventory")
+                .is_empty())
+            || low_sql
+            || (!profiles.is_empty()
+                && dml_ids
+                    .iter()
+                    .any(|id| !matches!(*id, "postgres-require-query-annotation"))),
+        postgres_variants: evaluated_annotation
+            || dml_ids.iter().any(|id| {
+                matches!(
+                    *id,
+                    "postgres-lock-ordering"
+                        | "postgres-conflict-ordering"
+                        | "postgres-lock-written-rows-only"
+                )
+            }),
+        postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering")
+            || rule_ids.contains(&"postgres-lock-written-rows-only")
+            || rule_ids.contains(&"postgres-lock-inventory"),
+        postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
+        postgres_general_locations: rule_ids.iter().any(|id| {
+            *id != "postgres-conflict-ordering"
+                && super::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
+        }),
+        postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
+        postgres_body_bounds: rule_ids.contains(&"postgres-bounded-statements")
+            && super::plan::body_bounds_requested(config),
+        postgres_json_writes: rule_ids.contains(&"postgres-json-relation-ids")
+            && config
+                .rule_applications("postgres-json-relation-ids")
+                .iter()
+                .any(|rule| rule.options.get("idKeyPattern").is_some()),
+        postgres_grouping: rule_ids.contains(&"postgres-grouping-not-aggregation")
+            && super::plan::grouping_requested(config),
+        postgres_index_probes: rule_ids.contains(&"postgres-required-predicates"),
+        postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
+        postgres_sql_include: patterns,
+        postgres_write_sql_include: if rule_ids.contains(&"postgres-no-generated-column-writes") {
+            super::plan::write_patterns(config)?
+        } else {
+            Vec::new()
+        },
+        query_annotation: evaluated_annotation,
+        query_annotation_heads: low_annotation,
+        query_annotation_options: rule_ids
+            .contains(&"postgres-require-query-annotation")
+            .then_some(annotation_profiles),
+        embedded_sql: !profiles.is_empty(),
+        embedded_sql_options: profiles,
+        embedded_sql_head_calls_only: head_calls_only,
+        embedded_sql_rule_ids,
+        postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,
+        ..Default::default()
+    };
+    fact_plan.require_call_site_paths(&lock_inventory_helpers);
     Ok(
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,
             selected,
             Vec::new(),
-            crate::codebase::check_facts::CheckFactPlan {
-                raw_source: low_plan.raw_source,
-                sql_identifier_profiles: low_plan.sql_identifier_profiles,
-                postgres_schema: rule_ids.iter().any(|id| {
-                    !matches!(
-                        *id,
-                        "postgres-no-test-state-mutation"
-                            | "postgres-sql-shape-policy"
-                            | "postgres-require-query-annotation"
-                            | "postgres-lock-ordering"
-                            | "postgres-lock-written-rows-only"
-                            | "postgres-conflict-ordering"
-                    )
-                }),
-                postgres_dml: low_sql
-                    || (!profiles.is_empty()
-                        && dml_ids
-                            .iter()
-                            .any(|id| !matches!(*id, "postgres-require-query-annotation"))),
-                postgres_variants: evaluated_annotation
-                    || dml_ids.iter().any(|id| {
-                        matches!(
-                            *id,
-                            "postgres-lock-ordering"
-                                | "postgres-conflict-ordering"
-                                | "postgres-lock-written-rows-only"
-                        )
-                    }),
-                postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering")
-                    || rule_ids.contains(&"postgres-lock-written-rows-only"),
-                postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
-                postgres_general_locations: rule_ids.iter().any(|id| {
-                    *id != "postgres-conflict-ordering"
-                        && super::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
-                }),
-                postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
-                postgres_body_bounds: rule_ids.contains(&"postgres-bounded-statements")
-                    && super::plan::body_bounds_requested(config),
-                postgres_json_writes: rule_ids.contains(&"postgres-json-relation-ids")
-                    && config
-                        .rule_applications("postgres-json-relation-ids")
-                        .iter()
-                        .any(|rule| rule.options.get("idKeyPattern").is_some()),
-                postgres_grouping: rule_ids.contains(&"postgres-grouping-not-aggregation")
-                    && super::plan::grouping_requested(config),
-                postgres_index_probes: rule_ids.contains(&"postgres-required-predicates"),
-                postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
-                postgres_sql_include: patterns,
-                postgres_write_sql_include: if rule_ids
-                    .contains(&"postgres-no-generated-column-writes")
-                {
-                    super::plan::write_patterns(config)?
-                } else {
-                    Vec::new()
-                },
-                query_annotation: evaluated_annotation,
-                query_annotation_heads: low_annotation,
-                query_annotation_options: rule_ids
-                    .contains(&"postgres-require-query-annotation")
-                    .then_some(annotation_profiles),
-                embedded_sql: !profiles.is_empty(),
-                embedded_sql_options: profiles,
-                embedded_sql_head_calls_only: head_calls_only,
-                embedded_sql_rule_ids,
-                postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,
-                ..Default::default()
-            },
+            fact_plan,
             None,
             sources,
         ),

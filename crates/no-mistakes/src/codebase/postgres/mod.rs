@@ -13,6 +13,7 @@ pub(crate) mod embedded;
 mod function_calls;
 pub use function_calls::{SqlFunctionCallFact, SqlFunctionClause};
 pub(crate) mod idents;
+pub(crate) mod lock_inventory;
 mod locking;
 mod migration;
 mod migration_order;
@@ -26,6 +27,9 @@ mod parse;
 pub(crate) mod predicate_normalization;
 pub(crate) mod prepared;
 mod profiles;
+#[doc(hidden)]
+pub use profiles::configure_lock_inventory_helper_call_sites;
+pub(crate) use profiles::helper_call_site_files;
 mod rule_options;
 mod schema;
 mod source;

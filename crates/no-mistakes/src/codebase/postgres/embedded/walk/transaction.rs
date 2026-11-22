@@ -122,22 +122,8 @@ pub(super) fn annotate_receiver(
     }
     if let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) {
         let name = id.name.as_str();
-        let binding = visitor.lookup(name);
-        let transaction = visitor
-            .scoped
-            .transactions
-            .get(name)
-            .and_then(|spans| {
-                spans
-                    .iter()
-                    .filter(|span| span.start <= position && position < span.end)
-                    .max_by_key(|span| span.start)
-            })
-            .filter(|span| {
-                !visitor.scoped.transaction_parameters.contains(&span.start)
-                    && binding.as_ref().and_then(|value| value.value_identity)
-                        == source_identity(span.start)
-            });
+        let transaction = super::transaction_flow::scoped_transaction(visitor, name, position)
+            .filter(|span| !visitor.scoped.transaction_parameters.contains(&span.start));
         if let Some(span) = transaction {
             fact.transaction_id = Some(span.start);
             fact.transaction_line = Some(byte_offset_to_line(visitor.source, span.start as usize));
@@ -147,7 +133,7 @@ pub(super) fn annotate_receiver(
                         !visitor.transaction_options.mutated.contains(&identity)
                     }));
         } else {
-            fact.executor_transaction_known = binding.is_none()
+            fact.executor_transaction_known = visitor.lookup(name).is_none()
                 && (visitor.bindings.contains(name)
                     || visitor.imported_namespace_names.contains_key(name));
         }

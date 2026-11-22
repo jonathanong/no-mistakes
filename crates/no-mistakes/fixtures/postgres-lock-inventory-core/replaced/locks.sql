@@ -1,0 +1,4 @@
+SELECT id FROM jobs FOR UPDATE;
+SELECT id FROM other_jobs FOR UPDATE;
+SELECT id FROM accounts FOR KEY SHARE;
+SELECT reserveJob(7);

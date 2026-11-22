@@ -408,6 +408,7 @@ remain failures. See
 | `call-sites`                               | `callSites(options)`                                                                                                                                                                                                                                                       |
 | `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
+| `postgres lock-inventory` | `postgresLockInventory(options)` |
 | `postgres catalog` | `generatePostgresCatalog(options)` |
 | Source-only library capability | `parsePostgresSql(sourceOrSources)` |
 | Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier, includeDiagnostics: true })` |
@@ -480,6 +481,7 @@ no separate JSON field is added.
 | `dependents` | `dependents(options)` |
 | `effects` | `effects(options)` |
 | `exportsOf` | `exportsOf(options)` |
+| `postgresLockInventory` | `postgresLockInventory(options)` |
 | `generatePostgresCatalog` | `generatePostgresCatalog(options)` |
 | `parsePostgresSql` | `parsePostgresSql(sourceOrSources)` |
 | `extractExecutedPostgresSql` | `extractExecutedPostgresSql({ sources, importSpecifier })` |
@@ -1002,3 +1004,17 @@ to `advise`. The canonical `unanalyzable` option uses the exported `Unanalyzable
 type and takes precedence over `unanalyzableSql`. Its `report` mode also emits
 advice and `ignore` suppresses diagnostic advice. Proven grouping findings stay
 advisory in every mode.
+
+### PostgreSQL lock inventory
+
+`await postgresLockInventory({ root, config, writeBaseline: false })` returns
+the `LockInventoryReport` fields `sites`, category `counts`, `unanalyzed` SQL
+inputs, `baselineFile`, `added`, `removed`, and `baselineUpdated`, plus optional
+invocation metadata such as `jobsPoolWarning`. Site keys ignore comments and
+whitespace; SQL token changes create new keys. With `writeBaseline: true`, a
+missing baseline is initialized from the analyzed sites. An existing baseline
+can only shrink by pruning stale entries and refuses added sites. Both paths
+refuse unresolved SQL. The command and this asynchronous API share one prepared
+analysis. Ordinary `check()` and `analyzeProject()` check reports use the same
+rule and standard suppressions. See the [rule](rules/postgres-lock-inventory.md)
+and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.

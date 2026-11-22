@@ -77,6 +77,7 @@ export interface DiagnosticOperations {
   lockStatus: typeof Api.lockStatus;
   lockfileDiff: typeof Api.lockfileDiff;
   parsePostgresSql: typeof Api.parsePostgresSql;
+  postgresLockInventory: typeof Api.postgresLockInventory;
   playwrightCheck: typeof Api.playwrightCheck;
   playwrightEdges: typeof Api.playwrightEdges;
   playwrightRelated: typeof Api.playwrightRelated;

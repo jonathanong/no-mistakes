@@ -54,6 +54,10 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &Field, refs: &mut Vec<R
         "markdown-structure-budget" => {
             paths_at(value, "baselineFile", field, Kind::File, refs);
         }
+        "postgres-lock-inventory" => {
+            paths_at(value, "baselineFile", field, Kind::File, refs);
+            paths_at(value, "baseline", field, Kind::File, refs);
+        }
         "nextjs-redirect-destinations" => {
             paths_at(value, "configPath", field, Kind::File, refs);
             paths_at(value, "appRoot", field, Kind::Directory, refs);

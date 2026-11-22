@@ -1,9 +1,32 @@
 use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, Statement};
+use oxc_span::Span;
 use std::num::NonZeroU32;
 
 pub(super) type Completed = crate::fx::FxHashSet<(u32, NonZeroU32)>;
+
+pub(super) fn scoped_transaction(
+    visitor: &ScopeVisitor<'_>,
+    name: &str,
+    position: u32,
+) -> Option<Span> {
+    let span = visitor
+        .scoped
+        .transactions
+        .get(name)?
+        .iter()
+        .filter(|span| span.start <= position && position < span.end)
+        .max_by_key(|span| span.start)?;
+    let binding = visitor
+        .scopes
+        .iter()
+        .rev()
+        .find_map(|scope| scope.get(name));
+    (binding.and_then(|value| value.value_identity)
+        == super::transaction::source_identity(span.start))
+    .then_some(*span)
+}
 
 type Identities = Vec<Vec<(String, Option<NonZeroU32>)>>;
 pub(super) struct Snapshot {
