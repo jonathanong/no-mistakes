@@ -46,7 +46,7 @@ fn scheduler_template(call: &CallExpression<'_>) -> (Option<String>, JobOptionEv
             None,
             JobOptionEvidence {
                 member: Some("opts".to_string()),
-                spreads: vec![id.name.to_string()],
+                spreads: vec![(&**id).into()],
                 ..JobOptionEvidence::default()
             },
         ),
@@ -85,10 +85,12 @@ fn note_flow_node<'a>(
     let queue_name = members.queue_name();
     let evidence = new_node.then(|| flow_opts(object)).flatten();
     let known_spreads = evidence.as_ref().is_some_and(|evidence| {
-        evidence
-            .spreads
-            .iter()
-            .all(|name| visitor.facts.const_objects.contains_key(name))
+        evidence.spreads.iter().all(|spread| {
+            visitor
+                .object_bindings
+                .lookup(&spread.name, spread.at)
+                .is_some_and(|binding| binding.value.is_some())
+        })
     });
     push_site(
         visitor,
@@ -131,7 +133,7 @@ fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
                             pending.clear();
                         }
                     }
-                    Expression::Identifier(id) => pending.push(id.name.to_string()),
+                    Expression::Identifier(id) => pending.push((&**id).into()),
                     _ => return None,
                 }
             }

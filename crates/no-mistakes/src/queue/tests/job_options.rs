@@ -126,6 +126,26 @@ fn required_job_options_are_reported() {
         finding.job.as_deref(),
         Some("defaults-from-known-spread" | "defaults-after-known")
     )));
+    let scoped_jobs = findings
+        .iter()
+        .filter(|finding| finding.file == "scoped-options.ts")
+        .map(|finding| finding.job.as_deref().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        scoped_jobs,
+        ["incomplete-second", "incomplete-first", "outer-opts"]
+    );
+    let shadowed = report
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| {
+            diagnostic.file == "scoped-options.ts" && diagnostic.message.starts_with("job options")
+        })
+        .map(|diagnostic| source_line(&root, &diagnostic.file, diagnostic.line))
+        .collect::<Vec<_>>();
+    assert_eq!(shadowed.len(), 2, "{shadowed:?}");
+    assert!(shadowed[0].contains("opaque-shadow"), "{shadowed:?}");
+    assert!(shadowed[1].contains("parameter-shadow"), "{shadowed:?}");
     let mut rows = Vec::new();
     for finding in findings {
         rows.push(serde_json::json!({
@@ -270,6 +290,29 @@ fn recursive_flow_children_abstain() {
     assert!(source_line(&root, &diagnostic.file, diagnostic.line).contains("cyclic-child"));
 }
 
+#[test]
+fn mutually_recursive_flow_children_abstain() {
+    let root = fixture("job-options");
+    let report = analyze_project(&root, None, &[]).unwrap();
+    let file = "flow-mutual-child-cycle.ts";
+    assert!(report
+        .check
+        .iter()
+        .all(|finding| finding.file != file || finding.kind != "missing-job-option"));
+    let diagnostics = report
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| {
+            diagnostic.file == file && diagnostic.message.starts_with("job options")
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+    assert!(diagnostics[0]
+        .message
+        .ends_with("the options object is not statically known"));
+    assert!(source_line(&root, file, diagnostics[0].line).contains("draw-child"));
+}
+
 fn required_option_rows(file: &str) -> Vec<(String, String, String)> {
     let report = analyze_project(&fixture("job-options"), None, &[]).unwrap();
     report
@@ -329,7 +372,7 @@ queues:
 }
 
 #[test]
-fn stamp_keeps_a_policy_already_on_the_facts() {
+fn stamp_clears_previous_requirements_when_the_selected_config_is_empty() {
     let policy = RequiredJobOptions {
         global: vec!["attempts".to_string()],
         by_queue: BTreeMap::new(),
@@ -340,11 +383,13 @@ fn stamp_keeps_a_policy_already_on_the_facts() {
         ..FileFacts::default()
     };
     facts.insert(PathBuf::from("widgets.ts"), file);
-    crate::queue::job_options::stamp_unconfigured(Path::new("/no/such"), &mut facts);
-    assert_eq!(
-        facts.values().next().unwrap().required_job_options,
-        Some(policy)
-    );
+    crate::queue::job_options::stamp(&mut facts, &Default::default());
+    assert!(facts
+        .values()
+        .next()
+        .unwrap()
+        .required_job_options
+        .is_none());
 }
 
 #[test]

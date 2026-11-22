@@ -336,6 +336,36 @@ expression: snapshot
     },
     {
       "kind": "missing-job-option",
+      "file": "scoped-options.ts",
+      "line": 12,
+      "queueFile": "scoped-options.ts",
+      "queueName": "scope",
+      "job": "incomplete-second",
+      "message": "job options missing attempts",
+      "sourceLine": "queue.add(\"incomplete-second\", {}, { ...opts });"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "scoped-options.ts",
+      "line": 17,
+      "queueFile": "scoped-options.ts",
+      "queueName": "scope",
+      "job": "incomplete-first",
+      "message": "job options missing attempts",
+      "sourceLine": "queue.add(\"incomplete-first\", {}, options);"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "scoped-options.ts",
+      "line": 34,
+      "queueFile": "scoped-options.ts",
+      "queueName": "scope",
+      "job": "outer-opts",
+      "message": "job options missing attempts",
+      "sourceLine": "queue.add(\"outer-opts\", {}, opts);"
+    },
+    {
+      "kind": "missing-job-option",
       "file": "skipped-file.ts",
       "line": 4,
       "queueFile": "queues.ts",
@@ -515,6 +545,12 @@ expression: snapshot
       "sourceLine": "children: [{ ...cycle, name: \"cyclic-child\", opts: { priority: 1 } }],"
     },
     {
+      "file": "flow-mutual-child-cycle.ts",
+      "line": 6,
+      "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "children: [{ ...draw, name: \"draw-child\", opts: { priority: 1 } }],"
+    },
+    {
       "file": "flow-queue-spreads.ts",
       "line": 12,
       "message": "job options were not judged because the queue name did not resolve",
@@ -597,6 +633,18 @@ expression: snapshot
       "line": 23,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.upsertJobScheduler(\"called\", { every: 1000 }, makeTemplate());"
+    },
+    {
+      "file": "scoped-options.ts",
+      "line": 29,
+      "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "queue.add(\"opaque-shadow\", {}, opts);"
+    },
+    {
+      "file": "scoped-options.ts",
+      "line": 32,
+      "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "queue.add(\"parameter-shadow\", {}, { ...opts });"
     }
   ]
 }

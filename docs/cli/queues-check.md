@@ -128,7 +128,8 @@ member leaves it intact. A later known write can replace an earlier unknown
 spread or computed key. A later unknown spread or computed key can overwrite
 the known member and makes the defaults unresolved. A flow node folds
 a spread of a statically known object the same way `queue.add` folds its
-options object, including a const object and a const alias of one. Identifier
+options object, including a const object and a const alias of one. Each
+identifier resolves to the declaration visible at its use. Identifier
 spreads stay in source order: a later known `opts` object replaces earlier
 keys, and a later object without `opts` does not erase them. A later known
 `queueName` sets the queue used for per-queue overrides. A spread that may

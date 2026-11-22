@@ -69,6 +69,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                             root,
                             prepared_tsconfig_catalog,
                             queues_enabled,
+                            config,
                             facts,
                             &session,
                         )

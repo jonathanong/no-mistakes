@@ -1,12 +1,13 @@
-use super::super::extract_model::JobOptionEvidence;
+use super::super::extract_model::{FileFacts, JobOptionEvidence, JobOptionSpread};
+use super::super::object_bindings::ObjectBindings;
+use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
-use std::collections::{HashMap, HashSet};
 
 pub(super) fn read(expr: &Expression<'_>) -> JobOptionEvidence {
     match expr.get_inner_expression() {
         Expression::ObjectExpression(object) => read_object(object),
         Expression::Identifier(id) => JobOptionEvidence {
-            spreads: vec![id.name.to_string()],
+            spreads: vec![(&**id).into()],
             ..JobOptionEvidence::default()
         },
         _ => JobOptionEvidence::open(),
@@ -28,7 +29,7 @@ pub(super) fn read_object(object: &ObjectExpression<'_>) -> JobOptionEvidence {
             ObjectPropertyKind::SpreadProperty(spread) => {
                 match spread.argument.get_inner_expression() {
                     Expression::ObjectExpression(inner) => out.absorb(&read_object(inner)),
-                    Expression::Identifier(id) => out.spreads.push(id.name.to_string()),
+                    Expression::Identifier(id) => out.spreads.push((&**id).into()),
                     _ => out.open = true,
                 }
             }
@@ -68,59 +69,88 @@ pub(super) fn read_member_with(
     evidence
 }
 
-pub(super) fn resolve_objects(
-    raw: &HashMap<String, JobOptionEvidence>,
-) -> HashMap<String, JobOptionEvidence> {
-    let mut memo = HashMap::new();
-    let mut names: Vec<&String> = raw.keys().collect();
-    names.sort();
-    let mut stack = HashSet::new();
-    for name in names {
-        resolve_one(name, raw, &mut memo, &mut stack);
-    }
-    memo
-}
-
-fn resolve_one(
-    name: &str,
-    raw: &HashMap<String, JobOptionEvidence>,
-    memo: &mut HashMap<String, JobOptionEvidence>,
-    stack: &mut HashSet<String>,
-) -> JobOptionEvidence {
-    if let Some(done) = memo.get(name) {
-        return done.clone();
-    }
-    let Some(item) = raw.get(name) else {
-        return JobOptionEvidence::open();
+pub(in crate::queue) fn finish(facts: &mut FileFacts, bindings: &ObjectBindings<'_>) {
+    let mut resolver = SpreadResolver {
+        bindings,
+        objects: FxHashMap::default(),
+        members: FxHashMap::default(),
+        active: FxHashSet::default(),
     };
-    if !stack.insert(name.to_string()) {
-        return JobOptionEvidence::open();
-    }
-    let mut out = JobOptionEvidence {
-        keys: item.keys.clone(),
-        open: item.open,
-        ..JobOptionEvidence::default()
-    };
-    for spread in &item.spreads {
-        out.absorb(&resolve_one(spread, raw, memo, stack));
-    }
-    stack.remove(name);
-    memo.insert(name.to_string(), out.clone());
-    out
-}
-
-pub(super) fn apply_evidence(
-    evidence: &mut JobOptionEvidence,
-    objects: &HashMap<String, JobOptionEvidence>,
-) {
-    for spread in std::mem::take(&mut evidence.spreads) {
-        match objects.get(&spread) {
-            Some(other) => {
-                evidence.keys.extend(other.keys.iter().cloned());
-                evidence.open |= other.open;
-            }
-            None => evidence.open = true,
+    for site in &mut facts.job_option_sites {
+        if site.evidence.member.take().is_some() {
+            resolver.fold_members(&mut site.evidence);
+        } else {
+            resolver.fold_keys(&mut site.evidence);
         }
     }
-    evidence.member = None;
+}
+
+struct SpreadResolver<'binding, 'ast> {
+    bindings: &'binding ObjectBindings<'ast>,
+    objects: FxHashMap<u32, JobOptionEvidence>,
+    members: FxHashMap<u32, Option<JobOptionEvidence>>,
+    active: FxHashSet<u32>,
+}
+
+impl SpreadResolver<'_, '_> {
+    fn fold_keys(&mut self, evidence: &mut JobOptionEvidence) {
+        for spread in std::mem::take(&mut evidence.spreads) {
+            evidence.absorb(&self.option_keys(&spread));
+        }
+    }
+
+    fn fold_members(&mut self, evidence: &mut JobOptionEvidence) {
+        for spread in std::mem::take(&mut evidence.spreads) {
+            if let Some(member) = self.opts_member(&spread) {
+                *evidence = member;
+            }
+        }
+    }
+
+    fn option_keys(&mut self, spread: &JobOptionSpread) -> JobOptionEvidence {
+        let Some((declaration, value)) = self.value(spread) else {
+            return JobOptionEvidence::open();
+        };
+        if let Some(found) = self.objects.get(&declaration) {
+            return found.clone();
+        }
+        if !self.active.insert(declaration) {
+            return JobOptionEvidence::open();
+        }
+        let mut evidence = read(value);
+        self.fold_keys(&mut evidence);
+        self.active.remove(&declaration);
+        self.objects.insert(declaration, evidence.clone());
+        evidence
+    }
+
+    fn opts_member(&mut self, spread: &JobOptionSpread) -> Option<JobOptionEvidence> {
+        let Some((declaration, value)) = self.value(spread) else {
+            return Some(JobOptionEvidence::open());
+        };
+        if let Some(found) = self.members.get(&declaration) {
+            return found.clone();
+        }
+        if !self.active.insert(declaration) {
+            return Some(JobOptionEvidence::open());
+        }
+        let member = match value {
+            Expression::ObjectExpression(object) => read_member(object, "opts").map(|mut opts| {
+                self.fold_keys(&mut opts);
+                opts
+            }),
+            Expression::Identifier(id) => self.opts_member(&(&**id).into()),
+            _ => Some(JobOptionEvidence::open()),
+        };
+        self.active.remove(&declaration);
+        self.members.insert(declaration, member.clone());
+        member
+    }
+}
+
+impl<'ast> SpreadResolver<'_, 'ast> {
+    fn value(&self, spread: &JobOptionSpread) -> Option<(u32, &'ast Expression<'ast>)> {
+        let binding = self.bindings.lookup(&spread.name, spread.at)?;
+        Some((binding.resolve_at, binding.value?))
+    }
 }

@@ -92,6 +92,7 @@ fn aggregate_queue_check_reports_selected_parse_failures_without_negative_findin
     assert!(analyze_project_with_prepared_facts_and_catalog_and_session(
         &root,
         &catalog,
+        &Default::default(),
         &[],
         &facts,
         &session,
@@ -101,6 +102,7 @@ fn aggregate_queue_check_reports_selected_parse_failures_without_negative_findin
     let report = analyze_project_with_prepared_facts_and_catalog_and_session(
         &root,
         &catalog,
+        &Default::default(),
         &[],
         &facts,
         &session,

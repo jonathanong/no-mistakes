@@ -1,6 +1,6 @@
 use crate::fx::{FxHashMap, FxHashSet};
 use crate::queue::extract_helpers::static_string;
-use crate::queue::lazy_object_bindings::LazyObjectBindings;
+use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 
@@ -62,7 +62,7 @@ impl<'node, 'ast> FlowMembers<'node, 'ast> {
 
 pub(super) fn read<'node, 'ast>(
     object: &'node ObjectExpression<'ast>,
-    bindings: &LazyObjectBindings<'ast>,
+    bindings: &ObjectBindings<'ast>,
 ) -> FlowMembers<'node, 'ast> {
     Reader {
         bindings,
@@ -73,7 +73,7 @@ pub(super) fn read<'node, 'ast>(
 }
 
 struct Reader<'bindings, 'ast> {
-    bindings: &'bindings LazyObjectBindings<'ast>,
+    bindings: &'bindings ObjectBindings<'ast>,
     memo: FxHashMap<u32, FlowMembers<'ast, 'ast>>,
     active: FxHashSet<u32>,
 }

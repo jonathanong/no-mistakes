@@ -80,6 +80,7 @@ fn prepared_catalog_keeps_symlinked_queue_producers_and_workers_in_one_namespace
     let report = analyze_project_with_prepared_facts_and_catalog_and_session(
         &root,
         &catalog,
+        &Default::default(),
         &[],
         &facts,
         &session,
@@ -135,6 +136,7 @@ fn prepared_catalog_indexed_queue_report_matches_plain_report_for_package_aliase
     let plain = analyze_project_with_prepared_facts_and_catalog_and_session(
         &root,
         &catalog,
+        &Default::default(),
         &[],
         &facts,
         &session,
@@ -143,6 +145,7 @@ fn prepared_catalog_indexed_queue_report_matches_plain_report_for_package_aliase
     let indexed = analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
         &root,
         &catalog,
+        &Default::default(),
         &[],
         &facts,
         &session,

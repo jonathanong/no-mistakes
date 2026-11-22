@@ -1,4 +1,4 @@
-use super::extract_model::{FileFacts, JobOptionEvidence, RequiredJobOptions};
+use super::extract_model::{FileFacts, RequiredJobOptions};
 use super::graph_model::CheckFinding;
 use super::source::relative_string;
 use crate::config::v2::schema::QueuesTopLevelConfig;
@@ -22,95 +22,18 @@ pub(crate) use defaults::{
     note_argument_options, note_constructed_defaults, note_factory_defaults,
 };
 pub(crate) use judge::judge_into_facts;
-pub(crate) use note::{note_call, note_consts};
+pub(crate) use note::note_call;
+pub(super) use walk::finish;
 
 pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopLevelConfig) {
-    if queues.required_job_options.is_empty() && queues.required_job_options_by_queue.is_empty() {
-        return;
-    }
-    let policy = RequiredJobOptions {
+    let policy = (!queues.required_job_options.is_empty()
+        || !queues.required_job_options_by_queue.is_empty())
+    .then(|| RequiredJobOptions {
         global: queues.required_job_options.clone(),
         by_queue: queues.required_job_options_by_queue.clone(),
-    };
+    });
     for file in facts.values_mut() {
-        file.required_job_options = Some(policy.clone());
-    }
-}
-
-pub(crate) fn stamp_unconfigured(root: &Path, facts: &mut HashMap<PathBuf, FileFacts>) {
-    if facts
-        .values()
-        .any(|file| file.required_job_options.is_some())
-    {
-        return;
-    }
-    if let Ok(config) = crate::config::v2::load_v2_config(root, None) {
-        stamp(facts, &config.queues);
-    }
-}
-
-pub(super) fn finish(facts: &mut FileFacts) {
-    let raw_objects = std::mem::take(&mut facts.const_objects);
-    let objects = walk::resolve_objects(&raw_objects);
-    let mut opts = std::mem::take(&mut facts.const_opts);
-    apply_map(&mut opts, &objects);
-    for site in &mut facts.job_option_sites {
-        if site.evidence.member.as_deref() == Some("opts") {
-            fold_opts_spreads(&mut site.evidence, &opts, &objects, &raw_objects);
-        } else {
-            walk::apply_evidence(&mut site.evidence, &objects);
-        }
-    }
-}
-
-fn fold_opts_spreads(
-    evidence: &mut JobOptionEvidence,
-    opts: &HashMap<String, JobOptionEvidence>,
-    objects: &HashMap<String, JobOptionEvidence>,
-    raw: &HashMap<String, JobOptionEvidence>,
-) {
-    let names = std::mem::take(&mut evidence.spreads);
-    evidence.member = None;
-    let mut open = false;
-    for name in &names {
-        if let Some(found) = opts_for(name, opts, raw) {
-            *evidence = found.clone();
-            open = false;
-        } else if !objects.contains_key(name) {
-            open = true;
-        }
-    }
-    if open {
-        *evidence = JobOptionEvidence::open();
-    }
-}
-
-fn opts_for<'a>(
-    name: &str,
-    opts: &'a HashMap<String, JobOptionEvidence>,
-    raw: &HashMap<String, JobOptionEvidence>,
-) -> Option<&'a JobOptionEvidence> {
-    if let Some(found) = opts.get(name) {
-        return Some(found);
-    }
-    let item = raw.get(name)?;
-    if item.keys.is_empty() && item.spreads.len() == 1 {
-        return opts.get(&item.spreads[0]);
-    }
-    None
-}
-
-fn apply_map(
-    map: &mut HashMap<String, JobOptionEvidence>,
-    objects: &HashMap<String, JobOptionEvidence>,
-) {
-    let mut names: Vec<String> = map.keys().cloned().collect();
-    names.sort();
-    for name in names {
-        if let Some(mut evidence) = map.remove(&name) {
-            walk::apply_evidence(&mut evidence, objects);
-            map.insert(name, evidence);
-        }
+        file.required_job_options.clone_from(&policy);
     }
 }
 

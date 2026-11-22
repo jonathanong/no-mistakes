@@ -11,9 +11,6 @@ impl<'a> QueueVisitor<'a> {
         let previous = self.binding_is_const;
         self.binding_is_const = decl.kind == oxc_ast::ast::VariableDeclarationKind::Const;
         self.note_wait_aliases(decl);
-        if decl.kind.is_const() {
-            super::super::job_options::note_consts(self, decl);
-        }
         super::super::extract_factory::visit_variable_declaration(self, decl);
         self.binding_is_const = previous;
     }

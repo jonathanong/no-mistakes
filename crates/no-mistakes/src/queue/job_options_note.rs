@@ -1,47 +1,9 @@
-use super::super::extract_helpers::binding_name;
 use super::super::extract_model::{JobOptionEvidence, ProducerBinding};
 use super::super::extract_visitor::QueueVisitor;
 use super::site::{evidence_at, job_at, member_string, push_site};
-use super::walk::{read_member, read_object};
-use oxc_ast::ast::{
-    ArrayExpressionElement, CallExpression, Expression, ObjectExpression, VariableDeclaration,
-};
+use super::walk::read_member;
+use oxc_ast::ast::{ArrayExpressionElement, CallExpression, Expression, ObjectExpression};
 use oxc_span::GetSpan;
-
-pub(crate) fn note_consts(visitor: &mut QueueVisitor<'_>, decl: &VariableDeclaration<'_>) {
-    for declarator in &decl.declarations {
-        let Some(name) = binding_name(&declarator.id) else {
-            continue;
-        };
-        let Some(init) = &declarator.init else {
-            continue;
-        };
-        match init.get_inner_expression() {
-            Expression::ObjectExpression(object) => record_const(&mut visitor.facts, name, object),
-            Expression::Identifier(id) => {
-                visitor.facts.const_objects.insert(
-                    name,
-                    JobOptionEvidence {
-                        spreads: vec![id.name.to_string()],
-                        ..JobOptionEvidence::default()
-                    },
-                );
-            }
-            _ => {}
-        }
-    }
-}
-
-fn record_const(
-    facts: &mut super::super::extract_model::FileFacts,
-    name: String,
-    object: &ObjectExpression<'_>,
-) {
-    if let Some(opts) = read_member(object, "opts") {
-        facts.const_opts.insert(name.clone(), opts);
-    }
-    facts.const_objects.insert(name, read_object(object));
-}
 
 pub(crate) fn note_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpression<'a>) {
     let Expression::StaticMemberExpression(member) = &call.callee else {
@@ -68,7 +30,11 @@ pub(crate) fn note_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpressio
             }
         }
         "addBulk" => note_bulk(visitor, call, binding),
-        "upsertJobScheduler" => super::flow::note_scheduler(visitor, call, binding),
+        "upsertJobScheduler"
+            if !visitor.facts.imports.is_empty() || !visitor.namespace_imports.is_empty() =>
+        {
+            super::flow::note_scheduler(visitor, call, binding);
+        }
         _ => {}
     }
 }

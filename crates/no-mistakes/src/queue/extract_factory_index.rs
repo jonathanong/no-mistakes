@@ -1,9 +1,7 @@
 //! Index local processors and scoped bindings using the prepared AST.
 use crate::fx::FxHashMap;
-use crate::queue::object_bindings::{
-    Collector as ObjectBindingCollector, ObjectBindings,
-};
 use crate::queue::extract_helpers::{binding_name, export_name, is_queue_package};
+use crate::queue::object_bindings::{Collector as ObjectBindingCollector, ObjectBindings};
 use oxc_ast::ast::*;
 use oxc_ast::ast_kind::AstKind;
 use oxc_ast_visit::{walk, Visit};

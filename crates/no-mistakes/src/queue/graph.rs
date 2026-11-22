@@ -1,3 +1,4 @@
+use crate::config::v2::NoMistakesConfig;
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_build::{build_prepared_report, build_report};
 use crate::queue::graph_model::PreparedProjectReport;
@@ -66,7 +67,7 @@ fn analyze_project_with_facts_inner<T>(
     let root = root.as_path();
     let tsconfig = load_tsconfig_from_visible(root, tsconfig_path, shared.files())?;
     let filter = build_filter(filters)?;
-    Ok(resolve_queue_relationships(
+    Ok(resolve_legacy_queue_relationships(
         root,
         &tsconfig,
         filter.as_ref(),
@@ -98,17 +99,19 @@ pub fn analyze_project_with_prepared_facts(
 pub fn analyze_project_with_prepared_facts_and_catalog_and_session(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    config: &NoMistakesConfig,
     filters: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> anyhow::Result<ProjectReport> {
-    catalog::analyze(root, tsconfig_catalog, filters, shared, session)
+    catalog::analyze(root, tsconfig_catalog, config, filters, shared, session)
 }
 
 #[doc(hidden)]
 pub fn analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    config: &NoMistakesConfig,
     filters: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -116,6 +119,7 @@ pub fn analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
     catalog::analyze_with(
         root,
         tsconfig_catalog,
+        config,
         filters,
         shared,
         session,
@@ -154,7 +158,7 @@ fn analyze_project_with_prepared_facts_inner<T>(
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let root = root.as_path();
     let filter = build_filter(filters)?;
-    Ok(resolve_queue_relationships(
+    Ok(resolve_legacy_queue_relationships(
         root,
         tsconfig,
         filter.as_ref(),
@@ -163,7 +167,7 @@ fn analyze_project_with_prepared_facts_inner<T>(
     ))
 }
 
-fn resolve_queue_relationships<T>(
+fn resolve_legacy_queue_relationships<T>(
     root: &Path,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     filter: Option<&globset::GlobSet>,
@@ -175,7 +179,12 @@ fn resolve_queue_relationships<T>(
         &HashMap<PathBuf, FileFacts>,
     ) -> T,
 ) -> T {
-    let facts = queue_project_facts_from_shared(shared, filter, root);
+    let mut facts = queue_project_facts_from_shared(shared, filter, root);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    if let Ok(config) = session.dataset(root).config(None) {
+        crate::queue::job_options::stamp(&mut facts, &config.queues);
+    }
     let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let resolver = queue_import_resolver(tsconfig, root, &visible_files);
     resolve_queue_relationships_with_resolver(root, &facts, &resolver, builder)
