@@ -399,7 +399,6 @@ remain failures. See
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dependencies`                             | `dependencies(options)`                                                                                                                                                                                                                                                    |
 | `dependents`                               | `dependents(options)`                                                                                                                                                                                                                                                      |
-| `related`                                  | `related(options)`                                                                                                                                                                                                                                                         |
 | `symbols`                                  | `symbols(options)`                                                                                                                                                                                                                                                         |
 | `import-usages`                            | `importUsages(options)`                                                                                                                                                                                                                                                    |
 | `importers`                                | `importers(options)`                                                                                                                                                                                                                                                       |
@@ -458,6 +457,15 @@ Import the exported `QueueWaitFindingKind` type for the wait-specific values
 other finding kinds. Declaration findings carry fix guidance in `message`;
 no separate JSON field is added.
 
+## Deprecated APIs
+
+`related(options)` is a deprecated compatibility alias for `dependents(options)`.
+Its CommonJS, ESM, and TypeScript exports remain available with `@deprecated`
+annotations and unchanged options, async results, and errors. Node calls do not
+print the CLI warning. For batched calls, use `{ type: "dependents", files: [...] }`
+in `analyzeProject()`; `{ type: "related", ... }` remains supported.
+See the [migration guide](migrations/deprecated-surfaces.md).
+
 ## Runtime exports
 
 | Runtime export | API |
@@ -502,7 +510,7 @@ no separate JSON field is added.
 | `reactCheck` | `reactCheck(options)` |
 | `reactUsages` | `reactUsages(options)` |
 | `registryExtension` | `registryExtension(options)` |
-| `related` | `related(options)` |
+| `related` | `related(options)`; deprecated, use `dependents(options)` |
 | `resolveCheck` | `resolveCheck(options)` |
 | `resolveConfig` | `resolveConfig(options)` returns the existing resolved report; `resolveConfig({ view: "declared" })` returns `DeclaredConfig` through the same async `resolveConfigJson` binding. |
 | `lockStatus` | `lockStatus()` |

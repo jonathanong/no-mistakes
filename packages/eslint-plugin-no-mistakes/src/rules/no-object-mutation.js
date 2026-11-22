@@ -21,6 +21,10 @@ function normalizeOptions(option) {
 module.exports = {
   meta: {
     type: "problem",
+    deprecated: {
+      message: "This opt-in rule has no replacement.",
+      replacedBy: [],
+    },
     docs: {
       description: "disallow mutations that make shared objects statically unknowable",
       recommended: false,

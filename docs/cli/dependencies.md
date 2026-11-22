@@ -100,6 +100,7 @@ conservatively; an invalid explicit `--tsconfig` remains an error.
 
 `FILE#SYMBOL` is meaningful for `--relationship call`, where it selects the
 callable instead of the whole file. For other relationships, symbol filtering
-is for [`dependents`](dependents.md) and [`related`](related.md).
+is for [`dependents`](dependents.md), including its deprecated
+[`related`](related.md) compatibility alias.
 
 Node API: `dependencies(options)`.

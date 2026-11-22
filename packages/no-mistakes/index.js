@@ -153,6 +153,7 @@ module.exports.reactAnalyze = jsonApis.reactAnalyze;
 module.exports.reactCheck = jsonApis.reactCheck;
 module.exports.reactUsages = jsonApis.reactUsages;
 module.exports.registryExtension = jsonApis.registryExtension;
+/** @deprecated Use dependents() instead. */
 module.exports.related = jsonApis.related;
 module.exports.resolveCheck = jsonApis.resolveCheck;
 module.exports.rscCallers = jsonApis.rscCallers;

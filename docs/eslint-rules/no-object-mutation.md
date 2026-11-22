@@ -1,5 +1,8 @@
 # `no-mistakes/no-object-mutation`
 
+> Deprecated with no replacement. Existing explicit configurations remain supported
+> and keep producing the same lint findings. See the [migration guide](../migrations/deprecated-surfaces.md).
+
 Opt-in. Enabling this rule does not change the analyzer. A file that skips the
 rule can still mutate, and a write the analyzer cannot follow stays Unknown.
 
