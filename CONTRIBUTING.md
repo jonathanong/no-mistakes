@@ -287,3 +287,37 @@ machine:
 - Keep worktrees and target directories where a reboot will not delete them,
   and commit and push early so a crash loses no work.
 - Delete throwaway target directories as soon as they are no longer needed.
+
+## Deprecations
+
+Before deprecating a command, compare every supported input, option, scope, and
+report capability with its proposed replacement. Keep a surface maintained when
+its replacement cannot answer the same query, and record the gap in the PR and
+migration page. Removal requires a separate change; deprecation does not disable
+commands, rules, exports, or existing configurations.
+
+- Keep analysis results, CLI reports, lint findings and severity, options, and
+  exit codes unchanged.
+  A deprecated CLI command writes one best-effort warning line to stderr from
+  its dispatch boundary, naming the replacement or stating that none exists.
+  Never add the warning to stdout or a JSON report, and never fail because the
+  warning could not be written. Help and argument parsing retain their normal
+  behavior before command dispatch.
+- Mark the matching Node API function in the CommonJS/ESM facades and `.d.ts`
+  export with `@deprecated`. Keep invocation behavior unchanged; do not add
+  runtime logging to Node calls. Document the canonical batched report type.
+- For ESLint rules, use native `meta.deprecated` with a message and replacement
+  information (`replacedBy: []` when none exists). Do not add a lint finding,
+  alter diagnostics, or use process-global warning state. ESLint owns
+  `usedDeprecatedRules` result metadata and its presentation; plugins have no
+  per-invocation stderr hook. Document that metadata exception to JSON parity.
+- Open each deprecated page with its status and replacement. Route active
+  indexes and the packaged agent skill to maintained surfaces. Keep deprecated
+  entries in labeled compatibility lists and in the complete Node runtime
+  export inventory. Add a migration page explaining all affected surfaces.
+- Use saved-fixture regressions to compare CLI stdout and exit status with the
+  maintained equivalent, assert one stderr warning, and cover error exits.
+  Keep lint diagnostic snapshots unchanged; test host deprecation metadata and
+  disabled-rule controls. Lock declaration annotations in the API tests.
+
+See [the initial surface migration](docs/migrations/deprecated-surfaces.md).

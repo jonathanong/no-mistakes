@@ -88,7 +88,6 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | --------------------------------------------------------------------------- | ---------------------------------------------- |
 | [`no-delete-property`](no-delete-property.md)                               | Avoid in-place object-shape deletion.          |
 | [`no-locale-less-date-format`](no-locale-less-date-format.md) | Require explicit locales for configured formatting methods. |
-| [`no-object-mutation`](no-object-mutation.md)                               | Keep shared objects statically knowable.       |
 | [`no-placeholder-never-type-exports`](no-placeholder-never-type-exports.md) | Reject exported placeholder `never` aliases.   |
 | [`ts-no-const-aliases`](ts-no-const-aliases.md)                             | Reject differently named direct const aliases. |
 | [`ts-no-export-renaming`](ts-no-export-renaming.md)                         | Keep value-export identities direct.           |
@@ -109,3 +108,12 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 - [require-top-level-registration](require-top-level-registration.md) — configure module registration contracts.
 
 - [`no-top-level-await`](no-top-level-await.md) keeps async initialization out of module evaluation.
+
+## Deprecated rules
+
+These rules remain available for existing configurations and are not recommended
+for new adoption. See the [migration guide](../migrations/deprecated-surfaces.md).
+
+| Rule | Replacement |
+| --- | --- |
+| [`no-object-mutation`](no-object-mutation.md) | None. Existing opt-in enforcement is unchanged. |

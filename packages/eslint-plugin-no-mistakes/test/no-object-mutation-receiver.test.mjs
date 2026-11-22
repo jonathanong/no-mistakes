@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import tsParser from "@typescript-eslint/parser";
+import { ESLint } from "eslint";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { fixture, messages } from "./helpers.mjs";
+import { fixture, messages, plugin } from "./helpers.mjs";
 
 const rule = "no-object-mutation";
 const typed = "no-object-mutation-receiver.ts";
@@ -11,6 +12,24 @@ const jsControls = "no-object-mutation-receiver-controls.js";
 const languageOptions = { ecmaVersion: 2024, sourceType: "module", parser: tsParser };
 const savedCase = (name, options) => ({ code: fixture(name), filename: name, options });
 const mutations = (count) => Array.from({ length: count }, () => "mutation");
+
+it.each([
+  ["error", [{ ruleId: "no-mistakes/no-object-mutation", info: { replacedBy: [] } }]],
+  ["off", []],
+])("reports rule deprecation metadata with severity %s", async (severity, deprecations) => {
+  const eslint = new ESLint({
+    overrideConfigFile: true,
+    overrideConfig: {
+      plugins: { "no-mistakes": plugin },
+      rules: { "no-mistakes/no-object-mutation": severity },
+    },
+  });
+
+  for (const filePath of [jsdoc, jsControls]) {
+    const [result] = await eslint.lintText(fixture(filePath), { filePath });
+    expect(result.usedDeprecatedRules).toMatchObject(deprecations);
+  }
+});
 
 describe("no-object-mutation declared receivers", () => {
   it("allows TypeScript this parameters and their lexical arrows", () => {

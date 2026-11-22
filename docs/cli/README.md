@@ -124,7 +124,6 @@ after the command name. See [Performance diagnostics](diagnostics.md).
 | --- | --- |
 | [`dependencies`](dependencies.md) | Files and modules reachable from changed files. |
 | [`dependents`](dependents.md) | Files, tests, and modules affected by changed files. |
-| [`related`](related.md) | Alias for `dependents`; useful when agents ask for impact. |
 | [`symbols`](symbols.md) | Named exports and imports in TS/JS files. |
 | [`import-usages`](import-usages.md) | Direct import usage rows for dependency declaration checks. |
 | [`importers`](importers.md) | Direct importers of one file, plus a dependents count. |
@@ -158,6 +157,15 @@ after the command name. See [Performance diagnostics](diagnostics.md).
 
 The [graph reference](graph.md) explains shared options and relationship
 filters used by the graph commands.
+
+## Deprecated commands
+
+Compatibility commands remain documented here, but new calls should use their
+replacement. See the [migration guide](../migrations/deprecated-surfaces.md).
+
+| Command | Replacement |
+| --- | --- |
+| [`related`](related.md) | [`dependents`](dependents.md) |
 
 ## Shared Output Formats
 

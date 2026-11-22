@@ -80,6 +80,68 @@ fn dependents_subcommand_outputs_reverse_imports() {
 }
 
 #[test]
+fn related_deprecation_preserves_reports_in_every_format() {
+    let root = fixture("simple");
+    let root = root.to_str().unwrap();
+    for format in ["json", "md", "yml", "paths", "human"] {
+        let related = run(&["related", "c.mts", "--root", root, "--format", format]);
+        let dependents = run(&["dependents", "c.mts", "--root", root, "--format", format]);
+
+        assert!(dependents.status.success(), "{dependents:?}");
+        assert_eq!(related.status, dependents.status, "{format}");
+        assert!(!dependents.stdout.is_empty(), "{format}");
+        assert_eq!(related.stdout, dependents.stdout, "{format}");
+        if format == "json" {
+            serde_json::from_slice::<serde_json::Value>(&related.stdout).unwrap();
+        }
+
+        let stderr = String::from_utf8_lossy(&related.stderr);
+        let warnings: Vec<_> = stderr
+            .lines()
+            .filter(|line| line.contains("deprecated"))
+            .collect();
+        assert_eq!(
+            warnings,
+            ["warning: `related` is deprecated. Use `dependents` instead."],
+            "{format}"
+        );
+        assert!(!String::from_utf8_lossy(&dependents.stderr).contains("deprecated"));
+    }
+}
+
+#[test]
+fn related_deprecation_preserves_command_errors() {
+    let root = fixture("simple");
+    let root = root.to_str().unwrap();
+    let related = run(&[
+        "related",
+        "c.mts",
+        "--root",
+        root,
+        "--candidate-include",
+        "c.mts",
+    ]);
+    let dependents = run(&[
+        "dependents",
+        "c.mts",
+        "--root",
+        root,
+        "--candidate-include",
+        "c.mts",
+    ]);
+    assert!(!dependents.status.success());
+    assert_eq!(related.status, dependents.status);
+    assert_eq!(related.stdout, dependents.stdout);
+
+    let stderr = String::from_utf8_lossy(&related.stderr);
+    let warning = "warning: `related` is deprecated. Use `dependents` instead.\n";
+    assert_eq!(stderr.matches(warning).count(), 1);
+    let error = "candidateInclude and candidateExclude are only valid for dependencies";
+    assert!(stderr.contains(error));
+    assert!(String::from_utf8_lossy(&dependents.stderr).contains(error));
+}
+
+#[test]
 fn symbols_subcommand_outputs_exports() {
     let root = fixture("simple");
     let output = run(&[

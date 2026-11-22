@@ -47,7 +47,12 @@ export const {
   reactCheck,
   reactUsages,
   registryExtension,
-  related,
+} = cjs;
+
+/** @deprecated Use dependents() instead. */
+export const related = cjs.related;
+
+export const {
   resolveCheck,
   resolveConfig,
   rscCallers,

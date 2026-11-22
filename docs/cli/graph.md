@@ -1,8 +1,9 @@
 # Graph Commands
 
-`dependencies`, `dependents`, and `related` query the canonical dependency
-graph. They share root, tsconfig, depth, relationship, test, module, and output
-filters. Omitted `--format` is human when stdout is a terminal and JSON otherwise.
+`dependencies` and `dependents` query the canonical dependency graph. They share
+root, tsconfig, depth, relationship, test, module, and output filters. Omitted
+`--format` is human when stdout is a terminal and JSON otherwise.
+The deprecated [`related`](related.md) alias remains compatible with `dependents`.
 
 When `--tsconfig` is omitted, graph commands select the config that owns each
 importing file among the discovered configs; otherwise the root tsconfig. A
@@ -16,7 +17,6 @@ compatibility with an existing single-config workflow.
 | --- | --- |
 | What this file imports | [`dependencies`](dependencies.md) |
 | What this file affects | [`dependents`](dependents.md) |
-| Impact phrased generically | [`related`](related.md) |
 
 Use `--relationship route-import` for the conservative runtime module closure
 used by Playwright route analysis. It includes runtime static imports/re-exports

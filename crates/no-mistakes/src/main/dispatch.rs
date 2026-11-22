@@ -1,5 +1,6 @@
 //! Command dispatch from the parsed CLI to each command module.
 use super::*;
+use std::io::{self, Write};
 
 enum CommandDispatch {
     Handled(ExitCode),
@@ -16,6 +17,11 @@ pub(super) fn run_command(command: Command) -> Result<ExitCode> {
     }
 }
 
+fn warn_deprecated_command(command: &str, replacement: &str) {
+    let message = format!("warning: `{command}` is deprecated. Use `{replacement}` instead.\n");
+    let _ = io::stderr().lock().write_all(message.as_bytes());
+}
+
 fn run_success(result: Result<()>) -> Result<CommandDispatch> {
     result?;
     Ok(CommandDispatch::Handled(ExitCode::SUCCESS))
@@ -24,7 +30,9 @@ fn run_success(result: Result<()>) -> Result<CommandDispatch> {
 fn run_codebase_command(command: Command) -> Result<CommandDispatch> {
     match command {
         Command::Dependencies(args) => run_success(dependencies::run(args, Direction::Deps)),
-        Command::Dependents(args) | Command::Related(args) => {
+        Command::Dependents(args) => run_success(dependencies::run(args, Direction::Dependents)),
+        Command::Related(args) => {
+            warn_deprecated_command("related", "dependents");
             run_success(dependencies::run(args, Direction::Dependents))
         }
         Command::Symbols(args) => run_success(symbols::run(args)),

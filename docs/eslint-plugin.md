@@ -145,6 +145,9 @@ including `.default()`.
 
 ### `no-object-mutation`
 
+Deprecated with no replacement; existing configured findings are unchanged. See
+the [migration guide](migrations/deprecated-surfaces.md).
+
 Opt-in. Not enabled by `configs.recommended` or `configs.strict`. `module`,
 `imported`, `parameters`, and `calls` default to `true`. `allowThis` defaults
 to `true` (class `this` writes are allowed). `allow` is a `string[]` of root

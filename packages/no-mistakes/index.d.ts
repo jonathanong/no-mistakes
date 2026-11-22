@@ -84,6 +84,7 @@ export function dependencies(
 export function dependents(
   options: WithInvocationOptions<TraverseOptions>,
 ): Promise<WithInvocationResult<DependencyResult>>;
+/** @deprecated Use dependents() instead. */
 export function related(
   options: WithInvocationOptions<TraverseOptions>,
 ): Promise<WithInvocationResult<DependencyResult>>;

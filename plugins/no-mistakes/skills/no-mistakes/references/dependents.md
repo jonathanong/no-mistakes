@@ -1,8 +1,9 @@
 # `no-mistakes dependents` — full reference
 
 Find every file that transitively imports the given file or named export.
-`related` is an alias of `dependents`, accepted by the CLI and as an
-`analyzeProject` report type.
+Use `dependents` for new calls and `analyzeProject` reports. The deprecated
+`related` alias remains compatible; executing that CLI alias emits a stderr
+warning without changing its report.
 
 ## When to use a different tool
 

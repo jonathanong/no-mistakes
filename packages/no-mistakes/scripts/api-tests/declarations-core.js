@@ -1,5 +1,18 @@
 const { assert, test, readFileSync, join, packageRoot } = require("./context");
 
+test("related remains declared as a deprecated alias for dependents", () => {
+  const declarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  assert.match(
+    declarations,
+    /\/\*\* @deprecated [^\n]*dependents\(\)[^\n]*\*\/\nexport function related\(/,
+  );
+  const esm = readFileSync(join(packageRoot, "index.mjs"), "utf8");
+  assert.match(
+    esm,
+    /\/\*\* @deprecated [^\n]*dependents\(\)[^\n]*\*\/\nexport const related = cjs\.related;/,
+  );
+});
+
 test("analyzeProject declarations mirror report-specific runtime requirements", () => {
   const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
   const analyzeProjectDeclarations = readFileSync(

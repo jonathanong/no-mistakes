@@ -1,12 +1,15 @@
 # `no-mistakes related`
 
-Alias for [`dependents`](dependents.md).
+> Deprecated. Use [`dependents`](dependents.md) for new calls.
+
+This compatibility alias accepts the same options and produces the same reports
+and exit codes as `dependents`. Executing it writes one deprecation warning to
+stderr; stdout is unchanged, including `--format json`.
 
 ```sh
-no-mistakes related web/app/users/page.tsx --format json
+no-mistakes dependents src/value.mts --format json
 ```
 
-Use this when an agent prompt asks “what is related to this change?” and the
-desired direction is downstream impact.
-
-Node API: `related(options)`.
+The async Node API `related(options)` remains available with an `@deprecated`
+tag. Use `dependents(options)` instead. Node calls do not print the CLI warning.
+See the [migration guide](../migrations/deprecated-surfaces.md).
