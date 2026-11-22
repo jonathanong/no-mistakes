@@ -28,6 +28,35 @@ fn embedded_sql_rule_scans_keep_distinct_path_filters() {
 }
 
 #[test]
+fn inventory_exact_origins_keep_legacy_executor_profiles_separate() {
+    let rules = ["postgres-no-offset", "postgres-lock-inventory"];
+    let mut config = NoMistakesConfig::default();
+    for rule in rules {
+        config.rules.push(RuleDef {
+            rule: rule.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("importSpecifier: '@example/db'\nexecutorNames: [query]")
+                .unwrap(),
+            ..RuleDef::default()
+        });
+    }
+
+    let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
+    assign_prepared_embedded_sql_options(&config, &mut plan).unwrap();
+    let legacy = EmbeddedSqlOptions::configured("@example/db", &["query".into()]);
+    let inventory = legacy.clone().with_exact_constant_origins();
+    assert_eq!(
+        plan.embedded_sql_options,
+        [legacy.clone(), inventory.clone()]
+    );
+    for (profile, rule) in [legacy, inventory].iter().zip(rules) {
+        let scans = &plan.embedded_sql_rule_ids[profile];
+        assert_eq!(scans.len(), 1);
+        assert_eq!(scans[0].rule_id, rule);
+    }
+}
+
+#[test]
 fn embedded_sql_rule_scan_rejects_an_invalid_glob() {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
