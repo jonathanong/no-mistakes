@@ -30,7 +30,7 @@ pub(super) struct QueueVisitor<'a> {
     pub queue_name_index: HashMap<String, usize>,
     pub enqueue_factories: HashMap<String, (usize, usize, Option<usize>)>,
     pub worker_factories: HashMap<String, (usize, usize)>,
-    pub scheduler_factories: HashMap<String, usize>,
+    pub scheduler_factories: crate::fx::FxHashMap<oxc_syntax::symbol::SymbolId, usize>,
     pub object_bindings: super::lazy_object_bindings::LazyObjectBindings<'a>,
     pub job_frames: Vec<JobFrame>,
     pub record_waits: bool,

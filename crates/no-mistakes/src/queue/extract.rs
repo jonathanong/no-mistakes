@@ -28,10 +28,12 @@ pub(crate) fn needs_scheduler_scoping(
     source: &str,
     roles: &crate::config::v2::schema::QueueFactoryRoles,
 ) -> bool {
-    roles
-        .job_scheduler
-        .iter()
-        .any(|role| source.contains(&role.callee))
+    !roles.job_scheduler.is_empty()
+        && (source.contains('\\')
+            || roles
+                .job_scheduler
+                .iter()
+                .any(|role| source.contains(&role.callee)))
 }
 
 pub(crate) fn extract_program_with_scoping(
@@ -67,6 +69,11 @@ fn extract_with_bindings<'a>(
     bindings: LazyObjectBindings<'a>,
 ) -> QueueVisitor<'a> {
     let program = bindings.program;
+    let scheduler_factories = if scoping.is_some() && needs_scheduler_scoping(source, roles) {
+        super::extract_factory::scheduler_factories(program, roles)
+    } else {
+        Default::default()
+    };
     let mut visitor = QueueVisitor {
         path,
         source,
@@ -85,7 +92,7 @@ fn extract_with_bindings<'a>(
         queue_name_index: HashMap::new(),
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
-        scheduler_factories: HashMap::new(),
+        scheduler_factories,
         object_bindings: bindings,
         job_frames: Vec::new(),
         record_waits,

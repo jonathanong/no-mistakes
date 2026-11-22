@@ -59,6 +59,18 @@ fn job_scheduler_templates_flag_literal_options_and_abstain_when_unknown() {
         .collect::<Vec<_>>();
     assert_eq!(factory_findings.len(), 1, "{factory_findings:?}");
     assert_eq!(factory_findings[0].line, 3);
+    let bound_before_import = findings
+        .iter()
+        .filter(|finding| finding.file == "factory-before-import.ts")
+        .collect::<Vec<_>>();
+    assert_eq!(bound_before_import.len(), 1, "{bound_before_import:?}");
+    assert_eq!(bound_before_import[0].line, 1);
+    let spread_findings = findings
+        .iter()
+        .filter(|finding| finding.file == "cyclic-spreads.ts")
+        .collect::<Vec<_>>();
+    assert_eq!(spread_findings.len(), 1, "{spread_findings:?}");
+    assert_eq!(spread_findings[0].line, 10);
     let switch_findings = findings
         .iter()
         .filter(|finding| finding.file == "switch-scope.ts")

@@ -1,4 +1,4 @@
-use crate::queue::extract_job_id;
+use crate::fx::{fx_set, FxHashSet};
 use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::lazy_object_bindings::LazyObjectBindings;
@@ -6,19 +6,6 @@ use crate::queue::source::line_number;
 use oxc_ast::ast::{CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 
 const KIND: &str = "scheduler-template-option";
-
-pub(super) fn note_import(visitor: &mut QueueVisitor<'_>, imported: &str, local: &str) {
-    if let Some(spec) = visitor
-        .roles
-        .job_scheduler
-        .iter()
-        .find(|spec| spec.callee == imported)
-    {
-        visitor
-            .scheduler_factories
-            .insert(local.to_string(), spec.template);
-    }
-}
 
 pub(super) fn note_scheduler(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
     let Some(index) = template_index(visitor, call) else {
@@ -63,11 +50,13 @@ fn template_index(visitor: &QueueVisitor<'_>, call: &CallExpression<'_>) -> Opti
         {
             Some(2)
         }
-        Expression::Identifier(id) => visitor
-            .scheduler_factories
-            .get(id.name.as_str())
-            .copied()
-            .filter(|_| extract_job_id::is_imported_callee(visitor, callee)),
+        Expression::Identifier(id) => {
+            let reference = visitor.scoping?.get_reference(id.reference_id.get()?);
+            visitor
+                .scheduler_factories
+                .get(&reference.symbol_id()?)
+                .copied()
+        }
         _ => None,
     }
 }
@@ -106,10 +95,25 @@ fn collect_template<'expr, 'arena: 'expr>(
 ) -> Option<Vec<(String, usize)>> {
     let mut hits = Vec::new();
     let mut opts = None;
-    collect(found, source, bindings, &mut hits, Some(&mut opts))?;
+    let mut active_spreads = fx_set();
+    collect(
+        found,
+        source,
+        bindings,
+        &mut hits,
+        Some(&mut opts),
+        &mut active_spreads,
+    )?;
     if let Some((value, at)) = opts {
         let options = resolve(value, bindings, at, 0)?;
-        collect(options, source, bindings, &mut hits, None)?;
+        collect(
+            options,
+            source,
+            bindings,
+            &mut hits,
+            None,
+            &mut active_spreads,
+        )?;
     }
     Some(hits)
 }
@@ -120,12 +124,25 @@ fn collect<'expr, 'arena: 'expr>(
     bindings: &'expr LazyObjectBindings<'arena>,
     hits: &mut Vec<(String, usize)>,
     mut opts: Option<&mut Option<LocatedOptions<'expr>>>,
+    active_spreads: &mut FxHashSet<u32>,
 ) -> Option<()> {
     for property in &found.object.properties {
         match property {
             ObjectPropertyKind::SpreadProperty(spread) => {
                 let spread = resolve(&spread.argument, bindings, found.at, 0)?;
-                collect(spread, source, bindings, hits, opts.as_deref_mut())?;
+                let start = spread.object.span.start;
+                if !active_spreads.insert(start) {
+                    return None;
+                }
+                collect(
+                    spread,
+                    source,
+                    bindings,
+                    hits,
+                    opts.as_deref_mut(),
+                    active_spreads,
+                )?;
+                active_spreads.remove(&start);
             }
             ObjectPropertyKind::ObjectProperty(property) => {
                 let key = crate::ast::property_key_name(&property.key)?;

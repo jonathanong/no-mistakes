@@ -37,7 +37,6 @@ pub(super) fn note_named_import(
             .worker_factories
             .insert(local.to_string(), (spec.name, spec.processor));
     }
-    calls::note_scheduler_import(visitor, imported, local);
 }
 pub(super) fn note_queue_binding(
     visitor: &mut QueueVisitor<'_>,
@@ -193,7 +192,7 @@ mod index;
 mod job_scope;
 #[path = "extract_factory_scope.rs"]
 mod scope;
-pub(super) use calls::{note_factory_call, note_wait};
+pub(super) use calls::{note_factory_call, note_wait, scheduler_factories};
 pub(super) use dedup::{note_self_dedup, visit_variable_declaration};
 pub(super) use index::processor_spans;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};

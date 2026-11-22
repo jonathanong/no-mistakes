@@ -4,8 +4,11 @@ expression: "render(&root, &findings)"
 ---
 arrow-scope.ts:4: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const options = { delay: 1 };
 arrow-scope.ts:18: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const options = { delay: 2 };
+cyclic-spreads.ts:10: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const right = { ...shared, opts: { delay: 3 } };
 disabled.ts:9: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | delay: 1,
 disabled.ts:10: `jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | jobId: "kept",
+factory-before-import.ts:1: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | schedulePack({ opts: { delay: 4 } });
+factory-escaped-import.ts:3: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | schedulePack({ opts: { delay: 7 } });
 factory-scope.ts:3: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | schedulePack({ opts: { delay: 1 } });
 factory.ts:8: `jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { jobId: "orders" },
 factory.ts:13: `parent` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { parent: { id: "items" } },
