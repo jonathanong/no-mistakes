@@ -251,6 +251,25 @@ fn flow_queue_members_follow_spread_order() {
     }));
 }
 
+#[test]
+fn recursive_flow_children_abstain() {
+    let root = fixture("job-options");
+    let report = analyze_project(&root, None, &[]).unwrap();
+    assert!(required_option_rows("flow-cyclic-child.ts").is_empty());
+    let diagnostics = report
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.file == "flow-cyclic-child.ts")
+        .filter(|diagnostic| diagnostic.message.starts_with("job options"))
+        .collect::<Vec<_>>();
+    assert_eq!(diagnostics.len(), 1);
+    let diagnostic = diagnostics[0];
+    assert!(diagnostic
+        .message
+        .ends_with("the options object is not statically known"));
+    assert!(source_line(&root, &diagnostic.file, diagnostic.line).contains("cyclic-child"));
+}
+
 fn required_option_rows(file: &str) -> Vec<(String, String, String)> {
     let report = analyze_project(&fixture("job-options"), None, &[]).unwrap();
     report

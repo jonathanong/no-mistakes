@@ -2,6 +2,7 @@ use super::super::extract_model::JobOptionEvidence;
 use super::super::extract_visitor::QueueVisitor;
 use super::site::{member_string, push_site};
 use super::walk::{read, read_member};
+use crate::fx::FxHashSet;
 use oxc_ast::ast::{
     Argument, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
     ObjectPropertyKind,
@@ -70,40 +71,40 @@ pub(super) fn note_flow<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpressio
         );
         return;
     };
-    note_flow_node(visitor, object);
+    note_flow_node(visitor, object, &mut FxHashSet::default());
 }
 
-fn note_flow_node<'a>(visitor: &mut QueueVisitor<'a>, object: &ObjectExpression<'a>) {
+fn note_flow_node<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    object: &ObjectExpression<'a>,
+    active: &mut FxHashSet<u32>,
+) {
+    let start = object.span().start;
+    let new_node = active.insert(start);
     let members = members::read(object, &visitor.object_bindings);
     let queue_name = members.queue_name();
-    let job = members.job();
-    let Some(evidence) = flow_opts(object) else {
-        push_site(
-            visitor,
-            object.span().start,
-            None,
-            queue_name,
-            job,
-            JobOptionEvidence::open(),
-        );
-        return;
-    };
-    let known_spreads = evidence
-        .spreads
-        .iter()
-        .all(|name| visitor.facts.const_objects.contains_key(name));
+    let evidence = new_node.then(|| flow_opts(object)).flatten();
+    let known_spreads = evidence.as_ref().is_some_and(|evidence| {
+        evidence
+            .spreads
+            .iter()
+            .all(|name| visitor.facts.const_objects.contains_key(name))
+    });
     push_site(
         visitor,
-        object.span().start,
+        start,
         None,
         queue_name.clone(),
-        job,
-        evidence,
+        members.job(),
+        evidence.unwrap_or_else(JobOptionEvidence::open),
     );
     if known_spreads {
         if let Some(children) = members.children() {
-            note_children(visitor, children, queue_name);
+            note_children(visitor, children, queue_name, active);
         }
+    }
+    if new_node {
+        active.remove(&start);
     }
 }
 
@@ -147,6 +148,7 @@ fn note_children<'a>(
     visitor: &mut QueueVisitor<'a>,
     expr: &Expression<'a>,
     queue_name: Option<String>,
+    active: &mut FxHashSet<u32>,
 ) {
     let expr = expr.get_inner_expression();
     let Expression::ArrayExpression(array) = expr else {
@@ -162,7 +164,9 @@ fn note_children<'a>(
     };
     for element in &array.elements {
         match element {
-            ArrayExpressionElement::ObjectExpression(object) => note_flow_node(visitor, object),
+            ArrayExpressionElement::ObjectExpression(object) => {
+                note_flow_node(visitor, object, active)
+            }
             _ => push_site(
                 visitor,
                 element.span().start,

@@ -206,6 +206,16 @@ expression: snapshot
     },
     {
       "kind": "missing-job-option",
+      "file": "flow-shared-child.ts",
+      "line": 4,
+      "queueFile": "queues.ts",
+      "queueName": "items",
+      "job": "shared-child",
+      "message": "job options missing priority",
+      "sourceLine": "children: [{ queueName: \"items\", name: \"shared-child\", opts: {} }],"
+    },
+    {
+      "kind": "missing-job-option",
       "file": "flow.ts",
       "line": 20,
       "queueFile": "queues.ts",
@@ -497,6 +507,12 @@ expression: snapshot
       "line": 100,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "enqueueWidget(widgets, \"spread-opts\", ...rest);"
+    },
+    {
+      "file": "flow-cyclic-child.ts",
+      "line": 6,
+      "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "children: [{ ...cycle, name: \"cyclic-child\", opts: { priority: 1 } }],"
     },
     {
       "file": "flow-queue-spreads.ts",
