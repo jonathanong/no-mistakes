@@ -60,8 +60,9 @@ fn multi_report_shares_resolver_keys_without_losing_known_dependencies() {
     assert_eq!(work["graph.builds"], 1);
     assert!(work["graph.reuses"] >= 1);
     assert_eq!(work["symbol_index.builds"], 1);
-    assert_eq!(work["resolver.computations"], 10);
-    assert_eq!(work["resolver.unique_keys"], 10);
+    // The app and its test share @core/index, and both test files share the vitest miss.
+    assert_eq!(work["resolver.computations"], 8);
+    assert_eq!(work["resolver.unique_keys"], 8);
     assert!(work["resolver.computations"] < work["resolver.requests"]);
 }
 

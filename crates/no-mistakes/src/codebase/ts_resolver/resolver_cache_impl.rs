@@ -52,31 +52,69 @@ impl<'a> ImportResolver<'a> {
             return resolved;
         }
 
-        let key = self.resolve_key(specifier, importing_file);
-
-        // Prepared graph scopes share the session import table. Unprepared
-        // legacy lookups can remap canonical aliases differently, so retain
-        // their explicit raw projection rather than inferring equivalence.
+        // Legacy graph consumers retain full importer keys. Only the prepared
+        // resolver cache already owns exact config, policy, and visibility.
         if !self.session_exact_visibility {
             if let Some(cache) = self.shared_cache {
-                return self.resolve_cached(&cache.raw_entries, key, specifier);
+                let key = self.resolve_key(specifier, importing_file);
+                return self.resolve_cached(&cache.raw_entries, key, |key| {
+                    self.resolve_uncached(&key.specifier, &key.importing_file)
+                });
             }
         }
-        self.resolve_cached(&self.cache, key, specifier)
+        let key = self.lookup_key(specifier, importing_file);
+        self.resolve_cached(&self.cache, key, |key| match key {
+            ResolverLookupKey::File(key) => {
+                self.resolve_uncached(&key.specifier, &key.importing_file)
+            }
+            ResolverLookupKey::Directory {
+                directory,
+                specifier,
+            } => self.resolve_from_directory(specifier, Some(directory)),
+            ResolverLookupKey::Independent(specifier) => {
+                self.resolve_from_directory(specifier, None)
+            }
+        })
+    }
+
+    fn lookup_key(&self, specifier: &str, importing_file: &Path) -> ResolverLookupKey {
+        if self.session_exact_visibility {
+            if Path::new(specifier).is_absolute() || !self.is_relative_specifier(specifier) {
+                return ResolverLookupKey::Independent(self.intern_resolve_specifier(specifier));
+            }
+            // Normalize the original importer before taking its parent. When
+            // the final component is a filename, normalizing its parent is equivalent.
+            if let Some(directory) = importing_file
+                .parent()
+                .filter(|_| importing_file.file_name().is_some())
+            {
+                return ResolverLookupKey::Directory {
+                    directory: self.intern_resolve_path(directory),
+                    specifier: self.intern_resolve_specifier(specifier),
+                };
+            }
+        }
+        ResolverLookupKey::File(self.resolve_key(specifier, importing_file))
     }
 
     fn resolve_key(&self, specifier: &str, importing_file: &Path) -> ResolveKey {
-        let importing_file = match &self.interner {
-            Some(interner) => interner.intern_path(importing_file),
-            None => Arc::<Path>::from(normalize_path(importing_file)),
-        };
-        let specifier = match &self.interner {
+        ResolveKey {
+            importing_file: self.intern_resolve_path(importing_file),
+            specifier: self.intern_resolve_specifier(specifier),
+        }
+    }
+
+    fn intern_resolve_path(&self, path: &Path) -> Arc<Path> {
+        match &self.interner {
+            Some(interner) => interner.intern_path(path),
+            None => Arc::<Path>::from(normalize_path(path)),
+        }
+    }
+
+    fn intern_resolve_specifier(&self, specifier: &str) -> Arc<str> {
+        match &self.interner {
             Some(interner) => interner.intern_str(specifier),
             None => Arc::from(specifier),
-        };
-        ResolveKey {
-            importing_file,
-            specifier,
         }
     }
 
@@ -101,11 +139,11 @@ impl<'a> ImportResolver<'a> {
         }
     }
 
-    fn resolve_cached(
+    fn resolve_cached<K: Eq + std::hash::Hash>(
         &self,
-        cache: &ResolverResultCache,
-        key: ResolveKey,
-        specifier: &str,
+        cache: &DashMap<K, Option<PathBuf>, rustc_hash::FxBuildHasher>,
+        key: K,
+        resolve: impl FnOnce(&K) -> Option<PathBuf>,
     ) -> Option<PathBuf> {
         if let Some(cached) = cache.get(&key) {
             let resolved = cached.clone();
@@ -123,7 +161,7 @@ impl<'a> ImportResolver<'a> {
             Entry::Vacant(entry) => {
                 // Hold the shard entry while resolving so concurrent requests
                 // cannot repeat successful or failed filesystem work.
-                let resolved = self.resolve_uncached(specifier, &entry.key().importing_file);
+                let resolved = resolve(entry.key());
                 drop(entry.insert(resolved.clone()));
                 self.increment("resolver.computations", 1);
                 if self.session_scoped || self.shared_cache.is_some() {

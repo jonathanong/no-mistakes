@@ -1,18 +1,15 @@
 impl<'a> ImportResolver<'a> {
     fn resolve_uncached(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
+        self.resolve_from_directory(specifier, importing_file.parent())
+    }
+
+    fn resolve_from_directory(&self, specifier: &str, directory: Option<&Path>) -> Option<PathBuf> {
         let specifier_path = Path::new(specifier);
         if specifier_path.is_absolute() {
             return self.try_path(specifier_path);
         }
-        let is_relative = match self.policy {
-            ImportResolutionPolicy::Standard => {
-                specifier.starts_with("./") || specifier.starts_with("../")
-            }
-            ImportResolutionPolicy::QueueCompatibility { .. } => specifier.starts_with('.'),
-        };
-        if is_relative {
-            let dir = importing_file.parent()?;
-            return self.try_path(&dir.join(specifier));
+        if self.is_relative_specifier(specifier) {
+            return self.try_path(&directory?.join(specifier));
         }
 
         for (capture, replacements) in self.matching_aliases(specifier) {
@@ -41,6 +38,15 @@ impl<'a> ImportResolver<'a> {
         }
 
         None
+    }
+
+    fn is_relative_specifier(&self, specifier: &str) -> bool {
+        match self.policy {
+            ImportResolutionPolicy::Standard => {
+                specifier.starts_with("./") || specifier.starts_with("../")
+            }
+            ImportResolutionPolicy::QueueCompatibility { .. } => specifier.starts_with('.'),
+        }
     }
 
     /// Try `base` as-is, then with each known extension appended, then as an index file.

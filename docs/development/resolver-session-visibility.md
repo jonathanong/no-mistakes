@@ -30,6 +30,14 @@ imports across configuration files and clones. This adds no competing session,
 source store, discovery, or TS fact pass. Importer/config selection is immutable
 within this owner.
 
+Exact prepared-context results are cached by normalized lexical importer
+directory when resolution is relative. Alias, absolute, and `baseUrl` results
+are importer-independent. Cache keys remain scoped to the exact config,
+visibility, catalog, and queue policy; legacy raw resolution and workspace
+classification retain the full importer identity. Canonical-importer checks
+reuse the session's prepared alias registry. Existing computation counters
+continue to count actual computations.
+
 Verbose diagnostics add these request work counters:
 
 - `resolver.visible_normalizations`: distinct visibility projections normalized.

@@ -13,13 +13,7 @@ impl<'a> ImportResolver<'a> {
         if specifier_path.is_absolute() {
             return self.path_resolution_candidates(specifier_path);
         }
-        let is_relative = match self.policy {
-            ImportResolutionPolicy::Standard => {
-                specifier.starts_with("./") || specifier.starts_with("../")
-            }
-            ImportResolutionPolicy::QueueCompatibility { .. } => specifier.starts_with('.'),
-        };
-        if is_relative {
+        if self.is_relative_specifier(specifier) {
             return importing_file
                 .parent()
                 .map(|dir| self.path_resolution_candidates(&dir.join(specifier)))

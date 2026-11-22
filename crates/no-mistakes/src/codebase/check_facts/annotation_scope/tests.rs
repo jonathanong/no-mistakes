@@ -65,6 +65,10 @@ fn scoped_max_annotation_lowers_only_its_runtime_closure_after_one_parse() {
             work["postgres.annotation.syntax_collections"],
             syntax_collections
         );
+        if config_path == "configs/small-max.yml" {
+            assert!(work["resolver.requests"] > 6000);
+            assert!(work["resolver.computations"] < 20);
+        }
         let attempts = session.work_snapshot().parse_attempts;
         assert_eq!(attempts.len(), 3076);
         assert!(attempts.values().all(|attempts| *attempts == 1));

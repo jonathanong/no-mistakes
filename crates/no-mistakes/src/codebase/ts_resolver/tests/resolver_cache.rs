@@ -232,3 +232,63 @@ fn import_resolver_session_reuses_only_exact_resolution_scopes() {
     assert_eq!(work["resolver.resolved"], 2);
     assert_eq!(work["resolver.unresolved"], 2);
 }
+
+#[test]
+fn prepared_resolution_cache_shares_only_equivalent_importer_contexts() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/tsconfig/symlink-workspace/real")
+        .canonicalize()
+        .unwrap();
+    let first = root.join("src/entry.ts");
+    let target = root.join("src/value.ts");
+    let second = root.join("project/src/entry.ts");
+    let other_target = root.join("project/src/value.ts");
+    let visible = crate::fx::PathSet::from_iter([
+        first.clone(),
+        target.clone(),
+        second.clone(),
+        other_target.clone(),
+    ]);
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![("@fixture/value".into(), vec!["src/value.ts".into()])],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let catalog = TsConfigCatalog::forced(&root, config.clone(), None);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    let prepared = ScopedImportResolver::new_in_session(&catalog, &visible, &session);
+    let outside_final_component = root.join("src/unused/..");
+    for (specifier, importing_file, expected) in [
+        ("./value.ts", &first, Some(&target)),
+        ("./value.ts", &target, Some(&target)),
+        ("./value.ts", &second, Some(&other_target)),
+        ("@fixture/value", &first, Some(&target)),
+        ("@fixture/value", &second, Some(&target)),
+        ("./missing.ts", &first, None),
+        ("./missing.ts", &target, None),
+        ("./src/value.ts", &outside_final_component, Some(&target)),
+        (target.to_str().unwrap(), &first, Some(&target)),
+        (target.to_str().unwrap(), &second, Some(&target)),
+    ] {
+        assert_eq!(
+            prepared.resolve(specifier, importing_file),
+            expected.cloned(),
+            "{specifier} from {}",
+            importing_file.display()
+        );
+    }
+    let work = observer.snapshot().work;
+    assert_eq!(work["resolver.computations"], 6);
+    assert_eq!(work["resolver.cache_hits"], 4);
+
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let raw = ImportResolutionCache::default();
+    let legacy = ImportResolver::new_observed(&config, Some(observer.clone()))
+        .with_visible(&visible)
+        .with_shared_cache(&raw);
+    assert_eq!(legacy.resolve("./value.ts", &first), Some(target.clone()));
+    assert_eq!(legacy.resolve("./value.ts", &target), Some(target));
+    assert_eq!(observer.snapshot().work["resolver.computations"], 2);
+}
