@@ -70,7 +70,7 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
     }
     assert_eq!(
         lines(&reports["advise"]["report"], "advisories", "unanalyzable"),
-        [56, 63, 69, 86, 114]
+        [56, 63, 69, 86, 114, 134, 141, 149, 165]
     );
     assert!(lines(
         &reports["disabled"]["report"],

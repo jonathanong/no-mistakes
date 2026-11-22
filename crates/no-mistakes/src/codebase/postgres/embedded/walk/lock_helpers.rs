@@ -76,6 +76,13 @@ impl<'a> ScopeVisitor<'a> {
             fact.kind = EmbeddedSqlKind::Inline;
             fact.lock_scope_analysis = true;
             fact.track_share_lock_writes = self.executor_options.track_share_lock_writes;
+            if fact.track_share_lock_writes {
+                super::transaction::annotate_execution_location(
+                    call,
+                    &mut fact,
+                    super::transaction::execution_scope(self),
+                );
+            }
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
             fact.callee = name.name.to_string();
             fact.execution_unconditional = self.helper_execution_unconditional();

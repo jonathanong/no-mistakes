@@ -82,9 +82,9 @@ async function lockAccount(query: typeof poolQuery, id: number) {
 }
 
 export async function shareInHelper(id: number) {
-  await using query = await beginTransaction();
-  await lockAccount(query, id);
-  await query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+  await using tx = await beginTransaction();
+  await lockAccount(tx.query, id);
+  await tx.query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
 }
 
 export async function shareThenDelete(id: number) {
@@ -127,4 +127,41 @@ export async function suppressedUpgrade(id: number) {
   // no-mistakes-disable-next-line postgres-lock-written-rows-only: reviewed transaction protocol
   await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
   await query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+}
+
+export async function awaitWriteThroughVariable(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+  const pending = query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+  await pending;
+}
+
+export async function discardLaterWrite(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+  void query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+}
+
+export async function pendingWriteBeforeLock(id: number) {
+  await using query = await beginTransaction();
+  const pending = query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+  await pending;
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+}
+
+export async function pendingWriteToAnotherRelation(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+  const pending = query(`UPDATE account_events SET touched = true WHERE id = $1`, [id]);
+  await pending;
+}
+
+async function writeAccount(query: typeof poolQuery, id: number) {
+  await query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+}
+
+export async function shareBeforeHelperWrite(id: number) {
+  await using tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+  await writeAccount(tx.query, id);
 }

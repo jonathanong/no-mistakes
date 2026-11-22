@@ -96,10 +96,13 @@ UPDATE accounts SET balance = balance - $2 WHERE id = $1;
 Choose the lock strength required by the later write before reading, or remove
 the pre-lock when a conditional write already decides whether the row changes.
 The check relies on direct awaited SQL calls with known transaction membership
-and statement order. It does not infer locks or writes through helpers, dynamic
-SQL, or unresolved control flow; those cases follow `unanalyzableSql`.
+and statement order. A write to the locked relation whose promise is awaited
+through a variable or discarded follows `unanalyzableSql` because the check
+cannot establish its order relative to the lock. Locks and
+writes recovered from helpers, dynamic SQL, or unresolved control flow also
+follow `unanalyzableSql` when execution order cannot be proved.
 `FOR UPDATE` and `FOR NO KEY UPDATE` are not shared-lock candidates, and a write
-before the lock does not match this sequence.
+directly awaited before the lock does not match this sequence.
 
 ## Redundant pre-lock before a conditional write
 

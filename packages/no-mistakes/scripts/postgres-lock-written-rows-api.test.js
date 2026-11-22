@@ -7,8 +7,8 @@ const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const cases = [
   ["advisory-ban-existing", "advisory-ban.yml", 10, 0],
   ["locking-cte-existing", "locking-cte.yml", 0, 2],
-  ["share-lock-sequences", "share-advise.yml", 0, 12],
-  ["share-lock-sequences", "share-fail.yml", 7, 5],
+  ["share-lock-sequences", "share-advise.yml", 0, 16],
+  ["share-lock-sequences", "share-fail.yml", 7, 9],
   ["share-lock-sequences", "disabled.yml", 0, 1],
   ["redundant-prelocks", "redundant-advise.yml", 0, 6],
   ["redundant-prelocks", "disabled.yml", 0, 1],

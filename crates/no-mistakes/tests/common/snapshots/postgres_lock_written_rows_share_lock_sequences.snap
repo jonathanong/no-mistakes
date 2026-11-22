@@ -32,6 +32,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/query.ts",
+          "line": 134,
+          "message": "src/query.ts:134: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 141,
+          "message": "src/query.ts:141: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 149,
+          "message": "src/query.ts:149: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 165,
+          "message": "src/query.ts:165: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
           "line": 18,
           "message": "src/query.ts:18: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
@@ -81,9 +113,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 86,
-          "message": "src/query.ts:86: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "message": "src/query.ts:86: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write; helper lockAccount locks at line 81",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await lockAccount(query, id);",
+          "sourceLine": "await lockAccount(tx.query, id);",
           "target": "unanalyzable"
         },
         {
@@ -146,6 +178,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/query.ts",
+          "line": 134,
+          "message": "src/query.ts:134: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 141,
+          "message": "src/query.ts:141: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 149,
+          "message": "src/query.ts:149: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 165,
+          "message": "src/query.ts:165: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
           "line": 56,
           "message": "src/query.ts:56: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
           "rule": "postgres-lock-written-rows-only",
@@ -171,9 +235,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 86,
-          "message": "src/query.ts:86: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "message": "src/query.ts:86: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write; helper lockAccount locks at line 81",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await lockAccount(query, id);",
+          "sourceLine": "await lockAccount(tx.query, id);",
           "target": "unanalyzable"
         }
       ],

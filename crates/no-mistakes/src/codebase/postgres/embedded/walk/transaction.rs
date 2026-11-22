@@ -21,15 +21,9 @@ pub(super) fn annotate(
             .get(&call.span.start)
             .copied();
     }
-    let owner = visitor
-        .member_query_proof
-        .function_ids
-        .last()
-        .copied()
-        .unwrap_or(0);
+    let owner = execution_scope(visitor);
     if visitor.executor_options.track_transaction_helpers {
-        fact.execution_scope = owner;
-        fact.execution_range = (call.span.start, call.span.end);
+        annotate_execution_location(call, fact, owner);
     }
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
@@ -83,6 +77,24 @@ pub(super) fn annotate(
                 .is_some_and(|identity| stable_parameter_identity(visitor, identity))
         });
     }
+}
+
+pub(super) fn execution_scope(visitor: &ScopeVisitor<'_>) -> u32 {
+    visitor
+        .member_query_proof
+        .function_ids
+        .last()
+        .copied()
+        .unwrap_or(0)
+}
+
+pub(super) fn annotate_execution_location(
+    call: &CallExpression<'_>,
+    fact: &mut EmbeddedSqlCall,
+    owner: u32,
+) {
+    fact.execution_scope = owner;
+    fact.execution_range = (call.span.start, call.span.end);
 }
 
 pub(super) fn stable_parameter_identity(visitor: &ScopeVisitor<'_>, identity: &str) -> bool {
