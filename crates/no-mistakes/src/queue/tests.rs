@@ -18,6 +18,7 @@ mod shared_facts;
 mod shared_rate_limit;
 mod wait_forms;
 mod wait_scopes;
+mod worker_rate_limit;
 use super::*;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};

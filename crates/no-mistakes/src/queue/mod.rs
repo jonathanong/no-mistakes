@@ -10,6 +10,7 @@ mod extract_priority;
 mod extract_processor;
 mod extract_record;
 mod extract_visitor;
+mod extract_worker_rate_limit;
 mod factory_resolve;
 mod globs;
 mod graph;
@@ -28,6 +29,7 @@ mod rate_limit;
 mod resolver;
 mod source;
 mod types;
+mod worker_rate_limit;
 
 pub use graph::{
     analyze_project, analyze_project_indexed, analyze_project_with_facts,

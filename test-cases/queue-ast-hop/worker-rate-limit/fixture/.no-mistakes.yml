@@ -1,0 +1,16 @@
+version: 2
+projects:
+  workers:
+    root: .
+    queues:
+      enqueues: ["**/*.ts"]
+      workers: ["**/*.ts"]
+queues:
+  factories:
+    queue:
+      - callee: createQueue
+        name: 0
+    worker:
+      - callee: createWorker
+        name: 0
+        processor: 1

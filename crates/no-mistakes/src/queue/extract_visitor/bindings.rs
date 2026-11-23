@@ -74,6 +74,7 @@ impl<'a> QueueVisitor<'a> {
                 }
             }
         }
+        super::super::extract_worker_rate_limit::note_variable(self, decl);
         walk::walk_variable_declarator(self, decl);
     }
 }

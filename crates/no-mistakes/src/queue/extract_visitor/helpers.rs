@@ -63,7 +63,7 @@ impl QueueVisitor<'_> {
     }
 
     pub fn is_worker_constructor(&self, expr: &Expression<'_>) -> bool {
-        matches!(expr, Expression::Identifier(id) if self.worker_classes.contains(id.name.as_str()))
+        super::super::extract_worker_rate_limit::is_worker_constructor_callee(self, expr)
     }
 
     pub fn is_flow_constructor(&self, expr: &Expression<'_>) -> bool {
@@ -106,9 +106,11 @@ impl QueueVisitor<'_> {
             processor_specifier,
             processor_file: None,
         });
+        let index = self.facts.workers.len() - 1;
+        self.worker_rate_limit
+            .note_worker_span(new_expr.span.start, index);
         if let Some(arg) = new_expr.arguments.get(1) {
             let span = arg.span();
-            let index = self.facts.workers.len() - 1;
             self.processor_spans.push((span.start, span.end, index));
         }
     }

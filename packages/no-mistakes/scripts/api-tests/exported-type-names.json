@@ -358,6 +358,7 @@
   "QueueJobSchedulerFactoryOptions",
   "QueueNameFactoryOptions",
   "QueueProducer",
+  "QueueRateLimitFindingKind",
   "QueueReport",
   "QueueWaitFindingKind",
   "QueueWorker",

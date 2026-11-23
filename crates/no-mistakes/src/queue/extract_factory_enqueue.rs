@@ -111,9 +111,12 @@ pub(super) fn note_worker(
         processor_file: None,
         wildcard: true,
     });
+    let index = visitor.facts.workers.len() - 1;
+    visitor
+        .worker_rate_limit
+        .note_worker_span(call.span.start, index);
     if let Some(arg) = call.arguments.get(processor_index) {
         let span = arg.span();
-        let index = visitor.facts.workers.len() - 1;
         visitor.processor_spans.push((span.start, span.end, index));
     }
 }

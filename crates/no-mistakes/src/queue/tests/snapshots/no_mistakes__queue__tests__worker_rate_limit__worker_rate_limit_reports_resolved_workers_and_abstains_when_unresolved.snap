@@ -1,0 +1,188 @@
+---
+source: crates/no-mistakes/src/queue/tests/worker_rate_limit.rs
+expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diagnostics\": diagnostics,\n})).unwrap()"
+---
+{
+  "check": [
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "direct-worker.ts",
+      "line": 5,
+      "queueFile": "queues.ts",
+      "queueName": "emails",
+      "job": null,
+      "message": "`.rateLimit()` on the `emails` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await worker.rateLimit(500);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "direct-worker.ts",
+      "line": 12,
+      "queueFile": "queues.ts",
+      "queueName": "emails",
+      "job": null,
+      "message": "`.rateLimit()` on the `emails` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await worker.rateLimit(1000);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "direct-worker.ts",
+      "line": 13,
+      "queueFile": "queues.ts",
+      "queueName": "emails",
+      "job": null,
+      "message": "`.rateLimit()` on the `emails` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await alias.rateLimit(250);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "direct-worker.ts",
+      "line": 14,
+      "queueFile": "queues.ts",
+      "queueName": "emails",
+      "job": null,
+      "message": "`.rateLimit()` on the `emails` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await worker[\"rateLimit\"](200);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "direct-worker.ts",
+      "line": 15,
+      "queueFile": "queues.ts",
+      "queueName": "emails",
+      "job": null,
+      "message": "`.rateLimit()` on the `emails` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await new bullmq.Worker(\"emails\", async () => {}).rateLimit(100);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "dynamic-worker.ts",
+      "line": 5,
+      "queueFile": null,
+      "queueName": null,
+      "job": null,
+      "message": "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await dynamicWorker.rateLimit(1000);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "dynamic-worker.ts",
+      "line": 8,
+      "queueFile": "queues.ts",
+      "queueName": "reports",
+      "job": null,
+      "message": "`.rateLimit()` on the `reports` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await testWorker.rateLimit(500);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "factory-worker.ts",
+      "line": 10,
+      "queueFile": "queues.ts",
+      "queueName": "orders",
+      "job": null,
+      "message": "`.rateLimit()` on the `orders` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await orderWorker.rateLimit(1000);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "factory-worker.ts",
+      "line": 12,
+      "queueFile": "queues.ts",
+      "queueName": "orders",
+      "job": null,
+      "message": "`.rateLimit()` on the `orders` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await awaited.rateLimit(500);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "factory-worker.ts",
+      "line": 13,
+      "queueFile": "queues.ts",
+      "queueName": "orders",
+      "job": null,
+      "message": "`.rateLimit()` on the `orders` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await createWorker(\"orders\", processOrder).rateLimit(250);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "imported-worker.ts",
+      "line": 7,
+      "queueFile": "queues.ts",
+      "queueName": "alerts",
+      "job": null,
+      "message": "`.rateLimit()` on the `alerts` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await reexportedWorker.rateLimit(1000);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "imported-worker.ts",
+      "line": 8,
+      "queueFile": "queues.ts",
+      "queueName": "alerts",
+      "job": null,
+      "message": "`.rateLimit()` on the `alerts` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await aliasedExport.rateLimit(900);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "imported-worker.ts",
+      "line": 9,
+      "queueFile": "queues.ts",
+      "queueName": "alerts",
+      "job": null,
+      "message": "`.rateLimit()` on the `alerts` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await defaultWorker.rateLimit(800);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "imported-worker.ts",
+      "line": 10,
+      "queueFile": "queues.ts",
+      "queueName": "orders",
+      "job": null,
+      "message": "`.rateLimit()` on the `orders` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await orderWorker.rateLimit(700);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "imported-worker.ts",
+      "line": 11,
+      "queueFile": "queues.ts",
+      "queueName": "alerts",
+      "job": null,
+      "message": "`.rateLimit()` on the `alerts` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await factoryWorkers.exportedWorker.rateLimit(500);"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "file": "unresolved.ts",
+      "line": 5,
+      "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+      "sourceLine": "await target.rateLimit(1000);"
+    },
+    {
+      "severity": "warning",
+      "file": "unresolved.ts",
+      "line": 10,
+      "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+      "sourceLine": "await unknownWorker.rateLimit(1000);"
+    },
+    {
+      "severity": "warning",
+      "file": "unresolved.ts",
+      "line": 16,
+      "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+      "sourceLine": "await mutable.rateLimit(1000);"
+    },
+    {
+      "severity": "warning",
+      "file": "unresolved.ts",
+      "line": 22,
+      "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+      "sourceLine": "await holder.worker.rateLimit(1000);"
+    }
+  ]
+}
