@@ -99,8 +99,8 @@ fn worker_rate_limit_handles_reexports_defaults_aliases_and_unresolved_edges() {
     assert_eq!(
         findings,
         vec![
-            ("caller.ts", 20, Some("edge-jobs")),
-            ("caller.ts", 23, Some("edge-jobs")),
+            ("caller.ts", 28, Some("edge-jobs")),
+            ("caller.ts", 31, Some("edge-jobs")),
         ],
         "only resolved re-exported worker aliases are reported: {:?}",
         report.check
@@ -114,11 +114,16 @@ fn worker_rate_limit_handles_reexports_defaults_aliases_and_unresolved_edges() {
     assert_eq!(
         diag_lines,
         vec![
-            ("caller.ts", 36),
-            ("caller.ts", 37),
-            ("caller.ts", 38),
-            ("caller.ts", 39),
-            ("caller.ts", 40),
+            ("caller.ts", 47),
+            ("caller.ts", 48),
+            ("caller.ts", 49),
+            ("caller.ts", 50),
+            ("caller.ts", 51),
+            ("caller.ts", 52),
+            ("caller.ts", 53),
+            ("caller.ts", 54),
+            ("caller.ts", 57),
+            ("caller.ts", 62),
         ],
         "unresolved calls abstain while non-workers stay silent: {:?}",
         report.diagnostics

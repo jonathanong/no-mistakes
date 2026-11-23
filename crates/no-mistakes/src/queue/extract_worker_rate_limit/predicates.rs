@@ -28,15 +28,15 @@ pub(in crate::queue) fn is_worker_constructor_callee(
 
 pub(super) fn is_worker_new(visitor: &QueueVisitor<'_>, new_expr: &NewExpression<'_>) -> bool {
     let callee = new_expr.callee.get_inner_expression();
-    if !is_worker_constructor_callee(visitor, callee) {
-        return false;
-    }
-    if visitor.scoping.is_none() {
-        return true;
-    }
     match callee {
-        Expression::Identifier(_) => is_imported_callee(visitor, callee),
-        Expression::StaticMemberExpression(member) => is_imported_callee(visitor, &member.object),
+        Expression::Identifier(id) => {
+            visitor.worker_classes.contains(id.name.as_str())
+                && (visitor.scoping.is_none() || is_imported_callee(visitor, callee))
+        }
+        Expression::StaticMemberExpression(member) => {
+            is_worker_constructor_callee(visitor, callee)
+                && (visitor.scoping.is_none() || is_imported_callee(visitor, &member.object))
+        }
         _ => false,
     }
 }

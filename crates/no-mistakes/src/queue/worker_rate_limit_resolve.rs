@@ -27,9 +27,7 @@ pub(in crate::queue) fn resolve<R: ImportResolverFacade>(
         }
     }
     for (path, index, resolved) in updates.into_iter().rev() {
-        let Some(file) = facts.get_mut(&path) else {
-            continue;
-        };
+        let file = facts.get_mut(&path).expect("path came from facts");
         match resolved {
             Some(target) => file.worker_rate_limits[index].target = target,
             None => {
@@ -47,16 +45,18 @@ fn resolve_imported<R: ImportResolverFacade>(
     file: &FileFacts,
     local: &str,
 ) -> Option<WorkerRateLimitTarget> {
-    let Some(binding) = file.imports.iter().find(|imp| imp.local == local) else {
-        return Some(WorkerRateLimitTarget::Unresolved);
-    };
-    resolve_export(
-        facts,
-        resolver,
-        remapper,
-        path,
-        &binding.source,
-        &binding.imported,
+    file.imports.iter().find(|imp| imp.local == local).map_or(
+        Some(WorkerRateLimitTarget::Unresolved),
+        |binding| {
+            resolve_export(
+                facts,
+                resolver,
+                remapper,
+                path,
+                &binding.source,
+                &binding.imported,
+            )
+        },
     )
 }
 
@@ -68,9 +68,6 @@ fn resolve_export<R: ImportResolverFacade>(
     specifier: &str,
     exported: &str,
 ) -> Option<WorkerRateLimitTarget> {
-    if is_queue_package(specifier) {
-        return None;
-    }
     let mut visited = HashSet::new();
     match follow_source(
         facts,
@@ -127,9 +124,8 @@ fn follow_file<R: ImportResolverFacade>(
     exported: &str,
     visited: &mut HashSet<(PathBuf, String)>,
 ) -> ResolvedExport {
-    let Some(file) = facts.get(path) else {
-        return ResolvedExport::Unresolved;
-    };
+    // `path` is remapped from `facts.keys()`.
+    let file = &facts[path];
     if let Some(binding) = file.worker_exports.get(exported) {
         return match *binding {
             ExportedWorkerBinding::Worker(index) => {
