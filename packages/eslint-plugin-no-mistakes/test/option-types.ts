@@ -1,5 +1,6 @@
 import plugin, {
   type NoTopLevelAwaitOptions,
+  type TestNoWallTimeAssertionsOptions,
   type NoLocaleLessDateFormatOptions,
   type PlaywrightTestTimeoutCapOptions,
   type PostgresNoExecutorAdapterMode,
@@ -78,3 +79,8 @@ export const awaitOptions: NoTopLevelAwaitOptions = {
 };
 // @ts-expect-error Guard policy must be a boolean.
 export const invalidAwaitOptions: NoTopLevelAwaitOptions = { allowInImportMetaMain: "yes" };
+
+export const wallTimeOptions: TestNoWallTimeAssertionsOptions = { allowedPaths: ["benchmarks/**"] };
+export const defaultWallTimeOptions: pluginRequire.TestNoWallTimeAssertionsOptions = {};
+// @ts-expect-error Allowed benchmark paths must be strings.
+export const invalidWallTimeOptions: TestNoWallTimeAssertionsOptions = { allowedPaths: [1] };

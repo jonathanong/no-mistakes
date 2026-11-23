@@ -20,6 +20,10 @@ declare namespace plugin {
     banOverrides?: boolean;
   }
 
+  export interface TestNoWallTimeAssertionsOptions {
+    allowedPaths?: string[];
+  }
+
   export interface NoLocaleLessDateFormatOptions {
     methods?: string[];
     allowUndefinedLocale?: boolean;
