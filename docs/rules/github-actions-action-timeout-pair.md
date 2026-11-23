@@ -1,5 +1,7 @@
 # `github-actions-action-timeout-pair`
 
+## Why and when
+
 An action can use its own deadline to stop work and start cleanup. Set that
 deadline below the workflow step's `timeout-minutes` so the action can act
 before GitHub cancels the step.
@@ -17,10 +19,12 @@ rules:
       nestedBelowStepTimeout: true
 ```
 
+## What it requires
+
 With `nestedBelowStepTimeout: true`, a matching third-party workflow step's
 finite, nonnegative `with[nestedInput]` number in seconds must be strictly less
-than its literal `timeout-minutes` multiplied by 60. The comparison uses the values in the
-workflow and does not require either exact-value option.
+than its literal `timeout-minutes` multiplied by 60. The comparison uses
+the workflow values. Both exact-value options can be omitted.
 
 ## Valid example
 
@@ -94,8 +98,9 @@ Runs at `max`. A request for `low` records a warning and runs the rule at
 ### Unanalyzable inputs
 
 With the comparison enabled, expressions, quoted numbers, and missing or
-otherwise unsupported operands follow `options.unanalyzable`. Use `report` for a finding (the
-default), `advise` for an advisory, or `ignore` to skip the uncertainty.
+otherwise unsupported operands follow `options.unanalyzable`. Use `report`
+for a finding (the default), `advise` for an advisory, or `ignore` to skip the
+uncertainty.
 The comparison reports a numeric deadline at or above the step cap under
 all three policies.
 
