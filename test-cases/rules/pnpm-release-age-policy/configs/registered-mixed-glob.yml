@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      permanentPackages:
+        - name: acme-lib
+        - pattern: '@acme/widget-?'
+          reason: 'first-party family'
+      temporarySelectors:
+        - outside-temporary@9.9.9
+      scopedPrefixes:
+        - '@acme/'

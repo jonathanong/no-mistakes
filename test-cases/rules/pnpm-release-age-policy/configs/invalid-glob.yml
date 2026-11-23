@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      permanentPackages:
+        - pattern: 'missing-*'
+        - pattern: ''
+        - pattern: 'acme-cli-*@1.0.0'
+        - name: acme-cli-linux
+          pattern: 'acme-cli-*'

@@ -679,6 +679,17 @@ exist, it checks both. Set the required nonnegative integer
 PR limit, `allowedCooldownExcludes` to restrict cooldown exclusions to whole-value
 globs, and `exemptEcosystems` to skip entries for exact ecosystem names.
 
+### pnpm release-age exemptions
+
+For [`pnpm-release-age-policy`](../rules/pnpm-release-age-policy.md#package-name-patterns),
+list permanent exemptions in `options.permanentPackages` by exact `name`
+or package-name `pattern`. For example, `{ pattern: 'acme-cli-*' }` covers all
+active package names that start with `acme-cli-`. Both pnpm
+`minimumReleaseAgeExclude` and Dependabot npm `cooldown.exclude` accept
+the same patterns. Each exclusion glob must cover a registered permanent
+package and stay within the permanent registry for all matching lockfile
+packages. Use exact `package@version` selectors for temporary exemptions.
+
 ### Vitest project properties
 
 [`vitest-project-policy`](../rules/vitest-project-policy.md) accepts an explicit

@@ -30,6 +30,7 @@ pub(crate) struct Options {
 #[serde(default)]
 pub(crate) struct PermanentPackage {
     pub(crate) name: String,
+    pub(crate) pattern: Option<String>,
     pub(crate) reason: String,
 }
 

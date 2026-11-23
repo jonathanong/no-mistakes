@@ -1,5 +1,4 @@
 use super::inputs::{active_names, cooldown, lockfile_keys};
-use super::lockfile::package_name_from_lock_key;
 use super::policy::{check_with_complete_names, ExcludeEntry, FileKind, Issue, Snapshot};
 use super::{rel, ClassifiedFinding, Options, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::SourceStore;
@@ -51,15 +50,8 @@ pub(super) fn scan(
         },
         None => None,
     };
-    let mut active_names = active_names(root, files, sources, &mut findings);
+    let manifest_names = active_names(root, files, sources, &mut findings);
     let complete_names = findings.is_empty();
-    if let Some(keys) = &lockfile_keys {
-        for key in keys {
-            if let Some(name) = package_name_from_lock_key(key) {
-                active_names.insert(name);
-            }
-        }
-    }
     let (exclude, included_findings) =
         super::included_exclude::included_exclude(root, workspace, sources, exclude_entries(&yaml));
     findings.extend(included_findings);
@@ -78,7 +70,7 @@ pub(super) fn scan(
     let snapshot = Snapshot {
         exclude,
         cooldown,
-        active_names,
+        manifest_names,
         lockfile_keys,
     };
     findings.extend(

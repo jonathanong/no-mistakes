@@ -20,6 +20,7 @@ fn conflict_entries_skip_exclude_drift() {
         permanent_packages: vec![PermanentPackage {
             name: "acme-lib".to_string(),
             reason: "first-party".to_string(),
+            pattern: None,
         }],
         ..Default::default()
     };
@@ -29,7 +30,7 @@ fn conflict_entries_skip_exclude_drift() {
             ExcludeEntry::Name("other".to_string()),
         ],
         cooldown: None,
-        active_names: HashSet::new(),
+        manifest_names: HashSet::new(),
         lockfile_keys: None,
     };
     let messages = policy_check(&opts, &snapshot, true)

@@ -1,12 +1,12 @@
-pub(super) fn package_name_from_lock_key(key: &str) -> Option<String> {
+pub(super) fn package_name_from_lock_key(key: &str) -> Option<&str> {
     let normalized = key.strip_prefix('/').unwrap_or(key);
     if let Some(rest) = normalized.strip_prefix('@') {
         let slash = rest.find('/')?;
         let version_at = rest[slash + 1..].find('@')?;
-        Some(normalized[..slash + 1 + version_at + 1].to_string())
+        Some(&normalized[..slash + 1 + version_at + 1])
     } else {
         let version_at = normalized.find('@')?;
-        Some(normalized[..version_at].to_string())
+        Some(&normalized[..version_at])
     }
 }
 

@@ -1,0 +1,4 @@
+minimumReleaseAgeExclude:
+  - 'acme-lib'
+  - '@acme/widget-?'
+  - 'outside-temporary@9.9.9'

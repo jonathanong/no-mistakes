@@ -39,6 +39,7 @@ export type * from "./postgres-bounded-statements-types";
 export type * from "./query-reached-per-item-types";
 export type * from "./vitest-default-excludes-types";
 export type * from "./dependabot-cooldown-policy-types";
+export type * from "./pnpm-release-age-policy-types";
 export type * from "./vitest-project-policy-types";
 export type * from "./postgres-lock-written-rows-types";
 export type * from "./postgres-sql-statement-policy-types";

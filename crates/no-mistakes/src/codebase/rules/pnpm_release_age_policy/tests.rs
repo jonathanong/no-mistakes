@@ -60,11 +60,11 @@ fn missing_workspace_yaml_is_clean() {
 #[test]
 fn lockfile_name_and_selector_helpers() {
     assert_eq!(
-        super::lockfile::package_name_from_lock_key("@acme/core@1.0.0").as_deref(),
+        super::lockfile::package_name_from_lock_key("@acme/core@1.0.0"),
         Some("@acme/core")
     );
     assert_eq!(
-        super::lockfile::package_name_from_lock_key("acme-lib@1.0.0").as_deref(),
+        super::lockfile::package_name_from_lock_key("acme-lib@1.0.0"),
         Some("acme-lib")
     );
     assert!(super::lockfile::lock_key_matches_selector(
