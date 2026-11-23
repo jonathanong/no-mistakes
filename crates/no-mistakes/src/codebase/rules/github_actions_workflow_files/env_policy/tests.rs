@@ -82,3 +82,11 @@ fn locate_handles_same_indent_sequences() {
     ];
     assert_eq!(locate(source, &at), 7);
 }
+
+#[test]
+fn locate_matches_quoted_keys() {
+    use lines::{locate, Seg};
+    let source = "\"env\":\n  'POLICY': wrong\n";
+    let at = [Seg::Key("env".into()), Seg::Key("POLICY".into())];
+    assert_eq!(locate(source, &at), 2);
+}

@@ -44,6 +44,19 @@ fn flatten(source: &str) -> Vec<Line<'_>> {
     out
 }
 
+fn key_of(text: &str) -> Option<&str> {
+    let quote = text.chars().next().filter(|c| matches!(c, '"' | '\''));
+    let Some(quote) = quote else {
+        return text.split_once(':').map(|(key, _)| key.trim_end());
+    };
+    let inner = &text[1..];
+    let end = inner.find(quote)?;
+    inner[end + 1..]
+        .trim_start()
+        .starts_with(':')
+        .then_some(&inner[..end])
+}
+
 fn range_end(lines: &[Line<'_>], at: usize, hi: usize, dash_ok: bool) -> usize {
     let indent = lines[at].indent;
     (at + 1..hi)
@@ -69,9 +82,7 @@ pub(super) fn locate(source: &str, path: &[Seg]) -> usize {
         for at in (lo..hi).filter(|&at| lines[at].indent == indent) {
             let text = lines[at].text;
             let matched = match seg {
-                Seg::Key(key) => text
-                    .strip_prefix(key.as_str())
-                    .is_some_and(|rest| rest.starts_with(':')),
+                Seg::Key(key) => key_of(text) == Some(key.as_str()),
                 Seg::Idx(want) => {
                     let is_dash = text == "-";
                     dashes += usize::from(is_dash);
