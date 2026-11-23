@@ -615,8 +615,11 @@ A cache path outside `caches` is silent. `matrix.os` does not satisfy `runner.os
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
 or parenthesized command applies to every command in the group that does not already redirect standard
-output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` and
-`{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"` count. A group with no redirect, or
+output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"`,
+`{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"`, and
+`{ echo "digest=$digest"; } &> "$GITHUB_OUTPUT"` count. Bash `{fd}>` and `{fd}>>`
+redirect an allocated descriptor and leave the command's inherited standard output in place.
+A group with no redirect, or
 a redirect to another file, does not. The redirect is fixed before the body runs. Assignments
 inside a parenthesized command do not affect later commands, and a command after `;` on the
 same line is separate. A `;` inside a nested group stays in that group. The closing `)` may

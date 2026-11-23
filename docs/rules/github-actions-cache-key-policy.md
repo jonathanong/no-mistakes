@@ -41,8 +41,9 @@ The key must also prove a digest of the configured lockfile, in either of these 
   all count. A redirect after the closing `}` or `)` applies to every command in that group
   that does not already redirect standard output, including
   `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"`,
-  `( echo "digest=$digest" ) >> "$GITHUB_OUTPUT"`, and
-  `{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"`. A group with no redirect, or a redirect
+  `( echo "digest=$digest" ) >> "$GITHUB_OUTPUT"`,
+  `{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"`, and
+  `{ echo "digest=$digest"; } &> "$GITHUB_OUTPUT"`. A group with no redirect, or a redirect
   to another file, does not count. The redirect is fixed before the group body runs, so an
   assignment inside the group does not change that destination. Assignments inside a
   parenthesized command do not affect later commands. A command after `;` on the same line
@@ -50,13 +51,15 @@ The key must also prove a digest of the configured lockfile, in either of these 
   may share a line with the last command. The closing `}` must be its own command, including
   after `;` or a background `&`. A later pipe discards
   the group unless standard output is redirected to a file before that pipe, and a pipe inside
-  `$(...)` or backticks stays in that substitution. A redirect such as `2>` or `3>>` leaves
-  standard output alone, so redirecting only those descriptors does not write the digest.
+  `$(...)` or backticks stays in that substitution. Group redirects `2>` and `2>>` redirect
+  standard error. The group's digest proof requires standard output to reach `GITHUB_OUTPUT`.
   The last standard-output redirect is the group's destination. A digit run is a descriptor
   only when it is its own word, so `1>> "$GITHUB_OUTPUT"` explicitly redirects standard
-  output and `ignored2>/tmp/orders` redirects standard output implicitly. `>=` sends standard
-  output to a file named `=`. An unquoted heredoc counts
-  only when the command's last standard-output redirect, or the group's, is the output file.
+  output and `ignored2>/tmp/orders` redirects standard output implicitly. Bash `{fd}>` and
+  `{fd}>>` redirect an allocated descriptor. A command with one of those redirects can still
+  inherit the group's standard output. `>=` sends standard output to a file named `=`. An
+  unquoted heredoc counts only when the command's last standard-output redirect, or the group's,
+  is the output file.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
   copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
   `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not
@@ -207,8 +210,10 @@ jobs:
 
 Put each configured fragment in the key as its own expression, for example `${{ runner.os }}` and
 `${{ runner.arch }}`. Add a digest with `hashFiles('widgets.lock')` when `allowHashFiles` is true,
-or with a preceding same-job step that writes a hash of the lockfile to `GITHUB_OUTPUT`. Remove
-`restore-keys`, or set `rejectRestoreKeys` to false when a prefix fallback is intentional.
+or with a preceding same-job step that writes a hash of the lockfile to `GITHUB_OUTPUT`.
+For a command that opens an allocated descriptor, send the digest through standard output with
+`echo "digest=$digest" >> "$GITHUB_OUTPUT"`. Remove `restore-keys`, or set
+`rejectRestoreKeys` to false when a prefix fallback is intentional.
 Replace broad patterns with exact paths to the files that determine cache contents. Put an
 intentional broad argument in `allowedHashFilesPatterns` when its full file set matters. Rewrite
 anchors and aliases that affect a configured path as ordinary block-style steps. There is no
