@@ -9,6 +9,7 @@ use serde::Deserialize;
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
+mod merge_keys;
 mod scan;
 
 pub const RULE_ID: &str = "dependabot-cooldown-policy";
@@ -124,11 +125,9 @@ fn compile_excludes(patterns: &[String]) -> Result<GlobSet> {
 fn read_updates(sources: &SourceStore, path: &Path) -> Result<Value> {
     let value = sources
         .parse_yaml_path(path)
-        .context("could not read or parse YAML")?;
+        .map_err(|error| anyhow::anyhow!("could not read or parse YAML: {error}"))?;
     let mut value = value.as_ref().clone();
-    value
-        .apply_merge()
-        .context("could not apply YAML merge keys")?;
+    merge_keys::expand(&mut value).context("could not apply YAML merge keys")?;
     anyhow::ensure!(value.is_mapping(), "expected a top-level mapping");
     if let Some(updates) = value.get("updates") {
         let updates = updates
