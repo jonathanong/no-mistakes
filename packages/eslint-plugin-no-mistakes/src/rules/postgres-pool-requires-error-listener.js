@@ -5,7 +5,7 @@ const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { literalString, memberPropertyName } = require("./logical-call");
-const { importedBinding } = require("./postgres-no-async-sql-builder-import");
+const { destructuredImport, importedBinding } = require("./postgres-no-async-sql-builder-import");
 
 const RULE_ID = "postgres-pool-requires-error-listener";
 const LISTENER_METHODS = new Set(["on", "once", "addListener"]);
@@ -13,7 +13,9 @@ const LISTENER_METHODS = new Set(["on", "once", "addListener"]);
 function isPoolConstructor(node, context, modules) {
   const callee = unwrapExpression(node.callee);
   if (callee.type === "Identifier") {
-    const binding = importedBinding(callee, context);
+    const binding =
+      importedBinding(callee, context) ??
+      destructuredImport(callee, context, { allowDefault: true });
     return binding?.name === "Pool" && modules.has(binding.source);
   }
   if (memberPropertyName(callee) !== "Pool") return false;

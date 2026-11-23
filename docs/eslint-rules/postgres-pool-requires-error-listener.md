@@ -25,6 +25,15 @@ export function createPool() {
 }
 ```
 
+Destructuring a pool constructor from a default or namespace import also reports:
+
+```ts
+import pg from "pg";
+
+const { Pool } = pg;
+export const pool = new Pool({ host: "example.invalid" });
+```
+
 ## Allowed
 
 ```ts
@@ -45,8 +54,20 @@ export const pool = new pg.Pool({ host: "example.invalid" }).on("error", (error)
 A literal `error` event registered with `on`, `once`, or `addListener` on the
 same pool binding satisfies the check. Other events or another pool's listener
 do not. Named import aliases, default-member imports, and namespace imports
-are recognized. Type-only imports and constructors from modules not listed in
-the configuration are not selected.
+are recognized, including `const { Pool } = pg` and renamed properties such as
+`const { Pool: DatabasePool } = pg`. Attach the listener to the created pool:
+
+```ts
+import pg from "pg";
+
+const { Pool: DatabasePool } = pg;
+export const pool = new DatabasePool({ host: "example.invalid" });
+pool.on("error", console.error);
+```
+
+Destructuring uses the imported binding's lexical scope; a parameter or local
+object named `pg` does not select its constructors. Type-only imports and
+constructors from modules not listed in the configuration are not selected.
 
 ## Options
 
@@ -61,7 +82,8 @@ the configuration are not selected.
 
 `extraModules` is an optional array of exact module names exporting a compatible
 `Pool`. It defaults to `[]` and adds to the built-in `pg` module; it does not
-replace it. Subpaths and cross-file re-exports are not inferred. This rule is
+replace it. The same destructuring support applies to configured compatible
+modules. Subpaths and cross-file re-exports are not inferred. This rule is
 opt-in and is not enabled by `configs.recommended` or `configs.strict`.
 
 ## Fix
@@ -80,6 +102,9 @@ registration executes before an error, remains installed, or handles failures
 correctly. A listener in a nested function referencing the same binding counts.
 Bindings with multiple writes cannot establish which pool instance owns a listener; use
 separate stable bindings and register each instance explicitly.
+Constructor destructuring follows only `const` declarations with static `Pool`
+properties. Mutable declarations, default values, and dynamic property keys
+are not followed; use a named import or a static `const` property instead.
 
 ## Suppression
 
