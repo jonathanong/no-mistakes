@@ -1,6 +1,6 @@
 use crate::queue::extract_helpers::JobFrame;
 use crate::queue::extract_model::FileFacts;
-use oxc_ast::ast::CallExpression;
+use oxc_ast::ast::{CallExpression, Statement};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -8,6 +8,7 @@ use std::path::Path;
 mod bindings;
 mod enqueue_calls;
 mod helpers;
+mod queue_bindings;
 mod rate_limit;
 mod wait_wrappers;
 mod waits;
@@ -21,10 +22,11 @@ pub(super) struct QueueVisitor<'a> {
     pub job_id_flows: crate::fx::FxHashSet<oxc_syntax::symbol::SymbolId>,
     pub job_id_queues: crate::fx::FxHashSet<oxc_syntax::symbol::SymbolId>,
     pub job_id_pending: Vec<super::extract_job_id::PendingCheck>,
+    pub binding_is_const: bool,
     pub queue_classes: HashSet<String>,
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
-    pub flow_bindings: HashSet<String>,
+    pub flow_bindings: HashSet<u32>,
     pub configured_factory_names: &'a [String],
     pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     pub queue_name_index: HashMap<String, usize>,
@@ -40,16 +42,13 @@ pub(super) struct QueueVisitor<'a> {
     pub namespace_imports: HashMap<String, String>,
     /// `(processor span start, end, worker index)` for factory and `new Worker` processors.
     pub processor_spans: Vec<(u32, u32, usize)>,
-    /// Indexes into `processor_spans` already claimed by an outer function.
     pub claimed_processors: Vec<usize>,
     pub worker_stack: Vec<usize>,
     pub dispatch_jobs: HashMap<usize, Vec<String>>,
     pub dispatch_dynamic_workers: HashSet<usize>,
     /// Innermost function spans where `note_job` or `note_dynamic` fired.
     pub dispatch_scopes: HashSet<u32>,
-    /// Function spans from the module root down to the function being visited.
     pub function_stack: Vec<u32>,
-    /// Functions and arrows that are not nested inside another function.
     pub top_level_callables: u32,
 }
 
@@ -124,8 +123,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_variable_declaration(&mut self, decl: &oxc_ast::ast::VariableDeclaration<'a>) {
-        self.note_wait_aliases(decl);
-        super::extract_factory::visit_variable_declaration(self, decl);
+        self.note_const_declaration(decl);
     }
 
     fn visit_block_statement(&mut self, block: &oxc_ast::ast::BlockStatement<'a>) {
@@ -161,5 +159,18 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
     fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
         super::extract_factory::visit_class(self, class);
+    }
+
+    fn visit_static_block(&mut self, block: &oxc_ast::ast::StaticBlock<'a>) {
+        super::extract_factory::visit_static_block(self, block);
+    }
+
+    fn visit_statement(&mut self, stmt: &Statement<'a>) {
+        match stmt {
+            Statement::ForStatement(it) => super::extract_factory::visit_for(self, it),
+            Statement::ForInStatement(it) => super::extract_factory::visit_for_in(self, it),
+            Statement::ForOfStatement(it) => super::extract_factory::visit_for_of(self, it),
+            _ => walk::walk_statement(self, stmt),
+        }
     }
 }

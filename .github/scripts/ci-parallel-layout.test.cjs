@@ -11,6 +11,58 @@ const results = JSON.parse(
   readFileSync(path.join(root, "test-cases/ci-speed/fixture/aggregate-results.json"), "utf8"),
 );
 
+test("CI reports and gates stop on workflow cancellation and still run after failures", () => {
+  for (const name of [
+    "quality",
+    "javascript-coverage",
+    "javascript-tests",
+    "native-tests",
+    "tests-gate",
+    "benchmark-gate",
+  ]) {
+    assert.match(job(name), /^    if: \$\{\{ !cancelled\(\) \}\}$/m, name);
+  }
+});
+
+test("JavaScript coverage rejects any unsuccessful shard result", () => {
+  const step = job("javascript-coverage").split("      - name: Require all JavaScript shards\n")[1];
+  assert.ok(step);
+  const script = step.match(/^        run: (.+)$/m)[1];
+  for (const fixture of results) {
+    const child = spawnSync("bash", ["-eu", "-c", script], {
+      env: { ...process.env, SHARDS: fixture.result },
+    });
+    assert.equal(child.status, fixture.exit, fixture.result);
+  }
+});
+
+test("Benchmarks enforces change detection and any required benchmark jobs", () => {
+  const script = job("benchmark-gate")
+    .split("        run: |\n")[1]
+    .replace(/^          /gm, "");
+  const passed = { CHANGE_RESULT: "success", BUILD_RESULT: "success", SHARD_RESULT: "success" };
+  for (const required of ["true", "false"]) {
+    for (const dependency of Object.keys(passed)) {
+      for (const fixture of results) {
+        const child = spawnSync("bash", ["-eu", "-c", script], {
+          env: {
+            ...process.env,
+            BENCHMARKS_CHANGED: required,
+            ...passed,
+            [dependency]: fixture.result,
+          },
+        });
+        const expected = required === "true" || dependency === "CHANGE_RESULT" ? fixture.exit : 0;
+        assert.equal(
+          child.status,
+          expected,
+          `required=${required}, ${dependency}: ${fixture.result}`,
+        );
+      }
+    }
+  }
+});
+
 for (const name of [
   "quality",
   "native-tests",
@@ -21,7 +73,11 @@ for (const name of [
   test(`${name} cannot pass when a dependency fails, cancels, or skips`, () => {
     const body = job(name);
     assert.ok(body);
-    assert.match(body, /if: \$\{\{ always\(\)(?: && needs.changes.outputs.rust == 'true')? \}\}/);
+    const condition =
+      name === "tests-standalone-lib"
+        ? "${{ !cancelled() && needs.changes.outputs.rust == 'true' }}"
+        : "${{ !cancelled() }}";
+    assert.ok(body.includes(`\n    if: ${condition}\n`));
     const needs = body
       .match(/needs:\s*\[([^\]]+)\]/)[1]
       .split(",")

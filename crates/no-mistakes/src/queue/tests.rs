@@ -7,6 +7,7 @@ mod factory_roles;
 mod job_id;
 mod lang;
 mod prepared;
+mod priority_mix;
 mod processor_identifiers;
 mod resolver;
 mod scheduler_template;
@@ -415,7 +416,10 @@ fn custom_factory_send_notification_has_producer_sites() {
         !facts.producers.is_empty(),
         "should detect notificationsQueue.add() as producer"
     );
-    assert_eq!(facts.producers[0].binding, "notificationsQueue");
+    assert!(matches!(
+        &facts.producers[0].binding,
+        crate::queue::extract_model::ProducerBinding::Named(name) if name == "notificationsQueue"
+    ));
 }
 
 #[test]

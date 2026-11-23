@@ -91,5 +91,5 @@ test("native aggregate requires all eight platform producer and consumer jobs", 
     ["changes", ...families.flatMap((name) => [name, `${name}-macos`])].sort(),
   );
   assert.match(body, /name: Native tests\n/);
-  assert.match(body, /if: \$\{\{ always\(\) \}\}/);
+  assert.match(body, /^    if: \$\{\{ !cancelled\(\) \}\}$/m);
 });

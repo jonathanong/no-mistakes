@@ -97,12 +97,13 @@ fn cycle_walk_visits_a_queue_that_does_not_enqueue() {
         site: crate::queue::extract::ProducerSite {
             file: file.clone(),
             line: 4,
-            binding: "leaf".to_string(),
+            binding: crate::queue::extract_model::ProducerBinding::Named("leaf".to_string()),
             job: Some("ping".to_string()),
             job_import: None,
             raw_job: None,
             worker_index: Some(0),
             self_dedup: false,
+            priority: crate::queue::extract_model::EnqueuePriority::Unprioritized,
         },
         queue: Some(crate::queue::types::QueueKey {
             queue_file: queues.clone(),

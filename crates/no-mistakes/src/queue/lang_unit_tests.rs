@@ -62,6 +62,10 @@ fn default_cluster_labels_language_queue_nodes() {
     let producer = language_producer(&root, &path, "WelcomeJob", None);
     let worker = language_worker(&root, &path, "WelcomeJob", None);
     assert_eq!(producer.queue.as_ref().unwrap().queue_name, "default");
+    assert_eq!(
+        producer.site.priority,
+        crate::queue::extract_model::EnqueuePriority::Dynamic
+    );
     assert_eq!(worker.queue.as_ref().unwrap().queue_name, "default");
 }
 

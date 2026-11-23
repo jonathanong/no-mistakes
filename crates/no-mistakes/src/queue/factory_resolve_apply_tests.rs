@@ -24,12 +24,13 @@ fn producer(job: Option<&str>) -> ProducerSite {
     ProducerSite {
         file: path(),
         line: 1,
-        binding: "q".to_string(),
+        binding: crate::queue::extract_model::ProducerBinding::Named("q".to_string()),
         job: job.map(str::to_string),
         job_import: None,
         raw_job: None,
         worker_index: None,
         self_dedup: false,
+        priority: crate::queue::extract_model::EnqueuePriority::Unprioritized,
     }
 }
 

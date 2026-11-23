@@ -1,6 +1,6 @@
 use super::super::identifier_arg;
 use crate::queue::extract_helpers::{literal_or_import, processor_specifier};
-use crate::queue::extract_model::{ProducerSite, WorkerSite};
+use crate::queue::extract_model::{EnqueuePriority, ProducerSite, WorkerSite};
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
@@ -34,15 +34,25 @@ pub(super) fn note_enqueue(
         note_job_id_options(visitor, call, queue_index, job.clone(), options);
     }
     let recorded = visitor.facts.producers.len();
+    let priority = match options {
+        Some(index) => crate::queue::extract_priority::from_call_argument(
+            &call.arguments,
+            index,
+            &visitor.facts.const_numbers,
+        ),
+        None => EnqueuePriority::Unprioritized,
+    };
+    let producer_binding = visitor.producer_binding(&binding, call.span.start);
     visitor.facts.producers.push(ProducerSite {
         file: visitor.path.to_path_buf(),
         line: line_number(visitor.source, call.span.start),
-        binding,
+        binding: producer_binding,
         job: job.clone(),
         job_import,
         raw_job,
         worker_index: visitor.worker_stack.last().copied(),
         self_dedup: false,
+        priority,
     });
     if let Some(index) = options {
         if let Some(expr) = call.arguments.get(index).and_then(Argument::as_expression) {

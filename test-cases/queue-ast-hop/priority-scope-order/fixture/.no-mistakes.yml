@@ -1,0 +1,7 @@
+version: 2
+projects:
+  widgets:
+    root: .
+    queues:
+      enqueues: ["**/*.ts"]
+      workers: ["**/*.ts"]

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
@@ -12,7 +12,7 @@ pub(crate) struct ImportBinding {
 pub(crate) struct ProducerSite {
     pub file: PathBuf,
     pub line: usize,
-    pub binding: String,
+    pub binding: ProducerBinding,
     pub job: Option<String>,
     /// Local name of an imported string constant used as the job name.
     pub job_import: Option<String>,
@@ -21,6 +21,29 @@ pub(crate) struct ProducerSite {
     pub worker_index: Option<usize>,
     /// The add reuses the active job's dedup id or job id. Judged after queue resolution.
     pub self_dedup: bool,
+    /// Static `priority` on this enqueue. `Dynamic` makes the queue abstain.
+    pub priority: EnqueuePriority,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) enum ProducerBinding {
+    Named(String),
+    Local(u32),
+    Flow(String),
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum LocalQueue {
+    Known(String),
+    ImportedName(String),
+    ImportedQueue(String),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum EnqueuePriority {
+    Unprioritized,
+    Prioritized(f64),
+    Dynamic,
 }
 
 #[derive(Debug, Clone)]
@@ -38,7 +61,7 @@ pub(crate) struct WorkerSite {
 
 #[derive(Debug, Clone)]
 pub(crate) enum JobIdQueue {
-    Named(String),
+    Named(ProducerBinding),
     Namespace { source: String, exported: String },
 }
 
@@ -61,6 +84,7 @@ pub(crate) struct RateLimitSite {
 pub(crate) struct FileFacts {
     pub imports: Vec<ImportBinding>,
     pub queue_bindings: HashMap<String, String>,
+    pub queue_declarations: HashMap<u32, LocalQueue>,
     pub queue_exports: HashMap<String, String>,
     pub producers: Vec<ProducerSite>,
     pub workers: Vec<WorkerSite>,
@@ -86,4 +110,10 @@ pub(crate) struct FileFacts {
     pub referenced_jobs_dynamic: bool,
     pub checks: Vec<LocalCheck>,
     pub job_id_sites: Vec<(JobIdQueue, LocalCheck)>,
+    /// Same-file `const` integers seen while extracting this file.
+    pub const_numbers: HashMap<String, f64>,
+    /// Bindings whose bulk enqueue list was not a closed list of object literals.
+    pub opaque_priority_bindings: HashSet<ProducerBinding>,
+    /// Resolved `(queue file, queue name)` pairs filled after binding resolution.
+    pub opaque_priority_queues: Vec<(PathBuf, String)>,
 }

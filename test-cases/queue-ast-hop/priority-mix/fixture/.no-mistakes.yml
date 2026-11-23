@@ -1,0 +1,11 @@
+version: 2
+projects:
+  widgets:
+    root: .
+    queues:
+      enqueues: ["**/*.ts"]
+      workers: ["**/*.ts"]
+queues:
+  factories:
+    enqueue:
+      - { callee: enqueueWidget, queue: 0, job: 1, options: 2 }

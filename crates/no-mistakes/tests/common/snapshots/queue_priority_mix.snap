@@ -1,0 +1,208 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "batches.ts",
+          "job": "countBatch",
+          "kind": "mixed-priority",
+          "line": 10,
+          "message": "queue \"batches\" mixes priority 0 and priority > 0; this producer sets priority 2 while other producers enqueue with priority 0: batches.ts:6 (countBatch)",
+          "queueFile": "queues.ts",
+          "queueName": "batches",
+          "sourceLine": "return batches.add(\"countBatch\", { id }, { priority: RUSH });"
+        },
+        {
+          "file": "batches.ts",
+          "job": "countBatch",
+          "kind": "mixed-priority",
+          "line": 6,
+          "message": "queue \"batches\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: batches.ts:10 (countBatch, priority 2)",
+          "queueFile": "queues.ts",
+          "queueName": "batches",
+          "sourceLine": "return batches.add(\"countBatch\", { id });"
+        },
+        {
+          "file": "catalog.ts",
+          "job": "listItem",
+          "kind": "mixed-priority",
+          "line": 5,
+          "message": "queue \"catalog\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: catalog.ts:9 (rushItem, priority 8), catalog.ts:13 (fastItem, priority 1)",
+          "queueFile": "queues.ts",
+          "queueName": "catalog",
+          "sourceLine": "return enqueueWidget(catalog, \"listItem\");"
+        },
+        {
+          "file": "labels.ts",
+          "job": "rushLabel",
+          "kind": "mixed-priority",
+          "line": 9,
+          "message": "queue \"labels\" mixes priority 0 and priority > 0; this producer sets priority 4 while other producers enqueue with priority 0: labels.ts:5 (printLabel)",
+          "queueFile": "queues.ts",
+          "queueName": "labels",
+          "sourceLine": "return labels.add(\"rushLabel\", { id }, { priority: 4 });"
+        },
+        {
+          "file": "later.ts",
+          "job": "holdLater",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"later\" mixes priority 0 and priority > 0; this producer sets priority 4 while other producers enqueue with priority 0: later.ts:10 (openLater)",
+          "queueFile": "queues.ts",
+          "queueName": "later",
+          "sourceLine": "return later.add(\"holdLater\", { id }, { priority: RUSH });"
+        },
+        {
+          "file": "later.ts",
+          "job": "openLater",
+          "kind": "mixed-priority",
+          "line": 10,
+          "message": "queue \"later\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: later.ts:4 (holdLater, priority 4)",
+          "queueFile": "queues.ts",
+          "queueName": "later",
+          "sourceLine": "return later.add(\"openLater\", { id });"
+        },
+        {
+          "file": "loops.ts",
+          "job": "fromIndex",
+          "kind": "mixed-priority",
+          "line": 22,
+          "message": "queue \"indexes\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: loops.ts:25 (storeIndex)",
+          "queueFile": "queues.ts",
+          "queueName": "indexes",
+          "sourceLine": "for (const cursor of [indexes.add(\"fromIndex\", { id }, { priority: LEVEL }), ...levels]) {"
+        },
+        {
+          "file": "loops.ts",
+          "job": "outerBox",
+          "kind": "mixed-priority",
+          "line": 58,
+          "message": "queue \"boxes\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: loops.ts:59 (storeBox)",
+          "queueFile": "queues.ts",
+          "queueName": "boxes",
+          "sourceLine": "boxes.add(\"outerBox\", { id }, { priority: LEVEL });"
+        },
+        {
+          "file": "loops.ts",
+          "job": "plainBlock",
+          "kind": "mixed-priority",
+          "line": 47,
+          "message": "queue \"blocks\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: loops.ts:42 (rankedBlock, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "blocks",
+          "sourceLine": "blocks.add(\"plainBlock\", { id });"
+        },
+        {
+          "file": "loops.ts",
+          "job": "rankedBlock",
+          "kind": "mixed-priority",
+          "line": 42,
+          "message": "queue \"blocks\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: loops.ts:47 (plainBlock)",
+          "queueFile": "queues.ts",
+          "queueName": "blocks",
+          "sourceLine": "blocks.add(\"rankedBlock\", { id }, { priority: LEVEL });"
+        },
+        {
+          "file": "loops.ts",
+          "job": "storeBox",
+          "kind": "mixed-priority",
+          "line": 59,
+          "message": "queue \"boxes\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: loops.ts:58 (outerBox, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "boxes",
+          "sourceLine": "boxes.add(\"storeBox\", { id });"
+        },
+        {
+          "file": "loops.ts",
+          "job": "storeIndex",
+          "kind": "mixed-priority",
+          "line": 25,
+          "message": "queue \"indexes\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: loops.ts:22 (fromIndex, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "indexes",
+          "sourceLine": "indexes.add(\"storeIndex\", { id });"
+        },
+        {
+          "file": "loops.ts",
+          "job": "storeRank",
+          "kind": "mixed-priority",
+          "line": 75,
+          "message": "queue \"ranks\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: loops.ts:71 (countRank, priority 9), loops.ts:74 (outerRank, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "ranks",
+          "sourceLine": "ranks.add(\"storeRank\", { id });"
+        },
+        {
+          "file": "mixed.ts",
+          "job": "packWidget",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"widgets\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: mixed.ts:8 (rushWidget, priority 5), mixed.ts:12 (fastWidget, priority 2)",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "return widgets.add(\"packWidget\", { id });"
+        },
+        {
+          "file": "names.ts",
+          "job": "shadeOther",
+          "kind": "mixed-priority",
+          "line": 22,
+          "message": "queue \"others\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: names.ts:26 (storeOther)",
+          "queueFile": "queues.ts",
+          "queueName": "others",
+          "sourceLine": "return others.add(\"shadeOther\", { id }, { priority: RANK });"
+        },
+        {
+          "file": "names.ts",
+          "job": "storeOther",
+          "kind": "mixed-priority",
+          "line": 26,
+          "message": "queue \"others\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: names.ts:22 (shadeOther, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "others",
+          "sourceLine": "others.add(\"storeOther\", { id });"
+        },
+        {
+          "file": "parcels.ts",
+          "job": "rushParcel",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"parcels\" mixes priority 0 and priority > 0; this producer sets priority 7 while other producers enqueue with priority 0: parcels.ts:4 (holdParcel), parcels.ts:4 (storeParcel)",
+          "queueFile": "queues.ts",
+          "queueName": "parcels",
+          "sourceLine": "return parcels.addBulk(["
+        },
+        {
+          "file": "routes.ts",
+          "job": "planRoute",
+          "kind": "mixed-priority",
+          "line": 6,
+          "message": "queue \"routes\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: routes.ts:10 (rushRoute, priority 6), routes.ts:19 (fastRoute, priority 1)",
+          "queueFile": "routes.ts",
+          "queueName": "routes",
+          "sourceLine": "return flow.add({ name: \"planRoute\", queueName: \"routes\", data: { id } });"
+        },
+        {
+          "file": "uniform.ts",
+          "job": "freeHold",
+          "kind": "mixed-priority",
+          "line": 28,
+          "message": "queue \"holds\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: uniform.ts:32 (paidHold, priority 3), uniform.ts:36 (firmHold, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "holds",
+          "sourceLine": "return holds.add(\"freeHold\", { id }, { priority: NONE });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

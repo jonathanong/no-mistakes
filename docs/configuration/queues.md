@@ -58,8 +58,8 @@ tests:
 
 `factories` names are matched against configured queue factory calls. An
 enqueue factory records a producer at the wrapper call. `options` is the
-argument index of that call's options object; self-dedup, debounce, and invalid
-jobId checks read it the same way they read `queue.add`'s third argument.
+argument index of that call's options object; self-dedup, debounce, invalid
+jobId, and mixed-priority checks read it the same way they read `queue.add`'s third argument.
 `jobScheduler` names a wrapper that registers a repeated job. `template` is the argument
 index of the job template. [`queues check`](../cli/queues-check.md) reads that
 argument the same way it reads the third argument of `upsertJobScheduler`.

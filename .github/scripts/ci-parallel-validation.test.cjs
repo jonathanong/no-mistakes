@@ -324,7 +324,11 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
   ]) {
     const body = workflowJob(name);
     assert.equal(jobBudgetSeconds(body), 180);
-    assert.match(body, /if: \$\{\{ always\(\)(?: && needs.changes.outputs.rust == 'true')? \}\}/);
+    const condition =
+      name === "tests-standalone-lib"
+        ? "${{ !cancelled() && needs.changes.outputs.rust == 'true' }}"
+        : "${{ !cancelled() }}";
+    assert.ok(body.includes(`\n    if: ${condition}\n`));
     assert.match(body, /RESULTS: \$\{\{ toJSON\(needs\) \}\}/);
     const needs = body
       .match(/needs:\s*\[([^\]]+)\]/)[1]

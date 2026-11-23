@@ -1,6 +1,5 @@
 use crate::edge_index::{CanonicalEdge, PreparedRelationshipIndex};
 use crate::queue::extract::FileFacts;
-use crate::queue::graph_model::CheckFinding;
 use crate::queue::graph_model::{
     dedup_sorted, diagnostics, node_name, InternalProducer, InternalWorker, PreparedProjectReport,
     ProjectReport,
@@ -43,24 +42,6 @@ pub(super) fn build_prepared_report(
     }
 }
 
-fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
-    let mut out = Vec::new();
-    for (path, facts) in facts {
-        for check in &facts.checks {
-            out.push(CheckFinding {
-                kind: check.kind.clone(),
-                file: relative_string(root, path),
-                line: check.line,
-                queue_file: None,
-                queue_name: None,
-                job: check.job.clone(),
-                message: check.message.clone(),
-            });
-        }
-    }
-    out
-}
-
 fn build_report_and_relationships(
     root: &Path,
     producers: Vec<InternalProducer>,
@@ -90,13 +71,18 @@ fn build_report_and_relationships(
         &producer_index,
         &producers,
     ));
-    check.extend(local_checks(root, facts));
+    check.extend(checks::local_checks(root, facts));
     check.extend(crate::queue::cycles::queue_cycles(
         root, &producers, &workers,
     ));
     let (dedup_checks, dedup_diagnostics) =
         crate::queue::rate_limit::findings(root, &producers, &workers, facts);
     check.extend(dedup_checks);
+    let mut check = dedup_sorted(check);
+    check.extend(crate::queue::priority_mix::mixed_priority_findings(
+        root, &producers, facts,
+    ));
+    check.sort();
     let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
     report_diagnostics.extend(dedup_diagnostics);
     let report = ProjectReport {
@@ -105,7 +91,7 @@ fn build_report_and_relationships(
         jobs: public_jobs(root, &relationships),
         edges: public_edges(root, &relationships),
         diagnostics: dedup_sorted(report_diagnostics),
-        check: dedup_sorted(check),
+        check,
     };
     (report, relationships)
 }

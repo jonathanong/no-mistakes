@@ -458,6 +458,9 @@ Import the exported `QueueWaitFindingKind` type for the wait-specific values
 other finding kinds. `queueCheck()` also reports
 [`scheduler-template-option`](cli/queues-check.md) when a job-scheduler
 template sets `delay`, `deduplication`, `parent`, or `jobId`.
+`mixed-priority` is one of those string kinds when one
+queue mixes priority 0 and a priority greater than 0. See
+[queues check](cli/queues-check.md).
 Declaration findings carry fix guidance in `message`;
 no separate JSON field is added.
 

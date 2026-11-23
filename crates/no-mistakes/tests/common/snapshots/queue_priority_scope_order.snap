@@ -1,0 +1,88 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "scope.ts",
+          "job": "arrowPlain",
+          "kind": "mixed-priority",
+          "line": 33,
+          "message": "queue \"arrowParams\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: scope.ts:28 (arrowRush, priority 5)",
+          "queueFile": "scope.ts",
+          "queueName": "arrowParams",
+          "sourceLine": "arrowParams.add(\"arrowPlain\", {});"
+        },
+        {
+          "file": "scope.ts",
+          "job": "arrowRush",
+          "kind": "mixed-priority",
+          "line": 28,
+          "message": "queue \"arrowParams\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: scope.ts:33 (arrowPlain)",
+          "queueFile": "scope.ts",
+          "queueName": "arrowParams",
+          "sourceLine": "result = arrowParams.add(\"arrowRush\", {}, { priority: LEVEL }),"
+        },
+        {
+          "file": "scope.ts",
+          "job": "fnPlain",
+          "kind": "mixed-priority",
+          "line": 25,
+          "message": "queue \"fnParams\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: scope.ts:21 (fnRush, priority 5)",
+          "queueFile": "scope.ts",
+          "queueName": "fnParams",
+          "sourceLine": "fnParams.add(\"fnPlain\", {});"
+        },
+        {
+          "file": "scope.ts",
+          "job": "fnRush",
+          "kind": "mixed-priority",
+          "line": 21,
+          "message": "queue \"fnParams\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: scope.ts:25 (fnPlain)",
+          "queueFile": "scope.ts",
+          "queueName": "fnParams",
+          "sourceLine": "export function send(result = fnParams.add(\"fnRush\", {}, { priority: LEVEL })) {"
+        },
+        {
+          "file": "scope.ts",
+          "job": "outerPlain",
+          "kind": "mixed-priority",
+          "line": 51,
+          "message": "queue \"switchOuter\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: scope.ts:41 (inDiscriminant, priority 5), scope.ts:50 (afterSwitch, priority 5)",
+          "queueFile": "scope.ts",
+          "queueName": "switchOuter",
+          "sourceLine": "switchOuter.add(\"outerPlain\", {});"
+        },
+        {
+          "file": "scope.ts",
+          "job": "patternPlain",
+          "kind": "mixed-priority",
+          "line": 39,
+          "message": "queue \"pattern\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: scope.ts:36 (patternRush, priority 5)",
+          "queueFile": "scope.ts",
+          "queueName": "pattern",
+          "sourceLine": "pattern.add(\"patternPlain\", {});"
+        },
+        {
+          "file": "scope.ts",
+          "job": "patternRush",
+          "kind": "mixed-priority",
+          "line": 36,
+          "message": "queue \"pattern\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: scope.ts:39 (patternPlain)",
+          "queueFile": "scope.ts",
+          "queueName": "pattern",
+          "sourceLine": "pattern.add(\"patternRush\", {}, { priority: LEVEL });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

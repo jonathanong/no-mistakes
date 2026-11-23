@@ -66,9 +66,7 @@ fn extract_queue_facts<'a>(
     scoping: Option<&'a Scoping>,
 ) -> QueueVisitor<'a> {
     let scoped_scheduler = scoping.is_some() && needs_scheduler_scoping(source, roles);
-    let collect_bindings =
-        scoped_scheduler || source.contains("upsertJobScheduler") || source.contains('\\');
-    let index = super::extract_factory::queue_index(program, roles, collect_bindings);
+    let index = super::extract_factory::queue_index(program, roles);
     let scheduler_factories = if scoped_scheduler {
         super::extract_factory::scheduler_factories(program, roles)
     } else {
@@ -83,6 +81,7 @@ fn extract_queue_facts<'a>(
         job_id_flows: Default::default(),
         job_id_queues: Default::default(),
         job_id_pending: Vec::new(),
+        binding_is_const: false,
         queue_classes: HashSet::new(),
         worker_classes: HashSet::new(),
         flow_classes: HashSet::new(),
@@ -109,8 +108,10 @@ fn extract_queue_facts<'a>(
         top_level_callables: 0,
         worker_stack: Vec::new(),
     };
+    super::number_scope::seed_program(&mut visitor, program);
     visitor.visit_program(program);
     super::extract_job_id::finish(&mut visitor);
+    super::number_scope::finish_opaque(&mut visitor.facts);
     super::extract_processor::finish(&mut visitor);
     visitor
 }

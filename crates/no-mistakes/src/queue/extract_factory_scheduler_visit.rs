@@ -1,5 +1,5 @@
-use super::{Collector, ScopeKind};
-use oxc_ast::ast::{BindingPattern, ClassType, Expression, FunctionType};
+use super::{Collector, Scope, ScopeKind};
+use oxc_ast::ast::{BindingPattern, ClassType, Expression, FormalParameters, FunctionType};
 use oxc_ast::ast_kind::AstKind;
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeId;
@@ -8,17 +8,19 @@ use std::cell::Cell;
 pub(super) fn bind_pattern<'a>(
     collector: &mut Collector<'a>,
     pattern: &BindingPattern<'a>,
-    scope_start: u32,
-    scope_end: u32,
+    scope: Scope,
     visible_from: u32,
     resolve_at: u32,
+    bare_var: bool,
     value: Option<&'a Expression<'a>>,
 ) {
     if let BindingPattern::BindingIdentifier(id) = pattern {
         collector.bindings.insert(super::ObjectBinding {
             name: id.name.as_str(),
-            scope_start,
-            scope_end,
+            scope_start: scope.start,
+            scope_end: scope.end,
+            scope_depth: scope.depth,
+            bare_var,
             visible_from,
             resolve_at,
             value,
@@ -30,8 +32,10 @@ pub(super) fn bind_pattern<'a>(
     for name in names {
         collector.bindings.insert(super::ObjectBinding {
             name,
-            scope_start,
-            scope_end,
+            scope_start: scope.start,
+            scope_end: scope.end,
+            scope_depth: scope.depth,
+            bare_var,
             visible_from,
             resolve_at: visible_from,
             value: None,
@@ -98,8 +102,14 @@ impl<'a> Collector<'a> {
                 }
             }
             AstKind::ForStatement(stmt) => self.push_span(stmt.span, ScopeKind::Block),
-            AstKind::ForInStatement(stmt) => self.push_span(stmt.span, ScopeKind::Block),
-            AstKind::ForOfStatement(stmt) => self.push_span(stmt.span, ScopeKind::Block),
+            AstKind::ForInStatement(stmt) => {
+                self.push_span(stmt.span, ScopeKind::Block);
+                self.mask_iterated_vars(&stmt.left, stmt.body.span().start);
+            }
+            AstKind::ForOfStatement(stmt) => {
+                self.push_span(stmt.span, ScopeKind::Block);
+                self.mask_iterated_vars(&stmt.left, stmt.body.span().start);
+            }
             AstKind::StaticBlock(block) => self.push_span(block.span, ScopeKind::Function),
             AstKind::SwitchStatement(stmt) => self.switches.push((
                 &stmt.scope_id,
@@ -151,5 +161,15 @@ impl<'a> Collector<'a> {
 
     fn push_span(&mut self, span: Span, kind: ScopeKind) {
         self.push_scope(span.start, span.end, kind);
+    }
+}
+impl<'a> Collector<'a> {
+    fn mask_params(&mut self, params: &FormalParameters<'a>, visible_from: u32) {
+        for param in &params.items {
+            self.mask_pattern(&param.pattern, visible_from);
+        }
+        if let Some(rest) = &params.rest {
+            self.mask_pattern(&rest.rest.argument, visible_from);
+        }
     }
 }

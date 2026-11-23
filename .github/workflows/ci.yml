@@ -536,7 +536,7 @@ jobs:
   quality:
     name: Lint and source checks
     needs: [changes, quality-source, quality-rust, quality-js, quality-links]
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
@@ -783,7 +783,7 @@ jobs:
   javascript-coverage:
     name: Merge JavaScript coverage
     needs: javascript-shards
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 8
     permissions:
@@ -938,7 +938,7 @@ jobs:
   javascript-tests:
     name: JavaScript tests
     needs: [javascript-coverage, linux-api-tests]
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
@@ -2313,7 +2313,7 @@ jobs:
         native-api-tests,
         native-api-tests-macos,
       ]
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
@@ -2475,7 +2475,7 @@ jobs:
   tests-standalone-lib:
     name: Standalone library tests
     needs: [changes, standalone-build, standalone-shards]
-    if: ${{ always() && needs.changes.outputs.rust == 'true' }}
+    if: ${{ !cancelled() && needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
@@ -2672,7 +2672,7 @@ jobs:
   tests:
     name: Rust tests and coverage
     needs: [changes, rust-coverage-build, rust-coverage-shards]
-    if: ${{ always() && needs.changes.outputs.rust == 'true' }}
+    if: ${{ !cancelled() && needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -2938,7 +2938,7 @@ jobs:
         tests,
         tests-standalone-lib,
       ]
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
@@ -3459,7 +3459,7 @@ jobs:
       - changes
       - bench
       - benchmark-shards
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 5
 

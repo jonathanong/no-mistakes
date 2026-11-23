@@ -1,4 +1,5 @@
 use crate::queue::extract_helpers::{binding_name, export_name, static_string};
+use crate::queue::extract_model::LocalQueue;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
     Argument, CallExpression, Declaration, ExportAllDeclaration, ExportDeclaration,
@@ -42,6 +43,7 @@ pub(super) fn note_queue_binding(
     visitor: &mut QueueVisitor<'_>,
     name: &str,
     call: &CallExpression<'_>,
+    declaration: u32,
 ) -> bool {
     let Expression::Identifier(id) = &call.callee else {
         return false;
@@ -53,45 +55,15 @@ pub(super) fn note_queue_binding(
         return false;
     };
     if let Some(queue_name) = visitor.literal_arg(arg) {
-        visitor
-            .facts
-            .queue_bindings
-            .insert(name.to_string(), queue_name.clone());
-        visitor
-            .facts
-            .queue_exports
-            .insert(name.to_string(), queue_name);
-        return true;
-    }
-    let Some(imported) =
+        visitor.note_queue_declaration(name, declaration, LocalQueue::Known(queue_name));
+    } else if let Some(imported) =
         identifier_arg(arg).filter(|name| visitor.facts.string_imports.contains_key(name))
-    else {
+    {
+        visitor.note_queue_declaration(name, declaration, LocalQueue::ImportedName(imported));
+    } else {
         return false;
-    };
-    visitor
-        .facts
-        .pending_queue_bindings
-        .insert(name.to_string(), imported);
+    }
     true
-}
-pub(super) fn note_alias(visitor: &mut QueueVisitor<'_>, name: &str, local: &str) {
-    if let Some(queue_name) = visitor.facts.queue_bindings.get(local).cloned() {
-        visitor
-            .facts
-            .queue_bindings
-            .insert(name.to_string(), queue_name.clone());
-        visitor
-            .facts
-            .queue_exports
-            .insert(name.to_string(), queue_name);
-        return;
-    }
-    if visitor.facts.string_imports.contains_key(local) {
-        visitor
-            .facts
-            .reexports
-            .push((name.to_string(), local.to_string()));
-    }
 }
 pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDeclaration<'_>) {
     if decl.export_kind.is_type() {
@@ -197,3 +169,4 @@ pub(super) use dedup::{note_self_dedup, visit_variable_declaration};
 pub(super) use index::queue_index;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};
 pub(super) use scope::{visit_block, visit_body, visit_catch, visit_class};
+pub(super) use scope::{visit_for, visit_for_in, visit_for_of, visit_static_block};

@@ -30,7 +30,7 @@ enum QueuesCommand {
         #[arg(long, value_enum, default_value = "both")]
         direction: QueueDirection,
     },
-    /// Check for unmatched producers and workers.
+    /// Check producers, workers, cycles, waits, and mixed priorities.
     Check,
 }
 

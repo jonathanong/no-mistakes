@@ -17,15 +17,19 @@ pub(crate) fn visit_function<'a>(
         visitor.top_level_callables += 1;
     }
     visitor.function_stack.push(func.span.start);
+    let numbers = visitor.facts.const_numbers.clone();
     let frames = visitor.job_frames.clone();
     if let Some(id) = &func.id {
         super::scope::mask_name(visitor, id.name.as_str());
+        visitor.facts.const_numbers.remove(id.name.as_str());
     }
     super::dedup::mask_parameters(visitor, &func.params);
+    crate::queue::number_scope::hide_params(visitor, &func.params);
     let worker = enter_worker(visitor, func.span);
     enter_job(visitor, &func.params, func.span);
     walk::walk_function(visitor, func, flags);
     visitor.job_frames = frames;
+    visitor.facts.const_numbers = numbers;
     if worker {
         visitor.worker_stack.pop();
     }
@@ -37,12 +41,15 @@ pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunct
         visitor.top_level_callables += 1;
     }
     visitor.function_stack.push(arrow.span.start);
+    let numbers = visitor.facts.const_numbers.clone();
     let frames = visitor.job_frames.clone();
     super::dedup::mask_parameters(visitor, &arrow.params);
+    crate::queue::number_scope::hide_params(visitor, &arrow.params);
     let worker = enter_worker(visitor, arrow.span);
     enter_job(visitor, &arrow.params, arrow.span);
     walk::walk_arrow_function_expression(visitor, arrow);
     visitor.job_frames = frames;
+    visitor.facts.const_numbers = numbers;
     if worker {
         visitor.worker_stack.pop();
     }
@@ -69,7 +76,13 @@ pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStat
     if !tracks {
         visitor.visit_expression(&stmt.discriminant);
     }
+    let numbers = visitor.facts.const_numbers.clone();
     for case in &stmt.cases {
+        crate::queue::number_scope::hide_statements(visitor, &case.consequent);
+    }
+    let case_numbers = visitor.facts.const_numbers.clone();
+    for case in &stmt.cases {
+        visitor.facts.const_numbers.clone_from(&case_numbers);
         let label = tracks
             .then(|| case_label(visitor, case.test.as_ref()))
             .flatten();
@@ -80,11 +93,13 @@ pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStat
         if let Some(test) = &case.test {
             visitor.visit_expression(test);
         }
+        crate::queue::number_scope::prepare_statements(visitor, &case.consequent);
         for statement in &case.consequent {
             visit_statement(visitor, statement);
         }
         visitor.current_case = previous;
     }
+    visitor.facts.const_numbers = numbers;
 }
 
 fn enter_job(
