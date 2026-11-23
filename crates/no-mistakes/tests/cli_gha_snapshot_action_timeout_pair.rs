@@ -47,3 +47,18 @@ fn github_actions_action_timeout_pair_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn nested_deadline_json_matches_snapshot() {
+    let root = rules_path(RULE, "fixture", "deadline");
+    let cases = [
+        ("report", "deadline-report.yml"),
+        ("advise", "deadline-advise.yml"),
+        ("ignore", "deadline-ignore.yml"),
+        ("disabled", "deadline-off.yml"),
+        ("custom_advisory", "deadline-custom-advisory.yml"),
+        ("with_exact_checks", "deadline-with-exact.yml"),
+    ]
+    .map(|(label, config)| (label, root.clone(), rules_path(RULE, "configs", config)));
+    assert_saved_fixture("github_actions_action_timeout_pair_deadline", &cases);
+}

@@ -497,6 +497,13 @@ keys nested under it are not judged as inputs. `include` defaults to workflow
 to `.github/actions/**/action.yml` and `.github/actions/**/action.yaml`. See the
 [action input policy](../rules/github-actions-action-input-policy.md#options-and-defaults).
 
+For [`github-actions-action-timeout-pair`](../rules/github-actions-action-timeout-pair.md),
+enable `options.nestedBelowStepTimeout` and name the action input with
+`options.nestedInput` to require the action's own deadline in seconds to be
+strictly below the workflow step's timeout. The option defaults to `false`.
+The comparison uses the values in the workflow. Unknown operands follow
+`options.unanalyzable`.
+
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),
 `options.assumeWriteWhenUnspecified` defaults to `false`. Leave it off unless
 the repository or organization default `GITHUB_TOKEN` can write. When it is

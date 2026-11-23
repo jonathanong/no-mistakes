@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    options:
+      uses: [example/deadline-action@]
+      nestedInput: timeout-seconds
+      nestedBelowStepTimeout: true
+      unanalyzable: advise

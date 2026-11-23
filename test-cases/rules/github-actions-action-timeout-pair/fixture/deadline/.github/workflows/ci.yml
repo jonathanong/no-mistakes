@@ -1,0 +1,49 @@
+name: Example
+on: workflow_dispatch
+jobs:
+  example:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Above cap
+        uses: example/deadline-action@v1
+        timeout-minutes: 2
+        with:
+          timeout-seconds: 150
+      - name: Below cap
+        uses: example/deadline-action@v1
+        timeout-minutes: 2
+        with:
+          timeout-seconds: 90
+      - name: At cap
+        uses: example/deadline-action@v1
+        timeout-minutes: 2
+        with:
+          timeout-seconds: 120
+      - name: Fractional deadline below cap
+        uses: example/deadline-action@v1
+        timeout-minutes: 2
+        with:
+          timeout-seconds: 119.5
+      - name: Expression cap
+        uses: example/deadline-action@v1
+        timeout-minutes: ${{ inputs.minutes }}
+        with:
+          timeout-seconds: 90
+      - name: Quoted deadline
+        uses: example/deadline-action@v1
+        timeout-minutes: 2
+        with:
+          timeout-seconds: '90'
+      - name: Negative deadline
+        uses: example/deadline-action@v1
+        timeout-minutes: 2
+        with:
+          timeout-seconds: -1
+  unanalyzable:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Above cap in named job
+        uses: example/deadline-action@v1
+        timeout-minutes: 2
+        with:
+          timeout-seconds: 150

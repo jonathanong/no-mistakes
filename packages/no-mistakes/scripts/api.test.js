@@ -68,6 +68,16 @@ test("forbidden dependency selectors and origin exceptions have public option ty
   );
 });
 
+test("action timeout pair exports the optional nested deadline comparison", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-action-timeout-pair-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface GithubActionsActionTimeoutPairOptions \{/);
+  assert.match(declarations, /nestedBelowStepTimeout\?: boolean;/);
+  assert.match(declarations, /unanalyzable\?: Unanalyzable;/);
+});
+
 test("annotation literal helpers remain an exported option and verdict profile", () => {
   for (const file of ["postgres-query-annotation-types.d.ts", "check-report-types.d.ts"]) {
     assert.match(readFileSync(join(packageRoot, file), "utf8"), /sqlLiteralHelpers\?: string\[\];/);

@@ -1,87 +1,10 @@
 # `github-actions-action-timeout-pair`
 
-## Why and when
+An action can use its own deadline to stop work and start cleanup. Set that
+deadline below the workflow step's `timeout-minutes` so the action can act
+before GitHub cancels the step.
 
-Use this rule when an action's outer workflow timeout and its native timeout
-must fail together. It prevents a wrapper or third-party action from outliving
-the step that owns it.
-
-## What it requires
-
-Matching workflow `uses:` steps need a literal step timeout. Direct third-party
-matches also need the configured numeric nested input; matching calls inside
-unrelated composite actions are forbidden by default.
-
-## Valid example
-
-Every matching caller step has a literal `timeout-minutes`, and the third-party
-action receives a numeric nested timeout.
-
-```yaml
-jobs:
-  deploy:
-    runs-on: ubuntu-slim
-    steps:
-      - uses: ./.github/actions/setup-aws
-        timeout-minutes: 2
-      - uses: aws-actions/configure-aws-credentials@v4
-        timeout-minutes: 2
-        with:
-          action-timeout-s: 90
-```
-
-## Counterexample
-
-A workflow step calls the local wrapper without `timeout-minutes`, or a
-third-party call quotes the nested timeout number.
-
-```yaml
-jobs:
-  deploy:
-    runs-on: ubuntu-slim
-    steps:
-      - uses: ./.github/actions/setup-aws
-      - uses: aws-actions/configure-aws-credentials@v4
-        timeout-minutes: 2
-        with:
-          action-timeout-s: "90"
-```
-
-## Analysis
-
-### Effort
-
-- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
-
-### Unanalyzable inputs
-
-Invalid YAML is skipped and produces no finding. It is not sent through `options.unanalyzable`. Parsed `uses` and timeout keys are judged.
-
-## Suppression
-
-Use `no-mistakes-disable-next-line github-actions-action-timeout-pair` on the
-specific workflow step, or a file directive only for an intentional wrapper
-exception. Prefer narrowing `uses` when the action is outside the policy.
-
-## Options and defaults
-
-`uses` is the required exact/prefix match list. `stepTimeoutMinutes`,
-`nestedInput`, and `nestedTimeoutSeconds` define the paired values; `include`
-defaults to workflow and composite `.yml`/`.yaml` locations, and
-`forbidNestedInComposite` defaults to `true`.
-
-## Related rules
-
-[`github-actions-job-timeouts`](github-actions-job-timeouts.md) sets the job
-ceiling, while [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md)
-keeps workflow-only timeout keys out of composite steps.
-[`github-actions-action-input-policy`](github-actions-action-input-policy.md)
-requires or bans `with:` inputs for each configured action family.
-
-Require a caller-side literal `timeout-minutes` and, for direct third-party
-`uses:`, a nested native timeout input. Composite-action steps cannot express
-`timeout-minutes`, so matching calls belong in the workflow (or inside a
-configured local wrapper that forwards the nested input).
+## Configuration
 
 ```yaml
 rules:
@@ -89,61 +12,100 @@ rules:
     scope: repository
     options:
       uses:
-        - ./.github/actions/setup-aws
-        - aws-actions/configure-aws-credentials@
-      stepTimeoutMinutes: 2
-      nestedInput: action-timeout-s
-      nestedTimeoutSeconds: 90
-      forbidNestedInComposite: true
+        - example-org/publish-widget@
+      nestedInput: deadline-seconds
+      nestedBelowStepTimeout: true
 ```
 
-`uses` entries match after trim and a trailing-slash strip. An entry that
-ends in `@` is a case-insensitive prefix; other entries are exact. Direct
-third-party calls are the prefix `@` form, not a local `./` path: those
-steps must also set `with[nestedInput]` to the number `nestedTimeoutSeconds`
-(not a quoted string).
+With `nestedBelowStepTimeout: true`, a matching third-party workflow step's
+finite, nonnegative `with[nestedInput]` number in seconds must be strictly less
+than its literal `timeout-minutes` multiplied by 60. The comparison uses the values in the
+workflow and does not require either exact-value option.
 
-`include` defaults to `.github/workflows/**/*.yml` / `*.yaml` and
-`.github/actions/**/action.yml` / `action.yaml`. Empty `uses` produces no
-findings. Invalid YAML is skipped so `github-actions-job-timeouts` can report
-it. `forbidNestedInComposite` (default true) rejects matching `uses:` inside
-any composite that is not itself the local wrapper path.
+## Valid example
 
-Counterexample: a workflow step calls the local wrapper without
-`timeout-minutes`, or a third-party call omits the nested timeout number.
+The step has a 120-second cap and the action's own deadline is 90 seconds.
 
 ```yaml
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-slim
     steps:
-      - uses: ./.github/actions/setup-aws
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: example-org/publish-widget@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         timeout-minutes: 2
         with:
-          action-timeout-s: "90"
+          deadline-seconds: 90
 ```
 
-Fix: set a literal `timeout-minutes` on the workflow step, and pass the
-nested timeout as a bare number. Keep matching `uses:` out of other
-composites.
+## Counterexample
+
+A 150-second deadline exceeds the 120-second cap. A 120-second deadline also
+fails because the deadlines are equal.
 
 ```yaml
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-slim
     steps:
-      - uses: ./.github/actions/setup-aws
-        timeout-minutes: 2
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: example-org/publish-widget@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         timeout-minutes: 2
         with:
-          action-timeout-s: 90
+          deadline-seconds: 150
 ```
 
-Use `no-mistakes-disable-next-line github-actions-action-timeout-pair` or
-`no-mistakes-disable-file` for a one-off exception.
+## Fix
 
-## Invalid UTF-8
+Lower `deadline-seconds` to a bare number below 120, such as `90`, so the
+action has time to start cleanup. Keep both values consistent with any
+configured exact values.
 
-Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.
+## Suppression
+
+Place `# no-mistakes-disable-next-line github-actions-action-timeout-pair`
+immediately above the reported key. Use
+`no-mistakes-disable-file github-actions-action-timeout-pair` for a file-wide
+exception.
+
+## Options and defaults
+
+- `uses` accepts exact matches and case-insensitive prefixes ending in `@`.
+  Entries are trimmed and a trailing slash is stripped. An empty list reports
+  no findings. Third-party matches for nested input checks use the `@` prefix
+  form.
+- `stepTimeoutMinutes` and `nestedTimeoutSeconds` set optional exact integer
+  values. `nestedInput` names the third-party action's `with` key.
+- `nestedBelowStepTimeout` defaults to `false`. Enable it with `nestedInput`
+  to compare the declared deadlines on direct third-party workflow steps.
+- `include` defaults to `.github/workflows/**/*.yml` and
+  `.github/workflows/**/*.yaml`, plus `action.yml` and `action.yaml` under
+  `.github/actions/`.
+- `forbidNestedInComposite` defaults to `true`. Matching calls are forbidden
+  in composites outside the configured local wrapper. Composite steps have
+  no caller-side `timeout-minutes`, so the deadline comparison applies only
+  to direct workflow calls.
+
+## Analysis
+
+### Effort
+
+Runs at `max`. A request for `low` records a warning and runs the rule at
+`max`.
+
+### Unanalyzable inputs
+
+With the comparison enabled, expressions, quoted numbers, and missing or
+otherwise unsupported operands follow `options.unanalyzable`. Use `report` for a finding (the
+default), `advise` for an advisory, or `ignore` to skip the uncertainty.
+The comparison reports a numeric deadline at or above the step cap under
+all three policies.
+
+Invalid YAML is skipped. Invalid UTF-8 is decoded lossily and scanned. Files
+that cannot be read for another reason are skipped.
+
+## Related rules
+
+[`github-actions-job-timeouts`](github-actions-job-timeouts.md) sets the job
+ceiling. [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md)
+keeps workflow-only timeout keys out of composite steps.
+[`github-actions-action-input-policy`](github-actions-action-input-policy.md)
+requires or bans `with` inputs for configured action families.
