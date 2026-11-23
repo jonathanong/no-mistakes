@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: mentions names only in a script
         run: echo "NODE_OPTIONS=--inspect"
-      - name: unconfigured name
+      - name: name outside the policy
         env:
           OTHER_OPTIONS: --inspect
         run: echo ok
