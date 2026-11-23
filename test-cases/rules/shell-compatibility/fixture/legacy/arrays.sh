@@ -5,6 +5,7 @@ set -euo pipefail
 collect "${items[@]}"
 collect "${items[*]}"
 collect ${items[@]+"${items[@]}"}
+collect ${items[*]+"${items[*]}"}
 collect "${items[@]+"${items[@]}"}"
 collect '${items[@]}' "\${items[@]}" ${items[@]}
 # collect "${items[@]}"

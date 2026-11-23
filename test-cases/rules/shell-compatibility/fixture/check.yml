@@ -10,4 +10,4 @@ rules:
     scope: repository
     exclude: ["zsh/excluded.zsh"]
     options:
-      files: ["zsh/startup"]
+      files: ["zsh/start*"]
