@@ -112,6 +112,52 @@ fn keyed_diff_selects_nested_arrays_by_dotted_path_or_pointer() {
     }
 }
 
+#[test]
+fn keyed_diff_decodes_saved_catalogs_as_utf16_with_both_byte_orders() {
+    for (name, format, extension) in CASES
+        .into_iter()
+        .filter(|(_, format, _)| matches!(format, KeyFormat::Strings | KeyFormat::Resx))
+    {
+        let options = KeyOptions {
+            format,
+            array: None,
+            id_field: None,
+        };
+        let base = fixture(name, "base", extension);
+        let head = fixture(name, "head", extension);
+        let expected = diff(&options, Some(&base), Some(&head)).unwrap();
+        for big_endian in [false, true] {
+            let encode = |source: &[u8]| {
+                let mut bytes = if big_endian {
+                    vec![0xfe, 0xff]
+                } else {
+                    vec![0xff, 0xfe]
+                };
+                for unit in std::str::from_utf8(source).unwrap().encode_utf16() {
+                    bytes.extend(if big_endian {
+                        unit.to_be_bytes()
+                    } else {
+                        unit.to_le_bytes()
+                    });
+                }
+                bytes
+            };
+            let encoded_base = encode(&base);
+            let encoded_head = encode(&head);
+            assert_eq!(
+                diff(&options, Some(&encoded_base), Some(&encoded_head)).unwrap(),
+                expected
+            );
+            let truncated = &encoded_head[..encoded_head.len() - 1];
+            assert!(format!(
+                "{:#}",
+                diff(&options, Some(&encoded_base), Some(truncated)).unwrap_err()
+            )
+            .contains("incomplete UTF-16 code unit"));
+        }
+    }
+}
+
 fn fixture(scenario: &str, name: &str, extension: &str) -> Vec<u8> {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/keyed-diff")
