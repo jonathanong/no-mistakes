@@ -42,11 +42,14 @@ pub(super) fn message(
         InputFault::Banned { key } => format!(
             "{where_} and sets banned input `{key}`. Remove `{key}` from `with:`."
         ),
+        InputFault::Unlisted { key } if key == "<<" => format!(
+            "{where_} with a YAML merge key `<<` under `with:`. The allowlist cannot check merged inputs. Write the inputs inline under `with:` so the policy can check each one."
+        ),
         InputFault::Unlisted { key } => format!(
             "{where_} with input `{key}`, which is not in `allowedInputs`. Remove `{key}` from `with:`, or add it to `allowedInputs` if the action may receive it. The action policy lists every input this action may receive."
         ),
         InputFault::NotPresent { key } => format!(
-            "{where_} without required input `{key}`. Set `{key}` to any value. The action policy requires this input on every ref."
+            "{where_} without required input `{key}`. Set `{key}` to a non-null value. The action policy requires this input on every ref."
         ),
     }
 }
