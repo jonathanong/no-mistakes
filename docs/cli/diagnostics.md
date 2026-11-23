@@ -199,6 +199,17 @@ independent preparation branches. With detailed timings, `check.prepare.catalog`
 and `check.prepare.independent` are reported as parallel, so they are not added
 to that wall time.
 
+In `check --timings`, `rules.canonical_dependency_graph` measures the shared
+graph build when the rules domain needs one. The build runs before rule
+execution and is included in `analysis.rules`. `rules.execute` covers the
+parallel rule branches through their join. `rules.execute.graph_consumers`
+measures the branch that runs graph-backed rules in sequence. Compare that
+branch's elapsed time with `rules.execute` to see how much of execution it
+occupies. These elapsed times can include scheduling and waits in the shared
+worker pool. `rules.finalize` measures result assembly and any rule-local
+suppression after the join. The enclosing domain also includes prerequisite
+checks and dispatch.
+
 For graph-finalization regressions, verbose `check` output separates
 `graph.forward_adjacency_normalization`, `graph.reverse_adjacency_normalization`,
 `graph.canonical_flatten`, and `graph.ordinal_construction`. Playwright-enabled

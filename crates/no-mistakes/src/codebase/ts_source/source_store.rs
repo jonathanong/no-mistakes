@@ -24,7 +24,7 @@ use validation::ValidatedPathCache;
 pub type SourceReadOutcome = Result<Arc<str>, Arc<io::Error>>;
 
 type JsonParseSlots = DashMap<PathBuf, Arc<OnceLock<JsonParseOutcome>>>;
-type YamlDocumentSlots = DashMap<PathBuf, Arc<OnceLock<yaml::CachedYaml>>>;
+type YamlDocumentSlots = DashMap<(PathBuf, yaml::YamlProjection), Arc<OnceLock<yaml::CachedYaml>>>;
 type SupplementalReadSlots = DashMap<PathBuf, Arc<OnceLock<SourceReadOutcome>>>;
 
 /// Lazy request-scoped source storage for a frozen file inventory.

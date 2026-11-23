@@ -20,6 +20,9 @@ pub(super) struct Reach<'a> {
 
 impl<'a> Reach<'a> {
     pub(super) fn new(graph: &'a DepGraph, enumerators: &[Enumerator]) -> Self {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("test-no-live-repository-scan.registry.scan-index-builds", 1);
+        }
         let scanners = graph
             .resolved_call_sites()
             .iter()

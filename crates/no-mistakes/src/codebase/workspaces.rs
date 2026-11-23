@@ -25,6 +25,8 @@ include!("workspaces/pnpm_include_settings.rs");
 include!("workspaces/pnpm_include_catalog.rs");
 include!("workspaces/loading.rs");
 include!("workspaces/package.rs");
+mod manual;
+pub(crate) use manual::{load_manual_workspace_from_source_store, ManualWorkspace};
 include!("workspaces/exports.rs");
 include!("workspaces/path.rs");
 

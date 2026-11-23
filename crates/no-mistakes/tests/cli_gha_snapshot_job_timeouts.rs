@@ -220,3 +220,12 @@ fn github_actions_job_timeouts_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn shared_workflow_yaml_json_matches_snapshot() {
+    let fixture = super::saved_fixture::materialize("performance", "shared-workflow-yaml");
+    assert_saved_fixture(
+        "shared_workflow_yaml",
+        &[("shared", fixture.path().to_path_buf(), Default::default())],
+    );
+}

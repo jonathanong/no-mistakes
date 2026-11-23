@@ -1,4 +1,18 @@
 use super::*;
+use crate::codebase::ts_source::SourceStore;
+
+fn load_workspace(
+    workspace_roots: &[PathBuf],
+    files: &[PathBuf],
+    sources: &SourceStore,
+) -> anyhow::Result<WorkspaceMap> {
+    crate::codebase::workspaces::load_manual_workspace_from_source_store(
+        workspace_roots.iter().map(PathBuf::as_path),
+        files,
+        sources,
+    )
+    .map(|inputs| inputs.workspace)
+}
 
 fn fixture_root(name: &str) -> PathBuf {
     normalize_path(

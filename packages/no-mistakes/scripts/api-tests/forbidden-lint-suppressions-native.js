@@ -18,6 +18,8 @@ for (const config of ["default", "ts", "blanket", "custom", "none", "excluded", 
     async () => {
       const cjs = require("../../index.js");
       const esm = await import("../../index.mjs");
+      assert.equal(esm.check, cjs.check);
+      assert.equal(esm.analyzeProject, cjs.analyzeProject);
       const directory = await mkdtemp(join(tmpdir(), "no-mistakes-suppression-parity-"));
       const project = join(directory, "project");
       try {
@@ -34,15 +36,7 @@ for (const config of ["default", "ts", "blanket", "custom", "none", "excluded", 
         const pending = cjs.check(options);
         assert.ok(pending instanceof Promise);
         const report = await pending;
-        assert.deepEqual(
-          normalizeCheckFailurePaths(await esm.check(options)),
-          normalizeCheckFailurePaths(report),
-        );
         const request = { ...options, reports: [{ type: "check" }] };
-        assert.deepEqual(
-          normalizeCheckFailurePaths((await cjs.analyzeProject(request)).reports[0].result),
-          normalizeCheckFailurePaths(report),
-        );
         assert.deepEqual(
           normalizeCheckFailurePaths((await esm.analyzeProject(request)).reports[0].result),
           normalizeCheckFailurePaths(report),

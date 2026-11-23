@@ -4,3 +4,7 @@ expression: "labels.join(\"\\n\")"
 ---
 [timing] analysis.filesystem_rules.test-no-dependency-pins: <timing> (parallel; non-additive)
 [timing] analysis.rules.forbidden-dependencies: <timing> (parallel; non-additive)
+[timing] rules.canonical_dependency_graph: <timing> (parallel; non-additive)
+[timing] rules.execute.graph_consumers: <timing> (parallel; non-additive)
+[timing] rules.execute: <timing> (parallel; non-additive)
+[timing] rules.finalize: <timing> (parallel; non-additive)

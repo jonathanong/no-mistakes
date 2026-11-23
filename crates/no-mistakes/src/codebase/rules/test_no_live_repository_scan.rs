@@ -13,9 +13,10 @@ mod requires;
 mod subprocess;
 use super::analysis_policy::AnalysisDiagnostics;
 use super::forbidden_calls::{expand_roots, site_source_node, SharedRoots};
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::ts_source::module_facts::arguments::PathAnchor;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
+use crate::perf_trace::trace;
 use anyhow::Result;
 use config::Options;
 use enumerators::{scan_of, Scan};
@@ -24,15 +25,7 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "test-no-live-repository-scan";
 
-pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
-    config.rule_configured(RULE_ID).then(|| {
-        let mut plan = GraphBuildPlan::imports_and_workspace();
-        plan.calls = true;
-        plan.value_import_selectors = true;
-        plan
-    })
-}
-
+pub(crate) use config::graph_plan;
 pub use config::vitest_roots_configured;
 
 pub(crate) fn check_with_graph(
@@ -61,17 +54,21 @@ pub(crate) fn check_with_graph(
             target_roots: &target_roots,
         })?;
         let setups = owned::setups::ConfiguredSetups::new(&root, vitest, &root_files);
-        let mut scope = reachable::sources(graph, &roots, &root_files, graph_files, &setups)?;
+        let mut scope = trace("test-no-live-repository-scan.reachability", || {
+            reachable::sources(graph, &roots, &root_files, graph_files, &setups)
+        })?;
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
-        for (site, expression) in registry::apply(
-            graph,
-            facts,
-            &mut scope,
-            &filter,
-            &options.enumerators,
-            resolution,
-            graph_files,
-        ) {
+        for (site, expression) in trace("test-no-live-repository-scan.registry", || {
+            registry::apply(
+                graph,
+                facts,
+                &mut scope,
+                &filter,
+                &options.enumerators,
+                resolution,
+                graph_files,
+            )
+        }) {
             findings::unresolved_findings(&mut diagnostics, options.unresolved_root).push(
                 findings::unresolved_dispatch(&root, application, site, &expression),
             );
@@ -81,104 +78,110 @@ pub(crate) fn check_with_graph(
         let analyzers = subprocess::Gate::new(&root, application, facts, &options, &fixture_dirs);
         let mut sites = requires::Sites::default();
         let owners = std::cell::OnceCell::new();
-        for site in graph.resolved_call_sites() {
-            if site.invocation != crate::codebase::dependencies::extract::InvocationKind::Call
-                || !reachable.contains(&site_source_node(site))
-                || !filter.is_match(&site.file)
-            {
-                continue;
-            }
-            analyzers.note(&mut diagnostics, site);
-            let loads =
-                node_loaders::findings(&root, application, site, facts, &options.enumerators);
-            findings::unresolved_findings(&mut diagnostics, options.unresolved_root).extend(loads);
-            sites.visit(site, &options.enumerators);
-            let Some(scan) = scan_of(site, &options.enumerators) else {
-                continue;
-            };
-            let ts = facts.get_ts_facts(&site.file);
-            // A mock that forwards its arguments unchanged is not a root of its own;
-            // the callers of the mocked function are judged where they enumerate.
-            if ts
-                .and_then(owned::path_provenance)
-                .and_then(|provenance| provenance.pass_through.get(&site.offset))
-                .is_some_and(|spied| enumerators::spied_enumerator(spied, &options.enumerators))
-            {
-                continue;
-            }
-            let origin = ts.and_then(|ts| provenance::scan_origin(ts, site));
-            let verdict = match scan {
-                Scan::Unresolved => {
-                    Verdict::Unresolved("the receiver of this call is not resolved")
+        trace("test-no-live-repository-scan.evaluate", || {
+            for site in graph.resolved_call_sites() {
+                if site.invocation != crate::codebase::dependencies::extract::InvocationKind::Call
+                    || !reachable.contains(&site_source_node(site))
+                    || !filter.is_match(&site.file)
+                {
+                    continue;
                 }
-                Scan::Resolved => classify(origin, &fixture_dirs),
-            };
-            let ownership = ((matches!(verdict, Verdict::Unresolved(_))
-                || origin.is_some_and(|origin| {
-                    origin.anchor == PathAnchor::SharedTemp && origin.env.is_some()
-                }))
-                && scan == Scan::Resolved)
-                .then_some(origin)
-                .flatten()
-                .map(|origin| {
-                    owners
-                        .get_or_init(|| {
-                            owned::Owners::new(
-                                graph,
-                                &scope,
-                                facts,
-                                graph_files,
-                                resolution,
-                                setups.clone(),
-                                owned::Environment {
-                                    root: &root,
-                                    config,
-                                    fixture_dirs: fixture_dirs
-                                        .iter()
-                                        .map(|dir| (*dir).to_owned())
-                                        .collect(),
-                                },
-                            )
-                        })
-                        .ownership(origin, site, facts, &fixture_dirs)
-                });
-            let owned = matches!(ownership.as_ref(), Some(owned::Ownership::Yes));
-            match verdict {
-                Verdict::Allowed => {}
-                _ if owned => {}
-                Verdict::Live(why) => {
-                    let asset = origin.and_then(|origin| {
-                        assets::declared(origin, &root, &site.file, &options.runtime_assets)
+                analyzers.note(&mut diagnostics, site);
+                let loads =
+                    node_loaders::findings(&root, application, site, facts, &options.enumerators);
+                findings::unresolved_findings(&mut diagnostics, options.unresolved_root)
+                    .extend(loads);
+                sites.visit(site, &options.enumerators);
+                let Some(scan) = scan_of(site, &options.enumerators) else {
+                    continue;
+                };
+                let ts = facts.get_ts_facts(&site.file);
+                // A mock that forwards its arguments unchanged is not a root of its own;
+                // the callers of the mocked function are judged where they enumerate.
+                if ts
+                    .and_then(owned::path_provenance)
+                    .and_then(|provenance| provenance.pass_through.get(&site.offset))
+                    .is_some_and(|spied| enumerators::spied_enumerator(spied, &options.enumerators))
+                {
+                    continue;
+                }
+                let origin = ts.and_then(|ts| provenance::scan_origin(ts, site));
+                let verdict = match scan {
+                    Scan::Unresolved => {
+                        Verdict::Unresolved("the receiver of this call is not resolved")
+                    }
+                    Scan::Resolved => classify(origin, &fixture_dirs),
+                };
+                let ownership = ((matches!(verdict, Verdict::Unresolved(_))
+                    || origin.is_some_and(|origin| {
+                        origin.anchor == PathAnchor::SharedTemp && origin.env.is_some()
+                    }))
+                    && scan == Scan::Resolved)
+                    .then_some(origin)
+                    .flatten()
+                    .map(|origin| {
+                        owners
+                            .get_or_init(|| {
+                                trace("test-no-live-repository-scan.ownership-index", || {
+                                    owned::Owners::new(
+                                        graph,
+                                        &scope,
+                                        facts,
+                                        graph_files,
+                                        resolution,
+                                        setups.clone(),
+                                        owned::Environment {
+                                            root: &root,
+                                            config,
+                                            fixture_dirs: fixture_dirs
+                                                .iter()
+                                                .map(|dir| (*dir).to_owned())
+                                                .collect(),
+                                        },
+                                    )
+                                })
+                            })
+                            .ownership(origin, site, facts, &fixture_dirs)
                     });
-                    match asset {
-                        Some(asset) => diagnostics.advisories.push(findings::runtime_asset(
-                            &root,
-                            application,
-                            site,
-                            asset,
-                        )),
-                        None => {
-                            diagnostics
-                                .findings
-                                .push(findings::live(&root, application, site, why))
+                let owned = matches!(ownership.as_ref(), Some(owned::Ownership::Yes));
+                match verdict {
+                    Verdict::Allowed => {}
+                    _ if owned => {}
+                    Verdict::Live(why) => {
+                        let asset = origin.and_then(|origin| {
+                            assets::declared(origin, &root, &site.file, &options.runtime_assets)
+                        });
+                        match asset {
+                            Some(asset) => diagnostics.advisories.push(findings::runtime_asset(
+                                &root,
+                                application,
+                                site,
+                                asset,
+                            )),
+                            None => diagnostics.findings.push(findings::live(
+                                &root,
+                                application,
+                                site,
+                                why,
+                            )),
                         }
                     }
-                }
-                Verdict::Unresolved(why) => {
-                    let finding = match ownership {
-                        Some(owned::Ownership::Parameter(cause)) => {
-                            findings::parameter(&root, application, site, &cause)
-                        }
-                        Some(owned::Ownership::Environment(cause)) => {
-                            findings::environment(&root, application, site, &cause)
-                        }
-                        _ => findings::unresolved(&root, application, site, why),
-                    };
-                    findings::unresolved_findings(&mut diagnostics, options.unresolved_root)
-                        .push(finding);
+                    Verdict::Unresolved(why) => {
+                        let finding = match ownership {
+                            Some(owned::Ownership::Parameter(cause)) => {
+                                findings::parameter(&root, application, site, &cause)
+                            }
+                            Some(owned::Ownership::Environment(cause)) => {
+                                findings::environment(&root, application, site, &cause)
+                            }
+                            _ => findings::unresolved(&root, application, site, why),
+                        };
+                        findings::unresolved_findings(&mut diagnostics, options.unresolved_root)
+                            .push(finding);
+                    }
                 }
             }
-        }
+        });
         for finding in sites.unresolved_requires(&root, application, facts, &options.enumerators) {
             findings::unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
         }

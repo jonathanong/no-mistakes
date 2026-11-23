@@ -1,4 +1,5 @@
-use serde::Deserialize;
+mod parse;
+use parse::cached_from_str;
 use std::io;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -16,6 +17,13 @@ impl YamlLoadError {
     #[doc(hidden)]
     pub fn is_io(&self) -> bool {
         matches!(self, Self::Io(_))
+    }
+
+    pub(crate) fn line(&self) -> usize {
+        match self {
+            Self::Io(_) => 1,
+            Self::Syntax(error) => error.location().map_or(1, |location| location.line()),
+        }
     }
 }
 
@@ -44,6 +52,12 @@ pub type YamlParseOutcome = Result<Arc<serde_yaml::Value>, YamlLoadError>;
 /// not drop the documents before it. An empty failure is a syntax error.
 #[doc(hidden)]
 pub type YamlDocumentsOutcome = Result<Arc<[Arc<serde_yaml::Value>]>, YamlLoadError>;
+
+#[derive(Clone, Copy, Default, Eq, Hash, PartialEq)]
+pub(super) struct YamlProjection {
+    removed_bom: bool,
+    replaced_invalid_bytes: bool,
+}
 
 /// One document walk. The strict single-document view is derived from it.
 pub(super) struct CachedYaml {
@@ -78,7 +92,30 @@ impl CachedYaml {
 impl super::SourceStore {
     #[doc(hidden)]
     pub fn parse_yaml_path(&self, path: &Path) -> YamlParseOutcome {
-        let cached = self.load_yaml(path);
+        self.parse_single_yaml(self.load_yaml(path))
+    }
+
+    /// Reuse the YAML parse for a strict or lossy read from this store.
+    pub(crate) fn parse_loaded_yaml(
+        &self,
+        path: &Path,
+        source: &str,
+        trim_bom: bool,
+    ) -> YamlParseOutcome {
+        let text = if trim_bom {
+            source.trim_start_matches('\u{feff}')
+        } else {
+            source
+        };
+        let projection = YamlProjection {
+            removed_bom: text.len() != source.len(),
+            replaced_invalid_bytes: source.contains('\u{fffd}') && self.read_path(path).is_err(),
+        };
+        let cached = self.load_yaml_projection(path, projection, |_| cached_from_str(self, text));
+        self.parse_single_yaml(cached)
+    }
+
+    fn parse_single_yaml(&self, cached: Arc<OnceLock<CachedYaml>>) -> YamlParseOutcome {
         let entry = cached.get().expect("yaml cache is initialized");
         entry.note_strict_rejection(self);
         entry.single.clone()
@@ -103,97 +140,39 @@ impl super::SourceStore {
     }
 
     fn load_yaml(&self, path: &Path) -> Arc<OnceLock<CachedYaml>> {
-        let path = crate::codebase::ts_source::normalize_discovery_path(path);
-        let slots = self.yaml_documents.get_or_init(dashmap::DashMap::new);
-        let cell = super::once_lock_slot(slots, path.clone());
-        self.increment("yaml.requests", 1);
-        let parsed = std::cell::Cell::new(false);
-        cell.get_or_init(|| {
-            parsed.set(true);
-            self.yaml_parse_count.fetch_add(1, Ordering::Relaxed);
-            self.increment("yaml.parses", 1);
-            match self.read_path(&path) {
+        self.load_yaml_projection(path, YamlProjection::default(), |path| {
+            match self.read_path(path) {
                 Ok(source) => cached_from_str(self, &source),
                 Err(error) => {
                     self.increment("yaml.errors", 1);
                     CachedYaml::failure(YamlLoadError::Io(error))
                 }
             }
+        })
+    }
+
+    fn load_yaml_projection(
+        &self,
+        path: &Path,
+        projection: YamlProjection,
+        load: impl FnOnce(&Path) -> CachedYaml,
+    ) -> Arc<OnceLock<CachedYaml>> {
+        let path = crate::codebase::ts_source::normalize_discovery_path(path);
+        let slots = self.yaml_documents.get_or_init(dashmap::DashMap::new);
+        let cell = super::once_lock_slot(slots, (path.clone(), projection));
+        self.increment("yaml.requests", 1);
+        let parsed = std::cell::Cell::new(false);
+        cell.get_or_init(|| {
+            parsed.set(true);
+            self.yaml_parse_count.fetch_add(1, Ordering::Relaxed);
+            self.increment("yaml.parses", 1);
+            load(&path)
         });
         if !parsed.get() {
             self.increment("yaml.cache_hits", 1);
         }
         cell
     }
-}
-
-fn cached_from_str(store: &super::SourceStore, source: &str) -> CachedYaml {
-    let split = split_documents(source);
-    let documents = document_view(&split);
-    let single = single_view(&split);
-    if documents.is_err() {
-        store.increment("yaml.errors", 1);
-    }
-    CachedYaml::from_views(documents, single)
-}
-
-struct SplitYaml {
-    documents: Vec<Arc<serde_yaml::Value>>,
-    failure: Option<Arc<serde_yaml::Error>>,
-}
-
-fn split_documents(source: &str) -> SplitYaml {
-    let mut documents = Vec::new();
-    let mut failure = None;
-    for document in serde_yaml::Deserializer::from_str(source) {
-        match serde_yaml::Value::deserialize(document) {
-            Ok(value) => documents.push(Arc::new(value)),
-            Err(error) => {
-                failure = Some(Arc::new(error));
-                break;
-            }
-        }
-    }
-    SplitYaml { documents, failure }
-}
-
-fn document_view(split: &SplitYaml) -> YamlDocumentsOutcome {
-    if split.documents.is_empty() {
-        if let Some(error) = &split.failure {
-            return Err(YamlLoadError::Syntax(Arc::clone(error)));
-        }
-    }
-    Ok(Arc::from(split.documents.as_slice()))
-}
-
-/// `from_str` keeps one clean document. No documents is an empty value.
-/// A later document, including one that does not parse, is rejected.
-fn single_view(split: &SplitYaml) -> YamlParseOutcome {
-    if split.documents.len() == 1 && split.failure.is_none() {
-        return Ok(Arc::clone(&split.documents[0]));
-    }
-    if split.documents.is_empty() {
-        if let Some(error) = &split.failure {
-            return Err(YamlLoadError::Syntax(Arc::clone(error)));
-        }
-        return Ok(null_document());
-    }
-    Err(YamlLoadError::Syntax(extra_document_error()))
-}
-
-fn null_document() -> Arc<serde_yaml::Value> {
-    static CELL: OnceLock<Arc<serde_yaml::Value>> = OnceLock::new();
-    Arc::clone(CELL.get_or_init(|| Arc::new(serde_yaml::Value::Null)))
-}
-
-fn extra_document_error() -> Arc<serde_yaml::Error> {
-    static CELL: OnceLock<Arc<serde_yaml::Error>> = OnceLock::new();
-    Arc::clone(CELL.get_or_init(|| {
-        Arc::new(
-            serde_yaml::from_str::<serde_yaml::Value>("a: 1\n---\nb: 2\n")
-                .expect_err("two YAML documents are rejected"),
-        )
-    }))
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

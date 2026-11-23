@@ -19,13 +19,13 @@ pub(super) fn check_file(
     {
         return Vec::new();
     }
-    let mut findings = match serde_yaml::from_str::<Value>(&source) {
+    let mut findings = match sources.parse_loaded_yaml(path, &source, false) {
         Ok(value) => check_parsed(&rel, &source, &value, opts),
         Err(err) => vec![RuleFinding {
             causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: rel.clone(),
-            line: err.location().map_or(1, |location| location.line()),
+            line: err.line(),
             message: format!("{rel}: invalid YAML ({err})"),
             import: None,
             target: None,

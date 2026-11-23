@@ -97,6 +97,9 @@ steps:
 
 ## Analysis
 
+Step and job timeout checks share a workflow's parsed YAML during a check.
+Each uses its own timeout policy and source locations.
+
 ### Effort
 
 - Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.

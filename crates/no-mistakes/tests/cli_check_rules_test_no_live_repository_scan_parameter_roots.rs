@@ -136,6 +136,35 @@ fn caller_references_check_json_snapshot() {
 }
 
 #[test]
+fn scan_registry_index_is_built_only_for_a_dynamic_key() {
+    let index_builds = "test-no-live-repository-scan.registry.scan-index-builds";
+    for (fixture, expected_builds) in [
+        ("registry-dispatch-only", 0),
+        ("registry-dynamic-dispatch", 1),
+    ] {
+        let root = crate::check_json_snapshot::rules_path(RULE, "caller-references", fixture);
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--format", "json", "--verbose-timings", "--root"])
+            .arg(root)
+            .output()
+            .unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert_eq!(output.status.code(), Some(0), "{fixture}: {stderr}");
+        assert!(
+            stderr.contains("[timing] test-no-live-repository-scan.registry:"),
+            "{stderr}"
+        );
+        let builds = stderr
+            .lines()
+            .find_map(|line| line.strip_prefix("[work] ")?.strip_prefix(index_builds))
+            .map_or(0, |count| {
+                count.strip_prefix(": ").unwrap().parse().unwrap()
+            });
+        assert_eq!(builds, expected_builds, "{fixture}: {stderr}");
+    }
+}
+
+#[test]
 fn caller_reference_owned_roots_clear_and_recall_controls_report() {
     let base = crate::check_json_snapshot::rules_path(RULE, "caller-references", "");
     for entry in std::fs::read_dir(base).unwrap() {

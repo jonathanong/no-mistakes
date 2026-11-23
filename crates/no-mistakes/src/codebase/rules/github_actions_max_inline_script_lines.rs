@@ -48,7 +48,12 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
             let rel = relative_slash_path(root, path);
             let Some(action) = gha_kind(&rel) else { return Vec::new() };
             match sources.read_path(path) {
-                Ok(source) => analyze::check_source(&rel, &source, action, opts.max_lines),
+                Ok(source) => match sources.parse_loaded_yaml(path, &source, true) {
+                    Ok(value) => analyze::check_parsed(&rel, &source, &value, action, opts.max_lines),
+                    Err(error) => vec![finding(&rel, error.line(), format!(
+                        "Invalid YAML ({error}); fix the YAML so inline script length can be checked."
+                    ))],
+                },
                 Err(error) => super::github_actions_workflow_files::unreadable_finding(
                     &error, defer_suppression, |line| finding(&rel, line,
                         format!("Cannot read GitHub Actions YAML as UTF-8 ({error}); restore a readable file so inline script length can be checked.")),

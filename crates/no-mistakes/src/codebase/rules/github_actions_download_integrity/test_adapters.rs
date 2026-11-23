@@ -44,9 +44,13 @@ pub(super) fn check_source(
     let Some(action) = gha_kind(rel) else {
         return Vec::new();
     };
+    let Ok(value) = serde_yaml::from_str(source.trim_start_matches('\u{feff}')) else {
+        return Vec::new();
+    };
     check_workflow(
         rel,
         source,
+        &value,
         action,
         &Policy {
             hosts,
@@ -69,9 +73,13 @@ pub(super) fn check_source_low(
     let Some(action) = gha_kind(rel) else {
         return AnalysisDiagnostics::default();
     };
+    let Ok(value) = serde_yaml::from_str(source.trim_start_matches('\u{feff}')) else {
+        return AnalysisDiagnostics::default();
+    };
     check_workflow(
         rel,
         source,
+        &value,
         action,
         &Policy {
             hosts,

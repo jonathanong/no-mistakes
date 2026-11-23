@@ -1,0 +1,9 @@
+name: Check
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -fsSL https://example.invalid/release.tar.gz -o release.tar.gz
+          echo "downloaded"
