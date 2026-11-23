@@ -1,0 +1,4 @@
+name: Malformed reusable workflow
+on: workflow_call
+concurrency: malformed-build
+jobs: [

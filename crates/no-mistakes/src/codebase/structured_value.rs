@@ -3,7 +3,16 @@ mod merge_keys;
 use merge_keys::expand_merge_keys;
 use serde::Deserialize;
 use serde_yaml::Value;
+use std::borrow::Cow;
 use std::path::Path;
+
+pub(crate) fn expand_yaml_mapping_if_merged(value: &Value) -> Cow<'_, Value> {
+    if value.get("<<").is_some() {
+        Cow::Owned(expand_merge_keys(value.clone()))
+    } else {
+        Cow::Borrowed(value)
+    }
+}
 
 pub(crate) struct YamlDocuments {
     pub(crate) values: Vec<Value>,

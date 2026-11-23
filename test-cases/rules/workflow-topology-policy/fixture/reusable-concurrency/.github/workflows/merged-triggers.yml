@@ -1,0 +1,15 @@
+name: Reusable with merged triggers
+x-triggers: &reusable
+  workflow_call: {}
+x-lock: &lock
+  group: merged-build
+on:
+  <<: *reusable
+  workflow_dispatch: {}
+concurrency:
+  <<: *lock
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

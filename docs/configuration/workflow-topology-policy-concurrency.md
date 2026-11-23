@@ -101,7 +101,6 @@ Give each owner its own group. Include `${{ github.workflow }}` or another
 value that differs per workflow, and use different text for a workflow lock
 and a job lock in the same file.
 
-
 ## `forbidReusableWorkflowConcurrency`
 
 `false` by default. Set it to `true` to report workflow-level `concurrency`
@@ -166,3 +165,11 @@ concurrency: example-isolated
 
 `no-mistakes-disable-line` on that key and `no-mistakes-disable-file` before the
 first code token also apply. Suppression does not require disabling job locks.
+
+### Limits
+
+The ban uses the declared `workflow_call` trigger, including a mapping entry
+with a null value or a trigger inherited through a YAML merge key. The ban
+applies even when the workflow has no callers. Workflows whose YAML cannot be
+parsed are skipped by the ban. Workflow topology still reports its
+`malformed-workflow` diagnostic for those files.

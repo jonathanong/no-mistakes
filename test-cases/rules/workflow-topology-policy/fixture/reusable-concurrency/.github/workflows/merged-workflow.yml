@@ -1,0 +1,10 @@
+name: Reusable with inherited fields
+x-defaults: &defaults
+  on: workflow_call
+<<: *defaults
+concurrency: inherited-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

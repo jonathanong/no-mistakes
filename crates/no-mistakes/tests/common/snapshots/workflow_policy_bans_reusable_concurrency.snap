@@ -19,6 +19,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "concurrency:"
         },
         {
+          "file": ".github/workflows/merged-triggers.yml",
+          "line": 9,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency:"
+        },
+        {
+          "file": ".github/workflows/merged-workflow.yml",
+          "line": 5,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: inherited-build"
+        },
+        {
+          "file": ".github/workflows/null-trigger.yml",
+          "line": 3,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: null-trigger-build"
+        },
+        {
           "file": ".github/workflows/scalar.yml",
           "line": 3,
           "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
@@ -51,6 +72,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Declare concurrency on the caller or on individual jobs.",
           "rule": "workflow-topology-policy",
           "sourceLine": "concurrency:"
+        },
+        {
+          "file": ".github/workflows/merged-triggers.yml",
+          "line": 9,
+          "message": "Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency:"
+        },
+        {
+          "file": ".github/workflows/merged-workflow.yml",
+          "line": 5,
+          "message": "Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: inherited-build"
+        },
+        {
+          "file": ".github/workflows/null-trigger.yml",
+          "line": 3,
+          "message": "Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: null-trigger-build"
         },
         {
           "file": ".github/workflows/scalar.yml",
