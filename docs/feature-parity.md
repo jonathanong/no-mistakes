@@ -211,7 +211,11 @@ graph was built. It does not change that graph or
 `postgres-no-mutable-sql-registry`. When a trusted SQL tag is configured, a
 file with an operational error, incomplete value flow, or unreadable source is
 listed on the check `incomplete` field and does not drop findings from complete
-files. Include and exclude select those gaps.
+files. Include and exclude select those gaps. Recorded project-file targets,
+including path aliases and workspace packages, are followed exactly. Node
+builtins and external packages are outside the search; a unique project ambient
+declaration can identify an external specifier. Unresolved project imports retain
+gap reporting.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
