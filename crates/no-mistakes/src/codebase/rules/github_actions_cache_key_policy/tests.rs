@@ -3,6 +3,7 @@ use super::*;
 mod coverage;
 mod edges;
 mod followups;
+mod forbidden_paths;
 
 fn fixture(name: &str) -> PathBuf {
     crate::test_support::rule_fixture_root(RULE_ID).join(name)
@@ -350,7 +351,7 @@ fn assert_scanned_fixtures(findings: &[RuleFinding]) {
                 | "shift-output.yml"
                 | "indirect-output.yml"
         ) {
-            let proved = judge::judge(relative, &jobs, &widget_options(), &|_| None);
+            let proved = judge::judge(relative, &jobs, &widget_options(), None, &|_| None);
             assert!(proved.is_empty(), "{relative}: {proved:?}");
         }
     }

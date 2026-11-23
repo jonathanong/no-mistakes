@@ -2,13 +2,13 @@ use super::options::{CacheSpec, Options};
 use super::output::proven_output_names;
 use super::scan::{Field, Job, Step};
 use super::text::{has_fragment, hash_args, norm_path, path_entries};
-use super::RuleFinding;
-use super::RULE_ID;
+use super::{hit, RuleFinding};
 
 pub(super) fn judge(
     rel: &str,
     jobs: &[Job],
     options: &Options,
+    rule_message: Option<&str>,
     actions: &dyn Fn(&str) -> Option<String>,
 ) -> Vec<RuleFinding> {
     let view = View { options, actions };
@@ -27,6 +27,8 @@ pub(super) fn judge(
                 .as_ref()
                 .map(|field| path_entries(&field.value))
                 .unwrap_or_default();
+            super::forbidden::check(rel, step, &paths, options, rule_message, &mut findings);
+            let before = findings.len();
             let mut scoped = false;
             for cache in &options.caches {
                 let path = norm_path(&cache.path);
@@ -46,6 +48,11 @@ pub(super) fn judge(
             }
             if scoped && options.forbid_broad_hash_files {
                 super::broad_hash::check(rel, step, options, &mut findings);
+            }
+            if let Some(message) = rule_message {
+                for finding in &mut findings[before..] {
+                    finding.message = message.to_string();
+                }
             }
         }
     }
@@ -169,16 +176,4 @@ fn restore_message(path: &str) -> String {
     format!(
         "Cache for `{path}` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false."
     )
-}
-
-fn hit(file: &str, line: usize, message: String) -> RuleFinding {
-    RuleFinding {
-        causes: Vec::new(),
-        rule: RULE_ID.into(),
-        file: file.into(),
-        line,
-        message,
-        import: None,
-        target: None,
-    }
 }

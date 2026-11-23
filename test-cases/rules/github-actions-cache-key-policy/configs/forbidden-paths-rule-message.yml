@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    message: Store caching is disabled in this repository; delete this step.
+    options:
+      forbiddenPaths:
+        - ~/.local/share/example-store
+        - .cache/example-store

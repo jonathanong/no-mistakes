@@ -1,0 +1,12 @@
+name: Aliased Composite Store Cache
+description: Composite action that aliases a forbidden store path
+inputs:
+  store:
+    default: &store ~/.local/share/example-store
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: *store
+        key: store-${{ runner.os }}

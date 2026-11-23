@@ -7,8 +7,8 @@ reuse bytes built for another operating system, architecture, or lockfile. Enabl
 portable cache path must be keyed by the platform and by a digest of a configured lockfile.
 A broad `hashFiles` glob can also invalidate a cache when unrelated source files change.
 
-The rule is opt-in. A cache whose `path` is not listed in `caches` is silent, including an
-expression path that is not exactly one configured path.
+The rule is opt-in. A cache whose `path` is not listed in `caches` or `forbiddenPaths` is silent,
+including an expression path that is not exactly one configured path.
 
 ## What it catches
 
@@ -18,12 +18,18 @@ or `action.yaml`. The action reference is matched without regard to case, an `@r
 trailing slash. Other actions are silent. Nested workflow files and non-composite action
 definitions are ignored. A non-composite action is one whose `runs.using` is not `composite`.
 
-A step is in scope only when a normalized `with.path` entry equals a configured `caches.path`.
+A step is in scope when a normalized `with.path` entry equals a configured `caches.path` or
+`forbiddenPaths` entry.
 Normalization trims whitespace, removes one leading `./`, and removes trailing slashes.
 `.cache/widgets` does not match `.cache/widgets-extra`. A block or sequence of paths matches when
 any entry equals a configured path. A comma is not a path separator.
 
-For each match, the `key` must contain every configured `keyParts` fragment as its own
+When a normalized `with.path` entry equals a `forbiddenPaths` entry, the rule reports that step on
+its `path` line (or the first item line for a `path` sequence) regardless of its `key` or
+`restore-keys`. Use `forbiddenPathsMessage` (or a rule-level `message`) to customize the reported
+message.
+
+For each `caches` match, the `key` must contain every configured `keyParts` fragment as its own
 `${{ }}` expression token. `matrix.os` does not satisfy `runner.os`. `runner.os_name`,
 `runner.os.extra`, `matrix.runner.os`, the literal text `runner.os` outside an expression, and a
 string literal such as `${{ 'runner.os' }}` or `${{ "runner.os" }}` do not satisfy `runner.os`.
@@ -118,23 +124,29 @@ independently of `allowHashFiles` and `rejectRestoreKeys`.
 
 A missing `key` is reported on the step. Platform and digest gaps are reported on the `key` line.
 `restore-keys` is reported on its own line. Broad patterns are reported on the associated
-field line, or on the first item line for a `restore-keys` sequence. Invalid YAML is reported
+field line, or on the first item line for a `restore-keys` sequence. Forbidden paths are reported on
+the `path` line, or on the first item line for a `path` sequence. Invalid YAML is reported
 at the parser location.
 Workflow or action bytes that are not UTF-8 are reported on the line of the first invalid byte.
 Anchors, aliases, and other shapes whose cache steps cannot be aligned to ordinary block locations
-produce one finding on line 1 when a configured path is involved, and are not partially judged.
+produce one finding on line 1 when a configured `caches` or `forbiddenPaths` path is involved, and
+are not partially judged.
 A cache step that does not use a configured path stays silent, including when the file uses anchors.
 
 ## Options
 
-`caches` is required and must list at least one cache. Each entry has a non-empty `path`, a
-non-empty `lockfile`, and at least one dotted `keyParts` fragment such as `runner.os`. The same
-normalized path cannot be listed twice. `rejectRestoreKeys` defaults to true. `allowHashFiles`
+At least one of `caches` or `forbiddenPaths` must be non-empty. Each `caches` entry has a non-empty
+`path`, a non-empty `lockfile`, and at least one dotted `keyParts` fragment such as `runner.os`.
+The same normalized path cannot be listed twice in `caches`, twice in `forbiddenPaths`, or in both
+`caches` and `forbiddenPaths`. `rejectRestoreKeys` defaults to true. `allowHashFiles`
 defaults to false, so a native `hashFiles` call is not provenance until you opt in. There is no
-repository-wide cache scan when `caches` is omitted. `forbidBroadHashFiles` defaults to false.
+repository-wide cache scan when neither `caches` nor `forbiddenPaths` is configured.
+`forbidBroadHashFiles` defaults to false.
 `allowedHashFilesPatterns` defaults to an empty list. Each entry is an exact, case-sensitive
 match to a decoded argument, such as `'generated/**'`, and exempts that argument from the
-broad-pattern check.
+broad-pattern check. `forbiddenPaths` defaults to an empty list; each entry must normalize to a
+non-empty path. Optional `forbiddenPathsMessage` sets a non-empty custom message for
+`forbiddenPaths` findings (falling back to the rule-level `message`, then the built-in message).
 
 ```yaml
 rules:
@@ -145,6 +157,9 @@ rules:
       allowHashFiles: true
       forbidBroadHashFiles: true
       allowedHashFilesPatterns: ['generated/**']
+      forbiddenPaths:
+        - ~/.local/share/example-store
+      forbiddenPathsMessage: Do not cache the package store; delete this cache step.
       caches:
         - path: .cache/widgets
           lockfile: widgets.lock
@@ -157,7 +172,8 @@ rules:
 
 With `allowHashFiles` true, the first key carries both platform fragments and `hashFiles`. The
 second key uses an earlier step in the same job instead: that step has an `id`, hashes
-`widgets.lock`, and writes that digest to `GITHUB_OUTPUT`. Neither step sets `restore-keys`.
+`widgets.lock`, and writes that digest to `GITHUB_OUTPUT`. The third step caches an unrelated path
+that is not listed in `forbiddenPaths`. Neither configured cache step sets `restore-keys`.
 
 ```yaml
 name: Widgets
@@ -178,6 +194,10 @@ jobs:
         with:
           path: .cache/widgets
           key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/other-store
+          key: other-${{ runner.os }}
 ```
 
 ## Counterexample
@@ -185,7 +205,9 @@ jobs:
 The first key omits both platform fragments and the lockfile digest, and its prefix can restore
 another platform or lockfile. The second key carries the required digest but also hashes
 `src/**`. With `forbidBroadHashFiles` enabled, the rule reports `src/**` in `key` and
-`output/*` in `restore-keys`, even when prefix fallbacks are allowed.
+`output/*` in `restore-keys`, even when prefix fallbacks are allowed. With `forbiddenPaths`
+containing `~/.local/share/example-store`, the third step is reported even though its key is
+well-formed, and a composite action step caching that path is reported too.
 
 ```yaml
 name: Widgets
@@ -204,6 +226,22 @@ jobs:
           path: .cache/widgets
           key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', 'src/**') }}
           restore-keys: widgets-${{ hashFiles('output/*') }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/example-store
+          key: store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}
+```
+
+```yaml
+# .github/actions/store-cache/action.yml
+name: Store cache
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: ~/.local/share/example-store
+        key: store-${{ runner.os }}
 ```
 
 ## Fix
@@ -215,9 +253,11 @@ For a command that opens an allocated descriptor, send the digest through standa
 `echo "digest=$digest" >> "$GITHUB_OUTPUT"`. Remove `restore-keys`, or set
 `rejectRestoreKeys` to false when a prefix fallback is intentional.
 Replace broad patterns with exact paths to the files that determine cache contents. Put an
-intentional broad argument in `allowedHashFilesPatterns` when its full file set matters. Rewrite
+intentional broad argument in `allowedHashFilesPatterns` when its full file set matters. For a
+`forbiddenPaths` finding, delete the cache step (or remove the forbidden path from a multi-path
+`with.path` input). Rewrite
 anchors and aliases that affect a configured path as ordinary block-style steps. There is no
-automatic fix: the platform list and the lockfile path come from configuration.
+automatic fix: the platform list, lockfile path, and forbidden store policy come from configuration.
 
 ## Analysis
 
@@ -229,9 +269,12 @@ the rule at `max`.
 
 ## Suppression
 
-Each finding line is suppressed on its own. A directive on `key` does not suppress `restore-keys`.
+Each finding line is suppressed on its own. A directive on `key` does not suppress `restore-keys`,
+and a directive on `path` suppresses only the `forbiddenPaths` finding.
 
 ```yaml
+# no-mistakes-disable-next-line github-actions-cache-key-policy
+path: ~/.local/share/example-store
 # no-mistakes-disable-next-line github-actions-cache-key-policy
 key: widgets-shared
 # no-mistakes-disable-next-line github-actions-cache-key-policy

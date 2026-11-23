@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 mod broad_hash;
 mod expand;
+mod forbidden;
 mod judge;
 mod local_action;
 mod options;
@@ -36,10 +37,17 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     let mut findings = super::run_rule_applications(config, RULE_ID, |rule| {
         let opts: options::Options = rule.try_rule_options()?;
         options::validate(&opts)?;
+        let rule_message = rule
+            .message
+            .as_deref()
+            .map(str::trim)
+            .filter(|message| !message.is_empty());
         let files = super::selected_rule_files(root, config, rule, files)?;
         Ok(files
             .par_iter()
-            .flat_map(|path| check_path(root, path, sources, &opts, defer_suppression))
+            .flat_map(|path| {
+                check_path(root, path, sources, &opts, rule_message, defer_suppression)
+            })
             .collect())
     })?;
     if !defer_suppression {
@@ -54,6 +62,7 @@ fn check_path(
     path: &Path,
     sources: &SourceStore,
     options: &options::Options,
+    rule_message: Option<&str>,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
@@ -61,7 +70,7 @@ fn check_path(
         return Vec::new();
     };
     match sources.read_path(path) {
-        Ok(source) => evaluate(&rel, &source, action, options, root, sources),
+        Ok(source) => evaluate(&rel, &source, action, options, rule_message, root, sources),
         Err(error) => super::github_actions_workflow_files::unreadable_finding(
             &error,
             defer_suppression,
@@ -85,6 +94,7 @@ fn evaluate(
     source: &str,
     action: bool,
     options: &options::Options,
+    rule_message: Option<&str>,
     root: &Path,
     sources: &SourceStore,
 ) -> Vec<RuleFinding> {
@@ -92,6 +102,12 @@ fn evaluate(
         .caches
         .iter()
         .map(|cache| text::norm_path(&cache.path))
+        .chain(
+            options
+                .forbidden_paths
+                .iter()
+                .map(|path| text::norm_path(path)),
+        )
         .collect();
     match scan::analyze(source, action, &configured) {
         scan::Document::Ignored => Vec::new(),
@@ -106,7 +122,7 @@ fn evaluate(
             "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.".into(),
         )],
         scan::Document::Jobs(jobs) => {
-            judge::judge(rel, &jobs, options, &|uses| {
+            judge::judge(rel, &jobs, options, rule_message, &|uses| {
                 read_local_action(root, sources, uses)
             })
         }

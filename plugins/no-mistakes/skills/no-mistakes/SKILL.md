@@ -361,7 +361,8 @@ Move oversized scripts into files and invoke them; see the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-max-inline-script-lines.md).
 
 For `github-actions-cache-key-policy`, list each portable cache path with its lockfile and
-required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
+required key fragments such as `runner.os`, or list paths to ban entirely in `forbiddenPaths`
+(with optional `forbiddenPathsMessage`). `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. Set `forbidBroadHashFiles: true` to report broad literal
 patterns in `key` and `restore-keys`, and list intentional arguments exactly in
 `allowedHashFilesPatterns`. A glob such as `**/widgets.lock` is allowed for a configured

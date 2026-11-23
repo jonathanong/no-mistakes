@@ -1,0 +1,12 @@
+name: Aliased Forbidden Path
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    env:
+      STORE: &store ~/.local/share/example-store
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: *store
+          key: store-${{ runner.os }}

@@ -1,0 +1,13 @@
+name: Cache Store
+description: Composite action that caches a forbidden store path
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: ~/.local/share/example-store
+        key: store-${{ runner.os }}
+    - uses: actions/cache@v4
+      with:
+        path: ~/.local/share/other-store
+        key: other-${{ runner.os }}

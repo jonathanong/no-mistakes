@@ -19,6 +19,8 @@ pub(super) struct Options {
     pub allow_hash_files: bool,
     pub forbid_broad_hash_files: bool,
     pub allowed_hash_files_patterns: Vec<String>,
+    pub forbidden_paths: Vec<String>,
+    pub forbidden_paths_message: Option<String>,
     pub caches: Vec<CacheSpec>,
 }
 
@@ -29,6 +31,8 @@ impl Default for Options {
             allow_hash_files: false,
             forbid_broad_hash_files: false,
             allowed_hash_files_patterns: Vec::new(),
+            forbidden_paths: Vec::new(),
+            forbidden_paths_message: None,
             caches: Vec::new(),
         }
     }
@@ -36,9 +40,15 @@ impl Default for Options {
 
 pub(super) fn validate(options: &Options) -> Result<()> {
     anyhow::ensure!(
-        !options.caches.is_empty(),
-        "{RULE_ID} caches must list at least one cache"
+        !options.caches.is_empty() || !options.forbidden_paths.is_empty(),
+        "{RULE_ID} caches must list at least one cache unless forbiddenPaths is configured"
     );
+    if let Some(message) = options.forbidden_paths_message.as_deref() {
+        anyhow::ensure!(
+            !message.trim().is_empty(),
+            "{RULE_ID} forbiddenPathsMessage must not be empty"
+        );
+    }
     let mut seen = BTreeSet::new();
     for cache in &options.caches {
         let path = norm_path(&cache.path);
@@ -64,6 +74,22 @@ pub(super) fn validate(options: &Options) -> Result<()> {
                 "{RULE_ID} caches.keyParts entries must be dotted context fragments such as runner.os"
             );
         }
+    }
+    let mut forbidden = BTreeSet::new();
+    for raw in &options.forbidden_paths {
+        let path = norm_path(raw);
+        anyhow::ensure!(
+            !path.is_empty(),
+            "{RULE_ID} forbiddenPaths entries must be non-empty paths"
+        );
+        anyhow::ensure!(
+            forbidden.insert(path.clone()),
+            "{RULE_ID} forbiddenPaths `{path}` is listed more than once"
+        );
+        anyhow::ensure!(
+            !seen.contains(&path),
+            "{RULE_ID} path `{path}` cannot appear in both caches and forbiddenPaths"
+        );
     }
     Ok(())
 }
