@@ -59,6 +59,26 @@ fn github_actions_action_input_policy_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "reusable"),
                 policy.clone(),
             ),
+            // 3 findings: an unlisted cache input, a missing required-present
+            // retention-days, and an unlisted overwrite input.
+            (
+                "allowlist_violations",
+                rules_path(RULE, "fixture", "allowlist-violations"),
+                rules_path(RULE, "configs", "allowlist.yml"),
+            ),
+            // 0 findings: allowed keys only, and a family that is not configured.
+            (
+                "allowlist_pass",
+                rules_path(RULE, "fixture", "allowlist-pass"),
+                rules_path(RULE, "configs", "allowlist.yml"),
+            ),
+            // Merge keys keep their meaning: << is an input named <<, so the
+            // allowlist reports it and ignores the keys nested under it.
+            (
+                "allowlist_merge_keys",
+                rules_path(RULE, "fixture", "merge-keys"),
+                rules_path(RULE, "configs", "allowlist.yml"),
+            ),
             // 6 findings: keys under << are not inputs. A sibling value and a
             // sequence still miss the nested requirements. An alias of with: passes.
             (

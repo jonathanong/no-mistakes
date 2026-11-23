@@ -1,0 +1,17 @@
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      actions:
+        - uses: example/publish-widget
+          allowedInputs:
+            - name
+            - path
+            - retention-days
+          requiredPresent:
+            - retention-days
+        - uses: example/setup-runtime
+          allowedInputs:
+            - runtime-version-file
+          require:
+            runtime-version-file: .runtime-version

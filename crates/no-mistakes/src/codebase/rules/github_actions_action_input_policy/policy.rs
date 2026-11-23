@@ -5,6 +5,8 @@ use serde_yaml::Mapping;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+mod extra;
+
 #[derive(Debug)]
 pub(super) struct Compiled {
     pub(super) include: Vec<String>,
@@ -17,6 +19,8 @@ pub(super) struct Family {
     pub(super) name: String,
     require: BTreeMap<String, String>,
     ban: Vec<String>,
+    allowed: Option<Vec<String>>,
+    require_present: Vec<String>,
 }
 
 pub(super) enum InputFault {
@@ -32,6 +36,12 @@ pub(super) enum InputFault {
     Banned {
         key: String,
     },
+    Unlisted {
+        key: String,
+    },
+    NotPresent {
+        key: String,
+    },
 }
 
 pub(super) fn compile(opts: Options) -> Result<Compiled> {
@@ -42,8 +52,14 @@ pub(super) fn compile(opts: Options) -> Result<Compiled> {
             name,
             require: BTreeMap::new(),
             ban: Vec::new(),
+            allowed: None,
+            require_present: Vec::new(),
         });
         merge_action(family, &action)?;
+        extra::merge(family, &action);
+    }
+    for family in families.values() {
+        extra::validate(family)?;
     }
     Ok(Compiled {
         include: opts.include,
@@ -116,6 +132,7 @@ pub(super) fn judge(with: Option<&Mapping>, family: &Family) -> Vec<InputFault> 
             faults.push(InputFault::Banned { key: key.clone() });
         }
     }
+    extra::judge(with, family, &mut faults);
     faults
 }
 

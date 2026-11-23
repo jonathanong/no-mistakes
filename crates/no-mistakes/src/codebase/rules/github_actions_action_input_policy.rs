@@ -37,6 +37,10 @@ pub(crate) struct ActionSpec {
     pub(crate) require: BTreeMap<String, Value>,
     #[serde(default)]
     pub(crate) ban: Vec<String>,
+    #[serde(default, rename = "allowedInputs")]
+    pub(crate) allowed_inputs: Option<Vec<String>>,
+    #[serde(default, rename = "requiredPresent")]
+    pub(crate) required_present: Vec<String>,
 }
 
 pub(crate) fn check_with_files(
