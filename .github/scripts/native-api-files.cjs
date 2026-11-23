@@ -35,6 +35,7 @@ const linuxFiles = [
   "packages/no-mistakes/scripts/doc-consistency-api.test.js",
   "packages/no-mistakes/scripts/dependabot-cooldown-policy-api.test.js",
   "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+  "packages/no-mistakes/scripts/each-table-mode-api.test.js",
 ];
 
 module.exports = { platformFiles, linuxFiles };

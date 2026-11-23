@@ -117,7 +117,7 @@ test("Linux runner shards execute the complete expanded inventory once and rejec
       env: { ...process.env, NATIVE_API_FIXTURE_SUITE: "linux" },
     });
   try {
-    assert.equal(linuxFiles.length, 25);
+    assert.equal(linuxFiles.length, 26);
     assert.equal(new Set(linuxFiles).size, linuxFiles.length);
     assert.deepEqual([...new Set(expected.map((row) => row.file))].sort(), [...linuxFiles].sort());
     assert.ok(platformFiles.every((file) => linuxFiles.includes(file)));
@@ -139,7 +139,7 @@ test("Linux runner shards execute the complete expanded inventory once and rejec
       .split("\n")
       .map(JSON.parse);
     assert.equal(commands.length, 8);
-    for (const args of commands) assert.deepEqual(args.slice(1, 26), linuxFiles);
+    for (const args of commands) assert.deepEqual(args.slice(1, 1 + linuxFiles.length), linuxFiles);
     const invalid = invoke(1, "unknown");
     assert.equal(invalid.status, 1);
     assert.match(invalid.stderr, /suite must be platform or linux/);

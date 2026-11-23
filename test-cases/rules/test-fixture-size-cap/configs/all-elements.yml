@@ -1,0 +1,13 @@
+rules:
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      threshold: 1000
+      exemptions:
+        - 1024
+      eachCalls:
+        - it.each
+      eachTableMode: all-elements
+      scopes:
+        tests:
+          - "*.test.ts"

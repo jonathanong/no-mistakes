@@ -1,7 +1,8 @@
 use super::literals::{
-    integer_cardinality, is_named_member, length_expression, member_names, numeric_list,
+    count_oversized_table_cells, integer_cardinality, is_named_member, length_expression,
+    member_names, numeric_list,
 };
-use super::{in_scope, is_script, relative_file, Compiled, RULE_ID};
+use super::{in_scope, is_script, relative_file, Compiled, EachTableMode, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers, SourceStore};
 use oxc_ast::ast::{Argument, CallExpression, Expression, NewExpression};
@@ -119,8 +120,29 @@ impl Scanner<'_> {
         let Expression::ArrayExpression(array) = unwrap_ts_wrappers(argument) else {
             return;
         };
-        for (value, span) in numeric_list(array) {
-            self.note_value(&format!("{label} size"), value, span);
+        match self.policy.each_table_mode {
+            EachTableMode::PerElement => {
+                let kind = format!("{label} size");
+                for (value, span) in numeric_list(array) {
+                    self.note_value(&kind, value, span);
+                }
+            }
+            EachTableMode::AllElements => {
+                let Some(count) = count_oversized_table_cells(array, |value| {
+                    integer_cardinality(value).is_some_and(|size| self.is_oversized(size))
+                }) else {
+                    return;
+                };
+                if count > 0 {
+                    let threshold = self.threshold;
+                    self.note_finding(
+                        format!(
+                            "{label} table has {count} sizes all exceeding threshold {threshold}"
+                        ),
+                        array.span,
+                    );
+                }
+            }
         }
     }
 
@@ -146,16 +168,26 @@ impl Scanner<'_> {
         let Some(cardinality) = integer_cardinality(value) else {
             return;
         };
-        if cardinality <= self.threshold || self.policy.exemptions.contains(&cardinality) {
-            return;
+        if self.is_oversized(cardinality) {
+            let threshold = self.threshold;
+            self.note_finding(
+                format!("{kind} {cardinality} exceeds threshold {threshold}"),
+                span,
+            );
         }
-        let threshold = self.threshold;
+    }
+
+    fn is_oversized(&self, cardinality: u64) -> bool {
+        cardinality > self.threshold && !self.policy.exemptions.contains(&cardinality)
+    }
+
+    fn note_finding(&mut self, message: String, span: Span) {
         let line = byte_offset_to_line(self.source, span.start as usize) as usize;
         self.findings.push(RuleFinding {
             rule: RULE_ID.to_string(),
             file: self.file.to_string(),
             line,
-            message: format!("{kind} {cardinality} exceeds threshold {threshold}"),
+            message,
             import: None,
             target: None,
             causes: Vec::new(),

@@ -198,5 +198,13 @@
   {
     "file": "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
     "name": "compiled synthetic case 24 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/each-table-mode-api.test.js",
+    "name": "compiled synthetic case 25 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/each-table-mode-api.test.js",
+    "name": "compiled synthetic case 25 (1)"
   }
 ]

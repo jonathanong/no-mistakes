@@ -440,6 +440,8 @@
   "TestAuditSelectionEvidence",
   "TestAuditSymbol",
   "TestExecutionTarget",
+  "TestFixtureSizeCapEachTableMode",
+  "TestFixtureSizeCapOptions",
   "TestForRow",
   "TestGraph",
   "TestNoLiveRepositoryScanAnalyzer",

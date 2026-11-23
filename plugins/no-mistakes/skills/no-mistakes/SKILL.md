@@ -397,8 +397,10 @@ composite `uses: ./...` counts when its declared output reads that proof. See th
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths
 and single-argument `Array` and `new Array` lengths in `scopes.tests` and
 `scopes.helpers`. `eachCalls` defaults to `[]`. When it lists a callee, numeric
-elements are cardinalities for scale or size tables. Omitting `threshold`
-reports nothing. Equal values and exact `exemptions` stay allowed. See the
+elements are cardinalities for scale or size tables. `eachTableMode` defaults
+to `per-element`. Use `all-elements` to report once when every numeric cell
+in a table exceeds the threshold and none are exempt. Omitting `threshold`
+reports nothing. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
 
 For `vite-optimize-deps-nested-imports`, set required `configFiles` and `packages`.

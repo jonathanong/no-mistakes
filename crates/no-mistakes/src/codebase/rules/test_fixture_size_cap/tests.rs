@@ -23,6 +23,7 @@ fn compiled(
         threshold,
         exemptions: vec![1024],
         each_calls: each.iter().map(|call| (*call).to_string()).collect(),
+        each_table_mode: Default::default(),
         scopes: Scopes {
             tests: tests.iter().map(|glob| (*glob).to_string()).collect(),
             helpers: helpers.iter().map(|glob| (*glob).to_string()).collect(),
@@ -86,6 +87,11 @@ fn defaults_leave_each_calls_empty_until_configured() {
     assert!(partial.each_calls.is_empty());
     let listed: Options = serde_yaml::from_str("eachCalls: [\"it.each\"]\n").unwrap();
     assert_eq!(listed.each_calls, ["it.each"]);
+    let explicit: Options = serde_yaml::from_str("eachTableMode: per-element\n").unwrap();
+    assert!(matches!(
+        explicit.each_table_mode,
+        super::EachTableMode::PerElement
+    ));
 }
 
 #[test]
@@ -452,4 +458,8 @@ fn saved_configs_reject_bad_options_before_scanning() {
         .unwrap_err()
         .to_string();
     assert!(threshold.contains("threshold"), "{threshold}");
+    let mode = check_saved("policy", "bad-each-table-mode.yml")
+        .unwrap_err()
+        .to_string();
+    assert!(mode.contains("options.eachTableMode"), "{mode}");
 }
