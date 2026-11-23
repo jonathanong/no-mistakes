@@ -1,0 +1,12 @@
+name: Unaligned Store Cache
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - &store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/example-store
+          key: store-${{ runner.os }}
+      - *store

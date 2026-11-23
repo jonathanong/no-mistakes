@@ -608,10 +608,14 @@ rules:
 For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy.md),
 `caches` lists each portable cache `path`, the `lockfile` that must be digested, and the
 `keyParts` expression fragments (such as `runner.os`) that the key must contain.
+`forbiddenPaths` lists normalized cache paths whose `actions/cache`, `actions/cache/restore`, and
+`actions/cache/save` steps are forbidden entirely, with optional `forbiddenPathsMessage` (or
+rule-level `message`) to customize the finding. At least one of `caches` or `forbiddenPaths` must
+be configured.
 `rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. Set
 `forbidBroadHashFiles: true` to report broad literal `hashFiles` patterns in `key` and
 `restore-keys`. Use `allowedHashFilesPatterns` to exempt specific argument strings.
-A cache path outside `caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
+A cache path outside `caches` and `forbiddenPaths` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
 or parenthesized command applies to every command in the group that does not already redirect standard
@@ -652,6 +656,9 @@ rules:
       allowHashFiles: true
       forbidBroadHashFiles: true
       allowedHashFilesPatterns: ['generated/**']
+      forbiddenPaths:
+        - ~/.local/share/example-store
+      forbiddenPathsMessage: Do not cache the package store; delete this cache step.
       caches:
         - path: .cache/widgets
           lockfile: widgets.lock

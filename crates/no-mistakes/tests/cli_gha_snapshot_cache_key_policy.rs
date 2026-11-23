@@ -60,6 +60,32 @@ fn malformed_hash_files_preserve_only_findings_from_complete_expressions() {
 }
 
 #[test]
+fn github_actions_cache_forbidden_paths_json_matches_snapshot() {
+    let root = rules_path(RULE, "fixture", "forbidden-paths");
+    assert_saved_fixture(
+        "github_actions_cache_forbidden_paths",
+        &[
+            (
+                "enabled",
+                root.clone(),
+                rules_path(RULE, "configs", "forbidden-paths.yml"),
+            ),
+            (
+                "custom-message",
+                root.clone(),
+                rules_path(RULE, "configs", "forbidden-paths-custom-message.yml"),
+            ),
+            (
+                "rule-message",
+                root.clone(),
+                rules_path(RULE, "configs", "forbidden-paths-rule-message.yml"),
+            ),
+            ("unset", root, rules_path(RULE, "configs", "policy.yml")),
+        ],
+    );
+}
+
+#[test]
 fn empty_cache_list_is_rejected() {
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args(["check", "--root"])

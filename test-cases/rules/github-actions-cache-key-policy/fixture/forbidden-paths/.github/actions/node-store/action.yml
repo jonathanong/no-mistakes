@@ -1,0 +1,5 @@
+name: Node Store
+description: Non-composite action ignored by cache policy
+runs:
+  using: node20
+  main: index.js

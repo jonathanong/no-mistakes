@@ -886,8 +886,9 @@ script-body lines, joining backslash continuations, in workflows and composite a
 
 `github-actions-cache-key-policy` is available through asynchronous `check()` and
 `analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
-Configure `caches` with a path, lockfile, and `keyParts`. `rejectRestoreKeys` defaults to true
-and `allowHashFiles` defaults to false. Set `forbidBroadHashFiles: true` in the rule's
+Configure `caches` with a path, lockfile, and `keyParts`, and/or `forbiddenPaths` (with optional
+`forbiddenPathsMessage`) to forbid caching specific normalized paths. `rejectRestoreKeys` defaults
+to true and `allowHashFiles` defaults to false. Set `forbidBroadHashFiles: true` in the rule's
 configuration to flag broad literal patterns in `key` and `restore-keys`. The
 `allowedHashFilesPatterns` list exempts exact argument strings. See the
 [rule documentation](rules/github-actions-cache-key-policy.md).
