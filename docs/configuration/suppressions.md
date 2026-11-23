@@ -145,7 +145,7 @@ comment cannot hide them. Configure `ignore` to turn the audit off.
 
 The audit reuses the request's source store and retains comment metadata before
 analysis. Suppression filtering builds a request-scoped disable-comment index
-per source file, then looks up findings in that index instead of rescanning
+per source file, then looks up findings in that index instead of scanning
 the file's comments for every finding. Checks that otherwise need only paths
 can therefore read additional selected source text. `ignore` skips the audit
 work; suppression filtering for enabled checks retains its existing behavior.

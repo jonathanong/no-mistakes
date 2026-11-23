@@ -53,11 +53,23 @@ fn prepared_applications_read_and_parse_each_selected_yaml_file_once() {
         let root = fixture_root(fixture);
         let config = load_v2_config(&root, None).unwrap();
         assert_eq!(config.rule_applications(RULE_ID).len(), application_count);
-        let files: Vec<_> = ["rules", "src/compat", "src/generated"]
-            .into_iter()
-            .flat_map(|dir| std::fs::read_dir(root.join(dir)).unwrap())
-            .map(|entry| entry.unwrap().path())
-            .collect();
+        let files: Vec<_> = [
+            "rules/files.yml",
+            "rules/reports.yml",
+            "rules/catalog.yml",
+            "rules/sessions.yml",
+            "rules/events.yml",
+            "rules/metrics.yml",
+            "rules/flags.yml",
+            "rules/audit.yml",
+            "rules/jobs.yml",
+            "rules/cache.yml",
+            "src/compat/adapter.ts",
+            "src/generated/registry.ts",
+        ]
+        .into_iter()
+        .map(|path| root.join(path))
+        .collect();
         assert_eq!(files.len(), 12);
         let snapshot = VisiblePathSnapshot::from_tracked_paths(&root, &files);
         let sources = snapshot.source_store_for(&root);
