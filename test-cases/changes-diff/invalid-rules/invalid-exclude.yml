@@ -1,0 +1,4 @@
+changes:
+  categories:
+    inputs:
+      exclude: ["["]

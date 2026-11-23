@@ -1,0 +1,5 @@
+changes:
+  categories:
+    inputs:
+      paths: ["fixtures/manifest.json"]
+      id: {keysOf: {format: json, array: fixtures}}

@@ -3,6 +3,7 @@ use crate::codebase::lockfile;
 use serde::Serialize;
 use std::{collections::BTreeMap, path::Path};
 
+mod lockfiles;
 mod malformed;
 
 const CASES: [(&str, KeyFormat, &str); 8] = [

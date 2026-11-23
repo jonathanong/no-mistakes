@@ -24,6 +24,16 @@ fn keyed_json_rejects_invalid_array_entries_and_shape() {
 }
 
 #[test]
+fn keyed_diff_rejects_invalid_options_without_a_file() {
+    let input = fixture("json-array", "invalid-options", "json");
+    let options: Vec<KeyOptions> = serde_json::from_slice(&input).unwrap();
+    assert_eq!(options.len(), 4);
+    for options in options {
+        assert!(diff(&options, None, None).is_err(), "{options:?}");
+    }
+}
+
+#[test]
 fn keyed_strings_decodes_equivalent_escape_forms() {
     let options = KeyOptions {
         format: KeyFormat::Strings,
@@ -55,11 +65,32 @@ fn keyed_strings_rejects_unterminated_entries_and_invalid_escapes() {
         &[
             ("unclosed-comment", "unclosed strings comment"),
             ("missing-semicolon", "expected ';' in strings entry"),
+            ("unquoted-key", "expected '\"' in strings entry"),
+            ("missing-equals", "expected '=' in strings entry"),
+            ("duplicate-key", "duplicate key \"alpha\""),
+            ("unclosed-inline-comment", "unclosed strings comment"),
             ("incomplete-escape", "incomplete strings escape"),
             ("invalid-hex-escape", "invalid strings Unicode escape"),
             ("non-ascii-octal", "non-ASCII strings octal escape"),
         ],
     );
+}
+
+#[test]
+fn keyed_strings_rejects_incomplete_utf8_sequences() {
+    let options = KeyOptions {
+        format: KeyFormat::Strings,
+        array: None,
+        id_field: None,
+    };
+    let source = fixture("strings", "moved", "strings");
+    let emoji = std::str::from_utf8(&source).unwrap().find('🚀').unwrap();
+    assert_eq!(
+        diff(&options, None, Some(&source)).unwrap().added,
+        ["alpha", "moving", "removed"]
+    );
+    let error = diff(&options, None, Some(&source[..emoji + 1])).unwrap_err();
+    assert!(format!("{error:#}").starts_with("could not parse head content: expected UTF-8 text"));
 }
 
 #[test]
@@ -85,7 +116,7 @@ fn keyed_resx_rejects_malformed_xml_and_ambiguous_data() {
     );
 }
 
-fn assert_rejected_fixtures(
+pub(super) fn assert_rejected_fixtures(
     options: &KeyOptions,
     scenario: &str,
     extension: &str,

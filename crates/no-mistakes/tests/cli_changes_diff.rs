@@ -3,6 +3,10 @@ use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[cfg(unix)]
+#[path = "cli_changes_diff/filesystem.rs"]
+mod filesystem;
+
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/changes-diff")
 }
@@ -133,4 +137,89 @@ fn changes_diff_rejects_reserved_categories_and_ambiguous_templates() {
         let stderr = String::from_utf8(output.stderr).unwrap();
         assert!(stderr.contains(message), "{stderr}");
     }
+}
+
+#[test]
+fn changes_diff_rejects_invalid_rules_even_when_the_roots_match() {
+    let root = fixture();
+    for (name, message) in [
+        (
+            "invalid-exclude.yml",
+            r#"changes category "inputs" exclude"#,
+        ),
+        ("invalid-paths.yml", r#"changes category "inputs" paths"#),
+        ("empty-glob.yml", "empty glob"),
+        ("missing-rule-paths.yml", "rule requires paths"),
+        (
+            "incomplete-key-options.yml",
+            "array and idField must be supplied together",
+        ),
+        ("conflicting-id.yml", "declare either fromPath or keysOf"),
+    ] {
+        let error = changes::diff(&ChangesDiffArgs {
+            base_root: root.join("base"),
+            head_root: root.join("base"),
+            config: Some(root.join("invalid-rules").join(name)),
+        })
+        .expect_err(name);
+        assert!(format!("{error:#}").contains(message), "{name}: {error:#}");
+    }
+}
+
+#[test]
+fn changes_diff_reports_changed_paths_with_no_capture_and_preserves_valid_ids() {
+    let root = fixture().join("capture-mismatch");
+    let report = changes::diff(&ChangesDiffArgs {
+        base_root: root.join("base"),
+        head_root: root.join("head"),
+        config: None,
+    })
+    .unwrap();
+    assert!(!report.complete);
+    assert_eq!(report.categories["inputs"].changed, ["matched"]);
+    assert!(report.unclassified.is_empty());
+    assert_eq!(report.reasons.len(), 2);
+    assert!(report.reasons[0].contains("inputs/.json"));
+    assert!(report.reasons[1].contains("inputs/unmatched.txt"));
+}
+
+#[test]
+fn changes_diff_rejects_a_file_used_as_a_root() {
+    let root = fixture();
+    let report = changes::diff(&ChangesDiffArgs {
+        base_root: root.join("base"),
+        head_root: root.join("reserved.yml"),
+        config: None,
+    })
+    .unwrap();
+    assert!(!report.complete);
+    assert!(report.categories.is_empty());
+    assert!(report.unclassified.is_empty());
+    assert_eq!(report.reasons.len(), 1);
+    assert!(report.reasons[0].contains("not a directory"));
+}
+
+#[test]
+fn changes_report_rejects_a_category_without_a_change_list() {
+    let error = serde_json::from_str::<ChangesReport>(include_str!(
+        "../../../test-cases/changes-diff/empty-category-report.json"
+    ))
+    .unwrap_err();
+    assert!(error.to_string().contains("requires a change list"));
+}
+
+#[test]
+fn changes_diff_distinguishes_binary_bytes_from_their_lossy_text_projection() {
+    let root = crate::saved_fixture::materialize_path(&fixture().join("raw-source"));
+    let invalid_utf8 =
+        fixture().join("../../fixtures/analysis-dataset/source-store/invalid-utf8.ts");
+    std::fs::copy(invalid_utf8, root.path().join("head/raw.txt")).unwrap();
+    let report = changes::diff(&ChangesDiffArgs {
+        base_root: root.path().join("base"),
+        head_root: root.path().join("head"),
+        config: None,
+    })
+    .unwrap();
+    assert!(report.complete, "{:?}", report.reasons);
+    assert_eq!(report.unclassified, ["raw.txt"]);
 }
