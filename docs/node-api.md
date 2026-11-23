@@ -971,6 +971,13 @@ same outcome as CLI `check`. Configure it in the YAML selected by `config`.
 Policy violations use `RuleFinding`, and unreadable or malformed input uses
 `CheckReport.incomplete` (`CheckFailure[]`).
 
+The configured [`pnpm-release-age-policy`](rules/pnpm-release-age-policy.md)
+rule runs through async `check()` and `analyzeProject()` check reports.
+`PnpmReleaseAgePolicyOptions` describes the rule options, including
+`PnpmReleaseAgePermanentPackage` entries with an exact `name` or
+package-name `pattern`, and `PnpmReleaseAgeTemporaryGroup` entries with
+exact version selectors. Configure the rule in the YAML selected by `config`.
+
 The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
 rule runs through async `check()` using the existing `checkJson` binding and
 through batched `analyzeProject()` check reports. `VitestDefaultExcludesOptions`

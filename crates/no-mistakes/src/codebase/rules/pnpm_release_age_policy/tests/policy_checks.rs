@@ -9,10 +9,12 @@ fn policy_checks_report_each_cross_file_drift_kind() {
             super::PermanentPackage {
                 name: "@acme/covered".to_string(),
                 reason: "first-party".to_string(),
+                pattern: None,
             },
             super::PermanentPackage {
                 name: "missing-permanent".to_string(),
                 reason: "first-party".to_string(),
+                pattern: None,
             },
         ],
         temporary_selectors: vec![
@@ -34,7 +36,7 @@ fn policy_checks_report_each_cross_file_drift_kind() {
             policy::CooldownEntry::Pattern("@acme/**".to_string()),
             policy::CooldownEntry::Other,
         ]),
-        active_names: HashSet::from(["@acme/covered".to_string(), "@acme/new-tool".to_string()]),
+        manifest_names: HashSet::from(["@acme/covered".to_string(), "@acme/new-tool".to_string()]),
         lockfile_keys: Some(vec!["temporary-present@1.0.0".to_string()]),
     };
 
@@ -88,13 +90,14 @@ fn invalid_dependabot_globs_do_not_cover_permanent_packages() {
         permanent_packages: vec![super::PermanentPackage {
             name: "acme-lib".to_string(),
             reason: "first-party".to_string(),
+            pattern: None,
         }],
         ..Default::default()
     };
     let snapshot = policy::Snapshot {
         exclude: vec![policy::ExcludeEntry::Name("acme-lib".to_string())],
         cooldown: Some(vec![policy::CooldownEntry::Pattern("[".to_string())]),
-        active_names: HashSet::from(["acme-lib".to_string()]),
+        manifest_names: HashSet::from(["acme-lib".to_string()]),
         lockfile_keys: None,
     };
 

@@ -113,3 +113,26 @@ fn pnpm_release_age_policy_json_matches_snapshot() {
     ];
     assert_saved_fixture("pnpm_release_age_policy", &cases);
 }
+
+#[test]
+fn pnpm_release_age_policy_globs_match_snapshot() {
+    let cases = [
+        case("pass", "glob-pass", "registered-glob.yml"),
+        case("unmatched", "glob-unmatched", "registered-glob.yml"),
+        case("overbroad", "glob-overbroad", "registered-glob.yml"),
+        case("mixed", "glob-mixed", "registered-mixed-glob.yml"),
+        case(
+            "dependabot_mismatch",
+            "glob-dependabot-mismatch",
+            "registered-glob.yml",
+        ),
+        case("invalid_registry", "glob-pass", "invalid-glob.yml"),
+        case("incomplete", "glob-incomplete", "registered-glob.yml"),
+        case(
+            "incomplete_ignored",
+            "glob-incomplete",
+            "registered-glob-ignore.yml",
+        ),
+    ];
+    assert_saved_fixture("pnpm_release_age_policy_globs", &cases);
+}

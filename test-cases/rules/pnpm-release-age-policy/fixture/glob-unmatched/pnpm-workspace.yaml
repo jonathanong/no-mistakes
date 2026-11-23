@@ -1,0 +1,6 @@
+minimumReleaseAgeExclude:
+  - 'acme-cli-*'
+  - 'absent-*'
+  - 'acme-cli-[a-z]*'
+  - 'acme-cli-{linux,macos}*'
+  - 'acme-cli-*@1.0.0'

@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      unanalyzable: ignore
+      permanentPackages:
+        - pattern: 'acme-cli-*'
+      scopedPrefixes:
+        - acme-cli-

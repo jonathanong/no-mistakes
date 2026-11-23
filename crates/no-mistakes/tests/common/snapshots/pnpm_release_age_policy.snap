@@ -33,6 +33,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"@acme/*\" matches lockfile package \"@acme/core\" outside permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
+          "target": "@acme/*"
+        },
+        {
           "file": "pnpm-workspace.yaml",
           "line": 1,
           "message": "pnpm-workspace.yaml: \"@acme/core\" is not in a release-age exemption registry",
@@ -140,6 +148,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"@acme/*\" matches lockfile package \"@acme/new-tool\" outside permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
+          "target": "@acme/*"
+        },
+        {
           "file": "pnpm-lock.yaml",
           "line": 1,
           "message": "pnpm-lock.yaml: \"@acme/new-tool\" is an active first-party package missing from permanentPackages",
@@ -205,6 +221,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"@acme/*\" matches lockfile package \"@acme/core\" outside permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
+          "target": "@acme/*"
+        },
         {
           "file": "pnpm-workspace.yaml",
           "line": 1,

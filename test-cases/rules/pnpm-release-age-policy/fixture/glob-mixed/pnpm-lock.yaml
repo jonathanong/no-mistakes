@@ -1,0 +1,10 @@
+lockfileVersion: '9.0'
+packages:
+  'acme-lib@1.0.0':
+    resolution: {}
+  '@acme/widget-a@1.0.0':
+    resolution: {}
+  'outside-temporary@9.9.9':
+    resolution: {}
+  'outside-lib@1.0.0':
+    resolution: {}

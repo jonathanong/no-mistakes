@@ -1,67 +1,97 @@
-use super::{push, CooldownEntry, ExcludeEntry, FileKind, Issue, Snapshot};
-use crate::codebase::rules::pnpm_release_age_policy::Options;
-use globset::GlobBuilder;
+use super::package_glob::PackageGlob;
+use super::registry::{invalid_glob, Registry};
+use super::{push, CooldownEntry, ExcludeEntry, FileKind, Issue, Options};
 use std::collections::HashSet;
 
-pub(super) fn exclude(
-    issues: &mut Vec<Issue>,
-    snapshot: &Snapshot,
-    registry: &HashSet<String>,
-    permanent: &HashSet<String>,
-    temporary: &HashSet<String>,
-) {
-    if snapshot
-        .exclude
+#[derive(Default)]
+struct Exemptions<'a> {
+    exact: HashSet<&'a str>,
+    globs: Vec<PackageGlob>,
+}
+
+impl<'a> Exemptions<'a> {
+    fn insert(
+        &mut self,
+        issues: &mut Vec<Issue>,
+        file: FileKind,
+        value: &'a str,
+        registry: &Registry,
+    ) {
+        if PackageGlob::is_glob(value) {
+            if let Some(glob) = PackageGlob::new(value) {
+                registry.check_glob(issues, file, value, &glob);
+                self.globs.push(glob);
+            } else {
+                invalid_glob(issues, file, value);
+            }
+        } else {
+            self.exact.insert(value);
+            if matches!(file, FileKind::Workspace)
+                && !registry.permanent.contains(value)
+                && !registry.temporary.contains(value)
+            {
+                push(
+                    issues,
+                    file,
+                    value,
+                    "is not in a release-age exemption registry",
+                );
+            }
+        }
+    }
+
+    fn covers(&self, name: &str) -> bool {
+        self.exact.contains(name) || self.globs.iter().any(|glob| glob.matches(name))
+    }
+}
+
+pub(super) fn exclude(issues: &mut Vec<Issue>, entries: &[ExcludeEntry], registry: &Registry) {
+    if entries
         .iter()
         .any(|entry| matches!(entry, ExcludeEntry::Conflict))
     {
         return;
     }
     let mut seen = HashSet::new();
-    let mut yaml_names = HashSet::new();
-    for entry in &snapshot.exclude {
+    let mut exemptions = Exemptions::default();
+    for entry in entries {
         let ExcludeEntry::Name(name) = entry else {
             continue;
         };
-        if !seen.insert(name.clone()) {
+        if !seen.insert(name) {
             push(issues, FileKind::Workspace, name, "duplicates");
         }
-        yaml_names.insert(name.clone());
-        if !registry.contains(name) {
-            push(
-                issues,
-                FileKind::Workspace,
-                name,
-                "is not in a release-age exemption registry",
-            );
-        }
+        exemptions.insert(issues, FileKind::Workspace, name, registry);
     }
-    report_missing(issues, permanent, &yaml_names);
-    report_missing(issues, temporary, &yaml_names);
-}
-
-fn report_missing(issues: &mut Vec<Issue>, wanted: &HashSet<String>, yaml_names: &HashSet<String>) {
-    for name in wanted {
-        if !yaml_names.contains(name) {
-            push(
-                issues,
-                FileKind::Workspace,
-                name,
-                "is missing from minimumReleaseAgeExclude",
-            );
-        }
+    for name in registry
+        .permanent
+        .iter()
+        .copied()
+        .filter(|name| !exemptions.covers(name))
+        .chain(
+            registry
+                .temporary
+                .iter()
+                .map(String::as_str)
+                .filter(|selector| !exemptions.exact.contains(selector)),
+        )
+    {
+        push(
+            issues,
+            FileKind::Workspace,
+            name,
+            "is missing from minimumReleaseAgeExclude",
+        );
     }
 }
 
-pub(super) fn dependabot(
-    issues: &mut Vec<Issue>,
-    cooldown: &[CooldownEntry],
-    permanent: &HashSet<String>,
-) {
-    let mut patterns = Vec::new();
+pub(super) fn dependabot(issues: &mut Vec<Issue>, cooldown: &[CooldownEntry], registry: &Registry) {
+    let mut exemptions = Exemptions::default();
     for entry in cooldown {
         match entry {
-            CooldownEntry::Pattern(pattern) => patterns.push(pattern.as_str()),
+            CooldownEntry::Pattern(pattern) => {
+                exemptions.insert(issues, FileKind::Dependabot, pattern, registry);
+            }
             CooldownEntry::Other => push(
                 issues,
                 FileKind::Dependabot,
@@ -70,8 +100,8 @@ pub(super) fn dependabot(
             ),
         }
     }
-    for name in permanent {
-        if !patterns.iter().any(|pattern| glob_matches(pattern, name)) {
+    for name in &registry.permanent {
+        if !exemptions.covers(name) {
             push(
                 issues,
                 FileKind::Dependabot,
@@ -85,12 +115,12 @@ pub(super) fn dependabot(
 pub(super) fn graph(
     issues: &mut Vec<Issue>,
     opts: &Options,
-    snapshot: &Snapshot,
-    permanent: &HashSet<String>,
+    active_names: &HashSet<&str>,
+    permanent: &HashSet<&str>,
     complete: bool,
 ) {
     if !opts.scoped_prefixes.is_empty() {
-        for name in &snapshot.active_names {
+        for name in active_names {
             if opts
                 .scoped_prefixes
                 .iter()
@@ -107,7 +137,7 @@ pub(super) fn graph(
         }
     }
     for name in permanent {
-        if complete && !snapshot.active_names.contains(name) {
+        if complete && !active_names.contains(name) {
             push(
                 issues,
                 FileKind::Lockfile,
@@ -134,12 +164,4 @@ pub(super) fn temporary_lockfile(
             );
         }
     }
-}
-
-fn glob_matches(pattern: &str, name: &str) -> bool {
-    GlobBuilder::new(pattern)
-        .literal_separator(false)
-        .build()
-        .ok()
-        .is_some_and(|glob| glob.compile_matcher().is_match(name))
 }

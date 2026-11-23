@@ -1,0 +1,226 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "dependabot_mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"acme-cli-macos\" is not covered by npm cooldown.exclude",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
+          "target": "acme-cli-macos"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "incomplete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile could not be parsed: Malformed. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "lockfileVersion: '9.0'",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "incomplete_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_registry": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"acme-cli-*\" matches lockfile package \"acme-cli-linux\" outside permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
+          "target": "acme-cli-*"
+        },
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: \"missing-*\" is registered but matches no package in manifests or the lockfile",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "lockfileVersion: '9.0'",
+          "target": "missing-*"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"\" must be a non-empty package-name pattern without a version",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": ""
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-cli-*@1.0.0\" must be a non-empty package-name pattern without a version",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "acme-cli-*@1.0.0"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-cli-*\" matches lockfile package \"acme-cli-linux\" outside permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "acme-cli-*"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-cli-*\" must use either name or pattern in permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "acme-cli-*"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "overbroad": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"!nothing-*\" matches lockfile package \"outside-lib\" outside permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
+          "target": "!nothing-*"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"*\" matches lockfile package \"outside-lib\" outside permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "*"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unmatched": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"absent-*\" matches no package in permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
+          "target": "absent-*"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"absent-*\" matches no package in permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "absent-*"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-cli-*@1.0.0\" must be a non-empty package-name pattern without a version",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "acme-cli-*@1.0.0"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-cli-[a-z]*\" matches no package in permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "acme-cli-[a-z]*"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-cli-{linux,macos}*\" matches no package in permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
+          "target": "acme-cli-{linux,macos}*"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

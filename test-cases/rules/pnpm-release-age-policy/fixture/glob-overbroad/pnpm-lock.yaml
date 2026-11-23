@@ -1,0 +1,10 @@
+lockfileVersion: '9.0'
+packages:
+  'acme-cli-linux@1.0.0':
+    resolution: {}
+  'acme-cli-macos@1.0.0':
+    resolution: {}
+  'outside-lib@1.0.0':
+    resolution: {}
+  'outside-tool@1.0.0':
+    resolution: {}
