@@ -1,0 +1,17 @@
+name: image-edge-shapes
+on: push
+jobs:
+  absent: null
+  build:
+    runs-on: ubuntu-latest
+    container:
+      credentials: {}
+    services:
+      absent:
+        options: --health-cmd true
+      nonstring:
+        image: 42
+      empty-name:
+        image: "@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    steps:
+      - run: echo done

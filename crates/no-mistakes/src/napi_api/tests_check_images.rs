@@ -53,3 +53,24 @@ fn check_json_images_option_preserves_default_and_routes_expressions() {
         "{advise}"
     );
 }
+
+#[test]
+fn check_json_images_handles_sparse_workflow_shapes() {
+    let report = check("images-on.yml", "image-edge-shapes");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{report}");
+    assert!(findings.iter().any(|finding| {
+        finding["file"] == ".github/workflows/root-sequence.yml"
+            && finding["line"] == 1
+            && finding["message"]
+                .as_str()
+                .unwrap()
+                .contains("root-sequence:latest")
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding["file"] == ".github/workflows/shapes.yml"
+            && finding["line"] == 15
+            && finding["message"].as_str().unwrap().contains("@sha256:")
+    }));
+    assert_eq!(report["advisories"], json!([]));
+}

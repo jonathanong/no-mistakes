@@ -108,6 +108,11 @@ fn github_actions_pinned_hash_json_matches_snapshot() {
                 rules_path(RULE, "configs", "images-on.yml"),
             ),
             (
+                "image-edge-shapes",
+                rules_path(RULE, "fixture", "cases/image-edge-shapes"),
+                rules_path(RULE, "configs", "images-on.yml"),
+            ),
+            (
                 "image-expressions-ignore",
                 rules_path(RULE, "fixture", "cases/image-expressions"),
                 rules_path(RULE, "configs", "images-on.yml"),

@@ -143,6 +143,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "image-edge-shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/root-sequence.yml",
+          "line": 1,
+          "message": ".github/workflows/root-sequence.yml:1: `uses` image `example.invalid/my-org/root-sequence:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: docker://example.invalid/my-org/root-sequence:latest"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "line": 15,
+          "message": ".github/workflows/shapes.yml:15: `image` image `@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "image: \"@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\""
+        }
+      ],
+      "warnings": []
+    }
+  },
   "image-expressions-ignore": {
     "exitCode": 0,
     "report": {
