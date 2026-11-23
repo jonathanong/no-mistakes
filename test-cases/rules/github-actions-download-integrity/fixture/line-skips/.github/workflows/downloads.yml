@@ -33,3 +33,7 @@ jobs:
           curl https://downloads.example.invalid/after-heredoc
       - run: curl https://downloads.example.invalid/inline-marked # integrity-check: skip reason=vendor
       - run: curl https://downloads.example.invalid/inline-unmarked
+      - run: |
+          # integrity-check: skip reason=vendor
+          curl \
+            https://example.invalid/continued
