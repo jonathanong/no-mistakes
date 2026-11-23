@@ -1,6 +1,9 @@
 use super::*;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 
+const FILE: &str = FILES[0];
+const ALTERNATE_FILE: &str = FILES[1];
+
 fn root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &crate::test_support::rule_fixture_root(RULE_ID).join(name),
@@ -107,15 +110,20 @@ fn handles_yaml_suppression_and_line_fallback() {
 #[test]
 fn malformed_or_unavailable_selected_input_records_a_rule_failure() {
     let config = config("minimumDays: 7");
-    for (fixture, expected) in [
-        ("malformed", "could not read or parse YAML"),
-        ("bad-root", "top-level mapping"),
-        ("bad-updates", "updates to be a sequence"),
-        ("bad-entry", "updates[1] to be a mapping"),
-        ("missing", "could not read or parse YAML"),
+    for (fixture, file, expected) in [
+        ("malformed", FILE, "could not read or parse YAML"),
+        ("bad-root", FILE, "top-level mapping"),
+        ("bad-updates", FILE, "updates to be a sequence"),
+        ("bad-entry", FILE, "updates[1] to be a mapping"),
+        ("missing", FILE, "could not read or parse YAML"),
+        (
+            "invalid-merge",
+            ALTERNATE_FILE,
+            "could not apply YAML merge keys",
+        ),
     ] {
         let root = root(fixture);
-        let files = [root.join(FILE)];
+        let files = [root.join(file)];
         let sources = rules::source_store_for_files(&files);
         let session = AnalysisSession::disabled();
         assert!(
@@ -126,11 +134,9 @@ fn malformed_or_unavailable_selected_input_records_a_rule_failure() {
         let failures = session.check_failures();
         assert_eq!(failures.len(), 1, "{failures:?}");
         assert_eq!(failures[0].consumer, RULE_ID);
-        assert_eq!(failures[0].file.as_deref(), Some(Path::new(FILE)));
+        assert_eq!(failures[0].file.as_deref(), Some(Path::new(file)));
         assert!(failures[0].message.contains(expected), "{failures:?}");
-        assert!(failures[0]
-            .message
-            .contains("Repair .github/dependabot.yml"));
+        assert!(failures[0].message.contains(&format!("Repair {file}")));
         assert_eq!(sources.yaml_parse_count(), 1);
     }
 
@@ -147,12 +153,52 @@ fn malformed_or_unavailable_selected_input_records_a_rule_failure() {
 }
 
 #[test]
+fn checks_both_selected_filenames_and_respects_include() {
+    let mut config = config("minimumDays: 7");
+    let root = root("both-filenames");
+    let files = FILES.map(|file| root.join(file));
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    let reported: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.file.as_str(), finding.line))
+        .collect();
+    assert_eq!(reported, [(ALTERNATE_FILE, 5), (FILE, 3)]);
+
+    config.rules[0].include = vec![ALTERNATE_FILE.into()];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ALTERNATE_FILE);
+}
+
+#[test]
+fn keeps_findings_from_the_alternate_file_when_the_yml_file_is_malformed() {
+    let root = root("malformed-with-alternate");
+    let files = FILES.map(|file| root.join(file));
+    let sources = rules::source_store_for_files(&files);
+    let session = AnalysisSession::disabled();
+    let findings = check_prepared(
+        &root,
+        &config("minimumDays: 7"),
+        &files,
+        &sources,
+        Some(&session),
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ALTERNATE_FILE);
+    let failures = session.check_failures();
+    assert_eq!(failures.len(), 1, "{failures:?}");
+    assert_eq!(failures[0].file.as_deref(), Some(Path::new(FILE)));
+    assert_eq!(sources.yaml_parse_count(), 2);
+}
+
+#[test]
 fn keeps_selection_inside_visible_repository_scope_and_filters() {
     let mut config = config("minimumDays: 7");
     let input_root = root("ignored-locations");
     let off_path = [
         input_root.join("nested/.github/dependabot.yml"),
-        input_root.join(".github/dependabot.yaml"),
+        input_root.join("nested/.github/dependabot.yaml"),
     ];
     let sources = rules::source_store_for_files(&off_path);
     assert!(
@@ -222,26 +268,24 @@ fn rejects_invalid_rule_options_even_when_input_is_absent() {
 #[test]
 fn co_configured_pnpm_release_age_policy_reuses_the_dependabot_parse() {
     let pnpm_rule = rules::pnpm_release_age_policy::RULE_ID;
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &crate::test_support::rule_fixture_root(pnpm_rule).join("fail-dependabot"),
-    );
-    let files = [
-        FILE,
-        "pnpm-workspace.yaml",
-        "pnpm-lock.yaml",
-        "package.json",
-    ]
-    .map(|path| root.join(path));
+    let root = root("merge-keys");
+    let files = [FILE, "pnpm-workspace.yaml", "package.json"].map(|path| root.join(path));
     let sources = rules::source_store_for_files(&files);
     let mut config = config("minimumDays: 7");
-    config.rules.extend(
-        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
-            .unwrap()
-            .rules,
-    );
+    config.rules.push(RuleDef {
+        rule: pnpm_rule.into(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(
+            "permanentPackages: [{name: example-library, reason: first-party}]",
+        )
+        .unwrap(),
+        ..Default::default()
+    });
     let cooldown = check_prepared(&root, &config, &files, &sources, None).unwrap();
     assert_eq!(cooldown.len(), 1, "{cooldown:?}");
     assert_eq!(cooldown[0].target.as_deref(), Some("cooldown.default-days"));
+    assert!(cooldown[0].message.contains("update #4 (cargo)"));
+    assert_eq!(cooldown[0].line, 21);
     assert_eq!(sources.physical_read_count(), 1);
 
     let pnpm = rules::pnpm_release_age_policy::check_with_files_and_sources(
@@ -253,6 +297,8 @@ fn co_configured_pnpm_release_age_policy_reuses_the_dependabot_parse() {
     assert!(pnpm[0]
         .message
         .contains("is not covered by npm cooldown.exclude"));
+    let cached = sources.parse_yaml_path(&files[0]).unwrap();
+    assert!(cached["updates"][0]["cooldown"]["<<"].is_mapping());
     assert_eq!(sources.physical_read_count(), files.len());
     assert_eq!(sources.yaml_parse_count(), 1);
 }

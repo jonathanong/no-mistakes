@@ -1,4 +1,4 @@
-use super::{Options, RuleFinding, FILE, RULE_ID};
+use super::{Options, RuleFinding, RULE_ID};
 use crate::config::source_locations::{ConfigLocations, ConfigPath};
 use globset::GlobSet;
 use serde_yaml::Value;
@@ -12,6 +12,7 @@ const DAYS: [&str; 4] = [
 const PR_LIMIT: &str = "open-pull-requests-limit";
 
 pub(super) fn check(
+    file: &str,
     updates: Option<&[Value]>,
     locations: Option<&ConfigLocations>,
     options: &Options,
@@ -30,6 +31,7 @@ pub(super) fn check(
             continue;
         }
         let update = Update {
+            file,
             path: ConfigPath::default().key("updates").index(index),
             label: format!(
                 "Dependabot update #{} ({})",
@@ -74,6 +76,7 @@ pub(super) fn check(
 }
 
 struct Update<'a> {
+    file: &'a str,
     path: ConfigPath,
     label: String,
     locations: Option<&'a ConfigLocations>,
@@ -131,7 +134,7 @@ impl Update<'_> {
         RuleFinding {
             causes: Vec::new(),
             rule: RULE_ID.to_owned(),
-            file: FILE.to_owned(),
+            file: self.file.to_owned(),
             line,
             message,
             import: None,

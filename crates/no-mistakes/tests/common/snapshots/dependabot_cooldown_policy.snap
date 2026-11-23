@@ -2,6 +2,47 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "anchors": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "both-paths": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yaml",
+          "line": 3,
+          "message": "Dependabot update #1 (cargo): set cooldown.default-days to an integer of at least 7.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "- package-ecosystem: cargo",
+          "target": "cooldown.default-days"
+        },
+        {
+          "file": ".github/dependabot.yaml",
+          "line": 3,
+          "message": "Dependabot update #1 (cargo): set open-pull-requests-limit to a nonnegative integer.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "- package-ecosystem: cargo",
+          "target": "open-pull-requests-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "compliant": {
     "exitCode": 0,
     "report": {
@@ -11,6 +52,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "incomplete-merge": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "dependabot-cooldown-policy",
+          "file": ".github/dependabot.yml",
+          "message": "Cannot verify Dependabot cooldowns: could not apply YAML merge keys: expected a mapping or list of mappings for merging, but found scalar. Repair .github/dependabot.yml and run the check again."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "low-explicit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 10,
+          "message": "Dependabot update #1 (npm): set cooldown.default-days to an integer of at least 7.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "default-days: 3",
+          "target": "cooldown.default-days"
+        }
+      ],
       "warnings": []
     }
   },

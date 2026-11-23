@@ -5,10 +5,14 @@ const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const rule = "dependabot-cooldown-policy";
 
-for (const [fixture, findingCount, incompleteCount] of [
+for (const [fixture, findingCount, incompleteCount, findingFile] of [
   ["compliant", 0, 0],
   ["violations", 6, 0],
   ["malformed", 0, 1],
+  ["both-paths", 2, 0, ".github/dependabot.yaml"],
+  ["anchors", 0, 0],
+  ["low-explicit", 1, 0],
+  ["incomplete-merge", 0, 1],
 ]) {
   test(
     `Dependabot cooldown reports agree across async Node APIs and CLI: ${fixture}`,
@@ -26,6 +30,9 @@ for (const [fixture, findingCount, incompleteCount] of [
       const report = await pending;
       assert.equal(report.rules.length, findingCount);
       assert.ok(report.rules.every((row) => row.rule === rule));
+      if (findingFile) {
+        assert.ok(report.rules.every((row) => row.file === findingFile));
+      }
       assert.equal(report.incomplete?.length ?? 0, incompleteCount);
       if (incompleteCount) {
         assert.equal(report.incomplete[0].consumer, rule);

@@ -7,8 +7,9 @@ Enable this rule to apply a consistent waiting period as ecosystems are added.
 
 ## What it requires
 
-Each update entry in `.github/dependabot.yml` must set a default cooldown at
-the configured floor. Explicit SemVer cooldown values use the same floor.
+Each update entry in `.github/dependabot.yml` or `.github/dependabot.yaml`
+must set a default cooldown at the configured floor. If both files exist, both
+are checked. Explicit SemVer cooldown values use the same floor.
 
 ## Options and defaults
 
@@ -32,8 +33,8 @@ rules:
 | `allowedCooldownExcludes` | Optional list of whole-value globs for entries in `cooldown.exclude`. An omitted list allows any exclusion. An empty list allows none. `*` can match across `/`. |
 | `exemptEcosystems` | Optional list of exact `package-ecosystem` names. Matching entries skip every policy check. The default list is empty. |
 
-The rule is silent when the file is absent. When the selected file cannot be read or
-parsed, or its `updates` structure cannot be analyzed, the JSON report records an
+The rule is silent when neither file exists. When either selected file cannot
+be read or parsed, or its `updates` structure cannot be analyzed, the JSON report records an
 `incomplete` entry with this rule as `consumer`, the file path, and a repair message.
 `check` exits unsuccessfully for incomplete analysis.
 

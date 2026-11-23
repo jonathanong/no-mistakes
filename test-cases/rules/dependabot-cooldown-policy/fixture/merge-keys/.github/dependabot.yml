@@ -1,0 +1,21 @@
+version: 2
+cooldown-defaults: &cooldown
+  default-days: 7
+  exclude: [example-library]
+update-defaults: &update
+  package-ecosystem: cargo
+  directory: /
+  cooldown: *cooldown
+updates:
+  - package-ecosystem: npm
+    directory: /
+    cooldown:
+      <<: *cooldown
+  - package-ecosystem: gomod
+    directory: /
+    cooldown: *cooldown
+  - <<: *update
+  - <<: *update
+    cooldown:
+      <<: *cooldown
+      default-days: 3

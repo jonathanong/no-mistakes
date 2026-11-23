@@ -1,7 +1,7 @@
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_outcome::{CheckFailure, CheckInputFailure};
 use crate::codebase::rules::{self, RuleFinding};
-use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 mod scan;
 
 pub const RULE_ID: &str = "dependabot-cooldown-policy";
-const FILE: &str = ".github/dependabot.yml";
+const FILES: [&str; 2] = [".github/dependabot.yml", ".github/dependabot.yaml"];
 
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
@@ -42,7 +42,7 @@ pub(super) fn check_prepared(
     sources: &SourceStore,
     session: Option<&AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
-    let path = root.join(FILE);
+    let paths = FILES.map(|file| root.join(file));
     rules::run_rule_applications(config, RULE_ID, |rule| {
         let options: Options = rule.try_rule_options()?;
         let minimum_days = options.minimum_days.with_context(|| {
@@ -59,41 +59,46 @@ pub(super) fn check_prepared(
             rule,
             files,
             sources,
-            |candidate| candidate == path,
+            |candidate| paths.iter().any(|path| candidate == path),
         )?;
-        if selected.is_empty() {
-            return Ok(Vec::new());
-        }
-        match read_updates(sources, &path) {
-            Ok(value) => Ok(scan::check(
-                value
-                    .get("updates")
-                    .and_then(Value::as_sequence)
-                    .map(Vec::as_slice),
-                sources.config_locations(&path).as_deref(),
-                &options,
-                minimum_days,
-                allowed.as_ref(),
-                rule.message.as_deref(),
-            )),
-            Err(error) => {
-                let message = format!(
-                    "Cannot verify Dependabot cooldowns: {error:#}. Repair {FILE} and run the check again."
-                );
-                let file = PathBuf::from(relative_slash_path(root, &path));
-                if let Some(session) = session {
+        let mut findings = Vec::new();
+        for (file, path) in FILES.into_iter().zip(&paths) {
+            if !selected.contains(path) {
+                continue;
+            }
+            let value = match read_updates(sources, path) {
+                Ok(value) => value,
+                Err(error) => {
+                    let message = format!(
+                        "Cannot verify Dependabot cooldowns: {error:#}. Repair {file} and run the check again."
+                    );
+                    let file = PathBuf::from(file);
+                    let Some(session) = session else {
+                        return Err(CheckInputFailure::source(file, message).into());
+                    };
                     session.record_check_failure(CheckFailure {
                         consumer: RULE_ID.to_owned(),
                         file: Some(file),
                         property: None,
                         message,
                     });
-                    Ok(Vec::new())
-                } else {
-                    Err(CheckInputFailure::source(file, message).into())
+                    continue;
                 }
-            }
+            };
+            findings.extend(scan::check(
+                file,
+                value
+                    .get("updates")
+                    .and_then(Value::as_sequence)
+                    .map(Vec::as_slice),
+                sources.config_locations(path).as_deref(),
+                &options,
+                minimum_days,
+                allowed.as_ref(),
+                rule.message.as_deref(),
+            ));
         }
+        Ok(findings)
     })
 }
 
@@ -116,10 +121,14 @@ fn compile_excludes(patterns: &[String]) -> Result<GlobSet> {
         .with_context(|| format!("{RULE_ID}: could not compile options.allowedCooldownExcludes"))
 }
 
-fn read_updates(sources: &SourceStore, path: &Path) -> Result<std::sync::Arc<Value>> {
+fn read_updates(sources: &SourceStore, path: &Path) -> Result<Value> {
     let value = sources
         .parse_yaml_path(path)
         .context("could not read or parse YAML")?;
+    let mut value = value.as_ref().clone();
+    value
+        .apply_merge()
+        .context("could not apply YAML merge keys")?;
     anyhow::ensure!(value.is_mapping(), "expected a top-level mapping");
     if let Some(updates) = value.get("updates") {
         let updates = updates

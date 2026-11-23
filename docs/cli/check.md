@@ -327,8 +327,9 @@ for sparse checkout coverage and suppression.
 
 Enable [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md)
 with `options.minimumDays` to require a cooldown on every applicable entry in
-`.github/dependabot.yml`.
-Configure PR limits, exclusion globs, and ecosystem exemptions as needed.
+`.github/dependabot.yml` and `.github/dependabot.yaml`; both files are checked
+when both exist. Configure PR limits, exclusion globs, and ecosystem exemptions
+as needed. Exempt ecosystems skip every check, including the PR limit.
 Unreadable or malformed input appears in the JSON `incomplete` list.
 
 Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch

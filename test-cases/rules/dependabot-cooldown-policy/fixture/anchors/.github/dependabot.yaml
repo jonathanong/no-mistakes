@@ -1,0 +1,21 @@
+version: 2
+cooldown: &cooldown
+  default-days: 7
+npm_defaults: &npm_defaults
+  package-ecosystem: npm
+  directory: /
+  open-pull-requests-limit: 3
+  cooldown: *cooldown
+updates:
+  - package-ecosystem: npm
+    directory: /
+    open-pull-requests-limit: 3
+    cooldown: *cooldown
+  - <<: *npm_defaults
+    package-ecosystem: cargo
+  - package-ecosystem: npm
+    directory: /
+    open-pull-requests-limit: 3
+    cooldown:
+      <<: *cooldown
+      semver-patch-days: 14

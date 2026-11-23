@@ -664,7 +664,8 @@ retains the defaults.
 ### Dependabot cooldown
 
 [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md) is opt-in
-and checks `.github/dependabot.yml`. Set the required nonnegative integer
+and checks `.github/dependabot.yml` and `.github/dependabot.yaml`; if both
+exist, it checks both. Set the required nonnegative integer
 `minimumDays` floor. Use `requireOpenPullRequestsLimit` to require an explicit
 PR limit, `allowedCooldownExcludes` to restrict cooldown exclusions to whole-value
 globs, and `exemptEcosystems` to skip entries for exact ecosystem names.

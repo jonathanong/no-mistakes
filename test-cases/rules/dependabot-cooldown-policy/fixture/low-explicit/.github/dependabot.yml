@@ -1,0 +1,10 @@
+version: 2
+npm_defaults: &npm_defaults
+  package-ecosystem: npm
+  directory: /
+  open-pull-requests-limit: 3
+  cooldown: { default-days: 7 }
+updates:
+  - <<: *npm_defaults
+    cooldown:
+      default-days: 3
