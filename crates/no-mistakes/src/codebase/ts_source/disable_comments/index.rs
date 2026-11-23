@@ -1,12 +1,15 @@
-use super::{directives, named_rule, next_line_rule_part, scan_file_directives, DisableDirective};
+use super::{
+    directives, named_rule, next_line_rule_part, scan_file_directives, DisableDirective,
+    LineCommentScanState,
+};
 use crate::diagnostics::InvocationObserver;
 use rustc_hash::FxHashMap;
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 
 pub(crate) struct DisableCommentIndex<S> {
     source: S,
     header: OnceLock<FxHashMap<Box<str>, u32>>,
-    lines: [OnceLock<LineDirectives>; 2],
+    lines: [OnceLock<Mutex<LineDirectives>>; 2],
 }
 
 impl<S: AsRef<str>> DisableCommentIndex<S> {
@@ -50,9 +53,15 @@ impl<S: AsRef<str>> DisableCommentIndex<S> {
             );
         }
         let line = line.filter(|&line| line != 0)?;
-        self.lines[usize::from(track_quotes)]
-            .get_or_init(|| LineDirectives::scan(source, track_quotes, observer))
-            .matching(rule, line)
+        let mut lines = self.lines[usize::from(track_quotes)]
+            .get_or_init(|| {
+                record(observer, "suppression.line_index_builds", 1);
+                Mutex::new(LineDirectives::new(source, track_quotes))
+            })
+            .lock()
+            .expect("disable comment index lock poisoned");
+        lines.scan_through(source, line, observer);
+        lines.matching(rule, line)
     }
 }
 
@@ -60,45 +69,59 @@ impl<S: AsRef<str>> DisableCommentIndex<S> {
 struct LineDirectives {
     next: FxHashMap<u32, Box<str>>,
     inline: FxHashMap<u32, Box<str>>,
+    scan_inline: bool,
+    scan_next: bool,
+    state: LineCommentScanState,
+    offset: usize,
+    scanned_line: u32,
 }
 
 impl LineDirectives {
-    fn scan(source: &str, track_quotes: bool, observer: Option<&InvocationObserver>) -> Self {
-        record(observer, "suppression.line_index_builds", 1);
+    fn new(source: &str, track_quotes: bool) -> Self {
         let (scan_inline, scan_next) = line_markers(source);
-        let mut found = Self::default();
-        if !scan_inline && !scan_next {
-            return found;
-        }
-
-        let mut state = super::LineCommentScanState {
-            track_quotes,
+        Self {
+            scan_inline,
+            scan_next,
+            state: LineCommentScanState {
+                track_quotes,
+                ..Default::default()
+            },
+            offset: source.len() - source.trim_start_matches('\u{FEFF}').len(),
             ..Default::default()
-        };
-        let mut visits = 0;
-        for (index, text) in source
-            .trim_start_matches('\u{FEFF}')
-            .lines()
-            .take(u32::MAX as usize)
-            .enumerate() {
-            let line = (index + 1) as u32;
-            if scan_inline {
-                if let Some(part) = directives::inline_rule_part(text, &mut state) {
-                    insert_named_rule(&mut found.inline, line, part);
+        }
+    }
+
+    fn scan_through(&mut self, source: &str, line: u32, observer: Option<&InvocationObserver>) {
+        let start_line = self.scanned_line;
+        let remaining = line.saturating_sub(start_line);
+        if remaining == 0 || self.offset == source.len() || !(self.scan_inline || self.scan_next) {
+            return;
+        }
+        for raw in source[self.offset..]
+            .split_inclusive('\n')
+            .take(remaining as usize)
+        {
+            self.offset += raw.len();
+            self.scanned_line += 1;
+            let text = raw
+                .strip_suffix('\n')
+                .map_or(raw, |text| text.strip_suffix('\r').unwrap_or(text));
+            if self.scan_inline {
+                if let Some(part) = directives::inline_rule_part(text, &mut self.state) {
+                    insert_named_rule(&mut self.inline, self.scanned_line, part);
                 }
             }
-            if scan_next {
+            if self.scan_next {
                 if let Some(part) = next_line_rule_part(text) {
-                    insert_named_rule(&mut found.next, line, part);
+                    insert_named_rule(&mut self.next, self.scanned_line, part);
                 }
             }
-            visits = index + 1;
         }
-        record(observer, "suppression.line_visits", visits as u64);
-        if scan_inline {
-            record(observer, "suppression.lexer_line_visits", visits as u64);
+        let visits = u64::from(self.scanned_line - start_line);
+        record(observer, "suppression.line_visits", visits);
+        if self.scan_inline {
+            record(observer, "suppression.lexer_line_visits", visits);
         }
-        found
     }
 
     fn matching(&self, rule: &str, line: u32) -> Option<DisableDirective> {
