@@ -66,6 +66,17 @@ fn github_actions_action_input_policy_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn github_actions_env_policy_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_ENV_POLICY;
+    assert_eq!(rule, "github-actions-env-policy");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    let body = read(&repo_root().join(format!("docs/rules/{rule}.md")));
+    for option in ["required:", "forbidden:", "include"] {
+        assert!(body.contains(option), "missing {option}");
+    }
+}
+
+#[test]
 fn github_actions_job_permissions_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_JOB_PERMISSIONS;
     assert_eq!(rule, "github-actions-job-permissions");

@@ -72,6 +72,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`forbidden-lint-suppressions`](forbidden-lint-suppressions.md) | Prevent selected comment directives from disabling protected lint rules. |
 | [`forbidden-calls`](forbidden-calls.md)                                       | Prevent configured roots from invoking selected functions.                      |
 | [`coverage-producer-assertion-owner`](coverage-producer-assertion-owner.md) | Require configured coverage producers to reach assertion owners. |
+| [`github-actions-env-policy`](github-actions-env-policy.md) | Require or forbid `env:` values at workflow, job and step scope. |
 | [`github-actions-action-input-policy`](github-actions-action-input-policy.md)     | Require or ban `with:` inputs for each configured action family.            |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-cache-key-policy`](github-actions-cache-key-policy.md)           | Require configured platform fragments and lockfile provenance in actions/cache keys. |

@@ -49,6 +49,13 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
+        GITHUB_ACTIONS_ENV_POLICY => github_actions_env_policy::check_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        ),
         GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => {
             github_actions_action_timeout_pair::check_with_files_and_sources(
                 root,

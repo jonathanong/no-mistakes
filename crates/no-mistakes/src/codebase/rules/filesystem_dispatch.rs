@@ -9,7 +9,7 @@ use super::{
     forbidden_lint_suppressions, forbidden_workspace_closure, github_actions_action_input_policy,
     github_actions_action_timeout_pair, github_actions_cache_key_policy,
     github_actions_checkout_credentials, github_actions_composite_step_schema,
-    github_actions_docker_host_ports, github_actions_download_integrity,
+    github_actions_docker_host_ports, github_actions_download_integrity, github_actions_env_policy,
     github_actions_job_permissions, github_actions_job_timeouts,
     github_actions_local_action_checkout, github_actions_max_inline_script_lines,
     github_actions_pinned_hash, github_actions_script_expressions, github_actions_step_timeouts,
@@ -106,6 +106,7 @@ pub use entrypoints::{
 };
 pub(super) const GITHUB_ACTIONS_ACTION_INPUT_POLICY: &str =
     github_actions_action_input_policy::RULE_ID;
+pub(super) const GITHUB_ACTIONS_ENV_POLICY: &str = github_actions_env_policy::RULE_ID;
 pub(super) const GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR: &str =
     github_actions_action_timeout_pair::RULE_ID;
 pub(super) const GITHUB_ACTIONS_CACHE_KEY_POLICY: &str = github_actions_cache_key_policy::RULE_ID;

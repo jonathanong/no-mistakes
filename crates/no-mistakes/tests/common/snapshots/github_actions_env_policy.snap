@@ -1,0 +1,103 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"build\" step 3 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: --inspect",
+          "target": "NODE_OPTIONS"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "violations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup/action.yml",
+          "line": 9,
+          "message": ".github/actions/setup/action.yml: composite action step 1 sets env `BASH_ENV` to `./composite-init.sh`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ./composite-init.sh",
+          "target": "BASH_ENV"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: --max-old-space-size=4096",
+          "target": "NODE_OPTIONS"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 15,
+          "message": ".github/workflows/ci.yml: job \"build\" step 2 sets env `BASH_ENV` to `${{ vars.SHELL_INIT }}`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ${{ vars.SHELL_INIT }}",
+          "target": "BASH_ENV"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 20,
+          "message": ".github/workflows/ci.yml: job \"build\" step 3 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: --trace-warnings",
+          "target": "NODE_OPTIONS"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: workflow sets env `BASH_ENV` to `./setup.sh`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ./setup.sh",
+          "target": "BASH_ENV"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

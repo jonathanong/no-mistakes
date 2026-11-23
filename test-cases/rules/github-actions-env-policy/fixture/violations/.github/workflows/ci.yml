@@ -1,0 +1,24 @@
+name: ci
+on: push
+env:
+  BASH_ENV: ./setup.sh
+  UNRELATED: value
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: example/setup-runtime@v1
+      - name: expression value
+        env:
+          BASH_ENV: ${{ vars.SHELL_INIT }}
+        run: echo done
+      - name: step level
+        run: echo hello
+        env:
+          NODE_OPTIONS: --trace-warnings
+  other:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
