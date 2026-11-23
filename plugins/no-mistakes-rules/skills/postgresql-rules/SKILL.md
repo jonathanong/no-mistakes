@@ -13,6 +13,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT run an unbounded `SELECT`, `UPDATE`, or `DELETE` in a job or endpoint; add a `LIMIT` or required predicates.
 - SHOULD NOT paginate a growing result with `OFFSET`; its cost grows with page depth and concurrent inserts shift rows between pages. Use keyset `(key, id) < ($1, $2)` ordered the same way.
 - MUST NOT trust a client page size; clamp it to a static ceiling.
+- MUST NOT derive a next-page flag from whether the page is full when rows can be filtered or capped after the `LIMIT`; a short or empty page then hides later rows. Set it from whether the read can continue.
+- SHOULD bound a run of empty pages a paginated read can return (for example by a time window), so a client following the cursor reaches results or the end.
 - MUST NOT query a protected relation without its required predicates (tenant, soft-delete, partition key).
 - SHOULD NOT issue one query per item for an input-sized batch when one query can do the same work.
 - MUST NOT use `NOT IN (SELECT …)`; NULLs silently drop rows. Use `NOT EXISTS`.

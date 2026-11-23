@@ -19,6 +19,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT point redirects or rewrites at routes that do not exist.
 - SHOULD NOT render user-supplied image URLs directly; the viewer's browser fetches them and leaks the viewer's IP address to that host.
 - MUST NOT nest interactive elements inside a clickable row or link.
+- MUST NOT end a paginated list on an empty or short page when the API returns a next-page flag or cursor; only that signal ends the list. Show the empty state only when there are no results and no further page can be requested.
 - SHOULD NOT disable accessibility checks to make stories or tests pass without a scoped exception and a stated reason.
 - SHOULD NOT add identity-only memoization when the React Compiler is on.
 - SHOULD NOT import server-only modules into stories or client components.
