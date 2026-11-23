@@ -25,6 +25,21 @@ require("./api-tests/declarations-audit");
 require("./api-tests/declarations-runtime");
 
 const { assert, test, readFileSync, join, packageRoot } = require("./api-tests/context");
+
+test("github-actions-pinned-hash images option is publicly named", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "github-actions-pinned-hash-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declaration, /export interface GithubActionsPinnedHashOptions \{/);
+  assert.match(declaration, /images\?: boolean;/);
+  assert.match(declaration, /unanalyzable\?: Unanalyzable;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-pinned-hash-types";/,
+  );
+});
+
 test("forbidden dependency selectors and origin exceptions have public option types", () => {
   const declarations = readFileSync(join(packageRoot, "forbidden-dependency-types.d.ts"), "utf8");
   assert.match(declarations, /export interface ForbiddenDependencyException \{/);

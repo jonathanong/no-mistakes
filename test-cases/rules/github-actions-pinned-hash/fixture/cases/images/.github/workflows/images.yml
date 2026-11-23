@@ -1,0 +1,40 @@
+name: image-pinning
+on: push
+x-service: &service
+  image: example.invalid/my-org/alias:latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      image: postgres:16
+    strategy:
+      matrix:
+        include:
+          - image: postgres:16
+    services:
+      db:
+        image: postgres:16
+      cache:
+        image: example.invalid/my-org/cache@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      short:
+        image: example.invalid/my-org/short@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+      long:
+        image: example.invalid/my-org/long@sha256:fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      nonhex:
+        image: example.invalid/my-org/nonhex@sha256:gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+      aliased: *service
+    container: example.invalid/my-org/tools:latest
+    steps:
+      - uses: example/action@v1
+      - uses: docker://example.invalid/my-org/task:latest
+      - uses: docker://example.invalid/my-org/pinned@sha256:BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+      - run: echo done
+        env:
+          image: example.invalid/my-org/unrelated:latest
+  mapped:
+    runs-on: ubuntu-latest
+    container:
+      image: example.invalid/my-org/mapped:latest
+    services: { db: { image: example.invalid/my-org/flow:latest }, second: { image: example.invalid/my-org/flow-two:latest } }
+    steps:
+      - uses: docker://example.invalid/my-org/flow-task@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc

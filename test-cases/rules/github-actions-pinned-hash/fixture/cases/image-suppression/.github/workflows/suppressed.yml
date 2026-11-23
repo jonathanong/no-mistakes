@@ -1,0 +1,8 @@
+name: image-suppression
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: example.invalid/my-org/suppressed:latest # no-mistakes-disable-line github-actions-pinned-hash

@@ -8,6 +8,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod execution;
+mod yaml_images;
 mod yaml_uses;
 #[doc(hidden)]
 pub use execution::diagnostics_with_files_and_sources;
@@ -18,6 +19,7 @@ pub const RULE_ID: &str = "github-actions-pinned-hash";
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
     pub(crate) exclude_paths: Vec<String>,
+    pub(crate) images: bool,
 }
 
 super::borrowed_source_rule_entrypoints!();
@@ -55,9 +57,8 @@ fn check_file_with_sources(
     path: &Path,
     root: &Path,
     exclude_set: &GlobSet,
-    uses_re: &Regex,
-    sha_re: &Regex,
-    version_re: &Regex,
+    patterns: (&Regex, &Regex, &Regex),
+    images: bool,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
@@ -76,18 +77,18 @@ fn check_file_with_sources(
         Ok(source) => source,
         Err(finding) => return vec![*finding],
     };
-    check_source(path, root, uses_re, sha_re, version_re, &content, sources)
+    check_source(path, root, patterns, images, &content, sources)
 }
 
 fn check_source(
     path: &Path,
     root: &Path,
-    uses_re: &Regex,
-    sha_re: &Regex,
-    version_re: &Regex,
+    patterns: (&Regex, &Regex, &Regex),
+    images: bool,
     content: &str,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
+    let (uses_re, sha_re, version_re) = patterns;
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
     // Lines the regex already accepted or flagged. Parsed `uses` values must
@@ -103,6 +104,10 @@ fn check_source(
             continue;
         };
         let raw = caps.get(1).map_or("", |m| m.as_str());
+        if images && raw.trim_start_matches(['"', '\'']).starts_with("docker://") {
+            seen_lines.insert(line_num);
+            continue;
+        }
         // Anchors, aliases, and block-scalar headers are resolved by the parsed walk.
         if raw.starts_with('&') || raw.starts_with('*') || yaml_uses::is_block_header(raw) {
             continue;
@@ -148,6 +153,9 @@ fn check_source(
         &seen_lines,
         &mut findings,
     );
+    if images && documents.is_some() {
+        yaml_images::append_images(content, &file, &mut findings);
+    }
     findings.sort_by(|left, right| {
         left.line
             .cmp(&right.line)

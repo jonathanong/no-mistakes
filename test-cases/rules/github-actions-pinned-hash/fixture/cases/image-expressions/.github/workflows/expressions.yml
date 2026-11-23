@@ -1,0 +1,13 @@
+name: image-expressions
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: ${{ vars.DB_IMAGE }}
+    container:
+      image: ${{ vars.JOB_IMAGE }}
+    steps:
+      - uses: docker://${{ vars.STEP_IMAGE }}
+      - uses: "docker://${{ vars.QUOTED_IMAGE }}"

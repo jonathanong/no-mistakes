@@ -122,6 +122,8 @@ pub(crate) use project::{
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod tests_check_images;
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests_check_timing;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_queue_waits;

@@ -1,0 +1,2 @@
+- uses: docker://example.invalid/my-org/root-sequence:latest
+- run: echo done

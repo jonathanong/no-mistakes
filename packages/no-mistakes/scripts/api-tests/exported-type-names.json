@@ -127,6 +127,7 @@
   "ForbiddenLintSuppressionsOptions",
   "GithubActionsDownloadIntegrityOptions",
   "GithubActionsDownloadIntegritySkipAnnotationScope",
+  "GithubActionsPinnedHashOptions",
   "GraphEdge",
   "GroupedExecutionTarget",
   "HotFileDiagnostic",

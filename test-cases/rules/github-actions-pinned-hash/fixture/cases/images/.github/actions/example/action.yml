@@ -1,0 +1,6 @@
+name: example
+runs:
+  using: composite
+  steps:
+    - uses: docker://example.invalid/my-org/composite:latest
+    - uses: docker://example.invalid/my-org/composite-pinned@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd

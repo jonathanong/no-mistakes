@@ -17,6 +17,7 @@ export * from "./query-types";
 export * from "./named-query-types";
 export * from "./mermaid-types";
 export * from "./resolve-config-types";
+export type * from "./github-actions-pinned-hash-types";
 export * from "./postgres-query-annotation-types";
 export type * from "./postgres-unbounded-identifier-types";
 export * from "./postgres-catalog-types";
