@@ -1,0 +1,19 @@
+name: suppressed
+on: pull_request
+jobs:
+  next-line:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # no-mistakes-disable-next-line github-actions-pr-diff-range
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+  same-line:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} # no-mistakes-disable-line github-actions-pr-diff-range
+  reported:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}

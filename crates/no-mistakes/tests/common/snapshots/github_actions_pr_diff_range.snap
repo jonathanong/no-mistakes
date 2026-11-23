@@ -1,0 +1,91 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/pull.yml",
+          "line": 10,
+          "message": ".github/workflows/pull.yml:10: job `two-argument` step 1 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}",
+          "target": "two-argument"
+        },
+        {
+          "file": ".github/workflows/pull.yml",
+          "line": 15,
+          "message": ".github/workflows/pull.yml:15: job `two-dot` step 1 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff \"${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}\"",
+          "target": "two-dot"
+        },
+        {
+          "file": ".github/workflows/pull.yml",
+          "line": 20,
+          "message": ".github/workflows/pull.yml:20: job `base-with-github-sha` step 1 pairs the pull request base with `github.sha` in a diff range. The two values are computed at different times and mean different things on `push` and `merge_group` events. Use a three-dot diff of the base and head SHAs after a deep enough fetch, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }}",
+          "target": "base-with-github-sha"
+        },
+        {
+          "file": ".github/workflows/pull.yml",
+          "line": 28,
+          "message": ".github/workflows/pull.yml:28: job `env-base-with-github-sha` step 1 pairs the pull request base with `github.sha` in a diff range. The two values are computed at different times and mean different things on `push` and `merge_group` events. Use a three-dot diff of the base and head SHAs after a deep enough fetch, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "CHANGED=$(git diff --name-only \"$BASE\" \"${{ github.sha }}\")",
+          "target": "env-base-with-github-sha"
+        },
+        {
+          "file": ".github/workflows/queue.yml",
+          "line": 10,
+          "message": ".github/workflows/queue.yml:10: job `read-pull-request` step 1 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: echo \"${{ github.event.pull_request.base.sha }}\"",
+          "target": "read-pull-request"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 19,
+          "message": ".github/workflows/suppressed.yml:19: job `reported` step 1 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}",
+          "target": "reported"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

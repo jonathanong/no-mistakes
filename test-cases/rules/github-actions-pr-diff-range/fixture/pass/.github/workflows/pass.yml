@@ -1,0 +1,36 @@
+name: pass
+on:
+  pull_request:
+  merge_group:
+jobs:
+  three-dot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request'
+  merge-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff --name-only HEAD^1 HEAD
+  merge-group-range:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff --name-only ${{ github.event.merge_group.base_sha }} ${{ github.event.merge_group.head_sha }}
+  guarded-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    steps:
+      - run: echo "${{ github.event.pull_request.base.sha }}"
+  unrecognized:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff --name-only "$RANGE"
+      - run: git log -1 HEAD

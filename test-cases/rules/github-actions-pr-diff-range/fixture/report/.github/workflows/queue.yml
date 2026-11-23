@@ -1,0 +1,10 @@
+name: queue
+on:
+  merge_group:
+  pull_request:
+jobs:
+  read-pull-request:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: echo "${{ github.event.pull_request.base.sha }}"

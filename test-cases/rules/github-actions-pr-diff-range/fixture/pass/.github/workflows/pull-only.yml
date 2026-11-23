@@ -1,0 +1,9 @@
+name: pull-only
+on: pull_request
+jobs:
+  not-a-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git log ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+      - run: git diff -U 3 ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}

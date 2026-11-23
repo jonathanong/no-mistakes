@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) mod job_lines;
 pub(super) mod no_poll_wait_job;
+pub(super) mod pr_diff_range;
 pub(super) mod run_scripts;
 pub(super) mod script_line;
 pub(super) mod shell_words;

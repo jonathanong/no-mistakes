@@ -72,7 +72,10 @@ fn inspect(words: &[Word], frame: &mut Frame, polls: &[Vec<String>]) {
         start += 1;
     }
     let words = &words[start..];
-    if words.first().is_some_and(|word| basename(&word.text) == "sleep") {
+    if words
+        .first()
+        .is_some_and(|word| basename(&word.text) == "sleep")
+    {
         frame.sleeps = true;
     }
     let flat = words

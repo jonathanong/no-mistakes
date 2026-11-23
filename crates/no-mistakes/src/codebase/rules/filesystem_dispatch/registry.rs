@@ -22,6 +22,7 @@ macro_rules! filesystem_rules {
             GITHUB_ACTIONS_CHECKOUT_CREDENTIALS => github_actions_checkout_credentials::check_with_files => "",
             GITHUB_ACTIONS_DOCKER_HOST_PORTS => github_actions_docker_host_ports::check_with_files => "",
             GITHUB_ACTIONS_NO_POLL_WAIT_JOB => no_poll_wait_job::check_with_files => "",
+            GITHUB_ACTIONS_PR_DIFF_RANGE => pr_diff_range::check_with_files => "",
             GITHUB_ACTIONS_VITEST_PROJECT_SELECTION => github_actions_vitest_project_selection::check_with_files => "",
             GITHUB_ACTIONS_DOWNLOAD_INTEGRITY => github_actions_download_integrity::check_with_files => "",
             GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS => github_actions_test_timeout_literals::check_with_files => "",

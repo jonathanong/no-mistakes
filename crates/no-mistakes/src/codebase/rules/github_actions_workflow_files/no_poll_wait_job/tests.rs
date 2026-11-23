@@ -19,7 +19,8 @@ fn until_condition_poll_with_sleep_body_is_reported() {
 
 #[test]
 fn command_substitution_poll_in_a_while_loop_is_reported() {
-    let script = "echo start\nwhile [ \"$(gh run view 1 -q .status)\" != completed ]; do\n  sleep 5\ndone";
+    let script =
+        "echo start\nwhile [ \"$(gh run view 1 -q .status)\" != completed ]; do\n  sleep 5\ndone";
     assert_eq!(lines(script, false), vec![2]);
 }
 

@@ -517,6 +517,9 @@ the commands that poll another run. `options.ignoreForLoops` (default `false`)
 skips `for` loops as bounded retries. The rule stays off until a configuration
 lists it.
 
+[`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md) has no
+options. It stays off until a configuration lists it.
+
 For [`github-actions-vitest-project-selection`](../rules/github-actions-vitest-project-selection.md),
 `options.projects` defaults to none. Each entry names a Vitest `project`, the
 workflow or composite-action paths that may select it, and `nameFilters`
