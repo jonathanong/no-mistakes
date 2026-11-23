@@ -56,9 +56,9 @@ tests:
     modules: [services/worker]
 ```
 
-`factories` names are matched against configured queue factory calls. An
-enqueue factory records a producer at the wrapper call. `options` is the
-argument index of that call's options object; self-dedup, debounce, invalid
+`factories` names are matched against configured queue factory calls. A
+positional enqueue factory records a producer at the wrapper call. `options`
+is the argument index of that call's options object; self-dedup, debounce, invalid
 jobId, and mixed-priority checks read it the same way they read `queue.add`'s third argument.
 
 `jobScheduler` names a wrapper that registers a repeated job. `template` is the argument
@@ -119,7 +119,8 @@ queue scan is enabled by default.
 
 ## Configured enqueue selectors and returned callables
 
-An enqueue role can select a numeric argument, or a direct property with
+Enqueue roles match named runtime imports, including import aliases. An
+enqueue role can select a numeric argument, or a direct property with
 `{ arg, property }`. `queueName` fixes the queue instead of selecting an
 argument. Declare exactly one of `queue` and `queueName`.
 

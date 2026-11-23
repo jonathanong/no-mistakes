@@ -99,7 +99,7 @@ fn configured_enqueue_wrappers_edges_snapshot() {
             && worker["to"] == "workers/worker.ts"));
     }
     assert!(edges.iter().all(|e| e["from"] != "enqueues/abstain.ts"));
-    insta::with_settings!({snapshot_path: "common/snapshots", prepend_module_to_snapshot: false}, {
+    insta::with_settings!({snapshot_path => "common/snapshots", prepend_module_to_snapshot => false}, {
         insta::assert_snapshot!("configured_enqueue_wrapper_edges", serde_json::to_string_pretty(&reports[0]).unwrap());
     });
 }
