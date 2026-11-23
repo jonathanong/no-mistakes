@@ -6,6 +6,7 @@ for (const entry of process.argv.slice(2)) {
   for (const path of Object.keys(require.cache)) delete require.cache[path];
   const names = [];
   globalThis.test = (name) => names.push(name);
+  globalThis.beforeAll = () => {};
   require(resolve(entry));
   registrations.push({ entry, names });
 }
