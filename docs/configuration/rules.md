@@ -471,6 +471,16 @@ service-port patterns documented on that page. Omitting the option keeps that
 default. An explicit list, including `[]`, replaces it. The rule stays off
 until a configuration lists it.
 
+For [`github-actions-run-command-policy`](../rules/github-actions-run-command-policy.md),
+`options.commands` defaults to `[]`, which reports nothing until a repository
+declares command policies. Each entry names `command` tokens (such as `[gh, api]`
+or `[git, commit]`), optional `valueFlags`, optional `whenAnyArgs` trigger
+arguments, `requireArgs` / `requireAnyArgs`, `forbidArgPatterns` (`scope: any`
+or `positional`), and an optional `message`. Unparsable commands (`eval`,
+dynamic command names, dynamic `sh -c`, or unterminated shell syntax) abstain
+with a diagnostic governed by `options.unanalyzable` (default `advise`). See
+the [run command policy](../rules/github-actions-run-command-policy.md#options-and-defaults).
+
 For [`github-actions-action-input-policy`](../rules/github-actions-action-input-policy.md),
 `options.actions` defaults to `[]`, which reports nothing until a repository
 lists action families. Each `uses` value is the family; a ref after `@` is

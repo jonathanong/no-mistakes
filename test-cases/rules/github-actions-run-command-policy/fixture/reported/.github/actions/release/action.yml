@@ -1,0 +1,7 @@
+name: Release helper
+description: Composite action with an unsafe gh api call
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: gh api -f x=1 repos/my-org/my-repo/labels

@@ -1,0 +1,29 @@
+name: Compliant
+on: push
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explicit method with field
+        run: gh api --method GET -f x=1 repos/my-org/my-repo/labels
+      - name: Inline method with typed field
+        run: gh api --method=GET -F per_page=100 repos/my-org/my-repo/labels
+      - name: Short method flag
+        run: gh api -X GET -f x=1 repos/my-org/my-repo/labels
+      - name: Plain endpoint without fields or query string
+        run: gh api repos/my-org/my-repo/labels
+      - name: Question mark inside flag value only
+        run: gh api --method GET -f "note=why?" --jq '.[] | select(.name?)' repos/my-org/my-repo/labels
+      - name: Commit with hooks-path flag
+        run: 'git -c core.hooksPath=/dev/null commit -m "chore: update"'
+      - name: Commit with -C and hooks-path flag
+        run: 'git -C packages/app -c core.hooksPath=/dev/null commit -m "chore: update"'
+      - name: Unconfigured commands stay silent
+        run: |
+          git status
+          echo "gh api -f x=1 repos/my-org/my-repo/labels"
+      - name: Suppressed step
+        # no-mistakes-disable-next-line github-actions-run-command-policy
+        run: gh api -f x=1 repos/my-org/my-repo/labels
+      - name: Inline suppressed step
+        run: 'git commit -m "chore: allow"' # no-mistakes-disable-line github-actions-run-command-policy

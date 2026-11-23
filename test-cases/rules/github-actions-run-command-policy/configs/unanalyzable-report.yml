@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: github-actions-run-command-policy
+    scope: repository
+    options:
+      unanalyzable: report
+      commands:
+        - command: [gh, api]
+          valueFlags: [-f, -F, --field, --raw-field, -X, --method]
+          whenAnyArgs: [-f, -F, --field, --raw-field]
+          requireAnyArgs: [--method, -X]
+          message: "gh api with -f/-F defaults to POST; pass --method (or -X) explicitly."

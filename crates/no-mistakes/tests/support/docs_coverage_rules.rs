@@ -168,3 +168,30 @@ fn rule_docs_use_supported_option_examples() {
         }
     }
 }
+
+pub(super) fn assert_run_command_policy_docs(root: &std::path::Path, rule: &str) {
+    assert!(rule_ids_from_source(root).contains(rule));
+    let page = read(&root.join(format!("docs/rules/{rule}.md")));
+    for needle in [
+        "commands:",
+        "requireArgs:",
+        "requireAnyArgs:",
+        "forbidArgPatterns:",
+        "gh-api-argument-safety",
+        "no-mistakes-disable-next-line",
+        "no-mistakes-disable-line",
+        "no-mistakes-disable-file",
+    ] {
+        assert!(page.contains(needle), "missing {needle}");
+    }
+    for path in [
+        "docs/rules/README.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}

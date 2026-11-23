@@ -1,0 +1,200 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "compliant": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-opt-in": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/release/action.yml",
+          "line": 7,
+          "message": ".github/actions/release/action.yml:7: composite step 1 runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api -f x=1 repos/my-org/my-repo/labels",
+          "target": "gh api"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml:10: job `api` step 2 runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api -F per_page=100 repos/my-org/my-repo/labels",
+          "target": "gh api"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 12,
+          "message": ".github/workflows/ci.yml:12: job `api` step 3 passes forbidden argument `repos/my-org/my-repo/labels?per_page=100` to `gh api` (matched `/[?]/`). Pass query parameters with -f/-F and --method GET instead of a query string in the endpoint.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api \"repos/my-org/my-repo/labels?per_page=100\"",
+          "target": "gh api"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 14,
+          "message": ".github/workflows/ci.yml:14: job `api` step 4 runs `git commit` without required argument `-c core.hooksPath=/dev/null`. Run CI commits with -c core.hooksPath=/dev/null so repository hooks cannot execute.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: 'git commit -m \"chore: update\"'",
+          "target": "git commit"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml:16: job `api` step 5 runs `git commit` without required argument `-c core.hooksPath=/dev/null`. Run CI commits with -c core.hooksPath=/dev/null so repository hooks cannot execute.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: 'git -C packages/app commit -m \"chore: update\"'",
+          "target": "git commit"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": ".github/workflows/ci.yml:19: job `api` step 6 runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "LABELS=$(gh api -f x=1 repos/my-org/my-repo/labels)",
+          "target": "gh api"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml:8: job `api` step 1 runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api -f x=1 repos/my-org/my-repo/labels",
+          "target": "gh api"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unparsable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 10,
+          "message": ".github/workflows/dynamic.yml:10: job `dynamic` step 2 invokes `eval`, which cannot be statically checked against configured command policies. Replace `eval` with a direct command invocation.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: eval \"gh api -f x=1 repos/my-org/my-repo/labels\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 12,
+          "message": ".github/workflows/dynamic.yml:12: job `dynamic` step 3 contains an unterminated quote, so configured command policies could not be checked. Fix the shell syntax in this step.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api \"repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 14,
+          "message": ".github/workflows/dynamic.yml:14: job `dynamic` step 4 passes a dynamic script to `bash -c`, which cannot be statically checked against configured command policies. Inline the literal command or run it directly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: bash -c \"$SCRIPT\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 8,
+          "message": ".github/workflows/dynamic.yml:8: job `dynamic` step 1 invokes dynamic command `$CMD`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $CMD api -f x=1 repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unparsable-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unparsable-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 10,
+          "message": ".github/workflows/dynamic.yml:10: job `dynamic` step 2 invokes `eval`, which cannot be statically checked against configured command policies. Replace `eval` with a direct command invocation.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: eval \"gh api -f x=1 repos/my-org/my-repo/labels\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 12,
+          "message": ".github/workflows/dynamic.yml:12: job `dynamic` step 3 contains an unterminated quote, so configured command policies could not be checked. Fix the shell syntax in this step.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api \"repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 14,
+          "message": ".github/workflows/dynamic.yml:14: job `dynamic` step 4 passes a dynamic script to `bash -c`, which cannot be statically checked against configured command policies. Inline the literal command or run it directly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: bash -c \"$SCRIPT\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 8,
+          "message": ".github/workflows/dynamic.yml:8: job `dynamic` step 1 invokes dynamic command `$CMD`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $CMD api -f x=1 repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

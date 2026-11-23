@@ -10,7 +10,7 @@ mod judge;
 mod runs;
 mod url;
 mod verify;
-mod words;
+pub(in crate::codebase::rules) mod words;
 
 pub const RULE_ID: &str = "github-actions-download-integrity";
 

@@ -32,6 +32,11 @@ shell sources through `shellSourceInclude` and per-transfer checks through
 check reports share the selected sources, shell inference, findings, and
 suppressions.
 
+The opt-in [`github-actions-run-command-policy`](rules/github-actions-run-command-policy.md)
+checks workflow and composite-action `run` scripts in Rust, CLI `check`, async
+Node `check()`, and `analyzeProject()` check reports, sharing the same script
+parser, argument policies, abstention advisories, and suppression handling.
+
 The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
 checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
 `analyzeProject()` check reports. These entry points share the same cooldown

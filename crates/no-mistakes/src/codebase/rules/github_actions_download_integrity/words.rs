@@ -1,35 +1,38 @@
 use std::ops::Range;
 
 #[derive(PartialEq, Eq)]
-pub(super) struct Word {
-    pub(super) text: String,
-    pub(super) line: usize,
+pub(in crate::codebase::rules) struct Word {
+    pub(in crate::codebase::rules) text: String,
+    pub(in crate::codebase::rules) line: usize,
     /// An unquoted expansion may add fields and change following option slots.
-    pub(super) expansion_may_split: bool,
-    pub(super) quoted_expansion: Option<(usize, usize)>,
+    pub(in crate::codebase::rules) expansion_may_split: bool,
+    pub(in crate::codebase::rules) quoted_expansion: Option<(usize, usize)>,
     /// The first simple reference outside quotes, as (byte offset, byte length).
-    pub(super) bare_expansion: Option<(usize, usize)>,
+    pub(in crate::codebase::rules) bare_expansion: Option<(usize, usize)>,
 }
 
-pub(super) struct Command {
+pub(in crate::codebase::rules) struct Command {
     // The preceding separator's character offset plus one, or zero at script start.
     pub(super) anchor: usize,
-    pub(super) dynamic: bool,
-    pub(super) words: Vec<Word>,
+    pub(in crate::codebase::rules) dynamic: bool,
+    pub(in crate::codebase::rules) words: Vec<Word>,
 }
 
 mod heredoc;
 mod scan;
 
-pub(super) struct Parse {
-    pub(super) commands: Vec<Command>,
-    pub(super) unterminated_heredoc: bool,
+pub(in crate::codebase::rules) struct Parse {
+    pub(in crate::codebase::rules) commands: Vec<Command>,
+    pub(in crate::codebase::rules) unterminated_heredoc: bool,
+    pub(in crate::codebase::rules) unterminated_quote: bool,
+    pub(in crate::codebase::rules) unterminated_substitution: bool,
+    pub(in crate::codebase::rules) substitutions: Vec<(usize, String)>,
     pub(super) skip_lines: Vec<usize>,
     // Character offsets in the unmodified shell source.
     pub(super) heredoc_ranges: Vec<Range<usize>>,
 }
 
-pub(super) fn parse(script: &str) -> Parse {
+pub(in crate::codebase::rules) fn parse(script: &str) -> Parse {
     parse_ordered(script, false, false)
 }
 
@@ -55,7 +58,12 @@ fn skip_arithmetic(chars: &[char], mut index: usize, line: &mut usize) -> usize 
     index
 }
 
-fn take_expansion(chars: &[char], mut index: usize, word: &mut String, line: &mut usize) -> usize {
+fn take_expansion(
+    chars: &[char],
+    mut index: usize,
+    word: &mut String,
+    line: &mut usize,
+) -> (usize, bool) {
     let open = chars[index + 1];
     let close = if open == '(' { ')' } else { '}' };
     word.push('$');
@@ -75,7 +83,7 @@ fn take_expansion(chars: &[char], mut index: usize, word: &mut String, line: &mu
         word.push(ch);
         index += 1;
     }
-    index
+    (index, depth == 0)
 }
 
 fn push_char(word: &mut String, word_line: &mut usize, line: usize, ch: char) {
@@ -124,11 +132,11 @@ fn flush_command(current: &mut Command, commands: &mut Vec<Command>) {
 
 mod lead;
 
-pub(super) fn command_at(words: &[Word]) -> Option<(String, usize)> {
+pub(in crate::codebase::rules) fn command_at(words: &[Word]) -> Option<(String, usize)> {
     lead::command_at(words)
 }
 
-pub(super) fn is_assignment(text: &str) -> bool {
+pub(in crate::codebase::rules) fn is_assignment(text: &str) -> bool {
     let Some((name, _)) = text.split_once('=') else {
         return false;
     };
@@ -142,7 +150,7 @@ pub(super) fn is_assignment(text: &str) -> bool {
             .all(|ch| ch.is_ascii_alphanumeric() || ch == '_')
 }
 
-pub(super) fn basename(text: &str) -> String {
+pub(in crate::codebase::rules) fn basename(text: &str) -> String {
     text.rsplit(['/', '\\']).next().unwrap_or(text).to_string()
 }
 

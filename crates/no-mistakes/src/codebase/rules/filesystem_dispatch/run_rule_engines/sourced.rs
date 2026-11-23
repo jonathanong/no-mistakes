@@ -90,6 +90,15 @@ pub(super) fn run(
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
         }
+        GITHUB_ACTIONS_RUN_COMMAND_POLICY => {
+            github_actions_run_command_policy::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         GITHUB_ACTIONS_CACHE_KEY_POLICY => {
             github_actions_cache_key_policy::check_with_files_sources_and_deferred_suppression(
                 root, config, files, sources, defer_suppression,

@@ -17,6 +17,7 @@ macro_rules! filesystem_rules {
             GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES => github_actions_max_inline_script_lines::check_with_files => "",
             GITHUB_ACTIONS_STEP_TIMEOUTS => github_actions_step_timeouts::check_with_files => "",
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files => "",
+            GITHUB_ACTIONS_RUN_COMMAND_POLICY => github_actions_run_command_policy::check_with_files => "",
             GITHUB_ACTIONS_SCRIPT_EXPRESSIONS => github_actions_script_expressions::check_with_files => "",
             GITHUB_ACTIONS_CHECKOUT_CREDENTIALS => github_actions_checkout_credentials::check_with_files => "",
             GITHUB_ACTIONS_DOCKER_HOST_PORTS => github_actions_docker_host_ports::check_with_files => "",

@@ -177,6 +177,7 @@ test("check rule options compile from the package root", () => {
     [
       join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/test-fixture-size-cap/public.mts"),
@@ -498,5 +499,37 @@ test("workflow topology policy exports the reusable workflow lock option", () =>
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/workflow-topology-policy-types";/,
+  );
+});
+
+test("GitHub Actions run command policy exports named option types", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-run-command-policy-types.d.ts"),
+    "utf8",
+  );
+  for (const name of [
+    "GithubActionsRunCommandArg",
+    "GithubActionsRunCommandArgScope",
+    "GithubActionsRunCommandForbiddenPattern",
+    "GithubActionsRunCommandPolicy",
+    "GithubActionsRunCommandPolicyOptions",
+  ]) {
+    assert.match(declarations, new RegExp(`export (?:type|interface) ${name}\\b`));
+  }
+  for (const field of [
+    "command: string[];",
+    "valueFlags?: string[];",
+    "whenAnyArgs?: GithubActionsRunCommandArg[];",
+    "requireArgs?: GithubActionsRunCommandArg[];",
+    "requireAnyArgs?: GithubActionsRunCommandArg[];",
+    "forbidArgPatterns?: GithubActionsRunCommandForbiddenPattern[];",
+    "commands?: GithubActionsRunCommandPolicy[];",
+    "unanalyzable?: Unanalyzable;",
+  ]) {
+    assert.ok(declarations.includes(field), `missing ${field}`);
+  }
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-run-command-policy-types";/,
   );
 });
