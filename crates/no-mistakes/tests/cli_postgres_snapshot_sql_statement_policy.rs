@@ -439,3 +439,26 @@ fn issue_3856_clause_verdicts_check_json_snapshot() {
         ]
     );
 }
+
+#[test]
+fn issue_3931_clause_coverage_check_json_snapshot() {
+    let rule = "postgres-sql-statement-policy";
+    let cases = [(
+        "clause_only",
+        rules_path(rule, "fixture", "issue-3931"),
+        rules_path(rule, "configs", "issue-3931-clauses.yml"),
+    )];
+    let reports =
+        assert_saved_fixture_report("postgres_sql_statement_policy_issue_3931", &cases, &[], &[]);
+    let report = &reports["clause_only"]["report"];
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 8, "{report}");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding["target"] == "clause:drop-cascade"),
+        "{report}"
+    );
+    assert_eq!(report["advisories"], serde_json::json!([]));
+    assert_eq!(reports["clause_only"]["exitCode"], 1);
+}

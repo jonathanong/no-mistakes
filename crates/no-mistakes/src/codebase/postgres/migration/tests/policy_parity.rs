@@ -90,6 +90,8 @@ fn clause_sites_match_in_schema_and_shared_statement_projections() {
                 (6, "drop-cascade"),
                 (8, "drop-cascade"),
                 (11, "drop-cascade"),
+                (12, "drop-cascade"),
+                (14, "drop-cascade"),
                 (18, "drop-cascade"),
                 (19, "create-extension-version"),
                 (23, "create-extension-version"),

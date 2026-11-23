@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      importSpecifier: '@example.invalid/db'
+      sqlInclude: ['sql/*.sql']
+      bannedStatements: []
+      bannedClauses: [create-extension-version, drop-cascade]
