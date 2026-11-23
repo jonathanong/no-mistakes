@@ -38,9 +38,8 @@ no autofix because the expected test contract must be chosen by the author.
 
 ## Options
 
-Enable the rule in your ESLint flat config or Oxlint JavaScript plugin config.
-Select test files with your linter's `files` globs. Use a TypeScript parser in
-ESLint for these files.
+Add the rule to your [ESLint or Oxlint config](../eslint-plugin.md). Select
+test files with your linter's `files` globs and use a TypeScript parser in ESLint.
 
 - `singleExportPattern` is a regular expression string matched against the
   export name, including `default` for a default import.
@@ -49,22 +48,15 @@ ESLint for these files.
   both match. With neither selector, the rule reports nothing.
 
 ```js
-import parser from "@typescript-eslint/parser";
-import noMistakes from "eslint-plugin-no-mistakes";
-
-export default [
-  {
-    files: ["**/*.test.ts"],
-    languageOptions: { parser },
-    plugins: { "no-mistakes": noMistakes },
-    rules: {
-      "no-mistakes/test-no-typed-enqueue-fake": [
-        "error",
-        { singleExportPattern: "^enqueue[A-Z]", moduleGlobs: ["./queue"] },
-      ],
-    },
+{
+  files: ["**/*.test.ts"],
+  rules: {
+    "no-mistakes/test-no-typed-enqueue-fake": [
+      "error",
+      { singleExportPattern: "^enqueue[A-Z]", moduleGlobs: ["./queue"] },
+    ],
   },
-];
+}
 ```
 
 ## Suppression
