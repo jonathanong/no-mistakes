@@ -14,17 +14,18 @@ const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 const TEMP_PATH_PATTERN = /^\/(?:var\/)?tmp\//;
 const TEMP_ROOTS = new Set(["/tmp", "/tmp/", "/var/tmp", "/var/tmp/"]);
 
-function isFixedTempPath(node, resolve) {
+function isFixedTempPath(node, resolve, origin) {
   const value = literalString(node);
   if (value !== null) return TEMP_PATH_PATTERN.test(value);
   if (node?.type !== "CallExpression") return false;
   const binding = resolve(node.callee);
   if (binding !== "path.join" && binding !== "path.resolve") return false;
 
-  const [root, ...segments] = node.arguments.map(unwrapExpression);
-  const names = segments.map(literalString);
+  const [rootArgument, ...segments] = node.arguments;
+  const names = segments.map((segment) => literalString(unwrapExpression(segment)));
   if (names.includes(null) || !names.some(Boolean)) return false;
 
+  const root = origin(rootArgument);
   const literalRoot = literalString(root);
   if (TEMP_ROOTS.has(literalRoot) || TEMP_PATH_PATTERN.test(literalRoot ?? "")) {
     const method = binding === "path.join" ? posix.join : posix.resolve;
@@ -68,7 +69,7 @@ module.exports = rule(
       return unwrapExpression(stableConstInitializer(node, context, new Set())) ?? node;
     }
     function recordPath(node) {
-      if (isFixedTempPath(node, resolve) && !suppressed(node)) findings.add(node);
+      if (isFixedTempPath(node, resolve, origin) && !suppressed(node)) findings.add(node);
     }
     return {
       CallExpression(node) {
