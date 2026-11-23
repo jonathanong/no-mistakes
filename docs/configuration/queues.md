@@ -169,7 +169,12 @@ file universe and uses the same producer/worker graph as `queues edges`.
 Property selection requires a direct, static object property. Unresolved
 values, spread objects, computed properties, non-const bindings, and mutated
 objects with observed member writes do not establish a concrete name.
-Excessively deep alias chains also abstain.
+Excessively deep alias chains also abstain. Recognized invocations retain
+unresolved producer locations when a name is unknown; they create no concrete
+job edge. Worker findings then describe unresolved producers instead of
+claiming there are no callers. Independently known options are still judged.
+A known-absent options property preserves wrapper defaults; an open object
+keeps options unknown.
 Wrapper bodies and arbitrary side effects in other calls are not executed
 or inferred; keep job definitions as immutable metadata. Unknown options are
 not treated as empty options or as priority zero. Rewrite these cases as direct immutable

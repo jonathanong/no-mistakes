@@ -52,9 +52,11 @@ impl<'a> Selected<'a> {
                 else {
                     return Self::Unknown;
                 };
-                closed_property(object, property)
-                    .flatten()
-                    .map_or(Self::Unknown, |expr| Self::Value(unwrap(expr)))
+                match closed_property(object, property) {
+                    Some(Some(expr)) => Self::Value(unwrap(expr)),
+                    Some(None) => Self::Missing,
+                    None => Self::Unknown,
+                }
             }
         }
     }
@@ -62,7 +64,7 @@ impl<'a> Selected<'a> {
 
 pub(super) fn local_value<'a>(
     visitor: &QueueVisitor<'a>,
-    mut expr: &'a Expression<'a>,
+    expr: &'a Expression<'a>,
 ) -> Option<&'a Expression<'a>> {
     if !visitor
         .wrapper_mutations
@@ -70,6 +72,13 @@ pub(super) fn local_value<'a>(
     {
         return None;
     }
+    const_value(visitor, expr)
+}
+
+pub(super) fn const_value<'a>(
+    visitor: &QueueVisitor<'a>,
+    mut expr: &'a Expression<'a>,
+) -> Option<&'a Expression<'a>> {
     loop {
         expr = unwrap(expr);
         let Expression::Identifier(id) = expr else {

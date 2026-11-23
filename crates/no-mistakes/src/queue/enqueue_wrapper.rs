@@ -1,11 +1,9 @@
-use super::extract_helpers::static_string;
 use super::extract_job_id::referenced_symbol;
 use super::extract_model::{JobOptionSite, LocalCheck, ProducerBinding};
 use super::extract_visitor::QueueVisitor;
 use super::source::line_number;
-use crate::config::v2::schema::{EnqueueFactory, EnqueuePropertySelector, EnqueueSelector};
+use crate::config::v2::schema::EnqueueFactory;
 use oxc_ast::ast::{CallExpression, Expression};
-use oxc_span::GetSpan;
 
 mod factories;
 mod mutations;
@@ -13,11 +11,12 @@ mod options;
 pub(in crate::queue) use mutations::Mutations;
 mod resolve;
 mod selection;
+mod targets;
 
 pub(crate) use factories::needs_scoping;
 pub(in crate::queue) use factories::{collect_exports, factories, Factories};
 pub(in crate::queue) use resolve::resolve;
-use selection::{imported_local, local_value, Selected};
+use selection::{const_value, Selected};
 
 #[derive(Debug, Clone)]
 pub(crate) struct WrapperSite {
@@ -34,11 +33,12 @@ pub(crate) struct WrapperSite {
 #[derive(Debug, Clone)]
 struct Target {
     queue: Queue,
-    job: Name,
+    job: Option<Name>,
 }
 
 #[derive(Debug, Clone)]
 enum Queue {
+    Unknown,
     Name(Name),
     Binding(ProducerBinding),
 }
@@ -71,7 +71,7 @@ pub(in crate::queue) fn note_call<'a>(
         ) {
             return;
         }
-        let Some(Expression::CallExpression(factory)) = local_value(visitor, &call.callee) else {
+        let Some(Expression::CallExpression(factory)) = const_value(visitor, &call.callee) else {
             return;
         };
         let Some(role) = role_for(visitor, factory) else {
@@ -82,9 +82,7 @@ pub(in crate::queue) fn note_call<'a>(
         }
         (factory.as_ref(), role)
     };
-    let Some((target, raw_job)) = targets(visitor, factory, role) else {
-        return;
-    };
+    let (target, raw_job) = targets::targets(visitor, factory, role);
     let layers = [
         Selected::select(visitor, factory, role.defaults.as_ref()),
         Selected::select(visitor, factory, role.options.as_ref()),
@@ -130,66 +128,4 @@ fn role_for<'a>(
         .wrapper_factories
         .get(&referenced_symbol(visitor, id)?)
         .copied()
-}
-
-fn targets<'a>(
-    visitor: &QueueVisitor<'a>,
-    call: &'a CallExpression<'a>,
-    role: &EnqueueFactory,
-) -> Option<(Target, String)> {
-    let queue = if let Some(name) = &role.queue_name {
-        Queue::Name(Name::Literal(name.clone()))
-    } else if let Some((name, _)) = name_at(visitor, call, role.queue.as_ref()?) {
-        match (&role.queue, &name) {
-            (Some(EnqueueSelector::Positional(_)), Name::Import { local, .. }) => {
-                Queue::Binding(visitor.producer_binding(local, call.span.start))
-            }
-            _ => Queue::Name(name),
-        }
-    } else {
-        let Some(EnqueueSelector::Positional(index)) = &role.queue else {
-            return None;
-        };
-        let Expression::Identifier(id) = Selected::argument(call, *index).value()? else {
-            return None;
-        };
-        Queue::Binding(visitor.producer_binding(id.name.as_str(), id.span.start))
-    };
-    let (job, raw_job) = name_at(visitor, call, &role.job)?;
-    Some((Target { queue, job }, raw_job))
-}
-
-fn name_at<'a>(
-    visitor: &QueueVisitor<'a>,
-    call: &'a CallExpression<'a>,
-    selector: &EnqueueSelector,
-) -> Option<(Name, String)> {
-    if let Some(expr) = Selected::select(visitor, call, Some(selector)).value() {
-        let raw = crate::ast::span_text(visitor.source, expr.span()).to_string();
-        if let Some(value) = local_value(visitor, expr).and_then(static_string) {
-            return Some((Name::Literal(value), raw));
-        }
-        if let Some(local) = imported_local(visitor, expr) {
-            return Some((
-                Name::Import {
-                    local,
-                    property: None,
-                },
-                raw,
-            ));
-        }
-        return None;
-    }
-    let EnqueueSelector::Property(EnqueuePropertySelector { arg, property }) = selector else {
-        return None;
-    };
-    let local = imported_local(visitor, Selected::argument(call, *arg).value()?)?;
-    let raw = format!("{local}.{property}");
-    Some((
-        Name::Import {
-            local,
-            property: Some(property.clone()),
-        },
-        raw,
-    ))
 }

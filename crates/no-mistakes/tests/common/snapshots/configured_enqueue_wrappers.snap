@@ -84,16 +84,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [
         {
           "file": "enqueues/fixed.ts",
-          "job": "bulkTask",
-          "kind": "mixed-priority",
-          "line": 14,
-          "message": "queue \"background\" mixes priority 0 and priority > 0; this producer sets priority 3 while other producers enqueue with priority 0: enqueues/fixed.ts:5 (definitionTask)",
-          "queueFile": "queues.ts",
-          "queueName": "background",
-          "sourceLine": "bulk([], { attempts: 2, removeOnComplete: true, priority: 3 });"
-        },
-        {
-          "file": "enqueues/fixed.ts",
           "job": "definitionTask",
           "kind": "debounce-ttl",
           "line": 5,
@@ -111,16 +101,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "queueFile": null,
           "queueName": null,
           "sourceLine": "jobId: \"bad:fixed\","
-        },
-        {
-          "file": "enqueues/fixed.ts",
-          "job": "definitionTask",
-          "kind": "mixed-priority",
-          "line": 5,
-          "message": "queue \"background\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueues/fixed.ts:14 (bulkTask, priority 3)",
-          "queueFile": "queues.ts",
-          "queueName": "background",
-          "sourceLine": "send({}, {"
         },
         {
           "file": "enqueues/object.ts",
@@ -226,6 +206,96 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [
         {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 33,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computed({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 35,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "getter({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 37,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "proto({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 42,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computedWrite({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 47,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computedDelete({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 53,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "nestedWrite({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 59,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computedNestedWrite({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 62,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "forward({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 72,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "destructured({});"
+        },
+        {
           "file": "enqueues.ts",
           "job": "aliased",
           "kind": "invalid-job-id",
@@ -236,6 +306,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "const defaults = { attempts: 4, priority: 3, jobId: \"bad:default\" };"
         },
         {
+          "file": "enqueues.ts",
+          "job": null,
+          "kind": "invalid-job-id",
+          "line": 4,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "const defaults = { attempts: 4, priority: 3, jobId: \"bad:default\" };"
+        },
+        {
+          "file": "enqueues.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 19,
+          "message": "job options missing removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "unknownDefinition({});"
+        },
+        {
+          "file": "enqueues.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 21,
+          "message": "job options missing removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "spreadDefinition({});"
+        },
+        {
           "file": "feedback.ts",
           "job": "aliased",
           "kind": "self-dedup-enqueue",
@@ -244,6 +344,56 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "queueFile": "controls.ts",
           "queueName": "wrapper-unit",
           "sourceLine": "send({}, { deduplication: { id: job.id } });"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 12,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "localMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 18,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "aliasedMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 23,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "importedMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 5,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "exportedMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 7,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "exportedAliasMutation({});"
         }
       ],
       "react": [],

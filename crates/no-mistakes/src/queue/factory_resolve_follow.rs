@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 #[derive(Clone, Copy)]
 pub(in crate::queue) enum Want<'a> {
     Property(&'a str),
+    StableString,
+    StableName,
     Queue,
     Either,
     Definition,
@@ -130,8 +132,7 @@ impl<'a, R: ImportResolverFacade> Follow<'a, R> {
             _ => direct_export(other, imported, want),
         };
         if direct.is_some()
-            || matches!(want, Want::Property(_))
-                && other.exported_enqueue_properties.contains_key(imported)
+            || export::stable_query(want) && other.blocked_enqueue_exports.contains(imported)
         {
             return direct;
         }
@@ -140,9 +141,13 @@ impl<'a, R: ImportResolverFacade> Follow<'a, R> {
                 return Some(value);
             }
         }
-        if let Some(value) = self.resolve(path, export::imported_local(other, imported, want), want)
-        {
-            return Some(value);
+        if let Some(local) = export::imported_local(other, imported, want) {
+            if let Some(value) = self.resolve(path, local, want) {
+                return Some(value);
+            }
+        }
+        if export::stable_query(want) && other.explicit_enqueue_exports.contains(imported) {
+            return None;
         }
         for specifier in &other.star_exports {
             let Some(next) = self

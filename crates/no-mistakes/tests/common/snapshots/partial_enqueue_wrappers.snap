@@ -1,0 +1,48 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "producers.ts",
+          "job": "defaults",
+          "kind": "mixed-priority",
+          "line": 11,
+          "message": "queue \"partial-options\" mixes priority 0 and priority > 0; this producer sets priority 3 while other producers enqueue with priority 0: producers.ts:12 (zero)",
+          "queueFile": "queues.ts",
+          "queueName": "partial-options",
+          "sourceLine": "makeOptions(\"defaults\", {}, { attempts: 2, priority: 3 });"
+        },
+        {
+          "file": "producers.ts",
+          "job": "zero",
+          "kind": "mixed-priority",
+          "line": 12,
+          "message": "queue \"partial-options\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: producers.ts:11 (defaults, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "partial-options",
+          "sourceLine": "makeOptions(\"zero\", { options: { attempts: 2, priority: 0 } });"
+        },
+        {
+          "file": "workers.ts",
+          "job": "pending",
+          "kind": "unmatched-worker-unresolved-producers",
+          "line": 3,
+          "message": "unresolved producers at producers.ts:6; the handler is not known to be dead",
+          "queueFile": "queues.ts",
+          "queueName": "partial-jobs",
+          "sourceLine": "createWorker(\"partial-jobs\", async job => {"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

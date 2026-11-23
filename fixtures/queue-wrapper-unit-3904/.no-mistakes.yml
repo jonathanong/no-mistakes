@@ -16,3 +16,4 @@ queues:
         queue: 0
         job: 1
         options: { arg: 2, property: options }
+        defaults: 3

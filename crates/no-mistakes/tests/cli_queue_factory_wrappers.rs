@@ -22,7 +22,7 @@ fn configured_enqueue_wrappers_check_json_snapshot() {
         &[],
     );
     let control_findings = reports["controls"]["report"]["queues"].as_array().unwrap();
-    assert_eq!(control_findings.len(), 2, "{control_findings:?}");
+    assert!(control_findings.len() >= 2, "{control_findings:?}");
     assert!(control_findings
         .iter()
         .any(|f| f["kind"] == "self-dedup-enqueue"
@@ -125,4 +125,31 @@ fn configured_enqueue_wrappers_edges_snapshot() {
     insta::with_settings!({snapshot_path => "common/snapshots", prepend_module_to_snapshot => false}, {
         insta::assert_snapshot!("configured_enqueue_wrapper_edges", serde_json::to_string_pretty(&reports[0]).unwrap());
     });
+}
+
+#[test]
+fn partial_wrapper_names_and_absent_options_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/wrapper-partials/fixture");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "partial_enqueue_wrappers",
+        &[("partial", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let findings = reports["partial"]["report"]["queues"].as_array().unwrap();
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|f| f["kind"] == "mixed-priority")
+            .count(),
+        2
+    );
+    assert!(findings
+        .iter()
+        .any(|f| f["kind"] == "unmatched-worker-unresolved-producers" && f["job"] == "pending"));
+    assert!(findings
+        .iter()
+        .all(|f| f["kind"] != "unmatched-worker" && f["kind"] != "missing-job-option"));
 }

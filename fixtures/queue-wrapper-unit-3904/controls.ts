@@ -64,7 +64,7 @@ const laterDefinition = { name: "forward" };
 
 const optionsWithSpread = makeEnqueue({ name: "aliased" }, {});
 optionsWithSpread({}, { ...unknownEnvelope });
-const missingProperty = enqueueProperty(queue, "aliased", { other: "unresolved" });
+const missingProperty = enqueueProperty(queue, "aliased", { other: "unresolved" }, { attempts: 2, removeOnComplete: true, priority: 3 });
 missingProperty({});
 
 import { DESTRUCTURED } from "./definitions";

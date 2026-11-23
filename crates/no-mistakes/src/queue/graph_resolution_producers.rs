@@ -102,6 +102,7 @@ pub(super) fn resolved_binding<R: ImportResolverFacade>(
     definitions: &HashMap<String, PathBuf>,
 ) -> Option<QueueKey> {
     let binding = match binding {
+        ProducerBinding::Unknown => return None,
         ProducerBinding::Named(binding) => binding,
         ProducerBinding::QueueName(name) => {
             return Some(QueueKey {

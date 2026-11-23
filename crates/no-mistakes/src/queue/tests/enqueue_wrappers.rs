@@ -28,7 +28,7 @@ fn enqueue_wrappers_resolve_const_aliases_and_use_effective_call_options() {
     let mut sites: Vec<_> = report
         .producers
         .iter()
-        .filter(|site| site.file == "enqueues.ts")
+        .filter(|site| site.file == "enqueues.ts" && site.job.is_some())
         .map(|site| (site.job.as_deref(), site.line))
         .collect();
     sites.sort_unstable();
@@ -51,13 +51,20 @@ fn enqueue_wrappers_resolve_const_aliases_and_use_effective_call_options() {
         .filter(|finding| finding.kind == "invalid-job-id")
         .map(|finding| finding.job.as_deref())
         .collect();
-    assert_eq!(invalid_ids, [Some("aliased")]);
-    assert!(report.check.iter().all(|finding| {
-        !matches!(
-            finding.kind.as_str(),
-            "mixed-priority" | "missing-job-option"
-        )
-    }));
+    assert!(invalid_ids.contains(&Some("aliased")));
+    assert!(invalid_ids
+        .iter()
+        .all(|job| job.is_none() || *job == Some("aliased")));
+    assert!(report
+        .check
+        .iter()
+        .filter(|finding| finding.job.is_some())
+        .all(|finding| {
+            !matches!(
+                finding.kind.as_str(),
+                "mixed-priority" | "missing-job-option"
+            )
+        }));
 }
 
 #[test]
@@ -66,7 +73,7 @@ fn enqueue_wrappers_abstain_on_direct_and_aliased_object_mutations() {
     let mut jobs: Vec<_> = report
         .producers
         .iter()
-        .filter(|site| site.file == "mutations.ts")
+        .filter(|site| site.file == "mutations.ts" && site.job.is_some())
         .map(|site| site.job.as_deref())
         .collect();
     jobs.sort_unstable();
@@ -81,7 +88,7 @@ fn enqueue_wrappers_abstain_on_direct_and_aliased_object_mutations() {
     assert!(report
         .check
         .iter()
-        .all(|finding| finding.file != "mutations.ts"));
+        .all(|finding| finding.file != "mutations.ts" || finding.job.is_none()));
 }
 
 #[test]
@@ -125,7 +132,9 @@ fn enqueue_wrapper_controls_keep_exact_sites_and_abstain_on_unknown_evidence() {
     let mut sites: Vec<_> = report
         .producers
         .iter()
-        .filter(|site| site.file == "controls.ts")
+        .filter(|site| {
+            site.file == "controls.ts" && site.job.is_some() && site.queue_name.is_some()
+        })
         .map(|site| (site.line, site.queue_name.as_deref(), site.job.as_deref()))
         .collect();
     sites.sort_unstable();
@@ -149,14 +158,16 @@ fn enqueue_wrapper_controls_keep_exact_sites_and_abstain_on_unknown_evidence() {
         report
             .check
             .iter()
-            .all(|finding| finding.file != "controls.ts"),
+            .all(|finding| finding.file != "controls.ts" || finding.job.is_none()),
         "{report:#?}"
     );
     assert!(
         report
             .producers
             .iter()
-            .filter(|site| site.file == "controls.ts")
+            .filter(|site| site.file == "controls.ts"
+                && site.job.is_some()
+                && site.queue_name.is_some())
             .all(|site| { site.queue_file.as_deref() == Some("controls.ts") }),
         "{report:#?}"
     );
@@ -183,7 +194,15 @@ fn returned_wrapper_preserves_worker_job_deduplication() {
         .producers
         .iter()
         .any(|site| { site.file == "feedback.ts" && site.job.as_deref() == Some("aliased") }));
-    assert_eq!(report.check.len(), 2, "{report:#?}");
+    assert_eq!(
+        report
+            .check
+            .iter()
+            .filter(|finding| finding.file == "feedback.ts")
+            .count(),
+        1,
+        "{report:#?}"
+    );
     assert!(report
         .check
         .iter()

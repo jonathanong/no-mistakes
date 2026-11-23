@@ -1,14 +1,15 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers as unwrap;
+use crate::fx::FxHashSet;
 use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Expression, Program, SimpleAssignmentTarget, UnaryExpression, UnaryOperator};
 use oxc_ast_visit::{walk, Visit};
-use std::collections::HashSet;
 
 #[derive(Default)]
 pub(in crate::queue) struct Mutations {
     unknown: bool,
-    objects: HashSet<u32>,
-    imports: HashSet<String>,
+    objects: FxHashSet<u32>,
+    locals: FxHashSet<u32>,
+    imports: FxHashSet<String>,
 }
 
 impl Mutations {
@@ -34,54 +35,30 @@ impl Mutations {
     ) -> bool {
         let mut origins = Origins::default();
         origins.follow(expr, bindings, 0);
+        self.accepts(&origins)
+    }
+    pub(super) fn stable_local(&self, name: &str, at: u32, bindings: &ObjectBindings<'_>) -> bool {
+        let mut origins = Origins::default();
+        origins.local(name, at, bindings, 0);
+        self.accepts(&origins)
+    }
+
+    pub(super) fn stable_import(&self, name: &str) -> bool {
+        !self.unknown && !self.imports.contains(name)
+    }
+
+    fn accepts(&self, origins: &Origins) -> bool {
         !self.unknown
             && !origins.unknown
+            && origins.locals.is_disjoint(&self.locals)
             && origins.objects.is_disjoint(&self.objects)
             && origins.imports.is_disjoint(&self.imports)
     }
 }
 
-#[derive(Default)]
-struct Origins {
-    objects: HashSet<u32>,
-    imports: HashSet<String>,
-    unknown: bool,
-}
-
-impl Origins {
-    fn follow<'a>(
-        &mut self,
-        expr: &'a Expression<'a>,
-        bindings: &ObjectBindings<'a>,
-        depth: usize,
-    ) {
-        if depth == 64 {
-            self.unknown = true;
-            return;
-        }
-        match unwrap(expr) {
-            Expression::Identifier(id) => {
-                if let Some(binding) = bindings.lookup(id.name.as_str(), id.span.start) {
-                    if let Some(init) = binding.init {
-                        self.follow(init, bindings, depth + 1);
-                    }
-                } else {
-                    self.imports.insert(id.name.to_string());
-                }
-            }
-            Expression::StaticMemberExpression(member) => {
-                self.follow(&member.object, bindings, depth + 1);
-            }
-            Expression::ComputedMemberExpression(member) => {
-                self.follow(&member.object, bindings, depth + 1);
-            }
-            Expression::ObjectExpression(object) => {
-                self.objects.insert(object.span.start);
-            }
-            _ => {}
-        }
-    }
-}
+#[path = "origins.rs"]
+mod origins;
+use origins::Origins;
 
 struct Collector<'b, 'a> {
     bindings: &'b ObjectBindings<'a>,
@@ -93,6 +70,7 @@ impl<'a> Collector<'_, 'a> {
         let mut origins = Origins::default();
         origins.follow(object, self.bindings, 0);
         self.mutations.unknown |= origins.unknown;
+        self.mutations.locals.extend(origins.locals);
         self.mutations.objects.extend(origins.objects);
         self.mutations.imports.extend(origins.imports);
     }
@@ -104,6 +82,13 @@ impl<'a> Visit<'a> for Collector<'_, 'a> {
             SimpleAssignmentTarget::StaticMemberExpression(member) => self.write(&member.object),
             SimpleAssignmentTarget::ComputedMemberExpression(member) => self.write(&member.object),
             SimpleAssignmentTarget::PrivateFieldExpression(member) => self.write(&member.object),
+            SimpleAssignmentTarget::AssignmentTargetIdentifier(id) => {
+                let mut origins = Origins::default();
+                origins.local(id.name.as_str(), id.span.start, self.bindings, 0);
+                self.mutations.locals.extend(origins.locals);
+                self.mutations.objects.extend(origins.objects);
+                self.mutations.imports.extend(origins.imports);
+            }
             _ => {}
         }
         walk::walk_simple_assignment_target(self, target);

@@ -1,0 +1,17 @@
+version: 2
+queues:
+  factories:
+    queue: [createQueue]
+    worker:
+      - { callee: createWorker, name: 0, processor: 1 }
+    enqueue:
+      - callee: makeEnqueue
+        queueName: review-queue
+        job: { arg: 0, property: name }
+        optionsOnReturnedCall: 1
+      - callee: makeStringEnqueue
+        queueName: review-queue
+        job: 0
+        optionsOnReturnedCall: 1
+      - { callee: makeNamedEnqueue, queue: 0, job: 1, optionsOnReturnedCall: 1 }
+      - { callee: enqueueLegacy, queue: 0, job: 1, options: 2 }

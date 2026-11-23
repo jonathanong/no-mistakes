@@ -85,6 +85,6 @@ fn imported_binding<'a>(file: &'a FileFacts, binding: &'a ProducerBinding) -> Op
             LocalQueue::ImportedQueue(name) => Some(name),
             _ => None,
         },
-        ProducerBinding::Flow(_) | ProducerBinding::QueueName(_) => None,
+        ProducerBinding::Flow(_) | ProducerBinding::QueueName(_) | ProducerBinding::Unknown => None,
     }
 }
