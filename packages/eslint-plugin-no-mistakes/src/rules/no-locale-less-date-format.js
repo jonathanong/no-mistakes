@@ -17,7 +17,7 @@ function methodName(member) {
   return null;
 }
 
-function isGlobalUndefined(identifier, sourceCode, evalScopes) {
+function isUnshadowedGlobal(identifier, sourceCode, evalScopes) {
   let reference;
   for (let scope = sourceCode.getScope(identifier); scope; scope = scope.upper) {
     if (scope.type === "with" || scope.directCallToEvalScope || evalScopes.has(scope)) return false;
@@ -31,7 +31,7 @@ module.exports = rule(
   {
     type: "problem",
     docs: {
-      description: "require explicit locales for configured formatting methods",
+      description: "require explicit locales for configured formatting methods and constructors",
       recommended: false,
     },
     schema: [
@@ -39,6 +39,7 @@ module.exports = rule(
         type: "object",
         properties: {
           methods: { type: "array", items: { type: "string" }, uniqueItems: true },
+          constructors: { type: "array", items: { type: "string" }, uniqueItems: true },
           allowUndefinedLocale: { type: "boolean" },
         },
         additionalProperties: false,
@@ -52,11 +53,33 @@ module.exports = rule(
   (context) => {
     const options = context.options[0] ?? {};
     const methods = new Set(options.methods ?? DEFAULT_METHODS);
+    const constructors = new Set(options.constructors ?? []);
     const { sourceCode } = context;
     const evalScopes = new Set();
-    const undefinedLocales = [];
+    const pending = [];
     function report(node, method) {
       context.report({ node, messageId: "explicitLocale", data: { method } });
+    }
+
+    function checkLocale(node, method, namespace) {
+      const locale = unwrapExpression(node.arguments[0]);
+      const undefinedIdentifier =
+        locale?.type === "Identifier" && locale.name === "undefined" ? locale : null;
+      const voidLocale = locale?.type === "UnaryExpression" && locale.operator === "void";
+      if (locale && (options.allowUndefinedLocale || !(undefinedIdentifier || voidLocale))) return;
+      if (namespace || undefinedIdentifier) {
+        pending.push({ node, method, namespace, undefinedIdentifier });
+      } else {
+        report(node, method);
+      }
+    }
+
+    function checkConstructor(node, callee, member) {
+      if (member === null) return;
+      const namespace = unwrapExpression(callee.object);
+      if (namespace.type !== "Identifier") return;
+      const name = `${namespace.name}.${member}`;
+      if (constructors.has(name)) checkLocale(node, name, namespace);
     }
 
     return {
@@ -68,21 +91,27 @@ module.exports = rule(
         }
         if (callee.type !== "MemberExpression") return;
         const method = methodName(callee);
-        if (!methods.has(method)) return;
-        const locale = unwrapExpression(node.arguments[0]);
-        if (!locale) {
-          report(node, method);
-        } else if (!options.allowUndefinedLocale) {
-          if (locale.type === "UnaryExpression" && locale.operator === "void") {
-            report(node, method);
-          } else if (locale.type === "Identifier" && locale.name === "undefined") {
-            undefinedLocales.push({ node, method, locale });
-          }
+        if (methods.has(method)) {
+          checkLocale(node, method);
+        } else if (constructors.size > 0) {
+          checkConstructor(node, callee, method);
         }
       },
+      NewExpression(node) {
+        if (constructors.size === 0) return;
+        const callee = unwrapExpression(node.callee);
+        if (callee.type === "MemberExpression") checkConstructor(node, callee, methodName(callee));
+      },
       "Program:exit"() {
-        for (const { node, method, locale } of undefinedLocales) {
-          if (isGlobalUndefined(locale, sourceCode, evalScopes)) report(node, method);
+        for (const { node, method, namespace, undefinedIdentifier } of pending) {
+          if (namespace && !isUnshadowedGlobal(namespace, sourceCode, evalScopes)) continue;
+          if (
+            undefinedIdentifier &&
+            !isUnshadowedGlobal(undefinedIdentifier, sourceCode, evalScopes)
+          ) {
+            continue;
+          }
+          report(node, method);
         }
       },
     };

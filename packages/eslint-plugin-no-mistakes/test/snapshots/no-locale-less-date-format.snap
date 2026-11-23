@@ -9,6 +9,42 @@
     "rule": "no-locale-less-date-format"
   },
   {
+    "file": "no-locale-less-date-format/intl-constructors.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "allowUndefinedLocale permits undefined arguments but still rejects omitted arguments in Intl constructors",
+    "options": {
+      "allowUndefinedLocale": true,
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "Intl.NumberFormat"
+      ]
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
     "file": "no-locale-less-date-format/known-undefined.mjs",
     "findings": [],
     "name": "allowUndefinedLocale permits void expressions",
@@ -134,6 +170,64 @@
     "name": "allowUndefinedLocale still rejects missing arguments",
     "options": {
       "allowUndefinedLocale": true
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/intl-constructors.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 3,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "configured Intl constructors require a locale in calls and new expressions",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "Intl.NumberFormat"
+      ],
+      "methods": []
     },
     "rule": "no-locale-less-date-format"
   },
@@ -388,6 +482,13 @@
     "rule": "no-locale-less-date-format"
   },
   {
+    "file": "no-locale-less-date-format/intl-constructors.mjs",
+    "findings": [],
+    "name": "Intl constructors are ignored by default",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
     "file": "no-locale-less-date-format/matching-receivers.mjs",
     "findings": [
       {
@@ -566,6 +667,53 @@
     ],
     "name": "missing locale across default methods and optional or computed calls",
     "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/intl-constructors.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "only configured Intl constructors are checked",
+    "options": {
+      "constructors": [
+        "Intl.NumberFormat"
+      ]
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/shadowed-intl.mjs",
+    "findings": [],
+    "name": "shadowed Intl constructors are ignored",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "Intl.NumberFormat"
+      ],
+      "methods": []
+    },
     "rule": "no-locale-less-date-format"
   },
   {

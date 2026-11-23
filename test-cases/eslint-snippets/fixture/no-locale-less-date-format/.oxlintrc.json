@@ -6,5 +6,16 @@
     }
   ],
   "categories": { "correctness": "off" },
-  "rules": { "no-mistakes/no-locale-less-date-format": "error" }
+  "rules": { "no-mistakes/no-locale-less-date-format": "error" },
+  "overrides": [
+    {
+      "files": ["intl-constructors.mjs", "shadowed-intl.mjs"],
+      "rules": {
+        "no-mistakes/no-locale-less-date-format": [
+          "error",
+          { "methods": [], "constructors": ["Intl.DateTimeFormat", "Intl.NumberFormat"] }
+        ]
+      }
+    }
+  ]
 }

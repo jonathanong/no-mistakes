@@ -31,15 +31,33 @@ formatDate(date);
 ```json
 {
   "methods": ["toLocaleString", "toLocaleDateString", "toLocaleTimeString"],
+  "constructors": ["Intl.DateTimeFormat", "Intl.NumberFormat"],
   "allowUndefinedLocale": false
 }
 ```
 
-- `methods` replaces the default method-name list. An empty list disables the
-  rule. Matching uses member names, without receiver type inference: selecting
-  `toLocaleString` also checks Number and custom-object methods with that name.
+- `methods` replaces the default method-name list. An empty list disables
+  method checks. Selecting `toLocaleString` also checks Number and custom-object
+  methods with that name.
+- `constructors` defaults to an empty list. Each entry selects a member of a
+  global namespace by its dotted name and checks both calls and `new`
+  expressions. A local binding that shadows the namespace is ignored.
 - `allowUndefinedLocale` permits global `undefined` or a `void` expression as
-  the explicit first argument. It never permits an omitted locale argument.
+  the explicit first argument. Omitting the locale still produces a finding.
+
+With the options above, both of these expressions report a missing locale.
+
+```ts
+new Intl.DateTimeFormat();
+Intl.NumberFormat(undefined);
+```
+
+Pass the application's locale to fix the findings.
+
+```ts
+new Intl.DateTimeFormat("en-GB", { timeZone: "UTC" });
+Intl.NumberFormat("en-GB");
+```
 
 ## Configuration
 
@@ -60,8 +78,10 @@ export default [{
 
 Direct helper calls such as `formatDate(date)` are never checked, even if the
 helper name matches a configured method. Optional calls and static string or
-expression-free template member keys are checked. Dynamic member keys, detached
-method aliases, and indirect `.call`/`.apply` invocations are outside the rule.
+expression-free template member keys are checked. Constructor entries match
+direct references such as `Intl.DateTimeFormat`. Dynamic member keys, qualified
+namespace references such as `globalThis.Intl`, detached aliases, and indirect
+`.call`/`.apply` invocations are outside the rule.
 A spread first argument is not expanded. Aliases and other dynamic locale
 expressions are accepted; the rule does not prove their runtime value or validate
 locale tags. References in dynamic `with` or direct-eval scopes stay unknown.
@@ -78,7 +98,7 @@ automatic fix because the rule cannot choose the correct locale for the app.
 
 ```ts
 // eslint-disable-next-line no-mistakes/no-locale-less-date-format -- intentional platform-native display
-new Date().toLocaleString();
+new Intl.DateTimeFormat();
 ```
 
 ## Related rules
