@@ -145,14 +145,14 @@ impl SharedCheckContext {
             unique_exports_enabled,
             prepared.visible_paths.as_ref(),
         );
-        crate::codebase::rules::required_companion_imports::configure_fact_plan(
+        let sources = prepared.visible_paths.source_store_for(&root);
+        fact_demand.include_discovered_files(
             &root,
             config,
             &views.filesystem,
-            &prepared.visible_paths.source_store_for(&root),
+            &sources,
             &mut plan,
         )?;
-        fact_demand.include_companion_plan(&plan);
         let needs_shared_facts = fact_demand.needs_shared_facts();
         let (discovered, graph_files) = crate::check_discovery::select_graph_files(
             views,

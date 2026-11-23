@@ -663,12 +663,13 @@ rules:
 ### Vitest discovery exclusions
 
 [`vitest-default-excludes`](../rules/vitest-default-excludes.md) checks literal
-`test.exclude` arrays in the file selected by the required root-relative
-`options.config` and in its inline projects. Optional `requiredGlobs` replaces
-the default list of `**/node_modules/**` and `**/.git/**`. Entries must be
-nonempty strings, duplicates are deduplicated, and an empty array disables the
-check. A spread of `configDefaults.exclude` imported from `vitest/config`
-retains the defaults.
+`test.exclude` arrays in the file selected by root-relative `options.config`
+(and its inline projects) and in `test`-shaped object literals inside modules
+matched by `options.files` globs. At least one of `config` or `files` is
+required. Optional `requiredGlobs` replaces the default list of
+`**/node_modules/**` and `**/.git/**`. Entries must be nonempty strings,
+duplicates are deduplicated, and an empty array disables the check. A spread of
+`configDefaults.exclude` imported from `vitest/config` retains the defaults.
 
 ### Dependabot cooldown
 

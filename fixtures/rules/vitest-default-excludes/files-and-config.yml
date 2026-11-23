@@ -1,0 +1,9 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: vitest.external.ts
+      files:
+        - factory.ts
+        - vitest.external.ts
+        - "*.yml"

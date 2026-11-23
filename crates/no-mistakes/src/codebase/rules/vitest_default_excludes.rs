@@ -1,4 +1,4 @@
-use super::{path_filter::RulePathFilter, RuleFinding};
+use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::check_outcome::CheckInputFailure;
@@ -8,7 +8,6 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use rustc_hash::FxHashSet;
-use serde::Deserialize;
 use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
@@ -16,10 +15,17 @@ use std::{
 };
 
 mod extract;
+mod options;
 pub(crate) use extract::collect;
+use options::{applications, Application, CheckMode};
 
 pub const RULE_ID: &str = "vitest-default-excludes";
-const DEFAULT_GLOBS: [&str; 2] = ["**/node_modules/**", "**/.git/**"];
+
+#[derive(Default)]
+pub(crate) struct CollectedExcludes {
+    pub(crate) default_export: Vec<ExcludeArray>,
+    pub(crate) test_literals: Vec<ExcludeArray>,
+}
 
 pub(crate) struct ExcludeArray {
     line: usize,
@@ -27,75 +33,21 @@ pub(crate) struct ExcludeArray {
     spreads_config_defaults: bool,
 }
 
-#[derive(Default, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Options {
-    #[serde(default)]
-    config: String,
-    #[serde(default = "default_globs")]
-    required_globs: Vec<String>,
-}
-
-fn default_globs() -> Vec<String> {
-    DEFAULT_GLOBS.into_iter().map(str::to_owned).collect()
-}
-
-struct Application<'a> {
-    path: PathBuf,
-    required_globs: Vec<String>,
-    message: Option<&'a str>,
-}
-
-fn applications<'a>(root: &Path, config: &'a NoMistakesConfig) -> Result<Vec<Application<'a>>> {
-    let mut applications = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let options: Options = rule.try_rule_options()?;
-        anyhow::ensure!(
-            !options.config.trim().is_empty(),
-            "{RULE_ID} requires options.config naming an explicit Vitest config file"
-        );
-        anyhow::ensure!(
-            options
-                .required_globs
-                .iter()
-                .all(|glob| !glob.trim().is_empty()),
-            "{RULE_ID} requiredGlobs entries must be nonempty strings"
-        );
-        let path = normalize_path(&root.join(options.config));
-        if !options.required_globs.is_empty()
-            && RulePathFilter::new(root, config, rule)?.is_match(&path)
-        {
-            anyhow::ensure!(
-                crate::codebase::dependencies::extract::is_indexable(&path),
-                "{RULE_ID} options.config must name a TypeScript or JavaScript file: {}",
-                path.display()
-            );
-            let mut seen = FxHashSet::default();
-            applications.push(Application {
-                path,
-                required_globs: options
-                    .required_globs
-                    .into_iter()
-                    .filter(|glob| seen.insert(glob.clone()))
-                    .collect(),
-                message: rule.message.as_deref(),
-            });
-        }
-    }
-    Ok(applications)
-}
-
 #[doc(hidden)]
-pub fn required_files(root: &Path, config: &NoMistakesConfig) -> Result<Arc<BTreeSet<PathBuf>>> {
+pub fn required_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+) -> Result<Arc<BTreeSet<PathBuf>>> {
     Ok(Arc::new(
-        applications(root, config)?
+        applications(root, config, files)?
             .into_iter()
             .map(|app| app.path)
             .collect(),
     ))
 }
 
-/// Check the selected Vitest configs using the supplied file inventory.
+/// Check the selected Vitest configs and config factory modules using the supplied file inventory.
 pub fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -103,7 +55,7 @@ pub fn check_with_files(
 ) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(files);
     let plan = CheckFactPlan {
-        vitest_default_exclude_paths: required_files(root, config)?,
+        vitest_default_exclude_paths: required_files(root, config, files)?,
         ..Default::default()
     };
     let facts =
@@ -115,7 +67,7 @@ pub fn check_with_files(
             None,
             Arc::clone(&sources),
         );
-    let mut findings = check_prepared(root, config, Some(&facts), &sources, None)?;
+    let mut findings = check_prepared(root, config, files, Some(&facts), &sources, None)?;
     super::suppress_rule_findings_with_sources(root, &mut findings, &sources);
     Ok(findings)
 }
@@ -123,14 +75,16 @@ pub fn check_with_files(
 pub(crate) fn check_prepared(
     root: &Path,
     config: &NoMistakesConfig,
+    files: &[PathBuf],
     facts: Option<&CheckFactMap>,
     sources: &SourceStore,
     session: Option<&AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
-    let batches: Result<Vec<_>> = applications(root, config)?
+    let normalized_root = normalize_path(root);
+    let batches: Result<Vec<_>> = applications(&normalized_root, config, files)?
         .into_par_iter()
         .map(|app| {
-            let result = check_application(root, app, facts, sources);
+            let result = check_application(&normalized_root, app, facts, sources);
             match session {
                 Some(session) => session.capture_check_result(RULE_ID, result),
                 None => result.map(Some),
@@ -167,27 +121,38 @@ fn check_application(
         }
         .into());
     }
-    Ok(file_facts.vitest_default_excludes.iter().filter_map(|array| {
-        if array.spreads_config_defaults {
-            return None;
-        }
-        let missing: Vec<_> = app.required_globs.iter()
-            .filter(|glob| !array.globs.contains(glob.as_str()))
-            .map(String::as_str)
-            .collect();
-        (!missing.is_empty()).then(|| RuleFinding {
-            causes: Vec::new(),
-            rule: RULE_ID.into(),
-            file: file.clone(),
-            line: array.line,
-            message: app.message.map(str::to_owned).unwrap_or_else(|| format!(
-                "Add {} to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
-                missing.join(", ")
-            )),
-            import: None,
-            target: None,
+    let arrays = match app.mode {
+        CheckMode::DefaultExport => &file_facts.vitest_default_excludes.default_export,
+        CheckMode::TestLiterals => &file_facts.vitest_default_excludes.test_literals,
+    };
+    Ok(arrays
+        .iter()
+        .filter_map(|array| {
+            if array.spreads_config_defaults {
+                return None;
+            }
+            let missing: Vec<_> = app
+                .required_globs
+                .iter()
+                .filter(|glob| !array.globs.contains(glob.as_str()))
+                .map(String::as_str)
+                .collect();
+            (!missing.is_empty()).then(|| RuleFinding {
+                causes: Vec::new(),
+                rule: RULE_ID.into(),
+                file: file.clone(),
+                line: array.line,
+                message: app.message.map(str::to_owned).unwrap_or_else(|| {
+                    format!(
+                        "Add {} to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+                        missing.join(", ")
+                    )
+                }),
+                import: None,
+                target: None,
+            })
         })
-    }).collect())
+        .collect())
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

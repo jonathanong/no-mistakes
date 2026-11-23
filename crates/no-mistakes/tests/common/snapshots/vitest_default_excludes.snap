@@ -55,6 +55,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "factories": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/vitest-bad-factory.ts",
+          "line": 4,
+          "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: ['custom/**'],"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "literal-controls": {
     "exitCode": 1,
     "report": {

@@ -343,8 +343,10 @@ Unreadable or malformed input appears in the JSON `incomplete` list.
 
 Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch
 literal `test.exclude` arrays that drop Vitest's discovery exclusions in the
-selected config or its inline projects. Set `options.config` to select the file
-and optionally set `options.requiredGlobs` to replace the default required list.
+selected config (and its inline projects) or in `test`-shaped object literals
+inside config factory modules matched by `options.files`. Set `options.config`,
+`options.files`, or both, and optionally set `options.requiredGlobs` to replace
+the default required list.
 
 Enable [`vitest-project-policy`](../rules/vitest-project-policy.md) to check
 literal properties across declared Vitest projects. Its explicit `config` and

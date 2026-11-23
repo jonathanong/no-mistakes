@@ -112,6 +112,51 @@ fn vitest_default_excludes_supplemental_configs_keep_batch_parity() {
     }
 }
 
+#[test]
+fn vitest_default_excludes_files_option_matches_cli_and_batch() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/vitest-default-excludes/fixture/factories")
+        .canonicalize()
+        .unwrap();
+    let config = root.join(".no-mistakes.yml");
+    let mut options = json!({"root": root, "config": config});
+    let native: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+    )
+    .unwrap();
+    let cli = crate::check_runner::run_all_with_options(
+        root.clone(),
+        Some(config.clone()),
+        None,
+        false,
+        false,
+        crate::check_runner::AnalysisOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(cli.rules.len(), 1);
+    assert_eq!(cli.rules[0].rule, "vitest-default-excludes");
+    assert_eq!(cli.rules[0].file, "config/vitest-bad-factory.ts");
+    assert_eq!(cli.rules[0].line, 4);
+    assert_eq!(native, crate::check_runner::json_value(&cli));
+
+    crate::ast::begin_parse_count(&root);
+    options["reports"] = json!([{"type": "check"}]);
+    let batched = batch(options);
+    let counts = crate::ast::finish_parse_count(&root);
+    assert_eq!(
+        counts.get(&root.join("config/vitest-bad-factory.ts")),
+        Some(&1),
+        "{counts:?}"
+    );
+    assert_eq!(
+        counts.get(&root.join("config/vitest-good-factory.ts")),
+        Some(&1),
+        "{counts:?}"
+    );
+    assert_eq!(counts.get(&root.join("other/unchecked-factory.ts")), None);
+    assert_eq!(batched["reports"][0]["result"], native);
+}
+
 fn batch(options: serde_json::Value) -> serde_json::Value {
     serde_json::from_str(
         &crate::napi_api::analyze_project::analyze_project_json_impl(

@@ -25,6 +25,27 @@ impl PreparedFactDemand {
                 .extend(plan.production_import_paths.iter().cloned());
         }
     }
+
+    pub(crate) fn include_discovered_files(
+        &mut self,
+        root: &Path,
+        config: &NoMistakesConfig,
+        files: &[PathBuf],
+        sources: &no_mistakes::codebase::ts_source::SourceStore,
+        plan: &mut CheckFactPlan,
+    ) -> Result<()> {
+        no_mistakes::codebase::rules::required_companion_imports::configure_fact_plan(
+            root, config, files, sources, plan,
+        )?;
+        self.include_companion_plan(plan);
+        plan.vitest_default_exclude_paths =
+            no_mistakes::codebase::rules::vitest_default_excludes::required_files(
+                root, config, files,
+            )?;
+        self.vitest_default_exclude_files =
+            plan.vitest_default_exclude_paths.iter().cloned().collect();
+        Ok(())
+    }
     pub(crate) fn needs_shared_facts(&self) -> bool {
         self.needs_other_facts
             || self.has_companion_plan
@@ -88,7 +109,7 @@ pub(crate) fn prepare(
     files.dedup();
     plan.require_call_site_paths(&files);
     plan.vitest_default_exclude_paths =
-        no_mistakes::codebase::rules::vitest_default_excludes::required_files(root, config)?;
+        no_mistakes::codebase::rules::vitest_default_excludes::required_files(root, config, &[])?;
     let mut demand = PreparedFactDemand {
         companion_import_files: Vec::new(),
         has_companion_plan: false,

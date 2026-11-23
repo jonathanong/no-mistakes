@@ -340,7 +340,9 @@ fn vitest_default_excludes_is_in_the_public_rule_inventory() {
         "docs/node-api.md",
         "docs/feature-parity.md",
     ] {
-        assert!(read(&root.join(path)).contains(rule), "{path}");
+        let content = read(&root.join(path));
+        assert!(content.contains(rule), "{path}");
+        assert!(content.contains("files"), "{path}");
     }
 }
 

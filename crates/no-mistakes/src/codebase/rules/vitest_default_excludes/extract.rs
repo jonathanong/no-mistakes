@@ -1,14 +1,33 @@
-use super::ExcludeArray;
+use super::{CollectedExcludes, ExcludeArray};
 use crate::codebase::ts_source::{line_number, unwrap_ts_wrappers};
 use oxc_ast::ast::{
     ArrayExpressionElement, CallExpression, Expression, ImportDeclarationSpecifier,
     ObjectExpression, ObjectProperty, Program, Statement,
 };
+use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use rustc_hash::FxHashSet;
 
-pub(crate) fn collect(program: &Program<'_>, source: &str) -> Vec<ExcludeArray> {
+pub(crate) fn collect(program: &Program<'_>, source: &str) -> CollectedExcludes {
     let imports = VitestImports::collect(program);
+    let default_export = collect_default_export(program, source, &imports);
+    let mut visitor = TestLiteralVisitor {
+        imports: &imports,
+        source,
+        arrays: Vec::new(),
+    };
+    visitor.visit_program(program);
+    CollectedExcludes {
+        default_export,
+        test_literals: visitor.arrays,
+    }
+}
+
+fn collect_default_export(
+    program: &Program<'_>,
+    source: &str,
+    imports: &VitestImports<'_>,
+) -> Vec<ExcludeArray> {
     let Some(root) = program.body.iter().find_map(|statement| {
         let Statement::ExportDefaultDeclaration(export) = statement else {
             return None;
@@ -35,6 +54,23 @@ pub(crate) fn collect(program: &Program<'_>, source: &str) -> Vec<ExcludeArray> 
         }));
     }
     arrays
+}
+
+struct TestLiteralVisitor<'a> {
+    imports: &'a VitestImports<'a>,
+    source: &'a str,
+    arrays: Vec<ExcludeArray>,
+}
+
+impl<'a> Visit<'a> for TestLiteralVisitor<'_> {
+    fn visit_object_expression(&mut self, object: &ObjectExpression<'a>) {
+        if let Some(test) = property(object, "test").and_then(|prop| literal_object(&prop.value)) {
+            if let Some(array) = self.imports.exclude_array(test, self.source) {
+                self.arrays.push(array);
+            }
+        }
+        walk::walk_object_expression(self, object);
+    }
 }
 
 fn property<'a>(object: &'a ObjectExpression<'a>, name: &str) -> Option<&'a ObjectProperty<'a>> {
