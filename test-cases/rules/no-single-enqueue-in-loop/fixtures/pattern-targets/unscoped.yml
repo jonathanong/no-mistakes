@@ -1,0 +1,6 @@
+rules:
+  - rule: no-single-enqueue-in-loop
+    scope: repository
+    options:
+      singleExportPattern: '^enqueue[A-Z]'
+      bulkExportPattern: '^enqueueBulk'

@@ -8,13 +8,14 @@ Call the configured bulk API once with the collection instead.
 
 One enqueue per element multiplies queue writes by the size of the collection.
 A bulk API accepts the collection in one call. The rule is opt-in: with no
-configured single targets it reports nothing, and it does not assume any queue
+configured single targets or single-export pattern it reports nothing, and it does not assume any queue
 or database API by name.
 
 ## What it catches
 
 It reports a direct call, or a bare identifier passed as a callback, whose
-resolved import is a configured `options.single` target. The call must already
+resolved import is a configured `options.single` target or matches the configured
+single-export pattern without a bulk exemption. The call must already
 be in the shared per-item occurrence list, and the construct must be `for`,
 `for-of`, `for-in`, `while`, `do`, `map callback`, `forEach callback`, or
 `flatMap callback`.
@@ -33,7 +34,7 @@ never a finding, including when a loop walks batches and calls the bulk API once
 per batch. Bulk names the export that already sends the collection. Validation
 rejects the same module and export in both lists. A bulk spelling that resolves
 to the same file and export as a single target does not skip that call. A
-different bulk export still skips. The same local name imported from a different module stays
+different bulk export still skips. For explicit lists, the same local name imported from a different module stays
 silent. An alias and a namespace member are judged by the resolved module file
 and export name. A namespace member is reported when the canonical graph
 resolves it to the configured export.
@@ -75,6 +76,40 @@ rules:
         - module: ./widgets
           export: enqueueItems
 ```
+
+Alternatively, select export names with patterns:
+
+```yaml
+rules:
+  - rule: no-single-enqueue-in-loop
+    options:
+      singleExportPattern: '^enqueue[A-Z]'
+      bulkExportPattern: '^enqueueBulk'
+      moduleGlobs: ['./queue/**']
+```
+
+`singleExportPattern` and `bulkExportPattern` are optional strings using Rust
+regular-expression syntax, without slash delimiters. They default to omitted.
+A pattern-selected export must match the single pattern and not the bulk
+pattern. For example, `enqueueWidget` is selected and `enqueueBulkWidgets` is
+exempt. Local import aliases do not change the export name used for matching.
+Use `^` and `$` when the whole name should match. Blank or invalid regexes are
+configuration errors that name the option.
+
+`moduleGlobs` defaults to `[]`, which leaves pattern-selected modules unrestricted.
+Otherwise, at least one glob must match the module specifier recorded by the
+canonical call graph. `*` matches one path segment and `**` crosses separators;
+use forward slashes. These globs filter import specifiers, not repository file
+paths or local variable names. External package re-exports follow the external
+origin selector recorded by the graph. Blank or invalid globs are errors.
+
+Explicit targets retain their existing matching rules. An explicit single
+target can report even if the pattern scope excludes it or the bulk regex
+matches its name. An explicit bulk target excludes an otherwise pattern-selected
+call. Neither `bulkExportPattern` nor `moduleGlobs` alone enables findings.
+When a call has multiple possible targets, every target must match the pattern
+selection; unknown or excluded alternatives keep it silent. A finding lists
+distinct matching selectors in sorted order.
 
 There is no separate low-effort implementation. `effort: low` warns
 `requested effort low; effective effort max because this rule has no low implementation`

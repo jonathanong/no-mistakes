@@ -1,3 +1,6 @@
+#[path = "pattern_tests.rs"]
+mod pattern_tests;
+
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -143,17 +146,17 @@ fn blank_duplicate_and_overlapping_targets_are_rejected() {
             module: "  ".into(),
             export: "enqueueItem".into(),
         }],
-        bulk: Vec::new(),
+        ..Options::default()
     };
     let error = options::validate(&blank).unwrap_err();
     assert!(error.to_string().contains("non-empty"), "{error:#}");
 
     let blank_export = Options {
-        single: Vec::new(),
         bulk: vec![ApiTarget {
             module: "./widgets".into(),
             export: " ".into(),
         }],
+        ..Options::default()
     };
     let error = options::validate(&blank_export).unwrap_err();
     assert!(error.to_string().contains("options.bulk[0]"), "{error:#}");
@@ -169,7 +172,7 @@ fn blank_duplicate_and_overlapping_targets_are_rejected() {
                 export: "enqueueItem".into(),
             },
         ],
-        bulk: Vec::new(),
+        ..Options::default()
     };
     let error = options::validate(&duplicate).unwrap_err();
     assert!(error.to_string().contains("more than once"), "{error:#}");
@@ -183,6 +186,7 @@ fn blank_duplicate_and_overlapping_targets_are_rejected() {
             module: "./widgets".into(),
             export: "enqueueItem".into(),
         }],
+        ..Options::default()
     };
     let error = options::validate(&overlap).unwrap_err();
     assert!(
@@ -204,6 +208,7 @@ fn trimmed_targets_keep_the_specifier_and_export() {
             module: " ./widgets ".into(),
             export: " enqueueItems ".into(),
         }],
+        ..Options::default()
     };
     let targets = options::validate(&options).unwrap();
     assert_eq!(
