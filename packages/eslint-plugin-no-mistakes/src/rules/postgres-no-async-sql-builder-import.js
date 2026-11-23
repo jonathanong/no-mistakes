@@ -32,9 +32,9 @@ function importedBinding(identifier, context) {
   return { kind: name === "default" ? "default" : "named", source: declaration.source.value, name };
 }
 
-// `const { sql } = db` is the namespace member `db.sql`. A default on the
+// `const { sql } = db` is the imported member `db.sql`. A default on the
 // property can bind something else, and a computed identifier key is not static.
-function destructuredImport(identifier, context) {
+function destructuredImport(identifier, context, { allowDefault = false } = {}) {
   const variable = resolveVariable(identifier, context);
   if (!variable) return null;
   if (variable.defs.length !== 1) return null;
@@ -49,12 +49,11 @@ function destructuredImport(identifier, context) {
   if (!property) return null;
   const key = staticKeyName(property);
   if (!key) return null;
-  const object = unwrapExpression(declarator.init);
-  if (object.type !== "Identifier") return null;
-  const imported = importedBinding(object, context);
-  if (!imported) return null;
-  if (imported.kind !== "namespace") return null;
-  return { name: key, source: imported.source };
+  const imported = importedBinding(unwrapExpression(declarator.init), context);
+  if (imported?.kind === "namespace" || (allowDefault && imported?.kind === "default")) {
+    return { name: key, source: imported.source };
+  }
+  return null;
 }
 
 module.exports = {

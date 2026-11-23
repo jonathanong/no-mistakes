@@ -23,12 +23,18 @@ it("snapshots PostgreSQL pool error listener diagnostics", async () => {
       poolCase("other-module.js"),
       poolCase("suppressed.js"),
       poolCase("disabled-file.js"),
+      poolCase("destructured-accepted.js"),
+      poolCase("destructured-shadowed.js"),
+      poolCase("destructured-unsupported.js"),
     ],
     invalid: [
       poolCase("missing.js"),
       poolCase("identity.ts"),
       poolCase("extra-modules.js"),
       poolCase("extra-modules.js", [{ extraModules }]),
+      poolCase("destructured-missing.js"),
+      poolCase("destructured-extra-modules.js"),
+      poolCase("destructured-extra-modules.js", [{ extraModules }]),
     ],
   };
   await expect(snapshotDocument(snapshotSuite(rule, languageOptions, suite))).toMatchFileSnapshot(
