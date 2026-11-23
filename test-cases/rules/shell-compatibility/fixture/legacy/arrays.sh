@@ -84,3 +84,6 @@ brace}"
 items=()
 set -- +u
 collect "${items[@]}"
+
+items=("[*]" *.sample)
+collect "${items[@]}"

@@ -32,3 +32,5 @@ status=value
 status=value # no-mistakes-disable-line zsh-readonly-parameter -- Shell example fixture.
 print { status=value > \
   /dev/null
+print < \
+status=value
