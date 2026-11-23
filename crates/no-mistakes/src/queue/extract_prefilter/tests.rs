@@ -73,6 +73,11 @@ fn package_and_factory_needles_are_required_substrings() {
         &roles,
     ));
     assert!(source_may_have_queue_facts(
+        "widgets.upsertJobScheduler('nightly', {}, { name: 'sweep' });",
+        &["createQueue".to_string()],
+        &roles,
+    ));
+    assert!(source_may_have_queue_facts(
         "background.addAndWait(\"page\", {});",
         &["createQueue".to_string()],
         &roles,

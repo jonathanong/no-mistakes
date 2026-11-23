@@ -56,9 +56,9 @@ tests:
 
 `factories` names are matched against configured queue factory calls. An
 enqueue factory records a producer at the wrapper call. `options` is the
-argument index of that call's options object; self-dedup and debounce checks
-read it the same way they read `queue.add`'s third argument. A worker factory
-records the processor. The active job is a parameter named `job`, or otherwise
+argument index of that call's options object; self-dedup, debounce, and invalid
+jobId checks read it the same way they read `queue.add`'s third argument. A
+worker factory records the processor. The active job is a parameter named `job`, or otherwise
 the processor's first parameter, including `switch (task.name)` and
 `async ({ name, id }) =>`. A nested callback is a job only when one of its
 parameters is named `job`. Local named processor functions can be declared

@@ -19,6 +19,10 @@ pub(crate) fn needs_wait_scoping(
                 || source.contains('\\'))
 }
 
+pub(crate) fn needs_job_id_scoping(source: &str) -> bool {
+    source.contains("jobId") || source.contains('\\')
+}
+
 pub(crate) fn extract_program_with_scoping(
     path: &Path,
     source: &str,
@@ -33,6 +37,10 @@ pub(crate) fn extract_program_with_scoping(
         source,
         facts: FileFacts::default(),
         const_strings: HashMap::new(),
+        job_id_consts: Default::default(),
+        job_id_flows: Default::default(),
+        job_id_queues: Default::default(),
+        job_id_pending: Vec::new(),
         queue_classes: HashSet::new(),
         worker_classes: HashSet::new(),
         flow_classes: HashSet::new(),
@@ -58,6 +66,7 @@ pub(crate) fn extract_program_with_scoping(
         worker_stack: Vec::new(),
     };
     visitor.visit_program(program);
+    super::extract_job_id::finish(&mut visitor);
     super::extract_processor::finish(&mut visitor);
     visitor.facts
 }

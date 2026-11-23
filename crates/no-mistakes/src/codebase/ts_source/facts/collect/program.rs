@@ -83,9 +83,7 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         None
     };
     let domain = if plan.has_domain_facts() || plan.call_sites {
-        let scoping = semantic
-            .filter(|_| record_waits)
-            .map(|built| built.semantic.scoping());
+        let scoping = semantic.map(|built| built.semantic.scoping());
         let queue_waits = (record_waits, scoping);
         domain::collect_domain_facts(program, path, source, plan, context, queue_waits)
     } else {

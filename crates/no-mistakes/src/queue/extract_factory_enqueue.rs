@@ -30,6 +30,9 @@ pub(super) fn note_enqueue(
         .map(|expr| literal_or_import(expr, &visitor.const_strings, &visitor.facts.string_imports))
         .unwrap_or((None, None));
     let raw_job = job_arg.map(|arg| crate::ast::span_text(visitor.source, arg.span()).to_string());
+    if crate::queue::extract_job_id::is_imported_callee(visitor, &call.callee) {
+        note_job_id_options(visitor, call, queue_index, job.clone(), options);
+    }
     let recorded = visitor.facts.producers.len();
     visitor.facts.producers.push(ProducerSite {
         file: visitor.path.to_path_buf(),
@@ -44,6 +47,27 @@ pub(super) fn note_enqueue(
     if let Some(index) = options {
         if let Some(expr) = call.arguments.get(index).and_then(Argument::as_expression) {
             super::super::dedup::note_dedup_argument(visitor, call, expr, job, recorded);
+        }
+    }
+}
+
+fn note_job_id_options(
+    visitor: &mut QueueVisitor<'_>,
+    call: &CallExpression<'_>,
+    queue_index: usize,
+    job: Option<String>,
+    options: Option<usize>,
+) {
+    if let Some(expr) = options
+        .and_then(|index| call.arguments.get(index))
+        .and_then(Argument::as_expression)
+    {
+        if let Some(receiver) = call
+            .arguments
+            .get(queue_index)
+            .and_then(Argument::as_expression)
+        {
+            crate::queue::extract_job_id::note_factory_options(visitor, receiver, job, expr);
         }
     }
 }

@@ -1,6 +1,7 @@
 use super::QueueVisitor;
 use crate::ast::js_literal;
 use crate::queue::extract_helpers::{binding_name, literal_expr, static_string};
+use crate::queue::extract_job_id;
 use oxc_ast::ast::{Argument, Expression, VariableDeclarator};
 use oxc_ast_visit::walk;
 
@@ -26,16 +27,29 @@ impl<'a> QueueVisitor<'a> {
                         .queue_bindings
                         .insert(name.clone(), queue_name.clone());
                     self.facts.queue_exports.insert(name.clone(), queue_name);
+                    if extract_job_id::is_imported_callee(self, &new_expr.callee) {
+                        extract_job_id::note_queue_binding(self, &decl.id);
+                    }
                 }
             } else if self.is_flow_constructor(&new_expr.callee) {
                 self.flow_bindings.insert(name.clone());
+                if extract_job_id::is_imported_callee(self, &new_expr.callee) {
+                    extract_job_id::note_flow_binding(self, &decl.id);
+                }
             }
         }
         if let Some(Expression::CallExpression(call_expr)) = &decl.init {
-            super::super::extract_factory::note_queue_binding(self, &name, call_expr);
+            if super::super::extract_factory::note_queue_binding(self, &name, call_expr)
+                && extract_job_id::is_imported_callee(self, &call_expr.callee)
+            {
+                extract_job_id::note_queue_binding(self, &decl.id);
+            }
         }
         if let Some(Expression::Identifier(id)) = &decl.init {
             super::super::extract_factory::note_alias(self, &name, id.name.as_str());
+            if extract_job_id::queue_identifier(self, id) {
+                extract_job_id::note_queue_binding(self, &decl.id);
+            }
         }
         walk::walk_variable_declarator(self, decl);
     }

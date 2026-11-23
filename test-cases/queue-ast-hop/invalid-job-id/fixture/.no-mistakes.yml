@@ -1,0 +1,11 @@
+version: 2
+queues:
+  factories:
+    queue:
+      - callee: makeReviewQueue
+        name: 0
+    enqueue:
+      - callee: enqueueConfigured
+        queue: 0
+        job: 1
+        options: 2
