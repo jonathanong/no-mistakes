@@ -39,9 +39,9 @@ test(
   { skip: !addon?.endsWith(".node") },
   async () => {
     const root = join(fixtures, "fixture", "url-assignments");
-    await assertParity(root, "url-assignments", 5);
-    await assertParity(root, "url-assignments-low", 13);
-    await assertParity(root, "url-assignments-strict", 6);
+    await assertParity(root, "url-assignments", 6);
+    await assertParity(root, "url-assignments-low", 14);
+    await assertParity(root, "url-assignments-strict", 7);
   },
 );
 
@@ -59,7 +59,7 @@ test(
       execFileSync("git", ["-C", root, "add", "."], { env });
       await assertParity(root, "line-skips-default", 3);
       await assertParity(root, "line-skips-step", 3);
-      await assertParity(root, "line-skips-line", 16);
+      await assertParity(root, "line-skips-line", 17);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

@@ -166,8 +166,9 @@ line breaks that association. Annotation-looking strings and here-document
 payloads are not comments. An annotation on an inline YAML `run` stays within
 that step; an adjacent literal block header can annotate its first body line.
 A URL on a backslash continuation line can still produce a finding when the
-skip applies to the command's first line. Put the annotation beside the URL
-on its physical line or keep the URL on the first line of the command.
+skip applies to the command's first line. Put the URL on the final physical
+line and append the annotation there. To annotate a URL on the first line,
+put a standalone annotation immediately above the command.
 
 For line scope, use ordinary inline runs or literal `run: |` bodies. Folded
 `run: >` bodies and other ambiguous physical-line projections retain their
