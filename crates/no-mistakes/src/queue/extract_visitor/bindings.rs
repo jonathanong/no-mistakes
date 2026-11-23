@@ -46,6 +46,20 @@ impl<'a> QueueVisitor<'a> {
                     if extract_job_id::is_imported_callee(self, &new_expr.callee) {
                         extract_job_id::note_queue_binding(self, &decl.id);
                     }
+                } else if let Some(imported) = new_expr
+                    .arguments
+                    .first()
+                    .and_then(crate::queue::extract_factory::identifier_arg)
+                    .filter(|ident| self.facts.string_imports.contains_key(ident))
+                {
+                    self.note_queue_declaration(
+                        &name,
+                        declaration,
+                        LocalQueue::ImportedName(imported),
+                    );
+                    if extract_job_id::is_imported_callee(self, &new_expr.callee) {
+                        extract_job_id::note_queue_binding(self, &decl.id);
+                    }
                 }
                 super::super::job_options::note_constructed_defaults(self, declaration, new_expr);
             } else if self.is_flow_constructor(&new_expr.callee) {

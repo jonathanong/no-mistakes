@@ -161,10 +161,17 @@ immutable `const` binding, including another immutable `const` alias. Without
 this setting, existing enqueue roles continue to record the factory call.
 
 For fixed queues, `makeFixedEnqueue(JOB_DEF)` selects `JOB_DEF.name` from a
-local or imported `const` object literal. Named re-exports use the prepared
-module resolver. The bulk wrapper's build callback does not supply a job name;
-only the configured selector does. Resolution stays within the configured
-file universe and uses the same producer/worker graph as `queues edges`.
+local or imported `const` object literal. Named re-exports, imported queue
+constants (including `new Queue(QUEUE_NAME)` and `new Worker(QUEUE_NAME, ...)`),
+and workspace package specifiers—including `package.json` `exports` wildcards
+such as `"./*": "./*.mts"`—use the prepared module and workspace resolver,
+with or without `--tsconfig`. When a fixed-`queueName` queue has no matching
+`new Queue` or configured queue factory declaration, its queue node uses the
+deterministic virtual anchor `queue:<name>` (for example, `queue:mail#welcome`)
+instead of anchoring on an arbitrary caller file. The bulk wrapper's build
+callback does not supply a job name; only the configured selector does.
+Resolution stays within the configured file universe and uses the same
+producer/worker graph as `queues edges`.
 
 Property selection requires a direct, static object property. Unresolved
 values, spread objects, computed properties, non-const bindings, and mutated

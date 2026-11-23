@@ -84,12 +84,25 @@ pub(super) fn analyze_with<T>(
     )?;
     let mut facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
     let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+    let scoped_resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         tsconfig_catalog,
         &visible_files,
         session,
     )
     .with_queue_compatibility(root);
+    let workspace = if session.existing_sources_for(root).is_some() {
+        session.workspace(root)
+    } else {
+        std::sync::Arc::new(
+            crate::codebase::workspaces::load_indexed_from_files(root, shared.files())
+                .unwrap_or_default(),
+        )
+    };
+    let resolver = crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(
+        &scoped_resolver,
+        &workspace,
+        &visible_files,
+    );
     crate::queue::job_options::stamp(&mut facts, &config.queues);
     let (lang_producers, lang_workers) =
         crate::queue::lang::language_queue_sites(root, session, config, filter.as_ref())?;

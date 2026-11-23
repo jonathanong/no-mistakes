@@ -128,12 +128,18 @@ fn analyze_project_inner<T>(
         crate::queue::job_options::stamp(&mut facts, &config.queues);
     }
 
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+    let scoped_resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         &tsconfig_catalog,
         &visible_set,
         &session,
     )
     .with_queue_compatibility(root);
+    let workspace = dataset.workspace();
+    let resolver = crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(
+        &scoped_resolver,
+        &workspace,
+        &visible_set,
+    );
     let remapper =
         crate::codebase::ts_source::FrozenPathRemapper::from_paths(facts.keys().cloned());
     crate::queue::factory_resolve::resolve_imported_queue_names(&mut facts, &resolver, &remapper);

@@ -49,7 +49,7 @@ pub(in crate::queue) fn definition_files(
     let mut paths = facts.keys().collect::<Vec<_>>();
     paths.sort();
     let mut out = HashMap::new();
-    let mut wrappers = HashMap::new();
+    let mut wrappers = std::collections::BTreeSet::new();
     for path in paths {
         let file = &facts[path];
         for name in defined_queue_names(file) {
@@ -61,14 +61,15 @@ pub(in crate::queue) fn definition_files(
                     out.entry(name.clone()).or_insert_with(|| path.clone());
                 }
                 ProducerBinding::QueueName(name) => {
-                    wrappers.entry(name).or_insert(path);
+                    wrappers.insert(name.clone());
                 }
                 _ => {}
             }
         }
     }
-    for (name, path) in wrappers {
-        out.entry(name.clone()).or_insert_with(|| path.clone());
+    for name in wrappers {
+        out.entry(name.clone())
+            .or_insert_with(|| PathBuf::from(format!("queue:{name}")));
     }
     out
 }

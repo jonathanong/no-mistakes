@@ -158,7 +158,7 @@ fn queue_name_index(visitor: &QueueVisitor<'_>, imported: &str) -> Option<usize>
         .any(|name| name == imported)
         .then_some(0)
 }
-pub(super) fn identifier_arg(arg: &Argument<'_>) -> Option<String> {
+pub(in crate::queue) fn identifier_arg(arg: &Argument<'_>) -> Option<String> {
     match arg.as_expression() {
         Some(Expression::Identifier(id)) => Some(id.name.as_str().to_string()),
         _ => None,

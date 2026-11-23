@@ -496,3 +496,4 @@ mod projection;
 
 mod enqueue_wrapper_exports;
 mod job_options_followups;
+mod workspace_exports;
