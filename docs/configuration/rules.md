@@ -603,8 +603,10 @@ rules:
 For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy.md),
 `caches` lists each portable cache `path`, the `lockfile` that must be digested, and the
 `keyParts` expression fragments (such as `runner.os`) that the key must contain.
-`rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. A cache path outside
-`caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
+`rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. Set
+`forbidBroadHashFiles: true` to report broad literal `hashFiles` patterns in `key` and
+`restore-keys`. Use `allowedHashFilesPatterns` to exempt specific argument strings.
+A cache path outside `caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
 or parenthesized command applies to every command in the group that does not already redirect standard
@@ -643,6 +645,8 @@ rules:
     options:
       rejectRestoreKeys: true
       allowHashFiles: true
+      forbidBroadHashFiles: true
+      allowedHashFilesPatterns: ['generated/**']
       caches:
         - path: .cache/widgets
           lockfile: widgets.lock

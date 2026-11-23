@@ -28,6 +28,7 @@ require("./workflow-activity-types-api.test.js");
 require("./workflow-topology-policy-bans-api.test.js");
 require("./script-input-policy-api.test.js");
 require("./inline-script-lines-api.test.js");
+require("./cache-key-policy-api.test.js");
 require("./shellcheck-policy-api.test.js");
 require("./version-pin-policy-api.test.js");
 require("./ephemeral-port-literal-api.test.js");

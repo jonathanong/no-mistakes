@@ -1,0 +1,33 @@
+name: Widgets
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: "${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', '**', 'src/**') }}"
+          restore-keys: |
+            widgets-${{ hashFiles('output/*') }}
+            widgets-${{ hashFiles('generated/**', '**/widgets.lock') }}
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache/widgets
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ HASHFILES('**/unlisted.lock', 'generated/other/**') }}
+          restore-keys:
+            - fallback-${{ format('{0}', hashFiles(format('{0}', 'nested/**'), 'assets/*/')) }}
+            - fallback-${{ hashFiles('it''s, odd)/**') }}
+      - uses: actions/cache/save@v4
+        with:
+          path: .cache/widgets
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', 'packages/**/widgets.lock', 'src/*.json', env.pattern, env['bracket/**'], '**' && env.pattern) }}-${{ 'hashFiles(''quoted/**'')' }}
+          restore-keys: 'fallback-${{ hashFiles(''*/**/widgets.lock'') }}'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/unconfigured
+          key: ${{ hashFiles('ignored/**') }}
+      - uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ hashFiles('suppressed/**') }} # no-mistakes-disable-line github-actions-cache-key-policy

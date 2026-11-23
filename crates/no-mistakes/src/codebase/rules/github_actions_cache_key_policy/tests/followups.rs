@@ -379,13 +379,12 @@ runs:
         other => panic!("expected jobs, got {other:?}"),
     };
     let options = options::Options {
-        reject_restore_keys: true,
-        allow_hash_files: false,
         caches: vec![options::CacheSpec {
             path: ".cache/widgets".into(),
             lockfile: "widgets.lock".into(),
             key_parts: vec!["runner.os".into(), "runner.arch".into()],
         }],
+        ..options::Options::default()
     };
     assert!(judge::judge("ci.yml", &jobs, &options, &|uses| {
         (uses == "./.github/actions/lock-digest").then(|| action.to_string())
