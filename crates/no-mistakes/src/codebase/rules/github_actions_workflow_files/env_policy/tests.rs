@@ -90,3 +90,44 @@ fn locate_matches_quoted_keys() {
     let at = [Seg::Key("env".into()), Seg::Key("POLICY".into())];
     assert_eq!(locate(source, &at), 2);
 }
+
+#[test]
+fn invalid_yaml_and_file_directive_report_nothing() {
+    for case in ["invalid", "disabled-file"] {
+        let root = rule_root().join("fixture").join(case);
+        let file = root.join(".github/workflows/ci.yml");
+        let found = check_with_files(&root, &config("policy.yml"), &[file]).unwrap();
+        assert!(found.is_empty(), "{case}: {found:?}");
+    }
+}
+
+#[test]
+fn odd_shapes_are_skipped_or_fall_back_to_the_parent_line() {
+    let opts: Options = serde_yaml::from_str("required: {A: ''}\nforbidden: [B]").unwrap();
+    let policy = compile(&opts).unwrap();
+    let source = "env: [a]\n1: x\njobs:\n  1:\n    env: {B: v}\n  s: skip\n  t:\n    env: {B: v, 2: x, A: z}\n    steps:\n      - skip\n      - env: {A: ''}\n\"q: [\n";
+    let value: Value = serde_yaml::from_str(source).unwrap_or(Value::Null);
+    assert!(scan::check_parsed("w.yml", source, &value, &policy).is_empty());
+    let source = "jobs:\n  1:\n    env: {B: v}\n  s: skip\n  t:\n    env: {B: v, 2: x, A: z}\n    steps:\n      - skip\n      - env: {A: ''}\nenv: [a]\n";
+    let value: Value = serde_yaml::from_str(source).unwrap();
+    let found = scan::check_parsed("w.yml", source, &value, &policy);
+    assert_eq!(found.iter().map(|f| f.line).collect::<Vec<_>>(), [6, 6]);
+}
+
+#[test]
+fn composite_shapes_and_unterminated_quotes() {
+    let opts: Options = serde_yaml::from_str("forbidden: [B]").unwrap();
+    let policy = compile(&opts).unwrap();
+    for source in [
+        "runs:\n  using: node20\n  steps:\n    - env: {B: v}\n",
+        "runs:\n  using: composite\n  steps: none\n",
+        "runs: none\n",
+    ] {
+        let value: Value = serde_yaml::from_str(source).unwrap();
+        assert!(scan::check_parsed("a.yml", source, &value, &policy).is_empty());
+    }
+    use lines::{locate, Seg};
+    assert_eq!(locate("\"env: x\n", &[Seg::Key("env".into())]), 1);
+    assert_eq!(locate("", &[Seg::Key("env".into())]), 1);
+    assert_eq!(locate("a: 1\n", &[Seg::Key("b".into()), Seg::Idx(0)]), 1);
+}
