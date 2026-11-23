@@ -13,7 +13,6 @@ use std::path::{Path, PathBuf};
 
 #[path = "graph_checks.rs"]
 mod checks;
-
 pub(super) fn build_report(
     root: &Path,
     producers: Vec<InternalProducer>,
@@ -85,7 +84,7 @@ fn build_report_and_relationships(
     check.sort();
     let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
     report_diagnostics.extend(dedup_diagnostics);
-    let report = ProjectReport {
+    let mut report = ProjectReport {
         producers: producers.iter().map(|p| p.public(root)).collect(),
         workers: workers.iter().map(|w| w.public(root)).collect(),
         jobs: public_jobs(root, &relationships),
@@ -93,6 +92,8 @@ fn build_report_and_relationships(
         diagnostics: dedup_sorted(report_diagnostics),
         check,
     };
+    report.producers.sort();
+    report.workers.sort();
     (report, relationships)
 }
 

@@ -186,11 +186,11 @@ fn conflicting_factory_indexes_are_rejected_and_wait_scopes_narrow() {
         &roles.wait_scopes
     ));
     let mut other = roles.clone();
-    other.enqueue[0].job = 9;
+    other.enqueue[0].job = crate::config::v2::schema::EnqueueSelector::Positional(9);
     let mut merged = roles.clone();
     assert!(merged.merge(&other).is_err());
-    assert_eq!(merged.enqueue[0].job, 1);
-    other.enqueue[0].job = 1;
+    assert_eq!(merged.enqueue[0].job, roles.enqueue[0].job);
+    other.enqueue[0].job = roles.enqueue[0].job.clone();
     other.worker.push(crate::config::v2::schema::WorkerFactory {
         callee: "createWorker".to_string(),
         name: 0,

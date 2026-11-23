@@ -15,6 +15,7 @@ require("./api-tests/declarations-postgres");
 require("./api-tests/postgres-lock-inventory");
 require("./api-tests/declarations-grouping");
 require("./api-tests/declarations-graph");
+require("./api-tests/declarations-queue-factories");
 require("./api-tests/declarations-executor-diagnostics");
 require("./api-tests/declarations-analysis");
 require("./api-tests/declarations-sql");

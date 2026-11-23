@@ -3,7 +3,7 @@ use super::super::object_bindings::ObjectBindings;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 
-pub(super) fn read(expr: &Expression<'_>) -> JobOptionEvidence {
+pub(in crate::queue) fn read(expr: &Expression<'_>) -> JobOptionEvidence {
     match expr.get_inner_expression() {
         Expression::ObjectExpression(object) => read_object(object),
         Expression::Identifier(id) => JobOptionEvidence {
@@ -76,7 +76,11 @@ pub(in crate::queue) fn finish(facts: &mut FileFacts, bindings: &ObjectBindings<
         members: FxHashMap::default(),
         active: FxHashSet::default(),
     };
-    for site in &mut facts.job_option_sites {
+    let wrappers = facts
+        .enqueue_wrappers
+        .iter_mut()
+        .map(|wrapper| &mut wrapper.options);
+    for site in facts.job_option_sites.iter_mut().chain(wrappers) {
         if site.evidence.member.take().is_some() {
             resolver.fold_members(&mut site.evidence);
         } else {
@@ -151,6 +155,6 @@ impl SpreadResolver<'_, '_> {
 impl<'ast> SpreadResolver<'_, 'ast> {
     fn value(&self, spread: &JobOptionSpread) -> Option<(u32, &'ast Expression<'ast>)> {
         let binding = self.bindings.lookup(&spread.name, spread.at)?;
-        Some((binding.resolve_at, binding.value?))
+        Some((binding.resolve_at, binding.value()?))
     }
 }

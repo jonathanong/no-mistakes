@@ -99,7 +99,7 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
         }
     }
 
-    fn job_id(&mut self, job: Option<String>, expr: &Expression<'_>) {
+    pub(super) fn job_id(&mut self, job: Option<String>, expr: &Expression<'_>) {
         match expr.get_inner_expression() {
             Expression::StringLiteral(literal) => {
                 self.push(job, literal.span.start, js_literal(literal).as_ref());

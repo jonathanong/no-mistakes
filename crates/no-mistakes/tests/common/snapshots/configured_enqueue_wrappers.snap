@@ -1,0 +1,404 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "before": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "workers/worker.ts",
+          "job": "bulkTask",
+          "kind": "unmatched-worker",
+          "line": 17,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "background",
+          "sourceLine": "createWorker(\"background\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "definitionTask",
+          "kind": "unmatched-worker",
+          "line": 17,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "background",
+          "sourceLine": "createWorker(\"background\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "directTask",
+          "kind": "unmatched-worker",
+          "line": 3,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "createWorker(\"objects\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "noDefaultsTask",
+          "kind": "unmatched-worker",
+          "line": 3,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "createWorker(\"objects\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "objectTask",
+          "kind": "unmatched-worker",
+          "line": 3,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "createWorker(\"objects\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "returnedTask",
+          "kind": "unmatched-worker",
+          "line": 11,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "createWorker(\"returned\", async (job) => {"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueues/fixed.ts",
+          "job": "definitionTask",
+          "kind": "debounce-ttl",
+          "line": 5,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "send({}, {"
+        },
+        {
+          "file": "enqueues/fixed.ts",
+          "job": "definitionTask",
+          "kind": "invalid-job-id",
+          "line": 9,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "jobId: \"bad:fixed\","
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "noDefaultsTask",
+          "kind": "missing-job-option",
+          "line": 30,
+          "message": "job options missing attempts",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "noDefaults({}, { removeOnComplete: true, priority: 3 });"
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "objectTask",
+          "kind": "debounce-ttl",
+          "line": 11,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "sendObject({}, {"
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "objectTask",
+          "kind": "invalid-job-id",
+          "line": 13,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "jobId: \"bad:object\","
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "objectTask",
+          "kind": "mixed-priority",
+          "line": 11,
+          "message": "queue \"objects\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueues/object.ts:16 (objectTask, priority 3), enqueues/object.ts:18 (directTask, priority 3), enqueues/object.ts:30 (noDefaultsTask, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "sendObject({}, {"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "debounce-ttl",
+          "line": 7,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "alias({}, {"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "invalid-job-id",
+          "line": 11,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "jobId: \"bad:returned\","
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "missing-job-option",
+          "line": 14,
+          "message": "job options missing attempts",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "send({}, { removeOnComplete: true, priority: 3 });"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "mixed-priority",
+          "line": 14,
+          "message": "queue \"returned\" mixes priority 0 and priority > 0; this producer sets priority 3 while other producers enqueue with priority 0: enqueues/returned.ts:7 (returnedTask)",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "send({}, { removeOnComplete: true, priority: 3 });"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "mixed-priority",
+          "line": 7,
+          "message": "queue \"returned\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueues/returned.ts:14 (returnedTask, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "alias({}, {"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 33,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computed({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 35,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "getter({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 37,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "proto({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 42,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computedWrite({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 47,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computedDelete({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 53,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "nestedWrite({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 59,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "computedNestedWrite({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 62,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "forward({});"
+        },
+        {
+          "file": "controls.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 72,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "destructured({});"
+        },
+        {
+          "file": "enqueues.ts",
+          "job": "aliased",
+          "kind": "invalid-job-id",
+          "line": 4,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "const defaults = { attempts: 4, priority: 3, jobId: \"bad:default\" };"
+        },
+        {
+          "file": "enqueues.ts",
+          "job": null,
+          "kind": "invalid-job-id",
+          "line": 4,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "const defaults = { attempts: 4, priority: 3, jobId: \"bad:default\" };"
+        },
+        {
+          "file": "enqueues.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 19,
+          "message": "job options missing removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "unknownDefinition({});"
+        },
+        {
+          "file": "enqueues.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 21,
+          "message": "job options missing removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "spreadDefinition({});"
+        },
+        {
+          "file": "feedback.ts",
+          "job": "aliased",
+          "kind": "self-dedup-enqueue",
+          "line": 9,
+          "message": "enqueue of the active job reuses its deduplication id or job id, so the queue drops the add while that job is active",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "send({}, { deduplication: { id: job.id } });"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 12,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "localMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 18,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "aliasedMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 23,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "importedMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 5,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "exportedMutation({});"
+        },
+        {
+          "file": "mutations.ts",
+          "job": null,
+          "kind": "missing-job-option",
+          "line": 7,
+          "message": "job options missing attempts, removeOnComplete",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "exportedAliasMutation({});"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

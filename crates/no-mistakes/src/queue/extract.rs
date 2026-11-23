@@ -19,6 +19,8 @@ pub(crate) fn needs_wait_scoping(
                 || source.contains('\\'))
 }
 
+pub(crate) use super::enqueue_wrapper::needs_scoping as needs_enqueue_scoping;
+
 pub(crate) fn needs_job_id_scoping(source: &str) -> bool {
     source.contains("jobId") || source.contains('\\')
 }
@@ -72,6 +74,11 @@ fn extract_queue_facts<'a>(
     } else {
         Default::default()
     };
+    let wrapper_mutations = super::enqueue_wrapper::Mutations::collect(
+        program,
+        &index.object_bindings,
+        roles.enqueue.iter().any(|role| role.positional().is_none()),
+    );
     let mut visitor = QueueVisitor {
         path,
         source,
@@ -89,6 +96,8 @@ fn extract_queue_facts<'a>(
         configured_factory_names: factory_names,
         roles,
         queue_name_index: HashMap::new(),
+        wrapper_mutations,
+        wrapper_factories: super::enqueue_wrapper::factories(program, roles, scoping),
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
         scheduler_factories,
@@ -110,6 +119,7 @@ fn extract_queue_facts<'a>(
     };
     super::number_scope::seed_program(&mut visitor, program);
     visitor.visit_program(program);
+    super::enqueue_wrapper::collect_exports(&mut visitor, program);
     super::extract_job_id::finish(&mut visitor);
     super::number_scope::finish_opaque(&mut visitor.facts);
     super::extract_processor::finish(&mut visitor);

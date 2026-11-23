@@ -1,6 +1,6 @@
 use crate::queue::extract::{
-    extract_program_with_scoping, needs_job_id_scoping, needs_scheduler_scoping,
-    needs_wait_scoping, waits_in_scope, FileFacts,
+    extract_program_with_scoping, needs_enqueue_scoping, needs_job_id_scoping,
+    needs_scheduler_scoping, needs_wait_scoping, waits_in_scope, FileFacts,
 };
 use oxc_ast::ast::Program;
 use std::path::Path;
@@ -15,6 +15,7 @@ pub(crate) fn extract_program_with_factories(
 ) -> FileFacts {
     let record_waits = waits_in_scope(path, root, &roles.wait_scopes);
     let semantic = (needs_job_id_scoping(source)
+        || needs_enqueue_scoping(source, roles)
         || needs_scheduler_scoping(source, roles)
         || (record_waits && needs_wait_scoping(source, roles)))
     .then(|| oxc_semantic::SemanticBuilder::new().build(program));

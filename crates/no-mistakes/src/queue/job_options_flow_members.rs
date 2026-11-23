@@ -113,7 +113,7 @@ impl<'ast> Reader<'_, 'ast> {
         let Some(binding) = self.bindings.lookup(name, at) else {
             return FlowMembers::UNKNOWN;
         };
-        let Some(value) = binding.value else {
+        let Some(value) = binding.value() else {
             return FlowMembers::UNKNOWN;
         };
         let declaration = binding.resolve_at;

@@ -1,4 +1,5 @@
 mod collisions;
+mod enqueue_wrappers;
 mod extract;
 mod factory_detectors;
 mod factory_false_positives;
@@ -491,3 +492,5 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
 }
 
 mod projection;
+
+mod enqueue_wrapper_exports;

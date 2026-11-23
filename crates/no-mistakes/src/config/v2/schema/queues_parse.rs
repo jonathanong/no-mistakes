@@ -47,16 +47,7 @@ where
                 })
             })
             .collect(),
-        enqueue: roles
-            .enqueue
-            .iter()
-            .map(|factory| EnqueueInput {
-                callee: factory.callee.clone(),
-                queue: factory.queue,
-                job: factory.job,
-                options: factory.options,
-            })
-            .collect(),
+        enqueue: roles.enqueue.clone(),
         worker: roles
             .worker
             .iter()
@@ -89,7 +80,7 @@ enum FactoriesInput {
 #[serde(rename_all = "camelCase", deny_unknown_fields, default)]
 struct RolesBody {
     queue: Vec<QueueEntry>,
-    enqueue: Vec<EnqueueInput>,
+    enqueue: Vec<EnqueueFactory>,
     worker: Vec<WorkerInput>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     job_scheduler: Vec<super::scheduler::JobSchedulerInput>,
@@ -114,16 +105,6 @@ struct QueueNameInput {
     callee: String,
     #[serde(default)]
     name: usize,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct EnqueueInput {
-    callee: String,
-    queue: usize,
-    job: usize,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    options: Option<usize>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -156,16 +137,7 @@ impl FactoriesInput {
                         },
                     })
                     .collect(),
-                enqueue: body
-                    .enqueue
-                    .into_iter()
-                    .map(|spec| EnqueueFactory {
-                        callee: spec.callee,
-                        queue: spec.queue,
-                        job: spec.job,
-                        options: spec.options,
-                    })
-                    .collect(),
+                enqueue: super::enqueue::validate(body.enqueue)?,
                 worker: body
                     .worker
                     .into_iter()

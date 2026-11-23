@@ -1,0 +1,29 @@
+version: 2
+projects:
+  backend:
+    type: server
+    root: .
+    queues:
+      enqueues: [producers.ts]
+      workers: [workers.ts]
+queues:
+  requiredJobOptions: [attempts]
+  factories:
+    queue:
+      - callee: createQueue
+        name: 0
+    worker:
+      - callee: createWorker
+        name: 0
+        processor: 1
+    enqueue:
+      - callee: makePartial
+        queueName: partial-jobs
+        job: { arg: 0, property: name }
+        defaults: 1
+        optionsOnReturnedCall: 1
+      - callee: makeOptions
+        queueName: partial-options
+        job: 0
+        options: { arg: 1, property: options }
+        defaults: 2

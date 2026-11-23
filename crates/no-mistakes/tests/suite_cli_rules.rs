@@ -350,3 +350,6 @@ mod cli_check_rules_no_single_enqueue_in_loop;
 
 #[path = "cli_suppression_index.rs"]
 mod cli_suppression_index;
+
+#[path = "cli_queue_factory_wrappers.rs"]
+mod cli_queue_factory_wrappers;

@@ -1,0 +1,19 @@
+version: 2
+queues:
+  requiredJobOptions: [attempts, removeOnComplete]
+  factories:
+    queue: [createQueue]
+    worker:
+      - { callee: createWorker, name: 0, processor: 1 }
+    enqueue:
+      - callee: makeEnqueue
+        queueName: wrapper-unit
+        job: { arg: 0, property: name }
+        defaults: 1
+        optionsOnReturnedCall: 1
+      - { callee: enqueuePositional, queue: 0, job: 1, options: 2 }
+      - callee: enqueueProperty
+        queue: 0
+        job: 1
+        options: { arg: 2, property: options }
+        defaults: 3

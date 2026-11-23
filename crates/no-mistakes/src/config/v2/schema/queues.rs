@@ -34,13 +34,9 @@ pub struct QueueNameFactory {
     pub name: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EnqueueFactory {
-    pub callee: String,
-    pub queue: usize,
-    pub job: usize,
-    pub options: Option<usize>,
-}
+#[path = "queues_enqueue.rs"]
+mod enqueue;
+pub use enqueue::{EnqueueFactory, EnqueuePropertySelector, EnqueueSelector};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkerFactory {
@@ -124,7 +120,7 @@ fn queue_same(left: &QueueNameFactory, right: &QueueNameFactory) -> bool {
 }
 
 fn enqueue_same(left: &EnqueueFactory, right: &EnqueueFactory) -> bool {
-    left.queue == right.queue && left.job == right.job && left.options == right.options
+    left == right
 }
 
 fn worker_same(left: &WorkerFactory, right: &WorkerFactory) -> bool {

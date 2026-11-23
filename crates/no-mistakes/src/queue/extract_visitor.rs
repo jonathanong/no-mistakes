@@ -30,6 +30,8 @@ pub(super) struct QueueVisitor<'a> {
     pub configured_factory_names: &'a [String],
     pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     pub queue_name_index: HashMap<String, usize>,
+    pub wrapper_mutations: super::enqueue_wrapper::Mutations,
+    pub wrapper_factories: super::enqueue_wrapper::Factories<'a>,
     pub enqueue_factories: HashMap<String, (usize, usize, Option<usize>)>,
     pub worker_factories: HashMap<String, (usize, usize)>,
     pub scheduler_factories: crate::fx::FxHashMap<oxc_syntax::symbol::SymbolId, usize>,
@@ -75,6 +77,8 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
         super::extract_job_id::note_call(self, call);
         self.note_enqueue_call(call);
         super::extract_factory::note_factory_call(self, call);
+        let wrapper_call = self.alloc(call);
+        super::enqueue_wrapper::note_call(self, wrapper_call);
         walk::walk_call_expression(self, call);
     }
 

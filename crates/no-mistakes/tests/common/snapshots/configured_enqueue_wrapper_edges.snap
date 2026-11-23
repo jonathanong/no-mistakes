@@ -1,0 +1,66 @@
+---
+source: crates/no-mistakes/tests/cli_queue_factory_wrappers.rs
+expression: "serde_json::to_string_pretty(&reports[0]).unwrap()"
+---
+[
+  {
+    "from": "enqueues/fixed.ts",
+    "to": "queues.ts#bulkTask",
+    "kind": "queue-enqueue"
+  },
+  {
+    "from": "enqueues/fixed.ts",
+    "to": "queues.ts#definitionTask",
+    "kind": "queue-enqueue"
+  },
+  {
+    "from": "enqueues/object.ts",
+    "to": "queues.ts#directTask",
+    "kind": "queue-enqueue"
+  },
+  {
+    "from": "enqueues/object.ts",
+    "to": "queues.ts#noDefaultsTask",
+    "kind": "queue-enqueue"
+  },
+  {
+    "from": "enqueues/object.ts",
+    "to": "queues.ts#objectTask",
+    "kind": "queue-enqueue"
+  },
+  {
+    "from": "enqueues/returned.ts",
+    "to": "queues.ts#returnedTask",
+    "kind": "queue-enqueue"
+  },
+  {
+    "from": "queues.ts#bulkTask",
+    "to": "workers/worker.ts",
+    "kind": "queue-worker"
+  },
+  {
+    "from": "queues.ts#definitionTask",
+    "to": "workers/worker.ts",
+    "kind": "queue-worker"
+  },
+  {
+    "from": "queues.ts#directTask",
+    "to": "workers/worker.ts",
+    "kind": "queue-worker"
+  },
+  {
+    "from": "queues.ts#noDefaultsTask",
+    "to": "workers/worker.ts",
+    "kind": "queue-worker"
+  },
+  {
+    "from": "queues.ts#objectTask",
+    "to": "workers/worker.ts",
+    "kind": "queue-worker"
+  },
+  {
+    "from": "queues.ts#returnedTask",
+    "to": "workers/worker.ts",
+    "kind": "queue-worker"
+  }
+]

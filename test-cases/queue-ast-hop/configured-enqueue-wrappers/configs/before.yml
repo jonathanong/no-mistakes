@@ -1,0 +1,19 @@
+version: 2
+reportUnusedDisableDirectives: ignore
+projects:
+  backend:
+    type: server
+    root: .
+    queues:
+      enqueues: [enqueues/*.ts]
+      workers: [workers/*.ts]
+queues:
+  requiredJobOptions: [attempts, removeOnComplete]
+  factories:
+    queue:
+      - callee: createQueue
+        name: 0
+    worker:
+      - callee: createWorker
+        name: 0
+        processor: 1

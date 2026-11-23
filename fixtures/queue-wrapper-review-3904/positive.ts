@@ -1,0 +1,22 @@
+import { JOB, STRING, QUEUE_NAME } from "./stable";
+import { JOB_ALIAS, STRING_ALIAS } from "./alias-stable";
+import { STRING as STAR_STRING } from "./star";
+import { queue } from "./queues";
+import { makeEnqueue, makeStringEnqueue, makeNamedEnqueue } from "./wrappers";
+
+const object = makeEnqueue(JOB);
+object({});
+const primitiveProperty = makeEnqueue({ name: STRING });
+primitiveProperty({});
+const primitive = makeStringEnqueue(STRING);
+primitive({});
+const alias = makeEnqueue(JOB_ALIAS);
+alias({});
+const stringAlias = makeStringEnqueue(STRING_ALIAS);
+stringAlias({});
+const star = makeStringEnqueue(STAR_STRING);
+star({});
+const named = makeNamedEnqueue(QUEUE_NAME, "named-queue");
+named({});
+const binding = makeNamedEnqueue(queue, "queue-binding");
+binding({});
