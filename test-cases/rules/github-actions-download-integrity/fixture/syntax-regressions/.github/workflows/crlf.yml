@@ -1,0 +1,7 @@
+name: CRLF heredoc with assignments
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: "EMPTY=''\r\nOTHER=x\r\nTOOL_URL=\"https://downloads.example.invalid/crlf-outside.tgz\"\r\ncat <<'EOF'\r\nEOF$EMPTY\r\ncurl https://downloads.example.invalid/crlf-hidden.tgz\r\nEOF\r\ncurl \"$TOOL_URL\"\r\n"

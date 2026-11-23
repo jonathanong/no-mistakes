@@ -7,8 +7,10 @@ use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::config::v2::Unanalyzable;
 
 pub(super) fn expand_uppercase(script: &str) -> String {
-    let bindings = super::assign::Bindings::collect(script, &words::parse(script));
-    prepare_max_script(script, &bindings).map_or_else(|| script.to_owned(), |rewrite| rewrite.text)
+    let parsed = words::parse(script);
+    let bindings = super::assign::Bindings::collect(script, &parsed);
+    prepare_max_script(script, &bindings, &parsed.heredoc_ranges)
+        .map_or_else(|| script.to_owned(), |rewrite| rewrite.text)
 }
 
 pub(super) fn download_hits(script: &str, helpers: &[String]) -> Vec<Hit> {

@@ -63,13 +63,6 @@ pub(super) fn line_scope_attributable(
 }
 
 fn folded_scalar(value: &str) -> bool {
-    let value = if value.starts_with('&') {
-        value
-            .split_once(char::is_whitespace)
-            .map_or("", |(_, rest)| rest.trim_start())
-    } else {
-        value
-    };
     let header = value
         .split_once('#')
         .map_or(value, |(header, _)| header)
@@ -104,7 +97,17 @@ fn run_value(line: &str) -> Option<&str> {
     let line = line.trim_start();
     let line = line.strip_prefix("- ").map_or(line, str::trim_start);
     let (key, value) = line.split_once(':')?;
-    (key.trim().trim_matches(['\'', '"']) == "run").then(|| value.trim_start())
+    (key.trim().trim_matches(['\'', '"']) == "run").then(|| without_anchor(value.trim_start()))
+}
+
+fn without_anchor(value: &str) -> &str {
+    if value.starts_with('&') {
+        value
+            .split_once(char::is_whitespace)
+            .map_or("", |(_, rest)| rest.trim_start())
+    } else {
+        value
+    }
 }
 
 fn yaml_skip(value: &str) -> bool {

@@ -1,0 +1,9 @@
+name: Anchored download skips
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: &cmd 'echo " # note"; curl https://downloads.example.invalid/anchored' # integrity-check: skip reason=external
+      - run: &unmarked 'echo " # note"; curl https://downloads.example.invalid/anchored-unmarked'
+      - run: &quoted 'echo " # integrity-check: skip reason=quoted"; curl https://downloads.example.invalid/anchored-quoted'

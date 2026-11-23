@@ -78,8 +78,9 @@ curl "${BASE_URL}/tool.tgz"
 
 Shell word splitting and dynamic argument roles cannot establish a URL proof;
 quote variable URL operands. Assignment-looking text inside comments or
-here-document data is not a binding. A here-document body is skipped, and a
-download after its terminator is still judged. An unterminated here-document
+here-document data is not a binding. Assignment substitution preserves
+here-document delimiters and bodies; their data is skipped, and a download
+after the terminator is still judged. An unterminated here-document
 is not judged. `<<<` and `<<` inside `$((...))` are not here-documents. The rule
 does not eval the shell.
 

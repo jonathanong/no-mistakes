@@ -194,6 +194,31 @@ fn github_actions_download_integrity_line_skips_match_snapshot() {
     );
 }
 
+#[test]
+fn github_actions_download_integrity_syntax_regressions_match_snapshot() {
+    let report = assert_saved_fixture_report(
+        "github_actions_download_integrity_syntax_regressions",
+        &[(
+            "line",
+            rules_path(RULE, "fixture", "syntax-regressions"),
+            rules_path(RULE, "configs", "syntax-regressions.yml"),
+        )],
+        &[],
+        &[],
+    );
+    assert_finding_locations(
+        &report["line"],
+        &[
+            (".github/workflows/anchored.yml", 8),
+            (".github/workflows/anchored.yml", 9),
+            (".github/workflows/backticks.yml", 11),
+            (".github/workflows/backticks.yml", 15),
+            (".github/workflows/crlf.yml", 7),
+            (".github/workflows/heredoc.yml", 15),
+        ],
+    );
+}
+
 fn assert_finding_locations(report: &serde_json::Value, expected: &[(&str, u64)]) {
     assert_eq!(report["exitCode"], 1, "{report}");
     let mut actual = report["report"]["rules"]

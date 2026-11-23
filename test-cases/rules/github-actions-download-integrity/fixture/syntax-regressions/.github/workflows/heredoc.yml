@@ -1,0 +1,15 @@
+name: Quoted heredoc with assignments
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          EMPTY=''
+          OTHER=x
+          TOOL_URL="https://downloads.example.invalid/outside.tgz"
+          cat <<'EOF'
+          EOF$EMPTY
+          curl https://downloads.example.invalid/tool.tgz
+          EOF
+          curl "$TOOL_URL"

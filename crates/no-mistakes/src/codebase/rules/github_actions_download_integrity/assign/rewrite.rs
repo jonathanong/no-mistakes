@@ -1,5 +1,6 @@
 use super::super::words::is_assignment;
 use super::{probe, reference_name, Bindings};
+use std::ops::Range;
 
 #[derive(Default)]
 pub(crate) struct Script {
@@ -26,10 +27,25 @@ impl Script {
         &mut self,
         line: &str,
         offset: usize,
+        heredocs: &mut &[Range<usize>],
         lookup: impl Fn(&str) -> Option<&'a str>,
     ) {
         let mut chars = line.chars().enumerate().peekable();
         while let Some((index, ch)) = chars.next() {
+            let raw = offset + index;
+            while heredocs.first().is_some_and(|range| range.end <= raw) {
+                *heredocs = &heredocs[1..];
+            }
+            if let Some(range) = heredocs.first().filter(|range| range.contains(&raw)) {
+                self.source_char(ch, raw);
+                while let Some((index, ch)) = chars.next_if(|(index, _)| offset + index < range.end)
+                {
+                    self.source_char(ch, offset + index);
+                }
+                self.quote = None;
+                self.in_word = true;
+                continue;
+            }
             if ch == '#' && self.quote.is_none() && !self.in_word {
                 self.source_char(ch, offset + index);
                 for (index, ch) in chars {
@@ -123,7 +139,11 @@ fn preserves_shell_syntax(value: &str, quote: Option<char>) -> bool {
         })
 }
 
-pub(in super::super) fn prepare_max_script(script: &str, bindings: &Bindings) -> Option<Script> {
+pub(in super::super) fn prepare_max_script(
+    script: &str,
+    bindings: &Bindings,
+    mut heredocs: &[Range<usize>],
+) -> Option<Script> {
     probe::note();
     let has_literals = bindings.has_literals();
     if !has_literals && !script.contains("\r\n") && (script.is_empty() || script.ends_with('\n')) {
@@ -136,7 +156,9 @@ pub(in super::super) fn prepare_max_script(script: &str, bindings: &Bindings) ->
             .strip_suffix('\n')
             .map_or(source, |body| body.strip_suffix('\r').unwrap_or(body));
         if has_literals {
-            out.substitute(line, offset, |name| bindings.literal(name, index + 1));
+            out.substitute(line, offset, &mut heredocs, |name| {
+                bindings.literal(name, index + 1)
+            });
         } else {
             for (index, ch) in line.chars().enumerate() {
                 out.source_char(ch, offset + index);

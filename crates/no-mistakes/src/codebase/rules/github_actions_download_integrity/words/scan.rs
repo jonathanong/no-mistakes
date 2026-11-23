@@ -1,6 +1,7 @@
 use super::heredoc;
-use super::{flush_command, push_char, skip_arithmetic, Command, Parse};
+use super::{flush_command, push_char, skip_arithmetic, Command, Parse, Range};
 
+mod comment;
 mod redirection;
 mod word;
 
@@ -20,6 +21,7 @@ struct Scan<'a> {
     current: Command,
     commands: Vec<Command>,
     pending: Option<heredoc::Opener>,
+    heredoc_ranges: Vec<Range<usize>>,
     unterminated: bool,
     stop: bool,
     collect_skips: bool,
@@ -49,6 +51,7 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
         },
         commands: Vec::new(),
         pending: None,
+        heredoc_ranges: Vec::new(),
         unterminated: false,
         stop: false,
         collect_skips,
@@ -62,6 +65,7 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
         commands: scan.commands,
         unterminated_heredoc: scan.unterminated || scan.pending.is_some(),
         skip_lines: scan.skip_lines,
+        heredoc_ranges: scan.heredoc_ranges,
     }
 }
 
@@ -95,36 +99,6 @@ impl<'a> Scan<'a> {
         }
         self.index += 2;
         self.line += 1;
-        true
-    }
-
-    /// `#` starts a comment only at the beginning of a word, outside quotes.
-    /// The newline stays for `separator`, so a here-document opener on the
-    /// same line still skips its body (`cat <<EOF # note`).
-    fn comment(&mut self, ch: char) -> bool {
-        if ch != '#' || self.quoting.is_some() || self.word_quoted || !self.word.is_empty() {
-            return false;
-        }
-        let start = self.index;
-        while self.index < self.chars.len() && self.chars[self.index] != '\n' {
-            self.index += 1;
-        }
-        if self.collect_skips
-            && !self.in_backticks
-            && !start
-                .checked_sub(1)
-                .is_some_and(|index| self.chars[index] != '\n' && self.escaped_at(index))
-            && super::super::url::skip_comment(
-                &self.chars[start + 1..self.index].iter().collect::<String>(),
-            )
-        {
-            let standalone = self.chars[..start]
-                .iter()
-                .rev()
-                .take_while(|ch| **ch != '\n')
-                .all(|ch| ch.is_whitespace());
-            self.skip_lines.push(self.line + usize::from(standalone));
-        }
         true
     }
 
@@ -163,6 +137,7 @@ impl<'a> Scan<'a> {
         if ch == '\n' {
             if let Some(opener) = self.pending.take() {
                 let body = heredoc::skip_body(self.chars, self.index, self.line, &opener);
+                self.heredoc_ranges.push(self.index + 1..body.index);
                 self.index = body.index;
                 self.line = body.line;
                 if !body.terminated {

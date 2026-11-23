@@ -40,7 +40,7 @@ pub(super) fn scan_script(
     let bindings = (!low).then(|| Bindings::collect(script, &raw));
     let expanded = bindings
         .as_ref()
-        .and_then(|bindings| prepare_max_script(script, bindings));
+        .and_then(|bindings| prepare_max_script(script, bindings, &raw.heredoc_ranges));
     let partial_bindings = bindings
         .as_ref()
         .filter(|bindings| bindings.has_partial_urls());

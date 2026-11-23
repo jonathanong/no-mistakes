@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 #[derive(PartialEq, Eq)]
 pub(super) struct Word {
     pub(super) text: String,
@@ -23,6 +25,8 @@ pub(super) struct Parse {
     pub(super) commands: Vec<Command>,
     pub(super) unterminated_heredoc: bool,
     pub(super) skip_lines: Vec<usize>,
+    // Character offsets in the unmodified shell source.
+    pub(super) heredoc_ranges: Vec<Range<usize>>,
 }
 
 pub(super) fn parse(script: &str) -> Parse {

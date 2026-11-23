@@ -27,7 +27,7 @@ pub(super) fn single_literal_binding(script: &str) -> Option<(String, String)> {
 
 pub(super) fn substitute_command(token: &str, binding: &(String, String)) -> String {
     let mut out = rewrite::Script::default();
-    out.substitute(token, 0, |name| {
+    out.substitute(token, 0, &mut &[][..], |name| {
         (name == binding.0).then_some(binding.1.as_str())
     });
     out.text
