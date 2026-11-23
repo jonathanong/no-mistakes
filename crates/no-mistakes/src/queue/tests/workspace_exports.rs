@@ -54,7 +54,10 @@ fn worker_queue_names_resolve_through_workspace_exports_wildcards() {
             report.edges
         );
         assert!(
-            report.edges.iter().all(|e| !e.to.starts_with("apps/alpha/")),
+            report
+                .edges
+                .iter()
+                .all(|e| !e.to.starts_with("apps/alpha/")),
             "billing queue must not anchor on an unrelated caller file: {:#?}",
             report.edges
         );
@@ -100,7 +103,12 @@ fn prepared_catalog_queue_analysis_resolves_workspace_exports_wildcards() {
     );
     let catalog = TsConfigCatalog::from_visible(&root, &[], &files);
     let report = analyze_project_with_prepared_facts_and_catalog_and_session(
-        &root, &catalog, &config, &[], &facts, &session,
+        &root,
+        &catalog,
+        &config,
+        &[],
+        &facts,
+        &session,
     )
     .unwrap();
     assert!(report.check.is_empty(), "{:#?}", report.check);

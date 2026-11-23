@@ -1,6 +1,4 @@
-use super::super::extract_model::{
-    FileFacts, JobOptionFinding, JobOptionSite, RequiredJobOptions,
-};
+use super::super::extract_model::{FileFacts, JobOptionFinding, JobOptionSite, RequiredJobOptions};
 use super::defaults::{index_defaults, DefaultsIndex};
 use super::retention;
 use std::collections::{BTreeSet, HashMap};

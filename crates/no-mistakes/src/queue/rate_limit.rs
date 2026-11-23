@@ -90,6 +90,7 @@ fn judge(
                 message: format!(
                     "`{queue_name}` carries more than one job ({jobs}), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits."
                 ),
+                severity: None,
             });
         }
         JobNames::Known(_) => {}

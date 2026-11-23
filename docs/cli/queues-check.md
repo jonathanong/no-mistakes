@@ -37,6 +37,7 @@ Findings use these
 | `mixed-priority` | Producers on one queue enqueue both priority 0 and a priority greater than 0. See [Mixed priority](#mixed-priority). |
 | `missing-job-option` | A producer omits one or more keys from [`queues.requiredJobOptions`](../configuration/queues.md#required-job-options). One finding lists every missing key in configuration order. `message` is `job options missing {keys}`. |
 | `unbounded-job-retention` | A queue `defaultJobOptions` or producer keeps completed or failed jobs without a bound under [`queues.unboundedJobRetention`](../configuration/queues.md#unbounded-job-retention). |
+| `job-state-as-record` | Advisory (`severity: "advisory"`). Code reads ephemeral queue job state (`getJob` -> `getState`/`isFailed`/`isCompleted` guarding `retry`/`remove`/`add`, or `getFailed`/`getCompleted`/`getJobs` feeding `add`/`addBulk`/`retry`) under [`queues.jobStateAsRecord`](../configuration/queues.md#queue-job-state-as-record-of-work). Report-only: does not fail `queues check` and moves to `advisories` in aggregate `check`. |
 
 The wait check recognizes member calls such as `this.queue.addAndWait(...)`
 and literal computed members such as `queue["addAndWait"](...)`. It also
@@ -248,6 +249,46 @@ Fix: set `removeOnComplete` and `removeOnFail` to `true`, a count, or an
 and store durable work records in the database. Exempt operator tooling or
 one-off scripts with `queues.unboundedJobRetention.allowPaths`, or suppress a
 single call with `// no-mistakes-disable-next-line queues-check`.
+
+## Queue job state as record of work
+
+Queue job state is ephemeral: jobs disappear under retention limits, Redis or
+Valkey flushes, or failover. Opt into `queues.jobStateAsRecord` to emit an
+advisory, report-only `job-state-as-record` finding (`severity: "advisory"`)
+for two patterns on resolved queue bindings:
+
+- `getJob(...)` followed by `getState()`, `isFailed()`, or `isCompleted()`
+  whose result guards `retry()`, `remove()`, or a queue `add` / `addBulk` in
+  the same function.
+- A failed or completed job listing (`getFailed`, `getCompleted`, or
+  `getJobs([...])` including `"failed"` or `"completed"`) whose results feed
+  `add`, `addBulk`, or `retry`.
+
+Unresolved receivers and non-queue objects (such as `Set.add`) abstain. Because
+the finding is advisory, `queues check` still exits `0` when only advisory
+findings are present, and aggregate `no-mistakes check` reports it under
+`advisories`.
+
+```ts
+// reported (advisory): the queue is the record of whether the work is done
+const job = await widgets.getJob(id);
+if ((await job?.getState()) === "failed") await job.retry();
+
+// reported (advisory): re-enqueue driven by the failed set
+for (const job of await widgets.getFailed(0, 100)) {
+  await widgets.add(job.name, job.data);
+}
+
+// accepted: the database decides what is pending
+for (const row of await pendingWidgets(db, 100)) {
+  await widgets.add("build", { id: row.id });
+}
+```
+
+Fix: query durable application state from the database to decide what to
+enqueue or retry. Exempt operator tooling and dashboards with
+`queues.jobStateAsRecord.allowPaths`, or suppress a single location with
+`// no-mistakes-disable-next-line queues-check`.
 
 ## Suppression
 

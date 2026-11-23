@@ -248,6 +248,24 @@ JavaScript callers can name this configuration shape with the exported
 `QueueUnboundedJobRetentionConfig` types.
 See [`queues check`](../cli/queues-check.md#unbounded-job-retention).
 
+## Queue job state as record of work
+
+`queues.jobStateAsRecord` is opt-in and disabled by default. Set it to `true`
+or pass `allowPaths` to emit advisory `job-state-as-record` findings when code
+uses queue job state or failed/completed job listings to drive retries or
+re-enqueues:
+
+```yaml
+queues:
+  jobStateAsRecord:
+    allowPaths: ["apps/admin/**"]
+```
+
+JavaScript callers can name this configuration shape with the exported
+`QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
+`QueueCheckSeverity` types.
+See [`queues check`](../cli/queues-check.md#queue-job-state-as-record-of-work).
+
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.
 Use [`queues edges`](../cli/queues-edges.md), [`queues related`](../cli/queues-related.md),

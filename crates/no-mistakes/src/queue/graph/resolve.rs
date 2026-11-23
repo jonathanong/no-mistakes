@@ -34,6 +34,13 @@ pub(in crate::queue) fn resolve_queue_relationships_with_resolver<
     );
     crate::queue::job_options::judge_into_facts(root, &mut facts);
     crate::queue::worker_rate_limit::resolve(&mut facts, resolver, &remapper);
+    crate::queue::job_state::resolve_sites(
+        &mut facts,
+        &queue_defs,
+        &definitions,
+        resolver,
+        &remapper,
+    );
     let workers = resolve_workers(&facts, &definitions, resolver, &remapper);
     builder(root, producers, workers, &facts)
 }

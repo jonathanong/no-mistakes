@@ -20,6 +20,7 @@ mod graph_model;
 mod graph_related;
 mod graph_resolution;
 mod job_options;
+mod job_state;
 mod lang;
 mod number_scope;
 mod object_bindings;
@@ -38,7 +39,7 @@ pub use graph::{
     analyze_project_with_prepared_facts_indexed,
     analyze_project_with_prepared_facts_indexed_and_catalog_and_session, RelatedDirection,
 };
-pub use graph_model::{CheckFinding, PreparedProjectReport, ProjectReport};
+pub use graph_model::{CheckFinding, CheckSeverity, PreparedProjectReport, ProjectReport};
 pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};
 pub use types::{Diagnostic, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity};

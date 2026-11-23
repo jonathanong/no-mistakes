@@ -71,6 +71,7 @@ import type {
   PlanningImpactArtifacts,
 } from "./types";
 export type { QueueRateLimitFindingKind, QueueWaitFindingKind } from "./queue-report-types";
+export type { QueueCheckSeverity } from "./queue-report-types";
 export type * from "./queue-factory-types";
 export * from "./types";
 export * from "./index-ci-infra";

@@ -30,7 +30,9 @@ fn unbounded_job_retention_findings_and_dedup_snapshot() {
         })
         .collect();
     assert!(
-        findings.iter().all(|row| row["file"] != "allowed/scripts.ts"),
+        findings
+            .iter()
+            .all(|row| row["file"] != "allowed/scripts.ts"),
         "allowPaths must skip allowed/scripts.ts: {findings:?}"
     );
     assert!(

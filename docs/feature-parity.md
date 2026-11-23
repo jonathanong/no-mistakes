@@ -492,8 +492,9 @@ a second route graph.
 TS/JS producers to virtual job nodes to workers. `queues.requiredJobOptions`
 adds `missing-job-option` when a producer omits a configured key;
 `queues.unboundedJobRetention` adds `unbounded-job-retention` when completed or
-failed jobs are kept without a bound; both are opt-in and leave default output
-unchanged. Celery, Asynq, Kafka, Active
+failed jobs are kept without a bound; `queues.jobStateAsRecord` adds advisory
+`job-state-as-record` findings when ephemeral queue job state drives retries or
+re-enqueues; all three are opt-in and leave default output unchanged. Celery, Asynq, Kafka, Active
 Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 `queue-worker` edges into `DepGraph`; query those with
 `dependents --relationship queue`. The dedicated `queues` commands project

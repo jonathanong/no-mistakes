@@ -91,7 +91,7 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
                 analyze_project(&root, args.common.tsconfig.as_deref(), &args.common.filters)
             })?;
             print_check(&report.check, format)?;
-            Ok(if report.check.is_empty() {
+            Ok(if report.check.iter().all(CheckFinding::is_advisory) {
                 ExitCode::SUCCESS
             } else {
                 ExitCode::from(1)

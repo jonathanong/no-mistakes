@@ -1,5 +1,48 @@
 use super::CheckResults;
+use crate::check_tasks::CheckTask;
+use no_mistakes::codebase::rules::RuleFinding;
+use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
+use no_mistakes::integration_tests::IntegrationFinding;
+use no_mistakes::queue::CheckFinding;
+use no_mistakes::react_traits;
 use std::time::Duration;
+
+pub(crate) struct CompletedDomainChecks {
+    pub(crate) react: CheckTask<Vec<react_traits::Violation>>,
+    pub(crate) queues: CheckTask<Vec<CheckFinding>>,
+    pub(crate) rules: CheckTask<Vec<RuleFinding>>,
+    pub(crate) integration: CheckTask<Vec<IntegrationFinding>>,
+    pub(crate) codebase: CheckTask<Vec<PreparedUniqueExportFinding>>,
+    pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
+}
+
+pub(super) fn collect_warnings(
+    root: &std::path::Path,
+    facts: &no_mistakes::codebase::check_facts::CheckFactMap,
+    config: &no_mistakes::config::v2::NoMistakesConfig,
+    domain: [Option<String>; 7],
+) -> (Vec<String>, usize) {
+    let mut warnings: Vec<String> = domain.into_iter().flatten().collect();
+    let executor_warnings = no_mistakes::codebase::postgres::executor_config_warnings(root, facts);
+    let analysis_warning_count = config.analysis_warnings.len() + executor_warnings.len();
+    warnings.extend(executor_warnings);
+    warnings.extend(config.analysis_warnings.iter().cloned());
+    (warnings, analysis_warning_count)
+}
+
+pub(super) fn timings(d: [Duration; 8]) -> Vec<(&'static str, Duration)> {
+    const NAMES: [&str; 8] = [
+        "discover",
+        "parse_extract",
+        "react",
+        "queues",
+        "rules",
+        "integration",
+        "codebase",
+        "filesystem_rules",
+    ];
+    NAMES.into_iter().zip(d).collect()
+}
 
 pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
     let warnings = warnings.into_iter().flatten().collect();
@@ -21,15 +64,6 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         include_suppressed: false,
         unproven_member_query_sql: 0,
         accepted_bounds: Vec::new(),
-        timings: vec![
-            ("discover", Duration::ZERO),
-            ("parse_extract", Duration::ZERO),
-            ("react", Duration::ZERO),
-            ("queues", Duration::ZERO),
-            ("rules", Duration::ZERO),
-            ("integration", Duration::ZERO),
-            ("codebase", Duration::ZERO),
-            ("filesystem_rules", Duration::ZERO),
-        ],
+        timings: timings([Duration::ZERO; 8]),
     }
 }

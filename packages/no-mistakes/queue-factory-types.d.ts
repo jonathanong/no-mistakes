@@ -60,3 +60,10 @@ export interface QueueUnboundedJobRetentionOptions {
 }
 
 export type QueueUnboundedJobRetentionConfig = boolean | QueueUnboundedJobRetentionOptions;
+
+/** Configuration for `queues.jobStateAsRecord` in the selected config file. */
+export interface QueueJobStateAsRecordOptions {
+  allowPaths?: string[];
+}
+
+export type QueueJobStateAsRecordConfig = boolean | QueueJobStateAsRecordOptions;

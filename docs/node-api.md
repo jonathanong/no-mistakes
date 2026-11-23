@@ -509,6 +509,11 @@ the findings array; their warnings stay on the queue report diagnostics.
 findings through `queueCheck()`, `check()`, and `analyzeProject()`. Exported
 types `QueueJobRetentionKey`, `QueueUnboundedJobRetentionOptions`, and
 `QueueUnboundedJobRetentionConfig` describe its YAML shape.
+`queues.jobStateAsRecord` is opt-in discovered configuration emitting advisory
+`job-state-as-record` findings (`severity: "advisory"` in `queueCheck()` and
+`advisories` in `check()` / `analyzeProject()`). Exported types
+`QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
+`QueueCheckSeverity` describe its configuration and finding severity.
 
 ## Queue factory configuration types
 

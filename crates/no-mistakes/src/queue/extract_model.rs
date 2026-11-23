@@ -144,4 +144,6 @@ pub(crate) struct FileFacts {
     pub worker_import_aliases: HashMap<String, String>,
     pub worker_namespace_exports: HashMap<String, (String, String)>,
     pub unbounded_job_retention: Option<UnboundedRetentionPolicy>,
+    pub job_state_sites: Vec<super::job_state::JobStateSite>,
+    pub job_state_as_record: Option<crate::config::v2::schema::JobStateAsRecordConfig>,
 }

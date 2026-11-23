@@ -44,10 +44,11 @@ pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopL
         file.required_job_options.clone_from(&policy);
         file.unbounded_job_retention.clone_from(&retention);
     }
+    super::job_state::stamp(facts, queues);
 }
 
 pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
-    let mut out = Vec::new();
+    let mut out = super::job_state::findings(root, facts);
     for (path, file) in facts {
         for check in &file.checks {
             out.push(CheckFinding {
@@ -58,6 +59,7 @@ pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> 
                 queue_name: None,
                 job: check.job.clone(),
                 message: check.message.clone(),
+                severity: None,
             });
         }
         for finding in &file.job_option_findings {
@@ -72,6 +74,7 @@ pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> 
                 queue_name: finding.queue_name.clone(),
                 job: finding.job.clone(),
                 message: finding.message.clone(),
+                severity: None,
             });
         }
     }

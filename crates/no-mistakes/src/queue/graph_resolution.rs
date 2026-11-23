@@ -21,8 +21,8 @@ pub(super) fn queue_definitions(
 #[path = "graph_resolution_producers.rs"]
 mod producers;
 
-use producers::local_queues;
 pub(super) use producers::resolve_producers;
+pub(in crate::queue) use producers::{local_queues, resolved_binding};
 
 pub(super) fn resolve_workers<R: ImportResolverFacade>(
     facts: &HashMap<PathBuf, FileFacts>,

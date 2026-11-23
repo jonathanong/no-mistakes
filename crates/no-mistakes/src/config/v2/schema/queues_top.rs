@@ -1,4 +1,7 @@
 use super::queues::{deserialize_factories, serialize_factories};
+use super::queues_job_state::{
+    deserialize_job_state_as_record, serialize_job_state_as_record, JobStateAsRecordConfig,
+};
 use super::queues_retention::{
     deserialize_unbounded_retention, serialize_unbounded_retention, UnboundedJobRetentionConfig,
 };
@@ -27,4 +30,11 @@ pub struct QueuesTopLevelConfig {
         serialize_with = "serialize_unbounded_retention"
     )]
     pub unbounded_job_retention: Option<UnboundedJobRetentionConfig>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_job_state_as_record",
+        serialize_with = "serialize_job_state_as_record"
+    )]
+    pub job_state_as_record: Option<JobStateAsRecordConfig>,
 }

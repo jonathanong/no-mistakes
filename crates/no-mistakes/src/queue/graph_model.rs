@@ -10,6 +10,13 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CheckSeverity {
+    Error,
+    Advisory,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CheckFinding {
@@ -20,6 +27,14 @@ pub struct CheckFinding {
     pub queue_name: Option<String>,
     pub job: Option<String>,
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub severity: Option<CheckSeverity>,
+}
+
+impl CheckFinding {
+    pub fn is_advisory(&self) -> bool {
+        self.severity == Some(CheckSeverity::Advisory)
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -62,6 +62,7 @@ pub(super) fn queue_cycles(
                 message: format!(
                     "queue cycle {cycle} has no declared terminator; review it before shipping"
                 ),
+                severity: None,
             }
         })
         .collect()
@@ -98,6 +99,7 @@ pub(super) fn self_dedup_findings(
                     queue_name: Some(source.queue_name.clone()),
                     job: producer.site.job.clone(),
                     message: "enqueue of the active job reuses its deduplication id or job id, so the queue drops the add while that job is active".to_string(),
+                    severity: None,
                 });
             }
             continue;

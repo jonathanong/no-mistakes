@@ -130,6 +130,7 @@ fn extract_queue_facts<'a>(
     super::number_scope::finish_opaque(&mut visitor.facts);
     super::extract_processor::finish(&mut visitor);
     super::job_options::finish(&mut visitor.facts, &visitor.object_bindings);
+    super::job_state::collect(&mut visitor, program);
     visitor
 }
 

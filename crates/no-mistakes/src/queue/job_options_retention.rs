@@ -147,7 +147,10 @@ fn format_producer_message(
 ) -> String {
     let mut parts = Vec::new();
     if !explicit_unbounded.is_empty() {
-        parts.push(format!("{} kept without a bound", format_keys(explicit_unbounded)));
+        parts.push(format!(
+            "{} kept without a bound",
+            format_keys(explicit_unbounded)
+        ));
     }
     if !unset.is_empty() {
         parts.push(format!("{} unset", format_keys(unset)));

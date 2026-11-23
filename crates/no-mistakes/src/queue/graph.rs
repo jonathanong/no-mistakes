@@ -183,9 +183,8 @@ fn resolve_legacy_queue_relationships<T>(
     let facts = queue_project_facts_from_shared(shared, filter, root);
     let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let base_resolver = queue_import_resolver(tsconfig, root, &visible_files);
-    let workspace =
-        crate::codebase::workspaces::load_indexed_from_files(root, shared.files())
-            .unwrap_or_default();
+    let workspace = crate::codebase::workspaces::load_indexed_from_files(root, shared.files())
+        .unwrap_or_default();
     let resolver = crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(
         &base_resolver,
         &workspace,
