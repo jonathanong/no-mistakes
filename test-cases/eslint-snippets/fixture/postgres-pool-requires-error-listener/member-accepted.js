@@ -26,3 +26,9 @@ export class StaticPool {
     this.pool.on("error", console.error);
   }
 }
+
+export class FieldListener {
+  pool = new Pool();
+
+  listen = () => this.pool.on("error", console.error);
+}

@@ -18,3 +18,16 @@ new DynamicPool();
 
 const { connection: { Pool: OverriddenPool } } = { connection: pg, ...getOverrides() };
 new OverriddenPool();
+
+const { connection: { Pool: GetterPool } } = {
+  get connection() {
+    return pg;
+  },
+};
+new GetterPool();
+
+const { connection: { Pool: ReplacedPool } } = { connection: pg, [key]: {} };
+new ReplacedPool();
+
+const { connections: [{ Pool: ArrayPool }] } = { connections: [pg] };
+new ArrayPool();
