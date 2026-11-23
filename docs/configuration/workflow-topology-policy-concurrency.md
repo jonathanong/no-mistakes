@@ -1,7 +1,7 @@
 # Workflow topology concurrency options
 
-This page documents the `concurrencyPolicy` and
-`forbidConcurrencyGroupCollisions` options of the
+This page documents the `concurrencyPolicy`, `forbidConcurrencyGroupCollisions`,
+and `forbidReusableWorkflowConcurrency` options of the
 [`workflow-topology-policy` rule](../rules/workflow-topology-policy.md).
 
 ## `concurrencyPolicy`
@@ -100,3 +100,69 @@ concurrency:
 Give each owner its own group. Include `${{ github.workflow }}` or another
 value that differs per workflow, and use different text for a workflow lock
 and a job lock in the same file.
+
+
+## `forbidReusableWorkflowConcurrency`
+
+`false` by default. Set it to `true` to report workflow-level `concurrency`
+in any workflow whose triggers include `workflow_call`. This applies to
+scalar and mapping locks, independent of the group expression or
+`cancel-in-progress` value. Other triggers on the same workflow do not exempt it.
+Job-level concurrency is allowed, as are workflow locks on ordinary callers.
+
+```yaml
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      forbidReusableWorkflowConcurrency: true
+```
+
+A reusable workflow holding its own workflow lock can wait on or cancel its
+caller when their group values coincide. This counterexample reports on the
+`concurrency` key:
+
+```yaml
+on: workflow_call
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo example
+```
+
+Move the lock to the caller, or use job-level concurrency instead. For example,
+this reusable workflow is accepted:
+
+```yaml
+on: workflow_call
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: "example-build-${{ github.ref }}"
+      cancel-in-progress: false
+    steps:
+      - run: echo example
+```
+
+The lock intent map cannot require absence of a workflow lock, and collision
+detection only compares group text. Neither replaces this trigger-based ban.
+The exported `WorkflowTopologyPolicyOptions` type describes the YAML options
+used by CLI `check`, async `check({ root, config })`, and `analyzeProject()`
+check reports; no extra invocation argument is needed.
+
+Use the standard custom `message` or suppress an intentional exception at the
+reported workflow-level key:
+
+```yaml
+on: workflow_call
+# no-mistakes-disable-next-line workflow-topology-policy -- isolated lock for this example
+concurrency: example-isolated
+```
+
+`no-mistakes-disable-line` on that key and `no-mistakes-disable-file` before the
+first code token also apply. Suppression does not require disabling job locks.

@@ -1,0 +1,6 @@
+name: Caller-only lock
+on: push
+concurrency: caller-build
+jobs:
+  build:
+    uses: ./.github/workflows/job-only.yml

@@ -41,3 +41,28 @@ fn check_json_snapshot_workflow_policy_bans_secrets() {
     .collect();
     assert_saved_fixture("workflow_policy_bans_secrets", &cases);
 }
+
+#[test]
+fn check_json_snapshot_workflow_policy_bans_reusable_concurrency() {
+    let cases: Vec<_> = [
+        ("banned", "reusable-concurrency.yml"),
+        ("disabled-false", "reusable-concurrency-false.yml"),
+        ("custom-message", "reusable-concurrency-custom.yml"),
+        ("disabled", "reusable-concurrency-disabled.yml"),
+        ("invalid-options", "reusable-concurrency-invalid.yml"),
+    ]
+    .into_iter()
+    .map(|(label, config)| {
+        (
+            label,
+            rules_path(
+                "workflow-topology-policy",
+                "fixture",
+                "reusable-concurrency",
+            ),
+            rules_path("workflow-topology-policy", "configs", config),
+        )
+    })
+    .collect();
+    assert_saved_fixture("workflow_policy_bans_reusable_concurrency", &cases);
+}

@@ -42,6 +42,7 @@ pub(crate) struct Options {
     pub(crate) step_orders: Vec<StepOrderRule>,
     pub(crate) concurrency_policy: BTreeMap<String, concurrency_compile::ConcurrencyIntent>,
     pub(crate) forbid_concurrency_group_collisions: bool,
+    pub(crate) forbid_reusable_workflow_concurrency: bool,
     pub(crate) secret_inventory: Option<secret_inventory::SecretInventory>,
 }
 

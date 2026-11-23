@@ -1,12 +1,36 @@
 use super::concurrency_compile::CompiledIntent;
 use super::concurrency_scope::actual_scope;
-use super::{finding, FindingOwner, LocatedFinding};
+use super::{finding, workflow_finding, FindingOwner, LocatedFinding};
 use crate::codebase::workflow_topology::model::{
     ConcurrencyValue, WorkflowConcurrency, WorkflowTopology,
 };
+use crate::config::source_locations::ConfigPath;
+use rayon::prelude::*;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
+
+pub(super) fn lint_reusable_workflows(topology: &WorkflowTopology) -> Vec<LocatedFinding> {
+    topology
+        .workflows
+        .par_iter()
+        .filter(|workflow| {
+            workflow.concurrency.is_some()
+                && workflow
+                    .triggers
+                    .iter()
+                    .any(|trigger| trigger.event == "workflow_call")
+        })
+        .map(|workflow| {
+            let mut finding = workflow_finding(
+                &workflow.path,
+                "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.".to_string(),
+            );
+            finding.path = ConfigPath::default().key("concurrency");
+            finding
+        })
+        .collect()
+}
 
 pub(super) fn lint(
     topology: &WorkflowTopology,

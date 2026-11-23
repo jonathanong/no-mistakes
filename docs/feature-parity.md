@@ -1,6 +1,11 @@
 # Feature Parity
 
 GitHub Actions `workflow-topology-policy` supports opt-in
+[`forbidReusableWorkflowConcurrency`](configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency)
+with identical workflow-level locations and suppression in Rust, CLI, and async
+N-API check reports. Job-level locks remain allowed.
+
+GitHub Actions `workflow-topology-policy` supports opt-in
 [`forbiddenActivityTypes`](configuration/workflow-topology-policy-activity-types.md)
 with the same explicit trigger matching, event filters, source locations, and
 suppressions in Rust, CLI `check`, async Node `check()`, and `analyzeProject()`

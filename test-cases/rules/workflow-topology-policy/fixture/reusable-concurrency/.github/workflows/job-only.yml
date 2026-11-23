@@ -1,0 +1,11 @@
+name: Job-only lock
+on:
+  workflow_call:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: job-build
+      cancel-in-progress: false
+    steps:
+      - run: echo build

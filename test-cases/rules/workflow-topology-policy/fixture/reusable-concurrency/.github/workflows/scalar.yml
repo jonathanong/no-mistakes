@@ -1,0 +1,8 @@
+name: Reusable scalar
+on: workflow_call
+concurrency: scalar-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
