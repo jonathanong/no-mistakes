@@ -5,6 +5,7 @@ import plugin, {
   type PostgresNoExecutorAdapterMode,
   type PostgresNonWritingCallee,
   type PostgresNoExecutorAdapterOptions,
+  type PostgresPoolRequiresErrorListenerOptions,
 } from "../src/index.js";
 import pluginRequire = require("../src/index.js");
 
@@ -41,6 +42,16 @@ export const invalidAllowUndefinedLocale: NoLocaleLessDateFormatOptions = {
 
 export const rule = plugin.rules?.["postgres-no-executor-adapter"];
 export const commonJsRule = pluginRequire.rules?.["postgres-no-executor-adapter"];
+
+export const poolListenerOptions: PostgresPoolRequiresErrorListenerOptions = {
+  extraModules: ["@example/pg-compatible"],
+};
+export const defaultPoolListenerOptions: pluginRequire.PostgresPoolRequiresErrorListenerOptions =
+  {};
+export const invalidPoolListenerOptions: PostgresPoolRequiresErrorListenerOptions = {
+  // @ts-expect-error Additional modules must be strings.
+  extraModules: [true],
+};
 
 // @ts-expect-error Unknown mode must fail at the declaration boundary.
 export const invalid: PostgresNoExecutorAdapterMode = "quiet";

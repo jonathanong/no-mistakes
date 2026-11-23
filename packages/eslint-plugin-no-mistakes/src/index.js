@@ -50,6 +50,7 @@ const rules = {
   "postgres-no-manual-transaction": require("./rules/postgres-no-manual-transaction"),
   "postgres-no-nonliteral-sql-registry-key": require("./rules/postgres-no-nonliteral-sql-registry-key"),
   "postgres-no-unbounded-query-fanout": require("./rules/postgres-no-unbounded-query-fanout"),
+  "postgres-pool-requires-error-listener": require("./rules/postgres-pool-requires-error-listener"),
   "react-no-nullish-react-node": require("./rules/react-no-nullish-react-node"),
   "react-no-use-promise-resolve": require("./rules/react-no-use-promise-resolve"),
   "require-options-on-imported-call": require("./rules/require-options-on-imported-call"),
