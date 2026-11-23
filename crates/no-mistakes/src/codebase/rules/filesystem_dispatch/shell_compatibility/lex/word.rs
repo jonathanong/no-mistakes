@@ -46,6 +46,7 @@ impl<'a> Lexer<'a> {
                     double_quoted = !double_quoted;
                     self.advance();
                 }
+                b'$' if !double_quoted && self.take("$'") => self.skip_ansi_quote(),
                 b'$' => self.expansion(&mut word, double_quoted),
                 b'`' => {
                     word.dynamic = true;
@@ -81,6 +82,7 @@ impl<'a> Lexer<'a> {
                     return literal;
                 }
                 _ => {
+                    self.skip_literal_array_index();
                     let item = self.word();
                     literal |= !item.dynamic;
                     references.extend(item.refs);
@@ -88,6 +90,28 @@ impl<'a> Lexer<'a> {
             }
         }
         literal
+    }
+
+    fn skip_literal_array_index(&mut self) {
+        if let Some(index) = self.rest().strip_prefix('[') {
+            let suffix = index.trim_start_matches(|ch: char| ch.is_ascii_digit());
+            if suffix.len() < index.len() && suffix.starts_with("]=") {
+                self.offset += 3 + index.len() - suffix.len();
+            }
+        }
+    }
+
+    fn skip_ansi_quote(&mut self) {
+        while let Some(byte) = self.current() {
+            match byte {
+                b'\\' => self.escape(),
+                b'\'' => {
+                    self.advance();
+                    break;
+                }
+                _ => self.advance(),
+            }
+        }
     }
 
     fn expansion(&mut self, word: &mut Word<'a>, double_quoted: bool) {

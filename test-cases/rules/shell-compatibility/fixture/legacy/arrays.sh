@@ -13,6 +13,10 @@ collect "${other[@]}"
 collect "${label:-café}" ${items[@]+"${items[@]}"}
 items=('' stable)
 collect "${items[@]}"
+items=([0]=stable)
+collect "${items[@]}"
+items=($'it\'s stable')
+collect "${items[@]}"
 items=(
   # reset
 ); collect "${items[@]}"

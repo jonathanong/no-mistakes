@@ -237,8 +237,6 @@ Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
 
-### Shell compatibility
-
 [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) runs only on
 paths matched by `options.files`. [`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md)
 selects `.zsh` files and zsh shebangs and accepts additional `options.files`
