@@ -114,8 +114,7 @@ graph. Details:
   reader would otherwise break, such as an intentionally odd fixture: one line,
   pointing to the doc when one exists. Prefer a regression test over a comment.
 - In coverage-gated code, run focused coverage early after adding defensive
-  branches; prefer small helpers or refactors when they avoid hard-to-cover
-  branches.
+  branches; prefer small helpers or refactors that avoid hard-to-cover ones.
 - When rejecting an automated review suggestion, add the rationale to the PR's
   Shepherd Journal before resolving the thread.
 - Every `no-mistakes` rule supports `no-mistakes-disable-file` (never
@@ -160,6 +159,7 @@ in that PR.
   `check_json_snapshot` for a saved fixture. ESLint plugin fixture diagnostics
   use Vitest `toMatchFileSnapshot`. Review that diff like code. Regenerate only
   with `INSTA_UPDATE=1` or `vitest run -u`.
+- Classify each PR per [change classes](docs/development/change-classes.md).
 
 ## Agent Best Practices
 
