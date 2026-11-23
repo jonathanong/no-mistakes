@@ -189,9 +189,11 @@ files (empty `checkedPathPatterns` checks every file).
 
 ### `playwright-no-raw-scroll-pagination`
 
-`cursorParams?: string[]` (default `["after", "cursor"]`) and
-`scrollHelper?: string` (default `""`; interpolated into the report message
-when set).
+`cursorParams?: string[]` (default `["after", "cursor"]`),
+`scrollHelper?: string` (default `""`), and optional
+`sentinelLocatorNames?: string[]` and `sentinelTestIds?: string[]` to check
+`scrollIntoViewIfNeeded()` on configured pagination sentinels.
+See [the rule reference](eslint-rules/playwright-no-raw-scroll-pagination.md).
 
 ### `playwright-no-swallowed-visibility`
 
