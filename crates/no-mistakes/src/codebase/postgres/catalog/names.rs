@@ -25,7 +25,7 @@ fn parts(raw: &str) -> Vec<String> {
     parts
 }
 
-pub(super) fn normalize_identifier(identifier: &str) -> String {
+pub(crate) fn normalize_identifier(identifier: &str) -> String {
     let part = parts(identifier).pop().unwrap_or_default();
     if part.starts_with('"') && part.ends_with('"') && part.len() >= 2 {
         part[1..part.len() - 1].replace("\"\"", "\"")

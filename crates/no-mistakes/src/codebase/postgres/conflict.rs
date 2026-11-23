@@ -12,7 +12,9 @@ pub(in crate::codebase::postgres) use prepared::{
     analyze_parsed, reliable_chunk_tokens, ConflictChunks,
 };
 mod pinned;
-pub use pinned::{expression_is_constant, SqlPinnedRelation};
+pub use pinned::{
+    expression_is_constant, SqlPinnedJoinEquality, SqlPinnedRelation, SqlPinnedSource,
+};
 mod raw;
 mod scope;
 pub use scope::SqlSourceRelation;
@@ -46,9 +48,9 @@ pub enum SqlConflictTarget {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SqlInsertSourceShape {
     pub multi_row: bool,
-    /// Set when the source reads one relation pinned by constant equalities; a catalog unique
-    /// key among `columns` then proves a single row.
-    pub pinned_relation: Option<SqlPinnedRelation>,
+    /// Set when the source reads one or more inner-joined plain relations whose top-level
+    /// equalities may bound every relation to one row via catalog unique keys.
+    pub pinned_source: Option<SqlPinnedSource>,
     /// Select-list expressions by position, for positional `ORDER BY`; `None` with a wildcard.
     pub select_list: Option<Vec<String>>,
     pub order: Option<Vec<CanonicalOrderKey>>,
@@ -120,7 +122,7 @@ fn analyze_insert(
         .map_or(SqlInsertSourceShape::default(), |query| {
             SqlInsertSourceShape {
                 multi_row: query_is_potentially_multi_row(query, binds),
-                pinned_relation: pinned::pinned_relation(query, binds),
+                pinned_source: pinned::pinned_source(query, binds),
                 select_list: single_row::select_list(query.body.as_ref()),
                 order: query.order_by.as_ref().and_then(canonical_order_keys),
                 projections: projection_map(insert, query.body.as_ref()),

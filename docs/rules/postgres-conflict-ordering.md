@@ -126,7 +126,12 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 ## What it catches
 
-See [details](postgres-conflict-ordering-proof.md). Default-on finding changes are
+See [details](postgres-conflict-ordering-proof.md). Sources that provably yield at most
+one row need no `ORDER BY`, including inner/cross joins where top-level `AND` equalities
+in `WHERE` and `ON` pin every column of a catalog unique key on every joined table (see
+[single-row sources](postgres-conflict-ordering-proof.md#single-row-sources-and-constant-keys));
+outer joins, `OR` predicates, non-unique join columns, and partly pinned keys stay
+multi-row. Default-on finding changes are
 separate from the opt-in SQL verdict ledger and are listed in
 [the migration note](../migrations/postgres-conflict-ordering-findings.md).
 

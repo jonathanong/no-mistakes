@@ -195,4 +195,4 @@ impl SchemaCatalog {
     }
 }
 
-pub(crate) use names::{decoded_parts, normalize_table_name};
+pub(crate) use names::{decoded_parts, normalize_identifier, normalize_table_name};

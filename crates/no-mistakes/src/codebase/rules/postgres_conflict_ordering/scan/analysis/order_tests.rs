@@ -33,6 +33,51 @@ fn catalog_unique_keys_decide_whether_equalities_pin_one_row() {
 }
 
 #[test]
+fn joined_unique_keys_propagate_pins_to_a_fixpoint() {
+    let catalog = catalog("fail-single-row-lookalikes");
+    let pins = |select: &str| {
+        let sql = format!(
+            "INSERT INTO order_archive (order_id, total) {select} ON CONFLICT (order_id) DO NOTHING"
+        );
+        let insert = crate::codebase::postgres::analyze_conflict_inserts(&sql)
+            .unwrap()
+            .remove(0);
+        order::pins_one_row(&insert, &catalog)
+    };
+    // Both join directions: orders -> order_lines and order_lines -> orders.
+    assert!(pins(
+        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON l.order_id = o.id WHERE o.id = $1 AND l.line_no = $2"
+    ));
+    assert!(pins(
+        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON o.id = l.order_id WHERE l.order_id = $1 AND l.line_no = $2"
+    ));
+    // Transitive constant equality through a non-yet-proven side before row uniqueness resolves.
+    assert!(pins(
+        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON o.id = l.order_id WHERE l.order_id = $1 AND l.line_no = $2 AND o.total = l.total"
+    ));
+    // Self-join on a unique key.
+    assert!(pins(
+        "SELECT a.id, b.total FROM orders a JOIN orders b ON b.id = a.parent_id WHERE a.id = $1"
+    ));
+    // Controls that must stay multi-row.
+    assert!(!pins(
+        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON l.order_id = o.id WHERE o.id = $1"
+    ));
+    assert!(!pins(
+        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON l.order_id = o.id WHERE o.total = $1 AND l.line_no = $2"
+    ));
+    assert!(!pins(
+        "SELECT o.id, l.total FROM orders o LEFT JOIN order_lines l ON l.order_id = o.id WHERE o.id = $1 AND l.line_no = $2"
+    ));
+    assert!(!pins(
+        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON l.order_id = o.id WHERE (o.id = $1 OR o.id = $2) AND l.line_no = $3"
+    ));
+    assert!(!pins(
+        "SELECT o.id, d.total FROM orders o JOIN drafts d ON d.id = o.id WHERE o.id = $1"
+    ));
+}
+
+#[test]
 fn positional_references_resolve_through_the_select_list() {
     let source = SqlInsertSourceShape {
         select_list: Some(vec!["i.id".to_string(), "lower(i.note)".to_string()]),

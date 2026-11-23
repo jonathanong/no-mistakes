@@ -37,14 +37,20 @@ one row because tied rows can all be returned. The rule accepts only these shape
   a recovered position: a user-authored identifier spelled `sql_placeholder_1` is a column.
   A `WHERE` clause never changes this. A set-returning function such as
   `unnest` or `generate_series` can expand it, so it is not single-row;
-- a `SELECT` from one plain table (no join, CTE shadowing or table function) whose
-  top-level `AND` conjuncts equate every column of one catalog unique key (valid, ready,
-  immediate, non-partial) to a literal or bound parameter;
+- a `SELECT` from one plain table, or several plain tables combined only with `JOIN` /
+  `INNER JOIN ... ON`, `CROSS JOIN`, or comma joins (no outer join, `USING`, CTE shadowing,
+  column-list alias, `GROUPING SETS`/`CUBE`/`ROLLUP`, or table function), where top-level
+  `AND` equalities in `WHERE` or inner-join `ON` pin every column of one catalog unique key
+  (valid, ready, live, immediate, non-partial) on every table — either directly to a literal or
+  bound parameter, or to a column of another table proven to hold a single value (iterated to a
+  fixed point). Unqualified column names count only in a single-table `FROM`; joined tables must
+  qualify their columns;
 - a literal `LIMIT 0`/`LIMIT 1`, `FETCH FIRST [1] ROW ONLY`, or
   `FETCH FIRST 0 ROWS WITH TIES` (which returns no rows).
 
-Anything else, including `OR` filters, partial unique indexes, a partly pinned composite key
-and `LIMIT $1`, stays multi-row and fail-closed. A positional `ORDER BY 1, 2` maps to the
+Anything else, including outer joins (`LEFT`/`RIGHT`/`FULL JOIN`), `OR` filters in `WHERE` or
+`ON`, non-unique join columns, partial unique indexes, a partly pinned composite key, and
+`LIMIT $1`, stays multi-row and fail-closed. A positional `ORDER BY 1, 2` maps to the
 select list. A key that is a literal or bound parameter is the same in every row, so the
 `ORDER BY` may include it or omit it; the remaining keys must still lead in catalog order.
 This covers a `${...}` placeholder in a recovered template literal, bare or cast, but only

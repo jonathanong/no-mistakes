@@ -1,0 +1,99 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            { "expression": "id", "descending": false, "nullsFirst": false }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        },
+        "orders_code_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            { "expression": "code", "descending": false, "nullsFirst": false }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": { "columns": ["id"] }
+    },
+    "order_lines": {
+      "indexes": {
+        "order_lines_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "order_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "line_no",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": { "columns": ["order_id", "line_no"] }
+    },
+    "order_line_archive": {
+      "indexes": {
+        "order_line_archive_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "order_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "line_no",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": { "columns": ["order_id", "line_no"] }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "extensions": {},
+  "functions": {},
+  "policies": {}
+}
