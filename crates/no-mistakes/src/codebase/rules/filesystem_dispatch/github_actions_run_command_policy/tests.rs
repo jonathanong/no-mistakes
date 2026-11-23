@@ -230,3 +230,155 @@ fn standalone_and_diagnostics_entrypoints_match_saved_fixtures() {
     assert!(diag.findings.is_empty());
     assert_eq!(diag.advisories.len(), 4);
 }
+
+#[test]
+fn covers_default_messages_any_scope_per_pattern_message_and_yaml_shapes() {
+    use super::runs::check_source;
+    use crate::config::v2::Unanalyzable;
+
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [gh, api]
+    valueFlags: [-f, -f, --method]
+    whenAnyArgs: [-f]
+    requireAnyArgs: [--method, -X]
+    message: "   "
+  - command: [gh, api]
+    forbidArgPatterns:
+      - pattern: 'secret'
+        scope: any
+        message: "Do not pass secrets on the command line."
+      - pattern: 'legacy'
+  - command: [git, push]
+    whenAnyArgs: [origin]
+    requireArgs: [HEAD, [--force-with-lease, main]]
+"#,
+    );
+    // Invalid YAML produces empty diagnostics.
+    let invalid = check_source(
+        ".github/workflows/bad.yml",
+        "jobs: [",
+        false,
+        &compiled,
+        Unanalyzable::Advise,
+        None,
+    );
+    assert!(invalid.findings.is_empty() && invalid.advisories.is_empty());
+
+    // Folded scalar, flow-style steps, default messages, and per-pattern messages.
+    let yaml = "\u{feff}name: Shapes\non: push\njobs:\n  folded:\n    runs-on: ubuntu-latest\n    steps:\n      - run: >\n          gh api\n          -f=x=1\n          secret\n          legacy\n      - run: >\n          git push origin\n  flow:\n    runs-on: ubuntu-latest\n    steps: [{ run: 'gh api -f x=1 repos/o/r' }, { run: 'gh api \"unclosed' }, { run: 'eval x' }]\n";
+    let out = check_source(
+        ".github/workflows/shapes.yml",
+        yaml,
+        false,
+        &compiled,
+        Unanalyzable::Advise,
+        None,
+    );
+    assert!(out
+        .findings
+        .iter()
+        .any(|f| f.message.contains("Pass one of those arguments")));
+    assert!(out.findings.iter().any(|f| f
+        .message
+        .contains("Do not pass secrets on the command line.")));
+    assert!(out
+        .findings
+        .iter()
+        .any(|f| f.message.contains("Rewrite the `gh api` invocation")));
+    assert!(out
+        .findings
+        .iter()
+        .any(|f| f.message.contains("Add `HEAD` to the `git push` command.")));
+    assert_eq!(out.advisories.len(), 2);
+}
+
+#[test]
+fn covers_shell_c_backticks_nesting_and_matcher_edges() {
+    let compiled = default_policy();
+    let hits = scan_script(
+        r#"
+FOO=bar
+bash scripts/build.sh
+bash -e
+bash -o errexit -c 'git commit -m hi'
+bash --command 'gh api -f x=1 repos/o/r'
+echo $(echo $(echo $(echo $(echo $(git commit -m deep)))))
+echo $(echo $(echo $(echo $(bash -c 'git commit -m deep'))))
+OUT=`gh api -f x=1 repos/o/r`
+`echo gh` api repos/o/r
+gh "$SUBCMD" repos/o/r
+git -- commit -m hi
+git -c
+git
+gh api -f x=1 $EXTRA repos/o/r
+git commit "$@" -m hi
+git commit "$*" -m hi
+git commit "${FLAGS[*]}" -m hi
+gh api -- repos/o/r "repos/o/r?a=1"
+"#,
+        &compiled,
+    );
+    assert!(hits
+        .iter()
+        .any(|h| matches!(h.kind, HitKind::MissingRequired { .. })));
+    assert!(hits
+        .iter()
+        .any(|h| matches!(h.kind, HitKind::MissingAnyRequired { .. })));
+    assert!(hits
+        .iter()
+        .any(|h| matches!(h.kind, HitKind::ForbiddenArg { .. })));
+    assert!(hits
+        .iter()
+        .any(|h| matches!(h.kind, HitKind::Unanalyzable { .. })));
+}
+
+#[test]
+fn covers_option_validation_include_filter_and_config_unanalyzable() {
+    for (yaml, needle) in [
+        (
+            "commands: [{ command: [gh, api], forbidArgPatterns: [{ pattern: '' }] }]",
+            "must be non-empty",
+        ),
+        (
+            "commands: [{ command: [''], requireArgs: ['--x'] }]",
+            "non-empty token",
+        ),
+        (
+            "commands: [{ command: [gh, api], requireArgs: [[foo, bar], [-c, x], [-c, y]] }]",
+            "__valid__",
+        ),
+    ] {
+        let opts: Options = serde_yaml::from_str(yaml).unwrap();
+        let res = options::compile(opts);
+        if needle == "__valid__" {
+            assert!(res.is_ok());
+        } else {
+            assert!(format!("{:#}", res.err().unwrap()).contains(needle));
+        }
+    }
+
+    let base = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules")
+            .join(RULE_ID),
+    );
+    let reported_root = base.join("fixture/reported");
+    let mut config =
+        load_v2_config(&reported_root, Some(&base.join("configs/policy.yml"))).unwrap();
+    config.unanalyzable = Some(crate::config::v2::Unanalyzable::Ignore);
+    let mut files = discover_files(&reported_root, &config.filesystem.skip_directories);
+    files.push(reported_root.join("README.md"));
+    files.push(reported_root.join(".github/workflows/missing.yml"));
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let all = diagnostics_with_files_and_sources(&reported_root, &config, &files, &sources, true)
+        .unwrap();
+    assert_eq!(all.findings.len(), 7);
+    config.rules[0].options["include"] =
+        serde_yaml::Value::Sequence(vec![serde_yaml::Value::String(".github/actions/**".into())]);
+    let diag = diagnostics_with_files_and_sources(&reported_root, &config, &files, &sources, true)
+        .unwrap();
+    assert_eq!(diag.findings.len(), 1);
+    assert_eq!(diag.findings[0].file, ".github/actions/release/action.yml");
+}
