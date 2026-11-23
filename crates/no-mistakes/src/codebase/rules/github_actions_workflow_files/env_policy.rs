@@ -90,9 +90,6 @@ pub(crate) fn check_with_files_and_sources(
             .cloned()
             .collect();
         let files = super::super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        if files.is_empty() {
-            continue;
-        }
         let include: Vec<String> = if opts.include.is_empty() {
             DEFAULT_INCLUDE.iter().map(|p| (*p).to_string()).collect()
         } else {

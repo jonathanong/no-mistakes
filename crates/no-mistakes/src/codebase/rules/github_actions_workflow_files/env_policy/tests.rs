@@ -131,3 +131,23 @@ fn composite_shapes_and_unterminated_quotes() {
     assert_eq!(locate("", &[Seg::Key("env".into())]), 1);
     assert_eq!(locate("a: 1\n", &[Seg::Key("b".into()), Seg::Idx(0)]), 1);
 }
+
+#[test]
+fn explicit_include_missing_files_and_scalar_forms() {
+    let root = rule_root().join("fixture/violations");
+    let file = root.join(".github/workflows/ci.yml");
+    let found = check_with_files(&root, &config("include.yml"), &[file]).unwrap();
+    assert_eq!(found.len(), 2, "{found:?}");
+    let gone = root.join(".github/workflows/gone.yml");
+    assert!(check_with_files(&root, &config("include.yml"), &[gone])
+        .unwrap()
+        .is_empty());
+    let opts: Options = serde_yaml::from_str("required: {FLAG: true, EMPTY: null, N: 1}").unwrap();
+    let policy = compile(&opts).unwrap();
+    let source = "env:\n  FLAG: true\n  EMPTY:\n  N: 1\n";
+    let value: Value = serde_yaml::from_str(source).unwrap();
+    assert!(scan::check_parsed("w.yml", source, &value, &policy).is_empty());
+    use lines::{locate, Seg};
+    let at = [Seg::Key("steps".into()), Seg::Idx(1)];
+    assert_eq!(locate("steps:\n  -\n  - run: x\n", &at), 3);
+}
