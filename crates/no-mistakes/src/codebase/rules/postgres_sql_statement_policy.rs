@@ -1,12 +1,13 @@
 use super::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
-use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
+use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions, SqlPolicyClause};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+mod clauses;
 mod options;
 mod scan;
 pub(crate) use options::Options;
@@ -28,6 +29,7 @@ struct CompiledOptions {
     schema: PostgresSchemaOptions,
     banned: HashSet<String>,
     settings: HashSet<String>,
+    clauses: HashSet<SqlPolicyClause>,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
     advise_unanalyzable: bool,
@@ -120,7 +122,16 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             anyhow::bail!("{RULE_ID}: unknown bannedStatements kind or group `{value}`");
         }
     }
+    let clauses = opts
+        .banned_clauses
+        .iter()
+        .map(|value| {
+            SqlPolicyClause::from_name(value)
+                .ok_or_else(|| anyhow::anyhow!("{RULE_ID}: unknown bannedClauses entry `{value}`"))
+        })
+        .collect::<Result<_>>()?;
     Ok(CompiledOptions {
+        clauses,
         paths: super::RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
         schema: PostgresSchemaOptions {
             sql_include: crate::codebase::postgres::effective_sql_include(

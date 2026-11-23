@@ -145,6 +145,7 @@ fn merge(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {
         .extend(dynamic.unnamed_constraints);
     facts.statement_kinds.extend(dynamic.statement_kinds);
     facts.setting_uses.extend(dynamic.setting_uses);
+    facts.clause_uses.extend(dynamic.clause_uses);
     facts.function_calls.extend(dynamic.function_calls);
     facts
         .not_valid_constraints

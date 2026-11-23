@@ -40,6 +40,10 @@ pub(in super::super) fn remap_fact_lines(
     for setting in &mut facts.setting_uses {
         setting.line = dynamic.source_line(setting.line);
     }
+    for clause in &mut facts.clause_uses {
+        clause.line = dynamic.source_line(clause.line);
+        clause.column = 1;
+    }
     for call in &mut facts.function_calls {
         call.line = dynamic.source_line(call.line);
     }

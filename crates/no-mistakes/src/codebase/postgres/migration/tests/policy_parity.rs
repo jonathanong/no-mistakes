@@ -68,3 +68,38 @@ fn locations(facts: &[crate::codebase::postgres::SqlStatementKind]) -> Vec<(&str
     locations.sort_unstable();
     locations
 }
+
+#[test]
+fn clause_sites_match_in_schema_and_shared_statement_projections() {
+    let sql = include_str!(
+        "../../../../../../../fixtures/rules/postgres-migration-statement-lines/policy-clauses.sql"
+    );
+    let schema = extract_migration_facts(sql);
+    let direct = statements::extract_sql_statement_facts(sql);
+    for uses in [&schema.clause_uses, &direct.clause_uses] {
+        let mut sites = uses
+            .iter()
+            .map(|used| (used.line, used.clause.name()))
+            .collect::<Vec<_>>();
+        sites.sort_unstable();
+        assert_eq!(
+            sites,
+            [
+                (4, "create-extension-version"),
+                (6, "drop-cascade"),
+                (6, "drop-cascade"),
+                (8, "drop-cascade"),
+                (11, "drop-cascade"),
+                (18, "drop-cascade"),
+                (19, "create-extension-version"),
+                (23, "create-extension-version"),
+                (29, "create-extension-version"),
+            ]
+        );
+        let columns: Vec<_> = uses
+            .iter()
+            .filter_map(|used| (used.line == 6).then_some(used.column))
+            .collect();
+        assert_eq!(columns, [36, 59]);
+    }
+}

@@ -370,7 +370,10 @@ Named imports, factory handles, and typed executor parameters honor configured
 scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
 29 statement kinds, including routines and database utility commands.
 `bannedSettings` checks named settings in SET commands and literal `set_config`
-calls, including recovered routine bodies and static EXECUTE. See
+calls, including recovered routine bodies and static EXECUTE. Opt-in
+`bannedClauses` rejects explicit extension versions and cascading drops, including
+`ALTER TABLE ... DROP COLUMN ... CASCADE` and `TRUNCATE ... CASCADE`, using the
+same SQL-file and finite embedded-alternative scope. See
 [statement policy](rules/postgres-sql-statement-policy.md).
 
 PostgreSQL 17 query and `CREATE TABLE` compatibility applies to the same SQL

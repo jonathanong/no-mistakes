@@ -14,8 +14,11 @@ YAML options; the existing async `checkJson` binding and report shape are unchan
 Configured [`postgres-sql-statement-policy`](rules/postgres-sql-statement-policy.md)
 runs through async `check({ root, config })` and `analyzeProject()` check reports.
 Omitting `options.bannedStatements` uses the seven default statement kinds;
-an explicit empty array bans no statement kinds. `bannedSettings` remains active
-independently. Set these rule options in the configuration file selected by `config`.
+an explicit empty array bans no statement kinds. `bannedSettings` and
+`bannedClauses` apply independently. `PostgresSqlStatementPolicyOptions` describes
+the YAML rule options, including the values of `PostgresSqlStatementPolicyClause`
+accepted by `bannedClauses`. Set these options in the configuration file selected
+by `config`.
 
 `check()` and check reports in `analyzeProject()` share the CLI's
 [integration annotation discovery scope](cli/check.md#integration-annotation-discovery).

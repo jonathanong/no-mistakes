@@ -301,7 +301,9 @@ selected project's `postgres` block). It bans schema DDL, `TRUNCATE`,
 Move schema setup into migrations and inject a throwing executor for failure
 tests. See [test state mutation](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-test-state-mutation.md).
 For other statement policies, configure `postgres-sql-statement-policy` with
-`bannedStatements` and `bannedSettings`; `sqlInclude` selects raw SQL files.
+`bannedStatements`, `bannedSettings`, or `bannedClauses`. Use
+`bannedClauses: [create-extension-version, drop-cascade]` to ban version pins
+and cascading drops. `sqlInclude` selects raw SQL files.
 See the [statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
 
 To catch cross-file SQL identifier registries and unbounded env/config/parameter

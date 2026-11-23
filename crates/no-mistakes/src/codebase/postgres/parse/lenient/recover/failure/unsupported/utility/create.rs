@@ -1,9 +1,10 @@
 //! Recognize utility CREATE forms without rewriting their retained source.
 use super::{string, Cursor};
+use sqlparser::tokenizer::Token;
 
 pub(super) fn valid(cursor: &mut Cursor<'_>) -> bool {
     if cursor.words(&["CREATE", "EXTENSION"]) {
-        extension(cursor)
+        extension(cursor).is_some()
     } else if cursor.words(&["CREATE", "USER"]) {
         user(cursor)
     } else {
@@ -11,36 +12,41 @@ pub(super) fn valid(cursor: &mut Cursor<'_>) -> bool {
     }
 }
 
-fn extension(cursor: &mut Cursor<'_>) -> bool {
+pub(crate) fn extension_has_version(tokens: &[&Token]) -> bool {
+    let mut cursor = Cursor { tokens, at: 0 };
+    cursor.words(&["CREATE", "EXTENSION"]) && extension(&mut cursor) == Some(true)
+}
+
+fn extension(cursor: &mut Cursor<'_>) -> Option<bool> {
     if cursor.word("IF") && !cursor.words(&["NOT", "EXISTS"]) {
-        return false;
+        return None;
     }
     if !cursor.identifier() {
-        return false;
+        return None;
     }
     cursor.word("WITH");
     let mut seen = [false; 3];
     while cursor.at < cursor.tokens.len() {
         let option = if cursor.word("SCHEMA") {
             if !cursor.identifier() {
-                return false;
+                return None;
             }
             0
         } else if cursor.word("VERSION") {
             if !(string(cursor) || cursor.identifier()) {
-                return false;
+                return None;
             }
             1
         } else if cursor.word("CASCADE") {
             2
         } else {
-            return false;
+            return None;
         };
         if std::mem::replace(&mut seen[option], true) {
-            return false;
+            return None;
         }
     }
-    true
+    Some(seen[1])
 }
 
 fn user(cursor: &mut Cursor<'_>) -> bool {

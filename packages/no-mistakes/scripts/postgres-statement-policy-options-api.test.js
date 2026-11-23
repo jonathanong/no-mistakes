@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
-const { join } = require("node:path");
+const { spawnSync } = require("node:child_process");
+const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
 test(
@@ -54,6 +55,48 @@ test(
       const batch = await prepared;
       assert.deepEqual(batch.reports, [{ type: "check", id: name, result: report }]);
       assert.deepEqual(await esm.analyzeProject(request), batch, name);
+    }
+  },
+);
+
+test(
+  "compiled async statement clause policies match CLI reports",
+  { skip: !process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node") },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const suite = join(__dirname, "../../../test-cases/rules/postgres-sql-statement-policy");
+    const root = join(suite, "fixture/issue-3856");
+    const cli =
+      process.env.NO_MISTAKES_TEST_CLI_PATH ||
+      join(
+        dirname(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH),
+        process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
+      );
+    for (const [name, exitCode, findingCount] of [
+      ["omitted", 0, 0],
+      ["clauses", 1, 12],
+      ["unknown", 1, 0],
+    ]) {
+      const config = join(suite, `configs/issue-3856-${name}.yml`);
+      const child = spawnSync(
+        cli,
+        ["--lock-timeout", "0", "check", "--root", root, "--config", config, "--format", "json"],
+        { cwd: root, encoding: "utf8" },
+      );
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, exitCode, child.stderr);
+      const expected = JSON.parse(child.stdout);
+      assert.equal(expected.rules.length, findingCount, name);
+      for (const api of [cjs, esm]) {
+        const options = { root, config };
+        const pending = api.check(options);
+        assert.ok(pending instanceof Promise);
+        assert.deepEqual(await pending, expected, name);
+        const prepared = api.analyzeProject({ ...options, reports: [{ type: "check" }] });
+        assert.ok(prepared instanceof Promise);
+        assert.deepEqual((await prepared).reports[0].result, expected, name);
+      }
     }
   },
 );

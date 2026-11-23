@@ -27,6 +27,9 @@ pub(super) fn collect(
         out.insert(Site::StatementKind(i), at.0, at.1);
     }
     settings::collect(facts, tokens, out);
+    for (i, fact) in facts.clause_uses.iter().enumerate() {
+        out.insert(Site::Clause(i), fact.line, fact.column);
+    }
     for (i, fact) in facts.function_calls.iter().enumerate() {
         out.insert(Site::Function(i), fact.line, fact.column);
     }

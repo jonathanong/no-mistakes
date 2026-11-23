@@ -356,3 +356,35 @@ fn issue_3311_empty_banned_statements_check_json_snapshot() {
         2
     );
 }
+
+#[test]
+fn issue_3856_banned_clauses_check_json_snapshot() {
+    let rule = "postgres-sql-statement-policy";
+    let root = rules_path(rule, "fixture", "issue-3856");
+    let cases = [
+        ("omitted", "issue-3856-omitted.yml"),
+        ("opt_in", "issue-3856-clauses.yml"),
+        ("unknown", "issue-3856-unknown.yml"),
+    ]
+    .map(|(label, config)| (label, root.clone(), rules_path(rule, "configs", config)));
+    let reports =
+        assert_saved_fixture_report("postgres_sql_statement_policy_issue_3856", &cases, &[], &[]);
+
+    assert_eq!(reports["omitted"]["exitCode"], 0);
+    assert_eq!(reports["omitted"]["report"]["rules"], serde_json::json!([]));
+    assert_eq!(reports["opt_in"]["exitCode"], 1);
+    let findings = reports["opt_in"]["report"]["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 12, "{findings:?}");
+    assert!(findings.iter().all(|finding| finding["rule"] == rule));
+    assert_eq!(reports["unknown"]["exitCode"], 1);
+    let errors = reports["unknown"]["report"]["incomplete"]
+        .as_array()
+        .unwrap();
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert_eq!(errors[0]["consumer"], rule);
+    let message = errors[0]["message"].as_str().unwrap();
+    assert!(
+        message.contains("bannedClauses") && message.contains("unknown-clause"),
+        "{message}"
+    );
+}

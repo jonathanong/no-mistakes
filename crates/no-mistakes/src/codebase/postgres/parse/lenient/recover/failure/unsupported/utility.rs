@@ -2,6 +2,7 @@
 use super::cursor::Cursor;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 mod create;
+pub(crate) use create::extension_has_version;
 mod declaration;
 mod maintenance;
 mod privileges;

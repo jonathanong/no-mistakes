@@ -1,7 +1,15 @@
 use crate::codebase::postgres::types::{SqlSchemaFileFacts, SqlStatementKind};
 use sqlparser::ast::{ObjectType, Statement};
 
-pub(super) fn record(line: usize, statement: &Statement, facts: &mut SqlSchemaFileFacts) {
+mod clauses;
+
+pub(super) fn record(
+    line: usize,
+    statement: &Statement,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
+    facts: &mut SqlSchemaFileFacts,
+) {
+    facts.clause_uses.extend(clauses::used(statement, tokens));
     super::super::function_calls::collect_executed(statement, &mut facts.function_calls);
     let Some((kind, _parts)) = kind_and_parts(statement) else {
         return;
@@ -43,9 +51,14 @@ pub(crate) fn policy_facts(
 ) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts::default();
     for (index, statement) in statements.iter().enumerate() {
-        let locations =
-            super::locating::Locations::new(tokens.get(index).copied().unwrap_or_default());
-        record(locations.statement_line(statement), statement, &mut facts);
+        let tokens = tokens.get(index).copied().unwrap_or_default();
+        let locations = super::locating::Locations::new(tokens);
+        record(
+            locations.statement_line(statement),
+            statement,
+            tokens,
+            &mut facts,
+        );
     }
     record_new(sql, &mut facts);
     for dynamic in super::dynamic::schema_bodies(sql)
@@ -79,6 +92,7 @@ pub(crate) fn policy_facts(
         super::dynamic::remap_fact_lines(&mut nested, &dynamic);
         facts.statement_kinds.extend(nested.statement_kinds);
         facts.setting_uses.extend(nested.setting_uses);
+        facts.clause_uses.extend(nested.clause_uses);
         facts.function_calls.extend(nested.function_calls);
     }
     facts

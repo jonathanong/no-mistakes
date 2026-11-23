@@ -38,6 +38,7 @@ fn option_defaults_use_schema_sql_include_and_supported_kinds() {
         assert!(compiled.banned.contains(*kind), "{kind}");
     }
     assert_eq!(compiled.banned.len(), DEFAULT_BANNED.len());
+    assert!(compiled.clauses.is_empty());
 }
 
 #[test]
@@ -154,4 +155,25 @@ fn legacy_sql_only_policy_does_not_read_or_parse_ts() {
     // Emptiness of the sql-only scan is in the snapshot. This call must not read TS.
     check_with_files_and_sources(&root, &config(), &files, &sources).unwrap();
     assert_eq!(sources.physical_read_count(), 0);
+}
+
+#[test]
+fn unknown_clause_option_errors_without_input_files() {
+    let root = fixture("fail");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("bannedClauses: [DROP-CASCADE]").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let error = check_with_files(&root, &config, &[]).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("unknown bannedClauses entry `DROP-CASCADE`"),
+        "{error}"
+    );
 }

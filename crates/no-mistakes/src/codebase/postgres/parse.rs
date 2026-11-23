@@ -10,6 +10,7 @@ pub(super) mod fetch_expression;
 mod function_sources;
 pub(crate) use function_sources::{orphan_chunk_tokens, partition as partition_function_sources};
 mod lenient;
+pub(crate) use lenient::extension_has_version;
 mod lock_of_list;
 mod lock_strength;
 mod named_arguments;

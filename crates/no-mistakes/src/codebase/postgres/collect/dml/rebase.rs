@@ -76,6 +76,9 @@ pub(crate) fn rebase_embedded_lines(
     for (i, setting) in facts.setting_uses.iter_mut().enumerate() {
         setting.line = physical_line(SqlFactSite::Setting(i), setting.line, 1);
     }
+    for (i, clause) in facts.clause_uses.iter_mut().enumerate() {
+        clause.line = physical_line(SqlFactSite::Clause(i), clause.line, clause.column);
+    }
     for (i, function) in facts.function_calls.iter_mut().enumerate() {
         function.line = physical_line(SqlFactSite::Function(i), function.line, function.column);
     }

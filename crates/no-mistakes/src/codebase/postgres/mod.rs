@@ -42,6 +42,8 @@ pub(crate) use statement_facts::{SqlLifecycleBatch, SqlLifecycleStep, SqlViewRea
 pub(crate) use statements::project_bounds as project_sql_bounds;
 pub mod statements;
 mod types;
+#[doc(hidden)]
+pub use types::{SqlPolicyClause, SqlPolicyClauseUse};
 
 pub use annotation::{leading_query_annotation, sql_requires_query_annotation};
 mod executed_source;

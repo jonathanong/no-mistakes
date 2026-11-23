@@ -14,8 +14,8 @@ module and called in scoped files.
 
 A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
 
-Flags configured PostgreSQL statement kinds and settings in matching SQL files
-and configured JavaScript/TypeScript executor calls. Use this to keep tests,
+Flags configured PostgreSQL statement kinds, settings, and clauses in matching
+SQL files and configured JavaScript/TypeScript executor calls. Use this to keep tests,
 helpers, or seed files from changing shared database state or bypassing
 constraints. The rule recognizes 29 statement kinds: `CREATE TABLE`,
 `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
@@ -65,7 +65,7 @@ rules:
 
 `sqlInclude` defaults to `**/*.sql`. Omitting `bannedStatements` selects the
 seven default kinds above; setting `bannedStatements: []` explicitly disables
-statement-kind findings. This distinction lets a rule check settings alone.
+statement-kind findings. Settings and clauses can still be checked independently.
 For example, this policy flags `statement_timeout` changes but permits every
 statement kind:
 
@@ -183,6 +183,47 @@ Use `no-mistakes-disable-next-line postgres-sql-statement-policy` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
 
+## Clause policy example
+
+A development database may already have an extension version that a fresh
+server image no longer ships. A cascading drop can also remove dependent
+objects that the migration never names. Ban both clauses in migrations while
+allowing the underlying statement kinds.
+
+```yaml
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      sqlInclude: ['db/migrations/**/*.sql']
+      bannedStatements: []
+      bannedClauses: [create-extension-version, drop-cascade]
+```
+
+Both statements below are findings with this configuration.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS widgets VERSION '1.4';
+DROP VIEW widget_summary CASCADE;
+```
+
+Omit `VERSION` to use the server's default extension version. Drop dependent
+objects explicitly in dependency order, then use `RESTRICT` on the original
+drop so unexpected dependencies stop the migration.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS widgets;
+DROP VIEW widget_dashboard RESTRICT;
+DROP VIEW widget_summary RESTRICT;
+```
+
+For an intentional exception, place the suppression above the statement.
+
+```sql
+-- no-mistakes-disable-next-line postgres-sql-statement-policy
+CREATE EXTENSION IF NOT EXISTS widgets VERSION '1.4';
+```
+
 ## Why and when
 
 Statement kinds come from SQL statements, not comment banners or identifiers
@@ -193,9 +234,9 @@ remain in migrations and the file's allowed purpose should be machine-checked.
 
 ## What it catches/requires
 
-Every configured banned statement kind and setting is a finding in included SQL
-and configured executor calls, including statically recoverable statements
-inside supported PL/pgSQL bodies and static `EXECUTE` strings.
+The rule reports each configured banned statement kind, setting, and clause in
+included SQL and configured executor calls. This includes statically recoverable
+statements inside supported PL/pgSQL bodies and static `EXECUTE` strings.
 
 ## Options and defaults
 
@@ -212,6 +253,21 @@ and matches literal setting names in `SET`, `SET LOCAL`, `SET SESSION`,
 supported `set_config()` calls, and database/system `SET` statements. Kind and
 group names are case-insensitive and ignore repeated whitespace; unknown kinds
 and groups are configuration errors.
+
+`bannedClauses` defaults to `[]` and applies independently of
+`bannedStatements` and `bannedSettings`. Use these exact names. An unknown
+name is a configuration error.
+
+| Clause name | SQL matched |
+| --- | --- |
+| `create-extension-version` | An explicit `VERSION` option in `CREATE EXTENSION`. |
+| `drop-cascade` | `CASCADE` on `DROP VIEW`, `DROP MATERIALIZED VIEW`, `DROP TABLE`, `DROP FUNCTION`, `DROP TYPE`, `DROP SCHEMA`, `DROP INDEX`, `ALTER TABLE ... DROP [COLUMN] ...`, and `TRUNCATE`. |
+
+The rule reports a matched clause once per statement at the statement's start
+with target `clause:<name>`. It checks SQL files selected by `sqlInclude` and
+each complete SQL alternative at configured executor calls. The clause checks
+use parsed extension options and cascading operations. Unsupported SQL
+syntax follows the existing `unanalyzableSql` policy.
 
 ## Valid example
 

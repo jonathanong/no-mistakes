@@ -150,7 +150,7 @@ pub(super) fn extract_from_parsed_and_sources(
             sources.policy.redundant_prelocks,
         ),
     );
-    let (statement_kinds, setting_uses, function_calls) =
+    let (statement_kinds, setting_uses, clause_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
     let mut facts = SqlStatementFileFacts {
         lock_inventory: lock_inventory.finish(&function_calls),
@@ -158,6 +158,7 @@ pub(super) fn extract_from_parsed_and_sources(
         lock_writes,
         statement_kinds,
         setting_uses,
+        clause_uses,
         function_calls,
         writes,
         json_writes,
