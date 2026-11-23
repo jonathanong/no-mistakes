@@ -15,6 +15,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "consumer": "postgres-sql-fragment-escape",
+          "file": "nested-query-broken.ts",
+          "message": "`nested-query-broken.ts` has a fatal parse error, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the syntax error and rerun the check."
+        },
+        {
+          "consumer": "postgres-sql-fragment-escape",
           "file": "query-broken.ts",
           "message": "`query-broken.ts` has a fatal parse error, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the syntax error and rerun the check."
         },

@@ -21,7 +21,7 @@ pub(super) fn module_lookup(
     specifier: &str,
     record_gap: bool,
 ) -> Option<PathBuf> {
-    use crate::codebase::ts_resolver::is_bare_node_builtin;
+    use crate::codebase::ts_resolver::{has_explicit_non_source_extension, is_bare_node_builtin};
     if specifier.starts_with("node:") || is_bare_node_builtin(specifier) {
         return None;
     }
@@ -29,10 +29,9 @@ pub(super) fn module_lookup(
     if let Some(ImportTarget::File(path)) = recorded {
         return is_indexable(path).then(|| path.clone());
     }
-    let relative = specifier.starts_with('.') || Path::new(specifier).is_absolute();
-    if relative
-        && crate::codebase::ts_resolver::has_explicit_non_source_extension(Path::new(specifier))
-    {
+    let specifier_path = Path::new(specifier);
+    let relative = specifier.starts_with('.') || specifier_path.is_absolute();
+    if relative && has_explicit_non_source_extension(specifier_path) {
         return None;
     }
     let trusted = catalog.tags.iter().any(|tag| {
@@ -68,13 +67,13 @@ pub(super) fn module_lookup(
             return ambient.into_iter().next();
         }
     }
-    let unresolved = recorded == Some(&ImportTarget::Unresolved);
+    // The graph marks every `#` import as local, even when no mapping exists.
+    let unresolved = recorded == Some(&ImportTarget::Unresolved) && !specifier.starts_with('#');
     if record_gap
         && (ambiguous
-            || unresolved
             || !ambient.is_empty()
-            || (!external && relative)
-            || resolution.is_some())
+            || ((unresolved || (!external && relative) || resolution.is_some())
+                && !has_explicit_non_source_extension(specifier_path)))
     {
         catalog.record_unresolved(importer, specifier);
     }
