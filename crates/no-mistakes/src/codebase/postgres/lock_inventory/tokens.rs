@@ -7,8 +7,9 @@ mod advisory;
 mod fingerprint;
 mod restoration;
 mod row;
+pub(crate) use row::RowLockMode;
 
-pub(super) struct Segments<'a> {
+pub(in crate::codebase::postgres) struct Segments<'a> {
     segments: Vec<Segment<'a>>,
 }
 
@@ -24,7 +25,7 @@ struct Lexeme<'a> {
 }
 
 impl<'a> Segments<'a> {
-    pub(super) fn new(tokens: &'a [TokenWithSpan]) -> Self {
+    pub(in crate::codebase::postgres) fn new(tokens: &'a [TokenWithSpan]) -> Self {
         Self::build(tokens, None)
     }
 
@@ -66,6 +67,13 @@ impl<'a> Segments<'a> {
             .partition_point(|segment| segment.start() <= at);
         let segment = self.segments.get(index.checked_sub(1)?)?;
         (at < segment.end()).then_some(segment)
+    }
+
+    pub(in crate::codebase::postgres) fn row_lock_modes(
+        &self,
+        query: &Query,
+    ) -> Option<Vec<RowLockMode>> {
+        row::modes(self.at(query.span().start)?, query)
     }
 
     pub(super) fn row_locks(&self, query: &Query, out: &mut Vec<InventoryLockFact>) -> bool {

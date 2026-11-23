@@ -70,12 +70,25 @@ pub(crate) fn check_with_files_sources_and_facts(
             Ok((rule, options))
         })
         .collect::<Result<Vec<_>>>()?;
-    let reports = applications
+    let application_findings = applications
         .par_iter()
         .enumerate()
-        .map(|(index, (rule, options))| collect_application(&context, index, rule, options))
+        .map(
+            |(index, (rule, options))| match collect_application(&context, index, rule, options) {
+                Ok(report) => Ok(report_findings(report)),
+                Err(error) if error.is::<baseline::InvalidBaseline>() => Ok(vec![finding(
+                    options.baseline_file.clone(),
+                    1,
+                    format!(
+                        "{error:#}. Repair the baseline before comparing PostgreSQL lock sites"
+                    ),
+                    "invalid-baseline".into(),
+                )]),
+                Err(error) => Err(error),
+            },
+        )
         .collect::<Result<Vec<_>>>()?;
-    let mut findings: Vec<_> = reports.into_iter().flat_map(report_findings).collect();
+    let mut findings: Vec<_> = application_findings.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -117,7 +130,7 @@ fn report_findings(report: LockInventoryReport) -> Vec<RuleFinding> {
         findings.push(finding(
             site.file,
             site.line,
-            format!("new PostgreSQL lock site ({}, {}). Remove the lock or reuse an existing locking path", site.category, site.key),
+            format!("new PostgreSQL lock site ({}, {}). Remove the lock or record the reviewed site in the baseline", site.category, site.key),
             site.category,
         ));
     }
@@ -140,7 +153,7 @@ fn report_findings(report: LockInventoryReport) -> Vec<RuleFinding> {
         findings.push(finding(
             report.baseline_file,
             1,
-            format!("stale PostgreSQL lock baseline contains {} removed site(s). Run `no-mistakes postgres lock-inventory --write-baseline` after removing any new sites", report.removed.len()),
+            format!("stale PostgreSQL lock baseline contains {} removed site(s). Run `no-mistakes postgres lock-inventory --write-baseline` after resolving any new sites", report.removed.len()),
             "stale-baseline".into(),
         ));
     }

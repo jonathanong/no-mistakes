@@ -4,6 +4,7 @@ pub(super) fn configure(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) {
+    plan.postgres_lock_inventory |= config.rule_configured("postgres-lock-inventory");
     plan.postgres_grouping |= grouping_requested(config);
     plan.postgres_bounds |= !config
         .rule_applications("postgres-bounded-statements")

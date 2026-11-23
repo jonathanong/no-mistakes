@@ -115,6 +115,7 @@ pub fn collect_postgres_facts(
             &embedded,
             plan.postgres_bounds,
             crate::codebase::postgres::statements::StatementPolicySources {
+                collect_lock_inventory: plan.postgres_lock_inventory,
                 collect_json_writes: plan.postgres_json_writes,
                 collect_grouping: plan.postgres_grouping,
                 ..Default::default()

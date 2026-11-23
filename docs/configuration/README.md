@@ -83,7 +83,8 @@ error even when the canonical value is valid. Legacy PostgreSQL applications
 that historically ignored this per-rule payload continue to ignore it for
 compatibility.
 [`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) always
-reports incomplete SQL and does not consume uncertainty-policy overrides.
+reports incomplete SQL and uses a single analysis mode. Omit per-rule
+`effort`, `unanalyzable`, and `unanalyzableSql` for this rule.
 Rules that do not implement low effort continue to use their maximum analysis.
 When a low-effort rule requires a partner check that is missing or outside its
 configured scope, `check` warns and runs that rule at `max`.

@@ -53,7 +53,7 @@ impl AlternativeGaps {
             let previous = self.counts.entry(gap).or_default();
             *previous = (*previous).max(count);
         }
-        statement.parse_failed || !statement.lock_inventory_unanalyzed.is_empty()
+        statement.parse_failed
     }
 
     pub(super) fn append_to(self, gaps: &mut Vec<Gap>) {

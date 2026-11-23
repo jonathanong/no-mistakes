@@ -23,11 +23,6 @@ impl<'a> Writes<'a> {
         self.exact.is_empty()
     }
 
-    pub fn clear(&mut self) {
-        self.exact.clear();
-        self.qualified_leaves.clear();
-    }
-
     pub fn extend(&mut self, writes: impl IntoIterator<Item = &'a str>) {
         for relation in writes {
             self.exact.insert(relation);

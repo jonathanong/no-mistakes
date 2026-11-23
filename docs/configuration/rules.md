@@ -152,8 +152,9 @@ invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
 
-[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) has a
-strict uncertainty contract instead of these policy overrides.
+[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options)
+always reports incomplete SQL and uses one analysis mode. Its rule options
+reject `effort`, `unanalyzable`, and `unanalyzableSql`.
 
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 also consumes the shared policy, but deliberately stays advisory only: its
@@ -916,4 +917,4 @@ identities rather than line numbers. Added sites and stale entries report;
 unresolved SQL is listed separately and prevents rewriting the baseline.
 Initialize or prune it with
 [`postgres lock-inventory --write-baseline`](../cli/postgres-lock-inventory.md).
-An existing baseline can only lose sites.
+Record reviewed additions manually in the baseline before pruning.

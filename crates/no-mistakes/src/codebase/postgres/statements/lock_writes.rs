@@ -1,8 +1,9 @@
 use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
+use crate::codebase::postgres::lock_inventory::tokens::Segments;
 mod advisory;
 mod cte_delete;
 mod ddl;
-pub(crate) use {cte_delete::CteWriteLink, ddl::DdlEvent};
+pub(crate) use {cte_delete::CteWriteLink, ddl::DdlEvent, sequences::SequenceMode};
 mod helpers;
 mod prelock;
 mod row_locks;
@@ -12,7 +13,7 @@ mod settings;
 mod trigger_writes;
 use super::value::PlaceholderPositions;
 pub(crate) use advisory::AdvisoryKey;
-use helpers::{access, generated_name};
+use helpers::generated_name;
 use sqlparser::ast::{BinaryOperator, Expr, Query, Statement, TableFactor, Visit, Visitor};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -49,7 +50,8 @@ pub(crate) struct RowAccess {
 pub(super) fn collect<const ADVANCED: bool>(
     statements: &[Statement],
     positions: PlaceholderPositions<'_>,
-    (share_lock_writes, redundant_prelocks): (bool, bool),
+    redundant_prelocks: bool,
+    modes: Option<&Segments<'_>>,
 ) -> LockWriteFacts {
     let mut out = LockWriteFacts::default();
     if let (true, [statement]) = (redundant_prelocks, statements) {
@@ -70,20 +72,20 @@ pub(super) fn collect<const ADVANCED: bool>(
             } else {
                 (0, 0)
             };
-            let mut share_relations = share_lock_writes.then(Vec::new);
+            let mut sequence = modes.map(sequences::Pending::new);
             let _ = statement.visit(&mut Collector::<ADVANCED> {
                 out: &mut out,
                 scopes: Vec::new(),
                 cte_depth: 0,
                 with_stack: Vec::new(),
                 positions,
-                share_relations: share_relations.as_mut(),
+                sequence: sequence.as_mut(),
                 share_top_level: matches!(statement, Statement::Query(_)),
             });
             if ADVANCED {
                 scope::mark_self_contained(&mut out, first_lock, first_write);
-                if let Some(locks) = share_relations {
-                    sequences::push_share_statement(&mut out, locks, first_write);
+                if let Some(sequence) = sequence {
+                    sequence.finish(&mut out, first_write);
                 }
                 if out.locks.len() == first_lock + 1
                     && out.self_contained_locks.contains_key(&first_lock)
@@ -97,16 +99,16 @@ pub(super) fn collect<const ADVANCED: bool>(
     }
     out
 }
-struct Collector<'a, 'p, const ADVANCED: bool> {
+struct Collector<'a, 'p, 'segments, 'sql, const ADVANCED: bool> {
     out: &'a mut LockWriteFacts,
     scopes: Vec<BTreeSet<String>>,
     cte_depth: usize,
     with_stack: Vec<bool>,
     positions: PlaceholderPositions<'p>,
-    share_relations: Option<&'a mut Vec<Option<String>>>,
+    sequence: Option<&'a mut sequences::Pending<'segments, 'sql>>,
     share_top_level: bool,
 }
-impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
+impl<const ADVANCED: bool> Visitor for Collector<'_, '_, '_, '_, ADVANCED> {
     type Break = ();
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         if ADVANCED {
@@ -122,7 +124,7 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
                     self.positions,
                     &self.scopes,
                     &mut self.out.locks,
-                    self.share_relations.as_deref_mut(),
+                    self.sequence.as_deref_mut(),
                     self.share_top_level && self.scopes.len() == 1,
                 );
             } else {
@@ -152,32 +154,12 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
             Statement::Commit { .. } | Statement::Rollback { .. } => {
                 self.out.transaction_boundary = true
             }
-            Statement::Update(update) => {
-                let mut target = access(
-                    &update.table.relation,
-                    update.selection.as_ref(),
-                    self.positions,
-                );
-                if !update.table.joins.is_empty() || update.from.is_some() {
-                    target.key = None;
-                    target.recovered_key = None;
-                    target.has_predicate = true;
-                }
-                self.out.writes.push(target);
-            }
-            Statement::Delete(delete) => {
-                use sqlparser::ast::FromTable;
-                let (FromTable::WithFromKeyword(from) | FromTable::WithoutKeyword(from)) =
-                    &delete.from;
-                if let [table] = from.as_slice() {
-                    let mut target =
-                        access(&table.relation, delete.selection.as_ref(), self.positions);
-                    if !table.joins.is_empty() || delete.using.is_some() {
-                        target.key = None;
-                        target.recovered_key = None;
-                        target.has_predicate = true;
+            Statement::Update(_) | Statement::Delete(_) => {
+                if let Some(row) = sequences::write(statement, self.positions) {
+                    if let Some(sequence) = self.sequence.as_deref_mut() {
+                        sequence.record_write(statement, self.out.writes.len());
                     }
-                    self.out.writes.push(target);
+                    self.out.writes.push(row);
                 }
             }
             Statement::Lock(lock) => self.out.table_locks.extend(lock.tables.iter().map(|table| {

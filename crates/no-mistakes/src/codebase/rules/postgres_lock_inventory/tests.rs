@@ -70,6 +70,15 @@ fn fingerprints_survive_movement_comments_and_whitespace() {
 }
 
 #[test]
+fn sql_helper_keys_fold_unquoted_names_and_retain_quoted_case() {
+    let before = report("before", &["helpers.sql"]);
+    let after = report("moved", &["helpers.sql"]);
+    assert_eq!(before.sites.len(), 2);
+    assert_ne!(before.sites[0].key, before.sites[1].key);
+    assert_eq!(before.sites, after.sites);
+}
+
+#[test]
 fn substitutes_by_identity_and_defers_removals_when_incomplete() {
     let before = report("before", &["locks.sql"]);
     let baseline = baseline(&before);
@@ -90,11 +99,14 @@ fn substitutes_by_identity_and_defers_removals_when_incomplete() {
 }
 
 #[test]
-fn stored_routine_body_excludes_uncertain_sql_and_defers_removals() {
+fn stored_routine_body_stays_unresolved_while_top_level_lock_is_counted() {
     let before = report("before", &["locks.sql"]);
     let mut routine = report("stored-routine", &["locks.sql"]);
-    assert!(routine.sites.is_empty());
-    assert!(routine.counts.is_empty());
+    assert_eq!(routine.sites.len(), 1);
+    assert_eq!(
+        (routine.sites[0].category.as_str(), routine.sites[0].line),
+        ("for-share", 1)
+    );
     assert_eq!(
         routine.unanalyzed,
         vec![UnanalyzedLockSite {

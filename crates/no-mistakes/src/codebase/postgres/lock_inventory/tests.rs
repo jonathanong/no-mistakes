@@ -1,4 +1,22 @@
-use super::super::{extract_sql_statement_facts, statements::extract_sql_conflict_policy_facts};
+use super::super::statement_facts::{SqlLocationDemand, SqlStatementFileFacts};
+use super::super::statements::{
+    extract_sql_conflict_policy_facts, extract_sql_statement_facts_with_policy,
+    StatementPolicySources,
+};
+
+fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_policy(
+        sql,
+        false,
+        None,
+        SqlLocationDemand::None,
+        StatementPolicySources {
+            collect_lock_inventory: true,
+            ..Default::default()
+        },
+        false,
+    )
+}
 
 fn fixture(name: &str) -> String {
     let path = crate::test_support::fixture_root("postgres-lock-inventory").join(name);
@@ -174,4 +192,25 @@ fn reports_root_routine_declarations_as_inventory_gaps_even_when_parsing_succeed
     assert_eq!(facts.lock_inventory[0].line, 12);
     let narrow = extract_sql_conflict_policy_facts(&sql, &[]);
     assert!(narrow.lock_inventory_unanalyzed.is_empty());
+}
+
+#[test]
+fn record_keys_survive_crlf_inside_multiline_literals() {
+    let source = fixture("multiline-literals.sql").replace("\r\n", "\n");
+    let windows = source.replace('\n', "\r\n");
+    let lf = extract_sql_statement_facts(&source);
+    let crlf = extract_sql_statement_facts(&windows);
+    assert!(!lf.parse_failed);
+    assert!(!crlf.parse_failed);
+    assert_eq!(lf.lock_inventory.len(), 2);
+    assert_eq!(lf.lock_inventory, crlf.lock_inventory);
+}
+
+#[test]
+fn regular_statement_projection_skips_inventory_candidates_and_routines() {
+    let source = fixture("routines.sql");
+    let facts = super::super::extract_sql_statement_facts(&source);
+    assert!(!facts.parse_failed);
+    assert!(facts.lock_inventory.is_empty());
+    assert!(facts.lock_inventory_unanalyzed.is_empty());
 }

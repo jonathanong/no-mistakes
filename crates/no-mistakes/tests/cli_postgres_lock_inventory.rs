@@ -12,6 +12,7 @@ fn postgres_lock_inventory_check_json_snapshot() {
         "suppressed",
         "helper-only",
         "routine",
+        "invalid-baseline",
         "imported-helper",
         "imported-alternatives",
         "callbacks",
@@ -38,7 +39,18 @@ fn postgres_lock_inventory_check_json_snapshot() {
             .len(),
         7
     );
-    assert_eq!(reports["routine"]["exitCode"], 1);
+    let routine = reports["routine"]["report"]["rules"].as_array().unwrap();
+    assert_eq!(routine.len(), 4);
+    let invalid = reports["invalid-baseline"]["report"]["rules"]
+        .as_array()
+        .unwrap();
+    assert_eq!(invalid.len(), 2);
+    assert!(invalid.iter().any(|finding| {
+        finding["file"] == "baseline.json" && finding["target"] == "invalid-baseline"
+    }));
+    assert!(invalid
+        .iter()
+        .any(|finding| finding["rule"] == "postgres-no-offset"));
     assert_eq!(
         reports["imported-helper"]["report"]["rules"]
             .as_array()
@@ -70,7 +82,7 @@ fn postgres_lock_inventory_check_json_snapshot() {
 }
 
 #[test]
-fn inventory_preserves_distinct_gaps_and_rejects_per_rule_uncertainty_policy() {
+fn inventory_preserves_distinct_gaps_and_rejects_unsupported_analysis_options() {
     let root = rules_path("postgres-lock-inventory", "fixture", "gap-multiplicity");
     let report = no_mistakes::postgres_lock_inventory::run(
         &no_mistakes::postgres_lock_inventory::PostgresLockInventoryOptions {
@@ -100,6 +112,7 @@ fn inventory_preserves_distinct_gaps_and_rejects_per_rule_uncertainty_policy() {
     for (config, key) in [
         ("legacy-policy.yml", "unanalyzableSql"),
         ("shared-policy.yml", "unanalyzable"),
+        ("effort.yml", "effort"),
     ] {
         let error =
             no_mistakes::config::v2::load_v2_config(&root, Some(&root.join(config))).unwrap_err();

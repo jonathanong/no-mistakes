@@ -2,6 +2,11 @@ use super::*;
 
 pub(in super::super) fn validate_inventory_policy(rule: &RuleDef) -> Result<()> {
     if rule.rule == "postgres-lock-inventory" {
+        anyhow::ensure!(
+            rule.options.get("effort").is_none(),
+            "{} does not support options.effort because it has one analysis mode",
+            rule.rule
+        );
         for key in ["unanalyzable", "unanalyzableSql"] {
             anyhow::ensure!(
                 rule.options.get(key).is_none(),
