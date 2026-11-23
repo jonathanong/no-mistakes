@@ -374,7 +374,7 @@ a brace group or parenthesized command applies to every command in the group tha
 standard output. `{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"` and
 `{ echo "digest=$digest"; } &> "$GITHUB_OUTPUT"` count. Bash `{fd}>` and `{fd}>>` redirect an
 allocated descriptor. A command with one of those redirects can still inherit the group's
-standard output. A group with no redirect, or a redirect to another file, does not count.
+standard output. `>&$fd` and numeric-fd duplications such as `>&3` are judged as before. A group with no redirect, or a redirect to another file, does not count.
 The redirect is fixed before the body runs. Assignments inside a parenthesized command do not
 affect later commands. A command after `;` on the same line is separate. A `;` inside a
 nested group stays in that group. The closing `)` may share a line with the last command,

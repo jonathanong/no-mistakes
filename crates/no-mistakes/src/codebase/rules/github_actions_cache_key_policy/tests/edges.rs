@@ -304,6 +304,8 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
     for script in [
         "{\n  echo \"digest=$digest\"\n} | cat /tmp/orders",
         "{ echo \"digest=$digest\" >& 2; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" >&$fd; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" >&3; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >&orders; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >&1widgets.lock; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >&2 > /tmp/orders; } >> \"$GITHUB_OUTPUT\"",

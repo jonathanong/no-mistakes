@@ -655,6 +655,8 @@ output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"`,
 `{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"`, and
 `{ echo "digest=$digest"; } &> "$GITHUB_OUTPUT"` count. Bash `{fd}>` and `{fd}>>`
 redirect an allocated descriptor and leave the command's inherited standard output in place.
+Duplications such as `>&$fd` and numeric-fd duplications such as `>&3` are judged as before:
+they do not prove a write to `GITHUB_OUTPUT` and override a group's standard output.
 A group with no redirect, or
 a redirect to another file, does not. The redirect is fixed before the body runs. Assignments
 inside a parenthesized command do not affect later commands, and a command after `;` on the

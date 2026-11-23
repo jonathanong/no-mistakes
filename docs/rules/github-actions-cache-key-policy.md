@@ -63,7 +63,9 @@ The key must also prove a digest of the configured lockfile, in either of these 
   only when it is its own word, so `1>> "$GITHUB_OUTPUT"` explicitly redirects standard
   output and `ignored2>/tmp/orders` redirects standard output implicitly. Bash `{fd}>` and
   `{fd}>>` redirect an allocated descriptor. A command with one of those redirects can still
-  inherit the group's standard output. `>=` sends standard output to a file named `=`. An
+  inherit the group's standard output. Duplications such as `>&$fd` and numeric-fd duplications
+  such as `>&3` are judged as before: they do not prove a write to `GITHUB_OUTPUT`, and inside a
+  group they redirect standard output away from the group's redirect. `>=` sends standard output to a file named `=`. An
   unquoted heredoc counts only when the command's last standard-output redirect, or the group's,
   is the output file.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
