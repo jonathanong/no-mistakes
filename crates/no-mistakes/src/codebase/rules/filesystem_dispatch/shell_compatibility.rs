@@ -20,25 +20,7 @@ struct Options {
     files: Vec<String>,
 }
 
-pub(crate) fn check_bash_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = rules::source_store_for_files(files);
-    check_with_sources(BASH_EMPTY_ARRAY_NOUNSET, root, config, files, &sources)
-}
-
-pub(crate) fn check_zsh_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = rules::source_store_for_files(files);
-    check_with_sources(ZSH_READONLY_PARAMETER, root, config, files, &sources)
-}
-
-pub(crate) fn check_with_sources(
+pub(super) fn check_with_sources(
     id: &str,
     root: &Path,
     config: &NoMistakesConfig,

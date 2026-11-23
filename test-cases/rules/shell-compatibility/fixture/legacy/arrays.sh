@@ -67,7 +67,7 @@ collect "${slots[@]}"
 declare -a unquoted=$value quoted="$value"
 collect "${unquoted[@]}" "${quoted[@]}"
 
-: 
+: {{FORM_FEED}}
 slots=()
 slots=()
 collect "${slots[@]}"
@@ -75,3 +75,12 @@ collect slots[0]=stable slots[1]+=stable
 collect "${slots[@]}"
 slots=stable collect example
 collect "${slots[@]}"
+
+items=(\
+  stable <(collect example))
+collect "${items[@]}"
+collect "${label:-escaped\}\
+brace}"
+items=()
+set -- +u
+collect "${items[@]}"

@@ -100,6 +100,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "slots"
         },
         {
+          "file": "legacy/arrays.sh",
+          "line": 86,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
           "file": "zsh/check.zsh",
           "line": 11,
           "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",

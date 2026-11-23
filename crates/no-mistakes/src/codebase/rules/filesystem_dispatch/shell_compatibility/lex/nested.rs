@@ -3,16 +3,10 @@ use super::Lexer;
 impl Lexer<'_> {
     pub(super) fn skip_group(&mut self, end: u8) -> bool {
         let mut ends = vec![end];
-        while let Some(byte) = self.current() {
-            let Some(end) = ends.last().copied() else {
-                return true;
-            };
+        while let (Some(byte), Some(&end)) = (self.current(), ends.last()) {
             if byte == end {
                 self.advance();
                 ends.pop();
-                if ends.is_empty() {
-                    return true;
-                }
                 continue;
             }
             if end == b'\'' {
@@ -36,7 +30,7 @@ impl Lexer<'_> {
             }
             self.advance();
         }
-        false
+        ends.is_empty()
     }
 
     pub(super) fn take_expansion_start(&mut self) -> Option<u8> {

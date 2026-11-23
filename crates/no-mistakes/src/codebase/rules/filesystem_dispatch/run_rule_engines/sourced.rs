@@ -12,9 +12,6 @@ pub(super) fn run(
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
-        BASH_EMPTY_ARRAY_NOUNSET | ZSH_READONLY_PARAMETER => {
-            shell_compatibility::check_with_sources(rule_id, root, config, files, sources)
-        }
         NO_MISTAKES_CONFIG => {
             no_mistakes_config::check_with_files_and_sources(root, config, files, sources)
         }

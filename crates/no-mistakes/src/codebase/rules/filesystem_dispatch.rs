@@ -151,6 +151,8 @@ macro_rules! define_filesystem_rule_ids {
             VITEST_CI_PATH_COVERAGE,
             TSCONFIG_GATE_COVERAGE,
             WORKFLOW_TOPOLOGY_POLICY,
+            BASH_EMPTY_ARRAY_NOUNSET,
+            ZSH_READONLY_PARAMETER,
         ];
     };
 }

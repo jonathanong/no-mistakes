@@ -30,3 +30,5 @@ cat <<-'EXAMPLE'
 # no-mistakes-disable-next-line zsh-readonly-parameter -- Shell example fixture.
 status=value
 status=value # no-mistakes-disable-line zsh-readonly-parameter -- Shell example fixture.
+print { status=value > \
+  /dev/null
