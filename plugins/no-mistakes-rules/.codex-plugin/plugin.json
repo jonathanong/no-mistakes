@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes-rules",
-  "version": "0.109.116",
+  "version": "0.109.117",
   "description": "Concise MUST NOT and SHOULD NOT rules for coding agents: testing, PostgreSQL, queues, TypeScript, React, Rust, CI, and more.",
   "author": {
     "name": "Jonathan Ong",
