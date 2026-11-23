@@ -66,4 +66,4 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT partition a table without evidence that partitioning helps retention, query performance, or maintenance.
 - SHOULD NOT read individual partitions in ordinary application queries. Query the parent with partition-key bounds when available.
 - SHOULD NOT omit partition-key bounds from queries that can use partition pruning. Check pruning in the plan.
-- MUST NOT infer commit order from UUIDv7 values alone.
+- SHOULD NOT infer commit order from UUIDv7 values alone.
