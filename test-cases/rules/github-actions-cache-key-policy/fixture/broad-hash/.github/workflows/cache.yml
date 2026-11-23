@@ -27,6 +27,13 @@ jobs:
         with:
           path: .cache/unconfigured
           key: ${{ hashFiles('ignored/**') }}
+      - uses: actions/setup-tools@v4
+        with:
+          cache-dependency-path: '**'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: "prefix \"v1\"-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', 'escaped\"dir\/**') }}"
       - uses: actions/cache@v4
         with:
           path: .cache/widgets

@@ -644,7 +644,9 @@ rule-level `message`) to customize the finding. At least one of `caches` or `for
 be configured.
 `rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. Set
 `forbidBroadHashFiles: true` to report broad literal `hashFiles` patterns in `key` and
-`restore-keys`. Use `allowedHashFilesPatterns` to exempt specific argument strings.
+`restore-keys` on configured `actions/cache` steps (`setup-*` `cache-dependency-path` and other
+actions are out of scope; a single `**/` before the basename of any configured cache's lockfile
+passes). Use `allowedHashFilesPatterns` to exempt specific argument strings.
 A cache path outside `caches` and `forbiddenPaths` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group

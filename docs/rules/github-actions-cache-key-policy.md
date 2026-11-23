@@ -111,11 +111,14 @@ sequence, is a finding. An empty or missing value is allowed. Set `rejectRestore
 allow prefix fallbacks.
 
 With `forbidBroadHashFiles: true`, the rule also checks each single-quoted string literal
-passed directly to `hashFiles` in a configured step's `key` or `restore-keys`. It reports a
+passed directly to `hashFiles` in a configured `actions/cache`, `actions/cache/restore`, or
+`actions/cache/save` step's `key` or `restore-keys`. `setup-*` `cache-dependency-path` inputs and
+steps other than `actions/cache` are out of scope. It reports a
 pattern containing `**` or ending in a standalone `*` path component, with or without a
 trailing slash. Examples include `**`, `src/**`, and `output/*`. Exact paths and suffix-specific
-patterns such as `src/*.json` pass. A single `**/` before the exact basename of a configured
-lockfile also passes, including `**/widgets.lock` and `packages/**/widgets.lock`. Every other
+patterns such as `src/*.json` pass. A single `**/` before the exact basename of any configured
+cache's lockfile (not only the matched cache's) also passes, including `**/widgets.lock` and
+`packages/**/widgets.lock`. Every other
 component in that exception must be literal. A basename glob still does not prove the
 required digest. Dynamic arguments such as `env.cachePattern` and `format(...)` are ignored.
 If the scan detects malformed quoting or delimiters, it discards partial findings from that

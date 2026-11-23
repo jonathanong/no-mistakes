@@ -364,9 +364,10 @@ For `github-actions-cache-key-policy`, list each portable cache path with its lo
 required key fragments such as `runner.os`, or list paths to ban entirely in `forbiddenPaths`
 (with optional `forbiddenPathsMessage`). `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. Set `forbidBroadHashFiles: true` to report broad literal
-patterns in `key` and `restore-keys`, and list intentional arguments exactly in
-`allowedHashFilesPatterns`. A glob such as `**/widgets.lock` is allowed for a configured
-lockfile basename. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
+patterns in `key` and `restore-keys` on configured `actions/cache` steps (`setup-*`
+`cache-dependency-path` and other actions are out of scope), and list intentional arguments
+exactly in `allowedHashFilesPatterns`. A glob such as `**/widgets.lock` is allowed for the
+basename of any configured cache's lockfile. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
 must name that lockfile in the same simple command. A redirect after the closing `}` or `)` of
 a brace group or parenthesized command applies to every command in the group that does not already redirect

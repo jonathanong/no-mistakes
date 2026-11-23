@@ -5,10 +5,9 @@ use super::{hit, RuleFinding};
 pub(super) fn check(rel: &str, step: &Step, options: &Options, findings: &mut Vec<RuleFinding>) {
     for (name, field) in [("key", &step.key), ("restore-keys", &step.restore_keys)] {
         let Some(field) = field else { continue };
-        // The source walker can leave YAML single quotes wrapped when the value has escapes.
         let decoded = field
             .value
-            .starts_with('\'')
+            .starts_with(['\'', '"'])
             .then(|| serde_yaml::from_str::<String>(&field.value).ok())
             .flatten();
         let value = decoded.as_deref().unwrap_or(&field.value);
