@@ -4,7 +4,11 @@ use super::super::source::line_number;
 use super::walk::read;
 use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 
-pub(super) fn evidence_at(call: &CallExpression<'_>, index: usize) -> JobOptionEvidence {
+pub(super) fn evidence_at(
+    call: &CallExpression<'_>,
+    index: usize,
+    bindings: &super::super::object_bindings::ObjectBindings<'_>,
+) -> JobOptionEvidence {
     if call
         .arguments
         .iter()
@@ -16,7 +20,7 @@ pub(super) fn evidence_at(call: &CallExpression<'_>, index: usize) -> JobOptionE
     call.arguments
         .get(index)
         .and_then(Argument::as_expression)
-        .map(read)
+        .map(|expr| read(expr, bindings))
         .unwrap_or_default()
 }
 

@@ -224,6 +224,30 @@ queues:
     orders: []
 ```
 
+## Unbounded job retention
+
+`queues.unboundedJobRetention` is opt-in and disabled by default. Set it to
+`true` to require bounded `removeOnComplete` and `removeOnFail` on every
+resolved producer and queue `defaultJobOptions`, or pass an object to select
+keys and exempt file paths:
+
+```yaml
+queues:
+  unboundedJobRetention:
+    require: [removeOnComplete, removeOnFail]
+    allowPaths: ["scripts/**"]
+```
+
+- `require` selects which of `removeOnComplete` and `removeOnFail` are checked
+  (defaults to both when enabled).
+- `allowPaths` lists relative glob patterns whose files are skipped by the
+  retention check.
+
+JavaScript callers can name this configuration shape with the exported
+`QueueJobRetentionKey`, `QueueUnboundedJobRetentionOptions`, and
+`QueueUnboundedJobRetentionConfig` types.
+See [`queues check`](../cli/queues-check.md#unbounded-job-retention).
+
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.
 Use [`queues edges`](../cli/queues-edges.md), [`queues related`](../cli/queues-related.md),

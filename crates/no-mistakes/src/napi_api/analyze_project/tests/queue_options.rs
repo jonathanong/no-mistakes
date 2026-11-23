@@ -37,3 +37,38 @@ fn queue_required_options_use_the_selected_config_in_prepared_reports() {
         }
     }
 }
+
+#[test]
+fn queue_unbounded_retention_uses_the_selected_config_in_prepared_reports() {
+    let fixtures = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-retention-config");
+    for (directory, default_count, explicit_count) in [("default-on", 1, 0), ("default-off", 0, 1)]
+    {
+        let root = fixtures.join(directory);
+        let standalone = crate::napi_api::queue_check_json_impl(
+            crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string()),
+        )
+        .unwrap();
+        let standalone: Value = serde_json::from_str(&standalone).unwrap();
+        assert_eq!(standalone.as_array().unwrap().len(), default_count);
+
+        let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "config": root.join("explicit.yml"),
+                "reports": [{ "type": "queueCheck" }, { "type": "check" }]
+            })
+            .to_string(),
+        ))
+        .unwrap();
+        let output: Value = serde_json::from_str(&output).unwrap();
+        let queue_check = &output["reports"][0]["result"];
+        let aggregate = &output["reports"][1]["result"]["queues"];
+        assert_eq!(queue_check, aggregate, "{directory}: {output}");
+        let findings = queue_check.as_array().unwrap();
+        assert_eq!(findings.len(), explicit_count, "{directory}: {output}");
+        for finding in findings {
+            assert_eq!(finding["kind"], "unbounded-job-retention");
+        }
+    }
+}

@@ -42,11 +42,11 @@ impl OptionsReader<'_, '_> {
         let mut evidence = match unwrap_ts_wrappers(expr) {
             Expression::ObjectExpression(object) => match projection {
                 Projection::DefaultMember => {
-                    read_member_with(object, "defaultJobOptions", |spread| {
+                    read_member_with(object, "defaultJobOptions", self.bindings, |spread| {
                         self.project(spread, at, Projection::DefaultMember)
                     })?
                 }
-                Projection::OptionKeys => read_object(object),
+                Projection::OptionKeys => read_object(object, self.bindings),
             },
             Expression::Identifier(id) => {
                 return self.project_binding(id.name.as_str(), at, projection)
@@ -57,7 +57,9 @@ impl OptionsReader<'_, '_> {
             if let Some(spread) =
                 self.project_binding(&spread.name, spread.at, Projection::OptionKeys)
             {
-                evidence.absorb(&spread);
+                evidence.keys.extend(spread.keys);
+                evidence.spreads.extend(spread.spreads);
+                evidence.open |= spread.open;
             }
         }
         Some(evidence)

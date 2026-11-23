@@ -36,6 +36,7 @@ Findings use these
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
 | `mixed-priority` | Producers on one queue enqueue both priority 0 and a priority greater than 0. See [Mixed priority](#mixed-priority). |
 | `missing-job-option` | A producer omits one or more keys from [`queues.requiredJobOptions`](../configuration/queues.md#required-job-options). One finding lists every missing key in configuration order. `message` is `job options missing {keys}`. |
+| `unbounded-job-retention` | A queue `defaultJobOptions` or producer keeps completed or failed jobs without a bound under [`queues.unboundedJobRetention`](../configuration/queues.md#unbounded-job-retention). |
 
 The wait check recognizes member calls such as `this.queue.addAndWait(...)`
 and literal computed members such as `queue["addAndWait"](...)`. It also
@@ -206,6 +207,47 @@ Suppression (applies on aggregate `no-mistakes check`):
 // no-mistakes-disable-next-line queues-check
 await worker.rateLimit(1000);
 ```
+
+## Unbounded job retention
+
+BullMQ and compatible libraries keep every completed and failed job in Redis or
+Valkey unless told otherwise. Opt into `queues.unboundedJobRetention` to report:
+
+- `removeOnComplete: false` or `removeOnFail: false` in a queue's
+  `defaultJobOptions`, at a producer site (`add`, `addBulk`, flow nodes,
+  configured enqueue factories), or in an `upsertJobScheduler` template.
+- A producer whose resolved options (call options over queue defaults) leave a
+  required retention key unset.
+
+`true`, a non-negative number, or an object with a `count` or `age` property
+counts as bounded. Non-literal expressions and open spreads abstain. When both
+`queues.requiredJobOptions` and `queues.unboundedJobRetention` cover the same
+key on a producer, `unbounded-job-retention` reports it once so the site is not
+reported twice.
+
+```ts
+// reported: failed jobs are kept forever
+const widgets = new Queue("widgets", {
+  defaultJobOptions: { removeOnComplete: true, removeOnFail: false },
+});
+
+// reported: nothing bounds failed jobs, and the queue has no bounded default
+await bare.add("build", data, { removeOnComplete: { count: 100 } });
+
+// accepted: both bounded by count or age
+const bounded = new Queue("bounded", {
+  defaultJobOptions: {
+    removeOnComplete: true,
+    removeOnFail: { age: 86_400, count: 1_000 },
+  },
+});
+```
+
+Fix: set `removeOnComplete` and `removeOnFail` to `true`, a count, or an
+`{ age, count }` object in `defaultJobOptions` or at the producer call site,
+and store durable work records in the database. Exempt operator tooling or
+one-off scripts with `queues.unboundedJobRetention.allowPaths`, or suppress a
+single call with `// no-mistakes-disable-next-line queues-check`.
 
 ## Suppression
 

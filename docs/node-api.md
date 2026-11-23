@@ -504,6 +504,11 @@ no separate JSON field is added.
 configuration, not an inline `queueCheck()` option. A `missing-job-option`
 finding lists the absent keys in `message`. Abstained calls are omitted from
 the findings array; their warnings stay on the queue report diagnostics.
+`queues.unboundedJobRetention` is also discovered configuration (selected by
+`config` in `check()` and `analyzeProject()`), emitting `unbounded-job-retention`
+findings through `queueCheck()`, `check()`, and `analyzeProject()`. Exported
+types `QueueJobRetentionKey`, `QueueUnboundedJobRetentionOptions`, and
+`QueueUnboundedJobRetentionConfig` describe its YAML shape.
 
 ## Queue factory configuration types
 

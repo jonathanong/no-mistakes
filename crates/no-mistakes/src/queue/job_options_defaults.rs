@@ -1,9 +1,14 @@
-use super::super::extract_model::{JobOptionEvidence, QueueDefaultOptions};
+use super::super::extract_model::{
+    FileFacts, JobOptionEvidence, JobOptionSite, LocalQueue, QueueDefaultOptions,
+};
 use super::super::extract_visitor::QueueVisitor;
+use super::super::source::line_number;
 use super::site::{evidence_at, push_site};
 use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[path = "job_options_default_read.rs"]
 mod read;
@@ -15,7 +20,8 @@ pub(crate) fn note_factory_defaults(
     name_index: usize,
     call: &CallExpression<'_>,
 ) {
-    let mut recorded = blank(declaration, queue_name.map(str::to_string));
+    let line = line_number(visitor.source, call.span().start);
+    let mut recorded = blank(declaration, line, queue_name.map(str::to_string));
     for (index, arg) in call.arguments.iter().enumerate() {
         if index == name_index {
             continue;
@@ -30,8 +36,10 @@ pub(crate) fn note_constructed_defaults(
     declaration: u32,
     new_expr: &oxc_ast::ast::NewExpression<'_>,
 ) {
+    let line = line_number(visitor.source, new_expr.span().start);
     let mut recorded = blank(
         declaration,
+        line,
         new_expr
             .arguments
             .first()
@@ -56,13 +64,16 @@ pub(crate) fn note_argument_options(
         Some(binding.to_string()),
         None,
         job.clone(),
-        index.map_or_else(JobOptionEvidence::default, |index| evidence_at(call, index)),
+        index.map_or_else(JobOptionEvidence::default, |index| {
+            evidence_at(call, index, &visitor.object_bindings)
+        }),
     );
 }
 
-fn blank(declaration: u32, queue_name: Option<String>) -> QueueDefaultOptions {
+fn blank(declaration: u32, line: usize, queue_name: Option<String>) -> QueueDefaultOptions {
     QueueDefaultOptions {
         declaration,
+        line,
         queue_name,
         evidence: JobOptionEvidence::default(),
     }
@@ -79,5 +90,65 @@ fn note_options_argument(
     };
     if !matches!(expr.get_inner_expression(), Expression::StringLiteral(_)) {
         recorded.evidence = read::queue_defaults(expr, bindings);
+    }
+}
+
+enum IndexedDefaults {
+    Single(JobOptionEvidence),
+    Ambiguous,
+}
+
+pub(super) struct DefaultsIndex {
+    by_file_queue: HashMap<(PathBuf, String), IndexedDefaults>,
+    by_declaration: HashMap<(PathBuf, u32), JobOptionEvidence>,
+}
+
+impl DefaultsIndex {
+    pub(super) fn lookup_evidence(
+        &self,
+        site: &JobOptionSite,
+    ) -> Option<Result<&JobOptionEvidence, ()>> {
+        let file = site.queue_file.as_ref()?;
+        if let Some(declaration) = site.declaration {
+            if let Some(evidence) = self.by_declaration.get(&(file.clone(), declaration)) {
+                return Some(Ok(evidence));
+            }
+        }
+        let name = site.queue_name.as_ref()?;
+        match self.by_file_queue.get(&(file.clone(), name.clone()))? {
+            IndexedDefaults::Single(evidence) => Some(Ok(evidence)),
+            IndexedDefaults::Ambiguous => Some(Err(())),
+        }
+    }
+}
+
+pub(super) fn index_defaults(facts: &HashMap<PathBuf, FileFacts>) -> DefaultsIndex {
+    let mut by_file_queue: HashMap<(PathBuf, String), IndexedDefaults> = HashMap::new();
+    let mut by_declaration: HashMap<(PathBuf, u32), JobOptionEvidence> = HashMap::new();
+    for (path, file) in facts {
+        for defaults in &file.queue_defaults {
+            let name = defaults.queue_name.clone().or_else(|| {
+                let LocalQueue::Known(name) = file.queue_declarations.get(&defaults.declaration)?
+                else {
+                    return None;
+                };
+                Some(name.clone())
+            });
+            let Some(name) = name else {
+                continue;
+            };
+            by_declaration.insert(
+                (path.clone(), defaults.declaration),
+                defaults.evidence.clone(),
+            );
+            by_file_queue
+                .entry((path.clone(), name))
+                .and_modify(|existing| *existing = IndexedDefaults::Ambiguous)
+                .or_insert_with(|| IndexedDefaults::Single(defaults.evidence.clone()));
+        }
+    }
+    DefaultsIndex {
+        by_file_queue,
+        by_declaration,
     }
 }

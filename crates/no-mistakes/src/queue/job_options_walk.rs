@@ -1,21 +1,32 @@
 use super::super::extract_model::{FileFacts, JobOptionEvidence, JobOptionSpread};
 use super::super::object_bindings::ObjectBindings;
+use super::retention_read;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 
-pub(in crate::queue) fn read(expr: &Expression<'_>) -> JobOptionEvidence {
+pub(in crate::queue) fn read(
+    expr: &Expression<'_>,
+    bindings: &ObjectBindings<'_>,
+) -> JobOptionEvidence {
     match expr.get_inner_expression() {
-        Expression::ObjectExpression(object) => read_object(object),
+        Expression::ObjectExpression(object) => read_object(object, bindings),
         Expression::Identifier(id) => JobOptionEvidence {
             spreads: vec![(&**id).into()],
+            retention: retention_read::from_expr(expr, bindings),
             ..JobOptionEvidence::default()
         },
         _ => JobOptionEvidence::open(),
     }
 }
 
-pub(super) fn read_object(object: &ObjectExpression<'_>) -> JobOptionEvidence {
-    let mut out = JobOptionEvidence::default();
+pub(super) fn read_object(
+    object: &ObjectExpression<'_>,
+    bindings: &ObjectBindings<'_>,
+) -> JobOptionEvidence {
+    let mut out = JobOptionEvidence {
+        retention: retention_read::from_object(object, bindings),
+        ..JobOptionEvidence::default()
+    };
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
@@ -28,7 +39,12 @@ pub(super) fn read_object(object: &ObjectExpression<'_>) -> JobOptionEvidence {
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
                 match spread.argument.get_inner_expression() {
-                    Expression::ObjectExpression(inner) => out.absorb(&read_object(inner)),
+                    Expression::ObjectExpression(inner) => {
+                        let inner_ev = read_object(inner, bindings);
+                        out.keys.extend(inner_ev.keys);
+                        out.spreads.extend(inner_ev.spreads);
+                        out.open |= inner_ev.open;
+                    }
                     Expression::Identifier(id) => out.spreads.push((&**id).into()),
                     _ => out.open = true,
                 }
@@ -38,16 +54,23 @@ pub(super) fn read_object(object: &ObjectExpression<'_>) -> JobOptionEvidence {
     out
 }
 
-pub(super) fn read_member(object: &ObjectExpression<'_>, key: &str) -> Option<JobOptionEvidence> {
-    read_member_with(object, key, |spread| match spread.get_inner_expression() {
-        Expression::ObjectExpression(inner) => read_member(inner, key),
-        _ => Some(JobOptionEvidence::open()),
+pub(super) fn read_member(
+    object: &ObjectExpression<'_>,
+    key: &str,
+    bindings: &ObjectBindings<'_>,
+) -> Option<JobOptionEvidence> {
+    read_member_with(object, key, bindings, |spread| {
+        match spread.get_inner_expression() {
+            Expression::ObjectExpression(inner) => read_member(inner, key, bindings),
+            _ => Some(JobOptionEvidence::open()),
+        }
     })
 }
 
 pub(super) fn read_member_with(
     object: &ObjectExpression<'_>,
     key: &str,
+    bindings: &ObjectBindings<'_>,
     mut spread_value: impl FnMut(&Expression<'_>) -> Option<JobOptionEvidence>,
 ) -> Option<JobOptionEvidence> {
     let mut evidence = None;
@@ -56,7 +79,7 @@ pub(super) fn read_member_with(
             ObjectPropertyKind::SpreadProperty(spread) => spread_value(&spread.argument),
             ObjectPropertyKind::ObjectProperty(property) => {
                 match crate::ast::property_key_name(&property.key) {
-                    Some(name) if name == key => Some(read(&property.value)),
+                    Some(name) if name == key => Some(read(&property.value, bindings)),
                     Some(_) => None,
                     None => Some(JobOptionEvidence::open()),
                 }
@@ -99,7 +122,10 @@ struct SpreadResolver<'binding, 'ast> {
 impl SpreadResolver<'_, '_> {
     fn fold_keys(&mut self, evidence: &mut JobOptionEvidence) {
         for spread in std::mem::take(&mut evidence.spreads) {
-            evidence.absorb(&self.option_keys(&spread));
+            let resolved = self.option_keys(&spread);
+            evidence.keys.extend(resolved.keys);
+            evidence.spreads.extend(resolved.spreads);
+            evidence.open |= resolved.open;
         }
     }
 
@@ -121,7 +147,7 @@ impl SpreadResolver<'_, '_> {
         if !self.active.insert(declaration) {
             return JobOptionEvidence::open();
         }
-        let mut evidence = read(value);
+        let mut evidence = read(value, self.bindings);
         self.fold_keys(&mut evidence);
         self.active.remove(&declaration);
         self.objects.insert(declaration, evidence.clone());
@@ -139,10 +165,12 @@ impl SpreadResolver<'_, '_> {
             return Some(JobOptionEvidence::open());
         }
         let member = match value {
-            Expression::ObjectExpression(object) => read_member(object, "opts").map(|mut opts| {
-                self.fold_keys(&mut opts);
-                opts
-            }),
+            Expression::ObjectExpression(object) => {
+                read_member(object, "opts", self.bindings).map(|mut opts| {
+                    self.fold_keys(&mut opts);
+                    opts
+                })
+            }
             Expression::Identifier(id) => self.opts_member(&(&**id).into()),
             _ => Some(JobOptionEvidence::open()),
         };

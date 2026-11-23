@@ -5,7 +5,7 @@ mod job_options;
 mod worker_rate_limit;
 pub(crate) use job_options::{
     JobOptionEvidence, JobOptionFinding, JobOptionSite, JobOptionSpread, QueueDefaultOptions,
-    RequiredJobOptions,
+    RequiredJobOptions, RetentionEvidence, RetentionValue, UnboundedRetentionPolicy,
 };
 pub(crate) use worker_rate_limit::{
     ExportedWorkerBinding, WorkerRateLimitCall, WorkerRateLimitTarget,
@@ -143,4 +143,5 @@ pub(crate) struct FileFacts {
     pub worker_exports: HashMap<String, ExportedWorkerBinding>,
     pub worker_import_aliases: HashMap<String, String>,
     pub worker_namespace_exports: HashMap<String, (String, String)>,
+    pub unbounded_job_retention: Option<UnboundedRetentionPolicy>,
 }

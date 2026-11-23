@@ -165,7 +165,7 @@ fn analyze_project_inner<T>(
         &resolver,
         &remapper,
     );
-    crate::queue::job_options::judge_into_facts(&mut facts);
+    crate::queue::job_options::judge_into_facts(root, &mut facts);
     crate::queue::worker_rate_limit::resolve(&mut facts, &resolver, &remapper);
     Ok(builder(root, producers, workers, &facts))
 }

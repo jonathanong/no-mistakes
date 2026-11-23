@@ -1,7 +1,67 @@
 use super::ProducerBinding;
+use crate::config::v2::schema::{JobRetentionKey, UnboundedJobRetentionConfig};
 use oxc_ast::ast::IdentifierReference;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RetentionValue {
+    Bounded,
+    Unbounded,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct RetentionEvidence {
+    pub remove_on_complete: Option<RetentionValue>,
+    pub remove_on_fail: Option<RetentionValue>,
+}
+
+impl RetentionEvidence {
+    pub(crate) fn get(&self, key: JobRetentionKey) -> Option<RetentionValue> {
+        match key {
+            JobRetentionKey::RemoveOnComplete => self.remove_on_complete,
+            JobRetentionKey::RemoveOnFail => self.remove_on_fail,
+        }
+    }
+
+    pub(crate) fn set_by_name(&mut self, name: &str, value: RetentionValue) {
+        match name {
+            "removeOnComplete" => self.remove_on_complete = Some(value),
+            "removeOnFail" => self.remove_on_fail = Some(value),
+            _ => {}
+        }
+    }
+
+    pub(crate) fn unknown_all() -> Self {
+        Self {
+            remove_on_complete: Some(RetentionValue::Unknown),
+            remove_on_fail: Some(RetentionValue::Unknown),
+        }
+    }
+
+    pub(crate) fn invalidate_unset(&mut self) {
+        self.remove_on_complete = Some(RetentionValue::Unknown);
+        self.remove_on_fail = Some(RetentionValue::Unknown);
+    }
+
+    pub(crate) fn absorb(&mut self, other: &Self, other_open: bool) {
+        if other_open {
+            if other.remove_on_complete.is_none() {
+                self.remove_on_complete = Some(RetentionValue::Unknown);
+            }
+            if other.remove_on_fail.is_none() {
+                self.remove_on_fail = Some(RetentionValue::Unknown);
+            }
+        }
+        if let Some(value) = other.remove_on_complete {
+            self.remove_on_complete = Some(value);
+        }
+        if let Some(value) = other.remove_on_fail {
+            self.remove_on_fail = Some(value);
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct JobOptionSpread {
@@ -26,12 +86,14 @@ pub(crate) struct JobOptionEvidence {
     pub spreads: Vec<JobOptionSpread>,
     /// When set, finish folds each name in `spreads` as this member, in order.
     pub member: Option<String>,
+    pub retention: RetentionEvidence,
 }
 
 impl JobOptionEvidence {
     pub(crate) fn open() -> Self {
         Self {
             open: true,
+            retention: RetentionEvidence::unknown_all(),
             ..Self::default()
         }
     }
@@ -40,6 +102,7 @@ impl JobOptionEvidence {
         self.keys.extend(other.keys.iter().cloned());
         self.spreads.extend(other.spreads.iter().cloned());
         self.open |= other.open;
+        self.retention.absorb(&other.retention, other.open);
     }
 }
 
@@ -58,12 +121,14 @@ pub(crate) struct JobOptionSite {
 #[derive(Debug, Clone)]
 pub(crate) struct QueueDefaultOptions {
     pub declaration: u32,
+    pub line: usize,
     pub queue_name: Option<String>,
     pub evidence: JobOptionEvidence,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct JobOptionFinding {
+    pub kind: String,
     pub line: usize,
     pub queue_file: Option<PathBuf>,
     pub queue_name: Option<String>,
@@ -84,3 +149,5 @@ impl RequiredJobOptions {
             .unwrap_or(&self.global)
     }
 }
+
+pub(crate) type UnboundedRetentionPolicy = UnboundedJobRetentionConfig;

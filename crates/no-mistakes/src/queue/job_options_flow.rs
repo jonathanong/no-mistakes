@@ -17,11 +17,14 @@ pub(super) fn note_scheduler(
     call: &CallExpression<'_>,
     binding: Option<String>,
 ) {
-    let (job, evidence) = scheduler_template(call);
+    let (job, evidence) = scheduler_template(call, &visitor.object_bindings);
     push_site(visitor, call.span().start, binding, None, job, evidence);
 }
 
-fn scheduler_template(call: &CallExpression<'_>) -> (Option<String>, JobOptionEvidence) {
+fn scheduler_template(
+    call: &CallExpression<'_>,
+    bindings: &super::super::object_bindings::ObjectBindings<'_>,
+) -> (Option<String>, JobOptionEvidence) {
     let Some(arg) = call.arguments.get(2) else {
         let evidence = if call
             .arguments
@@ -40,7 +43,7 @@ fn scheduler_template(call: &CallExpression<'_>) -> (Option<String>, JobOptionEv
     match expr.get_inner_expression() {
         Expression::ObjectExpression(object) => (
             member_string(object, "name"),
-            read_member(object, "opts").unwrap_or_default(),
+            read_member(object, "opts", bindings).unwrap_or_default(),
         ),
         Expression::Identifier(id) => (
             None,
@@ -83,7 +86,9 @@ fn note_flow_node<'a>(
     let new_node = active.insert(start);
     let members = members::read(object, &visitor.object_bindings);
     let queue_name = members.queue_name();
-    let evidence = new_node.then(|| flow_opts(object)).flatten();
+    let evidence = new_node
+        .then(|| flow_opts(object, &visitor.object_bindings))
+        .flatten();
     let known_spreads = evidence.as_ref().is_some_and(|evidence| {
         evidence.spreads.iter().all(|spread| {
             visitor
@@ -110,7 +115,10 @@ fn note_flow_node<'a>(
     }
 }
 
-fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
+fn flow_opts(
+    object: &ObjectExpression<'_>,
+    bindings: &super::super::object_bindings::ObjectBindings<'_>,
+) -> Option<JobOptionEvidence> {
     let mut evidence = JobOptionEvidence::default();
     let mut pending = Vec::new();
     for property in &object.properties {
@@ -118,7 +126,7 @@ fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
             ObjectPropertyKind::ObjectProperty(property) => {
                 match crate::ast::property_key_name(&property.key).as_deref() {
                     Some("opts") => {
-                        evidence = read(&property.value);
+                        evidence = read(&property.value, bindings);
                         pending.clear();
                     }
                     Some(_) => {}
@@ -128,7 +136,7 @@ fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
             ObjectPropertyKind::SpreadProperty(spread) => {
                 match spread.argument.get_inner_expression() {
                     Expression::ObjectExpression(inner) => {
-                        if let Some(member) = read_member(inner, "opts") {
+                        if let Some(member) = read_member(inner, "opts", bindings) {
                             evidence = member;
                             pending.clear();
                         }
