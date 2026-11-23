@@ -163,6 +163,8 @@ mod cli_gha_snapshot_checkout_credentials;
 mod cli_gha_snapshot_composite_step_schema;
 #[path = "cli_gha_snapshot_docker_host_ports.rs"]
 mod cli_gha_snapshot_docker_host_ports;
+#[path = "cli_gha_snapshot_no_poll_wait_job.rs"]
+mod cli_gha_snapshot_no_poll_wait_job;
 #[path = "cli_gha_snapshot_download_integrity.rs"]
 mod cli_gha_snapshot_download_integrity;
 #[path = "cli_gha_snapshot_job_permissions.rs"]

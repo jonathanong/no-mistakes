@@ -132,6 +132,9 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
+        GITHUB_ACTIONS_NO_POLL_WAIT_JOB => {
+            no_poll_wait_job::check_with_files_and_sources(root, config, files, sources)
+        }
         GITHUB_ACTIONS_VITEST_PROJECT_SELECTION => {
             github_actions_vitest_project_selection::check_with_files_and_sources(
                 root, config, files, sources,

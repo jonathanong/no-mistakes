@@ -19,6 +19,7 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::github_actions_script_expressions::RULE_ID,
     rules::github_actions_checkout_credentials::RULE_ID,
     rules::github_actions_docker_host_ports::RULE_ID,
+    rules::GITHUB_ACTIONS_NO_POLL_WAIT_JOB,
     rules::github_actions_vitest_project_selection::RULE_ID,
     rules::github_actions_download_integrity::RULE_ID,
     rules::VERSION_PIN_CONSISTENCY,
