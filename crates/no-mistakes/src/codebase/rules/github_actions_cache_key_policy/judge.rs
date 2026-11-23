@@ -27,11 +27,13 @@ pub(super) fn judge(
                 .as_ref()
                 .map(|field| path_entries(&field.value))
                 .unwrap_or_default();
+            let mut scoped = false;
             for cache in &options.caches {
                 let path = norm_path(&cache.path);
                 if !paths.iter().any(|entry| entry == &path) {
                     continue;
                 }
+                scoped = true;
                 judge_step(
                     rel,
                     step,
@@ -41,6 +43,9 @@ pub(super) fn judge(
                     &view,
                     &mut findings,
                 );
+            }
+            if scoped && options.forbid_broad_hash_files {
+                super::broad_hash::check(rel, step, options, &mut findings);
             }
         }
     }

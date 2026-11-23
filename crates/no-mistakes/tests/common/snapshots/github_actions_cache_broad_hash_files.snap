@@ -1,0 +1,138 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 33,
+          "message": "directive for `github-actions-cache-key-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ hashFiles('suppressed/**') }} # no-mistakes-disable-line github-actions-cache-key-policy",
+          "target": "github-actions-cache-key-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 10,
+          "message": "Cache `key` calls hashFiles with broad pattern `**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: \"${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', '**', 'src/**') }}\""
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 10,
+          "message": "Cache `key` calls hashFiles with broad pattern `src/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: \"${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', '**', 'src/**') }}\""
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 11,
+          "message": "Cache `restore-keys` calls hashFiles with broad pattern `output/*`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: |"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 17,
+          "message": "Cache `key` calls hashFiles with broad pattern `**/unlisted.lock`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ HASHFILES('**/unlisted.lock', 'generated/other/**') }}"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 17,
+          "message": "Cache `key` calls hashFiles with broad pattern `generated/other/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ HASHFILES('**/unlisted.lock', 'generated/other/**') }}"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 19,
+          "message": "Cache `restore-keys` calls hashFiles with broad pattern `assets/*/`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- fallback-${{ format('{0}', hashFiles(format('{0}', 'nested/**'), 'assets/*/')) }}"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 19,
+          "message": "Cache `restore-keys` calls hashFiles with broad pattern `it's, odd)/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- fallback-${{ format('{0}', hashFiles(format('{0}', 'nested/**'), 'assets/*/')) }}"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 25,
+          "message": "Cache `restore-keys` calls hashFiles with broad pattern `*/**/widgets.lock`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: 'fallback-${{ hashFiles(''*/**/widgets.lock'') }}'"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "restore-rejected": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 33,
+          "message": "directive for `github-actions-cache-key-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ hashFiles('suppressed/**') }} # no-mistakes-disable-line github-actions-cache-key-policy",
+          "target": "github-actions-cache-key-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 11,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: |"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 19,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- fallback-${{ format('{0}', hashFiles(format('{0}', 'nested/**'), 'assets/*/')) }}"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 25,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: 'fallback-${{ hashFiles(''*/**/widgets.lock'') }}'"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

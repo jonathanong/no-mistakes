@@ -17,6 +17,8 @@ pub(super) struct CacheSpec {
 pub(super) struct Options {
     pub reject_restore_keys: bool,
     pub allow_hash_files: bool,
+    pub forbid_broad_hash_files: bool,
+    pub allowed_hash_files_patterns: Vec<String>,
     pub caches: Vec<CacheSpec>,
 }
 
@@ -25,6 +27,8 @@ impl Default for Options {
         Self {
             reject_restore_keys: true,
             allow_hash_files: false,
+            forbid_broad_hash_files: false,
+            allowed_hash_files_patterns: Vec::new(),
             caches: Vec::new(),
         }
     }

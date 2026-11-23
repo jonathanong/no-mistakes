@@ -5,6 +5,7 @@
 A cache key that omits the runner platform, or that can be restored from a shorter prefix, can
 reuse bytes built for another operating system, architecture, or lockfile. Enable this rule when a
 portable cache path must be keyed by the platform and by a digest of a configured lockfile.
+A broad `hashFiles` glob can also invalidate a cache when unrelated source files change.
 
 The rule is opt-in. A cache whose `path` is not listed in `caches` is silent, including an
 expression path that is not exactly one configured path.
@@ -100,8 +101,22 @@ The key must also prove a digest of the configured lockfile, in either of these 
 sequence, is a finding. An empty or missing value is allowed. Set `rejectRestoreKeys` to false to
 allow prefix fallbacks.
 
+With `forbidBroadHashFiles: true`, the rule also checks each single-quoted string literal
+passed directly to `hashFiles` in a configured step's `key` or `restore-keys`. It reports a
+pattern containing `**` or ending in a standalone `*` path component, with or without a
+trailing slash. Examples include `**`, `src/**`, and `output/*`. Exact paths and suffix-specific
+patterns such as `src/*.json` pass. A single `**/` before the exact basename of a configured
+lockfile also passes, including `**/widgets.lock` and `packages/**/widgets.lock`. Every other
+component in that exception must be literal. A basename glob still does not prove the
+required digest. Dynamic arguments such as `env.cachePattern` and `format(...)` are ignored.
+If the scan detects malformed quoting or delimiters, it discards partial findings from that
+interpolation and keeps findings from earlier complete interpolations. The check applies
+independently of `allowHashFiles` and `rejectRestoreKeys`.
+
 A missing `key` is reported on the step. Platform and digest gaps are reported on the `key` line.
-`restore-keys` is reported on its own line. Invalid YAML is reported at the parser location.
+`restore-keys` is reported on its own line. Broad patterns are reported on the associated
+field line, or on the first item line for a `restore-keys` sequence. Invalid YAML is reported
+at the parser location.
 Workflow or action bytes that are not UTF-8 are reported on the line of the first invalid byte.
 Anchors, aliases, and other shapes whose cache steps cannot be aligned to ordinary block locations
 produce one finding on line 1 when a configured path is involved, and are not partially judged.
@@ -113,7 +128,10 @@ A cache step that does not use a configured path stays silent, including when th
 non-empty `lockfile`, and at least one dotted `keyParts` fragment such as `runner.os`. The same
 normalized path cannot be listed twice. `rejectRestoreKeys` defaults to true. `allowHashFiles`
 defaults to false, so a native `hashFiles` call is not provenance until you opt in. There is no
-repository-wide cache scan when `caches` is omitted.
+repository-wide cache scan when `caches` is omitted. `forbidBroadHashFiles` defaults to false.
+`allowedHashFilesPatterns` defaults to an empty list. Each entry is an exact, case-sensitive
+match to a decoded argument, such as `'generated/**'`, and exempts that argument from the
+broad-pattern check.
 
 ```yaml
 rules:
@@ -122,6 +140,8 @@ rules:
     options:
       rejectRestoreKeys: true
       allowHashFiles: true
+      forbidBroadHashFiles: true
+      allowedHashFilesPatterns: ['generated/**']
       caches:
         - path: .cache/widgets
           lockfile: widgets.lock
@@ -159,8 +179,10 @@ jobs:
 
 ## Counterexample
 
-This shared key has neither platform fragment nor a lockfile digest, and `restore-keys` can restore
-another platform or lockfile from the prefix:
+The first key omits both platform fragments and the lockfile digest, and its prefix can restore
+another platform or lockfile. The second key carries the required digest but also hashes
+`src/**`. With `forbidBroadHashFiles` enabled, the rule reports `src/**` in `key` and
+`output/*` in `restore-keys`, even when prefix fallbacks are allowed.
 
 ```yaml
 name: Widgets
@@ -174,6 +196,11 @@ jobs:
           path: .cache/widgets
           key: widgets-shared
           restore-keys: widgets-
+      - uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', 'src/**') }}
+          restore-keys: widgets-${{ hashFiles('output/*') }}
 ```
 
 ## Fix
@@ -181,7 +208,9 @@ jobs:
 Put each configured fragment in the key as its own expression, for example `${{ runner.os }}` and
 `${{ runner.arch }}`. Add a digest with `hashFiles('widgets.lock')` when `allowHashFiles` is true,
 or with a preceding same-job step that writes a hash of the lockfile to `GITHUB_OUTPUT`. Remove
-`restore-keys`, or set `rejectRestoreKeys` to false when a prefix fallback is intentional. Rewrite
+`restore-keys`, or set `rejectRestoreKeys` to false when a prefix fallback is intentional.
+Replace broad patterns with exact paths to the files that determine cache contents. Put an
+intentional broad argument in `allowedHashFilesPatterns` when its full file set matters. Rewrite
 anchors and aliases that affect a configured path as ordinary block-style steps. There is no
 automatic fix: the platform list and the lockfile path come from configuration.
 

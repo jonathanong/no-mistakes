@@ -358,13 +358,13 @@ fn assert_scanned_fixtures(findings: &[RuleFinding]) {
 
 fn widget_options() -> options::Options {
     options::Options {
-        reject_restore_keys: true,
         allow_hash_files: true,
         caches: vec![options::CacheSpec {
             path: ".cache/widgets".into(),
             lockfile: "widgets.lock".into(),
             key_parts: vec!["runner.os".into(), "runner.arch".into()],
         }],
+        ..options::Options::default()
     }
 }
 
@@ -396,12 +396,11 @@ fn empty_cache_list_is_a_config_error() {
 #[test]
 fn duplicate_paths_and_undotted_fragments_are_rejected() {
     let duplicate = options::Options {
-        reject_restore_keys: true,
-        allow_hash_files: false,
         caches: vec![
             spec(".cache/widgets", "widgets.lock", &["runner.os"]),
             spec("./.cache/widgets/", "orders.lock", &["runner.os"]),
         ],
+        ..options::Options::default()
     };
     let error = options::validate(&duplicate).unwrap_err().to_string();
     assert!(error.contains("listed more than once"), "{error}");

@@ -360,7 +360,10 @@ Move oversized scripts into files and invoke them; see the
 
 For `github-actions-cache-key-policy`, list each portable cache path with its lockfile and
 required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
-`allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
+`allowHashFiles` defaults to false. Set `forbidBroadHashFiles: true` to report broad literal
+patterns in `key` and `restore-keys`, and list intentional arguments exactly in
+`allowedHashFilesPatterns`. A glob such as `**/widgets.lock` is allowed for a configured
+lockfile basename. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
 must name that lockfile in the same simple command. A redirect after the closing `}` or `)` of
 a brace group or parenthesized command applies to every command in the group that does not already redirect

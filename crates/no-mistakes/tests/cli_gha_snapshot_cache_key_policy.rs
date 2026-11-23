@@ -23,6 +23,43 @@ fn github_actions_cache_key_policy_json_matches_snapshot() {
 }
 
 #[test]
+fn github_actions_cache_broad_hash_files_json_matches_snapshot() {
+    let root = rules_path(RULE, "fixture", "broad-hash");
+    assert_saved_fixture(
+        "github_actions_cache_broad_hash_files",
+        &[
+            (
+                "enabled",
+                root.clone(),
+                rules_path(RULE, "configs", "broad-hash.yml"),
+            ),
+            (
+                "default",
+                root.clone(),
+                rules_path(RULE, "configs", "restore-ok.yml"),
+            ),
+            (
+                "restore-rejected",
+                root,
+                rules_path(RULE, "configs", "policy.yml"),
+            ),
+        ],
+    );
+}
+
+#[test]
+fn malformed_hash_files_preserve_only_findings_from_complete_expressions() {
+    assert_saved_fixture(
+        "github_actions_cache_malformed_hash_files",
+        &[(
+            "malformed",
+            rules_path(RULE, "fixture", "malformed-broad-hash"),
+            rules_path(RULE, "configs", "broad-hash.yml"),
+        )],
+    );
+}
+
+#[test]
 fn empty_cache_list_is_rejected() {
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args(["check", "--root"])
