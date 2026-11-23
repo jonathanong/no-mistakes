@@ -26,8 +26,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 ## Leases
 
 - MUST NOT renew, complete, or fail leased work without matching your lease token; zero rows means you lost it.
-- MUST NOT release leased work without verifying ownership when another worker can acquire it after expiry. Use an atomic ownership check and release.
-- MUST NOT enter a lease-guarded section after failing to acquire its lease.
+- SHOULD NOT release leased work without verifying ownership when another worker can acquire it after expiry. Use an atomic ownership check and release.
+- SHOULD NOT enter a lease-guarded section after failing to acquire its lease.
 
 ## Sweeps and bounded iteration
 

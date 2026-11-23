@@ -32,4 +32,3 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT skip applicable suspension, block, or quota guards on mutating routes.
 - MUST NOT let client-evaluated feature flags authorize backend behavior.
 - MUST NOT expose unbounded lists; clamp page sizes.
-- MUST NOT let a schema drift from its handler, or widen it to hide drift.
