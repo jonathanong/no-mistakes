@@ -1,0 +1,69 @@
+id: prefer-shared-catalog-client
+language: TypeScript
+ignores:
+  - src/compat/adapter.ts
+  - src/generated/registry.ts
+message: Use the shared catalog client.
+severity: warning
+rule:
+  any:
+    - all:
+        - pattern: "catalog.add($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.archive($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.create($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.delete($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.find($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.get($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.list($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.lookup($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.publish($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.read($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.replace($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "catalog.update($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end

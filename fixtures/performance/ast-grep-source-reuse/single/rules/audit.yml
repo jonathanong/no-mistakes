@@ -1,0 +1,69 @@
+id: prefer-shared-audit-client
+language: TypeScript
+ignores:
+  - src/compat/adapter.ts
+  - src/generated/registry.ts
+message: Use the shared audit client.
+severity: warning
+rule:
+  any:
+    - all:
+        - pattern: "audit.append($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.emit($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.flush($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.initialize($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.inspect($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.list($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.publish($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.queue($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.record($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.rotate($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.subscribe($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "audit.write($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end

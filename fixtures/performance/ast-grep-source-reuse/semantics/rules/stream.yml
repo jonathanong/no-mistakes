@@ -1,0 +1,18 @@
+id: inherited
+language: TypeScript
+defaults: &defaults
+  ignores:
+    - missing-merged.ts
+<<: *defaults
+rule:
+  pattern: inherited()
+---
+id: explicit
+language: TypeScript
+ignores:
+  - missing-explicit.ts
+rule:
+  pattern: explicit()
+---
+id: broken
+rule: [

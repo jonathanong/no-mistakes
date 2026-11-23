@@ -1,6 +1,8 @@
 use super::load;
+use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[test]
 fn sgconfig_upgrades_a_rule_file_before_that_file_is_parsed() {
@@ -18,7 +20,9 @@ fn sgconfig_upgrades_a_rule_file_before_that_file_is_parsed() {
         "packages/widgets/sgconfig.yml".to_string(),
         "packages/widgets/rules".to_string(),
     ];
-    let (parsed, findings) = load(&root, &files, &tracked_owned, &tracked_set);
+    let paths: Vec<_> = tracked.iter().map(|path| root.join(path)).collect();
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&paths)));
+    let (parsed, findings) = load(&root, &files, &tracked_owned, &tracked_set, &sources);
     assert!(findings.is_empty());
     let orders = parsed
         .iter()

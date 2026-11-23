@@ -7,12 +7,14 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 
 mod config_locations;
+mod disable_comments;
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
 mod optional;
 mod read;
 mod regular_paths;
 mod roots;
+mod structured_yaml;
 mod validation;
 mod yaml;
 use read::{once_lock_slot, read_utf8_arc};
@@ -38,9 +40,11 @@ pub struct SourceStore {
     reads: Vec<OnceLock<SourceReadOutcome>>,
     json_parses: JsonParseSlots,
     yaml_documents: OnceLock<YamlDocumentSlots>,
+    structured_yaml: OnceLock<structured_yaml::StructuredYamlSlots>,
     config_locations: config_locations::LocationCache,
     supplemental_reads: SupplementalReadSlots,
     source_projections: SupplementalReadSlots,
+    disable_comments: OnceLock<disable_comments::DisableCommentSlots>,
     validated_regular_paths: ValidatedPathCache,
     trusted_regular_paths: DashSet<PathBuf>,
     physical_reads: AtomicUsize,
@@ -68,9 +72,11 @@ impl SourceStore {
             reads,
             json_parses: DashMap::new(),
             yaml_documents: OnceLock::new(),
+            structured_yaml: OnceLock::new(),
             config_locations: OnceLock::new(),
             supplemental_reads: DashMap::new(),
             source_projections: DashMap::new(),
+            disable_comments: OnceLock::new(),
             validated_regular_paths: DashMap::new(),
             trusted_regular_paths: DashSet::new(),
             physical_reads: AtomicUsize::new(0),

@@ -1,6 +1,8 @@
 use super::RuleFinding;
+use crate::codebase::ts_source::{DisableCommentIndex, DisableDirective, SourceStore};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 mod accounting;
 pub(crate) use accounting::read_directive_source;
@@ -13,7 +15,7 @@ pub use accounting::{
 pub(crate) fn suppress_rule_findings_with_sources_except(
     root: &Path,
     findings: &mut Vec<RuleFinding>,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
     already_suppressed_rules: &[&str],
 ) {
     suppress_rule_findings_inner(root, findings, Some(sources), already_suppressed_rules);
@@ -22,58 +24,120 @@ pub(crate) fn suppress_rule_findings_with_sources_except(
 pub(crate) fn suppress_rule_findings_with_sources(
     root: &Path,
     findings: &mut Vec<RuleFinding>,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
 ) {
     suppress_rule_findings_inner(root, findings, Some(sources), &[]);
 }
 
 pub(crate) fn suppress_rule_findings_with_source(findings: &mut Vec<RuleFinding>, source: &str) {
-    findings.retain(|finding| !finding_is_suppressed(source, finding));
+    let index = DisableCommentIndex::new(source);
+    findings.retain(|finding| {
+        finding.rule == super::allow_audit::RULE_ID
+            || index
+                .matching(
+                    &finding.rule,
+                    finding.line.try_into().ok(),
+                    !markdown_prose(&finding.file),
+                    None,
+                )
+                .is_none()
+    });
 }
 
 pub(super) fn suppress_rule_findings_inner(
     root: &Path,
     findings: &mut Vec<RuleFinding>,
-    request_sources: Option<&crate::codebase::ts_source::SourceStore>,
+    request_sources: Option<&SourceStore>,
     already_suppressed_rules: &[&str],
 ) {
-    let lexical_root = crate::codebase::ts_source::normalize_discovery_path(root);
-    let canonical_root = request_sources
-        .is_none()
-        .then(|| std::fs::canonicalize(&lexical_root).ok())
-        .flatten();
-    if request_sources.is_none() && canonical_root.is_none() {
-        return;
-    }
-    let mut sources: HashMap<String, Option<std::sync::Arc<str>>> = HashMap::new();
+    let mut sources = FindingSuppressions::new(root, request_sources);
     findings.retain(|finding| {
-        if already_suppressed_rules.contains(&finding.rule.as_str()) {
-            return true;
-        }
-        let source = sources.entry(finding.file.clone()).or_insert_with(|| {
-            let (candidate, is_absolute) =
-                finding_source_candidate(&lexical_root, &finding.file, request_sources.is_some())?;
-            let path = match request_sources {
-                Some(sources) if is_absolute => sources.trusted_regular_path(&candidate),
-                Some(sources) => sources.validated_regular_path(&lexical_root, &candidate),
-                None => source_path_for_candidate(
-                    canonical_root
-                        .as_deref()
-                        .expect("raw suppression canonicalizes root"),
-                    candidate,
-                ),
-            }?;
-            match request_sources {
-                Some(sources) => super::read_language_source(sources, &path),
-                None => std::fs::read_to_string(path)
-                    .ok()
-                    .map(std::sync::Arc::<str>::from),
-            }
-        });
-        !source
-            .as_deref()
-            .is_some_and(|source| finding_is_suppressed(source, finding))
+        already_suppressed_rules.contains(&finding.rule.as_str())
+            || sources
+                .matching(&finding.file, &finding.rule, Some(finding.line))
+                .is_none()
     });
+}
+
+type SharedIndex = Arc<DisableCommentIndex<Arc<str>>>;
+
+struct FindingSuppressions<'a> {
+    lexical_root: PathBuf,
+    canonical_root: Option<PathBuf>,
+    sources: Option<&'a SourceStore>,
+    files: HashMap<String, Option<SuppressionFile>>,
+}
+
+struct SuppressionFile {
+    index: SharedIndex,
+    track_quotes: bool,
+}
+
+impl<'a> FindingSuppressions<'a> {
+    fn new(root: &Path, sources: Option<&'a SourceStore>) -> Self {
+        let lexical_root = crate::codebase::ts_source::normalize_discovery_path(root);
+        let canonical_root = sources
+            .is_none()
+            .then(|| std::fs::canonicalize(&lexical_root).ok())
+            .flatten();
+        Self {
+            lexical_root,
+            canonical_root,
+            sources,
+            files: HashMap::new(),
+        }
+    }
+
+    fn matching(
+        &mut self,
+        file: &str,
+        rule: &str,
+        line: Option<usize>,
+    ) -> Option<DisableDirective> {
+        if rule == super::allow_audit::RULE_ID {
+            return None;
+        }
+        let source = match self.files.get(file) {
+            Some(cached) => cached,
+            None => {
+                let index = self.load(file);
+                self.files.entry(file.to_owned()).or_insert(index)
+            }
+        }
+        .as_ref()?;
+        source.index.matching(
+            rule,
+            line.and_then(|line| line.try_into().ok()),
+            source.track_quotes,
+            self.sources
+                .and_then(SourceStore::observer)
+                .map(Arc::as_ref),
+        )
+    }
+
+    fn load(&self, file: &str) -> Option<SuppressionFile> {
+        let (candidate, is_absolute) =
+            finding_source_candidate(&self.lexical_root, file, self.sources.is_some())?;
+        let index = match self.sources {
+            Some(sources) => {
+                let path = if is_absolute {
+                    sources.trusted_regular_path(&candidate)
+                } else {
+                    sources.validated_regular_path(&self.lexical_root, &candidate)
+                }?;
+                sources.suppressions_for_path(&path)?
+            }
+            None => {
+                let path = source_path_for_candidate(self.canonical_root.as_deref()?, candidate)?;
+                let source = Arc::<str>::from(std::fs::read_to_string(path).ok()?);
+                Arc::new(DisableCommentIndex::new(source))
+            }
+        };
+        Some(SuppressionFile {
+            index,
+            track_quotes: !markdown_prose(file),
+        })
+    }
 }
 
 fn finding_source_candidate(
@@ -116,55 +180,8 @@ fn markdown_prose(file: &str) -> bool {
         })
 }
 
-fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
-    if finding.rule == super::allow_audit::RULE_ID {
-        return false;
-    }
-    let line = finding.line.try_into().ok();
-    crate::codebase::ts_source::has_disable_file_comment(source, &finding.rule)
-        || line.is_some_and(|line| {
-            crate::codebase::ts_source::has_disable_comment(source, line, &finding.rule)
-                || crate::codebase::ts_source::has_disable_line_comment_tracking(
-                    source,
-                    line,
-                    &finding.rule,
-                    !markdown_prose(&finding.file),
-                )
-        })
-}
-
-fn matching_directive(
-    source: &str,
-    rule: &str,
-    line: Option<usize>,
-    file: &str,
-) -> Option<SuppressionDirective> {
-    use crate::codebase::ts_source::DisableDirective;
-
-    if rule == super::allow_audit::RULE_ID {
-        return None;
-    }
-
-    match crate::codebase::ts_source::matching_disable_directive_tracking(
-        source,
-        line.and_then(|line| u32::try_from(line).ok()),
-        rule,
-        !markdown_prose(file),
-    )? {
-        DisableDirective::File { line } => Some(SuppressionDirective {
-            kind: SuppressionDirectiveKind::File,
-            line: line as usize,
-        }),
-        DisableDirective::Line { line } => Some(SuppressionDirective {
-            kind: SuppressionDirectiveKind::Line,
-            line: line as usize,
-        }),
-        DisableDirective::NextLine { line } => Some(SuppressionDirective {
-            kind: SuppressionDirectiveKind::NextLine,
-            line: line as usize,
-        }),
-    }
-}
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod invalid_utf8_tests;
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod index_tests;

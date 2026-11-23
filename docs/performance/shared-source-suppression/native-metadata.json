@@ -1,0 +1,48 @@
+{
+  "system": "Linux",
+  "machine": "x86_64",
+  "logicalCpus": 24,
+  "timingObserver": "off",
+  "profile": {
+    "name": "release",
+    "lto": "thin",
+    "codegenUnits": 16,
+    "features": "default",
+    "cargoBuildJobs": 8
+  },
+  "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+  "variants": {
+    "release": {
+      "revision": "fe94a73d2812658e10792edd0d0cced2bade135d",
+      "binarySha256": "9bd6fa30de394fc0573719295b9731600cedf0095e22576ee14d13a8cfe71828"
+    },
+    "main": {
+      "revision": "cc55270e4cd09b7c47004cc51f095eb4e1f32142",
+      "binarySha256": "c2ae76a6f0f9e4ea9a0412539baee7599dc978d9717353092dcd38f4864355c8"
+    },
+    "candidate": {
+      "revision": "e31e725e51a4d840d9366c1ff714c62ec6473431",
+      "binarySha256": "448a9db2d5598b8d8f7602e9ddb98104dd9f494bec4fa2a12f1bab28adde5437"
+    }
+  },
+  "samplesPerVariantPerCase": 6,
+  "caseCount": 54,
+  "orderPerBlock": [
+    "release",
+    "main",
+    "candidate",
+    "candidate",
+    "main",
+    "release"
+  ],
+  "blocks": 3,
+  "warmupsPerVariantPerCase": 1,
+  "publishedReleaseTag": "v0.109.116",
+  "sourceJsonSha256": "145acbfde0832d3079664af6797163edc93bedf8062f3d861266e9e4073ac38a",
+  "dependencyPackagesSha256": "cea993ab5953df1cb3db914521fd592160ba3d39b4ef19f7884e455b85b33791",
+  "cargoLockSha256": {
+    "release": "155e884cb8d26d2d5701b54f30737b916a6bb1b2eb981eeeb6fb50f868ce14e4",
+    "main": "155e884cb8d26d2d5701b54f30737b916a6bb1b2eb981eeeb6fb50f868ce14e4",
+    "candidate": "155e884cb8d26d2d5701b54f30737b916a6bb1b2eb981eeeb6fb50f868ce14e4"
+  }
+}

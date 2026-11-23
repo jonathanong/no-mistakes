@@ -1,0 +1,75 @@
+version: 2
+reportUnusedDisableDirectives: ignore
+rules:
+  - name: ignore-freshness-01
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-02
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-03
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-04
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-05
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-06
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-07
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-08
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-09
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-10
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-11
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: ignore-freshness-12
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]

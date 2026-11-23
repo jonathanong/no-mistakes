@@ -1,3 +1,7 @@
+const DISABLE_FILE: &str = "no-mistakes-disable-file ";
+const DISABLE_LINE: &str = "no-mistakes-disable-line ";
+const DISABLE_NEXT_LINE: &str = "no-mistakes-disable-next-line ";
+
 pub fn byte_offset_to_line(source: &str, byte_offset: usize) -> u32 {
     let end = byte_offset.min(source.len());
     let line = source[..end].bytes().filter(|&b| b == b'\n').count();
@@ -19,17 +23,14 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
         .trim_start_matches('\u{FEFF}')
         .lines()
         .nth((stmt_line - 2) as usize)
-        .map(|line| {
-            let trimmed = line.trim();
-            let Some(rest) = leading_comment_text(trimmed) else {
-                return false;
-            };
-            let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-next-line ") else {
-                return false;
-            };
-            rule_part_matches(after_directive.trim(), rule_id)
-        })
-        .unwrap_or(false)
+        .and_then(next_line_rule_part)
+        .is_some_and(|part| rule_part_matches(part, rule_id))
+}
+
+fn next_line_rule_part(line: &str) -> Option<&str> {
+    leading_comment_text(line.trim())?
+        .strip_prefix(DISABLE_NEXT_LINE)
+        .map(str::trim)
 }
 
 /// Returns `true` if `stmt_line` (1-based) contains a
@@ -57,7 +58,17 @@ fn disable_file_directive_line(source: &str, rule_id: &str) -> Option<u32> {
     disable_file_directive_line_at(source, rule_id, None)
 }
 
-fn disable_file_directive_line_at(source: &str, rule_id: &str, expected: Option<u32>) -> Option<u32> {
+fn disable_file_directive_line_at(
+    source: &str,
+    rule_id: &str,
+    expected: Option<u32>,
+) -> Option<u32> {
+    scan_file_directives(source, |line, part| {
+        expected.is_none_or(|expected| expected == line) && rule_part_matches(part, rule_id)
+    })
+}
+
+fn scan_file_directives(source: &str, mut accept: impl FnMut(u32, &str) -> bool) -> Option<u32> {
     let mut in_block_comment = false;
     let mut saw_hash_attribute = false;
 
@@ -90,15 +101,15 @@ fn disable_file_directive_line_at(source: &str, rule_id: &str, expected: Option<
             let comment_prefix_is_slash = rest.starts_with("//");
             saw_hash_attribute |= hash_attribute_comment_line(rest);
             let rest = leading_comment_text(rest)?;
-            let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
+            let Some(after_directive) = rest.strip_prefix(DISABLE_FILE) else {
                 break;
             };
             if saw_hash_attribute && comment_prefix_is_slash {
                 return None;
             }
-            let rule_part = after_directive.trim();
-            if rule_part_matches(rule_part, rule_id) && expected.is_none_or(|line| line == (index + 1) as u32) {
-                return Some((index + 1) as u32);
+            let line = (index + 1) as u32;
+            if accept(line, after_directive.trim()) {
+                return Some(line);
             }
             break;
         }
@@ -120,11 +131,21 @@ fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
         suffix.is_empty() || suffix.starts_with(':') || suffix.starts_with(char::is_whitespace)
     })
 }
+fn named_rule(rule_part: &str) -> &str {
+    rule_part
+        .split(|ch: char| ch == ':' || ch.is_whitespace())
+        .next()
+        .unwrap_or("")
+}
+
+#[path = "disable_comments/index.rs"]
+mod disable_comment_index;
+pub(crate) use disable_comment_index::DisableCommentIndex;
+
 #[path = "disable_comments/directives.rs"]
 mod directives;
-pub(crate) use directives::{
-    has_disable_line_comment_tracking, matching_disable_directive_tracking,
-};
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+use directives::{has_disable_line_comment_tracking, matching_disable_directive_tracking};
 pub use directives::{matching_disable_directive, DisableDirective};
 
 /// Index line suppressions in one lexical pass. Next-line directives deliberately
@@ -140,9 +161,7 @@ fn disabled_statement_lines_with_scan_observer(
     rule_id: &str,
     mut scanned_line: impl FnMut(),
 ) -> Vec<u32> {
-    if !source.contains("no-mistakes-disable-line ")
-        && !source.contains("no-mistakes-disable-next-line ")
-    {
+    if !source.contains(DISABLE_LINE) && !source.contains(DISABLE_NEXT_LINE) {
         return Vec::new();
     }
     let mut state = LineCommentScanState {
@@ -155,17 +174,13 @@ fn disabled_statement_lines_with_scan_observer(
     for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
         line_count = index + 1;
         scanned_line();
-        let inline_disabled = line_comment_start(line, &mut state)
-            .and_then(|(start, kind)| {
-                comment_body(line, start, kind).strip_prefix("no-mistakes-disable-line ")
-            })
-            .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
+        let inline_disabled = directives::inline_rule_part(line, &mut state)
+            .is_some_and(|part| rule_part_matches(part, rule_id));
         if next_disabled || inline_disabled {
             disabled.push((index + 1) as u32);
         }
-        next_disabled = leading_comment_text(line.trim())
-            .and_then(|rest| rest.strip_prefix("no-mistakes-disable-next-line "))
-            .is_some_and(|rest| rule_part_matches(rest.trim(), rule_id));
+        next_disabled =
+            next_line_rule_part(line).is_some_and(|part| rule_part_matches(part, rule_id));
     }
     // Preserve next-line queries for an otherwise empty final line as well.
     if next_disabled {

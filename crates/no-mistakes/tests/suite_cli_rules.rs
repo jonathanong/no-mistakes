@@ -344,3 +344,6 @@ mod cli_check_queue_priority;
 
 #[path = "cli_check_rules_no_single_enqueue_in_loop.rs"]
 mod cli_check_rules_no_single_enqueue_in_loop;
+
+#[path = "cli_suppression_index.rs"]
+mod cli_suppression_index;

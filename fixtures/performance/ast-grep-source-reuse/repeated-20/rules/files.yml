@@ -1,0 +1,69 @@
+id: prefer-shared-files-client
+language: TypeScript
+ignores:
+  - src/compat/adapter.ts
+  - src/generated/registry.ts
+message: Use the shared files client.
+severity: warning
+rule:
+  any:
+    - all:
+        - pattern: "files.append($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.close($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.copy($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.delete($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.exists($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.list($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.move($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.open($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.read($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.rename($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.stat($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "files.write($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end

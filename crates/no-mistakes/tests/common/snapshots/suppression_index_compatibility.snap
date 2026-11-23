@@ -1,0 +1,77 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "mixed_directives": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "worker.ts",
+          "import": "scheduler.register",
+          "line": 2,
+          "message": "forbidden call (application #1): exact `scheduler.register`",
+          "rule": "forbidden-calls",
+          "sourceLine": "scheduler.register(0);",
+          "target": "exact `scheduler.register`"
+        },
+        {
+          "file": "worker.ts",
+          "import": "scheduler.register",
+          "line": 7,
+          "message": "forbidden call (application #1): exact `scheduler.register`",
+          "rule": "forbidden-calls",
+          "sourceLine": "scheduler.register(3);",
+          "target": "exact `scheduler.register`"
+        }
+      ],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "rules",
+          "file": "file.ts",
+          "line": 3,
+          "reason": "forbidden call (application #1): exact `scheduler.register`",
+          "rule": "forbidden-calls",
+          "sourceFile": "file.ts",
+          "sourceLine": "scheduler.register(4);"
+        },
+        {
+          "directive": {
+            "kind": "line",
+            "line": 5
+          },
+          "domain": "rules",
+          "file": "worker.ts",
+          "line": 5,
+          "reason": "forbidden call (application #1): exact `scheduler.register`",
+          "rule": "forbidden-calls",
+          "sourceFile": "worker.ts",
+          "sourceLine": "scheduler.register(2); // no-mistakes-disable-line forbidden-calls: retained exception"
+        },
+        {
+          "directive": {
+            "kind": "nextLine",
+            "line": 3
+          },
+          "domain": "rules",
+          "file": "worker.ts",
+          "line": 4,
+          "reason": "forbidden call (application #1): exact `scheduler.register`",
+          "rule": "forbidden-calls",
+          "sourceFile": "worker.ts",
+          "sourceLine": "scheduler.register(1);"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -53,6 +53,11 @@ directory of tracked rule YAML, or a tracked `sgconfig` file whose `ruleDirs`
 are scanned. When `files` is empty, the rule reads root `sgconfig.yml` or
 `sgconfig.yaml` and the tracked YAML under its `ruleDirs`.
 
+Selected YAML source and structured documents are loaded once per request
+and shared across rule applications. This retains the existing parser,
+including merge keys and partial-document errors; selection, strict UTF-8
+read errors, and freshness findings keep the same semantics.
+
 ## Options
 
 `files` defaults to empty, which selects root `sgconfig.yml` / `sgconfig.yaml`.

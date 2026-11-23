@@ -1,5 +1,5 @@
 use super::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::ts_source::{relative_slash_path, FileInventory, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -7,6 +7,7 @@ use serde::Deserialize;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub const RULE_ID: &str = "ast-grep-ignore-freshness";
 
@@ -29,12 +30,22 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(all_files)));
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
-            scan(root, config, rule, &opts, all_files)
+            scan(root, config, rule, &opts, all_files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -48,6 +59,7 @@ fn scan(
     rule: &crate::config::v2::schema::RuleDef,
     opts: &Options,
     all_files: &[PathBuf],
+    sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let tracked: Vec<String> = all_files
         .iter()
@@ -56,7 +68,7 @@ fn scan(
         .filter(|relative| !relative.is_empty())
         .collect();
     let tracked_set: BTreeSet<&str> = tracked.iter().map(String::as_str).collect();
-    let (parsed, mut findings) = scan::load(root, &opts.files, &tracked, &tracked_set);
+    let (parsed, mut findings) = scan::load(root, &opts.files, &tracked, &tracked_set, sources);
     let paths: Vec<PathBuf> = parsed
         .iter()
         .map(|item| root.join(&item.relative))
@@ -71,7 +83,7 @@ fn scan(
             findings.extend(ignore_findings(
                 &item.relative,
                 &item.source,
-                &item.documents,
+                &item.documents.values,
                 &item.project,
                 &tracked,
             ));
@@ -146,3 +158,6 @@ pub(super) fn finding(
         target,
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod source_reuse_tests;
