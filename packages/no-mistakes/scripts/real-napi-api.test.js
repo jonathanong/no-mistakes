@@ -7,6 +7,7 @@ const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { setTimeout: delay } = require("node:timers/promises");
 const { Worker } = require("node:worker_threads");
+const beforeAll = globalThis.beforeAll || require("node:test").before;
 const test = globalThis.test || require("node:test").test;
 require("./api-tests/forbidden-lint-suppressions-native");
 require("./api-tests/pnpm-release-age-policy-native");
@@ -74,6 +75,13 @@ const expectedReport = JSON.parse(readFileSync(join(fixtureRoot, "expected.json"
 const freshTopologyFixture = join(repositoryRoot, "fixtures", "napi", "fresh-topology");
 const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const compiledAddonPath = addonPath && addonPath.endsWith(".node") ? addonPath : undefined;
+
+beforeAll(async () => {
+  if (compiledAddonPath) {
+    require("../index.js");
+    await import("../index.mjs");
+  }
+});
 
 test(
   "compiled async N-API dependencies API matches the CLI fixture contract",
