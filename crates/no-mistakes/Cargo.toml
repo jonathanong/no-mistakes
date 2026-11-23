@@ -72,7 +72,7 @@ oxc_semantic = "0.158.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
-nix = { version = "0.31", features = ["process", "signal"] }
+nix = { version = "0.32", features = ["process", "signal"] }
 signal-hook = "0.4"
 
 [target.'cfg(windows)'.dependencies]
