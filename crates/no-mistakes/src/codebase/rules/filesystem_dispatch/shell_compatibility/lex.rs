@@ -72,7 +72,7 @@ impl<'a> Lexer<'a> {
                 continue;
             }
             match byte {
-                b' ' | b'\t' | b'\r' => self.advance(),
+                b' ' | b'\t' | b'\r' | b'\x0c' => self.advance(),
                 b'#' => self.skip_comment(),
                 b'\n' | b';' | b'|' | b'&' | b'(' | b')' | b'<' | b'>' if conditional => {
                     self.advance();
