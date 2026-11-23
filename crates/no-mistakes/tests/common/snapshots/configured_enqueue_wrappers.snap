@@ -1,0 +1,221 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "before": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "workers/worker.ts",
+          "job": "bulkTask",
+          "kind": "unmatched-worker",
+          "line": 17,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "background",
+          "sourceLine": "createWorker(\"background\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "definitionTask",
+          "kind": "unmatched-worker",
+          "line": 17,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "background",
+          "sourceLine": "createWorker(\"background\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "directTask",
+          "kind": "unmatched-worker",
+          "line": 3,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "createWorker(\"objects\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "noDefaultsTask",
+          "kind": "unmatched-worker",
+          "line": 3,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "createWorker(\"objects\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "objectTask",
+          "kind": "unmatched-worker",
+          "line": 3,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "createWorker(\"objects\", async (job) => {"
+        },
+        {
+          "file": "workers/worker.ts",
+          "job": "returnedTask",
+          "kind": "unmatched-worker",
+          "line": 11,
+          "message": "static queue worker has no matching producer",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "createWorker(\"returned\", async (job) => {"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueues/fixed.ts",
+          "job": "bulkTask",
+          "kind": "mixed-priority",
+          "line": 14,
+          "message": "queue \"background\" mixes priority 0 and priority > 0; this producer sets priority 3 while other producers enqueue with priority 0: enqueues/fixed.ts:5 (definitionTask)",
+          "queueFile": "queues.ts",
+          "queueName": "background",
+          "sourceLine": "bulk([], { attempts: 2, removeOnComplete: true, priority: 3 });"
+        },
+        {
+          "file": "enqueues/fixed.ts",
+          "job": "definitionTask",
+          "kind": "debounce-ttl",
+          "line": 5,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "send({}, {"
+        },
+        {
+          "file": "enqueues/fixed.ts",
+          "job": "definitionTask",
+          "kind": "invalid-job-id",
+          "line": 9,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "jobId: \"bad:fixed\","
+        },
+        {
+          "file": "enqueues/fixed.ts",
+          "job": "definitionTask",
+          "kind": "mixed-priority",
+          "line": 5,
+          "message": "queue \"background\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueues/fixed.ts:14 (bulkTask, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "background",
+          "sourceLine": "send({}, {"
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "noDefaultsTask",
+          "kind": "missing-job-option",
+          "line": 30,
+          "message": "job options missing attempts",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "noDefaults({}, { removeOnComplete: true, priority: 3 });"
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "objectTask",
+          "kind": "debounce-ttl",
+          "line": 11,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "sendObject({}, {"
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "objectTask",
+          "kind": "invalid-job-id",
+          "line": 13,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "jobId: \"bad:object\","
+        },
+        {
+          "file": "enqueues/object.ts",
+          "job": "objectTask",
+          "kind": "mixed-priority",
+          "line": 11,
+          "message": "queue \"objects\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueues/object.ts:16 (objectTask, priority 3), enqueues/object.ts:18 (directTask, priority 3), enqueues/object.ts:30 (noDefaultsTask, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "objects",
+          "sourceLine": "sendObject({}, {"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "debounce-ttl",
+          "line": 7,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "alias({}, {"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "invalid-job-id",
+          "line": 11,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "jobId: \"bad:returned\","
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "missing-job-option",
+          "line": 14,
+          "message": "job options missing attempts",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "send({}, { removeOnComplete: true, priority: 3 });"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "mixed-priority",
+          "line": 14,
+          "message": "queue \"returned\" mixes priority 0 and priority > 0; this producer sets priority 3 while other producers enqueue with priority 0: enqueues/returned.ts:7 (returnedTask)",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "send({}, { removeOnComplete: true, priority: 3 });"
+        },
+        {
+          "file": "enqueues/returned.ts",
+          "job": "returnedTask",
+          "kind": "mixed-priority",
+          "line": 7,
+          "message": "queue \"returned\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueues/returned.ts:14 (returnedTask, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "returned",
+          "sourceLine": "alias({}, {"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
