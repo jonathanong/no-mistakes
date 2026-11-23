@@ -13,16 +13,16 @@
   "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
   "variants": {
     "release": {
-      "revision": "939e89bbf9d46e14f7af9c6bc418fee339b0b609",
-      "binarySha256": "25b372f9005cc4091a44458565e8c525a32cd99da8cfc8d3565052022b295d9e"
-    },
-    "main": {
       "revision": "fe94a73d2812658e10792edd0d0cced2bade135d",
       "binarySha256": "9bd6fa30de394fc0573719295b9731600cedf0095e22576ee14d13a8cfe71828"
     },
+    "main": {
+      "revision": "cc55270e4cd09b7c47004cc51f095eb4e1f32142",
+      "binarySha256": "c2ae76a6f0f9e4ea9a0412539baee7599dc978d9717353092dcd38f4864355c8"
+    },
     "candidate": {
-      "revision": "81b96255431eb312ef4f611127b34a6583cc302e",
-      "binarySha256": "5150ba4d9f21229e511b95fdc3638da53c30c96d1c6393beba4d8f6d029a71e7"
+      "revision": "e31e725e51a4d840d9366c1ff714c62ec6473431",
+      "binarySha256": "448a9db2d5598b8d8f7602e9ddb98104dd9f494bec4fa2a12f1bab28adde5437"
     }
   },
   "samplesPerVariantPerCase": 6,
@@ -37,11 +37,11 @@
   ],
   "blocks": 3,
   "warmupsPerVariantPerCase": 1,
-  "publishedReleaseTag": "v0.109.115",
-  "sourceJsonSha256": "8fa69a208b21baf06592e0131c17a46d7d5715527c6bdff51adb5db70678057f",
+  "publishedReleaseTag": "v0.109.116",
+  "sourceJsonSha256": "145acbfde0832d3079664af6797163edc93bedf8062f3d861266e9e4073ac38a",
   "dependencyPackagesSha256": "cea993ab5953df1cb3db914521fd592160ba3d39b4ef19f7884e455b85b33791",
   "cargoLockSha256": {
-    "release": "f528bf9ab491705608f577f757eb7829da22cbf82538318bd5a6d2f2d7570ecb",
+    "release": "155e884cb8d26d2d5701b54f30737b916a6bb1b2eb981eeeb6fb50f868ce14e4",
     "main": "155e884cb8d26d2d5701b54f30737b916a6bb1b2eb981eeeb6fb50f868ce14e4",
     "candidate": "155e884cb8d26d2d5701b54f30737b916a6bb1b2eb981eeeb6fb50f868ce14e4"
   }
