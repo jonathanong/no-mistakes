@@ -15,6 +15,19 @@ fn configured_queue_wrappers_share_api_reports_edges_and_one_parse() {
         super::queue_check_json_impl(options()).unwrap(),
     ]
     .map(|s| serde_json::from_str::<Value>(&s).unwrap());
+    for field in ["producers", "workers"] {
+        let sites = standalone[0][field].as_array().unwrap();
+        let key = |site: &Value| {
+            (
+                site["file"].as_str().unwrap().to_owned(),
+                site["line"].as_u64().unwrap(),
+            )
+        };
+        assert!(
+            sites.windows(2).all(|pair| key(&pair[0]) <= key(&pair[1])),
+            "{field}: {sites:?}"
+        );
+    }
     let jobs: BTreeSet<_> = standalone[0]["producers"]
         .as_array()
         .unwrap()

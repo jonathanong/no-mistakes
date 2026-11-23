@@ -177,3 +177,6 @@ Node API: `queueCheck(options)`.
 For explicitly declared JSON payload schemas, configure
 [declared-payload-compatibility](../rules/declared-payload-compatibility.md) and
 run `no-mistakes check`. Declaration compatibility is a separate opt-in check.
+
+Queue producer and worker arrays are sorted by file and line in both standalone
+and aggregate programmatic reports, so repeated analyses retain identical order.
