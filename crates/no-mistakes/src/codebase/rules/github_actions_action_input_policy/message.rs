@@ -12,7 +12,9 @@ pub(super) fn fault_key(fault: &InputFault) -> &str {
     match fault {
         InputFault::Missing { key, .. }
         | InputFault::Mismatch { key, .. }
-        | InputFault::Banned { key } => key,
+        | InputFault::Banned { key }
+        | InputFault::Unlisted { key }
+        | InputFault::NotPresent { key } => key,
     }
 }
 
@@ -39,6 +41,12 @@ pub(super) fn message(
         ),
         InputFault::Banned { key } => format!(
             "{where_} and sets banned input `{key}`. Remove `{key}` from `with:`."
+        ),
+        InputFault::Unlisted { key } => format!(
+            "{where_} with input `{key}`, which is not in `allowedInputs`. Remove `{key}` from `with:`, or add it to `allowedInputs` if the action may receive it. The action policy lists every input this action may receive."
+        ),
+        InputFault::NotPresent { key } => format!(
+            "{where_} without required input `{key}`. Set `{key}` to any value. The action policy requires this input on every ref."
         ),
     }
 }

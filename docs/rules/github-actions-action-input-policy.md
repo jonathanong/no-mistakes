@@ -131,13 +131,61 @@ steps:
       replace: true
 ```
 
+## Allowlist and required-present inputs
+
+Per action family, `allowedInputs` lists the only `with:` keys the action may
+receive, and `requiredPresent` lists keys that must be set to any value. Both
+combine with `require` and `ban`. Without `allowedInputs` every other key stays
+silent, as before.
+
+Example: with `allowedInputs: [runtime-version-file]` on `example/setup-runtime`
+and `requiredPresent: [retention-days]` on `example/publish-widget`, this passes.
+
+```yaml
+steps:
+  - uses: example/setup-runtime@v2
+    with:
+      runtime-version-file: .runtime-version
+  - uses: example/publish-widget@v1
+    with:
+      name: widgets
+      retention-days: 3
+```
+
+Counterexample: `cache` is not allowed, and `retention-days` is missing.
+
+```yaml
+steps:
+  - uses: example/setup-runtime@v2
+    with:
+      runtime-version-file: .runtime-version
+      cache: pnpm
+  - uses: example/publish-widget@v1
+    with:
+      name: widgets
+```
+
+Fix: delete `cache`, or add it to `allowedInputs` when the action may receive
+it, and set `retention-days` to any value. Suppress one input with
+`# no-mistakes-disable-line github-actions-action-input-policy` on its line.
+
+A `<<` key is an input named `<<`, so an allowlist reports it unless listed;
+keys nested under it are still not inputs. A null input counts as absent for
+`requiredPresent`. Configuration errors: an allowed key that is also banned, a
+`require` or `requiredPresent` key missing from `allowedInputs`, and a key that
+is both `require` and `requiredPresent` or banned. Entries for one family merge
+by union.
+
 ## Options and defaults
 
 `actions` defaults to `[]`. An empty list reports nothing, so the rule is
 opt-in. Each entry needs `uses`, the action family. A ref after `@` on that
 name is ignored. `require` defaults to `{}` and maps an input name to a string,
 number, or boolean. `ban` defaults to `[]` and lists input names that must be
-absent. The same input cannot be both required and banned. Two entries for one
+absent. `allowedInputs` (default unset) restricts `with:` to the listed names,
+and `requiredPresent` (default `[]`) lists names that need any value; see
+[the allowlist section](#allowlist-and-required-present-inputs). The same input
+cannot be both required and banned. Two entries for one
 family merge; disagreeing required values are a configuration error.
 
 `include` defaults to `.github/workflows/**/*.yml`,
@@ -166,6 +214,12 @@ rules:
         - uses: example/ship-items
           ban:
             - overwrite
+        - uses: example/archive-widget
+          allowedInputs:
+            - name
+            - retention-days
+          requiredPresent:
+            - retention-days
 ```
 
 ## Analysis

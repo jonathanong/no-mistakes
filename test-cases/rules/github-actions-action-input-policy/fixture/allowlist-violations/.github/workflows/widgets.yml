@@ -1,0 +1,26 @@
+name: Widgets
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup runtime
+        uses: example/setup-runtime@v2
+        with:
+          runtime-version-file: .runtime-version
+          cache: pnpm
+      - name: publish widgets
+        uses: example/publish-widget@v1
+        with:
+          name: widgets
+          path: widgets.log
+      - name: publish with extra input
+        uses: example/publish-widget@v1
+        with:
+          name: widgets
+          retention-days: ${{ inputs.days }}
+          overwrite: true
+      - name: unlisted family
+        uses: example/checkout-orders@v1
+        with:
+          anything: goes

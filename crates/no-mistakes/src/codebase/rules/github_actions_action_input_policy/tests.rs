@@ -4,6 +4,8 @@ use crate::config::v2::NoMistakesConfig;
 use serde_yaml::Value;
 use std::path::PathBuf;
 
+#[path = "tests/allowlist.rs"]
+mod allowlist;
 #[path = "tests/calls.rs"]
 mod calls;
 
