@@ -38,4 +38,4 @@ A change to how the analyzer is built rather than what it reports:
 ## Maintenance
 
 CI-only, test-only, docs-only, or dependency-only changes with no change to
-analyzer behaviour.
+analyzer behavior.
