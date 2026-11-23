@@ -1,8 +1,33 @@
 use super::super::{assign, words};
 use std::cell::OnceCell;
 
+pub(super) fn at_anchor(parsed: &words::Parse, anchor: usize) -> Option<&words::Command> {
+    let index = parsed
+        .commands
+        .binary_search_by_key(&anchor, |command| command.anchor)
+        .ok()?;
+    parsed.commands.get(index)
+}
+
+pub(super) fn downloader(
+    command: &mut words::Command,
+    script: &str,
+    helpers: &[String],
+    low: bool,
+    binding: &OnceCell<Option<(String, String)>>,
+) -> Option<(String, usize, bool)> {
+    let (name, at) = words::command_at(&command.words)?;
+    if words::is_downloader(&name, helpers) {
+        return Some((name, at, false));
+    }
+    if !low || !name.contains('$') {
+        return None;
+    }
+    recover_downloader(command, script, helpers, binding).map(|(name, at)| (name, at, true))
+}
+
 /// Prove a declared downloader behind a command alias, never recover URL values.
-pub(super) fn recover_downloader(
+fn recover_downloader(
     command: &mut words::Command,
     script: &str,
     helpers: &[String],

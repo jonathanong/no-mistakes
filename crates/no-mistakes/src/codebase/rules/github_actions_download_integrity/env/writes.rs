@@ -1,7 +1,7 @@
 use super::super::words::{command_at, Word};
 use super::valid_name;
 
-pub(super) fn observe(mut words: &[Word], mut mark: impl FnMut(&str)) -> Option<()> {
+pub(in super::super) fn observe(mut words: &[Word], mut mark: impl FnMut(&str)) -> Option<()> {
     for word in words {
         if let Some(name) = parameter_assignment(&word.text) {
             mark(name);

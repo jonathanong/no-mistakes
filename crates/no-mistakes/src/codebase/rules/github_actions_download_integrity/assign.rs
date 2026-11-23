@@ -1,7 +1,9 @@
+mod bindings;
+pub(super) use bindings::Bindings;
 mod rewrite;
 pub(super) use rewrite::prepare_max_script;
 
-/// The same one-binding proof used by max, without expanding any script values.
+/// Recognize a low-effort command alias without expanding any URL values.
 pub(super) fn single_literal_binding(script: &str) -> Option<(String, String)> {
     probe::note_binding_scan();
     let mut count = 0usize;
@@ -25,7 +27,9 @@ pub(super) fn single_literal_binding(script: &str) -> Option<(String, String)> {
 
 pub(super) fn substitute_command(token: &str, binding: &(String, String)) -> String {
     let mut out = rewrite::Script::default();
-    out.substitute(token, 0, &binding.0, &binding.1);
+    out.substitute(token, 0, &mut &[][..], |name| {
+        (name == binding.0).then_some(binding.1.as_str())
+    });
     out.text
 }
 
@@ -35,6 +39,12 @@ pub(super) mod probe;
 #[cfg(not(test))]
 #[path = "assign/probe_disabled.rs"]
 mod probe;
+
+fn reference_name(text: &str) -> &str {
+    text.strip_prefix('{')
+        .and_then(|text| text.strip_suffix('}'))
+        .unwrap_or(text)
+}
 
 enum Kind {
     None,

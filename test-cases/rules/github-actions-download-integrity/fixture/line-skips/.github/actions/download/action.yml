@@ -1,0 +1,10 @@
+name: Download
+description: Exercise annotation scope in a composite action
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        # integrity-check: skip reason=vendor
+        download_to https://downloads.example.invalid/composite-first first
+        download_to https://downloads.example.invalid/composite-second second

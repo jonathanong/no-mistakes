@@ -1,5 +1,5 @@
 use super::judge::{self, Hit};
-use super::{RuleFinding, RULE_ID};
+use super::{RuleFinding, SkipAnnotationScope, RULE_ID};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::config::v2::Unanalyzable;
@@ -9,18 +9,34 @@ mod bodies;
 use bodies::{bodies, Body};
 
 mod findings;
-use findings::{script_finding, workflow_finding};
+use findings::{script_finding, workflow_finding, workflow_line};
+
+mod annotations;
+use annotations::{line_scope_attributable, step_skipped, yaml_line_skipped};
 
 pub(super) struct Policy<'a> {
     pub hosts: &'a [String],
     pub helpers: &'a [String],
     pub low: Option<Unanalyzable>,
     pub strict: bool,
+    pub skip_scope: SkipAnnotationScope,
 }
 
 impl Policy<'_> {
-    fn hits(&self, script: &str, env: Option<&Mapping>) -> Vec<Hit> {
-        let hits = judge::scan_script(script, self.helpers, self.low.is_some(), self.strict, env);
+    fn hits(
+        &self,
+        script: &str,
+        env: Option<&Mapping>,
+        skip_scope: Option<SkipAnnotationScope>,
+    ) -> Vec<Hit> {
+        let hits = judge::scan_script(
+            script,
+            self.helpers,
+            self.low.is_some(),
+            self.strict,
+            env,
+            skip_scope,
+        );
         judge::filter_trusted(hits, self.hosts)
     }
 
@@ -50,10 +66,21 @@ pub(super) fn check_workflow(
         let place = located
             .iter()
             .find(|item| item.job == body.job && item.step == body.step);
-        if skipped(&lines, place, body.script) {
+        if policy.skip_scope == SkipAnnotationScope::Step
+            && step_skipped(&lines, place, body.script)
+        {
             continue;
         }
-        for hit in policy.hits(body.script, body.env) {
+        let skip_scope = Some(policy.skip_scope).filter(|scope| {
+            *scope == SkipAnnotationScope::Step
+                || line_scope_attributable(&lines, place, body.script)
+        });
+        for hit in policy.hits(body.script, body.env, skip_scope) {
+            if skip_scope == Some(SkipAnnotationScope::Line)
+                && yaml_line_skipped(&lines, place, workflow_line(place, hit.line))
+            {
+                continue;
+            }
             let finding = workflow_finding(rel, &body, place, &hit, policy.strict);
             policy.record(&mut diagnostics, &hit, finding);
         }
@@ -63,32 +90,13 @@ pub(super) fn check_workflow(
 
 pub(super) fn check_shell(rel: &str, source: &str, policy: &Policy<'_>) -> AnalysisDiagnostics {
     let mut diagnostics = AnalysisDiagnostics::default();
-    for hit in policy.hits(source.trim_start_matches('\u{feff}'), None) {
+    for hit in policy.hits(
+        source.trim_start_matches('\u{feff}'),
+        None,
+        Some(policy.skip_scope),
+    ) {
         let finding = script_finding(rel, &hit, policy.strict);
         policy.record(&mut diagnostics, &hit, finding);
     }
     diagnostics
-}
-
-fn skipped(lines: &[&str], place: Option<&StepRun>, script: &str) -> bool {
-    if judge::has_skip(script) {
-        return true;
-    }
-    let Some(place) = place else {
-        return false;
-    };
-    // The skip comment sits above the `- ` item, which may be above `run:`.
-    let start = place.item_line;
-    if start >= 2 {
-        let prev = lines.get(start - 2).copied().unwrap_or("");
-        if prev.trim_start().starts_with('#') && judge::has_skip(prev) {
-            return true;
-        }
-    }
-    let first_run = place.lines.first().map_or(start, |(line, _)| *line);
-    lines
-        .iter()
-        .take(first_run)
-        .skip(start.saturating_sub(1))
-        .any(|line| judge::has_skip(line))
 }

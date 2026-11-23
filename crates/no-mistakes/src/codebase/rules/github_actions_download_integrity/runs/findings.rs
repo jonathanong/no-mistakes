@@ -7,13 +7,17 @@ pub(super) fn workflow_finding(
     hit: &Hit,
     strict: bool,
 ) -> RuleFinding {
-    let line = place
-        .and_then(|place| place.lines.get(hit.line.saturating_sub(1)))
-        .map(|(line, _)| *line)
-        .or_else(|| place.and_then(|place| place.lines.first().map(|(line, _)| *line)))
-        .unwrap_or(1);
+    let line = workflow_line(place, hit.line);
     let location = format!("job `{}` step {}", body.target, body.step);
     finding(rel, line, &location, &body.target, hit, strict)
+}
+
+pub(super) fn workflow_line(place: Option<&StepRun>, script_line: usize) -> usize {
+    place
+        .and_then(|place| place.lines.get(script_line.saturating_sub(1)))
+        .map(|(line, _)| *line)
+        .or_else(|| place.and_then(|place| place.lines.first().map(|(line, _)| *line)))
+        .unwrap_or(1)
 }
 
 pub(super) fn script_finding(rel: &str, hit: &Hit, strict: bool) -> RuleFinding {

@@ -53,17 +53,19 @@ pub(super) fn skip_body(chars: &[char], index: usize, line: usize, opener: &Open
             index += 1;
         }
         let text: String = chars[start..index].iter().collect();
+        let text = if index < chars.len() {
+            index += 1;
+            line += 1;
+            text.strip_suffix('\r').unwrap_or(&text)
+        } else {
+            &text
+        };
         let compare = if opener.strip_tabs {
             text.trim_start_matches('\t')
         } else {
-            text.as_str()
+            text
         };
-        let done = compare == opener.delim;
-        if index < chars.len() {
-            index += 1;
-            line += 1;
-        }
-        if done {
+        if compare == opener.delim {
             return Body {
                 index,
                 line,

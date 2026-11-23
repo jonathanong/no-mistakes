@@ -35,22 +35,54 @@ of these is true:
 - the URL path is a checksum file (`.sha256`, `.sha256sum`, `.sha512`,
   `.sha512sum`, `SHA256SUMS`, `SHA256SUMS.txt`, `SHA512SUMS`, or
   `SHA512SUMS.txt`)
-- the step carries `# integrity-check: skip reason=<slug>`
+- a reasoned `# integrity-check: skip reason=<slug>` matches the selected annotation scope
 
 `<slug>` starts with a letter or digit and then uses letters, digits, `_`, or
 `-`. The comment may be a shell comment in the `run` body, a trailing YAML
 comment on a `run` line, or a YAML comment on the line immediately above the
 step item.
 
-A whole-line uppercase assignment is expanded only when that script has exactly
-one such assignment and the value is a literal (`BASE_URL="https://example.invalid/base"`,
-single quotes, or a bare token). `$NAME` and `${NAME}` are then replaced
-outside single quotes. A second assignment, a lowercase name, `export`, a
-value that contains `$`, or a command substitution is not expanded and is
-not judged. A here-document body is skipped, and a download after its
-terminator is still judged. An unterminated here-document is not judged.
-`<<<` and `<<` inside `$((...))` are not here-documents. The rule does not
-eval the shell.
+At max effort, each whole-line uppercase assignment is considered independently.
+A name must be assigned exactly once in the step or selected script, before its
+use. Literal values may use single quotes, double quotes, or a bare token.
+`$NAME` and `${NAME}` are replaced outside single quotes. Multiple different
+names no longer prevent expansion. Repeated assignments or observed writes,
+including `read`, `export`, and `unset`, prevent recovery of that name; they do
+not discard an unrelated stable binding. Commands that can write unknown names,
+such as `eval` or sourcing another script, prevent a binding proof.
+Lowercase names and declarations such as `export URL=...` are not recovered as
+whole-line literal bindings.
+
+A partly literal value can establish its URL host when the prefix before the
+first `$` already contains a complete `http://host/` or `https://host/` authority
+and path boundary. The dynamic path remains dynamic and cannot establish a
+checksum-file exception:
+
+```sh
+BASE_URL="https://example.invalid/v${VERSION}"
+FIRST_URL="https://example.invalid/first.tgz"
+SECOND_URL="https://example.invalid/second.tgz"
+curl "${BASE_URL}/tool.tgz"
+curl "$FIRST_URL"
+wget "$SECOND_URL"
+```
+
+All three downloads above are reported without verification. A checksum check
+or a configured trusted host still exempts them. A dynamic scheme, host, or
+port does not establish a host and is not judged at max effort:
+
+```sh
+BASE_URL="https://${HOST}/v1"
+curl "${BASE_URL}/tool.tgz"
+```
+
+Shell word splitting and dynamic argument roles cannot establish a URL proof;
+quote variable URL operands. Assignment-looking text inside comments or
+here-document data is not a binding. Assignment substitution preserves
+here-document delimiters and bodies; their data is skipped, and a download
+after the terminator is still judged. An unterminated here-document
+is not judged. `<<<` and `<<` inside `$((...))` are not here-documents. The rule
+does not eval the shell.
 
 At max effort in Bourne-style steps, a literal HTTP(S) URL in the step’s `env`
 map can also bind `"$NAME"` or `"${NAME}"` as a complete downloader URL argument
@@ -125,6 +157,37 @@ skips that source’s downloads. The `#` must begin a shell comment at a word
 boundary; `echo note# integrity-check: skip reason=fixture` is an ordinary
 argument and does not skip analysis.
 
+`skipAnnotationScope` is `"step"` (the default) or `"line"`. The default preserves
+the existing whole-step annotation scope for workflows and composite actions,
+and whole-file scope for selected shell sources. With `"line"`, a trailing
+annotation applies only to downloads on that physical line; a standalone
+annotation applies only to the immediately following physical line. A blank
+line breaks that association. Annotation-looking strings and here-document
+payloads are not comments. An annotation on an inline YAML `run` stays within
+that step; an adjacent literal block header can annotate its first body line.
+
+For line scope, use ordinary inline runs or literal `run: |` bodies. Folded
+`run: >` bodies and other ambiguous physical-line projections retain their
+findings instead of applying an annotation that could suppress extra downloads. Rewrite them
+as literal blocks when you need a line-specific exception.
+
+```yaml
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      skipAnnotationScope: line
+```
+
+In line mode, the last download below remains a finding:
+
+```sh
+# integrity-check: skip reason=separate-review
+curl https://example.invalid/first
+curl https://example.invalid/second # integrity-check: skip reason=separate-review
+curl https://example.invalid/third
+```
+
 `strictSequencing` defaults to `false`. The default accepts a supported checksum
 command anywhere in the same script. When enabled, each untrusted payload must
 have a supported check after it and before the next payload transfer, including
@@ -164,11 +227,12 @@ same-script checksum policy.
 
 ### Effort
 
-- Supports `low` and `max` (default `max`). **Max**: expands one whole-line uppercase literal assignment before checking `$VAR` URL arguments. **Low**: accepts only literal URL arguments and routes a command with any dynamic candidate URL to `unanalyzable`. No partner rule is required.
+- Supports `low` and `max` (default `max`). **Max**: resolves independently assigned uppercase bindings and partly literal URL values whose host is already fixed before a dynamic path. **Low**: accepts only literal URL arguments and routes a command with any dynamic candidate URL to `unanalyzable`. No partner rule is required.
 
-`effort: max` is the default. It keeps the current expansion of one whole-line
-uppercase assignment with a literal value, such as `BASE_URL="https://example.invalid/base"`,
-before checking later `$BASE_URL` or `${BASE_URL}` URL arguments.
+`effort: max` is the default. It resolves eligible whole-line uppercase
+assignments before checking later `$BASE_URL` or `${BASE_URL}` URL arguments,
+including multiple distinct names and partly literal values with a fixed host.
+This changes findings for URL assignments that previously stayed unresolved.
 
 Select low effort and its explicit uncertainty policy on the rule application:
 
@@ -217,7 +281,7 @@ max: trusted-host and checksum-file exceptions, same-step checksum verification,
 and the `integrity-check: skip` comment still apply. URL-option parsing also
 stays enabled, so header and output-file arguments are not treated as dynamic
 URL slots.
-The default `max` output is unchanged.
+Literal-only commands retain their existing host and verification policy.
 
 ```yaml
 rules:
@@ -325,15 +389,21 @@ jobs:
           sha256sum -c tool.tgz.sha256
 ```
 
-`wget`, `shasum -a 256 -c`, and a configured helper use the same fix. A single
-literal `BASE_URL="https://example.invalid/base"` followed by `curl "$BASE_URL/tool.tgz"`
-is the same download. Two assignments, or `BASE_URL="$(...)"`, are not expanded.
+`wget`, `shasum -a 256 -c`, and a configured helper use the same fix. A stable
+`BASE_URL="https://example.invalid/base"` followed by `curl "$BASE_URL/tool.tgz"`
+is the same download, even alongside other stable assignments. A value with
+an unresolved authority or a command substitution that cannot preserve the
+URL's argument role does not establish a static download proof.
 
 A checksum check whose arguments contain command substitution (`$(...)` or backticks), including inside double quotes, cannot establish static integrity verification. Quoted filename references such as `"${ARTIFACT}.sha256"` remain supported
 after a proven check option. An unresolved argument before the check option
 cannot establish verification because it could terminate option parsing. Use a literal checksum file or another statically analyzable check. Single-quoted substitution text is literal.
 
 ## Suppression
+
+`skipAnnotationScope: line` narrows only `integrity-check` annotations. It does
+not change the ordinary `no-mistakes-disable-*` directives. Move a legacy
+whole-step annotation beside its intended download when opting into line scope.
 
 Use a YAML comment, or a shell comment in a selected source.
 `no-mistakes-disable-next-line github-actions-download-integrity`

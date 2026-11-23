@@ -3,6 +3,7 @@ use crate::fx::{fx_set, FxHashSet};
 use serde_yaml::Mapping;
 
 mod writes;
+pub(super) use writes::observe as observe_writes;
 
 pub(super) struct UrlBindings<'a> {
     values: &'a Mapping,

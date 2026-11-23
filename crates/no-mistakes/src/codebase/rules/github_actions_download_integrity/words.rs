@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 #[derive(PartialEq, Eq)]
 pub(super) struct Word {
     pub(super) text: String,
@@ -5,7 +7,7 @@ pub(super) struct Word {
     /// An unquoted expansion may add fields and change following option slots.
     pub(super) expansion_may_split: bool,
     pub(super) quoted_expansion: Option<(usize, usize)>,
-    /// A whole `$NAME` or `${NAME}` reference outside quotes, as (offset, length).
+    /// The first simple reference outside quotes, as (byte offset, byte length).
     pub(super) bare_expansion: Option<(usize, usize)>,
 }
 
@@ -22,14 +24,17 @@ mod scan;
 pub(super) struct Parse {
     pub(super) commands: Vec<Command>,
     pub(super) unterminated_heredoc: bool,
+    pub(super) skip_lines: Vec<usize>,
+    // Character offsets in the unmodified shell source.
+    pub(super) heredoc_ranges: Vec<Range<usize>>,
 }
 
 pub(super) fn parse(script: &str) -> Parse {
-    parse_ordered(script, false)
+    parse_ordered(script, false, false)
 }
 
-pub(super) fn parse_ordered(script: &str, strict: bool) -> Parse {
-    scan::run(script, strict)
+pub(super) fn parse_ordered(script: &str, strict: bool, collect_skips: bool) -> Parse {
+    scan::run(script, strict, collect_skips)
 }
 
 fn skip_arithmetic(chars: &[char], mut index: usize, line: &mut usize) -> usize {

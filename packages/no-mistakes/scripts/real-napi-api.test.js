@@ -25,6 +25,7 @@ require("./tests-audit-native-api.test.js");
 require("./cargo-target-ownership-api.test.js");
 require("./analysis-policy-api.test.js");
 require("./workflow-activity-types-api.test.js");
+require("./github-actions-download-integrity-api.test.js");
 require("./workflow-topology-policy-bans-api.test.js");
 require("./script-input-policy-api.test.js");
 require("./inline-script-lines-api.test.js");

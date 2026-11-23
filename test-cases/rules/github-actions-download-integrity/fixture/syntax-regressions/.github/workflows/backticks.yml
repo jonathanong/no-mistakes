@@ -1,0 +1,15 @@
+name: Backtick download skips
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          printf '%s\n' `echo ok # note`
+          # integrity-check: skip reason=external
+          curl https://downloads.example.invalid/backtick-skipped
+          curl https://downloads.example.invalid/backtick-unmarked
+      - run: |
+          printf '%s\n' `echo ok
+          # integrity-check: skip reason=inner
+          `; curl https://downloads.example.invalid/backtick-inner

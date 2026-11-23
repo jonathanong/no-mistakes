@@ -1,0 +1,53 @@
+name: Download URLs
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          BASE_URL="https://downloads.example.invalid/releases/${TAG}"
+          curl "${BASE_URL}/tool" -o tool
+      - run: |
+          BASE_URL="https://trusted.example.invalid/releases/${TAG}"
+          curl "${BASE_URL}/tool" -o tool
+      - run: |
+          BASE_URL="https://downloads.example.invalid/releases/${TAG}"
+          download_to "${BASE_URL}/tool" tool
+          sha256sum -c tool.sha256
+      - run: |
+          BASE_URL="https://downloads.example.invalid/tool.sha256${SUFFIX}"
+          wget "$BASE_URL"
+      - run: |
+          curl "https://$HOST/releases/tool"
+          curl "https://downloads.example.invalid:$PORT/releases/tool"
+          curl "$SCHEME://downloads.example.invalid/releases/tool"
+          curl "https://downloads.example.invalid$SUFFIX"
+      - run: |
+          FIRST_URL="https://downloads.example.invalid/first"
+          SECOND_URL='https://downloads.example.invalid/second'
+          curl "$FIRST_URL" -o first
+          wget "${SECOND_URL}" -O second
+      - run: |
+          FIRST_URL="https://downloads.example.invalid/first"
+          SECOND_URL="https://downloads.example.invalid/second"
+          curl "$FIRST_URL" -o first
+          sha256sum -c first.sha256
+          download_to "$SECOND_URL" second
+          shasum -a 256 -c second.sha256
+      - run: |
+          REPEATED_URL="https://downloads.example.invalid/original"
+          REPEATED_URL="https://downloads.example.invalid/new"
+          OTHER_URL=https://downloads.example.invalid/other
+          curl "$REPEATED_URL"
+          curl "$OTHER_URL"
+      - run: |
+          READ_URL="https://downloads.example.invalid/original"
+          EXPORTED_URL="https://downloads.example.invalid/original"
+          read -r READ_URL < ./replacement.txt
+          export EXPORTED_URL="https://downloads.example.invalid/new"
+          curl "$READ_URL"
+          curl "$EXPORTED_URL"
+      - run: |
+          curl https://downloads.example.invalid/payload -o payload
+          curl "https://downloads.example.invalid/${NAME}.sha256" -o payload.sha256
+          sha256sum -c payload.sha256

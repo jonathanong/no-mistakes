@@ -378,9 +378,13 @@ fallback in both APIs. See [its Effort section](rules/github-actions-job-timeout
 Configured `github-actions-download-integrity` applications use the existing
 async `check()` → `checkJson` binding and `analyzeProject()` check reports.
 `GithubActionsDownloadIntegrityOptions` exports the rule's configuration
-contract, including opt-in `shellSourceInclude` and `strictSequencing`. Set them
-in the rule application's YAML `options` selected by `config`; both entrypoints
-share the CLI's literal step env handling and selected-shell policy.
+contract, including opt-in `shellSourceInclude`, `strictSequencing`, and
+`skipAnnotationScope`. The exported `GithubActionsDownloadIntegritySkipAnnotationScope`
+union is `"step" | "line"`; the default preserves whole-step / whole-selected-file
+scope. Set these fields in the rule application's YAML `options` selected by
+`config`. Both entrypoints share the CLI's assignment recovery, literal step env
+handling and selected-shell policy; line mode keeps exceptions local to the
+annotated physical line or, for a standalone comment, the next line.
 
 For `github-actions-download-integrity`, `low` skips assignment expansion for
 URL values and routes a known downloader command with any dynamic candidate URL

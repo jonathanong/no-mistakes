@@ -1,6 +1,7 @@
 use super::heredoc;
-use super::{flush_command, push_char, skip_arithmetic, Command, Parse};
+use super::{flush_command, push_char, skip_arithmetic, Command, Parse, Range};
 
+mod comment;
 mod redirection;
 mod word;
 
@@ -20,11 +21,15 @@ struct Scan<'a> {
     current: Command,
     commands: Vec<Command>,
     pending: Option<heredoc::Opener>,
+    heredoc_ranges: Vec<Range<usize>>,
     unterminated: bool,
     stop: bool,
+    collect_skips: bool,
+    skip_lines: Vec<usize>,
+    in_backticks: bool,
 }
 
-pub(super) fn run(script: &str, strict: bool) -> Parse {
+pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
     let chars: Vec<char> = script.chars().collect();
     let mut scan = Scan {
         chars: &chars,
@@ -46,8 +51,12 @@ pub(super) fn run(script: &str, strict: bool) -> Parse {
         },
         commands: Vec::new(),
         pending: None,
+        heredoc_ranges: Vec::new(),
         unterminated: false,
         stop: false,
+        collect_skips,
+        skip_lines: Vec::new(),
+        in_backticks: false,
     };
     while scan.index < scan.chars.len() && !scan.step() {}
     scan.flush_word();
@@ -55,6 +64,8 @@ pub(super) fn run(script: &str, strict: bool) -> Parse {
     Parse {
         commands: scan.commands,
         unterminated_heredoc: scan.unterminated || scan.pending.is_some(),
+        skip_lines: scan.skip_lines,
+        heredoc_ranges: scan.heredoc_ranges,
     }
 }
 
@@ -88,19 +99,6 @@ impl<'a> Scan<'a> {
         }
         self.index += 2;
         self.line += 1;
-        true
-    }
-
-    /// `#` starts a comment only at the beginning of a word, outside quotes.
-    /// The newline stays for `separator`, so a here-document opener on the
-    /// same line still skips its body (`cat <<EOF # note`).
-    fn comment(&mut self, ch: char) -> bool {
-        if ch != '#' || self.quoting.is_some() || self.word_quoted || !self.word.is_empty() {
-            return false;
-        }
-        while self.index < self.chars.len() && self.chars[self.index] != '\n' {
-            self.index += 1;
-        }
         true
     }
 
@@ -139,6 +137,7 @@ impl<'a> Scan<'a> {
         if ch == '\n' {
             if let Some(opener) = self.pending.take() {
                 let body = heredoc::skip_body(self.chars, self.index, self.line, &opener);
+                self.heredoc_ranges.push(self.index + 1..body.index);
                 self.index = body.index;
                 self.line = body.line;
                 if !body.terminated {

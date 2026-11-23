@@ -79,7 +79,11 @@ per-step timeout comparison; the partner reports invalid or over-cap steps.
 Smaller job timeouts keep the full comparison, and all other job checks stay
 active. An unavailable partner warns and falls back to `max`. See
 [the rule](../rules/github-actions-job-timeouts.md#effort).
-For `github-actions-download-integrity`, max effort resolves literal step env
+For `github-actions-download-integrity`, max effort resolves independently
+assigned uppercase literals and partly literal URL values with a fixed host.
+`skipAnnotationScope: line` narrows integrity annotations to their own download
+line, or the next line for standalone comments; the default stays step-wide
+(file-wide for selected shell sources). Max effort also resolves literal step env
 URLs. Configure `shellSourceInclude` to opt into Git-tracked shell files and
 `strictSequencing: true` to require verification before each following payload
 transfer. Both options default off. The async Node check APIs use the same

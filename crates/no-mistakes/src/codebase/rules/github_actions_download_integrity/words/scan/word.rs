@@ -41,23 +41,24 @@ impl Scan<'_> {
         if self.quoting.is_none() && matches!(ch, '$' | '`') {
             self.word_expansion_may_split = true;
         }
-        if self.quoting.is_none() && ch == '$' {
-            self.word_bare_expansion = quoted_reference_len(&self.chars[self.index + 1..])
-                .map(|len| (self.word.len(), len));
-        }
-        if self.quoting == Some('"') && ch == '$' {
-            self.word_quoted_expansion = quoted_reference_len(&self.chars[self.index + 1..])
-                .map(|len| (self.word.len(), len));
+        let reference = (ch == '$')
+            .then(|| quoted_reference_len(&self.chars[self.index + 1..]))
+            .flatten()
+            .map(|len| (self.word.len(), len));
+        if self.quoting.is_none() {
+            self.word_bare_expansion = self.word_bare_expansion.or(reference);
+        } else {
+            self.word_quoted_expansion = self.word_quoted_expansion.or(reference);
         }
         if ch == '`' {
             self.current.dynamic = true;
+            self.in_backticks = !self.in_backticks;
         }
         if ch != '$' || !matches!(self.chars.get(self.index + 1), Some(&'(' | &'{')) {
             return false;
         }
-        self.current.dynamic |= self.chars[self.index + 1] == '('
-            || self.quoting != Some('"')
-            || self.word_quoted_expansion.is_none();
+        self.current.dynamic |=
+            self.chars[self.index + 1] == '(' || self.quoting != Some('"') || reference.is_none();
         if self.word.is_empty() {
             self.word_line = self.line;
         }

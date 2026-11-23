@@ -514,7 +514,12 @@ command names beside `curl` and `wget`; the default is no extra helpers. The
 rule stays off until a configuration lists it. `options.shellSourceInclude`
 (default `[]`) adds root-relative globs for Git-tracked shell sources to scan without
 executing them or following workflow invocations. Without a Git index, no
-additional shell sources are scanned. `options.strictSequencing`
+additional shell sources are scanned. `options.skipAnnotationScope` is `step`
+(default whole-step / whole-selected-file) or `line` (one physical download line:
+trailing comments apply to that line, standalone comments to the next line).
+At max effort, individually assigned uppercase literal values and partly
+literal URL values with a complete fixed authority are recovered.
+`options.strictSequencing`
 (default `false`) requires verification after each payload download and before
 the next unrelated payload download, including another URL in the same
 command; checksum sidecars do not close that window. At max effort, literal step `env` URL bindings are resolved; expressions

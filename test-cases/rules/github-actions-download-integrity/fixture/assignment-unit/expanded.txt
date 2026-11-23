@@ -1,0 +1,3 @@
+BASE_URL="https://a.example.invalid"
+ALT_URL="https://b.example.invalid"
+curl "https://a.example.invalid/a" "https://b.example.invalid/b"
