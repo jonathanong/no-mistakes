@@ -62,18 +62,11 @@ pub(super) fn scan_script(
     let binding = OnceCell::new();
     let mut pending_start = 0;
     for mut command in parsed.commands {
-        let raw_command = match (&expanded, &original) {
-            (Some(expanded), Some(raw)) => {
-                expanded.original_anchor(command.anchor).and_then(|anchor| {
-                    let index = raw
-                        .commands
-                        .binary_search_by_key(&anchor, |command| command.anchor)
-                        .ok()?;
-                    raw.commands.get(index)
-                })
-            }
-            _ => None,
-        };
+        let raw_command = expanded
+            .as_ref()
+            .and_then(|expanded| expanded.original_anchor(command.anchor))
+            .zip(original.as_ref())
+            .and_then(|(anchor, raw)| command::at_anchor(raw, anchor));
         let original_command = if expanded.is_some() {
             raw_command
         } else {
@@ -86,22 +79,11 @@ pub(super) fn scan_script(
             hits.truncate(pending_start);
             continue;
         }
-        let Some((mut name, mut arg_at)) = words::command_at(&command.words) else {
+        let Some((name, arg_at, indirect_command)) =
+            command::downloader(&mut command, script, helpers, low, &binding)
+        else {
             continue;
         };
-        let mut indirect_command = false;
-        if !words::is_downloader(&name, helpers) {
-            if !low || !name.contains('$') {
-                continue;
-            }
-            let Some(recovered) =
-                command::recover_downloader(&mut command, script, helpers, &binding)
-            else {
-                continue;
-            };
-            (name, arg_at) = recovered;
-            indirect_command = true;
-        }
         let args = command.words.get(arg_at + 1..).unwrap_or(&[]);
         let candidates = operands::url_words(&name, args);
         let unknown = low
