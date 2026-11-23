@@ -34,3 +34,11 @@ print { status=value > \
   /dev/null
 print < \
 status=value
+
+report_hidden() {
+  local -h status=0
+  typeset -i status=1
+}; status=2
+print > ; status=3
+print << ; status=4
+print > {{FORM_FEED}}; status=5

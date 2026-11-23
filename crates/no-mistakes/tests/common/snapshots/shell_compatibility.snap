@@ -29,6 +29,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "legacy/arrays.sh",
+          "line": 110,
+          "message": "Array `samples` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${samples[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${samples[@]}\"",
+          "target": "samples"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 114,
+          "message": "Array `samples` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${samples[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${samples[@]}\"",
+          "target": "samples"
+        },
+        {
+          "file": "legacy/arrays.sh",
           "line": 23,
           "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
           "rule": "bash-empty-array-nounset",
@@ -177,6 +193,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
           "rule": "zsh-readonly-parameter",
           "sourceLine": "declare -g status=value",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 41,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "}; status=2",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 42,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "print > ; status=3",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 43,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "print << ; status=4",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 44,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "print > \f; status=5",
           "target": "status"
         },
         {

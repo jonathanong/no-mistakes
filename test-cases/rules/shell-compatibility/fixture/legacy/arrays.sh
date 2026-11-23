@@ -104,3 +104,11 @@ collect "${single[@]}"
 single[0]=stable
 unset -v -- 'single[*]'
 collect "${single[@]}"
+
+shopt -s nullglob
+samples=([1-3])
+collect "${samples[@]}"
+collect "${!samples[@]}"
+samples=(ready)
+unset '' unknown samples
+collect "${samples[@]}"
