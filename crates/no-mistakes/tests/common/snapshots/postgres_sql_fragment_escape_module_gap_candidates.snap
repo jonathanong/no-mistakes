@@ -12,6 +12,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "postgres-sql-fragment-escape",
           "file": "known-local.ts",
           "message": "`known-local.ts` could not resolve import `./missing.server`, so an escape of an exported SQL fragment may be missing. Resolve the import and rerun the check."
+        },
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "packages/local/missing-map-target.ts",
+          "message": "`packages/local/missing-map-target.ts` could not resolve import `#hidden`, so an escape of an exported SQL fragment may be missing. Resolve the import and rerun the check."
         }
       ],
       "integration": [],
@@ -64,6 +69,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "COLS"
         },
         {
+          "file": "missing-alias-asset.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export { COLS, settings };",
+          "target": "COLS"
+        },
+        {
           "file": "missing-json.ts",
           "import": "columns.ts",
           "line": 4,
@@ -77,6 +91,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "import": "packages/local/columns.ts",
           "line": 3,
           "message": "exported SQL fragment `COLS` from `packages/local/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(\"state\");",
+          "target": "COLS"
+        },
+        {
+          "file": "packages/local/missing-map-target.ts",
+          "import": "packages/local/columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `packages/local/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(\"state\");",
+          "target": "COLS"
+        },
+        {
+          "file": "packages/local/unmapped-subpath.ts",
+          "import": "packages/local/columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `packages/local/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(\"state\");",
+          "target": "COLS"
+        },
+        {
+          "file": "resolved-alias-source.ts",
+          "import": "columns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `COLS` from `columns.ts` is written, rebound, or escaped",
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "COLS.append(\"state\");",
           "target": "COLS"

@@ -677,12 +677,10 @@ unsupported inputs use the shared `unanalyzable` report/advice/ignore policy.
 
 `postgres-sql-fragment-escape` runs through the same async `check()` path. It
 reports cross-file writes, rebinds, and namespace escapes of exported trusted
-SQL fragments and does not add a separate function. A file with an operational
-error, a fatal parse error, incomplete value flow, or unreadable source is
-listed on `CheckReport.incomplete` for this consumer when `trustedSqlTags` is
-non-empty and the file passes the application's include and exclude filters.
-An empty `trustedSqlTags` list produces no gaps, and a file excluded by every
-application is omitted. An absent entry is not proof that the file was analyzed.
+SQL fragments. For this consumer, `CheckReport.incomplete` is scoped to the
+runtime dependency closure of files that reach a fragment or use a configured
+SQL tag, subject to each application's include and exclude filters. See the
+[rule's coverage limits](rules/postgres-sql-fragment-escape.md#why-and-when).
 
 Configured [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
 applications run through the existing async `check()` binding and through

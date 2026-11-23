@@ -42,10 +42,16 @@ Enable this rule next to the adapter lint when exported SQL constants are
 shared across files. Operational errors, incomplete value flow, unreadable
 source, and missing prepared facts can add `incomplete` entries within the
 runtime dependency closure of a file that reaches a fragment or uses a
-configured SQL tag. When parsing yields no usable facts, a file can enter
-that closure only through an import from a relevant file. A tag import
-alone does not establish relevance. Usable prepared facts can still establish
-a finding and keep that file in scope for a gap.
+configured SQL tag. A tagged template inside a function counts when its tag
+resolves to the configured module-level import. A tag import alone does not
+establish relevance. Usable prepared facts can still establish a finding and
+keep that file in scope for a gap.
+
+The closure follows imports from relevant files to their dependencies. A
+file with no usable facts can enter that closure only if a relevant file
+depends on it, directly or transitively. For example, a file that fails to
+parse may import and mutate a fragment without producing an `incomplete`
+entry when no relevant file depends on it.
 
 When value flow is incomplete, graph-dependent sibling rules keep the
 canonical graph prerequisite and their own diagnostics. An ESLint-only setup
@@ -150,14 +156,17 @@ A failed or ambiguous local code import can add one `incomplete` entry per
 file when the file otherwise reaches a proven exported SQL fragment. The
 entry identifies the unresolved specifier. Built-in Node modules, external
 packages (including external trusted-tag modules and their subpaths), and
-resolved non-code files are outside this search. Relative JSON and asset
-specifiers with extensions recognized by the TypeScript resolver also stay
-outside the search. Missing relative imports, missing absolute paths (including
-Windows drive paths), and path aliases whose target files are absent remain
-unresolved. A use of the configured trusted tag itself
-is not a fragment; other bindings from the same project specifier still follow
-the ordinary fragment checks. `check` exits 1 when the report contains an
-incomplete entry, even if the report has zero findings.
+resolved non-code files are outside this search. Missing paths and aliases
+with a recognized asset extension such as `.json` or `.css` stay silent.
+Missing relative and absolute code imports (including Windows drive paths)
+and missing code targets of configured path aliases can add an entry.
+A `#` specifier can also add an entry when it matches an `imports` mapping in
+the importing file's indexed workspace package and its local code target is
+missing. Unmapped `#` specifiers and other unknown bare imports stay silent.
+A use of the configured trusted tag itself is not a fragment; other
+bindings from the same project specifier still follow the ordinary fragment
+checks. `check` exits 1 when the report contains an incomplete entry, even if
+the report has zero findings.
 
 ## Valid example
 

@@ -324,14 +324,22 @@ fn postgres_sql_fragment_escape_module_gap_candidates_snapshot() {
     );
     let report = &reports["candidates"]["report"];
     let gaps = report["incomplete"].as_array().expect("incomplete");
-    assert_eq!(gaps.len(), 1, "{gaps:?}");
+    assert_eq!(gaps.len(), 2, "{gaps:?}");
     assert_eq!(gaps[0]["file"], "known-local.ts");
     assert!(gaps[0]["message"]
         .as_str()
         .unwrap()
         .contains("`./missing.server`"));
-    assert!(report["rules"].as_array().unwrap().iter().any(|row| {
+    assert_eq!(gaps[1]["file"], "packages/local/missing-map-target.ts");
+    assert!(gaps[1]["message"].as_str().unwrap().contains("`#hidden`"));
+    let findings = report["rules"].as_array().unwrap();
+    assert!(findings.iter().any(|row| {
         row["file"] == "packages/local/mapped.ts" && row["target"] == "COLS"
+    }));
+    assert!(findings.iter().any(|row| {
+        row["file"] == "resolved-alias-source.ts"
+            && row["import"] == "columns.ts"
+            && row["target"] == "COLS"
     }));
 }
 
@@ -352,7 +360,12 @@ fn postgres_sql_fragment_escape_dependency_gaps_snapshot() {
         .collect::<Vec<_>>();
     assert_eq!(
         files,
-        ["created-broken.ts", "query-broken.ts", "transitive-broken.ts"]
+        [
+            "created-broken.ts",
+            "nested-query-broken.ts",
+            "query-broken.ts",
+            "transitive-broken.ts"
+        ]
     );
     assert!(gaps.iter().all(|gap| gap["message"]
         .as_str()
