@@ -206,6 +206,17 @@
         "messageId": "typedEnqueueFake",
         "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
         "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 45,
+        "file": "typed-fakes.test.ts",
+        "line": 45,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
       }
     ],
     "name": "selects matching modules",

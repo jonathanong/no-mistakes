@@ -2,7 +2,7 @@ import { vi as mock } from "vitest";
 import { jest as jestMock } from "@jest/globals";
 import * as vitest from "vitest";
 import { vi as unrelatedMock } from "./helpers";
-import { enqueueEmail as sendMail, enqueueEmail, formatEmail as enqueuePreview } from "./queue";
+import dispatch, { enqueueEmail as sendMail, enqueueEmail, formatEmail as enqueuePreview } from "./queue";
 import type { enqueueNotice } from "./queue";
 import { enqueueAudit } from "./audit";
 
@@ -41,3 +41,7 @@ function separateTypeNamespace() {
 // no-mistakes-disable-next-line test-no-typed-enqueue-fake -- Verifies the directive.
 mock.fn<typeof sendMail>();
 mock.fn<typeof sendMail>(); // no-mistakes-disable-line test-no-typed-enqueue-fake -- Verifies the directive.
+
+mock.fn<typeof dispatch>();
+mock.fn<typeof setTimeout>();
+(() => mock)().fn<typeof sendMail>();

@@ -33,6 +33,13 @@ it("snapshots typed enqueue fake diagnostics", async () => {
   );
 });
 
+it("identifies an invalid export pattern in the rule configuration", () => {
+  const source = fixture(`${rule}/${file}`);
+  expect(() => pluginFindings(source, rule, { singleExportPattern: "[" }, file)).toThrow(
+    "singleExportPattern must be a valid regular expression",
+  );
+});
+
 it("reports the same saved cases through Oxlint", () => {
   const repo = resolve(__dirname, "../../..");
   const root = resolve(repo, "test-cases/eslint-snippets/fixture", rule);
