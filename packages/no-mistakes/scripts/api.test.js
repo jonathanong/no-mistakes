@@ -356,7 +356,8 @@ test("declared config exports its unused allow-entry policy", () => {
 test("Vitest default excludes exports its configuration type", () => {
   const types = readFileSync(join(packageRoot, "vitest-default-excludes-types.d.ts"), "utf8");
   assert.match(types, /export interface VitestDefaultExcludesOptions/);
-  assert.match(types, /config: string;/);
+  assert.match(types, /config\?: string;/);
+  assert.match(types, /files\?: string\[\];/);
   assert.match(types, /requiredGlobs\?: string\[\];/);
   assert.ok(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(

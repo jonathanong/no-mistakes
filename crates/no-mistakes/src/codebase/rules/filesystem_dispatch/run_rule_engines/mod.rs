@@ -20,7 +20,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         ..
     } = request;
     if rule_id == VITEST_DEFAULT_EXCLUDES {
-        return vitest_default_excludes::check_prepared(root, config, facts, sources, session);
+        return vitest_default_excludes::check_prepared(
+            root, config, files, facts, sources, session,
+        );
     }
     if rule_id == VITEST_PROJECT_POLICY {
         return vitest_project_policy::check_with_files_and_sources(

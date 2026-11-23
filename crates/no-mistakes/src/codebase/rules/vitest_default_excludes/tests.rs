@@ -20,6 +20,8 @@ fn run(config: &str) -> Vec<RuleFinding> {
         "absent.ts",
         "suppressed.ts",
         "shadowed.ts",
+        "factory.ts",
+        "files-and-config.yml",
     ]
     .map(|path| root.join(path));
     let findings =
@@ -69,7 +71,7 @@ fn a_bad_config_retains_other_config_findings_and_records_its_failure() {
     let files = [root.join("vitest.external.ts")];
     let sources = super::super::source_store_for_files(&files);
     let plan = CheckFactPlan {
-        vitest_default_exclude_paths: required_files(&root, &config).unwrap(),
+        vitest_default_exclude_paths: required_files(&root, &config, &files).unwrap(),
         ..Default::default()
     };
     let facts = crate::codebase::check_facts::collect_prepared_check_facts(
@@ -82,7 +84,15 @@ fn a_bad_config_retains_other_config_findings_and_records_its_failure() {
         Arc::clone(&sources),
     );
     assert_eq!(facts.files, files);
-    let findings = check_prepared(&root, &config, Some(&facts), &sources, Some(&session)).unwrap();
+    let findings = check_prepared(
+        &root,
+        &config,
+        &files,
+        Some(&facts),
+        &sources,
+        Some(&session),
+    )
+    .unwrap();
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "vitest.external.ts");
     let failures = session.check_failures();
@@ -97,6 +107,12 @@ fn invalid_options_report_the_problem() {
     let root = fixture_root();
     for (config, expected_error) in [
         ("missing-config-option.yml", "requires options.config"),
+        ("empty-config-option.yml", "requires options.config"),
+        (
+            "empty-files-glob.yml",
+            "files entries must be nonempty globs",
+        ),
+        ("invalid-files-glob.yml", "invalid glob"),
         (
             "empty-glob.yml",
             "requiredGlobs entries must be nonempty strings",
@@ -133,8 +149,34 @@ fn out_of_scope_config_paths_are_skipped() {
 
     let root = fixture_root();
     let config = load(&root, "empty-required-globs.yml");
-    assert!(required_files(&root, &config).unwrap().is_empty());
+    assert!(required_files(&root, &config, &[]).unwrap().is_empty());
     assert!(check_with_files(&root, &config, &[]).unwrap().is_empty());
+
+    let files = [root.join("factory.ts")];
+    let config = load(&root, "files-empty-required-globs.yml");
+    assert!(required_files(&root, &config, &files).unwrap().is_empty());
+    assert!(check_with_files(&root, &config, &files).unwrap().is_empty());
+}
+
+#[test]
+fn files_option_checks_factory_modules_and_deduplicates_with_config() {
+    let findings = run("files-and-config.yml");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            ("factory.ts", 5),
+            ("factory.ts", 13),
+            ("vitest.external.ts", 1),
+        ]
+    );
+    assert!(findings[0]
+        .message
+        .contains("**/node_modules/**, **/.git/**"));
+    assert!(findings[1].message.contains("**/.git/**"));
+    assert!(!findings[1].message.contains("**/node_modules/**"));
 }
 
 #[test]

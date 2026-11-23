@@ -996,8 +996,8 @@ exact version selectors. Configure the rule in the YAML selected by `config`.
 The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
 rule runs through async `check()` using the existing `checkJson` binding and
 through batched `analyzeProject()` check reports. `VitestDefaultExcludesOptions`
-exports the selected `config` and optional `requiredGlobs`. Findings use the
-standard `RuleFinding` shape.
+exports optional `config`, `files` (module globs for config factories), and
+`requiredGlobs`. Findings use the standard `RuleFinding` shape.
 
 The configured [`vitest-project-policy`](rules/vitest-project-policy.md) rule
 runs through `check()` and `analyzeProject()` check queries using the existing

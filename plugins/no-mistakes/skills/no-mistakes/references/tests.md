@@ -362,10 +362,12 @@ This does not assign neighboring helper files to those packages.
 
 
 To preserve Vitest's discovery exclusions in literal `test.exclude` arrays,
-configure `vitest-default-excludes` with an explicit `options.config` and run
-`no-mistakes check --root . --format json`. The check covers the root config
-and inline projects. To fix a missing exclusion, add the required string or
-spread `configDefaults.exclude` from `vitest/config` to keep the built-in defaults.
+configure `vitest-default-excludes` with an explicit `options.config`,
+`options.files` globs for config factory modules, or both, and run
+`no-mistakes check --root . --format json`. The check covers the root config,
+inline projects, and `test`-shaped object literals in matched factory modules.
+To fix a missing exclusion, add the required string or spread
+`configDefaults.exclude` from `vitest/config` to keep the built-in defaults.
 When `requiredGlobs` is configured, keep those custom strings in `test.exclude`
 alongside the spread defaults.
 

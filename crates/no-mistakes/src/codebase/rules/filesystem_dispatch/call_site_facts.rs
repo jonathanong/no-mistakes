@@ -35,7 +35,7 @@ pub(super) fn prepare_call_site_facts(
         crate::codebase::rules::forbidden_lint_suppressions::required_files(root, config, files)?;
     plan.require_call_site_paths(&call_site_files);
     plan.vitest_default_exclude_paths =
-        super::vitest_default_excludes::required_files(root, config)?;
+        super::vitest_default_excludes::required_files(root, config, files)?;
     let lock_inventory_helpers = crate::codebase::postgres::helper_call_site_files(
         root,
         config,

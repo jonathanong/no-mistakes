@@ -345,7 +345,7 @@ fn vitest_config_demand_keeps_read_failure_for_an_overlapping_playwright_config(
     );
     let load_paths = |file| {
         let config = crate::config::v2::load_v2_config(&root, Some(&root.join(file))).unwrap();
-        required_files(&root, &config).unwrap()
+        required_files(&root, &config, &[]).unwrap()
     };
     let missing = root.join("nonexistent.ts");
     let playwright_only = root.join("missing-playwright.config.ts");

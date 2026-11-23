@@ -132,7 +132,7 @@ impl CheckFactMap {
 pub(crate) struct CheckFileFacts {
     pub(crate) fact_extraction_panicked: bool,
     pub(crate) vitest_default_excludes:
-        Vec<crate::codebase::rules::vitest_default_excludes::ExcludeArray>,
+        crate::codebase::rules::vitest_default_excludes::CollectedExcludes,
     pub(crate) sql_source_prerequisites: super::SqlSourcePrerequisites,
     pub ts: Arc<TsFileFacts>,
     pub(crate) lint_suppressions:

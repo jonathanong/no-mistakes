@@ -154,7 +154,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         vitest_default_excludes: if plan.vitest_default_exclude_paths.contains(path) {
             crate::codebase::rules::vitest_default_excludes::collect(program, source)
         } else {
-            Vec::new()
+            Default::default()
         },
         ts: ts.into(),
         production_imports: None,
