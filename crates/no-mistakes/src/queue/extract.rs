@@ -23,6 +23,18 @@ pub(crate) fn needs_job_id_scoping(source: &str) -> bool {
     source.contains("jobId") || source.contains('\\')
 }
 
+pub(crate) fn needs_scheduler_scoping(
+    source: &str,
+    roles: &crate::config::v2::schema::QueueFactoryRoles,
+) -> bool {
+    !roles.job_scheduler.is_empty()
+        && (source.contains('\\')
+            || roles
+                .job_scheduler
+                .iter()
+                .any(|role| source.contains(&role.callee)))
+}
+
 pub(crate) fn extract_program_with_scoping(
     path: &Path,
     source: &str,
@@ -32,6 +44,36 @@ pub(crate) fn extract_program_with_scoping(
     record_waits: bool,
     scoping: Option<&Scoping>,
 ) -> FileFacts {
+    extract_queue_facts(
+        path,
+        source,
+        program,
+        factory_names,
+        roles,
+        record_waits,
+        scoping,
+    )
+    .facts
+}
+
+fn extract_queue_facts<'a>(
+    path: &'a Path,
+    source: &'a str,
+    program: &'a Program<'a>,
+    factory_names: &'a [String],
+    roles: &'a crate::config::v2::schema::QueueFactoryRoles,
+    record_waits: bool,
+    scoping: Option<&'a Scoping>,
+) -> QueueVisitor<'a> {
+    let scoped_scheduler = scoping.is_some() && needs_scheduler_scoping(source, roles);
+    let collect_bindings =
+        scoped_scheduler || source.contains("upsertJobScheduler") || source.contains('\\');
+    let index = super::extract_factory::queue_index(program, roles, collect_bindings);
+    let scheduler_factories = if scoped_scheduler {
+        super::extract_factory::scheduler_factories(program, roles)
+    } else {
+        Default::default()
+    };
     let mut visitor = QueueVisitor {
         path,
         source,
@@ -50,6 +92,8 @@ pub(crate) fn extract_program_with_scoping(
         queue_name_index: HashMap::new(),
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
+        scheduler_factories,
+        object_bindings: index.object_bindings,
         job_frames: Vec::new(),
         record_waits,
         scoping,
@@ -57,7 +101,7 @@ pub(crate) fn extract_program_with_scoping(
         claimed_processors: Vec::new(),
         current_case: None,
         namespace_imports: HashMap::new(),
-        processor_spans: super::extract_factory::processor_spans(program, roles),
+        processor_spans: index.processor_spans,
         dispatch_dynamic_workers: HashSet::new(),
         dispatch_jobs: HashMap::new(),
         dispatch_scopes: HashSet::new(),
@@ -68,8 +112,11 @@ pub(crate) fn extract_program_with_scoping(
     visitor.visit_program(program);
     super::extract_job_id::finish(&mut visitor);
     super::extract_processor::finish(&mut visitor);
-    visitor.facts
+    visitor
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests;
 
 #[path = "wait_scope.rs"]
 mod wait_scope;

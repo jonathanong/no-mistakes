@@ -1,7 +1,11 @@
-//! Index local processor references before visiting their bodies; reuse this AST.
+//! Index local processors and scoped bindings using the prepared AST.
 use crate::fx::FxHashMap;
+use crate::queue::extract_factory_scheduler_bind::{
+    Collector as ObjectBindingCollector, ObjectBindings,
+};
 use crate::queue::extract_helpers::{binding_name, export_name, is_queue_package};
 use oxc_ast::ast::*;
+use oxc_ast::ast_kind::AstKind;
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::{ScopeFlags, ScopeId};
 use std::cell::Cell;
@@ -10,60 +14,54 @@ use std::cell::Cell;
 mod model;
 use model::{Binding, Index};
 
-pub(crate) fn processor_spans(
-    program: &Program<'_>,
+pub(in crate::queue) struct QueueIndex<'a> {
+    pub processor_spans: Vec<(u32, u32, usize)>,
+    pub object_bindings: ObjectBindings<'a>,
+}
+
+pub(in crate::queue) fn queue_index<'a>(
+    program: &'a Program<'a>,
     roles: &crate::config::v2::schema::QueueFactoryRoles,
-) -> Vec<(u32, u32, usize)> {
+    collect_bindings: bool,
+) -> QueueIndex<'a> {
     let mut collector = Collector {
         index: Index::default(),
         roles,
+        object_bindings: collect_bindings.then(ObjectBindingCollector::default),
     };
     collector.visit_program(program);
-    let mut index = collector.index;
-    index.invalidate_writes();
-    let mut spans: FxHashMap<(u32, u32), Vec<usize>> = FxHashMap::default();
-    let mut worker_index = 0;
-    for (scope, callee, constructed, args) in &index.workers {
-        let processor = match (
-            index
-                .factories
-                .get(callee)
-                .copied()
-                .unwrap_or(Binding::Other),
-            constructed,
-        ) {
-            (Binding::Factory(processor), false) => processor,
-            (Binding::Constructor, true) => 1,
-            _ => continue,
-        };
-        if let Some(Some(name)) = args.get(processor) {
-            if let Binding::Callable(span) = index.lookup(*scope, name) {
-                spans
-                    .entry((span.start, span.end))
-                    .or_default()
-                    .push(worker_index);
-            }
-        }
-        worker_index += 1;
+    QueueIndex {
+        processor_spans: collector.index.processor_spans(),
+        object_bindings: collector
+            .object_bindings
+            .map(|collector| collector.bindings)
+            .unwrap_or_default(),
     }
-    // A shared callable cannot be assigned one enclosing worker soundly.
-    let mut spans: Vec<_> = spans
-        .into_iter()
-        .filter_map(|((start, end), workers)| {
-            (workers.len() == 1).then(|| (start, end, workers[0]))
-        })
-        .collect();
-    spans.sort_unstable();
-    spans
 }
 
-struct Collector<'r> {
+struct Collector<'a, 'r> {
     index: Index,
     roles: &'r crate::config::v2::schema::QueueFactoryRoles,
+    object_bindings: Option<ObjectBindingCollector<'a>>,
 }
 
-impl<'a> Visit<'a> for Collector<'_> {
-    fn enter_scope(&mut self, flags: ScopeFlags, _: &Cell<Option<ScopeId>>) {
+impl<'a> Visit<'a> for Collector<'a, '_> {
+    fn enter_node(&mut self, kind: AstKind<'a>) {
+        if let Some(bindings) = &mut self.object_bindings {
+            bindings.enter_node(kind);
+        }
+    }
+
+    fn leave_node(&mut self, kind: AstKind<'a>) {
+        if let Some(bindings) = &mut self.object_bindings {
+            bindings.leave_node(kind);
+        }
+    }
+
+    fn enter_scope(&mut self, flags: ScopeFlags, scope_id: &Cell<Option<ScopeId>>) {
+        if let Some(bindings) = &mut self.object_bindings {
+            bindings.enter_scope(scope_id);
+        }
         let next = self.index.scopes.len();
         self.index.scopes.push(FxHashMap::default());
         self.index.parents.push(self.index.scope);

@@ -2,12 +2,13 @@
 ///
 /// A bare list of names stays the queue-factory form: each name is a call whose
 /// first argument is the queue name. The object form names the argument index
-/// for queue, enqueue, and worker wrappers separately.
+/// for queue, enqueue, worker, and job-scheduler wrappers separately.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct QueueFactoryRoles {
     pub queue: Vec<QueueNameFactory>,
     pub enqueue: Vec<EnqueueFactory>,
     pub worker: Vec<WorkerFactory>,
+    pub job_scheduler: Vec<JobSchedulerFactory>,
     pub enqueue_and_wait: Vec<String>,
     pub enqueue_and_wait_patterns: QueueWaitPatterns,
     pub forbid_enqueue_and_wait_declarations: bool,
@@ -23,6 +24,9 @@ pub use wait::ProjectWaitScopes;
 #[path = "queues_patterns.rs"]
 mod patterns;
 pub use patterns::QueueWaitPatterns;
+#[path = "queues_scheduler.rs"]
+mod scheduler;
+pub use scheduler::JobSchedulerFactory;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueueNameFactory {
@@ -76,6 +80,7 @@ impl QueueFactoryRoles {
         {
             return Err(message);
         }
+        scheduler::merge(&mut self.job_scheduler, &other.job_scheduler)?;
         self.queue.extend(other.queue.clone());
         self.enqueue.extend(other.enqueue.clone());
         self.worker.extend(other.worker.clone());
@@ -92,6 +97,7 @@ impl QueueFactoryRoles {
         within(&self.queue, queue_same, "queue")
             .or_else(|| within(&self.enqueue, enqueue_same, "enqueue"))
             .or_else(|| within(&self.worker, worker_same, "worker"))
+            .or_else(|| scheduler::conflicts(&self.job_scheduler))
     }
 
     pub(super) fn dedup_callees(&mut self) {
@@ -107,12 +113,12 @@ impl QueueFactoryRoles {
             .sort_by(|left, right| left.callee.cmp(&right.callee));
         self.worker
             .dedup_by(|left, right| left.callee == right.callee);
+        scheduler::dedup(&mut self.job_scheduler);
         self.enqueue_and_wait.sort();
         self.enqueue_and_wait.dedup();
         wait::dedup(&mut self.wait_scopes);
     }
 }
-
 fn queue_same(left: &QueueNameFactory, right: &QueueNameFactory) -> bool {
     left.name == right.name
 }

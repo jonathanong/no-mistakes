@@ -1,6 +1,7 @@
 mod cycles;
 pub(crate) mod extract;
 mod extract_factory;
+mod extract_factory_scheduler_bind;
 mod extract_helpers;
 mod extract_job_id;
 mod extract_model;

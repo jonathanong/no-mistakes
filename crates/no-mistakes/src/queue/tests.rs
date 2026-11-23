@@ -9,6 +9,7 @@ mod lang;
 mod prepared;
 mod processor_identifiers;
 mod resolver;
+mod scheduler_template;
 pub(crate) mod session_lang;
 mod shared_facts;
 mod shared_rate_limit;

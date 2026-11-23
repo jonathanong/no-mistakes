@@ -1,5 +1,5 @@
 use super::{contains_bytes, source_may_have_queue_facts};
-use crate::config::v2::schema::{QueueFactoryRoles, QueueNameFactory};
+use crate::config::v2::schema::{JobSchedulerFactory, QueueFactoryRoles, QueueNameFactory};
 
 #[test]
 fn empty_factory_name_disables_the_prefilter() {
@@ -85,6 +85,39 @@ fn package_and_factory_needles_are_required_substrings() {
     assert!(source_may_have_queue_facts(
         "job.waitUntilFinished(queue.events);",
         &["createQueue".to_string()],
+        &roles,
+    ));
+}
+
+#[test]
+fn job_scheduler_needles_keep_scheduler_files() {
+    assert!(source_may_have_queue_facts(
+        "orders.upsertJobScheduler('daily', {}, {});",
+        &[],
+        &QueueFactoryRoles::default(),
+    ));
+    let mut roles = QueueFactoryRoles::default();
+    roles.job_scheduler.push(JobSchedulerFactory {
+        callee: "scheduleOrders".to_string(),
+        template: 0,
+    });
+    assert!(source_may_have_queue_facts(
+        "scheduleOrders(template);",
+        &[],
+        &roles,
+    ));
+    assert!(!source_may_have_queue_facts(
+        "export const value = 1;",
+        &[],
+        &roles,
+    ));
+    roles.job_scheduler.push(JobSchedulerFactory {
+        callee: String::new(),
+        template: 0,
+    });
+    assert!(source_may_have_queue_facts(
+        "export const value = 1;",
+        &[],
         &roles,
     ));
 }

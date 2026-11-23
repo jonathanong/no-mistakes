@@ -28,6 +28,8 @@ queues:
       - { callee: createBulkEnqueueFunction, queue: 0, job: 1 }
     worker:
       - { callee: createWorker, name: 0, processor: 1 }
+    jobScheduler:
+      - { callee: scheduleOrders, template: 2 }
     enqueueAndWait: [submitForResult]
     enqueueAndWaitPatterns: ['^submit.*ForResult$']
     forbidEnqueueAndWaitDeclarations: false
@@ -57,8 +59,11 @@ tests:
 `factories` names are matched against configured queue factory calls. An
 enqueue factory records a producer at the wrapper call. `options` is the
 argument index of that call's options object; self-dedup, debounce, and invalid
-jobId checks read it the same way they read `queue.add`'s third argument. A
-worker factory records the processor. The active job is a parameter named `job`, or otherwise
+jobId checks read it the same way they read `queue.add`'s third argument.
+`jobScheduler` names a wrapper that registers a repeated job. `template` is the argument
+index of the job template. [`queues check`](../cli/queues-check.md) reads that
+argument the same way it reads the third argument of `upsertJobScheduler`.
+A worker factory records the processor. The active job is a parameter named `job`, or otherwise
 the processor's first parameter, including `switch (task.name)` and
 `async ({ name, id }) =>`. A nested callback is a job only when one of its
 parameters is named `job`. Local named processor functions can be declared

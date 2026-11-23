@@ -9,19 +9,13 @@ fn source_line(root: &std::path::Path, file: &str, line: usize) -> String {
         .to_string()
 }
 
-fn invalid_rows(root: &std::path::Path) -> Vec<serde_json::Value> {
-    let report = analyze_project(root, None, &[]).unwrap();
-    assert!(
-        report
-            .check
-            .iter()
-            .all(|finding| finding.kind == "invalid-job-id"),
-        "other queue findings: {:?}",
-        report.check
-    );
-    report
-        .check
+fn invalid_rows(
+    root: &std::path::Path,
+    findings: &[crate::queue::CheckFinding],
+) -> Vec<serde_json::Value> {
+    findings
         .iter()
+        .filter(|finding| finding.kind == "invalid-job-id")
         .map(|finding| {
             serde_json::json!({
                 "file": finding.file,
@@ -37,7 +31,18 @@ fn invalid_rows(root: &std::path::Path) -> Vec<serde_json::Value> {
 #[test]
 fn invalid_job_id_findings_match_snapshot() {
     let root = fixture("invalid-job-id");
-    let rows = invalid_rows(&root);
+    let report = analyze_project(&root, None, &[]).unwrap();
+    let other_findings: Vec<_> = report
+        .check
+        .iter()
+        .filter(|finding| finding.kind != "invalid-job-id")
+        .map(|finding| (finding.kind.as_str(), finding.file.as_str(), finding.line))
+        .collect();
+    assert_eq!(
+        other_findings,
+        [("scheduler-template-option", "enqueue.ts", 47)]
+    );
+    let rows = invalid_rows(&root, &report.check);
     let sources: Vec<String> = rows
         .iter()
         .filter(|row| row["file"] == "enqueue.ts")
@@ -138,7 +143,8 @@ fn invalid_job_id_respects_queues_check_directives() {
 #[test]
 fn invalid_job_id_uses_the_lexical_const_and_resolved_queue_receiver() {
     let root = fixture("invalid-job-id");
-    let rows = invalid_rows(&root);
+    let report = analyze_project(&root, None, &[]).unwrap();
+    let rows = invalid_rows(&root, &report.check);
     let scoped = rows
         .iter()
         .filter(|row| row["file"] == "scoped-enqueue.ts")

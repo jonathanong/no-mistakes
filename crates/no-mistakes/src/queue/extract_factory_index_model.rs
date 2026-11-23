@@ -24,6 +24,43 @@ pub(super) struct Index {
 }
 
 impl Index {
+    pub(super) fn processor_spans(mut self) -> Vec<(u32, u32, usize)> {
+        self.invalidate_writes();
+        let mut spans: FxHashMap<(u32, u32), Vec<usize>> = FxHashMap::default();
+        let mut worker_index = 0;
+        for (scope, callee, constructed, args) in &self.workers {
+            let processor = match (
+                self.factories
+                    .get(callee)
+                    .copied()
+                    .unwrap_or(Binding::Other),
+                constructed,
+            ) {
+                (Binding::Factory(processor), false) => processor,
+                (Binding::Constructor, true) => 1,
+                _ => continue,
+            };
+            if let Some(Some(name)) = args.get(processor) {
+                if let Binding::Callable(span) = self.lookup(*scope, name) {
+                    spans
+                        .entry((span.start, span.end))
+                        .or_default()
+                        .push(worker_index);
+                }
+            }
+            worker_index += 1;
+        }
+        // A shared callable cannot be assigned one enclosing worker soundly.
+        let mut spans: Vec<_> = spans
+            .into_iter()
+            .filter_map(|((start, end), workers)| {
+                (workers.len() == 1).then(|| (start, end, workers[0]))
+            })
+            .collect();
+        spans.sort_unstable();
+        spans
+    }
+
     pub fn insert(&mut self, name: &str, binding: Binding) {
         let bindings = &mut self.scopes[self.scope];
         let binding = if matches!(bindings.get(name), Some(Binding::Callable(_))) {
