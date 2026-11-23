@@ -1,0 +1,143 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueBulkExplicit",
+          "line": 16,
+          "message": "single enqueue `enqueueBulkExplicit` (`./queue/widgets#enqueueBulkExplicit`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueBulkExplicit(item);",
+          "target": "./queue/widgets#enqueueBulkExplicit"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "publishWidget",
+          "line": 13,
+          "message": "single enqueue `publishWidget` (`./queue/widgets#enqueueWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "publishWidget(item);",
+          "target": "./queue/widgets#enqueueWidget"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "pushWidget",
+          "line": 20,
+          "message": "single enqueue `pushWidget` (`./other/widgets#pushWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "pushWidget(item);",
+          "target": "./other/widgets#pushWidget"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "widgets.enqueueWidget",
+          "line": 14,
+          "message": "single enqueue `widgets.enqueueWidget` (`./queue/widgets#enqueueWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "widgets.enqueueWidget(item);",
+          "target": "./queue/widgets#enqueueWidget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueLegacyWidget",
+          "line": 17,
+          "message": "single enqueue `enqueueLegacyWidget` (`./queue/widgets#enqueueLegacyWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueLegacyWidget(item);",
+          "target": "./queue/widgets#enqueueLegacyWidget"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "publishWidget",
+          "line": 13,
+          "message": "single enqueue `publishWidget` (`./queue/widgets#enqueueWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "publishWidget(item);",
+          "target": "./queue/widgets#enqueueWidget"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "widgets.enqueueWidget",
+          "line": 14,
+          "message": "single enqueue `widgets.enqueueWidget` (`./queue/widgets#enqueueWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "widgets.enqueueWidget(item);",
+          "target": "./queue/widgets#enqueueWidget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unscoped": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueLegacyWidget",
+          "line": 17,
+          "message": "single enqueue `enqueueLegacyWidget` (`./queue/widgets#enqueueLegacyWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueLegacyWidget(item);",
+          "target": "./queue/widgets#enqueueLegacyWidget"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueOutside",
+          "line": 19,
+          "message": "single enqueue `enqueueOutside` (`./other/widgets#enqueueWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueOutside(item);",
+          "target": "./other/widgets#enqueueWidget"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "publishWidget",
+          "line": 13,
+          "message": "single enqueue `publishWidget` (`./queue/widgets#enqueueWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "publishWidget(item);",
+          "target": "./queue/widgets#enqueueWidget"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "widgets.enqueueWidget",
+          "line": 14,
+          "message": "single enqueue `widgets.enqueueWidget` (`./queue/widgets#enqueueWidget`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "widgets.enqueueWidget(item);",
+          "target": "./queue/widgets#enqueueWidget"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

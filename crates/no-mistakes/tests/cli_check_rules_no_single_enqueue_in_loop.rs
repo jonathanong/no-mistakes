@@ -55,3 +55,34 @@ fn no_single_enqueue_in_loop_check_json_snapshot() {
         .unwrap()
         .is_empty());
 }
+
+#[test]
+fn no_single_enqueue_in_loop_patterns_check_json_snapshot() {
+    let root = fixture("pattern-targets");
+    let cases = [
+        ("scoped", ".no-mistakes.yml", &[13, 14, 17][..]),
+        ("mixed", "mixed.yml", &[13, 14, 16, 20][..]),
+        ("unscoped", "unscoped.yml", &[13, 14, 17, 19][..]),
+    ];
+    let fixtures = cases.map(|(label, config, _)| (label, root.clone(), root.join(config)));
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "no_single_enqueue_in_loop_patterns",
+        &fixtures,
+        &[],
+        &[],
+    );
+
+    for (label, _, expected) in cases {
+        assert_eq!(reports[label]["exitCode"], 1);
+        let findings = reports[label]["report"]["rules"].as_array().unwrap();
+        let mut lines = findings
+            .iter()
+            .map(|finding| {
+                assert_eq!(finding["file"], "src/publish.ts");
+                finding["line"].as_u64().unwrap()
+            })
+            .collect::<Vec<_>>();
+        lines.sort_unstable();
+        assert_eq!(lines, expected, "{label}: {findings:#?}");
+    }
+}

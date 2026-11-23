@@ -1,0 +1,13 @@
+rules:
+  - rule: no-single-enqueue-in-loop
+    scope: repository
+    options:
+      single:
+        - { module: ./other/widgets, export: pushWidget }
+        - { module: ./queue/widgets, export: enqueueBulkExplicit }
+      bulk:
+        - { module: ./queue/widgets, export: enqueueLegacyWidget }
+      singleExportPattern: '^enqueue[A-Z]'
+      bulkExportPattern: '^enqueueBulk'
+      moduleGlobs:
+        - './queue/*'

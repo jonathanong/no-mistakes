@@ -2,6 +2,7 @@
 mod modules;
 mod options;
 mod scan;
+mod targets;
 
 pub(crate) use modules::module_catalog;
 
@@ -18,7 +19,7 @@ pub const RULE_ID: &str = "no-single-enqueue-in-loop";
 pub fn demands_analysis(config: &NoMistakesConfig) -> bool {
     config.rule_applications(RULE_ID).iter().any(|application| {
         match application.try_rule_options::<options::Options>() {
-            Ok(options) => !options.single.is_empty(),
+            Ok(options) => options.has_single_targets(),
             Err(_) => true,
         }
     })
@@ -42,10 +43,9 @@ pub(crate) fn check_with_catalog(
     for application in config.rule_applications(RULE_ID) {
         let options = application.try_rule_options()?;
         let targets = options::validate(&options)?;
-        if targets.single.is_empty() {
-            continue;
+        if options.has_single_targets() {
+            prepared.push((application, targets));
         }
-        prepared.push((application, targets));
     }
     if prepared.is_empty() {
         return Ok(Vec::new());

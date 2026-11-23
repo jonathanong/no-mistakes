@@ -53,6 +53,9 @@ pub(super) fn resolve_modules(
         return Ok(ResolvedModules::empty());
     };
     let modules: BTreeSet<String> = modules.into_iter().collect();
+    if modules.is_empty() {
+        return Ok(ResolvedModules::empty());
+    }
     let visible = facts
         .graph_file_universe()
         .iter()
@@ -107,23 +110,21 @@ pub(super) fn matches_resolved(
     export: &str,
     site: &ResolvedCallSite,
 ) -> bool {
-    if files.is_empty() || site.has_unknown_target() {
+    if files.is_empty() || site.has_unknown_target() || site.targets().is_empty() {
         return false;
     }
-    let mut matched = false;
-    for candidate in site.targets() {
-        matched = true;
-        let KnownCallTargetRef::ModuleExport {
-            export_path,
-            repository_target: Some((file, _)),
-            ..
-        } = candidate.target
-        else {
-            return false;
-        };
-        if export_path != export || !files.contains(&normalize_path(file)) {
-            return false;
-        }
-    }
-    matched
+    site.targets()
+        .all(|candidate| matches_resolved_candidate(files, export, candidate.target))
+}
+
+pub(super) fn matches_resolved_candidate(
+    files: &BTreeSet<PathBuf>,
+    export: &str,
+    target: KnownCallTargetRef<'_>,
+) -> bool {
+    matches!(target, KnownCallTargetRef::ModuleExport {
+        export_path,
+        repository_target: Some((file, _)),
+        ..
+    } if export_path == export && files.contains(&normalize_path(file)))
 }

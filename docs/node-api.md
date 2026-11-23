@@ -83,6 +83,14 @@ use the shared `unanalyzable` policy; definite inherited write grants remain
 findings under every policy. The rule adds no function, option, or report
 type, so `check()` remains the runtime entrypoint.
 
+`no-single-enqueue-in-loop` accepts `singleExportPattern`, `bulkExportPattern`,
+and `moduleGlobs` in the YAML rule options loaded by async `check({ root, config })`
+and `analyzeProject()` check reports. CLI and Node share the prepared call graph
+and pattern selection. The exported `NoSingleEnqueueInLoopOptions` and
+`NoSingleEnqueueInLoopTarget` describe the pattern and explicit-target options;
+the runtime entrypoints and report fields are unchanged. See the
+[target selection contract](rules/no-single-enqueue-in-loop.md#options-and-defaults).
+
 `query-reached-per-item` accepts `exemptCappedCursorPageReads` in the rule's
 YAML `options`, selected by `check({ root, config })` or an `analyzeProject()`
 check report. It defaults to `false` and shares CLI behavior. The exported

@@ -1,5 +1,6 @@
 use super::modules::ResolvedModules;
 use super::options::Targets;
+use super::targets::matching_target;
 use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
 use crate::codebase::dependencies::graph::{DepGraph, ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::RuleFinding;
@@ -39,10 +40,7 @@ pub(super) fn scan(
         if !reported_construct(construct) {
             continue;
         }
-        if bulk_skips(graph, targets, site, resolved) {
-            continue;
-        }
-        let Some((module, export)) = matching_target(graph, &targets.single, site, resolved) else {
+        let Some(target) = matching_target(graph, targets, site, resolved) else {
             continue;
         };
         findings.push(finding(
@@ -52,7 +50,7 @@ pub(super) fn scan(
             *line,
             construct,
             site,
-            (module, export),
+            target,
         ));
     }
     Ok(findings)
@@ -105,60 +103,6 @@ fn reported_construct(construct: &str) -> bool {
     )
 }
 
-fn bulk_skips(
-    graph: &DepGraph,
-    targets: &Targets,
-    site: &ResolvedCallSite,
-    resolved: &ResolvedModules,
-) -> bool {
-    targets.bulk.iter().any(|(module, export)| {
-        target_matches(graph, module, export, site, resolved)
-            && !same_resolved_export(module, export, &targets.single, resolved)
-    })
-}
-
-fn same_resolved_export(
-    module: &str,
-    export: &str,
-    single: &[(String, String)],
-    resolved: &ResolvedModules,
-) -> bool {
-    let Some(bulk_files) = resolved.files(module) else {
-        return false;
-    };
-    single.iter().any(|(single_module, single_export)| {
-        single_export == export
-            && resolved
-                .files(single_module)
-                .is_some_and(|files| files.iter().any(|file| bulk_files.contains(file)))
-    })
-}
-
-fn matching_target<'a>(
-    graph: &DepGraph,
-    targets: &'a [(String, String)],
-    site: &ResolvedCallSite,
-    resolved: &ResolvedModules,
-) -> Option<(&'a str, &'a str)> {
-    targets.iter().find_map(|(module, export)| {
-        target_matches(graph, module, export, site, resolved)
-            .then_some((module.as_str(), export.as_str()))
-    })
-}
-
-fn target_matches(
-    graph: &DepGraph,
-    module: &str,
-    export: &str,
-    site: &ResolvedCallSite,
-    resolved: &ResolvedModules,
-) -> bool {
-    graph.matches_module_export(module, export, site)
-        || resolved
-            .files(module)
-            .is_some_and(|files| super::modules::matches_resolved(files, export, site))
-}
-
 fn finding(
     root: &Path,
     application: &RuleDef,
@@ -166,11 +110,10 @@ fn finding(
     line: u32,
     construct: &str,
     site: &ResolvedCallSite,
-    target: (&str, &str),
+    target: String,
 ) -> RuleFinding {
-    let (module, export) = target;
     let body = format!(
-        "single enqueue `{}` (`{module}#{export}`) inside {construct}; call the configured bulk API once with the collection",
+        "single enqueue `{}` (`{target}`) inside {construct}; call the configured bulk API once with the collection",
         site.source_callee
     );
     let message = match application.message.as_deref() {
@@ -184,6 +127,6 @@ fn finding(
         line: line as usize,
         message,
         import: Some(site.source_callee.clone()),
-        target: Some(format!("{module}#{export}")),
+        target: Some(target),
     }
 }

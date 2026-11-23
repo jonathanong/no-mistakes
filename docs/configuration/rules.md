@@ -85,7 +85,21 @@ project-relative components alongside export-kind selections. Use a top-level
 names the single and bulk enqueue APIs by import specifier and export name.
 A relative specifier, a package name, and a tsconfig `paths` alias match when
 the shared resolver produces the same file. `options.single` and `options.bulk`
-both default to an empty list. An empty `single` list reports nothing.
+both default to an empty list. Alternatively, `singleExportPattern` and
+`bulkExportPattern` accept regex strings; pattern-selected singles must match
+the first and not the second. Optional `moduleGlobs` narrow those targets by
+the import specifier recorded in the canonical graph. Explicit targets retain
+their existing matching rules. With neither explicit single targets nor a
+single-export pattern, the rule reports nothing.
+
+```yaml
+rules:
+  - rule: no-single-enqueue-in-loop
+    options:
+      singleExportPattern: '^enqueue[A-Z]'
+      bulkExportPattern: '^enqueueBulk'
+      moduleGlobs: ['./queue/**']
+```
 
 [`forbidden-dependencies`](../rules/forbidden-dependencies.md#glob-semantics)
 accepts file/directory/glob `options.roots` and `options.excludeRoots`, plus
