@@ -13,3 +13,5 @@ const alias = ALIAS_MUTATED_DEF;
 alias.name = "afterAliasMutation";
 
 export const STABLE_DEF = { name: "stableDefinition" };
+
+export const { DESTRUCTURED } = { DESTRUCTURED: { name: "destructured" } };

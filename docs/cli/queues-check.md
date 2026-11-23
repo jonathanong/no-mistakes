@@ -180,3 +180,6 @@ run `no-mistakes check`. Declaration compatibility is a separate opt-in check.
 
 Queue producer and worker arrays are sorted by file and line in both standalone
 and aggregate programmatic reports, so repeated analyses retain identical order.
+
+Configured returned enqueue callables inside workers also preserve the
+`self-dedup-enqueue` check when they reuse the active job's id.

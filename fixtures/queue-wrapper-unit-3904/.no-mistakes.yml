@@ -12,3 +12,7 @@ queues:
         defaults: 1
         optionsOnReturnedCall: 1
       - { callee: enqueuePositional, queue: 0, job: 1, options: 2 }
+      - callee: enqueueProperty
+        queue: 0
+        job: 1
+        options: { arg: 2, property: options }

@@ -118,3 +118,80 @@ fn enqueue_wrapper_config_rejects_unknown_property_selector_keys() {
         );
     }
 }
+
+#[test]
+fn enqueue_wrapper_controls_keep_exact_sites_and_abstain_on_unknown_evidence() {
+    let report = analyze_project(&wrapper_fixture(), None, &[]).unwrap();
+    let mut sites: Vec<_> = report
+        .producers
+        .iter()
+        .filter(|site| site.file == "controls.ts")
+        .map(|site| (site.line, site.queue_name.as_deref(), site.job.as_deref()))
+        .collect();
+    sites.sort_unstable();
+    assert_eq!(
+        sites,
+        [
+            (10, Some("wrapper-unit"), Some("aliased")),
+            (11, Some("wrapper-unit"), Some("aliased")),
+            (12, Some("wrapper-unit"), Some("aliased")),
+            (13, Some("wrapper-unit"), Some("aliased")),
+            (14, Some("wrapper-unit"), Some("aliased")),
+            (15, Some("wrapper-unit"), Some("aliased")),
+            (16, Some("wrapper-unit"), Some("aliased")),
+            (17, Some("wrapper-unit"), Some("aliased")),
+            (66, Some("wrapper-unit"), Some("aliased")),
+            (67, Some("wrapper-unit"), Some("aliased")),
+        ],
+        "{report:#?}"
+    );
+    assert!(
+        report
+            .check
+            .iter()
+            .all(|finding| finding.file != "controls.ts"),
+        "{report:#?}"
+    );
+    assert!(
+        report
+            .producers
+            .iter()
+            .filter(|site| site.file == "controls.ts")
+            .all(|site| { site.queue_file.as_deref() == Some("controls.ts") }),
+        "{report:#?}"
+    );
+    assert!(
+        report
+            .edges
+            .iter()
+            .any(|edge| { edge.from == "controls.ts" && edge.to == "controls.ts#aliased" }),
+        "{report:#?}"
+    );
+    assert!(
+        !report
+            .edges
+            .iter()
+            .any(|edge| { edge.from == "controls.ts" && edge.to != "controls.ts#aliased" }),
+        "{report:#?}"
+    );
+}
+
+#[test]
+fn returned_wrapper_preserves_worker_job_deduplication() {
+    let report = analyze_project(&wrapper_fixture(), None, &[]).unwrap();
+    assert!(report
+        .producers
+        .iter()
+        .any(|site| { site.file == "feedback.ts" && site.job.as_deref() == Some("aliased") }));
+    assert_eq!(report.check.len(), 2, "{report:#?}");
+    assert!(report
+        .check
+        .iter()
+        .any(|finding| finding.kind == "self-dedup-enqueue"
+            && finding.file == "feedback.ts"
+            && finding.line == 9));
+    assert!(report
+        .check
+        .iter()
+        .any(|finding| finding.kind == "invalid-job-id" && finding.file == "enqueues.ts"));
+}

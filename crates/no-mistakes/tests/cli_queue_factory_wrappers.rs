@@ -5,15 +5,29 @@ use std::path::PathBuf;
 fn configured_enqueue_wrappers_check_json_snapshot() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/queue-ast-hop/configured-enqueue-wrappers/fixture");
+    let controls =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/queue-wrapper-unit-3904");
     let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "configured_enqueue_wrappers",
         &[
             ("configured", root.clone(), root.join(".no-mistakes.yml")),
             ("before", root.clone(), root.join("../configs/before.yml")),
+            (
+                "controls",
+                controls.clone(),
+                controls.join("configs/check.yml"),
+            ),
         ],
         &[],
         &[],
     );
+    let control_findings = reports["controls"]["report"]["queues"].as_array().unwrap();
+    assert_eq!(control_findings.len(), 2, "{control_findings:?}");
+    assert!(control_findings
+        .iter()
+        .any(|f| f["kind"] == "self-dedup-enqueue"
+            && f["file"] == "feedback.ts"
+            && f["line"] == 9));
     let before = reports["before"]["report"]["queues"].as_array().unwrap();
     assert_eq!(before.len(), 6);
     assert!(before.iter().all(|f| f["kind"] == "unmatched-worker"));
@@ -51,7 +65,16 @@ fn configured_enqueue_wrappers_check_json_snapshot() {
             "{file}: {findings:?}"
         );
     }
-    assert!(findings.iter().all(|f| f["file"] != "enqueues/abstain.ts"));
+    for file in [
+        "enqueues/abstain.ts",
+        "enqueues/deep-alias.ts",
+        "enqueues/deep-write.ts",
+    ] {
+        assert!(
+            findings.iter().all(|f| f["file"] != file),
+            "{file}: {findings:?}"
+        );
+    }
     let missing: BTreeSet<_> = findings
         .iter()
         .filter(|f| f["kind"] == "missing-job-option")

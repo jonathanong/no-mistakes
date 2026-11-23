@@ -217,5 +217,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [],
       "warnings": []
     }
+  },
+  "controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueues.ts",
+          "job": "aliased",
+          "kind": "invalid-job-id",
+          "line": 4,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "const defaults = { attempts: 4, priority: 3, jobId: \"bad:default\" };"
+        },
+        {
+          "file": "feedback.ts",
+          "job": "aliased",
+          "kind": "self-dedup-enqueue",
+          "line": 9,
+          "message": "enqueue of the active job reuses its deduplication id or job id, so the queue drops the add while that job is active",
+          "queueFile": "controls.ts",
+          "queueName": "wrapper-unit",
+          "sourceLine": "send({}, { deduplication: { id: job.id } });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
   }
 }
