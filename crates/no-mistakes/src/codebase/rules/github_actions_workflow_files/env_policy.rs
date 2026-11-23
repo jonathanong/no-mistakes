@@ -64,7 +64,7 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
+    let sources = super::super::source_store_for_files(all_files);
     check_with_files_and_sources(root, config, all_files, &sources, false)
 }
 
@@ -82,14 +82,14 @@ pub(crate) fn check_with_files_and_sources(
         if policy.required.is_empty() && policy.forbidden.is_empty() {
             continue;
         }
-        let roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
+        let roots = super::super::target_roots(root, config, rule);
+        let skip = super::super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
             .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &roots))
+            .filter(|path| super::super::file_allowed_by_roots_and_skip(root, &skip, path, &roots))
             .cloned()
             .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let files = super::super::path_filter::filter_rule_files(root, config, rule, &files)?;
         if files.is_empty() {
             continue;
         }
@@ -98,14 +98,14 @@ pub(crate) fn check_with_files_and_sources(
         } else {
             opts.include.clone()
         };
-        let files = super::matching_files(root, &include, &files, &roots)?;
+        let files = super::super::matching_files(root, &include, &files, &roots)?;
         let found: Vec<RuleFinding> = files
             .par_iter()
             .flat_map(|path| scan::check_file(root, path, &policy, sources, defer_suppression))
             .collect();
         findings.extend(found);
     }
-    super::sort_findings(&mut findings);
+    super::super::sort_findings(&mut findings);
     Ok(findings)
 }
 

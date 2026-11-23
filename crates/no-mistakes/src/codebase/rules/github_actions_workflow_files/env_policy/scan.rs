@@ -12,7 +12,7 @@ pub(super) fn check_file(
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
-    let Some(source) = super::super::read_language_source(sources, path) else {
+    let Some(source) = super::super::super::read_language_source(sources, path) else {
         return Vec::new();
     };
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
@@ -24,7 +24,7 @@ pub(super) fn check_file(
         Err(_) => Vec::new(),
     };
     if !defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+        super::super::super::suppress_rule_findings_with_source(&mut findings, &source);
     }
     findings
 }

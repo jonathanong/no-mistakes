@@ -49,7 +49,7 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
-        GITHUB_ACTIONS_ENV_POLICY => github_actions_env_policy::check_with_files_and_sources(
+        GITHUB_ACTIONS_ENV_POLICY => github_actions_workflow_files::env_policy::check_with_files_and_sources(
             root,
             config,
             files,

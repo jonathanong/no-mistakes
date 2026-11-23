@@ -9,7 +9,7 @@ use super::{
     forbidden_lint_suppressions, forbidden_workspace_closure, github_actions_action_input_policy,
     github_actions_action_timeout_pair, github_actions_cache_key_policy,
     github_actions_checkout_credentials, github_actions_composite_step_schema,
-    github_actions_docker_host_ports, github_actions_download_integrity, github_actions_env_policy,
+    github_actions_docker_host_ports, github_actions_download_integrity,
     github_actions_job_permissions, github_actions_job_timeouts,
     github_actions_local_action_checkout, github_actions_max_inline_script_lines,
     github_actions_pinned_hash, github_actions_script_expressions, github_actions_step_timeouts,
@@ -62,11 +62,11 @@ pub(super) mod shell_compatibility;
 #[macro_use]
 mod registry;
 use super::{
-    rule_enabled, suppress_rule_findings_with_sources_except, RuleFinding, AGENTS_MD_MAX_SIZE,
-    AST_GREP_IGNORE_FRESHNESS, BANNED_PATHS, BANNED_RENAMED_FILES, BASH_EMPTY_ARRAY_NOUNSET,
-    CONFIG_PATH_REFERENCES, CSHARP_MAX_LINES_PER_FILE, CSHARP_NO_ASYNC_VOID_DELEGATE,
-    DECLARED_PAYLOAD_COMPATIBILITY, DEPENDABOT_COOLDOWN_POLICY, DOC_CONSISTENCY,
-    FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_LINT_SUPPRESSIONS,
+    github_actions_workflow_files, rule_enabled, suppress_rule_findings_with_sources_except,
+    RuleFinding, AGENTS_MD_MAX_SIZE, AST_GREP_IGNORE_FRESHNESS, BANNED_PATHS, BANNED_RENAMED_FILES,
+    BASH_EMPTY_ARRAY_NOUNSET, CONFIG_PATH_REFERENCES, CSHARP_MAX_LINES_PER_FILE,
+    CSHARP_NO_ASYNC_VOID_DELEGATE, DECLARED_PAYLOAD_COMPATIBILITY, DEPENDABOT_COOLDOWN_POLICY,
+    DOC_CONSISTENCY, FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_LINT_SUPPRESSIONS,
     FORBIDDEN_WORKSPACE_CLOSURE, INTEGRATION_TEST_NO_MOCKS, LOCKFILE_ALLOWLIST,
     MARKDOWN_CHILD_LINKS, MARKDOWN_EVAL_TESTS, MARKDOWN_LINK_DISPLAY_TEXT,
     MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
@@ -106,7 +106,8 @@ pub use entrypoints::{
 };
 pub(super) const GITHUB_ACTIONS_ACTION_INPUT_POLICY: &str =
     github_actions_action_input_policy::RULE_ID;
-pub(super) const GITHUB_ACTIONS_ENV_POLICY: &str = github_actions_env_policy::RULE_ID;
+pub(super) const GITHUB_ACTIONS_ENV_POLICY: &str =
+    github_actions_workflow_files::env_policy::RULE_ID;
 pub(super) const GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR: &str =
     github_actions_action_timeout_pair::RULE_ID;
 pub(super) const GITHUB_ACTIONS_CACHE_KEY_POLICY: &str = github_actions_cache_key_policy::RULE_ID;
