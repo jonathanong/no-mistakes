@@ -40,7 +40,11 @@ fn matched_dir(text: &str) -> Option<String> {
     launches(&[known(text)], true)
         .into_iter()
         .find(|parsed| matched(parsed, &[analyzer()]).is_some())
-        .and_then(|parsed| parsed.shell_dir)
+        .and_then(|parsed| first_shell_dir(&parsed).map(str::to_owned))
+}
+
+fn first_shell_dir(parsed: &super::Invocation) -> Option<&str> {
+    parsed.shell_dirs.as_ref()?.first()?.as_deref()
 }
 
 fn matched_text(text: &str) -> String {
@@ -147,7 +151,7 @@ fn quoted_arguments_match_on_static_text() {
         matched(&quoted_dir, &[analyzer()]).as_deref(),
         Some("widget-audit check")
     );
-    assert_eq!(quoted_dir.shell_dir.as_deref(), Some("widgets"));
+    assert_eq!(first_shell_dir(&quoted_dir), Some("widgets"));
     let literal = invocation(&[known("widget-audit check --label '$item'")], true).unwrap();
     assert_eq!(
         matched(&literal, &[analyzer()]).as_deref(),
@@ -162,19 +166,19 @@ fn quoted_arguments_match_on_static_text() {
         matched(&quoted_operator, &[analyzer()]).as_deref(),
         Some("widget-audit check")
     );
-    assert_eq!(quoted_operator.shell_dir.as_deref(), Some("&&"));
+    assert_eq!(first_shell_dir(&quoted_operator), Some("&&"));
     let quoted_cd = invocation(&[known("\"cd\" widgets && widget-audit check")], true).unwrap();
     assert_eq!(
         matched(&quoted_cd, &[analyzer()]).as_deref(),
         Some("widget-audit check")
     );
-    assert_eq!(quoted_cd.shell_dir.as_deref(), Some("widgets"));
+    assert_eq!(first_shell_dir(&quoted_cd), Some("widgets"));
     let partial_cd = invocation(&[known("c''d widgets && widget-audit check")], true).unwrap();
     assert_eq!(
         matched(&partial_cd, &[analyzer()]).as_deref(),
         Some("widget-audit check")
     );
-    assert_eq!(partial_cd.shell_dir.as_deref(), Some("widgets"));
+    assert_eq!(first_shell_dir(&partial_cd), Some("widgets"));
     assert!(matched_text("\"cd\" widgets \"&&\" widget-audit check").is_empty());
     assert!(matched_text("widget-audit check --label 'nightly").is_empty());
     assert!(matched_text("widget-audit check --label 'ni\\ghtly'").is_empty());

@@ -1,0 +1,90 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 10,
+          "message": "live repository scan: `execSync` may run `widget-audit check` after `cd /repo`, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd /repo && cd fixtures || widget-audit check\", { cwd: root });",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 12,
+          "message": "live repository scan: `execSync` runs `widget-audit check` after a shell directory change, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd /repo || cd /workspace && widget-audit check\", { cwd: root });",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 13,
+          "message": "live repository scan: `execSync` may run `widget-audit check` after `cd /repo`, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd ../widgets || cd /repo && widget-audit check\", { cwd: root });",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 14,
+          "message": "live repository scan: `execSync` may run `widget-audit check` after `cd /repo`, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd /repo && check-preflight; widget-audit check\", { cwd: root });",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 15,
+          "message": "live repository scan: `execSync` runs `widget-audit check` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd fixtures || widget-audit check\");",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 16,
+          "message": "live repository scan: `execSync` may run `widget-audit check` after `cd /repo`, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd /repo || READY=1 && widget-audit check\", { cwd: root });",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 8,
+          "message": "live repository scan: `execSync` may run `widget-audit check` after `cd /repo`, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd fixtures && widget-audit check || cd /repo && widget-audit check\", { cwd: root });",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "import": "execSync",
+          "line": 9,
+          "message": "live repository scan: `execSync` may run `widget-audit check` after `cd /repo`, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"cd /repo || cd fixtures && widget-audit check\", { cwd: root });",
+          "target": "analyzer subprocess"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

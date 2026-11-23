@@ -59,36 +59,46 @@ impl<'a> Gate<'a> {
                 continue;
             };
             let wrapped = command::wrapper_dir(&invocation);
-            let shell_dir = invocation.shell_dir.as_deref();
             let base = place::directory(facts, site.offset, invocation.options, &self.fixture_dirs);
-            let located = match wrapped.as_deref().or(shell_dir) {
-                Some(dir) => place::shell_place(dir, &self.fixture_dirs, base),
-                None => base,
-            };
-            match located {
-                place::Directory::Allowed => continue,
-                place::Directory::Live => {
-                    diagnostics.findings.push(finding(
-                        place::live_message(
-                            &site.source_callee,
-                            &label,
-                            place::owned_shift(base, wrapped.as_deref(), shell_dir),
-                        ),
-                        "analyzer subprocess",
-                    ));
-                    return;
+            let mut live = None;
+            let mut multiple_live_dirs = false;
+            let mut allowed = false;
+            let mut unresolved = false;
+            for shell_dir in invocation.shell_dirs.as_deref().unwrap_or(&[None]) {
+                let dir = wrapped.as_deref().or(shell_dir.as_deref());
+                let located = dir.map_or(base, |dir| {
+                    place::shell_place(dir, &self.fixture_dirs, base)
+                });
+                match located {
+                    place::Directory::Live => {
+                        multiple_live_dirs |= *live.get_or_insert(dir) != dir;
+                    }
+                    place::Directory::Allowed => allowed = true,
+                    place::Directory::Unresolved => unresolved = true,
                 }
-                place::Directory::Unresolved => {
-                    findings::unresolved_findings(diagnostics, self.options.unresolved_root).push(
-                        finding(
-                            format!(
-                                "unresolved root: `{}` runs `{label}`, but its cwd cannot be shown to be a fixtures path or an owned temporary directory. Fix: pass a const fixture path or owned mkdtemp directory as `cwd`. As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason.",
-                                site.source_callee
-                            ),
-                            "unresolved root",
+            }
+            if let Some(dir) = live {
+                diagnostics.findings.push(finding(
+                    place::live_message(
+                        &site.source_callee,
+                        &label,
+                        place::owned_shift(base, wrapped.as_deref(), dir, multiple_live_dirs),
+                        allowed || unresolved,
+                    ),
+                    "analyzer subprocess",
+                ));
+                return;
+            }
+            if unresolved {
+                findings::unresolved_findings(diagnostics, self.options.unresolved_root).push(
+                    finding(
+                        format!(
+                            "unresolved root: `{}` runs `{label}`, but its cwd cannot be shown to be a fixtures path or an owned temporary directory. Fix: pass a const fixture path or owned mkdtemp directory as `cwd`. As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason.",
+                            site.source_callee
                         ),
-                    );
-                }
+                        "unresolved root",
+                    ),
+                );
             }
         }
     }
