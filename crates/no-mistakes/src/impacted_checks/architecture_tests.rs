@@ -4,6 +4,9 @@ fn impacted_fanout_prepares_and_builds_the_graph_once() {
     let impacted_prepare = include_str!("generate/prepare.rs");
     let prepared = concat!(
         include_str!("../tests/prepared_plan.rs"),
+        include_str!("../tests/prepared_plan/inputs.rs"),
+        include_str!("../tests/prepared_plan/request.rs"),
+        include_str!("../tests/prepared_plan/graph_inputs.rs"),
         include_str!("../tests/prepared_plan_discovery.rs"),
     );
     let plan = concat!(
