@@ -12,7 +12,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT hardcode user-facing copy that needs localization. Use the app's localization mechanism.
 - MUST NOT ship debug-only session or cookie loading in release builds, or default release endpoints to localhost.
 - MUST NOT store sessions outside secure storage.
-- MUST NOT end a paginated list on an empty or short page when the API returns a next-page flag or cursor; only that signal ends the list. Show the empty state only when there are no results and no further page can be requested.
+- MUST NOT treat an empty or short page as the end of a paginated list when the API returns a next-page flag or cursor; continue until it says there is no next page. Show the empty state only when there are no results and no next page.
 
 ## Swift
 
