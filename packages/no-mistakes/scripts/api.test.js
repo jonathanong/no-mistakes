@@ -159,6 +159,7 @@ test("check rule options compile from the package root", () => {
     [
       join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
     ],

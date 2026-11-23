@@ -356,3 +356,86 @@ fn issue_3311_empty_banned_statements_check_json_snapshot() {
         2
     );
 }
+
+#[test]
+fn issue_3856_banned_clauses_check_json_snapshot() {
+    let rule = "postgres-sql-statement-policy";
+    let root = rules_path(rule, "fixture", "issue-3856");
+    let cases = [
+        ("omitted", "issue-3856-omitted.yml"),
+        ("opt_in", "issue-3856-clauses.yml"),
+        ("unknown", "issue-3856-unknown.yml"),
+    ]
+    .map(|(label, config)| (label, root.clone(), rules_path(rule, "configs", config)));
+    let reports =
+        assert_saved_fixture_report("postgres_sql_statement_policy_issue_3856", &cases, &[], &[]);
+
+    assert_eq!(reports["omitted"]["exitCode"], 0);
+    assert_eq!(reports["omitted"]["report"]["rules"], serde_json::json!([]));
+    assert_eq!(reports["opt_in"]["exitCode"], 1);
+    let findings = reports["opt_in"]["report"]["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 12, "{findings:?}");
+    assert!(findings.iter().all(|finding| finding["rule"] == rule));
+    assert_eq!(reports["unknown"]["exitCode"], 1);
+    let errors = reports["unknown"]["report"]["incomplete"]
+        .as_array()
+        .unwrap();
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert_eq!(errors[0]["consumer"], rule);
+    let message = errors[0]["message"].as_str().unwrap();
+    assert!(
+        message.contains("bannedClauses") && message.contains("unknown-clause"),
+        "{message}"
+    );
+}
+
+#[test]
+fn issue_3856_clause_verdicts_check_json_snapshot() {
+    let rule = "postgres-sql-statement-policy";
+    let cases = [(
+        "opt_in",
+        rules_path(rule, "fixture", "issue-3856"),
+        rules_path(rule, "configs", "issue-3856-clauses.yml"),
+    )];
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_statement_policy_issue_3856_clause_verdicts",
+        &cases,
+        &[],
+        &["--include-sql-verdicts"],
+    );
+    let report = &reports["opt_in"]["report"];
+    let verdicts = report["sqlVerdicts"].as_array().unwrap();
+    let mut by_call = std::collections::BTreeMap::new();
+    for verdict in verdicts {
+        assert_eq!(verdict["rule"], rule);
+        assert_eq!(verdict["file"], "src/policy.test.ts");
+        assert_eq!(verdict["evidence"], "exhaustive-union");
+        by_call
+            .entry(verdict["span"][0].as_u64().unwrap())
+            .or_insert_with(Vec::new)
+            .push((
+                verdict["subcheck"].as_str().unwrap(),
+                verdict["status"].as_str().unwrap(),
+            ));
+    }
+    let actual = by_call
+        .into_values()
+        .map(|mut checks| {
+            checks.sort_unstable();
+            checks
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        actual,
+        [
+            vec![
+                ("clause:create-extension-version", "violation"),
+                ("clause:drop-cascade", "proven-clear"),
+            ],
+            vec![
+                ("clause:create-extension-version", "proven-clear"),
+                ("clause:drop-cascade", "violation"),
+            ],
+        ]
+    );
+}

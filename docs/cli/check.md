@@ -27,6 +27,11 @@ from reaching tests transitively. Per-root `exceptions` allow specified file
 targets without pruning other reachable dependencies. The CLI uses the shared
 canonical graph and resolver for these checks.
 
+The `postgres-sql-statement-policy` rule can ban extension version pins and
+cascading drops through `options.bannedClauses`. The setting applies to matching
+SQL files and configured executor calls. See the
+[statement policy](../rules/postgres-sql-statement-policy.md#options-and-defaults).
+
 The `postgres-require-query-annotation` rule traces straight-line SQL helpers and
 callback forwarding. Unknown leading SQL reports by default; use the rule option
 `unanalyzableSql: ignore` explicitly to skip opaque executor arguments. Findings

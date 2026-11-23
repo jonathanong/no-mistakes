@@ -54,3 +54,16 @@ fn embedded_sql_options_keep_public_struct_update_and_hidden_provenance() {
     assert!(value.get("exactConstantOrigins").is_none());
     assert_eq!(serde_json::to_value(exact).unwrap(), value);
 }
+
+#[test]
+fn sql_schema_file_facts_keep_public_struct_update() {
+    use no_mistakes::codebase::postgres::SqlSchemaFileFacts;
+
+    let facts = SqlSchemaFileFacts {
+        path: "schema.sql".into(),
+        ..Default::default()
+    };
+
+    assert_eq!(facts.path, PathBuf::from("schema.sql"));
+    assert!(facts.clause_uses.is_empty());
+}

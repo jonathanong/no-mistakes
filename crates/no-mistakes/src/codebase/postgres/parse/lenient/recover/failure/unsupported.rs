@@ -7,6 +7,7 @@ mod publication;
 mod query;
 mod utility;
 use cursor::Cursor;
+pub(crate) use utility::extension_has_version;
 
 pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
     if native::valid(tokens) || utility::valid(tokens) || query::valid(tokens) {

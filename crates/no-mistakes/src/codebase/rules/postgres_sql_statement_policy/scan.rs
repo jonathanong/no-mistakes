@@ -1,9 +1,11 @@
-use super::{sql_rel, CompiledOptions, RuleFinding, RULE_ID};
+use super::{clauses::clause_finding, sql_rel, CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
-use crate::codebase::postgres::collect_prepared_schema_facts;
+use crate::codebase::postgres::{collect_prepared_schema_facts, statements::SqlFactSite};
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Context;
 use std::path::{Path, PathBuf};
+
+mod verdicts;
 
 pub(super) fn scan(
     root: &Path,
@@ -20,6 +22,11 @@ pub(super) fn scan(
     for file in &schema_facts {
         let rel = sql_rel(root, &file.path);
         findings.extend(settings(&rel, &file.setting_uses, opts));
+        findings.extend(
+            file.clause_uses
+                .iter()
+                .filter_map(|clause| clause_finding(&rel, clause, opts)),
+        );
         for statement in &file.statement_kinds {
             if !opts.banned.contains(&statement.kind) {
                 continue;
@@ -42,6 +49,11 @@ pub(super) fn scan(
     if !opts.embedded.selects_executors() {
         return Ok(findings);
     }
+    let checks = if facts.wants_sql_verdicts() {
+        verdicts::checks(opts)
+    } else {
+        Vec::new()
+    };
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -49,50 +61,19 @@ pub(super) fn scan(
         let embedded = prepared.embedded_sql(path, &opts.embedded)?;
         let rel = sql_rel(root, path);
         let statements = prepared.postgres_statements(path, Some(&opts.embedded))?;
-        if facts.wants_sql_verdicts() {
-            let mut checks = opts
-                .banned
-                .iter()
-                .map(|kind| format!("statement:{kind}"))
-                .chain(opts.settings.iter().map(|name| format!("setting:{name}")))
-                .collect::<Vec<_>>();
-            checks.sort();
-            crate::codebase::postgres::record_sql_policy_verdicts(
-                crate::codebase::postgres::SqlPolicyVerdictContext {
-                    facts,
-                    embedded,
-                    statements,
-                },
-                RULE_ID,
-                &rel,
-                &opts.embedded,
-                &checks,
-                opts.advise_unanalyzable,
-                |check, _, statement| {
-                    let violates = check.strip_prefix("statement:").map_or_else(
-                        || {
-                            check.strip_prefix("setting:").is_some_and(|name| {
-                                statement
-                                    .setting_uses
-                                    .iter()
-                                    .any(|setting| setting.name == name)
-                            })
-                        },
-                        |kind| {
-                            statement
-                                .statement_kinds
-                                .iter()
-                                .any(|item| item.kind == kind)
-                        },
-                    );
-                    if violates {
-                        crate::codebase::postgres::SqlBranchJudgment::violation(true)
-                    } else {
-                        crate::codebase::postgres::SqlBranchJudgment::clear()
-                    }
-                },
-            );
-        }
+        crate::codebase::postgres::record_sql_policy_verdicts(
+            crate::codebase::postgres::SqlPolicyVerdictContext {
+                facts,
+                embedded,
+                statements,
+            },
+            RULE_ID,
+            &rel,
+            &opts.embedded,
+            &checks,
+            opts.advise_unanalyzable,
+            |check, _, statement| verdicts::judge(check, statement),
+        );
         if opts.fail_unanalyzable {
             for call in &embedded.calls {
                 if call.is_unanalyzable() {
@@ -118,7 +99,18 @@ pub(super) fn scan(
                     dedup.push(
                         &mut findings,
                         file,
-                        crate::codebase::postgres::statements::SqlFactSite::Setting(index),
+                        SqlFactSite::Setting(index),
+                        source.as_deref(),
+                        finding,
+                    );
+                }
+            }
+            for (index, clause) in file.clause_uses.iter().enumerate() {
+                if let Some(finding) = clause_finding(&rel, clause, opts) {
+                    dedup.push(
+                        &mut findings,
+                        file,
+                        SqlFactSite::Clause(index),
                         source.as_deref(),
                         finding,
                     );
@@ -129,7 +121,7 @@ pub(super) fn scan(
                     dedup.push(
                         &mut findings,
                         file,
-                        crate::codebase::postgres::statements::SqlFactSite::StatementKind(index),
+                        SqlFactSite::StatementKind(index),
                         source.as_deref(),
                         RuleFinding {
                             causes: Vec::new(),

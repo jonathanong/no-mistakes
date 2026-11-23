@@ -315,6 +315,8 @@
   "PostgresSqlSpan",
   "PostgresSqlStatement",
   "PostgresSqlStatementKind",
+  "PostgresSqlStatementPolicyClause",
+  "PostgresSqlStatementPolicyOptions",
   "PostgresSqlTrigger",
   "PostgresSqlTriggerEvent",
   "PostgresSqlTriggerEventKind",

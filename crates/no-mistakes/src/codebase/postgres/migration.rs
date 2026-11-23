@@ -100,12 +100,13 @@ fn extract_parsed_migration_facts(
         .extend(identifier_locations.unparsed_declarations());
     let mut table_positions = table_events::Positions::new(sql);
     for (ordinal, statement) in statements.iter().enumerate() {
-        let locations = locating::Locations::new(tokens.get(ordinal).copied().unwrap_or_default());
+        let tokens = tokens.get(ordinal).copied().unwrap_or_default();
+        let locations = locating::Locations::new(tokens);
         facts
             .declared_identifiers
             .extend(identifiers::collect(&mut identifier_locations, statement));
         let line = locations.statement_line(statement);
-        statements::record(line, statement, &mut facts);
+        statements::record(line, statement, tokens, &mut facts);
         table_events::record(statement, &mut table_positions, &mut facts.table_events);
         match statement {
             Statement::CreateIndex(index) => {

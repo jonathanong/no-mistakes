@@ -174,3 +174,7 @@ impl fmt::Display for PostgresFactError {
 }
 
 impl std::error::Error for PostgresFactError {}
+
+mod policy_clause;
+#[doc(hidden)]
+pub use policy_clause::{SqlPolicyClause, SqlPolicyClauseUse};

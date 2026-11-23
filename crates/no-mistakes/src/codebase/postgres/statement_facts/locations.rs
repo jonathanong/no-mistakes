@@ -18,6 +18,7 @@ pub enum SqlFactSite {
     Annotation,
     StatementKind(usize),
     Setting(usize),
+    Clause(usize),
     Function(usize),
     Write(usize),
     JsonWrite(usize),

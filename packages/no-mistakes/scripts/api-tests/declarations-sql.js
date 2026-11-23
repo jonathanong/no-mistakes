@@ -31,6 +31,18 @@ test("TypeScript module facts expose named contracts and async invocation option
   }
 });
 
+test("PostgreSQL statement policy exports its clause option and supported clause names", () => {
+  const types = readFileSync(join(packageRoot, "postgres-sql-statement-policy-types.d.ts"), "utf8");
+  const exports = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
+  assert.match(
+    types,
+    /export type PostgresSqlStatementPolicyClause = "create-extension-version" \| "drop-cascade";/,
+  );
+  assert.match(types, /export interface PostgresSqlStatementPolicyOptions/);
+  assert.match(types, /bannedClauses\?: PostgresSqlStatementPolicyClause\[\];/);
+  assert.match(exports, /export type \* from "\.\/postgres-sql-statement-policy-types"/);
+});
+
 test("nested DO constraints remain typed through procedural declaration paths", () => {
   const source = readFileSync(join(packageRoot, "postgres-source-types.d.ts"), "utf8");
   const procedural = readFileSync(join(packageRoot, "postgres-procedural-types.d.ts"), "utf8");

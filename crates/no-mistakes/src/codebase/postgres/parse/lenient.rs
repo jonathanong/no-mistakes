@@ -13,6 +13,7 @@ mod pg_ast;
 pub(super) mod pg_ident;
 mod query_compat;
 mod recover;
+pub(crate) use recover::failure::extension_has_version;
 pub(super) mod rewrite;
 mod source;
 pub(super) use chr::{expand_chr_encoded_sql, rewrite_chr_tokens};

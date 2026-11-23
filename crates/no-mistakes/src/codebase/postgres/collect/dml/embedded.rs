@@ -118,6 +118,7 @@ pub(super) fn embedded_call_facts_with_policy(
                 facts = SqlStatementFileFacts {
                     statement_kinds: facts.statement_kinds,
                     setting_uses: facts.setting_uses,
+                    clause_uses: facts.clause_uses,
                     function_calls: facts.function_calls,
                     offset_uses: facts.offset_uses,
                     writes: facts.writes,

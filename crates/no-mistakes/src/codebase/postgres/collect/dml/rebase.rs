@@ -66,22 +66,7 @@ pub(crate) fn rebase_embedded_lines(
                 |position| position.source_line,
             )
     };
-    for (index, failure) in facts.parse_failures.iter_mut().enumerate() {
-        failure.line = physical_line(
-            SqlFactSite::ParseFailure(index),
-            failure.line,
-            failure.column,
-        );
-    }
-    for (i, setting) in facts.setting_uses.iter_mut().enumerate() {
-        setting.line = physical_line(SqlFactSite::Setting(i), setting.line, 1);
-    }
-    for (i, function) in facts.function_calls.iter_mut().enumerate() {
-        function.line = physical_line(SqlFactSite::Function(i), function.line, function.column);
-    }
-    for (i, statement) in facts.statement_kinds.iter_mut().enumerate() {
-        statement.line = physical_line(SqlFactSite::StatementKind(i), statement.line, 1);
-    }
+    policy_lines(facts, &physical_line);
     for (i, offset) in facts.offset_uses.iter_mut().enumerate() {
         offset.line = physical_line(SqlFactSite::Offset(i), offset.line, offset.column);
     }
@@ -149,6 +134,27 @@ pub(crate) fn rebase_embedded_lines(
     }
     rebase_source_lines(facts, &source_line);
     facts.variant_locations = locations;
+}
+
+fn policy_lines(
+    facts: &mut SqlStatementFileFacts,
+    line: &impl Fn(SqlFactSite, usize, usize) -> usize,
+) {
+    for (i, failure) in facts.parse_failures.iter_mut().enumerate() {
+        failure.line = line(SqlFactSite::ParseFailure(i), failure.line, failure.column);
+    }
+    for (i, setting) in facts.setting_uses.iter_mut().enumerate() {
+        setting.line = line(SqlFactSite::Setting(i), setting.line, 1);
+    }
+    for (i, clause) in facts.clause_uses.iter_mut().enumerate() {
+        clause.line = line(SqlFactSite::Clause(i), clause.line, clause.column);
+    }
+    for (i, function) in facts.function_calls.iter_mut().enumerate() {
+        function.line = line(SqlFactSite::Function(i), function.line, function.column);
+    }
+    for (i, statement) in facts.statement_kinds.iter_mut().enumerate() {
+        statement.line = line(SqlFactSite::StatementKind(i), statement.line, 1);
+    }
 }
 
 fn grouping_identity(

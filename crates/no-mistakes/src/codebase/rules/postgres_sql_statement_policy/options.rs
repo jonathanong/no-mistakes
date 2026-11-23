@@ -10,6 +10,7 @@ pub(crate) struct Options {
     pub(crate) sql_include_locked: bool,
     pub(crate) banned_statements: Vec<String>,
     pub(crate) banned_settings: Vec<String>,
+    pub(crate) banned_clauses: Vec<String>,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
     pub(crate) extra_executor_names: Option<Vec<String>>,
@@ -32,6 +33,7 @@ impl Default for Options {
                 .map(|kind| (*kind).into())
                 .collect(),
             banned_settings: Vec::new(),
+            banned_clauses: Vec::new(),
             import_specifier: String::new(),
             executor_names: Vec::new(),
             extra_executor_names: None,

@@ -72,3 +72,4 @@ test-cases/rules/postgres-no-test-state-mutation/issue-3426/** text eol=lf
 test-cases/rules/postgres-lock-ordering/issue-3426/** text eol=lf
 test-cases/rules/postgres-bounded-statements/issue-3426/** text eol=lf
 test-cases/rules/postgres-bounded-statements/value-const-holes/src/value-positions.ts text eol=lf
+test-cases/rules/postgres-sql-statement-policy/fixture/issue-3856/src/policy.test.ts text eol=lf

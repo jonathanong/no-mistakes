@@ -1,0 +1,240 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "opt_in": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/policy.sql",
+          "line": 1,
+          "message": "sql/policy.sql:1: CREATE EXTENSION must omit VERSION so PostgreSQL can select an available default version",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE EXTENSION IF NOT EXISTS widgets VERSION '1.4';",
+          "target": "clause:create-extension-version"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 10,
+          "message": "sql/policy.sql:10: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE widgets CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 2,
+          "message": "sql/policy.sql:2: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP VIEW widget_summary CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 3,
+          "message": "sql/policy.sql:3: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP MATERIALIZED VIEW widget_snapshot CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 4,
+          "message": "sql/policy.sql:4: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TABLE widgets CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 5,
+          "message": "sql/policy.sql:5: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP FUNCTION summarize_widgets() CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 6,
+          "message": "sql/policy.sql:6: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TYPE widget_kind CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 7,
+          "message": "sql/policy.sql:7: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP SCHEMA widgets_archive CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 8,
+          "message": "sql/policy.sql:8: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP INDEX widgets_lookup CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 9,
+          "message": "sql/policy.sql:9: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER TABLE widgets DROP COLUMN description CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 6,
+          "message": "src/policy.test.ts:6: CREATE EXTENSION must omit VERSION so PostgreSQL can select an available default version",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "? sql`CREATE EXTENSION IF NOT EXISTS widgets VERSION '1.4'`",
+          "target": "clause:create-extension-version"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 9,
+          "message": "src/policy.test.ts:9: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "? sql`DROP VIEW widget_summary CASCADE`",
+          "target": "clause:drop-cascade"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/policy.test.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example.invalid/db",
+            "trustedSqlTags": [
+              {
+                "module": "@example.invalid/db",
+                "name": "sql"
+              }
+            ]
+          },
+          "rule": "postgres-sql-statement-policy",
+          "span": [
+            214,
+            90
+          ],
+          "status": "proven-clear",
+          "subcheck": "clause:drop-cascade"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/policy.test.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example.invalid/db",
+            "trustedSqlTags": [
+              {
+                "module": "@example.invalid/db",
+                "name": "sql"
+              }
+            ]
+          },
+          "rule": "postgres-sql-statement-policy",
+          "span": [
+            214,
+            90
+          ],
+          "status": "violation",
+          "subcheck": "clause:create-extension-version"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/policy.test.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example.invalid/db",
+            "trustedSqlTags": [
+              {
+                "module": "@example.invalid/db",
+                "name": "sql"
+              }
+            ]
+          },
+          "rule": "postgres-sql-statement-policy",
+          "span": [
+            222,
+            321
+          ],
+          "status": "proven-clear",
+          "subcheck": "clause:create-extension-version"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/policy.test.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example.invalid/db",
+            "trustedSqlTags": [
+              {
+                "module": "@example.invalid/db",
+                "name": "sql"
+              }
+            ]
+          },
+          "rule": "postgres-sql-statement-policy",
+          "span": [
+            222,
+            321
+          ],
+          "status": "violation",
+          "subcheck": "clause:drop-cascade"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

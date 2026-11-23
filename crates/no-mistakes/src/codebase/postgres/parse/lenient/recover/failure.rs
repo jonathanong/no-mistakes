@@ -5,6 +5,7 @@ mod ddl_metadata;
 pub(crate) mod keywords;
 mod owned;
 mod unsupported;
+pub(crate) use unsupported::extension_has_version;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod utility_tests;
 use crate::codebase::postgres::types::SqlUnanalyzableStatement;

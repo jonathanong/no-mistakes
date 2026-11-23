@@ -746,6 +746,11 @@ The same options and mutual exclusion apply to
 [`projects.<name>.postgres.executors`](projects.md#postgresql-scope). Declare
 selection there when a rule inherits a project PostgreSQL scope.
 
+Use `postgres-sql-statement-policy.options.bannedClauses` to ban specific
+PostgreSQL clauses independently of whole statement kinds or setting names.
+The list defaults to `[]` and accepts `create-extension-version` and
+`drop-cascade`. See the [statement policy](../rules/postgres-sql-statement-policy.md#options-and-defaults).
+
 [`postgres-lock-written-rows-only`](../rules/postgres-lock-written-rows-only.md)
 is opt-in and inherits the selected PostgreSQL executor scope. Its `checks`
 map sets `fail`, `advise` (default), or `ignore` independently for
