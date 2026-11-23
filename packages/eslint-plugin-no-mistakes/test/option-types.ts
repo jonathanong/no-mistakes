@@ -30,12 +30,15 @@ export const options: PostgresNoExecutorAdapterOptions = {
 };
 export const dateFormatOptions: NoLocaleLessDateFormatOptions = {
   methods: ["toLocaleDateString"],
+  constructors: ["Intl.DateTimeFormat"],
   allowUndefinedLocale: true,
 };
 export const defaultDateFormatOptions: pluginRequire.NoLocaleLessDateFormatOptions = {};
 
 // @ts-expect-error Methods must be an array of strings.
 export const invalidMethods: NoLocaleLessDateFormatOptions = { methods: [1] };
+// @ts-expect-error Constructors must be an array of strings.
+export const invalidConstructors: NoLocaleLessDateFormatOptions = { constructors: [1] };
 export const invalidAllowUndefinedLocale: NoLocaleLessDateFormatOptions = {
   // @ts-expect-error The undefined-locale option must be boolean.
   allowUndefinedLocale: "true",

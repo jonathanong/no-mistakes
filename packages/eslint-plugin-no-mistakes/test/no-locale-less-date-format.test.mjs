@@ -6,17 +6,51 @@ import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-sn
 
 const rule = "no-locale-less-date-format";
 const ruleId = `no-mistakes/${rule}`;
+const constructors = ["Intl.DateTimeFormat", "Intl.NumberFormat"];
 const cases = [
+  {
+    name: "configured Intl constructors require a locale in calls and new expressions",
+    file: "intl-constructors.mjs",
+    options: { methods: [], constructors },
+    lines: [1, 2, 3, 4],
+    oxlint: true,
+  },
+  {
+    name: "Intl constructors are ignored by default",
+    file: "intl-constructors.mjs",
+    lines: [],
+  },
+  {
+    name: "only configured Intl constructors are checked",
+    file: "intl-constructors.mjs",
+    options: { constructors: ["Intl.NumberFormat"] },
+    lines: [2, 4],
+  },
+  {
+    name: "allowUndefinedLocale permits undefined arguments but still rejects omitted arguments in Intl constructors",
+    file: "intl-constructors.mjs",
+    options: { constructors, allowUndefinedLocale: true },
+    lines: [1, 4],
+  },
+  {
+    name: "shadowed Intl constructors are ignored",
+    file: "shadowed-intl.mjs",
+    options: { methods: [], constructors },
+    lines: [],
+    oxlint: true,
+  },
   {
     name: "default parameter global undefined is not shadowed by body var",
     file: "default-parameter.mjs",
     lines: [1],
+    oxlint: true,
   },
   {
     name: "with and direct eval leave undefined references unknown",
     file: "dynamic-scope.js",
     sourceType: "script",
     lines: [],
+    oxlint: true,
   },
   {
     name: "empty methods disables default method matching",
@@ -54,11 +88,13 @@ const cases = [
     name: "missing locale across default methods and optional or computed calls",
     file: "missing-locale.mjs",
     lines: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    oxlint: true,
   },
   {
     name: "global undefined is rejected by default",
     file: "undefined-locale.mjs",
     lines: [1, 2, 3, 4, 5, 6],
+    oxlint: true,
   },
   {
     name: "explicit false rejects global undefined",
@@ -123,13 +159,9 @@ it("snapshots configured locale checks and scope boundaries", async () => {
 
 it("keeps real Oxlint and ESLint scope diagnostics identical", () => {
   const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
-  for (const file of [
-    "missing-locale.mjs",
-    "undefined-locale.mjs",
-    "default-parameter.mjs",
-    "dynamic-scope.js",
-  ]) {
-    const item = cases.find((item) => item.file === file && item.options === undefined);
+  for (const { file, options, lines: expectedLines, sourceType } of cases.filter(
+    (item) => item.oxlint,
+  )) {
     const result = spawnSync(
       process.execPath,
       [
@@ -142,28 +174,28 @@ it("keeps real Oxlint and ESLint scope diagnostics identical", () => {
       ],
       { encoding: "utf8" },
     );
-    expect(result.status, `${file}: ${result.stderr}`).toBe(item.lines.length ? 1 : 0);
+    expect(result.status, `${file}: ${result.stderr}`).toBe(expectedLines.length ? 1 : 0);
     const diagnostics = JSON.parse(result.stdout).diagnostics;
     expect(
       diagnostics.map((finding) => finding.code),
       file,
-    ).toEqual(item.lines.map(() => `no-mistakes(${rule})`));
+    ).toEqual(expectedLines.map(() => `no-mistakes(${rule})`));
     const lines = diagnostics
       .map((finding) => finding.labels[0].span.line)
       .sort((left, right) => left - right);
-    expect(lines, file).toEqual(item.lines);
+    expect(lines, file).toEqual(expectedLines);
     const findings = pluginFindings(
       fixture(`${rule}/${file}`),
       rule,
-      undefined,
+      options,
       `${rule}/${file}`,
       {},
-      item.sourceType,
+      sourceType,
     );
     expect(lines, file).toEqual(findings.map((finding) => finding.line));
     expect(
       findings.map((finding) => finding.ruleId),
       file,
-    ).toEqual(item.lines.map(() => ruleId));
+    ).toEqual(expectedLines.map(() => ruleId));
   }
 });

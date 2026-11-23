@@ -26,6 +26,7 @@ declare namespace plugin {
 
   export interface NoLocaleLessDateFormatOptions {
     methods?: string[];
+    constructors?: string[];
     allowUndefinedLocale?: boolean;
   }
 

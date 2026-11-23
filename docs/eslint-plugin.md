@@ -474,11 +474,13 @@ entrypoint guidance; see [the rule reference](eslint-rules/no-argv-main-guard.md
 
 ### `no-locale-less-date-format`
 
-Opt-in locale-argument checks for configured formatting member calls. `methods`
+Opt-in locale-argument checks for formatting methods and constructors. `methods`
 replaces the default `toLocaleString`, `toLocaleDateString`, and
-`toLocaleTimeString` names; selecting `toLocaleString` also covers Number and
-custom-object methods. `allowUndefinedLocale` defaults to `false` and permits
-explicit undefined values when enabled, while missing arguments still report.
+`toLocaleTimeString` names. Selecting `toLocaleString` also covers Number and
+custom-object methods. `constructors` defaults to an empty list and selects
+global members such as `Intl.DateTimeFormat` for both calls and `new`
+expressions. `allowUndefinedLocale` defaults to `false` and permits explicit
+undefined values when enabled, while missing arguments still report.
 Use flat-config `files`/`ignores` for scope. Direct helper calls are not checked.
 The plugin exports `NoLocaleLessDateFormatOptions` for TypeScript configuration.
 See [the rule reference](eslint-rules/no-locale-less-date-format.md).

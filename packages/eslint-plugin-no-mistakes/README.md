@@ -62,8 +62,8 @@ See [options and examples](../../docs/eslint-rules/gh-api-argument-safety.md).
 See [options and examples](../../docs/eslint-rules/no-argv-main-guard.md).
 
 `no-locale-less-date-format` is an opt-in rule requiring explicit locale arguments
-for configured formatting methods. Scope it with flat-config `files`/`ignores`;
-direct project helper calls are not checked. See the
+for formatting methods and configured constructors. Scope it with flat-config
+`files`/`ignores`. See the
 [options and examples](../../docs/eslint-rules/no-locale-less-date-format.md).
 
 `no-comment-phrases` is an opt-in rule for configured phrases in line and block comments.
