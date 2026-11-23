@@ -16,10 +16,10 @@ test(
     const pending = cjs.check(options);
     assert.ok(pending instanceof Promise);
     const report = await pending;
-    assert.deepEqual(
-      [...new Set(report.rules.map(({ rule }) => rule))].sort(),
-      ["bash-empty-array-nounset", "zsh-readonly-parameter"],
-    );
+    assert.deepEqual([...new Set(report.rules.map(({ rule }) => rule))].sort(), [
+      "bash-empty-array-nounset",
+      "zsh-readonly-parameter",
+    ]);
     assert.deepEqual(await esm.check(options), report);
 
     const request = { ...options, reports: [{ type: "check" }] };
@@ -30,9 +30,13 @@ test(
     const cli =
       process.env.NO_MISTAKES_TEST_CLI_PATH ||
       join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
-    const output = spawnSync(cli, ["check", "--root", root, "--config", config, "--format", "json"], {
-      encoding: "utf8",
-    });
+    const output = spawnSync(
+      cli,
+      ["check", "--root", root, "--config", config, "--format", "json"],
+      {
+        encoding: "utf8",
+      },
+    );
     assert.equal(output.error, undefined);
     assert.equal(output.status, 1, output.stderr);
     assert.deepEqual(JSON.parse(output.stdout), report);
