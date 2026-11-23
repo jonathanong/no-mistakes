@@ -99,6 +99,11 @@ Credential/ref risks can produce separate rows on the same checkout.
 
 Repository and rule settings use `effort` and `unanalyzable`; the older
 SQL-specific `unanalyzableSql` setting remains an alias.
+Use `bash-empty-array-nounset` with `options.files` for scripts targeting Bash
+before 4.4. Use `zsh-readonly-parameter` to catch assignments to `status` in
+zsh scripts, and add `options.files` for sourced files without a zsh shebang or
+`.zsh` extension. Both rules run in `check` without ShellCheck.
+
 For `shellcheck-runner`, the shared policy handles a missing executable or a
 failed invocation with no recognized diagnostics. If an abnormal exit has
 some recognized diagnostics, those findings remain and the policy handles

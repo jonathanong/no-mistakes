@@ -78,6 +78,9 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &Field, refs: &mut Vec<R
             paths_at(value, "dependabotPath", field, Kind::File, refs);
             paths_at(value, "lockfilePath", field, Kind::File, refs);
         }
+        "bash-empty-array-nounset" | "zsh-readonly-parameter" => {
+            paths_at(value, "files", field, Kind::Glob, refs);
+        }
         "shellcheck-runner" => {
             paths_at(value, "shellFiles", field, Kind::File, refs);
             paths_at(value, "shebangDirs", field, Kind::Directory, refs);

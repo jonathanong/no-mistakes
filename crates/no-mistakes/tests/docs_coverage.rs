@@ -263,6 +263,25 @@ fn review_found_doc_regressions_stay_fixed() {
 }
 
 #[test]
+fn shell_compatibility_rules_are_registered_and_documented() {
+    let root = repo_root();
+    let rules = rule_ids_from_source(&root);
+    for rule in [
+        no_mistakes::codebase::rules::BASH_EMPTY_ARRAY_NOUNSET,
+        no_mistakes::codebase::rules::ZSH_READONLY_PARAMETER,
+    ] {
+        assert!(rules.contains(rule));
+        for doc in [
+            "docs/cli/check.md",
+            "docs/node-api.md",
+            "docs/configuration/rules.md",
+        ] {
+            assert!(read(&root.join(doc)).contains(rule), "{doc} omits {rule}");
+        }
+    }
+}
+
+#[test]
 fn github_actions_max_inline_script_lines_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES;
     assert_eq!(rule, "github-actions-max-inline-script-lines");

@@ -1,0 +1,12 @@
+effort: max
+rules:
+  - rule: bash-empty-array-nounset
+    scope: repository
+    include: ["legacy/excluded.sh"]
+    message: Expand this optional array with a presence guard.
+    options:
+      files: ["legacy/excluded.sh"]
+  - rule: zsh-readonly-parameter
+    scope: repository
+    include: ["zsh/excluded.zsh"]
+    message: Use exit_status for this assignment.

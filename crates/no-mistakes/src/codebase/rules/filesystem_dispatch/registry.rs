@@ -110,6 +110,8 @@ macro_rules! filesystem_rules {
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files => "",
             DOC_CONSISTENCY => doc_consistency::check_with_files => "",
             SHELLCHECK_RUNNER => shellcheck_runner::check_with_files => "",
+            BASH_EMPTY_ARRAY_NOUNSET => shell_compatibility::check_bash_with_files => "",
+            ZSH_READONLY_PARAMETER => shell_compatibility::check_zsh_with_files => "",
         }
     };
 }

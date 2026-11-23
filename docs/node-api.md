@@ -216,6 +216,11 @@ Existing excluded or ignored files and empty glob matches stay silent. The expor
 [check options](node-api/check-verdicts.md) for precedence and fallback
 warnings.
 
+The configured [`bash-empty-array-nounset`](rules/bash-empty-array-nounset.md)
+and [`zsh-readonly-parameter`](rules/zsh-readonly-parameter.md) rules return
+`RuleFinding` entries through async `check()` and `analyzeProject()` check reports.
+Use the same configuration and file globs as the CLI.
+
 For `shellcheck-runner`, both APIs apply the same repository or
 rule-application `unanalyzable` policy when the ShellCheck executable is
 missing or a failed invocation yields no recognized diagnostics. If an

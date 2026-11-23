@@ -1,5 +1,11 @@
 # Feature Parity
 
+The shell compatibility checks
+[`bash-empty-array-nounset`](rules/bash-empty-array-nounset.md) and
+[`zsh-readonly-parameter`](rules/zsh-readonly-parameter.md) share file selection,
+source-line findings, and suppressions across Rust, CLI `check`, async Node
+`check()`, and `analyzeProject()` check reports.
+
 GitHub Actions `workflow-topology-policy` supports opt-in
 [`forbidReusableWorkflowConcurrency`](configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency)
 with identical workflow-level locations and suppression in Rust, CLI, and async

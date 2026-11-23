@@ -1,0 +1,13 @@
+effort: max
+rules:
+  - rule: bash-empty-array-nounset
+    scope: repository
+    include: ["legacy/**"]
+    exclude: ["legacy/excluded.sh"]
+    options:
+      files: ["**/*.sh"]
+  - rule: zsh-readonly-parameter
+    scope: repository
+    exclude: ["zsh/excluded.zsh"]
+    options:
+      files: ["zsh/startup"]

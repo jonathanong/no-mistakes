@@ -171,6 +171,8 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`rust-no-inline-allows`](rust-no-inline-allows.md)                           | Ban inline Rust `allow` attributes.                                             |
 | [`rust-no-inline-tests`](rust-no-inline-tests.md)                             | Ban inline Rust test modules.                                                   |
 | [`server-route-client-boundary`](server-route-client-boundary.md)             | Keep client/helper code out of configured server route folders.                 |
+| [`bash-empty-array-nounset`](bash-empty-array-nounset.md) | Guard expansions of potentially empty arrays in scripts targeting Bash before 4.4. |
+| [`zsh-readonly-parameter`](zsh-readonly-parameter.md) | Reserve `status` for the zsh exit status. |
 | [`shellcheck-runner`](shellcheck-runner.md)                                   | Run ShellCheck for shell files/scripts, optionally limited to tracked files.   |
 | [`strict-package-layout`](strict-package-layout.md)                           | Enforce configured package file layout.                                         |
 | [`structured-config-policy`](structured-config-policy.md)                     | Require or ban structured config keys.                                          |
