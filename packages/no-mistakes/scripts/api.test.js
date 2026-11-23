@@ -179,6 +179,16 @@ test("Dependabot cooldown policy has exported option types", () => {
   );
 });
 
+test("shell compatibility rules expose optional path globs", () => {
+  const declaration = readFileSync(join(packageRoot, "shell-compatibility-types.d.ts"), "utf8");
+  for (const name of ["BashEmptyArrayNounsetOptions", "ZshReadonlyParameterOptions"]) {
+    assert.match(
+      declaration,
+      new RegExp(`export interface ${name} \\{[^}]*files\\?: string\\[\\];`),
+    );
+  }
+});
+
 test("check rule options compile from the package root", () => {
   const { createRequire } = require("node:module");
   const dependencyRequire = createRequire(require.resolve("@storybook/react"));
@@ -191,6 +201,7 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/shell-compatibility/public.mts"),
       join(repositoryRoot, "fixtures/node-api/test-fixture-size-cap/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),

@@ -18,6 +18,7 @@
   "ArtifactEdge",
   "ArtifactUploadDeclaration",
   "ArtifactValue",
+  "BashEmptyArrayNounsetOptions",
   "BatchedCheckOptions",
   "BatchedDependencyTraverseOptions",
   "BatchedFlowOptions",
@@ -543,5 +544,6 @@
   "WorkflowTopologyIndex",
   "WorkflowTopologyPolicyOptions",
   "WorkflowTrigger",
-  "WritePlanningImpactArtifactsOptions"
+  "WritePlanningImpactArtifactsOptions",
+  "ZshReadonlyParameterOptions"
 ]
