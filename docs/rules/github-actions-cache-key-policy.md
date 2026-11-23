@@ -26,7 +26,9 @@ any entry equals a configured path. A comma is not a path separator.
 
 When a normalized `with.path` entry equals a `forbiddenPaths` entry, the rule reports that step on
 its `path` line (or the first item line for a `path` sequence) regardless of its `key` or
-`restore-keys`. Use `forbiddenPathsMessage` (or a rule-level `message`) to customize the reported
+`restore-keys`. When one step lists multiple `forbiddenPaths` entries, each matched path produces
+its own finding on that same line, differing only in the path unless a custom message is configured.
+Use `forbiddenPathsMessage` (or a rule-level `message`) to customize the reported
 message.
 
 For each `caches` match, the `key` must contain every configured `keyParts` fragment as its own
@@ -135,8 +137,11 @@ at the parser location.
 Workflow or action bytes that are not UTF-8 are reported on the line of the first invalid byte.
 Anchors, aliases, and other shapes whose cache steps cannot be aligned to ordinary block locations
 produce one finding on line 1 when a configured `caches` or `forbiddenPaths` path is involved, and
-are not partially judged.
-A cache step that does not use a configured path stays silent, including when the file uses anchors.
+are not partially judged. In particular, a cache step whose `with.path` uses a YAML alias (`*alias`)
+that resolves to a configured `caches` or `forbiddenPaths` entry cannot be aligned to block-style
+source text and yields that line-1 alignment finding rather than being judged on the raw `*alias`
+text. An aliased `path` (or anchored step) that resolves only to paths outside `caches` and
+`forbiddenPaths` stays silent.
 
 ## Options
 

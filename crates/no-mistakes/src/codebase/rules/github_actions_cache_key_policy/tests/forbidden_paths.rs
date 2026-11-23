@@ -168,3 +168,41 @@ jobs:
         "{findings:?}"
     );
 }
+
+#[test]
+fn two_forbidden_paths_in_one_step_report_each_path_on_the_path_line() {
+    let workflow = "\
+name: Multi Forbidden
+jobs:
+  unit:
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/example-store
+            .cache/example-store
+          key: store-${{ runner.os }}
+";
+    let jobs = super::expect_jobs(workflow, false);
+    let options = options::Options {
+        forbidden_paths: vec![
+            "~/.local/share/example-store".into(),
+            ".cache/example-store".into(),
+        ],
+        ..options::Options::default()
+    };
+    let findings = judge::judge(
+        ".github/workflows/multi.yml",
+        &jobs,
+        &options,
+        None,
+        &|_| None,
+    );
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(findings[0].line, 7);
+    assert_eq!(findings[1].line, 7);
+    assert!(findings[0]
+        .message
+        .contains("`~/.local/share/example-store`"));
+    assert!(findings[1].message.contains("`.cache/example-store`"));
+}

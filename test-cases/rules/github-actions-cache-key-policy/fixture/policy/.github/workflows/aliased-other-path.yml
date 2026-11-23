@@ -1,0 +1,12 @@
+name: Aliased Other Cache Path
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    env:
+      OTHER_PATH: &other_path .cache/orders
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: *other_path
+          key: orders-shared

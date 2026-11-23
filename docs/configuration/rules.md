@@ -647,7 +647,9 @@ be configured.
 `restore-keys` on configured `actions/cache` steps (`setup-*` `cache-dependency-path` and other
 actions are out of scope; a single `**/` before the basename of any configured cache's lockfile
 passes). Use `allowedHashFilesPatterns` to exempt specific argument strings.
-A cache path outside `caches` and `forbiddenPaths` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
+A cache path outside `caches` and `forbiddenPaths` is silent. A cache step whose `with.path` is a
+YAML alias (`*alias`) resolving to a configured `caches` or `forbiddenPaths` path produces one
+line-1 alignment finding; an alias resolving outside `caches` and `forbiddenPaths` stays silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
 or parenthesized command applies to every command in the group that does not already redirect standard

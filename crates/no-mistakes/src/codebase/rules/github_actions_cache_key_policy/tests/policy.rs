@@ -1,7 +1,5 @@
 use super::super::*;
-use super::{
-    assert_needles, assert_silent, expect_jobs, rows, source, widget_options,
-};
+use super::{assert_needles, assert_silent, expect_jobs, rows, source, widget_options};
 
 #[test]
 fn policy_fixture_reports_only_the_configured_cache_gaps() {
@@ -39,6 +37,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
     assert_needles(&findings, "sequence-restore.yml", &[restore]);
     assert_needles(&findings, "multiline-path.yml", &[platform, digest]);
     assert_needles(&findings, "alias.yml", &["could not be aligned"]);
+    assert_needles(&findings, "aliased-path.yml", &["could not be aligned"]);
     assert_needles(
         &findings,
         "literal-fragment.yml",
@@ -93,6 +92,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "multiline-key.yml",
         "quoted-key.yml",
         "alias-other.yml",
+        "aliased-other-path.yml",
         "hash-widgets/action.yml",
         "here-string.yml",
         "shift-output.yml",
@@ -121,7 +121,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 59, "{findings:?}");
+    assert_eq!(findings.len(), 60, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {
