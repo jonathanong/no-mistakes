@@ -1,0 +1,324 @@
+[
+  {
+    "file": "benchmarks/speed.test.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 52,
+        "endLine": 1,
+        "file": "benchmarks/speed.test.js",
+        "line": 1,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "benchmarks/speed.test.js (**/*.bench.js)",
+    "options": {
+      "allowedPaths": [
+        "**/*.bench.js"
+      ]
+    },
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "benchmarks/speed.test.js",
+    "findings": [],
+    "name": "benchmarks/speed.test.js (benchmarks/**/*.test.js)",
+    "options": {
+      "allowedPaths": [
+        "benchmarks/**/*.test.js"
+      ]
+    },
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "captures.spec.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 52,
+        "endLine": 11,
+        "file": "captures.spec.ts",
+        "line": 11,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 50,
+        "endLine": 13,
+        "file": "captures.spec.ts",
+        "line": 13,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "captures.spec.ts",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "commonjs-expect.test.cjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 44,
+        "endLine": 5,
+        "file": "commonjs-expect.test.cjs",
+        "line": 5,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 56,
+        "endLine": 6,
+        "file": "commonjs-expect.test.cjs",
+        "line": 6,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "commonjs-expect.test.cjs",
+    "options": null,
+    "rule": "test-no-wall-time-assertions",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "commonjs-namespace.test.cjs",
+    "findings": [],
+    "name": "commonjs-namespace.test.cjs",
+    "options": null,
+    "rule": "test-no-wall-time-assertions",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "commonjs-shadow.test.cjs",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 47,
+        "endLine": 5,
+        "file": "commonjs-shadow.test.cjs",
+        "line": 5,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "commonjs-shadow.test.cjs",
+    "options": null,
+    "rule": "test-no-wall-time-assertions",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "commonjs-timers.test.cjs",
+    "findings": [],
+    "name": "commonjs-timers.test.cjs",
+    "options": null,
+    "rule": "test-no-wall-time-assertions",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "direct.js",
+    "findings": [],
+    "name": "direct.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "direct.test.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 47,
+        "endLine": 4,
+        "file": "direct.test.js",
+        "line": 4,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 5,
+        "file": "direct.test.js",
+        "line": 5,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "direct.test.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "direct.test.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 47,
+        "endLine": 4,
+        "file": "direct.test.js",
+        "line": 4,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 5,
+        "file": "direct.test.js",
+        "line": 5,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "direct.test.js ()",
+    "options": {
+      "allowedPaths": []
+    },
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "fake-timers.test.ts",
+    "findings": [],
+    "name": "fake-timers.test.ts",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "global-timers.test.js",
+    "findings": [],
+    "name": "global-timers.test.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "imported-clock.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 46,
+        "endLine": 5,
+        "file": "imported-clock.test.ts",
+        "line": 5,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 52,
+        "endLine": 6,
+        "file": "imported-clock.test.ts",
+        "line": 6,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "imported-clock.test.ts",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "namespace-timers.spec.js",
+    "findings": [],
+    "name": "namespace-timers.spec.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "scope.test.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 10,
+        "file": "scope.test.js",
+        "line": 10,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "scope.test.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "shadowed-expect.test.js",
+    "findings": [],
+    "name": "shadowed-expect.test.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "suppressed-file.test.js",
+    "findings": [],
+    "name": "suppressed-file.test.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "suppressions.test.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 45,
+        "endLine": 4,
+        "file": "suppressions.test.js",
+        "line": 4,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "suppressions.test.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  },
+  {
+    "file": "unrelated-timers.test.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 45,
+        "endLine": 8,
+        "file": "unrelated-timers.test.js",
+        "line": 8,
+        "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+        "messageId": "wallTime",
+        "ruleId": "no-mistakes/test-no-wall-time-assertions",
+        "severity": 2
+      }
+    ],
+    "name": "unrelated-timers.test.js",
+    "options": null,
+    "rule": "test-no-wall-time-assertions"
+  }
+]

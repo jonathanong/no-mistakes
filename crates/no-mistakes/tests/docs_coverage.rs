@@ -450,3 +450,27 @@ fn postgres_lock_inventory_has_rule_command_and_node_documentation() {
     }
     assert!(read(&root.join("docs/node-api.md")).contains("postgresLockInventory"));
 }
+
+#[test]
+fn test_file_hygiene_eslint_rules_have_public_docs_and_options() {
+    let root = repo_root();
+    let registry = read(&root.join("packages/eslint-plugin-no-mistakes/src/index.js"));
+    let catalog = read(&root.join("docs/eslint-rules/README.md"));
+    let plugin_docs = read(&root.join("docs/eslint-plugin.md"));
+    for rule in ["test-no-fixed-temp-paths", "test-no-wall-time-assertions"] {
+        assert!(registry.contains(&format!("\"{rule}\": require(\"./rules/{rule}\")")));
+        assert!(catalog.contains(&format!("{rule}.md")));
+        assert!(plugin_docs.contains(&format!("### `{rule}`")));
+        let doc = read(&root.join(format!("docs/eslint-rules/{rule}.md")));
+        for section in ["Why", "Options", "Suppression", "Related"] {
+            assert!(
+                doc.to_ascii_lowercase()
+                    .contains(&section.to_ascii_lowercase()),
+                "{rule}: {section}"
+            );
+        }
+    }
+    let types = read(&root.join("packages/eslint-plugin-no-mistakes/src/index.d.ts"));
+    assert!(types.contains("export interface TestNoWallTimeAssertionsOptions"));
+    assert!(types.contains("allowedPaths?: string[]"));
+}

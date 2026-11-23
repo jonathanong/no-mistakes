@@ -43,6 +43,11 @@ literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
 produce scoped aggregate-check warnings; see
 [matcher recovery](configuration/tests.md#playwright-file-matchers).
 
+The ESLint plugin provides opt-in, file-local test hygiene checks for
+[fixed temporary paths](eslint-rules/test-no-fixed-temp-paths.md) and
+[wall-time assertions](eslint-rules/test-no-wall-time-assertions.md). These
+checks belong to ESLint/Oxlint; they do not add Rust CLI or native Node rules.
+
 `no-mistakes` is a local, deterministic codebase-intelligence engine. TypeScript
 and JavaScript are the reference implementation for the full product surface.
 This page is the contract for bringing other languages and their key frameworks

@@ -56,6 +56,8 @@ const rules = {
   "require-options-on-imported-call": require("./rules/require-options-on-imported-call"),
   "server-require-nullable-fetch-wrapper": require("./rules/server-require-nullable-fetch-wrapper"),
   "test-no-error-message-matching": require("./rules/test-no-error-message-matching"),
+  "test-no-fixed-temp-paths": require("./rules/test-no-fixed-temp-paths"),
+  "test-no-wall-time-assertions": require("./rules/test-no-wall-time-assertions"),
   "test-no-delayed-rejects": require("./rules/test-no-delayed-rejects"),
   "test-no-skips": require("./rules/test-no-skips"),
   "test-no-shared-state": require("./rules/test-no-shared-state"),

@@ -336,6 +336,22 @@ see [the rule reference](eslint-rules/postgres-pool-requires-error-listener.md).
 `nullableReturnTypeNames?: string[]`, `inferNullableFromTopLevelEntityPath?: boolean`
 (default `false`), and `topLevelEntityPathPatterns?: string[]`.
 
+### `test-no-fixed-temp-paths`
+
+Opt-in; no rule-local options. Report fixed temporary paths only when they
+reach known Node filesystem or process sinks, directly or through one `const`
+alias. Unique-directory prefixes, including disposable variants, are accepted;
+files that mock the filesystem are exempt. See
+[the rule reference](eslint-rules/test-no-fixed-temp-paths.md).
+
+### `test-no-wall-time-assertions`
+
+Opt-in. `allowedPaths?: string[]` defaults to `[]` and exempts benchmark paths
+using globs relative to the ESLint working directory. Numeric bounds on elapsed
+`Date.now()` or `performance.now()` values are reported in test filenames;
+files that call Vitest or Jest fake timers are exempt. See
+[the rule reference](eslint-rules/test-no-wall-time-assertions.md).
+
 ### `test-no-shared-state`
 
 `allowBeforeAllAssignments?: boolean`; default `false`.
