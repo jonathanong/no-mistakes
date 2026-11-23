@@ -323,7 +323,7 @@ pub fn snippet_runs(fences: &[(String, String)]) -> Vec<(usize, Vec<(String, Str
 fn path_comment_prefix(lang: &str) -> &'static str {
     match lang {
         "sql" => "-- ",
-        "yaml" | "yml" | "sh" | "bash" | "py" | "toml" => "# ",
+        "yaml" | "yml" | "sh" | "bash" | "zsh" | "py" | "toml" => "# ",
         _ => "// ",
     }
 }
@@ -338,7 +338,7 @@ fn split_named_files(code: &str, lang: &str, catalog: Option<&str>) -> Vec<(Stri
             // A shell path comment follows its shebang so the named file keeps
             // the interpreter line at the top. Carry that header into the
             // named file instead of writing an overwritten default file.
-            if matches!(lang, "sh" | "bash")
+            if matches!(lang, "sh" | "bash" | "zsh")
                 && current
                     .lines()
                     .filter(|line| !line.trim().is_empty())
@@ -416,6 +416,7 @@ fn default_filename(lang: &str, code: &str, catalog: Option<&str>) -> String {
         "md" | "markdown" => "README.md".into(),
         "cs" | "csharp" => "src/App.cs".into(),
         "sh" | "bash" => "scripts/run.sh".into(),
+        "zsh" => "scripts/run.zsh".into(),
         "toml" => "Cargo.toml".into(),
         _ => "fixture.txt".into(),
     }

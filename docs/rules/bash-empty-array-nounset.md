@@ -29,12 +29,15 @@ The finding points to the expansion line. The check tracks direct array
 initializers and appends and `declare -a` and `local -a` declarations in the
 same file. It follows explicit `set` options in source order, including
 `set -o nounset` and `set +u`. It checks quoted `${name[@]}` and
-`${name[*]}` expansions. A list with a literal element stays safe until it
-is replaced by a list that may be empty or unset.
+`${name[*]}` expansions. A list with a literal element, a scalar initializer,
+or a direct scalar or indexed write to a known array establishes a nonempty
+array. Replacing it with a list that may be empty or unsetting the array
+removes that guarantee.
 
 ## Counterexample
 
 ```bash
+# scripts/legacy/run.sh
 set -euo pipefail
 items=()
 collect "${items[@]}"
@@ -61,6 +64,7 @@ collect ${items[*]+"${items[*]}"}
 An array with a literal element can be expanded directly.
 
 ```bash
+# scripts/legacy/run.sh
 set -u
 items=('example')
 collect "${items[@]}"

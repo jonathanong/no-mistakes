@@ -9,12 +9,6 @@ pub(in super::super) struct Word<'a> {
     dynamic: bool,
 }
 
-impl Word<'_> {
-    pub fn is_literal(&self) -> bool {
-        !self.dynamic
-    }
-}
-
 impl<'a> Lexer<'a> {
     pub(super) fn word(&mut self) -> Word<'a> {
         let start = self.offset;

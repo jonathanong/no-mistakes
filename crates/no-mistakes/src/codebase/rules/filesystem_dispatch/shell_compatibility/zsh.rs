@@ -18,8 +18,14 @@ pub(super) fn has_shebang(source: &str) -> bool {
     match words.next().and_then(basename) {
         Some("zsh") => true,
         Some("env") => {
-            let interpreter = match words.next() {
-                Some("-S" | "--split-string") => words.next(),
+            let interpreter = words.find(|word| {
+                !matches!(
+                    *word,
+                    "-S" | "--split-string" | "-i" | "--ignore-environment"
+                )
+            });
+            let interpreter = match interpreter {
+                Some("--") => words.next(),
                 word => word,
             };
             interpreter.and_then(basename) == Some("zsh")

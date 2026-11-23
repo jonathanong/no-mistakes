@@ -1,0 +1,2 @@
+#!/usr/bin/env -S -i /bin/zsh
+status=$?

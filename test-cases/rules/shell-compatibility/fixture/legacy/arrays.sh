@@ -50,3 +50,28 @@ collect "${items[@]}"
 collect "${items[@]}" # no-mistakes-disable-line bash-empty-array-nounset -- Conditional population is guaranteed.
 declare -a literal=stable
 collect "${literal[@]}"
+
+slots=()
+slots[0]=stable
+collect "${slots[@]}"
+slots=()
+slots[1]+=stable
+collect "${slots[@]}"
+slots=()
+slots=stable
+collect "${slots[@]}"
+value=
+slots=()
+slots=$value
+collect "${slots[@]}"
+declare -a unquoted=$value quoted="$value"
+collect "${unquoted[@]}" "${quoted[@]}"
+
+: 
+slots=()
+slots=()
+collect "${slots[@]}"
+collect slots[0]=stable slots[1]+=stable
+collect "${slots[@]}"
+slots=stable collect example
+collect "${slots[@]}"

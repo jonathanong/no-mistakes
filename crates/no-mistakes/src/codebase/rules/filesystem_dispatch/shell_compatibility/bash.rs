@@ -43,12 +43,17 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
                     if array && identifier(word.raw) {
                         arrays.entry(word.raw).or_insert(false);
                     }
-                    remember_array(&mut arrays, word, array);
+                    if let Some(assignment) = array_assignment(word.raw) {
+                        remember_array(&mut arrays, word, assignment, array);
+                    }
                 }
             }
             _ => {
-                for word in command.take_while(|word| assignment(word.raw).is_some()) {
-                    remember_array(&mut arrays, word, false);
+                let assignments: Option<Vec<_>> = command
+                    .map(|word| array_assignment(word.raw).map(|assignment| (word, assignment)))
+                    .collect();
+                for (word, assignment) in assignments.into_iter().flatten() {
+                    remember_array(&mut arrays, word, assignment, false);
                 }
             }
         }
@@ -56,16 +61,31 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
     hits
 }
 
-fn remember_array<'a>(arrays: &mut FxHashMap<&'a str, bool>, word: &Word<'a>, declared: bool) {
-    let Some((name, append)) = assignment(word.raw) else {
-        return;
-    };
+fn remember_array<'a>(
+    arrays: &mut FxHashMap<&'a str, bool>,
+    word: &Word<'a>,
+    (name, append): (&'a str, bool),
+    declared: bool,
+) {
     if let Some(literal) = word.array_literal {
         let nonempty = arrays.entry(name).or_default();
         *nonempty = literal || (append && *nonempty);
     } else if declared {
-        arrays.insert(name, word.is_literal());
+        arrays.insert(name, true);
+    } else if let Some(nonempty) = arrays.get_mut(name) {
+        *nonempty = true;
     }
+}
+
+fn array_assignment(word: &str) -> Option<(&str, bool)> {
+    if let Some(assignment) = assignment(word) {
+        return Some(assignment);
+    }
+    let (lhs, _) = word.split_once('=')?;
+    let append = lhs.ends_with('+');
+    let lhs = lhs.strip_suffix('+').unwrap_or(lhs);
+    let (name, index) = lhs.strip_suffix(']')?.split_once('[')?;
+    (identifier(name) && !index.is_empty() && !index.contains(['[', ']'])).then_some((name, append))
 }
 
 fn nounset<'w, 'a: 'w>(mut words: impl Iterator<Item = &'w Word<'a>>, mut active: bool) -> bool {

@@ -14,7 +14,7 @@ fn shell_compatibility_json_matches_snapshot() {
             case("no_bash_globs", FIXTURE, "no-bash-globs.yml"),
         ],
         &[("PATH", "")],
-        &[],
+        &["--timeout", "15"],
     );
     assert_eq!(report["both"]["exitCode"], 1);
     assert_eq!(report["custom"]["exitCode"], 1);
