@@ -344,6 +344,14 @@ alias. Unique-directory prefixes, including disposable variants, are accepted;
 files that mock the filesystem are exempt. See
 [the rule reference](eslint-rules/test-no-fixed-temp-paths.md).
 
+### `test-no-typed-enqueue-fake`
+
+Opt-in. `singleExportPattern?: string` matches the imported export name with a
+regular expression. `moduleGlobs?: string[]` selects import specifiers and
+narrows the export pattern when both are configured. The rule reports Vitest
+and Jest mock constructors typed with `typeof` a matching imported binding.
+See [the rule reference](eslint-rules/test-no-typed-enqueue-fake.md).
+
 ### `test-no-wall-time-assertions`
 
 Opt-in. `allowedPaths?: string[]` defaults to `[]` and exempts benchmark paths

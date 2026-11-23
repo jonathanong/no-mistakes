@@ -24,6 +24,11 @@ declare namespace plugin {
     allowedPaths?: string[];
   }
 
+  export interface TestNoTypedEnqueueFakeOptions {
+    singleExportPattern?: string;
+    moduleGlobs?: string[];
+  }
+
   export interface NoLocaleLessDateFormatOptions {
     methods?: string[];
     allowUndefinedLocale?: boolean;
