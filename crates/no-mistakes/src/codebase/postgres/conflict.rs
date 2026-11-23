@@ -21,6 +21,8 @@ pub use scope::SqlSourceRelation;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod consumer_recovery_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod pinned_join_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod prepared_tests;
 mod single_row;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]

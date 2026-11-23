@@ -51,9 +51,9 @@ fn joined_unique_keys_propagate_pins_to_a_fixpoint() {
     assert!(pins(
         "SELECT o.id, l.total FROM orders o JOIN order_lines l ON o.id = l.order_id WHERE l.order_id = $1 AND l.line_no = $2"
     ));
-    // Transitive constant equality through a non-yet-proven side before row uniqueness resolves.
+    // Transitive constant equality through an unproven relation before row uniqueness resolves.
     assert!(pins(
-        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON o.id = l.order_id WHERE l.order_id = $1 AND l.line_no = $2 AND o.total = l.total"
+        "SELECT o.id, l.total FROM orders o JOIN order_lines l ON o.id = l.order_id AND l.line_no = o.line_no WHERE l.order_id = $1"
     ));
     // Self-join on a unique key.
     assert!(pins(
