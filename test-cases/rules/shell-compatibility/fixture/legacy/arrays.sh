@@ -4,6 +4,7 @@ collect "${items[@]}"
 set -euo pipefail
 collect "${items[@]}"
 collect "${items[*]}"
+collect <<< "${items[@]}"
 collect ${items[@]+"${items[@]}"}
 collect ${items[*]+"${items[*]}"}
 collect "${items[@]+"${items[@]}"}"
@@ -26,7 +27,7 @@ unset items
 collect "${items[@]}"
 set +u
 collect "${items[@]}"
-declare -a declared
+declare -x -a -- declared
 declared+=()
 set -o nounset
 collect \
@@ -41,6 +42,9 @@ cat <<'EXAMPLE'
 items=()
 collect "${items[@]}"
 EXAMPLE
+cat <<''
+collect "${items[@]}"
+
 # no-mistakes-disable-next-line bash-empty-array-nounset -- Conditional population is guaranteed by the caller.
 collect "${items[@]}"
 collect "${items[@]}" # no-mistakes-disable-line bash-empty-array-nounset -- Conditional population is guaranteed.

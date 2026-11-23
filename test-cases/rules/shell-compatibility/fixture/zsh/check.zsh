@@ -10,10 +10,18 @@ report() {
 }
 status=$?
 typeset -p status
+typeset -m status
+typeset -- status=value
 [[ enabled = enabled && status=value = example ]]
 print status=example
 print 'status=example'
 print "local status=value"
+print <<< 'status=example'
+print <(print status=example)
+print `print status=example`
+print 'status=example' >/dev/null
+print 'status=example' 2>&1
+(( shift = 1 << 2 ))
 # status=value
 pipestatus=(1 2)
 cat <<-'EXAMPLE'
