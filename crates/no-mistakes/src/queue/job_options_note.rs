@@ -29,9 +29,14 @@ pub(crate) fn note_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpressio
                 note_add(visitor, call, binding);
             }
         }
-        "addBulk" => note_bulk(visitor, call, binding),
+        "addBulk" => {
+            if binding.is_some() {
+                note_bulk(visitor, call, binding);
+            }
+        }
         "upsertJobScheduler"
-            if !visitor.facts.imports.is_empty() || !visitor.namespace_imports.is_empty() =>
+            if binding.is_some()
+                && (!visitor.facts.imports.is_empty() || !visitor.namespace_imports.is_empty()) =>
         {
             super::flow::note_scheduler(visitor, call, binding);
         }

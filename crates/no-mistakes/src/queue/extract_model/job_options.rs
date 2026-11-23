@@ -49,6 +49,8 @@ pub(crate) struct JobOptionSite {
     pub binding: Option<ProducerBinding>,
     pub queue_name: Option<String>,
     pub queue_file: Option<PathBuf>,
+    pub declaration: Option<u32>,
+    pub ambiguous_defaults: bool,
     pub job: Option<String>,
     pub evidence: JobOptionEvidence,
 }

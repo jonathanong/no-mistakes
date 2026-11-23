@@ -8,6 +8,8 @@ const CALL_OPEN: &str =
     "job options were not judged because the options object is not statically known";
 const DEFAULTS_OPEN: &str =
     "job options were not judged because defaultJobOptions is not statically known";
+const DEFAULTS_AMBIGUOUS: &str =
+    "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions";
 const NAME_OPEN: &str = "job options were not judged because the queue name did not resolve";
 
 pub(crate) fn judge_into_facts(facts: &mut HashMap<PathBuf, FileFacts>) {
@@ -38,10 +40,35 @@ pub(crate) fn judge_into_facts(facts: &mut HashMap<PathBuf, FileFacts>) {
     }
 }
 
-fn index_defaults(
-    facts: &HashMap<PathBuf, FileFacts>,
-) -> HashMap<(PathBuf, String), JobOptionEvidence> {
-    let mut out: HashMap<(PathBuf, String), JobOptionEvidence> = HashMap::new();
+enum IndexedDefaults {
+    Single(JobOptionEvidence),
+    Ambiguous,
+}
+
+struct DefaultsIndex {
+    by_file_queue: HashMap<(PathBuf, String), IndexedDefaults>,
+    by_declaration: HashMap<(PathBuf, u32), JobOptionEvidence>,
+}
+
+impl DefaultsIndex {
+    fn lookup_evidence(&self, site: &JobOptionSite) -> Option<Result<&JobOptionEvidence, ()>> {
+        let file = site.queue_file.as_ref()?;
+        if let Some(declaration) = site.declaration {
+            if let Some(evidence) = self.by_declaration.get(&(file.clone(), declaration)) {
+                return Some(Ok(evidence));
+            }
+        }
+        let name = site.queue_name.as_ref()?;
+        match self.by_file_queue.get(&(file.clone(), name.clone()))? {
+            IndexedDefaults::Single(evidence) => Some(Ok(evidence)),
+            IndexedDefaults::Ambiguous => Some(Err(())),
+        }
+    }
+}
+
+fn index_defaults(facts: &HashMap<PathBuf, FileFacts>) -> DefaultsIndex {
+    let mut by_file_queue: HashMap<(PathBuf, String), IndexedDefaults> = HashMap::new();
+    let mut by_declaration: HashMap<(PathBuf, u32), JobOptionEvidence> = HashMap::new();
     for (path, file) in facts {
         for defaults in &file.queue_defaults {
             let name = defaults.queue_name.clone().or_else(|| {
@@ -54,12 +81,20 @@ fn index_defaults(
             let Some(name) = name else {
                 continue;
             };
-            let entry = out.entry((path.clone(), name)).or_default();
-            entry.open |= defaults.evidence.open;
-            entry.keys.extend(defaults.evidence.keys.iter().cloned());
+            by_declaration.insert(
+                (path.clone(), defaults.declaration),
+                defaults.evidence.clone(),
+            );
+            by_file_queue
+                .entry((path.clone(), name))
+                .and_modify(|existing| *existing = IndexedDefaults::Ambiguous)
+                .or_insert_with(|| IndexedDefaults::Single(defaults.evidence.clone()));
         }
     }
-    out
+    DefaultsIndex {
+        by_file_queue,
+        by_declaration,
+    }
 }
 
 struct Note {
@@ -77,7 +112,7 @@ fn judge_site(
     path: &Path,
     site: &JobOptionSite,
     policy: &RequiredJobOptions,
-    defaults: &HashMap<(PathBuf, String), JobOptionEvidence>,
+    defaults: &DefaultsIndex,
 ) -> Option<Note> {
     if site.binding.is_some() && site.queue_name.is_none() {
         return None;
@@ -95,13 +130,14 @@ fn judge_site(
     if missing(required, &site.evidence.keys).is_empty() {
         return None;
     }
-    let defaults = site.queue_file.as_ref().and_then(|file| {
-        site.queue_name
-            .as_ref()
-            .map(|name| defaults.get(&(file.clone(), name.clone())))
-    });
-    let Some(Some(defaults)) = defaults else {
+    if site.ambiguous_defaults {
+        return Some(diagnostic(path, site.line, DEFAULTS_AMBIGUOUS));
+    }
+    let Some(defaults) = defaults.lookup_evidence(site) else {
         return Some(finding(path, site, required, &site.evidence.keys));
+    };
+    let Ok(defaults) = defaults else {
+        return Some(diagnostic(path, site.line, DEFAULTS_AMBIGUOUS));
     };
     if defaults.open {
         return Some(diagnostic(path, site.line, DEFAULTS_OPEN));

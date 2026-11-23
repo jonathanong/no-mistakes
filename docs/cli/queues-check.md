@@ -146,9 +146,12 @@ keys, and a later object without `opts` does not erase them. A later known
 replace `queueName` leaves it unknown until a later known value resolves it.
 Unresolved spreads and dynamic computed keys can prevent the check from
 judging the node and its children. A spread before the options argument abstains
-that call. `.add` counts only
+that call. `.add`, `.addBulk`, and `.upsertJobScheduler` count only
 when the receiver is a resolved queue binding or the call is a configured
-enqueue factory. An unresolved receiver abstains.
+enqueue factory. An unresolved receiver abstains. When more than one queue
+definition uses the same queue name, a binding uses the definition it resolves
+to; a flow node or unresolved origin abstains when `defaultJobOptions` is
+needed.
 
 An unknown spread, call, or computed key abstains. Abstentions are not
 findings. `queues check` still prints only the findings array. The warning is

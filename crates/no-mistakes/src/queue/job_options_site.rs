@@ -34,6 +34,8 @@ pub(super) fn push_site(
         binding,
         queue_name,
         queue_file: None,
+        declaration: None,
+        ambiguous_defaults: false,
         job,
         evidence,
     });
