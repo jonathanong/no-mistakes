@@ -29,10 +29,14 @@ rule works without ShellCheck.
 ## What it catches
 
 The finding points to the line that assigns or declares `status`. The rule
-recognizes direct assignment and `local`, `typeset`, or `declare`.
+recognizes direct assignments and parameter declarations with `local`,
+`typeset`, or `declare`. Function declarations and queries in `typeset -f`
+mode use a separate namespace.
 It checks the name `status` from the [zsh parameter manual](https://zsh.sourceforge.io/Doc/Release/Parameters.html#Parameters-Set-By-The-Shell).
 It uses lexical command positions and skips nested substitutions and
-here-document bodies.
+here-document bodies, including bodies introduced with ANSI-C quoted
+delimiters. It keeps combined output redirects and adjacent file descriptor
+prefixes in the same command.
 
 ## Counterexample
 
@@ -62,8 +66,10 @@ Reading `status` is valid.
 print -r -- "$status"
 ```
 
-A local declaration with `-h` hides the special parameter and allows
-assignments in the same function.
+A local declaration with `-h` hides the special parameter through the end of
+its brace-delimited function body. An ordinary brace group shares that scope.
+At file scope or with `-g`, the `-h` attribute can affect later localization.
+Assignments to the active special parameter still fail.
 
 ## Suppression
 

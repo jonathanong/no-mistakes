@@ -1,4 +1,4 @@
-use super::lex::{assignment, command_words, Lexer};
+use super::lex::{assignment, command_words, Lexer, Shell};
 use crate::codebase::shell_words::{split_quoted_words, Whitespace};
 
 pub const RULE_ID: &str = "zsh-readonly-parameter";
@@ -44,7 +44,7 @@ fn basename(interpreter: &str) -> Option<&str> {
 pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
     let mut hits = Vec::new();
     let mut hidden_scope = None;
-    Lexer::new(source).commands(|words, scope| {
+    Lexer::new(source, Shell::Zsh).commands(|words, scope| {
         if hidden_scope.is_some_and(|hidden| hidden > scope) {
             hidden_scope = None;
         }
@@ -61,19 +61,21 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
             return;
         }
         let mut hide = false;
+        let mut global = false;
         while let Some(word) = command.next_if(|word| word.raw.starts_with('-') && word.raw != "--")
         {
             let flags = &word.raw[1..];
-            if flags.contains(['m', 'p']) {
+            if flags.contains(['f', 'm', 'p']) {
                 return;
             }
             hide |= flags.contains('h');
+            global |= flags.contains('g');
         }
         command.next_if(|word| word.raw == "--");
         for word in command.filter(|word| uses_status(word.raw)) {
-            if hide {
+            if hide && !global && scope > 0 {
                 hidden_scope.get_or_insert(scope);
-            } else if hidden_scope.is_none() {
+            } else if hidden_scope.is_none() && (!hide || assignment(word.raw).is_some()) {
                 hits.push(("status", word.line));
             }
         }

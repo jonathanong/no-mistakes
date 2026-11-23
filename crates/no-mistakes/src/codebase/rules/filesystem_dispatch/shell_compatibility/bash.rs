@@ -1,4 +1,4 @@
-use super::lex::{assignment, command_words, identifier, Lexer, Word};
+use super::lex::{assignment, command_words, identifier, Lexer, Shell, Word};
 use crate::codebase::shell_words::{split_quoted_words, Whitespace};
 use crate::fx::FxHashMap;
 
@@ -8,7 +8,7 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
     let mut arrays = FxHashMap::default();
     let mut active = false;
     let mut hits = Vec::new();
-    Lexer::new(source).commands(|words, _| {
+    Lexer::new(source, Shell::Bash).commands(|words, _| {
         if active {
             hits.extend(
                 words

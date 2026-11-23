@@ -73,8 +73,10 @@ collect "${items[@]}"
 ```
 
 The check is lexical. It uses source order and skips nested substitutions and
-here-document bodies. It does not evaluate control flow, function calls, or
-sourced files.
+here-document bodies, including bodies introduced with ANSI-C quoted
+delimiters. It keeps combined output redirects and adjacent file descriptor
+prefixes in the same command. It does not evaluate control flow, function
+calls, or sourced files.
 
 ## Suppression
 

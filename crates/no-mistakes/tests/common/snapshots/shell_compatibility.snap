@@ -156,6 +156,94 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "single"
         },
         {
+          "file": "legacy/redirections.sh",
+          "line": 11,
+          "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${slots[@]}\"",
+          "target": "slots"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 14,
+          "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${slots[@]}\"",
+          "target": "slots"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 26,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 30,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 34,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 38,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 4,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 42,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 47,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 51,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/unfinished-heredoc.sh",
+          "line": 4,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
           "file": "zsh/check.zsh",
           "line": 11,
           "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
@@ -297,6 +385,94 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
           "rule": "zsh-readonly-parameter",
           "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 13,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "typeset -gh status=4",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 14,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=5",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 20,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=10",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 26,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "}; status=13",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 29,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=16",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 4,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=1",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 7,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "local -h status=2",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 8,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=3",
+          "target": "status"
+        },
+        {
+          "file": "zsh/redirections.zsh",
+          "line": 13,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=assignment",
+          "target": "status"
+        },
+        {
+          "file": "zsh/redirections.zsh",
+          "line": 3,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "&>/dev/null status=assignment",
+          "target": "status"
+        },
+        {
+          "file": "zsh/redirections.zsh",
+          "line": 4,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "2>/dev/null status=assignment",
           "target": "status"
         },
         {

@@ -1,21 +1,24 @@
-use super::{Lexer, Word};
-use crate::codebase::shell_words::{split_quoted_words, Whitespace};
+mod delimiter;
+
+use super::{Lexer, Shell, Word};
 
 impl<'a> Lexer<'a> {
+    pub(super) fn is_fd_prefix(&self, word: &str) -> bool {
+        let rest = self.rest().as_bytes();
+        matches!(rest, [b'<' | b'>', ..])
+            && !matches!(rest, [_, b'(', ..])
+            && (matches!(self.shell, Shell::Bash) || word.len() == 1)
+            && word.bytes().all(|byte| byte.is_ascii_digit())
+    }
+
     pub(super) fn redirection(&mut self) -> Option<Word<'a>> {
-        if self.take("<<<") {
+        if self.take("<<<") || self.take("&>>") || self.take("&>") {
             return self.redirect_word();
         }
         if self.take("<<") {
             let strip_tabs = self.take("-");
             let word = self.redirect_word()?;
-            let delimiter = if matches!(word.raw, "''" | "\"\"") {
-                String::new()
-            } else {
-                split_quoted_words(word.raw, Whitespace::Ascii)?
-                    .into_iter()
-                    .next()?
-            };
+            let delimiter = delimiter::unquote(word.raw)?;
             self.heredocs.push((delimiter, strip_tabs));
             return None;
         }

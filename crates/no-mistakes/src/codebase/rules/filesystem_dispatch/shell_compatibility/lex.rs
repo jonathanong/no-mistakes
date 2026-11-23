@@ -4,17 +4,24 @@ mod word;
 
 pub(super) use word::{assignment, identifier, Word};
 
+pub(super) enum Shell {
+    Bash,
+    Zsh,
+}
+
 pub(super) struct Lexer<'a> {
     source: &'a str,
+    shell: Shell,
     offset: usize,
     pub(super) line: usize,
     heredocs: Vec<(String, bool)>,
 }
 
 impl<'a> Lexer<'a> {
-    pub(super) fn new(source: &'a str) -> Self {
+    pub(super) fn new(source: &'a str, shell: Shell) -> Self {
         Self {
             source,
+            shell,
             offset: 0,
             line: 1,
             heredocs: Vec::new(),
@@ -66,6 +73,8 @@ impl<'a> Lexer<'a> {
     pub(super) fn commands(mut self, mut visit: impl FnMut(&[Word<'a>], usize)) {
         let mut words = Vec::new();
         let mut scope = 0usize;
+        let mut groups = Vec::new();
+        let mut pending_function = false;
         let mut conditional = false;
         while let Some(byte) = self.current() {
             if self.continuation() {
@@ -78,17 +87,28 @@ impl<'a> Lexer<'a> {
                     self.advance();
                 }
                 b'{' | b'}' if self.group_boundary(&words) => {
+                    let function_body = pending_function || starts_with_function(&words);
+                    pending_function = false;
                     visit(&words, scope);
                     words.clear();
                     self.advance();
                     if byte == b'{' {
-                        scope += 1;
+                        groups.push(function_body);
+                        scope += usize::from(function_body);
                     } else {
-                        scope = scope.saturating_sub(1);
+                        scope -= usize::from(groups.pop().unwrap_or_default());
                         visit(&[], scope);
                     }
                 }
+                b'&' if self.rest().starts_with("&>") => words.extend(self.redirection()),
+                b'(' if function_parentheses(&words) && self.take("()") => {
+                    pending_function = true;
+                    visit(&words, scope);
+                    words.clear();
+                }
                 b'\n' | b';' | b'|' | b'&' | b'(' | b')' => {
+                    pending_function = matches!(byte, b'\n' | b';')
+                        && (pending_function || starts_with_function(&words));
                     visit(&words, scope);
                     words.clear();
                     if self.take("((") {
@@ -107,7 +127,9 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 _ => {
-                    let word = self.word();
+                    pending_function = false;
+                    let mut word = self.word();
+                    word.redirect = !conditional && self.is_fd_prefix(word.raw);
                     if word.raw == "[[" && command_words(&words).next().is_none() {
                         conditional = true;
                     } else if word.raw == "]]" {
@@ -134,6 +156,19 @@ impl<'a> Lexer<'a> {
                 byte.is_ascii_whitespace() || matches!(byte, b';' | b'&' | b'|' | b')')
             })
     }
+}
+
+fn starts_with_function(words: &[Word<'_>]) -> bool {
+    command_words(words)
+        .next()
+        .is_some_and(|word| word.raw == "function")
+}
+
+fn function_parentheses(words: &[Word<'_>]) -> bool {
+    let mut words = command_words(words);
+    words
+        .next()
+        .is_none_or(|word| word.raw == "function" || words.next().is_none())
 }
 
 pub(super) fn command_words<'w, 'a>(words: &'w [Word<'a>]) -> impl Iterator<Item = &'w Word<'a>> {
