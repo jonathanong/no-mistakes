@@ -31,6 +31,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         session,
     } = request;
     match rule_id {
+        DEPENDABOT_COOLDOWN_POLICY => {
+            dependabot_cooldown_policy::check_prepared(root, config, files, sources, session)
+        }
         AGENTS_MD_MAX_SIZE => {
             agents_md_max_size::check_with_files_sources_and_deferred_suppression(
                 root,

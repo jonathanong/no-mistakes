@@ -661,6 +661,15 @@ nonempty strings, duplicates are deduplicated, and an empty array disables the
 check. A spread of `configDefaults.exclude` imported from `vitest/config`
 retains the defaults.
 
+### Dependabot cooldown
+
+[`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md) is opt-in
+and checks `.github/dependabot.yml` and `.github/dependabot.yaml`; if both
+exist, it checks both. Set the required nonnegative integer
+`minimumDays` floor. Use `requireOpenPullRequestsLimit` to require an explicit
+PR limit, `allowedCooldownExcludes` to restrict cooldown exclusions to whole-value
+globs, and `exemptEcosystems` to skip entries for exact ecosystem names.
+
 ### Vitest project properties
 
 [`vitest-project-policy`](../rules/vitest-project-policy.md) accepts an explicit

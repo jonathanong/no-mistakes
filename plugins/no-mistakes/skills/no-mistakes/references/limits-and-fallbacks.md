@@ -198,6 +198,12 @@ invalidates every path. Conditional, nonroot, and noncovering self checkouts
 preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
 in-process queries. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
 
+For `dependabot-cooldown-policy`, set `options.minimumDays` and run
+`check --root <root> --format json`. Add `cooldown.default-days` and raise
+any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.
+Repair YAML when the rule appears in `incomplete`, then rerun the check.
+See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/dependabot-cooldown-policy.md).
+
 ## Fact extraction failures
 
 `check` isolates an unwinding panic during a single file's fact extraction.

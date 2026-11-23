@@ -27,6 +27,12 @@ shell sources through `shellSourceInclude` and per-transfer checks through
 check reports share the selected sources, shell inference, findings, and
 suppressions.
 
+The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
+checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
+`analyzeProject()` check reports. These entry points share the same cooldown
+floor, explicit PR limit check, exclusion globs, ecosystem exemptions, and
+incomplete-input diagnostics.
+
 Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
 literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
 produce scoped aggregate-check warnings; see

@@ -1,0 +1,4 @@
+# no-mistakes-disable-file dependabot-cooldown-policy
+version: 2
+updates:
+  - package-ecosystem: npm

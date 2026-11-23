@@ -76,6 +76,7 @@
   "DeclaredPayloadContract",
   "DeclaredPayloadSchema",
   "DeclaredRule",
+  "DependabotCooldownPolicyOptions",
   "DependencyBoundOptions",
   "DependencyFile",
   "DependencyResult",

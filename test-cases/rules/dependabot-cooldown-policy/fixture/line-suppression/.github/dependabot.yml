@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    cooldown:
+      default-days: 0 # no-mistakes-disable-line dependabot-cooldown-policy
+      # no-mistakes-disable-next-line dependabot-cooldown-policy
+      semver-major-days: 0
+      semver-minor-days: 0
+  # no-mistakes-disable-next-line dependabot-cooldown-policy
+  - package-ecosystem: bundler

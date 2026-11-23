@@ -1,0 +1,10 @@
+rules:
+  - rule: dependabot-cooldown-policy
+    scope: repository
+    options:
+      minimumDays: 7
+      requireOpenPullRequestsLimit: true
+      allowedCooldownExcludes:
+        - "@example/*"
+      exemptEcosystems:
+        - docker

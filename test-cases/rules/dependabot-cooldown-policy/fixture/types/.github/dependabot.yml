@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    open-pull-requests-limit: -1
+    cooldown:
+      default-days: '7'
+      semver-major-days: null
+      semver-minor-days: 7.1
+      semver-patch-days: -1
+      exclude: ["@example/nested/package", 7]
+  - package-ecosystem: bundler
+    open-pull-requests-limit: 0
+    cooldown: {default-days: 7, exclude: external-package}
+  - cooldown: false

@@ -184,11 +184,19 @@
     "name": "compiled synthetic case 22 (1)"
   },
   {
-    "file": "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+    "file": "packages/no-mistakes/scripts/dependabot-cooldown-policy-api.test.js",
     "name": "compiled synthetic case 23 (0)"
   },
   {
-    "file": "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+    "file": "packages/no-mistakes/scripts/dependabot-cooldown-policy-api.test.js",
     "name": "compiled synthetic case 23 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+    "name": "compiled synthetic case 24 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+    "name": "compiled synthetic case 24 (1)"
   }
 ]

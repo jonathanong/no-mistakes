@@ -277,6 +277,9 @@ mod cli_gha_snapshot_workflow_policy_bans;
 #[path = "cli_gha_snapshot_local_action_checkout.rs"]
 mod cli_gha_snapshot_local_action_checkout;
 
+#[path = "cli_snapshot_dependabot_cooldown_policy.rs"]
+mod cli_snapshot_dependabot_cooldown_policy;
+
 #[path = "cli_snapshot_vitest_default_excludes.rs"]
 mod cli_snapshot_vitest_default_excludes;
 #[path = "cli_snapshot_vitest_project_policy.rs"]

@@ -1,0 +1,6 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+  - package-ecosystem: cargo
+    cooldown: { default-days: [7 }
