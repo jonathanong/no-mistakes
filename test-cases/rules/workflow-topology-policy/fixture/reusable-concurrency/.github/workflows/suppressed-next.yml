@@ -1,0 +1,10 @@
+name: Suppressed above concurrency
+on: workflow_call
+# no-mistakes-disable-next-line workflow-topology-policy
+concurrency:
+  group: next-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

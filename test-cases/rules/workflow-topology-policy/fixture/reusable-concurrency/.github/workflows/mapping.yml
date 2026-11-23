@@ -1,0 +1,13 @@
+name: Reusable and manual
+on:
+  workflow_call: {}
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

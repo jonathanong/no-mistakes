@@ -118,6 +118,11 @@ no requirement. `secretInventory` is separately opt-in:
 - `forbidSecretsInherit`: when `true`, report reusable-workflow calls that set
   `secrets: inherit`. `false` reports nothing. See
   [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
+- `forbidReusableWorkflowConcurrency`: `false` by default. When enabled, ban
+  workflow-level locks on workflows triggered by `workflow_call`, including
+  workflows with additional triggers. Job-level locks remain allowed. See the
+  [concurrency reference](../configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency)
+  for counterexamples, rewrites and suppression.
 - `concurrencyPolicy`: owner id to the intended pending, cancellation, and
   scope behavior of that lock. See [concurrency configuration](../configuration/workflow-topology-policy-concurrency.md#concurrencypolicy).
 - `forbidConcurrencyGroupCollisions`: when `true`, report workflows and jobs
@@ -191,6 +196,12 @@ Map each secret by name. A missing `secrets` key and `secrets: {}` pass. A job
 without a reusable-workflow `uses` is ignored. Findings point to the `secrets`
 key. See the
 [configuration guide](../configuration/workflow-topology-policy-secrets-inherit.md).
+
+### `forbidReusableWorkflowConcurrency`
+
+Move workflow-level concurrency in a reusable workflow to its caller or to a
+job. Findings point to `concurrency`, irrespective of group text or cancellation.
+See the [configuration guide](../configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency).
 
 ### `concurrencyPolicy`
 

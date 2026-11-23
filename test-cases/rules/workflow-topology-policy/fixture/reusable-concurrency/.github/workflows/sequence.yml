@@ -1,0 +1,11 @@
+name: Reusable and push
+on: [push, workflow_call]
+concurrency:
+  group: sequence-build
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency: sequence-job
+    steps:
+      - run: echo build

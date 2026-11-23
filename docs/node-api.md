@@ -31,6 +31,13 @@ there is no additional runtime export or invocation option. The existing
 `check` → `checkJson` binding carries this rule. See
 [activity type configuration](configuration/workflow-topology-policy-activity-types.md).
 
+Configured `workflow-topology-policy.options.forbidReusableWorkflowConcurrency`
+also runs through async `check({ root, config })` and `analyzeProject()` check
+reports. It shares CLI findings and suppression at the workflow-level
+`concurrency` key. The exported `WorkflowTopologyPolicyOptions` type describes
+these YAML options; configure them in the file selected by `config`. See the
+[reusable workflow concurrency policy](configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency).
+
 Configured `workflow-topology-policy.options.forbiddenEvents` and
 `forbidSecretsInherit` also run through async `check({ root, config })` and
 `analyzeProject()` check reports. Event bans use the same exact matching and

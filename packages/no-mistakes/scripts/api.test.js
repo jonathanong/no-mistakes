@@ -497,3 +497,16 @@ test("queue wait kinds compile when imported from the package root", { timeout: 
     /export type \{ QueueWaitFindingKind \} from "\.\/queue-report-types";/,
   );
 });
+
+test("workflow topology policy exports the reusable workflow lock option", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "workflow-topology-policy-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface WorkflowTopologyPolicyOptions \{/);
+  assert.match(declarations, /forbidReusableWorkflowConcurrency\?: boolean;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/workflow-topology-policy-types";/,
+  );
+});

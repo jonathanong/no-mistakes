@@ -1,0 +1,9 @@
+# no-mistakes-disable-file workflow-topology-policy
+name: Suppressed at file
+on: workflow_call
+concurrency: file-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
