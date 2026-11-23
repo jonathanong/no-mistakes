@@ -66,6 +66,7 @@ impl<'a> Lexer<'a> {
     pub(super) fn commands(mut self, mut visit: impl FnMut(&[Word<'a>], usize)) {
         let mut words = Vec::new();
         let mut scope = 0usize;
+        let mut conditional = false;
         while let Some(byte) = self.current() {
             if self.continuation() {
                 continue;
@@ -73,6 +74,9 @@ impl<'a> Lexer<'a> {
             match byte {
                 b' ' | b'\t' | b'\r' => self.advance(),
                 b'#' => self.skip_comment(),
+                b'\n' | b';' | b'|' | b'&' | b'(' | b')' | b'<' | b'>' if conditional => {
+                    self.advance();
+                }
                 b'{' | b'}' if self.group_boundary(&words) => {
                     visit(&words, scope);
                     words.clear();
@@ -102,7 +106,15 @@ impl<'a> Lexer<'a> {
                         words.push(word);
                     }
                 }
-                _ => words.push(self.word()),
+                _ => {
+                    let word = self.word();
+                    if word.raw == "[[" && command_words(&words).next().is_none() {
+                        conditional = true;
+                    } else if word.raw == "]]" {
+                        conditional = false;
+                    }
+                    words.push(word);
+                }
             }
         }
         visit(&words, scope);

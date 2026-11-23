@@ -10,6 +10,7 @@ report() {
 }
 status=$?
 typeset -p status
+[[ enabled = enabled && status=value = example ]]
 print status=example
 print 'status=example'
 print "local status=value"
