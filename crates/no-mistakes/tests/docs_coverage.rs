@@ -472,7 +472,11 @@ fn test_file_hygiene_eslint_rules_have_public_docs_and_options() {
     let registry = read(&root.join("packages/eslint-plugin-no-mistakes/src/index.js"));
     let catalog = read(&root.join("docs/eslint-rules/README.md"));
     let plugin_docs = read(&root.join("docs/eslint-plugin.md"));
-    for rule in ["test-no-fixed-temp-paths", "test-no-wall-time-assertions"] {
+    for rule in [
+        "test-no-fixed-temp-paths",
+        "test-no-typed-enqueue-fake",
+        "test-no-wall-time-assertions",
+    ] {
         assert!(registry.contains(&format!("\"{rule}\": require(\"./rules/{rule}\")")));
         assert!(catalog.contains(&format!("{rule}.md")));
         assert!(plugin_docs.contains(&format!("### `{rule}`")));

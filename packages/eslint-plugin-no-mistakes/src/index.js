@@ -61,6 +61,7 @@ const rules = {
   "test-no-delayed-rejects": require("./rules/test-no-delayed-rejects"),
   "test-no-skips": require("./rules/test-no-skips"),
   "test-no-shared-state": require("./rules/test-no-shared-state"),
+  "test-no-typed-enqueue-fake": require("./rules/test-no-typed-enqueue-fake"),
   "ts-no-const-aliases": require("./rules/ts-no-const-aliases"),
   "ts-no-export-renaming": require("./rules/ts-no-export-renaming"),
   "ts-no-function-aliases": require("./rules/ts-no-function-aliases"),

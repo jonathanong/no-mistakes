@@ -81,6 +81,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`test-no-fixed-temp-paths`](test-no-fixed-temp-paths.md)             | Require unique temporary paths in test files.                   |
 | [`test-no-shared-state`](test-no-shared-state.md)                     | Reject mutable module-scope test state.                         |
 | [`test-no-skips`](test-no-skips.md)                                   | Reject skipped, conditional, pending, and focused tests.        |
+| [`test-no-typed-enqueue-fake`](test-no-typed-enqueue-fake.md)           | Keep enqueue fake signatures explicit.                         |
 | [`test-no-wall-time-assertions`](test-no-wall-time-assertions.md)     | Replace elapsed wall-time assertions with deterministic checks. |
 | [`vitest-mock-test-file-naming`](vitest-mock-test-file-naming.md)     | Name module-mocking tests `*.mock.test.*`.                      |
 | [`vitest-timeout-cap`](vitest-timeout-cap.md)                         | Cap Vitest defaults and test timeout overrides.                 |

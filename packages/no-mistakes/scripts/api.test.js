@@ -40,6 +40,17 @@ test("github-actions-pinned-hash images option is publicly named", () => {
   );
 });
 
+test("typed enqueue fake lint options are publicly declared", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "..", "eslint-plugin-no-mistakes", "src", "index.d.ts"),
+    "utf8",
+  );
+  const options = declarations.match(/export interface TestNoTypedEnqueueFakeOptions \{([^}]+)\}/);
+  assert.ok(options, "TestNoTypedEnqueueFakeOptions must be exported");
+  assert.match(options[1], /singleExportPattern\?: string;/);
+  assert.match(options[1], /moduleGlobs\?: string\[\];/);
+});
+
 test("forbidden dependency selectors and origin exceptions have public option types", () => {
   const declarations = readFileSync(join(packageRoot, "forbidden-dependency-types.d.ts"), "utf8");
   assert.match(declarations, /export interface ForbiddenDependencyException \{/);

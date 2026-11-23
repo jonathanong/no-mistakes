@@ -49,7 +49,8 @@ produce scoped aggregate-check warnings; see
 [matcher recovery](configuration/tests.md#playwright-file-matchers).
 
 The ESLint plugin provides opt-in, file-local test hygiene checks for
-[fixed temporary paths](eslint-rules/test-no-fixed-temp-paths.md) and
+[fixed temporary paths](eslint-rules/test-no-fixed-temp-paths.md),
+[typed enqueue fakes](eslint-rules/test-no-typed-enqueue-fake.md), and
 [wall-time assertions](eslint-rules/test-no-wall-time-assertions.md). These
 checks belong to ESLint/Oxlint; they do not add Rust CLI or native Node rules.
 
