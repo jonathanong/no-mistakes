@@ -108,7 +108,7 @@ pub(crate) fn check_with_sources(
 fn message(bash: bool, target: &str) -> String {
     if bash {
         format!(
-            "Array `{target}` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Guard the expansion with ${{{target}[@]+\"${{{target}[@]}}\"}}."
+            "Array `{target}` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${{{target}[@]+...}} to guard it and keep the original array selector."
         )
     } else {
         "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`."

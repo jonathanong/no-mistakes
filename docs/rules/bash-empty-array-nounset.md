@@ -44,6 +44,13 @@ arguments for an empty array.
 collect ${items[@]+"${items[@]}"}
 ```
 
+Keep the `*` selector if the command expects one joined argument for a
+nonempty array.
+
+```bash
+collect ${items[*]+"${items[*]}"}
+```
+
 ## Counterexample
 
 An array with a literal element can be expanded directly.
