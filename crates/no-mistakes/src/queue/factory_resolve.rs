@@ -97,7 +97,9 @@ fn pending_updates<R: ImportResolverFacade>(
             }
         }
     }
-    updates.extend(follow::star_and_job_updates(facts, resolver, remapper));
+    updates.extend(declarations::star_and_job_updates(
+        facts, resolver, remapper,
+    ));
     updates
 }
 
@@ -193,3 +195,4 @@ pub(super) fn binding_queue<R: ImportResolverFacade>(
 mod declarations;
 
 pub(super) use declarations::{defined_queue_names, definition_files};
+pub(super) use follow::lookup_queue_origin;

@@ -1,10 +1,12 @@
 use super::{build_filter, build_report, queue_project_facts_from_shared};
 use super::{resolve_queue_relationships_with_resolver, ProjectReport};
+use crate::config::v2::NoMistakesConfig;
 use std::path::Path;
 
 pub(super) fn analyze(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    config: &NoMistakesConfig,
     filters: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -12,6 +14,7 @@ pub(super) fn analyze(
     let mut report = analyze_with(
         root,
         tsconfig_catalog,
+        config,
         filters,
         shared,
         session,
@@ -31,6 +34,7 @@ pub(super) fn analyze(
 pub(super) fn analyze_with<T>(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    config: &NoMistakesConfig,
     filters: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -78,7 +82,7 @@ pub(super) fn analyze_with<T>(
         queue_inputs.unwrap_or_default(),
         parse_failures,
     )?;
-    let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
+    let mut facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
     let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         tsconfig_catalog,
@@ -86,11 +90,9 @@ pub(super) fn analyze_with<T>(
         session,
     )
     .with_queue_compatibility(root);
-    let (lang_producers, lang_workers) = if let Ok(config) = session.dataset(root).config(None) {
-        crate::queue::lang::language_queue_sites(root, session, config.as_ref(), filter.as_ref())?
-    } else {
-        (Vec::new(), Vec::new())
-    };
+    crate::queue::job_options::stamp(&mut facts, &config.queues);
+    let (lang_producers, lang_workers) =
+        crate::queue::lang::language_queue_sites(root, session, config, filter.as_ref())?;
     let report = resolve_queue_relationships_with_resolver(
         root,
         &facts,

@@ -1,0 +1,22 @@
+version: 2
+queues:
+  requiredJobOptions:
+    - attempts
+    - removeOnComplete
+    - backoff
+  requiredJobOptionsByQueue:
+    items:
+      - priority
+    orders: []
+  factories:
+    queue:
+      - callee: createQueue
+        name: 0
+    enqueue:
+      - callee: enqueueWidget
+        queue: 0
+        job: 1
+        options: 2
+      - callee: enqueueBare
+        queue: 0
+        job: 1

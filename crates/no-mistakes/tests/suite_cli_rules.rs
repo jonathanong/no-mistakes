@@ -336,6 +336,9 @@ mod cli_check_queue_waits;
 #[path = "cli_check_queue_wait_wrappers.rs"]
 mod cli_check_queue_wait_wrappers;
 
+#[path = "cli_check_queue_required_options.rs"]
+mod cli_check_queue_required_options;
+
 #[path = "cli_check_queue_priority.rs"]
 mod cli_check_queue_priority;
 

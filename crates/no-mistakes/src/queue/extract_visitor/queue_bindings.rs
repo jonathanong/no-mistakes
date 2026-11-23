@@ -1,6 +1,6 @@
 use super::QueueVisitor;
-use crate::queue::extract_factory_scheduler_bind::ObjectBinding;
 use crate::queue::extract_model::{LocalQueue, ProducerBinding};
+use crate::queue::object_bindings::ObjectBinding;
 
 impl QueueVisitor<'_> {
     pub fn producer_binding(&self, name: &str, at: u32) -> ProducerBinding {

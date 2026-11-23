@@ -24,11 +24,12 @@ fn missing_prepared_queue_inputs_are_failures_not_clean_negative_reports() {
         }
         let catalog = TsConfigCatalog::forced(&root, Default::default(), None);
         let session = AnalysisSession::disabled();
-        let legacy = analyze(&root, &catalog, &[], &shared, &session).unwrap_err();
+        let config = NoMistakesConfig::default();
+        let legacy = analyze(&root, &catalog, &config, &[], &shared, &session).unwrap_err();
         assert!(legacy.to_string().contains("missing prepared queue"));
         assert!(session.check_failures().is_empty());
         session.enable_partial_checks();
-        let report = analyze(&root, &catalog, &[], &shared, &session).unwrap();
+        let report = analyze(&root, &catalog, &config, &[], &shared, &session).unwrap();
         assert!(report.check.is_empty());
         let failures = session.check_failures();
         assert_eq!(failures.len(), 1);

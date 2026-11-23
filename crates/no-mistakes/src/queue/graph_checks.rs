@@ -1,27 +1,8 @@
-use crate::queue::extract::FileFacts;
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
 use crate::queue::types::{JobKey, QueueKey};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-
-pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
-    let mut out = Vec::new();
-    for (path, facts) in facts {
-        for check in &facts.checks {
-            out.push(CheckFinding {
-                kind: check.kind.clone(),
-                file: relative_string(root, path),
-                line: check.line,
-                queue_file: None,
-                queue_name: None,
-                job: check.job.clone(),
-                message: check.message.clone(),
-            });
-        }
-    }
-    out
-}
+use std::path::Path;
 
 pub(super) fn unmatched_workers(
     root: &Path,

@@ -23,6 +23,7 @@ pub(crate) fn run_queue_check(
     root: &std::path::Path,
     prepared_tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     enabled: bool,
+    config: &NoMistakesConfig,
     facts: &CheckFactMap,
     session: &no_mistakes::codebase::analysis_session::AnalysisSession,
 ) -> Result<CheckTask<Vec<CheckFinding>>> {
@@ -34,6 +35,7 @@ pub(crate) fn run_queue_check(
                 no_mistakes::queue::analyze_project_with_prepared_facts_and_catalog_and_session(
                     root,
                     prepared_tsconfig_catalog,
+                    config,
                     &[],
                     facts,
                     session,

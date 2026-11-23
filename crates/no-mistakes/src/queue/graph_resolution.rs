@@ -5,6 +5,10 @@ use crate::queue::types::QueueKey;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+mod job_option_sites;
+
+pub(super) use job_option_sites::resolve_job_option_sites;
+
 pub(super) fn queue_definitions(
     facts: &HashMap<PathBuf, FileFacts>,
 ) -> HashMap<PathBuf, HashMap<String, String>> {
@@ -17,6 +21,7 @@ pub(super) fn queue_definitions(
 #[path = "graph_resolution_producers.rs"]
 mod producers;
 
+use producers::local_queues;
 pub(super) use producers::resolve_producers;
 
 pub(super) fn resolve_workers<R: ImportResolverFacade>(

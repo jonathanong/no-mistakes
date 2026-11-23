@@ -33,7 +33,7 @@ pub(super) struct QueueVisitor<'a> {
     pub enqueue_factories: HashMap<String, (usize, usize, Option<usize>)>,
     pub worker_factories: HashMap<String, (usize, usize)>,
     pub scheduler_factories: crate::fx::FxHashMap<oxc_syntax::symbol::SymbolId, usize>,
-    pub object_bindings: super::extract_factory_scheduler_bind::ObjectBindings<'a>,
+    pub object_bindings: super::object_bindings::ObjectBindings<'a>,
     pub job_frames: Vec<JobFrame>,
     pub record_waits: bool,
     pub scoping: Option<&'a oxc_semantic::Scoping>,
@@ -70,6 +70,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        super::job_options::note_call(self, call);
         self.note_wait_call(call);
         super::extract_job_id::note_call(self, call);
         self.note_enqueue_call(call);

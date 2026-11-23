@@ -25,6 +25,14 @@ pub(in crate::queue) fn resolve_queue_relationships_with_resolver<
     let queue_defs = queue_definitions(&facts);
     let definitions = crate::queue::factory_resolve::definition_files(&facts);
     let producers = resolve_producers(&mut facts, &queue_defs, &definitions, resolver, &remapper);
+    crate::queue::graph_resolution::resolve_job_option_sites(
+        &mut facts,
+        &queue_defs,
+        &definitions,
+        resolver,
+        &remapper,
+    );
+    crate::queue::job_options::judge_into_facts(&mut facts);
     let workers = resolve_workers(&facts, &definitions, resolver, &remapper);
     builder(root, producers, workers, &facts)
 }

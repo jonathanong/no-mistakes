@@ -125,6 +125,7 @@ fn analyze_project_inner<T>(
             &files,
             &mut facts,
         );
+        crate::queue::job_options::stamp(&mut facts, &config.queues);
     }
 
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
@@ -151,5 +152,13 @@ fn analyze_project_inner<T>(
         producers.extend(lang_producers);
         workers.extend(lang_workers);
     }
+    crate::queue::graph_resolution::resolve_job_option_sites(
+        &mut facts,
+        &queue_defs,
+        &definitions,
+        &resolver,
+        &remapper,
+    );
+    crate::queue::job_options::judge_into_facts(&mut facts);
     Ok(builder(root, producers, workers, &facts))
 }

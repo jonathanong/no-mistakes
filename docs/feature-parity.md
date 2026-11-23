@@ -458,7 +458,9 @@ those language `RouteRef` facts into the existing server report. Do not invent
 a second route graph.
 
 **Queues.** `queues edges`, `queues related`, and `queues check` connect
-TS/JS producers to virtual job nodes to workers. Celery, Asynq, Kafka, Active
+TS/JS producers to virtual job nodes to workers. `queues.requiredJobOptions`
+adds `missing-job-option` when a producer omits a configured key; an empty
+list leaves the report unchanged. Celery, Asynq, Kafka, Active
 Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 `queue-worker` edges into `DepGraph`; query those with
 `dependents --relationship queue`. The dedicated `queues` commands project

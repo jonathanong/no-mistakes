@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 #[path = "tests/partial.rs"]
 mod partial;
+mod queue_options;
 
 fn fixture_root(name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(

@@ -54,7 +54,8 @@ pub(super) fn note_queue_binding(
     let Some(arg) = call.arguments.get(index) else {
         return false;
     };
-    if let Some(queue_name) = visitor.literal_arg(arg) {
+    let queue_name = visitor.literal_arg(arg);
+    if let Some(queue_name) = queue_name.clone() {
         visitor.note_queue_declaration(name, declaration, LocalQueue::Known(queue_name));
     } else if let Some(imported) =
         identifier_arg(arg).filter(|name| visitor.facts.string_imports.contains_key(name))
@@ -63,6 +64,13 @@ pub(super) fn note_queue_binding(
     } else {
         return false;
     }
+    super::job_options::note_factory_defaults(
+        visitor,
+        declaration,
+        queue_name.as_deref(),
+        index,
+        call,
+    );
     true
 }
 pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDeclaration<'_>) {
@@ -77,8 +85,12 @@ pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDecl
         let exported = export_name(&spec.exported);
         if visitor.facts.queue_bindings.contains_key(&local) {
             if let Some(queue_name) = visitor.facts.queue_bindings.get(&local).cloned() {
-                visitor.facts.queue_exports.insert(exported, queue_name);
+                visitor
+                    .facts
+                    .queue_exports
+                    .insert(exported.clone(), queue_name);
             }
+            visitor.facts.reexports.push((exported, local));
             continue;
         }
         visitor.facts.reexports.push((exported, local));
@@ -164,6 +176,7 @@ mod index;
 mod job_scope;
 #[path = "extract_factory_scope.rs"]
 mod scope;
+
 pub(super) use calls::{note_factory_call, note_wait, scheduler_factories};
 pub(super) use dedup::{note_self_dedup, visit_variable_declaration};
 pub(super) use index::queue_index;

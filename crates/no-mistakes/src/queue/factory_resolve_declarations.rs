@@ -1,4 +1,4 @@
-use super::{follow, FileFacts, ImportResolverFacade, LocalQueue, ProducerBinding};
+use super::{follow, FileFacts, ImportResolverFacade, LocalQueue, ProducerBinding, Update};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -63,4 +63,57 @@ pub(in crate::queue) fn definition_files(
         }
     }
     out
+}
+
+pub(super) fn star_and_job_updates<R: ImportResolverFacade>(
+    facts: &std::collections::HashMap<PathBuf, FileFacts>,
+    resolver: &R,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
+) -> Vec<Update> {
+    let mut updates = Vec::new();
+    for (path, file) in facts {
+        for specifier in &file.star_exports {
+            let Some(resolved) = resolver
+                .resolve(specifier, path)
+                .and_then(|resolved| remapper.remap(&resolved))
+            else {
+                continue;
+            };
+            let other = &facts[&resolved];
+            for (name, queue_name) in &other.queue_exports {
+                if file.queue_exports.contains_key(name) {
+                    continue;
+                }
+                updates.push(Update::Export {
+                    file: path.clone(),
+                    exported: name.clone(),
+                    queue_name: queue_name.clone(),
+                });
+            }
+        }
+        for (index, producer) in file.producers.iter().enumerate() {
+            if producer.job.is_some() {
+                continue;
+            }
+            let Some(local) = &producer.job_import else {
+                continue;
+            };
+            let Some(job) = super::follow::lookup(
+                facts,
+                resolver,
+                remapper,
+                path,
+                local,
+                super::follow::Want::Either,
+            ) else {
+                continue;
+            };
+            updates.push(Update::ProducerJob {
+                file: path.clone(),
+                index,
+                job,
+            });
+        }
+    }
+    updates
 }

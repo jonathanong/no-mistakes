@@ -463,6 +463,10 @@ queue mixes priority 0 and a priority greater than 0. See
 [queues check](cli/queues-check.md).
 Declaration findings carry fix guidance in `message`;
 no separate JSON field is added.
+`queues.requiredJobOptions` is discovered
+configuration, not an inline `queueCheck()` option. A `missing-job-option`
+finding lists the absent keys in `message`. Abstained calls are omitted from
+the findings array; their warnings stay on the queue report diagnostics.
 
 ## Deprecated APIs
 

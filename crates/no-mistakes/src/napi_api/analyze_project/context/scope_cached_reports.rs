@@ -5,6 +5,7 @@ impl PreparedScope {
             || self.queue_traversal_keys.contains(&key);
         let root = self.traversal.root();
         let tsconfig_catalog = self.traversal.tsconfig_catalog();
+        let config = self.traversal.config();
         let session = self.traversal.session_arc();
         let facts = &self.facts;
         let report = cached_analysis(
@@ -16,6 +17,7 @@ impl PreparedScope {
                 crate::queue::analyze_project_with_prepared_facts_and_catalog_and_session(
                     root,
                     tsconfig_catalog,
+                    config,
                     &options.filters,
                     facts,
                     &session,
@@ -25,6 +27,7 @@ impl PreparedScope {
                 crate::queue::analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
                     root,
                     tsconfig_catalog,
+                    config,
                     &options.filters,
                     facts,
                     &session,

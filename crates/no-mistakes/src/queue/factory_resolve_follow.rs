@@ -1,4 +1,4 @@
-use super::{FileFacts, ImportResolverFacade, Update};
+use super::{FileFacts, ImportResolverFacade};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 pub(in crate::queue) enum Want {
     Queue,
     Either,
+    Definition,
 }
 
 pub(super) fn lookup<R: ImportResolverFacade>(
@@ -16,14 +17,7 @@ pub(super) fn lookup<R: ImportResolverFacade>(
     local: &str,
     want: Want,
 ) -> Option<String> {
-    let mut visited = HashSet::new();
-    Follow {
-        facts,
-        resolver,
-        remapper,
-        visited: &mut visited,
-    }
-    .resolve(path, local, want)
+    Follow::new(facts, resolver, remapper).resolve(path, local, want)
 }
 
 pub(super) fn reexport_queue<R: ImportResolverFacade>(
@@ -61,70 +55,44 @@ pub(in crate::queue) fn lookup_export<R: ImportResolverFacade>(
     imported: &str,
     want: Want,
 ) -> Option<String> {
-    let mut visited = HashSet::new();
-    Follow {
-        facts,
-        resolver,
-        remapper,
-        visited: &mut visited,
-    }
-    .follow_source(path, specifier, imported, want)
+    Follow::new(facts, resolver, remapper).follow_source(path, specifier, imported, want)
 }
 
-pub(super) fn star_and_job_updates<R: ImportResolverFacade>(
+pub(in crate::queue) fn lookup_queue_origin<R: ImportResolverFacade>(
     facts: &std::collections::HashMap<PathBuf, FileFacts>,
     resolver: &R,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
-) -> Vec<Update> {
-    let mut updates = Vec::new();
-    for (path, file) in facts {
-        for specifier in &file.star_exports {
-            let Some(resolved) = resolver
-                .resolve(specifier, path)
-                .and_then(|resolved| remapper.remap(&resolved))
-            else {
-                continue;
-            };
-            let other = &facts[&resolved];
-            for (name, queue_name) in &other.queue_exports {
-                if file.queue_exports.contains_key(name) {
-                    continue;
-                }
-                updates.push(Update::Export {
-                    file: path.clone(),
-                    exported: name.clone(),
-                    queue_name: queue_name.clone(),
-                });
-            }
-        }
-        for (index, producer) in file.producers.iter().enumerate() {
-            if producer.job.is_some() {
-                continue;
-            }
-            let Some(local) = &producer.job_import else {
-                continue;
-            };
-            let Some(job) = lookup(facts, resolver, remapper, path, local, Want::Either) else {
-                continue;
-            };
-            updates.push(Update::ProducerJob {
-                file: path.clone(),
-                index,
-                job,
-            });
-        }
-    }
-    updates
+    path: &Path,
+    local: &str,
+) -> Option<(PathBuf, String)> {
+    let mut follow = Follow::new(facts, resolver, remapper);
+    let value = follow.resolve(path, local, Want::Definition)?;
+    Some((follow.origin?, value))
 }
 
 struct Follow<'a, R: ImportResolverFacade> {
     facts: &'a std::collections::HashMap<PathBuf, FileFacts>,
     resolver: &'a R,
     remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
-    visited: &'a mut HashSet<(PathBuf, String)>,
+    visited: HashSet<(PathBuf, String)>,
+    origin: Option<PathBuf>,
 }
 
-impl<R: ImportResolverFacade> Follow<'_, R> {
+impl<'a, R: ImportResolverFacade> Follow<'a, R> {
+    fn new(
+        facts: &'a std::collections::HashMap<PathBuf, FileFacts>,
+        resolver: &'a R,
+        remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
+    ) -> Self {
+        Self {
+            facts,
+            resolver,
+            remapper,
+            visited: HashSet::new(),
+            origin: None,
+        }
+    }
+
     fn resolve(&mut self, path: &Path, local: &str, want: Want) -> Option<String> {
         let file = self.facts.get(path)?;
         // A local import wins over an `export { ... as local } from` of the same name.
@@ -156,8 +124,12 @@ impl<R: ImportResolverFacade> Follow<'_, R> {
 
     fn export_named(&mut self, path: &Path, imported: &str, want: Want) -> Option<String> {
         let other = self.facts.get(path)?;
-        if let Some(value) = direct_export(other, imported, want) {
-            return Some(value);
+        let direct = match want {
+            Want::Definition => self.local_definition(path, other, imported),
+            _ => direct_export(other, imported, want),
+        };
+        if direct.is_some() {
+            return direct;
         }
         if let Some((specifier, name)) = other.export_from.get(imported).cloned() {
             if let Some(value) = self.follow_source(path, &specifier, &name, want) {
@@ -186,11 +158,34 @@ impl<R: ImportResolverFacade> Follow<'_, R> {
         }
         None
     }
+
+    fn local_definition(&mut self, path: &Path, file: &FileFacts, name: &str) -> Option<String> {
+        if file.export_from.contains_key(name) {
+            return None;
+        }
+        file.queue_exports.get(name)?;
+        let local = file
+            .reexports
+            .iter()
+            .find(|(exported, _)| exported == name)
+            .map_or(name, |(_, local)| local);
+        if let Some(queue_name) = file.queue_bindings.get(local) {
+            self.origin = Some(path.to_path_buf());
+            return Some(queue_name.clone());
+        }
+        if local != name && self.visited.insert((path.to_path_buf(), local.to_string())) {
+            return self
+                .resolve(path, local, Want::Definition)
+                .or_else(|| self.export_named(path, local, Want::Definition));
+        }
+        None
+    }
 }
 
 fn direct_export(file: &FileFacts, imported: &str, want: Want) -> Option<String> {
     match want {
         Want::Queue => file.queue_exports.get(imported).cloned(),
+        Want::Definition => None,
         Want::Either => file
             .exported_strings
             .get(imported)

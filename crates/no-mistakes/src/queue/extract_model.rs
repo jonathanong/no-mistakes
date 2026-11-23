@@ -1,6 +1,12 @@
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
+mod job_options;
+pub(crate) use job_options::{
+    JobOptionEvidence, JobOptionFinding, JobOptionSite, JobOptionSpread, QueueDefaultOptions,
+    RequiredJobOptions,
+};
+
 #[derive(Debug, Clone)]
 pub(crate) struct ImportBinding {
     pub local: String,
@@ -116,4 +122,8 @@ pub(crate) struct FileFacts {
     pub opaque_priority_bindings: HashSet<ProducerBinding>,
     /// Resolved `(queue file, queue name)` pairs filled after binding resolution.
     pub opaque_priority_queues: Vec<(PathBuf, String)>,
+    pub job_option_sites: Vec<JobOptionSite>,
+    pub queue_defaults: Vec<QueueDefaultOptions>,
+    pub job_option_findings: Vec<JobOptionFinding>,
+    pub required_job_options: Option<RequiredJobOptions>,
 }

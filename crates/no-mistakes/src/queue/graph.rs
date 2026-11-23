@@ -1,3 +1,4 @@
+use crate::config::v2::NoMistakesConfig;
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_build::{build_prepared_report, build_report};
 use crate::queue::graph_model::PreparedProjectReport;
@@ -41,6 +42,8 @@ pub fn analyze_project_indexed(
     standalone::analyze_project_indexed(&root, tsconfig_path, filters, snapshot)
 }
 
+/// Analyze shared facts with a single TypeScript resolver. For caller-selected
+/// queue policy, use the catalog-aware prepared entry point.
 pub fn analyze_project_with_facts(
     root: &Path,
     tsconfig_path: Option<&Path>,
@@ -66,7 +69,7 @@ fn analyze_project_with_facts_inner<T>(
     let root = root.as_path();
     let tsconfig = load_tsconfig_from_visible(root, tsconfig_path, shared.files())?;
     let filter = build_filter(filters)?;
-    Ok(resolve_queue_relationships(
+    Ok(resolve_legacy_queue_relationships(
         root,
         &tsconfig,
         filter.as_ref(),
@@ -77,9 +80,8 @@ fn analyze_project_with_facts_inner<T>(
 
 /// Analyze shared queue facts with a TypeScript config already prepared by the caller.
 ///
-/// Legacy callers use this entrypoint with one caller-selected config. Aggregate
-/// checks use the catalog-aware entrypoint below so each importer selects its
-/// visible workspace config.
+/// Aggregate checks use the catalog-aware entry point below, which accepts the
+/// selected queue policy and resolves aliases with each importer's workspace config.
 #[doc(hidden)]
 pub fn analyze_project_with_prepared_facts(
     root: &Path,
@@ -98,17 +100,19 @@ pub fn analyze_project_with_prepared_facts(
 pub fn analyze_project_with_prepared_facts_and_catalog_and_session(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    config: &NoMistakesConfig,
     filters: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> anyhow::Result<ProjectReport> {
-    catalog::analyze(root, tsconfig_catalog, filters, shared, session)
+    catalog::analyze(root, tsconfig_catalog, config, filters, shared, session)
 }
 
 #[doc(hidden)]
 pub fn analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    config: &NoMistakesConfig,
     filters: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -116,6 +120,7 @@ pub fn analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
     catalog::analyze_with(
         root,
         tsconfig_catalog,
+        config,
         filters,
         shared,
         session,
@@ -154,7 +159,7 @@ fn analyze_project_with_prepared_facts_inner<T>(
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let root = root.as_path();
     let filter = build_filter(filters)?;
-    Ok(resolve_queue_relationships(
+    Ok(resolve_legacy_queue_relationships(
         root,
         tsconfig,
         filter.as_ref(),
@@ -163,7 +168,7 @@ fn analyze_project_with_prepared_facts_inner<T>(
     ))
 }
 
-fn resolve_queue_relationships<T>(
+fn resolve_legacy_queue_relationships<T>(
     root: &Path,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     filter: Option<&globset::GlobSet>,
