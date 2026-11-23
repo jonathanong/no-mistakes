@@ -334,6 +334,12 @@ repository. An unconditional foreign root checkout invalidates all paths' readin
 Findings point to the local `uses:` line; see [the rule](../rules/github-actions-local-action-checkout.md)
 for sparse checkout coverage and suppression.
 
+Enable [`github-actions-run-command-policy`](../rules/github-actions-run-command-policy.md)
+with `options.commands` to require arguments or argument pairs and forbid
+argument patterns on configured commands inside workflow and composite-action
+`run` scripts. Unparsable commands (`eval`, dynamic command names, or
+unterminated shell syntax) abstain with an advisory diagnostic by default.
+
 Enable [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md)
 with `options.minimumDays` to require a cooldown on every applicable entry in
 `.github/dependabot.yml` and `.github/dependabot.yaml`; both files are checked

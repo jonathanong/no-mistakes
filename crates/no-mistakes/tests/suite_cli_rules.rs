@@ -171,6 +171,8 @@ mod cli_gha_snapshot_job_permissions;
 mod cli_gha_snapshot_job_timeouts;
 #[path = "cli_gha_snapshot_pinned_hash.rs"]
 mod cli_gha_snapshot_pinned_hash;
+#[path = "cli_gha_snapshot_run_command_policy.rs"]
+mod cli_gha_snapshot_run_command_policy;
 #[path = "cli_gha_snapshot_script_expressions.rs"]
 mod cli_gha_snapshot_script_expressions;
 #[path = "cli_gha_snapshot_step_timeouts.rs"]

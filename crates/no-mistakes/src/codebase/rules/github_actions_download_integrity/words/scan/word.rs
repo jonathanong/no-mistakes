@@ -52,17 +52,33 @@ impl Scan<'_> {
         }
         if ch == '`' {
             self.current.dynamic = true;
+            if let Some((start, start_line)) = self.backtick_start.take() {
+                let body: String = self.chars[start..self.index].iter().collect();
+                self.substitutions.push((start_line, body));
+            } else {
+                self.backtick_start = Some((self.index + 1, self.line));
+            }
             self.in_backticks = !self.in_backticks;
         }
         if ch != '$' || !matches!(self.chars.get(self.index + 1), Some(&'(' | &'{')) {
             return false;
         }
-        self.current.dynamic |=
-            self.chars[self.index + 1] == '(' || self.quoting != Some('"') || reference.is_none();
+        let open = self.chars[self.index + 1];
+        self.current.dynamic |= open == '(' || self.quoting != Some('"') || reference.is_none();
         if self.word.is_empty() {
             self.word_line = self.line;
         }
-        self.index = take_expansion(self.chars, self.index, &mut self.word, &mut self.line);
+        let body_start = self.index + 2;
+        let body_line = self.line;
+        let (next, terminated) =
+            take_expansion(self.chars, self.index, &mut self.word, &mut self.line);
+        if !terminated {
+            self.unterminated_substitution = true;
+        } else if open == '(' && self.chars.get(body_start) != Some(&'(') {
+            let body: String = self.chars[body_start..next - 1].iter().collect();
+            self.substitutions.push((body_line, body));
+        }
+        self.index = next;
         true
     }
 

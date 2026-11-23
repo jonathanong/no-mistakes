@@ -50,6 +50,7 @@ mod candidate_index;
 pub(super) mod dependabot_cooldown_policy;
 mod entrypoints;
 mod execute;
+pub mod github_actions_run_command_policy;
 mod inventory;
 mod markdown_dispatch;
 mod metadata;
@@ -115,6 +116,8 @@ pub(super) const GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES: &str =
     github_actions_max_inline_script_lines::RULE_ID;
 pub(super) const GITHUB_ACTIONS_STEP_TIMEOUTS: &str = github_actions_step_timeouts::RULE_ID;
 pub(super) const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
+pub(super) const GITHUB_ACTIONS_RUN_COMMAND_POLICY: &str =
+    github_actions_run_command_policy::RULE_ID;
 pub(super) const GITHUB_ACTIONS_SCRIPT_EXPRESSIONS: &str =
     github_actions_script_expressions::RULE_ID;
 pub(super) const GITHUB_ACTIONS_CHECKOUT_CREDENTIALS: &str =

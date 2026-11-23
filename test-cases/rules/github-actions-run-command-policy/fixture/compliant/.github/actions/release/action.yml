@@ -1,0 +1,7 @@
+name: Compliant helper
+description: Composite action with compliant calls
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: gh api --method GET -f x=1 repos/my-org/my-repo/labels

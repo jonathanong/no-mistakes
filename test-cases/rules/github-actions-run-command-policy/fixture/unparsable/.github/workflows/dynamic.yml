@@ -1,0 +1,14 @@
+name: Unparsable
+on: push
+jobs:
+  dynamic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dynamic command name
+        run: $CMD api -f x=1 repos/my-org/my-repo/labels
+      - name: Eval invocation
+        run: eval "gh api -f x=1 repos/my-org/my-repo/labels"
+      - name: Unterminated quote
+        run: gh api "repos/my-org/my-repo/labels
+      - name: Dynamic shell -c
+        run: bash -c "$SCRIPT"

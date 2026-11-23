@@ -27,6 +27,9 @@ struct Scan<'a> {
     collect_skips: bool,
     skip_lines: Vec<usize>,
     in_backticks: bool,
+    backtick_start: Option<(usize, usize)>,
+    unterminated_substitution: bool,
+    substitutions: Vec<(usize, String)>,
 }
 
 pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
@@ -57,6 +60,9 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
         collect_skips,
         skip_lines: Vec::new(),
         in_backticks: false,
+        backtick_start: None,
+        unterminated_substitution: false,
+        substitutions: Vec::new(),
     };
     while scan.index < scan.chars.len() && !scan.step() {}
     scan.flush_word();
@@ -64,6 +70,9 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
     Parse {
         commands: scan.commands,
         unterminated_heredoc: scan.unterminated || scan.pending.is_some(),
+        unterminated_quote: scan.quoting.is_some(),
+        unterminated_substitution: scan.unterminated_substitution || scan.in_backticks,
+        substitutions: scan.substitutions,
         skip_lines: scan.skip_lines,
         heredoc_ranges: scan.heredoc_ranges,
     }

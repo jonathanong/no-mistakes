@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: github-actions-run-command-policy
+    scope: repository
+    options:
+      commands: []

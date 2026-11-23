@@ -198,6 +198,14 @@ invalidates every path. Conditional, nonroot, and noncovering self checkouts
 preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
 in-process queries. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
 
+For `github-actions-run-command-policy`, declare `options.commands` with the
+exact command tokens, `valueFlags`, `whenAnyArgs`, `requireArgs`,
+`requireAnyArgs`, and `forbidArgPatterns` to enforce. Commands the shared
+script parser cannot analyze statically (dynamic command names, `eval`,
+dynamic `sh -c`, or unterminated quotes or here-documents) abstain with an advisory
+diagnostic rather than failing the check unless `options.unanalyzable: report`
+is set. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-run-command-policy.md).
+
 For `dependabot-cooldown-policy`, set `options.minimumDays` and run
 `check --root <root> --format json`. Add `cooldown.default-days` and raise
 any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.

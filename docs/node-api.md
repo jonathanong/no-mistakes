@@ -978,6 +978,14 @@ export, option type, or report field is needed.
 unanalyzable policy as CLI `check`. Use the exported
 `GithubActionsPinnedHashOptions` type when authoring the option object.
 
+The opt-in [`github-actions-run-command-policy`](rules/github-actions-run-command-policy.md)
+runs through async `check()` and `analyzeProject()` check reports with the same
+outcome as CLI `check`. Exported `GithubActionsRunCommandPolicyOptions`,
+`GithubActionsRunCommandPolicy`, `GithubActionsRunCommandForbiddenPattern`,
+`GithubActionsRunCommandArg`, and `GithubActionsRunCommandArgScope` describe
+its YAML options. Policy violations appear in `CheckReport.rules` and abstained
+unparsable-command diagnostics appear in `CheckReport.advisories` by default.
+
 The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
 runs through async `check()` and `analyzeProject()` check reports with the
 same outcome as CLI `check`. Configure it in the YAML selected by `config`.

@@ -1,0 +1,20 @@
+name: Reported
+on: push
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Field without method
+        run: gh api -f x=1 repos/my-org/my-repo/labels
+      - name: Typed field without method
+        run: gh api -F per_page=100 repos/my-org/my-repo/labels
+      - name: Query string in endpoint
+        run: gh api "repos/my-org/my-repo/labels?per_page=100"
+      - name: Commit without hooks-path flag
+        run: 'git commit -m "chore: update"'
+      - name: Commit with -C but without hooks-path flag
+        run: 'git -C packages/app commit -m "chore: update"'
+      - name: Command substitution violation
+        run: |
+          LABELS=$(gh api -f x=1 repos/my-org/my-repo/labels)
+          echo "$LABELS"

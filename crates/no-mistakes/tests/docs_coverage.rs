@@ -310,6 +310,13 @@ fn github_actions_local_action_checkout_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn github_actions_run_command_policy_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_RUN_COMMAND_POLICY;
+    assert_eq!(rule, "github-actions-run-command-policy");
+    docs_coverage_rules::assert_run_command_policy_docs(&repo_root(), rule);
+}
+
+#[test]
 fn dependabot_cooldown_policy_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::DEPENDABOT_COOLDOWN_POLICY;
     assert_eq!(rule, "dependabot-cooldown-policy");
