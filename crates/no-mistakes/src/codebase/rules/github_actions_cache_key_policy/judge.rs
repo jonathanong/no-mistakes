@@ -4,17 +4,7 @@ use super::scan::{Field, Job, Step};
 use super::text::{has_fragment, hash_args, norm_path, path_entries};
 use super::{hit, RuleFinding};
 
-#[cfg(test)]
 pub(super) fn judge(
-    rel: &str,
-    jobs: &[Job],
-    options: &Options,
-    actions: &dyn Fn(&str) -> Option<String>,
-) -> Vec<RuleFinding> {
-    judge_with_message(rel, jobs, options, None, actions)
-}
-
-pub(super) fn judge_with_message(
     rel: &str,
     jobs: &[Job],
     options: &Options,

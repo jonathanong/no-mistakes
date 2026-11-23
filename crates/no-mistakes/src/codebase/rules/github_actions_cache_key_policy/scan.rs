@@ -8,7 +8,7 @@ pub(super) struct Field {
     pub value: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(super) struct Step {
     pub line: usize,
     pub id: Option<String>,
@@ -17,20 +17,6 @@ pub(super) struct Step {
     pub path: Option<Field>,
     pub key: Option<Field>,
     pub restore_keys: Option<Field>,
-}
-
-impl Step {
-    pub(super) fn blank(line: usize) -> Self {
-        Self {
-            line,
-            id: None,
-            uses: None,
-            run: None,
-            path: None,
-            key: None,
-            restore_keys: None,
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -66,7 +52,9 @@ pub(super) fn analyze(source: &str, action: bool, configured: &[String]) -> Docu
         .flat_map(|job| &job.steps)
         .filter(|step| step.uses.as_deref().is_some_and(is_cache_action))
         .count();
-    if seen == cache_count(&value, action) || !configured_path(&value, &jobs, action, configured) {
+    let (serde_hits, walked_hits) = configured_hits(&value, &jobs, action, configured);
+    let aligned = seen == cache_count(&value, action) && serde_hits == walked_hits;
+    if aligned || (serde_hits.is_empty() && walked_hits.is_empty()) {
         Document::Jobs(jobs)
     } else {
         Document::Unaligned
@@ -82,52 +70,56 @@ fn map_jobs(jobs: Vec<step_lines::Job>) -> Vec<Job> {
 }
 
 fn map_step(step: step_lines::Step) -> Step {
-    let mut out = Step::blank(step.line);
+    let mut out = Step {
+        line: step.line,
+        ..Step::default()
+    };
     for field in step.fields {
-        let line = field.value_line;
         match field.name.as_str() {
             "id" => out.id = Some(field.value),
             "uses" => out.uses = Some(field.value),
             "run" => out.run = Some(field.value),
-            "path" => {
-                out.path = Some(Field {
-                    line,
-                    value: field.value,
-                })
-            }
-            "key" => {
-                out.key = Some(Field {
-                    line,
-                    value: field.value,
-                })
-            }
-            "restore-keys" => {
-                out.restore_keys = Some(Field {
-                    line,
-                    value: field.value,
-                })
-            }
+            "path" => out.path = make_field(field),
+            "key" => out.key = make_field(field),
+            "restore-keys" => out.restore_keys = make_field(field),
             _ => {}
         }
     }
     out
 }
 
-fn configured_path(value: &Value, jobs: &[Job], action: bool, configured: &[String]) -> bool {
+fn make_field(field: step_lines::Field) -> Option<Field> {
+    Some(Field {
+        line: field.value_line,
+        value: field.value,
+    })
+}
+
+fn configured_hits(
+    value: &Value,
+    jobs: &[Job],
+    action: bool,
+    configured: &[String],
+) -> (Vec<String>, Vec<String>) {
     if configured.is_empty() {
-        return false;
+        return (Vec::new(), Vec::new());
     }
-    serde_paths(value, action)
+    let keep = |paths: Vec<String>| {
+        let mut hits: Vec<String> = paths
+            .into_iter()
+            .filter(|path| configured.iter().any(|item| item == path))
+            .collect();
+        hits.sort();
+        hits
+    };
+    let walked = jobs
         .iter()
-        .any(|path| configured.iter().any(|item| item == path))
-        || jobs.iter().flat_map(|job| &job.steps).any(|step| {
-            step.uses.as_deref().is_some_and(is_cache_action)
-                && step.path.as_ref().is_some_and(|field| {
-                    path_entries(&field.value)
-                        .iter()
-                        .any(|path| configured.iter().any(|item| item == path))
-                })
-        })
+        .flat_map(|job| &job.steps)
+        .filter(|step| step.uses.as_deref().is_some_and(is_cache_action))
+        .filter_map(|step| step.path.as_ref())
+        .flat_map(|field| path_entries(&field.value))
+        .collect();
+    (keep(serde_paths(value, action)), keep(walked))
 }
 
 fn serde_paths(value: &Value, action: bool) -> Vec<String> {

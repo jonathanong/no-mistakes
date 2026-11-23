@@ -122,7 +122,7 @@ fn evaluate(
             "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.".into(),
         )],
         scan::Document::Jobs(jobs) => {
-            judge::judge_with_message(rel, &jobs, options, rule_message, &|uses| {
+            judge::judge(rel, &jobs, options, rule_message, &|uses| {
                 read_local_action(root, sources, uses)
             })
         }

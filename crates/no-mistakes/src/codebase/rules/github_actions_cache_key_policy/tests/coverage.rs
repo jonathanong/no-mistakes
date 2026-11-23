@@ -261,6 +261,7 @@ fn block_scalars_flow_with_and_blank_restore_keys_keep_their_text() {
         "ci.yml",
         &jobs,
         &policy(&["runner.os", "runner.arch"]),
+        None,
         &|_| None,
     );
     let messages: Vec<_> = findings

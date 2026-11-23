@@ -49,6 +49,6 @@ test(
   "forbidden cache paths policy agrees across async Node APIs and CLI",
   { skip: !addon?.endsWith(".node") },
   async () => {
-    await assertCheckParity("forbidden-paths", "forbidden-paths-custom-message.yml", 6);
+    await assertCheckParity("forbidden-paths", "forbidden-paths-custom-message.yml", 8);
   },
 );

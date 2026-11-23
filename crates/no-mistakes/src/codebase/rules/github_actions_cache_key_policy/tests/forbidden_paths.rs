@@ -62,7 +62,7 @@ fn forbidden_paths_options_validate_emptiness_duplicates_overlap_and_messages() 
 #[test]
 fn forbidden_paths_reports_workflows_and_composite_actions_and_respects_messages() {
     let default_findings = super::rows("forbidden-paths", "forbidden-paths");
-    assert_eq!(default_findings.len(), 6, "{default_findings:?}");
+    assert_eq!(default_findings.len(), 8, "{default_findings:?}");
     super::assert_needles(
         &default_findings,
         "cache.yml",
@@ -75,18 +75,21 @@ fn forbidden_paths_reports_workflows_and_composite_actions_and_respects_messages
     );
     super::assert_needles(
         &default_findings,
-        "store-cache/action.yml",
+        "/store-cache/action.yml",
         &["Caching `~/.local/share/example-store` is forbidden"],
     );
-    super::assert_needles(
-        &default_findings,
+    for file in [
         "unaligned-forbidden.yml",
-        &["could not be aligned"],
-    );
+        "aliased-path.yml",
+        "aliased-store-cache/action.yml",
+    ] {
+        super::assert_needles(&default_findings, file, &["could not be aligned"]);
+    }
+    super::assert_silent(&default_findings, "aliased-other-path.yml");
     super::assert_silent(&default_findings, "node-store/action.yml");
 
     let custom_findings = super::rows("forbidden-paths", "forbidden-paths-custom-message");
-    assert_eq!(custom_findings.len(), 6, "{custom_findings:?}");
+    assert_eq!(custom_findings.len(), 8, "{custom_findings:?}");
     assert_eq!(
         custom_findings
             .iter()
@@ -99,7 +102,7 @@ fn forbidden_paths_reports_workflows_and_composite_actions_and_respects_messages
     );
 
     let rule_msg_findings = super::rows("forbidden-paths", "forbidden-paths-rule-message");
-    assert_eq!(rule_msg_findings.len(), 6, "{rule_msg_findings:?}");
+    assert_eq!(rule_msg_findings.len(), 8, "{rule_msg_findings:?}");
     assert_eq!(
         rule_msg_findings
             .iter()
@@ -140,7 +143,7 @@ jobs:
         forbidden_paths_message: Some("Forbidden store path.".into()),
         ..options::Options::default()
     };
-    let findings = judge::judge_with_message(
+    let findings = judge::judge(
         ".github/workflows/mixed.yml",
         &jobs,
         &options,

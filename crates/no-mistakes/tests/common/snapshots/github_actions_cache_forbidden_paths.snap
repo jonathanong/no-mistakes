@@ -12,11 +12,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/actions/aliased-store-cache/action.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Aliased Composite Store Cache"
+        },
+        {
           "file": ".github/actions/store-cache/action.yml",
           "line": 8,
           "message": "Do not cache the example store; delete this cache step.",
           "rule": "github-actions-cache-key-policy",
           "sourceLine": "path: ~/.local/share/example-store"
+        },
+        {
+          "file": ".github/workflows/aliased-path.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Aliased Forbidden Path"
         },
         {
           "file": ".github/workflows/cache.yml",
@@ -67,11 +81,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/actions/aliased-store-cache/action.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Aliased Composite Store Cache"
+        },
+        {
           "file": ".github/actions/store-cache/action.yml",
           "line": 8,
           "message": "Caching `~/.local/share/example-store` is forbidden by forbiddenPaths. Delete this cache step or remove `~/.local/share/example-store` from its path input.",
           "rule": "github-actions-cache-key-policy",
           "sourceLine": "path: ~/.local/share/example-store"
+        },
+        {
+          "file": ".github/workflows/aliased-path.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Aliased Forbidden Path"
         },
         {
           "file": ".github/workflows/cache.yml",
@@ -122,11 +150,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/actions/aliased-store-cache/action.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Aliased Composite Store Cache"
+        },
+        {
           "file": ".github/actions/store-cache/action.yml",
           "line": 8,
           "message": "Store caching is disabled in this repository; delete this step.",
           "rule": "github-actions-cache-key-policy",
           "sourceLine": "path: ~/.local/share/example-store"
+        },
+        {
+          "file": ".github/workflows/aliased-path.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Aliased Forbidden Path"
         },
         {
           "file": ".github/workflows/cache.yml",

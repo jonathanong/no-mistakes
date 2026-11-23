@@ -1,0 +1,12 @@
+name: Aliased Unconfigured Path
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    env:
+      OTHER: &other ~/.local/share/other-store
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: *other
+          key: other-${{ runner.os }}
