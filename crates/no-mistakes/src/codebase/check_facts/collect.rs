@@ -57,6 +57,7 @@ fn collect_check_facts_inner(
         call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),
         vitest_default_exclude_paths: Arc::clone(&plan.vitest_default_exclude_paths),
+        test_reliability_paths: Arc::clone(&plan.test_reliability_paths),
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
     };

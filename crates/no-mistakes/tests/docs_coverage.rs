@@ -32,6 +32,8 @@ use cli_docs_helpers::{
 mod docs_coverage_commands;
 #[path = "support/docs_coverage_rules.rs"]
 mod docs_coverage_rules;
+#[path = "support/docs_coverage_test_reliability.rs"]
+mod docs_coverage_test_reliability;
 
 #[test]
 fn ast_grep_ignore_freshness_documents_tracked_inventory_controls() {

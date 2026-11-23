@@ -36,6 +36,8 @@ pub(super) fn prepare_call_site_facts(
     plan.require_call_site_paths(&call_site_files);
     plan.vitest_default_exclude_paths =
         super::vitest_default_excludes::required_files(root, config, files)?;
+    plan.test_reliability_paths =
+        super::test_reliability::required_files(root, config, files, sources)?;
     let lock_inventory_helpers = crate::codebase::postgres::helper_call_site_files(
         root,
         config,
@@ -54,6 +56,7 @@ pub(super) fn prepare_call_site_facts(
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if plan.lint_suppression_paths.is_empty()
         && plan.vitest_default_exclude_paths.is_empty()
+        && plan.test_reliability_paths.is_empty()
         && !needs_call_sites
         && plan.companion_import_plans.is_empty()
         && plan.production_import_paths.is_empty()
@@ -68,6 +71,7 @@ pub(super) fn prepare_call_site_facts(
     files.extend(lock_inventory_helpers);
     files.extend(plan.lint_suppression_paths.iter().cloned());
     files.extend(plan.vitest_default_exclude_paths.iter().cloned());
+    files.extend(plan.test_reliability_paths.keys().cloned());
     files.extend(plan.production_import_paths.iter().cloned());
     if plan.postgres_schema || plan.postgres_dml {
         files.extend(crate::codebase::postgres::postgres_sql_paths(

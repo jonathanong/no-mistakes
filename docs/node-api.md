@@ -450,7 +450,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check`                                    | `check(options)` (including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
+| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `vitest-default-excludes`, and `vitest-project-policy` |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -538,7 +538,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
+| `check` | `check(options)` uses `checkJson` for configured rules, including `playwright-no-serial` and `test-no-retries`. Reports may include `CheckReport.incomplete` (`CheckFailure[]`) and `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`). |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
@@ -1048,6 +1048,15 @@ report dynamic projects as incomplete. Selected config/helper sources that canno
 be read or parsed, and unresolved effective-policy values, are returned as
 `CheckReport.incomplete` (`CheckFailure[]`). Application include/exclude filters
 and source suppressions apply to declaration diagnostics.
+
+### Test reliability rules
+
+[`test-no-retries`](rules/test-no-retries.md) and
+[`playwright-no-serial`](rules/playwright-no-serial.md) run through asynchronous
+`check()` and batched `analyzeProject()` check queries using the existing
+`checkJson` binding. Import `TestNoRetriesOptions`, `PlaywrightNoSerialOptions`,
+and `TestReliabilityAllowlistEntry` from `no-mistakes` to type rule options.
+Both rules return standard `RuleFinding` entries.
 
 PostgreSQL executor options accept `extraExecutorNames` in the asynchronous
 Node APIs, including `extractExecutedPostgresSql`. Each also accepts

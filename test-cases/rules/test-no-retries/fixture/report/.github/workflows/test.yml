@@ -1,0 +1,34 @@
+name: Test
+on: push
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nick-fields/retry@v3
+        with:
+          command: pnpm test:unit
+          max_attempts: 2
+          timeout_minutes: 3
+      - run: |
+          for attempt in 1 2 3; do
+            pnpm test:unit -- --changed && break
+          done
+      - run: |
+          for attempt in 1 2 3; do
+            pnpm test:nonmatching && break
+          done
+      - run: |
+          until pnpm test:unit; do
+            echo "Rerunning unit tests"
+          done
+      - run: |
+          for browser in chromium firefox; do
+            pnpm test:unit -- --browser "$browser"
+          done
+      - run: pnpm test:unit
+      - run: |
+          cat <<'RETRY_EXAMPLE'
+          for attempt in 1 2 3; do
+            pnpm test:unit && break
+          done
+          RETRY_EXAMPLE

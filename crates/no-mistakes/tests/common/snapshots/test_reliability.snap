@@ -1,0 +1,657 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowlist": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 12,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 20,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/unit.config.ts",
+          "line": 5,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retry: 2,",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 5,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 6,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: false,",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 5,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.serial(\"checkout\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 3,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "describe(\"checkout\", { retry: 2 }, () => {",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 6,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"falls back to cash\", { retry: process.env.CI ? 2 : 0 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/globals.test.ts",
+          "line": 2,
+          "message": "Vitest retry configures a retry count of 3. Keep retries at or below 2 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test(\"exceeds the project cap\", { retry: 3 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 3,
+          "message": "Jest retryTimes configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(3);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 5,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(retriesFromEnvironment);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 6,
+          "message": "Jest retryTimes configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(2);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/mixed.test.ts",
+          "line": 5,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"checks receipt formatting\", { retry: 2 }, () => {});",
+          "target": "Vitest retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "blank-reason": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "test-no-retries",
+          "message": "test-no-retries: allowlist[0]: reason must not be blank"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 12,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 20,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 7,
+          "message": "GitHub Actions retry action configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "GitHub Actions retry action"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/unit.config.ts",
+          "line": 5,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retry: 2,",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "config/unit.config.ts",
+          "line": 8,
+          "message": "Vitest test.retry configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ test: { name: \"approved\", retry: 3 } },",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "legacy/playwright.config.cjs",
+          "line": 2,
+          "message": "Playwright retries configures a retry count of 4. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retries: 4,",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "legacy/playwright.config.cjs",
+          "line": 3,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright retries configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retries: 1,",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 5,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 6,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: false,",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 9,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"approved\", retries: 3, workers: 1, fullyParallel: false },",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 9,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"approved\", retries: 3, workers: 1, fullyParallel: false },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 9,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"approved\", retries: 3, workers: 1, fullyParallel: false },",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 5,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.serial(\"checkout\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 3,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "describe(\"checkout\", { retry: 2 }, () => {",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 4,
+          "message": "Vitest retry configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"shows a receipt\", { retry: 1 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 6,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"falls back to cash\", { retry: process.env.CI ? 2 : 0 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/excluded.spec.ts",
+          "line": 3,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.serial(\"exclusive scenario\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/external.test.ts",
+          "line": 3,
+          "message": "Vitest retry configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test(\"opens a remote browser\", { retry: 3 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 3,
+          "message": "Jest retryTimes configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(3);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 5,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(retriesFromEnvironment);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 6,
+          "message": "Jest retryTimes configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(2);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/mixed.test.ts",
+          "line": 5,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"checks receipt formatting\", { retry: 2 }, () => {});",
+          "target": "Vitest retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "broken.spec.ts",
+          "message": "parsing broken.spec.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 13, end: 14 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }. Repair this file so playwright-no-serial can verify its test settings."
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": ".github/workflows/broken.yml",
+          "message": "did not find expected node content at line 3 column 1, while parsing a flow node. Repair this file so test-no-retries can verify its test settings."
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "broken.spec.ts",
+          "message": "parsing broken.spec.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 13, end: 14 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }. Repair this file so test-no-retries can verify its test settings."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "valid.spec.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "valid.spec.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "static-shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "__tests__/globals.ts",
+          "line": 3,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(-1);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "__tests__/globals.ts",
+          "line": 4,
+          "message": "Jest retryTimes configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(0x02);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "__tests__/globals.ts",
+          "line": 5,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(inCI ? maxAttempts : 0);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "__tests__/globals.ts",
+          "line": 6,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(inCI ? 0 : maxAttempts);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 2,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: inCI ? 2 : 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 3,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: inCI ? false : true,",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 5,
+          "message": "Playwright retries configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: projectName, retries: 2.5 },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 6,
+          "message": "Playwright retries configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"unlimited\", retries: 1e30 },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/common.cjs",
+          "line": 1,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "const settings = { retries: 3, workers: 1 };",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "config/common.cjs",
+          "line": 1,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "const settings = { retries: 3, workers: 1 };",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/opaque-projects/vitest.config.ts",
+          "line": 1,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "export default { test: { retry: 2, projects: loadProjects() } };",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "scripts/quality.ts",
+          "line": 3,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "playwright.test.describe[\"configure\"]({ mode: inCI ? \"parallel\" : \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/excluded.spec.ts",
+          "line": 5,
+          "message": "Vitest retry configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "it(\"renders the outline\", { retry: 3 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "vite.config.ts",
+          "line": 3,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "const inline = vitest.defineProject({ test: { [\"retry\"]: +2 } });",
+          "target": "Vitest test.retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow-action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 17,
+          "message": "GitHub Actions retry action configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "GitHub Actions retry action"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 25,
+          "message": "GitHub Actions retry action configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: Wandalen/wretry.action/main@v3",
+          "target": "GitHub Actions retry action"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 7,
+          "message": "GitHub Actions retry action configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "GitHub Actions retry action"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

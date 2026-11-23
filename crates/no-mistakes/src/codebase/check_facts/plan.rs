@@ -14,6 +14,10 @@ pub struct CheckFactPlan {
     pub lint_suppression_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     #[doc(hidden)]
     pub vitest_default_exclude_paths: Arc<std::collections::BTreeSet<PathBuf>>,
+    #[doc(hidden)]
+    pub test_reliability_paths: Arc<
+        std::collections::BTreeMap<PathBuf, crate::codebase::rules::test_reliability::SourceDemand>,
+    >,
     /// Exact call-source demand; broad `graph.call_sites` remains independent.
     #[doc(hidden)]
     pub call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,

@@ -47,6 +47,7 @@ behavior.
 | Keep transaction locks on written rows | [`postgres-lock-written-rows-only`](postgres-lock-written-rows-only.md) |
 | Check PostgreSQL migrations and query safety | [`postgres-array-columns`](postgres-array-columns.md), [`postgres-bounded-statements`](postgres-bounded-statements.md), [`postgres-column-naming`](postgres-column-naming.md), [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md), [`postgres-conflict-ordering`](postgres-conflict-ordering.md), [`postgres-constraint-validate`](postgres-constraint-validate.md), [`postgres-explicit-columns`](postgres-explicit-columns.md), [`postgres-generated-column-predicates`](postgres-generated-column-predicates.md), [`postgres-fk-index`](postgres-fk-index.md), [`postgres-key-column-types`](postgres-key-column-types.md), [`postgres-lock-ordering`](postgres-lock-ordering.md), [`postgres-no-transformed-uuid-predicates`](postgres-no-transformed-uuid-predicates.md), [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md), [`postgres-finite-text-columns`](postgres-finite-text-columns.md), [`postgres-identifier-length`](postgres-identifier-length.md), [`postgres-json-relation-ids`](postgres-json-relation-ids.md), [`postgres-grouping-not-aggregation`](postgres-grouping-not-aggregation.md), [`postgres-required-comments`](postgres-required-comments.md), [`postgres-materialized-view-shape`](postgres-materialized-view-shape.md), [`postgres-table-shape`](postgres-table-shape.md), [`postgres-status-with-lifecycle-timestamps`](postgres-status-with-lifecycle-timestamps.md), [`postgres-object-naming`](postgres-object-naming.md) |
 | Cap literal fixture sizes in tests and helpers | [`test-fixture-size-cap`](test-fixture-size-cap.md) |
+| Keep flaky tests visible | [`test-no-retries`](test-no-retries.md), [`playwright-no-serial`](playwright-no-serial.md) |
 | Enforce language-specific source policy | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md), [`rust-no-inline-tests`](rust-no-inline-tests.md), [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md) |
 
 These are starting points, not presets. The related-rules section on each page
@@ -157,6 +158,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-object-naming`](postgres-object-naming.md)                         | Check PostgreSQL object names against configured patterns, plurals, and tokens. |
 | [`postgres-require-query-annotation`](postgres-require-query-annotation.md)   | Require a leading /* name */ annotation on executed PostgreSQL SQL.             |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
+| [`playwright-no-serial`](playwright-no-serial.md) | Report Playwright settings that force serial execution. |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |
 | [`playwright-unique-html-ids`](playwright-unique-html-ids.md)                 | Require unique HTML `id` values in Playwright analysis.                         |
 | [`playwright-unique-test-ids`](playwright-unique-test-ids.md)                 | Require unique test ID values in Playwright analysis.                           |
@@ -184,6 +186,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |
 | [`test-no-live-repository-scan`](test-no-live-repository-scan.md)             | Ban live-repository directory scans reachable from Vitest roots.                |
+| [`test-no-retries`](test-no-retries.md) | Cap retries declared in test runners and supported GitHub Actions steps. |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
 | [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to be owned by a tracked tsconfig.             |
