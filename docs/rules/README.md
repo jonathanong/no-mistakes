@@ -84,7 +84,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`github-actions-local-action-checkout`](github-actions-local-action-checkout.md) | Require a preceding root self checkout covering each local action path. |
 | [`github-actions-max-inline-script-lines`](github-actions-max-inline-script-lines.md) | Keep workflow and composite-action scripts small enough to lint and test separately. |
 | [`github-actions-step-timeouts`](github-actions-step-timeouts.md)                 | Require bounded timeouts on executable workflow steps.                      |
-| [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
+| [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Pin remote action refs to commit SHAs with version comments and optionally pin images to SHA-256 digests. |
 | [`github-actions-script-expressions`](github-actions-script-expressions.md)   | Reject untrusted `${{ }}` expressions inside `run` and `actions/github-script` scripts. |
 | [`github-actions-test-timeout-literals`](github-actions-test-timeout-literals.md) | Reject timeout-minutes literals restated in workflow tests.                 |
 | [`github-actions-vitest-project-selection`](github-actions-vitest-project-selection.md) | Reject file and, when configured, name narrowing of a Vitest project in CI. |

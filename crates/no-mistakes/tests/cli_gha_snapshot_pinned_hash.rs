@@ -98,6 +98,21 @@ fn github_actions_pinned_hash_json_matches_snapshot() {
                 rules_path(RULE, "configs", "empty.yml"),
             ),
             (
+                "images-off",
+                rules_path(RULE, "fixture", "cases/images"),
+                rules_path(RULE, "configs", "images-off.yml"),
+            ),
+            (
+                "images-on",
+                rules_path(RULE, "fixture", "cases/images"),
+                rules_path(RULE, "configs", "images-on.yml"),
+            ),
+            (
+                "image-expressions-ignore",
+                rules_path(RULE, "fixture", "cases/image-expressions"),
+                rules_path(RULE, "configs", "images-on.yml"),
+            ),
+            (
                 "comment-uses",
                 rules_path(RULE, "fixture", "cases/comment-uses"),
                 rules_path(RULE, "configs", "empty.yml"),

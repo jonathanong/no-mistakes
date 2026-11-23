@@ -952,6 +952,12 @@ rule, `file`/`line` locate the local action's `uses:` line, and `target` identif
 the `job#step` (one-based step position). No new runtime
 export, option type, or report field is needed.
 
+[`github-actions-pinned-hash`](rules/github-actions-pinned-hash.md) reads
+`options.images` from the rule configuration selected by `config`. The async
+`check()` and `analyzeProject()` check paths use the same image findings and
+unanalyzable policy as CLI `check`. Use the exported
+`GithubActionsPinnedHashOptions` type when authoring the option object.
+
 The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
 runs through async `check()` and `analyzeProject()` check reports with the
 same outcome as CLI `check`. Configure it in the YAML selected by `config`.

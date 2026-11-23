@@ -336,6 +336,11 @@ advice, and `ignore` stays silent. A valid source outside the selected file
 set still supplies the comparison pin, and definite mismatches remain failures
 under every policy.
 
+[`github-actions-pinned-hash`](../rules/github-actions-pinned-hash.md) accepts
+`options.images: true` to require SHA-256 digests for job containers, service
+images, and Docker action steps. The option defaults to `false`.
+Expression-valued images use the shared `options.unanalyzable` policy.
+
 [`github-actions-script-expressions`](../rules/github-actions-script-expressions.md)
 uses `options.unanalyzable` when a selected workflow or composite-action file
 cannot be read, including invalid UTF-8. The default `report` fails, `advise`

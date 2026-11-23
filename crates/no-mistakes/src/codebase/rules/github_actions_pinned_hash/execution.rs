@@ -61,9 +61,8 @@ fn scan(
                 path,
                 root,
                 &exclude_set,
-                &uses_re,
-                &sha_re,
-                &version_re,
+                (&uses_re, &sha_re, &version_re),
+                opts.images,
                 sources,
             )
         })

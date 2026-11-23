@@ -8,7 +8,7 @@ able to identify the version represented by each immutable SHA.
 ## What it catches
 
 It rejects mutable tag or branch refs, non-40-character refs, and SHA refs
-without a version-shaped trailing comment. Local and Docker actions are exempt.
+without a version-shaped trailing comment. Local action references are exempt.
 Flow mappings, quoted `uses` keys, values on the line after `uses:`, including
 a flow mapping that breaks after the key, and YAML aliases are checked the
 same way. An alias is judged as the action reference it resolves to. Each YAML
@@ -22,18 +22,20 @@ reference; the following line of a block `uses` is. A `uses` field under
 
 ## Options
 
-`excludePaths` is the only rule-specific option and defaults to an empty list.
-The built-in workflow and composite-action locations remain the default scope.
-
-Requires every `uses:` step in GitHub Actions workflow files to reference a
-40-char commit SHA with a version comment. Tag- or branch-pinned actions are
-mutable — an upstream owner can move the ref at any time, silently swapping
-the action's code.
+- `excludePaths` skips matching workflow and composite action files. It
+  defaults to an empty list.
+- `images` defaults to `false`. Set it to `true` to require an
+  `@sha256:<64 hex digits>` suffix on job service images, both forms of job
+  `container`, and `uses: docker://...` image references. Images need no
+  version comment. Tags can move and cause the same workflow to use different
+  image contents across runs.
 
 ```yaml
 rules:
   - rule: github-actions-pinned-hash
     scope: repository
+    options:
+      images: true
 ```
 
 ## Valid example
@@ -48,6 +50,17 @@ version comment.
     toolchain: stable
 ```
 
+With `images: true`, this service image passes because it has a full digest.
+The digest below is illustrative.
+
+```yaml
+jobs:
+  verify:
+    services:
+      database:
+        image: example.invalid/team/database@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```
+
 ## Counterexample
 
 ```yaml
@@ -55,6 +68,17 @@ version comment.
 - uses: dtolnay/rust-toolchain@stable   # branch — fails
 - uses: actions/checkout@de0fac2e45...  # SHA but no version comment — fails
 - uses: actions/checkout@de0fac2e45...  # main  # comment not a version — fails
+```
+
+With `images: true`, the tag-only job container and service image both fail.
+
+```yaml
+jobs:
+  verify:
+    container: example.invalid/team/tools:latest
+    services:
+      database:
+        image: postgres:16
 ```
 
 ## Fix
@@ -79,9 +103,11 @@ numeric snapshot date such as `# 2026.10.09` also passes. The Rust example pins
 the setup action snapshot while selecting the latest stable compiler through
 its input. Branch-name and tool-name comments (`# main`, `# stable`) are rejected.
 
-**Exemptions:** Local action references (`./`, `../`) and Docker image
-references (`docker://`) are never checked. Use `excludePaths` to opt out
-specific files:
+For an image, look up the desired tag in your registry and copy its SHA-256
+manifest digest. Replace the tag with `@sha256:<digest>`, as shown in the valid
+example. Keep the `docker://` prefix for a Docker action step.
+
+Use `excludePaths` to opt out specific files.
 
 ```yaml
 rules:
@@ -124,10 +150,15 @@ YAML parse failures also use this policy. Definite pin violations recovered
 by the line scan remain findings when YAML cannot be parsed, including with
 `advise` or `ignore`.
 
+With `images: true`, expression-valued images also follow this policy. For
+example, `image: ${{ matrix.image }}` produces an unanalyzable diagnostic under
+`report`, advice under `advise`, and no diagnostic under `ignore`.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line github-actions-pinned-hash` to suppress a
-single line.
+single line. Place it directly above the image field or Docker action step
+that the diagnostic identifies.
 
 **Scope:** Checks any `.yml` or `.yaml` file under `.github/workflows/`,
 including nested directories, and `.github/actions/**/action.{yml,yaml}`

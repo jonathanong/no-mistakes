@@ -16,13 +16,23 @@ pub(crate) struct Node {
 
 pub(crate) struct Document {
     pub(crate) nodes: Vec<Node>,
+    roots: Vec<usize>,
     anchors: BTreeMap<usize, usize>,
 }
 
 impl Document {
     pub(crate) fn parse(source: &str) -> Option<Self> {
+        Self::parse_internal(source, false)
+    }
+
+    pub(crate) fn parse_with_scalars(source: &str) -> Option<Self> {
+        Self::parse_internal(source, true)
+    }
+
+    fn parse_internal(source: &str, values: bool) -> Option<Self> {
         let mut document = Self {
             nodes: Vec::new(),
+            roots: Vec::new(),
             anchors: BTreeMap::new(),
         };
         let mut stack: Vec<usize> = Vec::new();
@@ -35,7 +45,7 @@ impl Document {
                 Event::MappingStart(_, anchor, _) => (Kind::Mapping(Vec::new()), anchor, true),
                 Event::SequenceStart(_, anchor, _) => (Kind::Sequence(Vec::new()), anchor, true),
                 Event::Scalar(text, style, anchor, tag) => {
-                    let key = (is_key || anchor != 0)
+                    let key = (values || is_key || anchor != 0)
                         .then(|| scalar_key(&text, style, tag.as_deref()))
                         .flatten();
                     (key.map_or(Kind::Other, Kind::String), anchor, false)
@@ -60,6 +70,8 @@ impl Document {
                 {
                     children.push(id);
                 }
+            } else {
+                document.roots.push(id);
             }
             if container {
                 stack.push(id);
@@ -114,6 +126,14 @@ impl Document {
             Kind::String(key) => Some(key),
             _ => None,
         }
+    }
+
+    pub(crate) fn scalar(&self, id: usize) -> Option<&str> {
+        self.key(id)
+    }
+
+    pub(crate) fn roots(&self) -> &[usize] {
+        &self.roots
     }
 }
 

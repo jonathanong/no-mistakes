@@ -143,6 +143,135 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "image-expressions-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "images-off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 28,
+          "message": ".github/workflows/images.yml:28: `uses: example/action@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: example/action@v1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "images-on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 5,
+          "message": ".github/actions/example/action.yml:5: `uses` image `example.invalid/my-org/composite:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: docker://example.invalid/my-org/composite:latest"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 16,
+          "message": ".github/workflows/images.yml:16: `image` image `postgres:16` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "image: postgres:16"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 20,
+          "message": ".github/workflows/images.yml:20: `image` image `example.invalid/my-org/short@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "image: example.invalid/my-org/short@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 22,
+          "message": ".github/workflows/images.yml:22: `image` image `example.invalid/my-org/long@sha256:fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "image: example.invalid/my-org/long@sha256:fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 24,
+          "message": ".github/workflows/images.yml:24: `image` image `example.invalid/my-org/nonhex@sha256:gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "image: example.invalid/my-org/nonhex@sha256:gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 25,
+          "message": ".github/workflows/images.yml:25: `image` image `example.invalid/my-org/alias:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "aliased: *service"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 26,
+          "message": ".github/workflows/images.yml:26: `container` image `example.invalid/my-org/tools:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "container: example.invalid/my-org/tools:latest"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 28,
+          "message": ".github/workflows/images.yml:28: `uses: example/action@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: example/action@v1"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 29,
+          "message": ".github/workflows/images.yml:29: `uses` image `example.invalid/my-org/task:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: docker://example.invalid/my-org/task:latest"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 37,
+          "message": ".github/workflows/images.yml:37: `image` image `example.invalid/my-org/mapped:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "image: example.invalid/my-org/mapped:latest"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 38,
+          "message": ".github/workflows/images.yml:38: `image` image `example.invalid/my-org/flow-two:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "services: { db: { image: example.invalid/my-org/flow:latest }, second: { image: example.invalid/my-org/flow-two:latest } }"
+        },
+        {
+          "file": ".github/workflows/images.yml",
+          "line": 38,
+          "message": ".github/workflows/images.yml:38: `image` image `example.invalid/my-org/flow:latest` must be pinned with `@sha256:<64-hex-digest>`; resolve and pin the image digest",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "services: { db: { image: example.invalid/my-org/flow:latest }, second: { image: example.invalid/my-org/flow-two:latest } }"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "local-action": {
     "exitCode": 0,
     "report": {
