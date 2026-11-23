@@ -1,0 +1,6 @@
+name: Flow download skips
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: [{run: "curl https://downloads.example.invalid/flow-first; curl https://downloads.example.invalid/flow-second # integrity-check: skip reason=flow"}]

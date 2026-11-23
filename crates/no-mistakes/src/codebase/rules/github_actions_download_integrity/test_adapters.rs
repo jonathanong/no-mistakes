@@ -2,20 +2,35 @@ use super::assign::prepare_max_script;
 use super::judge::{scan_script, Hit};
 use super::runs::{check_workflow, Policy};
 use super::verify::command_verifies;
-use super::{gha_kind, words, RuleFinding};
+use super::{gha_kind, words, RuleFinding, SkipAnnotationScope};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::config::v2::Unanalyzable;
 
 pub(super) fn expand_uppercase(script: &str) -> String {
-    prepare_max_script(script).map_or_else(|| script.to_owned(), |rewrite| rewrite.text)
+    let bindings = super::assign::Bindings::collect(script, &words::parse(script));
+    prepare_max_script(script, &bindings).map_or_else(|| script.to_owned(), |rewrite| rewrite.text)
 }
 
 pub(super) fn download_hits(script: &str, helpers: &[String]) -> Vec<Hit> {
-    scan_script(script, helpers, false, false, None)
+    scan_script(
+        script,
+        helpers,
+        false,
+        false,
+        None,
+        Some(SkipAnnotationScope::Step),
+    )
 }
 
 pub(super) fn download_hits_low(script: &str, helpers: &[String]) -> Vec<Hit> {
-    scan_script(script, helpers, true, false, None)
+    scan_script(
+        script,
+        helpers,
+        true,
+        false,
+        None,
+        Some(SkipAnnotationScope::Step),
+    )
 }
 
 pub(super) fn check_source(
@@ -36,6 +51,7 @@ pub(super) fn check_source(
             helpers,
             low: None,
             strict: false,
+            skip_scope: SkipAnnotationScope::Step,
         },
     )
     .findings
@@ -60,6 +76,7 @@ pub(super) fn check_source_low(
             helpers,
             low: Some(policy),
             strict: false,
+            skip_scope: SkipAnnotationScope::Step,
         },
     )
 }

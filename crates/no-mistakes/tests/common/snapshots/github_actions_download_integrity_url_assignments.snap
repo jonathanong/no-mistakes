@@ -1,0 +1,236 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 12,
+          "message": ".github/workflows/downloads.yml:12: job `build` step 2 download URL or argument shape `${BASE_URL}/tool` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"${BASE_URL}/tool\" -o tool",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 19,
+          "message": ".github/workflows/downloads.yml:19: job `build` step 4 download URL or argument shape `$BASE_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `wget` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "wget \"$BASE_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 21,
+          "message": ".github/workflows/downloads.yml:21: job `build` step 5 download URL or argument shape `https://$HOST/releases/tool` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"https://$HOST/releases/tool\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 22,
+          "message": ".github/workflows/downloads.yml:22: job `build` step 5 download URL or argument shape `https://downloads.example.invalid:$PORT/releases/tool` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"https://downloads.example.invalid:$PORT/releases/tool\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 23,
+          "message": ".github/workflows/downloads.yml:23: job `build` step 5 download URL or argument shape `$SCHEME://downloads.example.invalid/releases/tool` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$SCHEME://downloads.example.invalid/releases/tool\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 24,
+          "message": ".github/workflows/downloads.yml:24: job `build` step 5 download URL or argument shape `https://downloads.example.invalid$SUFFIX` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"https://downloads.example.invalid$SUFFIX\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 28,
+          "message": ".github/workflows/downloads.yml:28: job `build` step 6 download URL or argument shape `$FIRST_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$FIRST_URL\" -o first",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 29,
+          "message": ".github/workflows/downloads.yml:29: job `build` step 6 download URL or argument shape `${SECOND_URL}` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `wget` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "wget \"${SECOND_URL}\" -O second",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 41,
+          "message": ".github/workflows/downloads.yml:41: job `build` step 8 download URL or argument shape `$REPEATED_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$REPEATED_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 42,
+          "message": ".github/workflows/downloads.yml:42: job `build` step 8 download URL or argument shape `$OTHER_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$OTHER_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 48,
+          "message": ".github/workflows/downloads.yml:48: job `build` step 9 download URL or argument shape `$READ_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$READ_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 49,
+          "message": ".github/workflows/downloads.yml:49: job `build` step 9 download URL or argument shape `$EXPORTED_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$EXPORTED_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 9,
+          "message": ".github/workflows/downloads.yml:9: job `build` step 1 download URL or argument shape `${BASE_URL}/tool` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"${BASE_URL}/tool\" -o tool",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 19,
+          "message": ".github/workflows/downloads.yml:19: job `build` step 4 downloads `https://downloads.example.invalid/tool.sha256${SUFFIX}` with `wget` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "wget \"$BASE_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 28,
+          "message": ".github/workflows/downloads.yml:28: job `build` step 6 downloads `https://downloads.example.invalid/first` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$FIRST_URL\" -o first",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 29,
+          "message": ".github/workflows/downloads.yml:29: job `build` step 6 downloads `https://downloads.example.invalid/second` with `wget` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "wget \"${SECOND_URL}\" -O second",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 42,
+          "message": ".github/workflows/downloads.yml:42: job `build` step 8 downloads `https://downloads.example.invalid/other` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$OTHER_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 9,
+          "message": ".github/workflows/downloads.yml:9: job `build` step 1 downloads `https://downloads.example.invalid/releases/${TAG}/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"${BASE_URL}/tool\" -o tool",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "strict": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 19,
+          "message": ".github/workflows/downloads.yml:19: job `build` step 4 downloads `https://downloads.example.invalid/tool.sha256${SUFFIX}` with `wget` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "wget \"$BASE_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 28,
+          "message": ".github/workflows/downloads.yml:28: job `build` step 6 downloads `https://downloads.example.invalid/first` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$FIRST_URL\" -o first",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 29,
+          "message": ".github/workflows/downloads.yml:29: job `build` step 6 downloads `https://downloads.example.invalid/second` with `wget` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "wget \"${SECOND_URL}\" -O second",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 42,
+          "message": ".github/workflows/downloads.yml:42: job `build` step 8 downloads `https://downloads.example.invalid/other` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$OTHER_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 51,
+          "message": ".github/workflows/downloads.yml:51: job `build` step 10 downloads `https://downloads.example.invalid/payload` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.invalid/payload -o payload",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 9,
+          "message": ".github/workflows/downloads.yml:9: job `build` step 1 downloads `https://downloads.example.invalid/releases/${TAG}/tool` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"${BASE_URL}/tool\" -o tool",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

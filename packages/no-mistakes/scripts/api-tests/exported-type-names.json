@@ -126,6 +126,7 @@
   "ForbiddenLintSuppressionDirective",
   "ForbiddenLintSuppressionsOptions",
   "GithubActionsDownloadIntegrityOptions",
+  "GithubActionsDownloadIntegritySkipAnnotationScope",
   "GraphEdge",
   "GroupedExecutionTarget",
   "HotFileDiagnostic",

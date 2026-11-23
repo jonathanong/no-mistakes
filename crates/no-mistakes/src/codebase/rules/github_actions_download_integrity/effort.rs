@@ -58,6 +58,7 @@ pub fn diagnostics_with_files_and_sources(
             helpers: &options.download_helpers,
             low: (analysis.effort == Effort::Low).then_some(analysis.unanalyzable),
             strict: options.strict_sequencing,
+            skip_scope: options.skip_annotation_scope,
         };
         let includes = GlobMatcher::new(
             &options.shell_source_include,

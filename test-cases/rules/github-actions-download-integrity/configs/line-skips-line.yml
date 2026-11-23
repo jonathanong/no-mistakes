@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      trustedHosts: [trusted.example.invalid]
+      downloadHelpers: [download_to]
+      shellSourceInclude:
+        - scripts/download.sh
+      skipAnnotationScope: line

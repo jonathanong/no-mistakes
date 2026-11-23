@@ -1,0 +1,10 @@
+name: Quoted download skips
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: "curl https://downloads.example.invalid/quoted-double" # integrity-check: skip reason=vendor
+      - run: 'echo ''ready''; curl https://downloads.example.invalid/quoted-single' # integrity-check: skip reason=vendor
+      - run: "echo \"ready\"; curl https://downloads.example.invalid/quoted-escaped" # integrity-check: skip reason=vendor
+      - run: "echo '# integrity-check: skip reason=quoted'; curl https://downloads.example.invalid/quoted-directive"

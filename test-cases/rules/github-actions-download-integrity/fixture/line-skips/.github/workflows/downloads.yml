@@ -1,0 +1,35 @@
+name: Download skips
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl https://downloads.example.invalid/same-first # integrity-check: skip reason=vendor
+          curl https://downloads.example.invalid/same-second
+      - run: |
+          # integrity-check: skip reason=vendor
+          wget https://downloads.example.invalid/previous-first
+          wget https://downloads.example.invalid/previous-second
+      - run: |
+          # integrity-check: skip reason=vendor
+
+          curl https://downloads.example.invalid/after-blank
+      # integrity-check: skip reason=vendor
+      - run: curl https://downloads.example.invalid/inline
+      - run: | # integrity-check: skip reason=vendor
+          curl https://downloads.example.invalid/header-first
+          curl https://downloads.example.invalid/header-second
+      - run: | # integrity-check: skip reason=vendor
+
+          curl https://downloads.example.invalid/header-blank
+      - run: |
+          echo '# integrity-check: skip reason=quoted'
+          download_to https://downloads.example.invalid/quoted '# integrity-check: skip reason=quoted'
+      - run: |
+          cat <<'# integrity-check: skip reason=end'
+          # integrity-check: skip reason=heredoc
+          # integrity-check: skip reason=end
+          curl https://downloads.example.invalid/after-heredoc
+      - run: curl https://downloads.example.invalid/inline-marked # integrity-check: skip reason=vendor
+      - run: curl https://downloads.example.invalid/inline-unmarked

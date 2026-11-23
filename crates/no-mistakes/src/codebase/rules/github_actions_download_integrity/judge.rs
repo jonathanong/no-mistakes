@@ -1,8 +1,9 @@
-use super::assign::prepare_max_script;
+use super::assign::{prepare_max_script, Bindings};
 use super::env::UrlBindings;
-use super::url;
+use super::url::{self, dynamic};
 use super::verify;
 use super::words;
+use super::SkipAnnotationScope;
 use std::cell::OnceCell;
 
 mod command;
@@ -23,20 +24,35 @@ pub(super) fn scan_script(
     low: bool,
     strict: bool,
     env: Option<&serde_yaml::Mapping>,
+    skip_scope: Option<SkipAnnotationScope>,
 ) -> Vec<Hit> {
-    if url::has_skip(script) {
+    if skip_scope == Some(SkipAnnotationScope::Step) && url::has_skip(script) {
         return Vec::new();
     }
-    let raw = words::parse_ordered(script, strict);
+    let mut raw = words::parse_ordered(
+        script,
+        strict,
+        skip_scope == Some(SkipAnnotationScope::Line),
+    );
     if !strict && raw.commands.iter().any(verify::command_verifies) {
         return Vec::new();
     }
-    let expanded = (!low).then(|| prepare_max_script(script)).flatten();
+    let bindings = (!low).then(|| Bindings::collect(script, &raw));
+    let expanded = bindings
+        .as_ref()
+        .and_then(|bindings| prepare_max_script(script, bindings));
+    let partial_bindings = bindings
+        .as_ref()
+        .filter(|bindings| bindings.has_partial_urls());
+    let skip_lines = std::mem::take(&mut raw.skip_lines);
     let env = env
         .filter(|env| !low && !env.is_empty())
         .and_then(|env| UrlBindings::new(env, script, &raw));
     let (parsed, original) = match &expanded {
-        Some(expanded) => (words::parse_ordered(&expanded.text, strict), Some(raw)),
+        Some(expanded) => (
+            words::parse_ordered(&expanded.text, strict, false),
+            Some(raw),
+        ),
         None => (raw, None),
     };
     if parsed.unterminated_heredoc {
@@ -133,16 +149,23 @@ pub(super) fn scan_script(
                 .matches(&name, arg_at, args.len())
                 .then_some((bindings, shape))
         });
-        let mut unknown_role = env.is_some() && options::dynamic_option(&name, args).is_some();
+        let mut unknown_role = (env.is_some() || partial_bindings.is_some())
+            && options::dynamic_option(&name, args).is_some();
         for operand in candidates {
             let word = operand.word;
             if indirect_command {
                 continue;
             }
-            let url = env
-                .as_ref()
-                .filter(|(_, shape)| !unknown_role && shape.same_operand(&operand))
-                .and_then(|(env, _)| env.resolve(word, operand.text))
+            let partial_url = partial_bindings
+                .filter(|_| !unknown_role)
+                .and_then(|bindings| bindings.resolve_partial_url(word, operand.text));
+            let url = partial_url
+                .as_deref()
+                .or_else(|| {
+                    env.as_ref()
+                        .filter(|(_, shape)| !unknown_role && shape.same_operand(&operand))
+                        .and_then(|(env, _)| env.resolve(word, operand.text))
+                })
                 .unwrap_or(operand.text);
             unknown_role |= operand.may_be_option && dynamic(url);
             let Some(parsed) = url::http_url(url) else {
@@ -166,20 +189,10 @@ pub(super) fn scan_script(
             });
         }
     }
+    if !skip_lines.is_empty() {
+        hits.retain(|hit| skip_lines.binary_search(&hit.line).is_err());
+    }
     hits
 }
 
-fn dynamic(value: &str) -> bool {
-    value.contains(['$', '`', '{'])
-}
-
-pub(super) fn filter_trusted(hits: Vec<Hit>, hosts: &[String]) -> Vec<Hit> {
-    hits.into_iter()
-        .filter(|hit| {
-            hit.unanalyzable
-                || url::http_url(&hit.url).is_none_or(|url| !url::trusted(&url.host, hosts))
-        })
-        .collect()
-}
-
-pub(super) use url::{configured_host, has_skip};
+pub(super) use operands::filter_trusted;

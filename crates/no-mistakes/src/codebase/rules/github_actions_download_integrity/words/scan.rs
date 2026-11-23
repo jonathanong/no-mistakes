@@ -22,9 +22,12 @@ struct Scan<'a> {
     pending: Option<heredoc::Opener>,
     unterminated: bool,
     stop: bool,
+    collect_skips: bool,
+    skip_lines: Vec<usize>,
+    in_backticks: bool,
 }
 
-pub(super) fn run(script: &str, strict: bool) -> Parse {
+pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
     let chars: Vec<char> = script.chars().collect();
     let mut scan = Scan {
         chars: &chars,
@@ -48,6 +51,9 @@ pub(super) fn run(script: &str, strict: bool) -> Parse {
         pending: None,
         unterminated: false,
         stop: false,
+        collect_skips,
+        skip_lines: Vec::new(),
+        in_backticks: false,
     };
     while scan.index < scan.chars.len() && !scan.step() {}
     scan.flush_word();
@@ -55,6 +61,7 @@ pub(super) fn run(script: &str, strict: bool) -> Parse {
     Parse {
         commands: scan.commands,
         unterminated_heredoc: scan.unterminated || scan.pending.is_some(),
+        skip_lines: scan.skip_lines,
     }
 }
 
@@ -98,8 +105,25 @@ impl<'a> Scan<'a> {
         if ch != '#' || self.quoting.is_some() || self.word_quoted || !self.word.is_empty() {
             return false;
         }
+        let start = self.index;
         while self.index < self.chars.len() && self.chars[self.index] != '\n' {
             self.index += 1;
+        }
+        if self.collect_skips
+            && !self.in_backticks
+            && !start
+                .checked_sub(1)
+                .is_some_and(|index| self.chars[index] != '\n' && self.escaped_at(index))
+            && super::super::url::skip_comment(
+                &self.chars[start + 1..self.index].iter().collect::<String>(),
+            )
+        {
+            let standalone = self.chars[..start]
+                .iter()
+                .rev()
+                .take_while(|ch| **ch != '\n')
+                .all(|ch| ch.is_whitespace());
+            self.skip_lines.push(self.line + usize::from(standalone));
         }
         true
     }

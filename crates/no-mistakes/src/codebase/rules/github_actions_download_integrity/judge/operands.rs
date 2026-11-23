@@ -91,3 +91,13 @@ pub(super) fn url_words<'a>(command: &str, args: &'a [Word]) -> Vec<UrlOperand<'
     }
     out
 }
+
+pub(in super::super) fn filter_trusted(hits: Vec<super::Hit>, hosts: &[String]) -> Vec<super::Hit> {
+    hits.into_iter()
+        .filter(|hit| {
+            hit.unanalyzable
+                || super::url::http_url(&hit.url)
+                    .is_none_or(|url| !super::url::trusted(&url.host, hosts))
+        })
+        .collect()
+}

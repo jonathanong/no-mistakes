@@ -3,23 +3,43 @@ pub(super) struct UrlHost {
     pub(super) checksum: bool,
 }
 
-pub(super) fn http_url(word: &str) -> Option<UrlHost> {
-    let rest = if word
+fn after_scheme(word: &str) -> Option<&str> {
+    if word
         .get(..8)
         .is_some_and(|prefix| prefix.eq_ignore_ascii_case("https://"))
     {
-        &word[8..]
+        Some(&word[8..])
     } else if word
         .get(..7)
         .is_some_and(|prefix| prefix.eq_ignore_ascii_case("http://"))
     {
-        &word[7..]
+        Some(&word[7..])
     } else {
-        return None;
+        None
+    }
+}
+
+pub(super) fn has_static_url_prefix(word: &str) -> bool {
+    let Some((prefix, _)) = word.split_once('$') else {
+        return false;
     };
+    after_scheme(prefix).is_some_and(|rest| {
+        authority_end(rest) < rest.len()
+            && rest[authority_end(rest)..].starts_with('/')
+            && !prefix.contains(['\\', '`', '{', '}'])
+            && !prefix.contains(char::is_whitespace)
+            && http_url(prefix).is_some()
+    })
+}
+
+pub(super) fn http_url(word: &str) -> Option<UrlHost> {
+    let rest = after_scheme(word)?;
+    if dynamic(&rest[..authority_end(rest)]) {
+        return None;
+    }
     let (host, path) = split_host(rest);
     // A dynamic path is not a checksum file. A dynamic authority cannot be judged.
-    if host.is_empty() || host.contains(['$', '`', '{']) {
+    if host.is_empty() {
         return None;
     }
     Some(UrlHost {
@@ -48,7 +68,7 @@ fn split_host(rest: &str) -> (String, &str) {
         let path = path_after_authority(after, after.find(['/', '?', '#']).unwrap_or(after.len()));
         return (host.to_ascii_lowercase(), path);
     }
-    let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    let end = authority_end(rest);
     let authority = rest[..end]
         .rsplit_once('@')
         .map(|(_, host)| host)
@@ -63,13 +83,21 @@ fn split_host(rest: &str) -> (String, &str) {
     (host.to_ascii_lowercase(), path)
 }
 
+fn authority_end(url: &str) -> usize {
+    url.find(['/', '?', '#']).unwrap_or(url.len())
+}
+
 fn path_after_authority(url: &str, end: usize) -> &str {
     url[end..].strip_prefix('/').unwrap_or("")
 }
 
+pub(super) fn dynamic(value: &str) -> bool {
+    value.contains(['$', '`', '{'])
+}
+
 fn checksum_path(path: &str) -> bool {
     let path = path.split(['?', '#']).next().unwrap_or(path);
-    if path.contains(['$', '`', '{']) {
+    if dynamic(path) {
         return false;
     }
     let name = path.rsplit('/').next().unwrap_or(path);
@@ -124,7 +152,7 @@ pub(super) fn has_skip(text: &str) -> bool {
     false
 }
 
-fn skip_comment(comment: &str) -> bool {
+pub(super) fn skip_comment(comment: &str) -> bool {
     let rest = comment.trim_start();
     let Some(rest) = rest.strip_prefix("integrity-check:") else {
         return false;

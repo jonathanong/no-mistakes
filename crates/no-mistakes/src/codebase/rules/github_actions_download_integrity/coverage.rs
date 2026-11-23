@@ -1,8 +1,8 @@
-use super::judge::{self, configured_host};
+use super::judge;
 use super::test_adapters::{
     check_source, commands, download_hits, expand_uppercase, step_verifies,
 };
-use super::url::{self, http_url};
+use super::url::{self, configured_host, http_url};
 use super::verify::takes_url_slot;
 use super::words;
 use super::RULE_ID;
@@ -36,8 +36,14 @@ fn shell_forms_cover_quotes_pipes_and_verifiers() {
     assert!(expanded.contains("https://example.invalid/c"));
     assert!(expanded.contains("$OTHER"));
     assert_eq!(
-        expand_uppercase("BASE_URL=\"https://a\"\nALT_URL=\"https://b\"\ncurl \"$BASE_URL/a\"\n"),
-        "BASE_URL=\"https://a\"\nALT_URL=\"https://b\"\ncurl \"$BASE_URL/a\"\n"
+        expand_uppercase(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../test-cases/rules/github-actions-download-integrity/fixture/assignment-unit/input.sh"
+        ))),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../test-cases/rules/github-actions-download-integrity/fixture/assignment-unit/expanded.txt"
+        ))
     );
     assert!(expand_uppercase("BASE_URL=$HOME\ncurl \"$BASE_URL/a\"\n").contains("$BASE_URL"));
     assert!(expand_uppercase("BASE_URL=\"https://a\" extra\n").contains("extra"));
@@ -133,16 +139,14 @@ fn urls_hosts_and_skip_comments_name_the_decision() {
     assert!(configured_host("user@host").is_none());
     assert!(!url::trusted("example.invalid", &["other".to_string()]));
 
-    assert!(judge::has_skip("# integrity-check: skip reason=vendor_1"));
-    assert!(!judge::has_skip("# integrity-check: skip reason="));
-    assert!(!judge::has_skip("# integrity-check: skip reason=has space"));
-    assert!(!judge::has_skip(
-        "# integrity-check: skipping reason=vendor"
-    ));
-    assert!(!judge::has_skip(
+    assert!(url::has_skip("# integrity-check: skip reason=vendor_1"));
+    assert!(!url::has_skip("# integrity-check: skip reason="));
+    assert!(!url::has_skip("# integrity-check: skip reason=has space"));
+    assert!(!url::has_skip("# integrity-check: skipping reason=vendor"));
+    assert!(!url::has_skip(
         "echo '# integrity-check: skip reason=vendor'"
     ));
-    assert!(!judge::has_skip("echo no-hash"));
+    assert!(!url::has_skip("echo no-hash"));
 
     let hits = download_hits(
         "curl --url=https://example.invalid/a -o out -- --url=https://example.invalid/b\nwget -O out https://example.invalid/SHA256SUMS\n",

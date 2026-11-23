@@ -424,5 +424,8 @@ exceptions and async `check()` / `analyzeProject()` for repeated in-process work
 For `github-actions-download-integrity`, use `shellSourceInclude` root-relative
 globs to opt into Git-tracked shell-source scanning and `strictSequencing: true` to require
 a checksum after each payload and before the next unrelated download. Literal
-step `env` URL bindings resolve at max effort. See the
+step `env` URL bindings resolve at max effort, as do independent uppercase
+assignments and partly literal URL values with a fixed host. Use
+`skipAnnotationScope: line` for one-line exceptions; the default remains
+whole-step / whole-selected-file. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-download-integrity.md).

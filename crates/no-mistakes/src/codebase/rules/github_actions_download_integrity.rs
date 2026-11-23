@@ -30,6 +30,15 @@ struct Options {
     download_helpers: Vec<String>,
     shell_source_include: Vec<String>,
     strict_sequencing: bool,
+    skip_annotation_scope: SkipAnnotationScope,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+enum SkipAnnotationScope {
+    #[default]
+    Step,
+    Line,
 }
 
 fn compile_hosts(opts: &Options) -> Result<Vec<String>> {
@@ -41,7 +50,7 @@ fn compile_hosts(opts: &Options) -> Result<Vec<String>> {
         Some(list) => list
             .iter()
             .map(|host| {
-                judge::configured_host(host).ok_or_else(|| {
+                url::configured_host(host).ok_or_else(|| {
                     anyhow::anyhow!("{RULE_ID} trustedHosts entry `{host}` is not a host")
                 })
             })
