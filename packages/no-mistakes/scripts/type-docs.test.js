@@ -23,6 +23,10 @@ const CANONICAL_JSDOC = {
 // `TestExecutionTarget`) don't match and are correctly left alone.
 const FIELD_PATTERN = /^(\s*)(root|tsconfig|config)\?: string;\s*$/;
 
+// Rule-option declarations whose `config` field names a tool config (e.g.
+// Vitest) rather than `.no-mistakes.yml`.
+const NON_INVOCATION_CONFIG_FILES = new Set(["vitest-default-excludes-types.d.ts"]);
+
 function declarationFiles() {
   return readdirSync(packageRoot).filter((name) => name.endsWith(".d.ts"));
 }
@@ -40,6 +44,9 @@ test("every root/tsconfig/config option field carries its canonical JSDoc", () =
       }
 
       const [, indent, field] = match;
+      if (field === "config" && NON_INVOCATION_CONFIG_FILES.has(file)) {
+        return;
+      }
       const expected = `${indent}${CANONICAL_JSDOC[field]}`;
       const actual = lines[index - 1];
 
