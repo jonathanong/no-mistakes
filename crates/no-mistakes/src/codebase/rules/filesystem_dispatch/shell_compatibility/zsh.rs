@@ -17,21 +17,24 @@ pub(super) fn has_shebang(source: &str) -> bool {
     let mut words = words.iter().map(String::as_str);
     match words.next().and_then(basename) {
         Some("zsh") => true,
-        Some("env") => {
-            let interpreter = words.find(|word| {
-                !matches!(
-                    *word,
-                    "-S" | "--split-string" | "-i" | "--ignore-environment"
-                )
-            });
-            let interpreter = match interpreter {
-                Some("--") => words.next(),
-                word => word,
-            };
-            interpreter.and_then(basename) == Some("zsh")
-        }
+        Some("env") => env_interpreter(words).and_then(basename) == Some("zsh"),
         _ => false,
     }
+}
+
+fn env_interpreter<'a>(mut words: impl Iterator<Item = &'a str>) -> Option<&'a str> {
+    while let Some(word) = words.next() {
+        let word = word
+            .strip_prefix("--split-string=")
+            .or_else(|| word.strip_prefix("-S"))
+            .unwrap_or(word);
+        match word {
+            "" | "--split-string" | "-i" | "--ignore-environment" => {}
+            "--" => return words.next(),
+            _ => return Some(word),
+        }
+    }
+    None
 }
 
 fn basename(interpreter: &str) -> Option<&str> {

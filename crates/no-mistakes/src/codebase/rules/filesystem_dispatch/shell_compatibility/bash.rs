@@ -1,4 +1,5 @@
 use super::lex::{assignment, command_words, identifier, Lexer, Word};
+use crate::codebase::shell_words::{split_quoted_words, Whitespace};
 use crate::fx::FxHashMap;
 
 pub const RULE_ID: &str = "bash-empty-array-nounset";
@@ -22,13 +23,7 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
         };
         match first.raw {
             "set" => active = nounset(command.skip(1), active),
-            "unset" => {
-                for word in command.skip(1) {
-                    if let Some(nonempty) = arrays.get_mut(word.raw) {
-                        *nonempty = false;
-                    }
-                }
-            }
+            "unset" => forget_unset(command.skip(1), &mut arrays),
             "declare" | "local" => {
                 command.next();
                 let mut array = false;
@@ -84,8 +79,39 @@ fn array_assignment(word: &str) -> Option<(&str, bool)> {
     let (lhs, _) = word.split_once('=')?;
     let append = lhs.ends_with('+');
     let lhs = lhs.strip_suffix('+').unwrap_or(lhs);
-    let (name, index) = lhs.strip_suffix(']')?.split_once('[')?;
-    (identifier(name) && !index.is_empty() && !index.contains(['[', ']'])).then_some((name, append))
+    indexed_name(lhs).map(|name| (name, append))
+}
+
+fn indexed_name(word: &str) -> Option<&str> {
+    let (name, index) = word.strip_suffix(']')?.split_once('[')?;
+    (identifier(name) && !index.is_empty() && !index.contains(['[', ']'])).then_some(name)
+}
+
+fn forget_unset<'w, 'a: 'w>(
+    words: impl Iterator<Item = &'w Word<'a>>,
+    arrays: &mut FxHashMap<&str, bool>,
+) {
+    let mut operands = words
+        .filter_map(|word| {
+            let mut parts = split_quoted_words(word.raw, Whitespace::Ascii)?;
+            let operand = parts.pop()?;
+            parts.is_empty().then_some(operand)
+        })
+        .peekable();
+    operands.next_if(|operand| operand == "-v");
+    operands.next_if(|operand| operand == "--");
+    if operands
+        .peek()
+        .is_some_and(|operand| operand.starts_with('-'))
+    {
+        return;
+    }
+    for operand in operands {
+        let name = indexed_name(&operand).unwrap_or(&operand);
+        if let Some(nonempty) = arrays.get_mut(name) {
+            *nonempty = false;
+        }
+    }
 }
 
 fn nounset<'w, 'a: 'w>(mut words: impl Iterator<Item = &'w Word<'a>>, mut active: bool) -> bool {

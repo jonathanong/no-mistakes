@@ -17,9 +17,11 @@ rules:
 ## Options
 
 The rule selects files with a `.zsh` extension or a shebang that names zsh
-directly or through `env`. Supported `env` flags are `-S` (`--split-string`),
-`-i` (`--ignore-environment`), and the `--` option separator. Use
-`options.files` to add repository-relative globs for sourced files and
+directly or through `env`. The rule recognizes `-S zsh -f`, `-S/bin/zsh -f`,
+`--split-string zsh -f`, and `--split-string=zsh -f`, with support for
+`-i` (`--ignore-environment`) and the `--` option separator. Quote individual
+arguments with spaces. Quoting the entire `'zsh -f'` names a single executable.
+Use `options.files` to add repository-relative globs for sourced files and
 other shebang forms. The option defaults to an empty list. The standard rule
 and project `include` and `exclude` filters further restrict the scope. The
 rule works without ShellCheck.

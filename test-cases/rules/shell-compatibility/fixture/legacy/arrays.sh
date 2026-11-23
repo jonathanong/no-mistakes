@@ -87,3 +87,20 @@ collect "${items[@]}"
 
 items=("[*]" *.sample)
 collect "${items[@]}"
+
+single=()
+single[0]=stable
+collect "${single[@]}"
+unset 'single[0]'
+collect "${single[@]}"
+single[0]=stable
+unset single[0]
+collect "${single[@]}"
+single[0]=stable
+unset -f single
+collect "${single[@]}"
+unset "single[@]"
+collect "${single[@]}"
+single[0]=stable
+unset -v -- 'single[*]'
+collect "${single[@]}"

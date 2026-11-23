@@ -31,8 +31,10 @@ same file. It follows explicit `set` options in source order, including
 `set -o nounset` and `set +u`. It checks quoted `${name[@]}` and
 `${name[*]}` expansions. A list with a literal element, a scalar initializer,
 or a direct scalar or indexed write to a known array establishes a nonempty
-array. Replacing it with a list that may be empty or unsetting the array
-removes that guarantee.
+array. Replacing it with a list that may be empty or using `unset` on the
+array or a literal indexed operand removes that guarantee. The rule treats
+any element removal as potentially empty because it tracks whether an array
+has elements without counting them.
 
 ## Counterexample
 

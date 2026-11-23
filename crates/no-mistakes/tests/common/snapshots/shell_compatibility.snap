@@ -13,6 +13,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "legacy/arrays.sh",
+          "line": 103,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 106,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
+          "file": "legacy/arrays.sh",
           "line": 23,
           "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
           "rule": "bash-empty-array-nounset",
@@ -108,6 +124,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "items"
         },
         {
+          "file": "legacy/arrays.sh",
+          "line": 95,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 98,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
           "file": "zsh/check.zsh",
           "line": 11,
           "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
@@ -172,6 +204,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "status"
         },
         {
+          "file": "zsh/env-attached",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-attached-options",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
           "file": "zsh/env-long-options",
           "line": 2,
           "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
@@ -180,7 +228,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "status"
         },
         {
+          "file": "zsh/env-long-separated",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
           "file": "zsh/env-options",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-short-attached",
           "line": 2,
           "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
           "rule": "zsh-readonly-parameter",
