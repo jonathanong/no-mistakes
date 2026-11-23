@@ -104,39 +104,21 @@ pub(super) fn scan_script(
         }
         let args = command.words.get(arg_at + 1..).unwrap_or(&[]);
         let candidates = operands::url_words(&name, args);
-        // An expansion can become an option and consume a later literal URL.
-        // Judge the command's argument shape before claiming any unsafe URL.
-        if low {
-            let unknown = options::dynamic_option(&name, args)
-                .or_else(|| {
-                    candidates
-                        .iter()
-                        .find(|operand| dynamic(operand.text))
-                        .map(|operand| (operand.word, operand.text))
-                })
-                .or_else(|| {
-                    if indirect_command {
-                        candidates
-                            .iter()
-                            .find(|operand| url::http_url(operand.text).is_some())
-                            .map(|operand| (operand.word, operand.text))
-                    } else {
-                        None
-                    }
-                });
-            if let Some((word, url)) = unknown {
-                if strict {
-                    pending_start = hits.len();
-                }
-                hits.push(Hit {
-                    url: url.to_string(),
-                    line: word.line,
-                    command: name,
-                    unanalyzable: true,
-                    indirect_command,
-                });
-                continue;
+        let unknown = low
+            .then(|| options::unproven_argument(&name, args, &candidates, indirect_command))
+            .flatten();
+        if let Some((word, url)) = unknown {
+            if strict {
+                pending_start = hits.len();
             }
+            hits.push(Hit {
+                url: url.to_string(),
+                line: word.line,
+                command: name,
+                unanalyzable: true,
+                indirect_command,
+            });
+            continue;
         }
         let env = env.as_ref().and_then(|bindings| {
             let original = if expanded.is_some() {

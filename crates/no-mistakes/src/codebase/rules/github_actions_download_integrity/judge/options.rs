@@ -1,4 +1,31 @@
 use super::super::{verify, words::Word};
+use super::{dynamic, operands::UrlOperand, url};
+
+pub(super) fn unproven_argument<'a>(
+    command: &str,
+    args: &'a [Word],
+    candidates: &[UrlOperand<'a>],
+    indirect_command: bool,
+) -> Option<(&'a Word, &'a str)> {
+    // An expansion can become an option and consume a later literal URL.
+    dynamic_option(command, args)
+        .or_else(|| {
+            candidates
+                .iter()
+                .find(|operand| dynamic(operand.text))
+                .map(|operand| (operand.word, operand.text))
+        })
+        .or_else(|| {
+            if indirect_command {
+                candidates
+                    .iter()
+                    .find(|operand| url::http_url(operand.text).is_some())
+                    .map(|operand| (operand.word, operand.text))
+            } else {
+                None
+            }
+        })
+}
 
 /// Dynamic option names can change whether a later token is a URL or an operand.
 pub(super) fn dynamic_option<'a>(command: &str, args: &'a [Word]) -> Option<(&'a Word, &'a str)> {
@@ -16,7 +43,7 @@ pub(super) fn dynamic_option<'a>(command: &str, args: &'a [Word]) -> Option<(&'a
             continue;
         }
         let dynamic_name = if token.starts_with("--") {
-            super::dynamic(token.split_once('=').map_or(token, |(name, _)| name))
+            dynamic(token.split_once('=').map_or(token, |(name, _)| name))
                 || (token.contains('=') && word.expansion_may_split)
         } else if token.starts_with('-') {
             dynamic_short_name(command, word)
