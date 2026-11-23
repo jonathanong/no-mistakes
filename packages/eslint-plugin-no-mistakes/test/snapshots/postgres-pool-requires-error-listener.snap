@@ -42,6 +42,18 @@
     "options": null
   },
   {
+    "file": "postgres-pool-requires-error-listener/member-accepted.js",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "postgres-pool-requires-error-listener/commonjs-accepted.cjs",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
     "file": "postgres-pool-requires-error-listener/missing.js",
     "findings": [
       {
@@ -145,6 +157,245 @@
         "endLine": 6,
         "file": "postgres-pool-requires-error-listener/identity.ts",
         "line": 6,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "postgres-pool-requires-error-listener/member-missing.js",
+    "findings": [
+      {
+        "column": 10,
+        "endColumn": 20,
+        "endLine": 4,
+        "file": "postgres-pool-requires-error-listener/member-missing.js",
+        "line": 4,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 27,
+        "endLine": 19,
+        "file": "postgres-pool-requires-error-listener/member-missing.js",
+        "line": 19,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 20,
+        "endLine": 29,
+        "file": "postgres-pool-requires-error-listener/member-missing.js",
+        "line": 29,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 27,
+        "endLine": 39,
+        "file": "postgres-pool-requires-error-listener/member-missing.js",
+        "line": 39,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 20,
+        "endLine": 46,
+        "file": "postgres-pool-requires-error-listener/member-missing.js",
+        "line": 46,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 27,
+        "endLine": 64,
+        "file": "postgres-pool-requires-error-listener/member-missing.js",
+        "line": 64,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "postgres-pool-requires-error-listener/member-types.ts",
+    "findings": [
+      {
+        "column": 17,
+        "endColumn": 27,
+        "endLine": 16,
+        "file": "postgres-pool-requires-error-listener/member-types.ts",
+        "line": 16,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 11,
+        "endLine": 2,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 2,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 5,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 5,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 8,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 8,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 11,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 11,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 11,
+        "endLine": 2,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 2,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 5,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 5,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 8,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 8,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 11,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 11,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 47,
+        "endLine": 13,
+        "file": "postgres-pool-requires-error-listener/commonjs-missing.cjs",
+        "line": 13,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "extraModules": [
+          "@example/pg-compatible"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "postgres-pool-requires-error-listener/nested-destructured.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 11,
+        "endLine": 4,
+        "file": "postgres-pool-requires-error-listener/nested-destructured.js",
+        "line": 4,
+        "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+        "messageId": "missingErrorListener",
+        "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 7,
+        "file": "postgres-pool-requires-error-listener/nested-destructured.js",
+        "line": 7,
         "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
         "messageId": "missingErrorListener",
         "ruleId": "no-mistakes/postgres-pool-requires-error-listener",

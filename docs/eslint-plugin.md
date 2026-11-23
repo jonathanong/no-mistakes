@@ -324,10 +324,11 @@ file and cannot know a name never matched anywhere. See the
 ### `postgres-pool-requires-error-listener`
 
 Opt-in. `extraModules?: string[]` defaults to `[]` and adds exact compatible
-module names to the built-in `pg` import. A pool needs a same-module
-`on("error", ...)`, `once`, or `addListener` registration on its own binding.
-Named, default-member, and namespace imports are supported. There is no autofix;
-see [the rule reference](eslint-rules/postgres-pool-requires-error-listener.md).
+module names to the built-in `pg` module. A pool needs a same-module
+`on("error", ...)`, `once`, or `addListener` registration on its own binding or
+class member. Both ECMAScript imports and literal CommonJS `require` calls are
+supported. See [the rule reference](eslint-rules/postgres-pool-requires-error-listener.md)
+for supported patterns and fixes.
 
 ### `server-require-nullable-fetch-wrapper`
 

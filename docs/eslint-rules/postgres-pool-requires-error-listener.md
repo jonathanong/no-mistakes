@@ -65,9 +65,25 @@ export const pool = new DatabasePool({ host: "example.invalid" });
 pool.on("error", console.error);
 ```
 
-Destructuring uses the imported binding's lexical scope; a parameter or local
-object named `pg` does not select its constructors. Type-only imports and
-constructors from modules not listed in the configuration are not selected.
+Both the destructured constructor binding and the module binding resolve
+lexically. In CommonJS, a literal `require("pg")` can supply a destructured
+`Pool` or a `.Pool` member directly or through a stable `const` module binding.
+Parameters or local variables can shadow `Pool`, `pg`, or `require`. The rule
+checks runtime bindings from the configured modules.
+
+A direct `this` member also works for class-field initializers and assignments.
+
+```ts
+import { Pool } from "pg";
+
+export class Database {
+  #pool = new Pool();
+
+  constructor() {
+    this.#pool.on("error", console.error);
+  }
+}
+```
 
 ## Options
 
@@ -91,9 +107,9 @@ opt-in and is not enabled by `configs.recommended` or `configs.strict`.
 Bind the pool locally and attach its idle-client error listener where it is
 created. Log or handle the failure according to the application's policy. The
 rule has no autofix because it cannot choose that policy for the application.
-A listener in a different module does not satisfy this file-local check;
-move it beside construction or document the external ownership with a
-suppression.
+Passing the pool to a helper such as `attach(pool)` still produces a finding,
+even if the helper registers the listener. Move the registration beside
+construction or document the helper's ownership with a suppression.
 
 ## Limits
 
@@ -102,9 +118,23 @@ registration executes before an error, remains installed, or handles failures
 correctly. A listener in a nested function referencing the same binding counts.
 Bindings with multiple writes cannot establish which pool instance owns a listener; use
 separate stable bindings and register each instance explicitly.
-Constructor destructuring follows only `const` declarations with static `Pool`
-properties. Mutable declarations, default values, and dynamic property keys
-are not followed; use a named import or a static `const` property instead.
+Class member matching follows a directly named `this` property within the
+same class. Static and instance properties are tracked independently. Use a
+field with one recognized write and register directly on `this.pool` or
+`this["pool"]`. An uninitialized runtime field such as TypeScript's
+`pool: Pool` counts as a write, so a later assignment is a second write.
+A TypeScript `declare pool: Pool` field is erased. Receiver aliases, accessors,
+inherited fields, dynamic keys, and deeper chains such as `this.database.pool`
+fall outside this matching.
+
+Constructor destructuring follows `const` declarations with static property
+names and no default values along the path. Nested patterns can reach the
+module through inline object literals, as in
+`const { database: { Pool } } = { database: pg }`. Unknown nested exports and
+paths through opaque objects are outside the check.
+
+The rule applies to test files whenever their ESLint config enables it. Use a
+flat-config `files` glob or a test-file override to select the intended files.
 
 ## Suppression
 
