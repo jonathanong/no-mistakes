@@ -3,6 +3,8 @@ use crate::codebase::lockfile;
 use serde::Serialize;
 use std::{collections::BTreeMap, path::Path};
 
+mod malformed;
+
 const CASES: [(&str, KeyFormat, &str); 8] = [
     ("npm", KeyFormat::Npm, "json"),
     ("pnpm", KeyFormat::Pnpm, "yaml"),
@@ -143,7 +145,7 @@ fn keyed_diff_decodes_saved_catalogs_as_utf16_with_both_byte_orders() {
                 bytes
             };
             let encoded_base = encode(&base);
-            let encoded_head = encode(&head);
+            let mut encoded_head = encode(&head);
             assert_eq!(
                 diff(&options, Some(&encoded_base), Some(&encoded_head)).unwrap(),
                 expected
@@ -154,6 +156,16 @@ fn keyed_diff_decodes_saved_catalogs_as_utf16_with_both_byte_orders() {
                 diff(&options, Some(&encoded_base), Some(truncated)).unwrap_err()
             )
             .contains("incomplete UTF-16 code unit"));
+            encoded_head.extend(if big_endian {
+                0xd800_u16.to_be_bytes()
+            } else {
+                0xd800_u16.to_le_bytes()
+            });
+            assert!(format!(
+                "{:#}",
+                diff(&options, Some(&encoded_base), Some(&encoded_head)).unwrap_err()
+            )
+            .contains("invalid UTF-16 text"));
         }
     }
 }
