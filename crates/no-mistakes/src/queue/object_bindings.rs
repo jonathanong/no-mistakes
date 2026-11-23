@@ -163,7 +163,7 @@ impl<'a> Collector<'a> {
             declarator.span.end
         };
         let init = (kind == VariableDeclarationKind::Const)
-            .then(|| declarator.init.as_ref())
+            .then_some(declarator.init.as_ref())
             .flatten()
             .map(crate::codebase::ts_source::unwrap_ts_wrappers);
         visit::bind_pattern(
