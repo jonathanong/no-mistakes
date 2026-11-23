@@ -108,9 +108,7 @@ fn scan_expression<'a>(mut body: &'a str, patterns: &mut Vec<String>) -> Option<
                 &token[1..]
             }
             b',' => {
-                if let Some(group) = groups.last_mut() {
-                    group.finish_argument(token, patterns);
-                }
+                groups.last_mut()?.finish_argument(token, patterns);
                 &token[1..]
             }
             b'a'..=b'z' | b'A'..=b'Z' | b'_' | b'0'..=b'9' | b'-' => {

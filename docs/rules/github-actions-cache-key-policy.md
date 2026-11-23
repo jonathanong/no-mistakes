@@ -109,7 +109,9 @@ patterns such as `src/*.json` pass. A single `**/` before the exact basename of 
 lockfile also passes, including `**/widgets.lock` and `packages/**/widgets.lock`. Every other
 component in that exception must be literal. A basename glob still does not prove the
 required digest. Dynamic arguments such as `env.cachePattern` and `format(...)` are ignored.
-The check applies independently of `allowHashFiles` and `rejectRestoreKeys`.
+If the scan detects malformed quoting or delimiters, it discards partial findings from that
+interpolation and keeps findings from earlier complete interpolations. The check applies
+independently of `allowHashFiles` and `rejectRestoreKeys`.
 
 A missing `key` is reported on the step. Platform and digest gaps are reported on the `key` line.
 `restore-keys` is reported on its own line. Broad patterns are reported on the associated

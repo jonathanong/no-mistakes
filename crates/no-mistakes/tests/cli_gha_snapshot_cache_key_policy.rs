@@ -48,6 +48,18 @@ fn github_actions_cache_broad_hash_files_json_matches_snapshot() {
 }
 
 #[test]
+fn malformed_hash_files_preserve_only_findings_from_complete_expressions() {
+    assert_saved_fixture(
+        "github_actions_cache_malformed_hash_files",
+        &[(
+            "malformed",
+            rules_path(RULE, "fixture", "malformed-broad-hash"),
+            rules_path(RULE, "configs", "broad-hash.yml"),
+        )],
+    );
+}
+
+#[test]
 fn empty_cache_list_is_rejected() {
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args(["check", "--root"])

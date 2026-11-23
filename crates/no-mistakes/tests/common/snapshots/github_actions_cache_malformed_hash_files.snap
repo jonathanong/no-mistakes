@@ -1,0 +1,25 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 10,
+          "message": "Cache `key` calls hashFiles with broad pattern `retained/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ hashFiles('retained/**') }}-${{ hashFiles('double/**', \"invalid\") }}"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
