@@ -42,41 +42,34 @@ pub(crate) fn has_disable_line_comment_tracking(
     rule_id: &str,
     track_quotes: bool,
 ) -> bool {
-    stmt_line != 0
-        && line_comment_directive_matches(
-            source,
-            stmt_line,
-            "no-mistakes-disable-line ",
-            rule_id,
-            track_quotes,
-        )
-}
-
-fn line_comment_directive_matches(
-    source: &str,
-    stmt_line: u32,
-    directive: &str,
-    rule_id: &str,
-    track_quotes: bool,
-) -> bool {
+    if stmt_line == 0 {
+        return false;
+    }
     let mut state = super::LineCommentScanState {
         track_quotes,
         ..super::LineCommentScanState::default()
     };
     for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
-        let line_number = (index + 1) as u32;
         let comment = super::line_comment_start(line, &mut state);
-        if line_number != stmt_line {
-            continue;
+        if (index + 1) as u32 == stmt_line {
+            return comment
+                .and_then(|(start, kind)| comment_rule_part(line, start, kind))
+                .is_some_and(|part| super::rule_part_matches(part, rule_id));
         }
-        let Some((comment_start, kind)) = comment else {
-            return false;
-        };
-        let rest = super::comment_body(line, comment_start, kind);
-        let Some(after_directive) = rest.strip_prefix(directive) else {
-            return false;
-        };
-        return super::rule_part_matches(after_directive.trim(), rule_id);
     }
     false
+}
+
+pub(super) fn inline_rule_part<'a>(
+    line: &'a str,
+    state: &mut super::LineCommentScanState,
+) -> Option<&'a str> {
+    let (start, kind) = super::line_comment_start(line, state)?;
+    comment_rule_part(line, start, kind)
+}
+
+fn comment_rule_part(line: &str, start: usize, kind: super::CommentKind) -> Option<&str> {
+    super::comment_body(line, start, kind)
+        .strip_prefix(super::DISABLE_LINE)
+        .map(str::trim)
 }

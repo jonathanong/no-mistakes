@@ -32,11 +32,7 @@ pub fn disable_directives(source: &str, track_quotes: bool) -> Vec<NamedDisableD
         else {
             continue;
         };
-        let rule = rest
-            .trim()
-            .split(|ch: char| ch == ':' || ch.is_whitespace())
-            .next()
-            .unwrap_or("");
+        let rule = super::named_rule(rest.trim());
         if rule.is_empty() {
             continue;
         }

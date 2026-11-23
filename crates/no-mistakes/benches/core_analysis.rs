@@ -4,6 +4,8 @@ mod aggregate;
 mod annotation_call_values;
 #[path = "core_analysis/annotation_modules.rs"]
 mod annotation_modules;
+#[path = "core_analysis/ast_grep_sources.rs"]
+mod ast_grep_sources;
 #[path = "core_analysis/call_index.rs"]
 mod call_index;
 #[path = "core_analysis/companion_imports.rs"]
@@ -50,6 +52,8 @@ mod sql_fetch;
 mod sql_source_positions;
 #[path = "core_analysis/stage_imports.rs"]
 mod stage_imports;
+#[path = "core_analysis/suppression.rs"]
+mod suppression;
 #[path = "core_analysis/workflow_artifact_values.rs"]
 mod workflow_artifact_values;
 
@@ -133,5 +137,7 @@ criterion_group!(
     stage_imports::bench_stage_imports,
     bench_sql_fetch_fast_path,
     bench_workflow_artifact_values,
+    suppression::bench_suppression_index,
+    ast_grep_sources::bench_ast_grep_source_reuse,
 );
 criterion_main!(benches);

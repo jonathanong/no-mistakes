@@ -1,0 +1,69 @@
+id: prefer-shared-reports-client
+language: TypeScript
+ignores:
+  - src/compat/adapter.ts
+  - src/generated/registry.ts
+message: Use the shared reports client.
+severity: warning
+rule:
+  any:
+    - all:
+        - pattern: "reports.archive($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.build($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.create($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.delete($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.export($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.fetch($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.generate($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.get($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.list($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.publish($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.render($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "reports.schedule($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end

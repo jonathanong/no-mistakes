@@ -1,0 +1,13 @@
+version: 2
+reportUnusedDisableDirectives: ignore
+rules:
+  - name: scheduler-registration
+    rule: forbidden-calls
+    scope: repository
+    include: [src/worker.ts]
+    options:
+      roots:
+        - glob: ["src/worker.ts"]
+      traversal: file
+      targets:
+        - exact: scheduler.register

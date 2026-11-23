@@ -1,0 +1,15 @@
+version: 2
+reportUnusedDisableDirectives: ignore
+rules:
+  - name: first
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]
+  - name: second
+    rule: ast-grep-ignore-freshness
+    scope: repository
+    include: [rules/*.yml]
+    options:
+      files: [rules]

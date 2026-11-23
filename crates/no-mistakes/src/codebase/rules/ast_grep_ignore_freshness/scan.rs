@@ -1,15 +1,17 @@
 use super::entries;
 use super::select;
-use crate::codebase::structured_value::parse_yaml_documents;
+use crate::codebase::structured_value::YamlDocuments;
+use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::Path;
+use std::sync::Arc;
 
 pub(super) struct ParsedConfig {
     pub(super) relative: String,
     pub(super) project: String,
-    pub(super) source: String,
-    pub(super) documents: Vec<Value>,
+    pub(super) source: Arc<str>,
+    pub(super) documents: Arc<YamlDocuments>,
 }
 
 pub(super) fn load(
@@ -17,6 +19,7 @@ pub(super) fn load(
     files: &[String],
     tracked: &[String],
     tracked_set: &BTreeSet<&str>,
+    sources: &SourceStore,
 ) -> (Vec<ParsedConfig>, Vec<super::RuleFinding>) {
     let mut findings = Vec::new();
     let (seeds, missing) = select::seeds(files, tracked_set);
@@ -41,8 +44,8 @@ pub(super) fn load(
             .get(&relative)
             .map(|visit| visit.project.clone())
             .unwrap_or_default();
-        let source = match std::fs::read_to_string(root.join(&relative)) {
-            Ok(source) => source,
+        let (source, documents) = match sources.parse_structured_yaml_path(&root.join(&relative)) {
+            Ok(parsed) => parsed,
             Err(error) => {
                 findings.push(super::finding(
                     &relative,
@@ -53,9 +56,8 @@ pub(super) fn load(
                 continue;
             }
         };
-        let documents = parse_yaml_documents(&source);
-        for (line, message) in documents.errors {
-            findings.push(super::finding(&relative, line, message, None));
+        for (line, message) in &documents.errors {
+            findings.push(super::finding(&relative, *line, message.clone(), None));
         }
         if documents.values.is_empty() {
             continue;
@@ -84,7 +86,7 @@ pub(super) fn load(
             relative,
             project,
             source,
-            documents: documents.values,
+            documents,
         });
     }
     (parsed, findings)

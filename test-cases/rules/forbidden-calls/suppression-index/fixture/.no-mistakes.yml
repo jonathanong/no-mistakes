@@ -1,0 +1,12 @@
+version: 2
+reportUnusedDisableDirectives: ignore
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    include: ["*.ts"]
+    options:
+      roots:
+        - glob: ["*.ts"]
+      traversal: file
+      targets:
+        - exact: scheduler.register

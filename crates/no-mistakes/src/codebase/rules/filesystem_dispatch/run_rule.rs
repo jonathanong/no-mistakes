@@ -40,6 +40,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
                 defer_suppression,
             )
         }
+        AST_GREP_IGNORE_FRESHNESS => {
+            ast_grep_ignore_freshness::check_with_files_and_sources(root, config, files, sources)
+        }
         FORBIDDEN_LINT_SUPPRESSIONS => forbidden_lint_suppressions::check_prepared(
             root,
             config,

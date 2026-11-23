@@ -1,0 +1,69 @@
+id: prefer-shared-events-client
+language: TypeScript
+ignores:
+  - src/compat/adapter.ts
+  - src/generated/registry.ts
+message: Use the shared events client.
+severity: warning
+rule:
+  any:
+    - all:
+        - pattern: "events.ack($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.consume($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.dispatch($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.emit($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.listen($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.nack($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.publish($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.receive($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.replay($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.send($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.subscribe($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end
+    - all:
+        - pattern: "events.unsubscribe($$$ARGS)"
+        - inside:
+            kind: function_declaration
+            stopBy: end

@@ -185,3 +185,7 @@ json_binding!(
 include!("napi_api/ci_bindings.rs");
 
 include!("napi_api/postgres_bindings.rs");
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[path = "napi_api/suppression_index_tests.rs"]
+mod suppression_index_tests;

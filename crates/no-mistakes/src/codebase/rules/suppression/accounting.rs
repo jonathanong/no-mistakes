@@ -1,6 +1,6 @@
-use super::{finding_source_candidate, matching_directive};
+use super::FindingSuppressions;
+use crate::codebase::ts_source::{DisableDirective, SourceStore};
 use serde::Serialize;
-use std::collections::HashMap;
 use std::path::Path;
 
 /// A domain finding projected into the common suppression contract.
@@ -55,7 +55,7 @@ pub enum SuppressionDirectiveKind {
 pub fn suppress_domain_findings_with_sources<T>(
     root: &Path,
     findings: &mut Vec<T>,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
     describe: impl Fn(&T) -> SuppressionTarget<'_>,
 ) -> Vec<SuppressedFinding> {
     suppress_domain_findings_with_source_files(root, findings, sources, describe, |_| None)
@@ -67,7 +67,7 @@ pub fn suppress_domain_findings_with_sources<T>(
 pub fn suppress_domain_findings_with_source_files<T>(
     root: &Path,
     findings: &mut Vec<T>,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
     describe: impl Fn(&T) -> SuppressionTarget<'_>,
     source_file: impl Fn(&T) -> Option<&str>,
 ) -> Vec<SuppressedFinding> {
@@ -83,33 +83,17 @@ pub fn suppress_domain_findings_with_source_files<T>(
 pub fn suppress_domain_findings_with_source_locations<T>(
     root: &Path,
     findings: &mut Vec<T>,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
     describe: impl Fn(&T) -> SuppressionTarget<'_>,
     source_location: impl Fn(&T) -> Option<(&str, Option<usize>)>,
 ) -> Vec<SuppressedFinding> {
-    let lexical_root = crate::codebase::ts_source::normalize_discovery_path(root);
-    let mut cached_sources = HashMap::new();
+    let mut sources = FindingSuppressions::new(root, Some(sources));
     let mut suppressed = Vec::new();
     findings.retain(|finding| {
         let target = describe(finding);
         let (source_file, source_line) =
             source_location(finding).unwrap_or((target.file, target.line));
-        let source = cached_sources
-            .entry(source_file.to_string())
-            .or_insert_with(|| {
-                let (candidate, is_absolute) =
-                    finding_source_candidate(&lexical_root, source_file, true)?;
-                let path = if is_absolute {
-                    sources.trusted_regular_path(&candidate)
-                } else {
-                    sources.validated_regular_path(&lexical_root, &candidate)
-                }?;
-                read_directive_source(sources, &path)
-            });
-        let Some(directive) = source
-            .as_deref()
-            .and_then(|source| matching_directive(source, target.rule, source_line, source_file))
-        else {
+        let Some(directive) = sources.matching(source_file, target.rule, source_line) else {
             return true;
         };
         suppressed.push(SuppressedFinding {
@@ -122,7 +106,7 @@ pub fn suppress_domain_findings_with_source_locations<T>(
                 || target.reason.to_string(),
                 |identity| format!("{} (component {identity})", target.reason),
             ),
-            directive,
+            directive: project(directive),
         });
         false
     });
@@ -130,23 +114,24 @@ pub fn suppress_domain_findings_with_source_locations<T>(
     suppressed
 }
 
-/// Invalid UTF-8 remains an analyzer error. Its retained bytes are usable only
-/// for matching or auditing directives after the caller validates the path.
+fn project(directive: DisableDirective) -> SuppressionDirective {
+    let (kind, line) = match directive {
+        DisableDirective::File { line } => (SuppressionDirectiveKind::File, line),
+        DisableDirective::Line { line } => (SuppressionDirectiveKind::Line, line),
+        DisableDirective::NextLine { line } => (SuppressionDirectiveKind::NextLine, line),
+    };
+    SuppressionDirective {
+        kind,
+        line: line as usize,
+    }
+}
+
+/// Auditing can read the lossy projection while strict reads retain their error.
 pub(crate) fn read_directive_source(
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
     path: &Path,
 ) -> Option<std::sync::Arc<str>> {
-    match sources.read_path(path) {
-        Ok(source) => Some(source),
-        Err(error) => {
-            let retained = error
-                .get_ref()?
-                .downcast_ref::<std::string::FromUtf8Error>()?;
-            Some(std::sync::Arc::from(String::from_utf8_lossy(
-                retained.as_bytes(),
-            )))
-        }
-    }
+    sources.read_source_path(path).ok()
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
