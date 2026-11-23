@@ -25,10 +25,14 @@ export const tagged = String.raw`/tmp/template-input`;
 
 declare const fallback: typeof combine;
 
-defaultedJoin(os.tmpdir(), "unresolved-default.json");
-rest.join(os.tmpdir(), "unresolved-rest.json");
-computedJoin(os.tmpdir(), "unresolved-key.json");
-typeOnlyPath.join(os.tmpdir(), "unresolved-type.json");
-Join(os.tmpdir(), "unresolved-specifier.json");
-unknownJoin(os.tmpdir(), "unresolved-join.json");
+filesystem.readFileSync(defaultedJoin(os.tmpdir(), "unresolved-default.json"));
+filesystem.readFileSync(rest.join(os.tmpdir(), "unresolved-rest.json"));
+filesystem.readFileSync(computedJoin(os.tmpdir(), "unresolved-key.json"));
+filesystem.readFileSync(typeOnlyPath.join(os.tmpdir(), "unresolved-type.json"));
+filesystem.readFileSync(Join(os.tmpdir(), "unresolved-specifier.json"));
+filesystem.readFileSync(unknownJoin(os.tmpdir(), "unresolved-join.json"));
 unknownMaker("/tmp/unresolved-maker.json");
+
+filesystem.readFileSync(joined);
+filesystem.readFileSync(computed);
+filesystem.readFileSync(tagged);

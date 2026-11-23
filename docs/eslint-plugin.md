@@ -338,9 +338,10 @@ see [the rule reference](eslint-rules/postgres-pool-requires-error-listener.md).
 
 ### `test-no-fixed-temp-paths`
 
-Opt-in; no rule-local options. Fixed temporary path literals and all-literal
-`path.join(os.tmpdir(), ...)` calls in test filenames are reported. A direct
-`mkdtemp` or `mkdtempSync` prefix is accepted. See
+Opt-in; no rule-local options. Report fixed temporary paths only when they
+reach known Node filesystem or process sinks, directly or through one `const`
+alias. Unique-directory prefixes, including disposable variants, are accepted;
+files that mock the filesystem are exempt. See
 [the rule reference](eslint-rules/test-no-fixed-temp-paths.md).
 
 ### `test-no-wall-time-assertions`
