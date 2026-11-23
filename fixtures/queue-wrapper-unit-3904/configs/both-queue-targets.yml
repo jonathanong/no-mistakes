@@ -1,0 +1,8 @@
+version: 2
+queues:
+  factories:
+    enqueue:
+      - callee: makeEnqueue
+        queue: 0
+        queueName: background
+        job: 1

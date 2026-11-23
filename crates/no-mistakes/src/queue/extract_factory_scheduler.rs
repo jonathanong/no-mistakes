@@ -80,7 +80,7 @@ fn resolve<'expr, 'arena: 'expr>(
         Expression::ObjectExpression(object) => Some(Found { object, at }),
         Expression::Identifier(id) => {
             let binding = bindings.lookup(id.name.as_str(), at)?;
-            resolve(binding.value?, bindings, binding.resolve_at, depth + 1)
+            resolve(binding.value()?, bindings, binding.resolve_at, depth + 1)
         }
         _ => None,
     }

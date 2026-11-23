@@ -89,7 +89,7 @@ fn note_flow_node<'a>(
             visitor
                 .object_bindings
                 .lookup(&spread.name, spread.at)
-                .is_some_and(|binding| binding.value.is_some())
+                .is_some_and(|binding| binding.value().is_some())
         })
     });
     push_site(

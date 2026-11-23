@@ -49,18 +49,26 @@ pub(in crate::queue) fn definition_files(
     let mut paths = facts.keys().collect::<Vec<_>>();
     paths.sort();
     let mut out = HashMap::new();
+    let mut wrappers = HashMap::new();
     for path in paths {
         let file = &facts[path];
-        let flows = file
-            .producers
-            .iter()
-            .filter_map(|producer| match &producer.binding {
-                ProducerBinding::Flow(name) => Some(name.as_str()),
-                _ => None,
-            });
-        for name in defined_queue_names(file).chain(flows) {
+        for name in defined_queue_names(file) {
             out.entry(name.to_string()).or_insert_with(|| path.clone());
         }
+        for producer in &file.producers {
+            match &producer.binding {
+                ProducerBinding::Flow(name) => {
+                    out.entry(name.clone()).or_insert_with(|| path.clone());
+                }
+                ProducerBinding::QueueName(name) => {
+                    wrappers.entry(name).or_insert(path);
+                }
+                _ => {}
+            }
+        }
+    }
+    for (name, path) in wrappers {
+        out.entry(name.clone()).or_insert_with(|| path.clone());
     }
     out
 }

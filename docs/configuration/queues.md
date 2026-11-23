@@ -60,6 +60,7 @@ tests:
 enqueue factory records a producer at the wrapper call. `options` is the
 argument index of that call's options object; self-dedup, debounce, invalid
 jobId, and mixed-priority checks read it the same way they read `queue.add`'s third argument.
+
 `jobScheduler` names a wrapper that registers a repeated job. `template` is the argument
 index of the job template. [`queues check`](../cli/queues-check.md) reads that
 argument the same way it reads the third argument of `upsertJobScheduler`.
@@ -115,6 +116,70 @@ unmatched worker, so that finding can be broader than the handler's own queue.
 Language test/graph frontends likewise
 require explicit `tests.<language>` package or module roots; no repository-wide
 queue scan is enabled by default.
+
+## Configured enqueue selectors and returned callables
+
+An enqueue role can select a numeric argument, or a direct property with
+`{ arg, property }`. `queueName` fixes the queue instead of selecting an
+argument. Declare exactly one of `queue` and `queueName`.
+
+```yaml
+queues:
+  factories:
+    enqueue:
+      - callee: makeObjectEnqueue
+        queue: { arg: 0, property: queueName }
+        job: { arg: 0, property: jobName }
+        defaults: { arg: 0, property: defaults }
+        optionsOnReturnedCall: 1
+      - callee: makeReturnedEnqueue
+        queue: 0
+        job: 1
+        optionsOnReturnedCall: 1
+      - callee: makeFixedEnqueue
+        queueName: background
+        job: { arg: 0, property: name }
+        optionsOnReturnedCall: 1
+      - callee: makeFixedBulkEnqueue
+        queueName: background
+        job: { arg: 0, property: name }
+        optionsOnReturnedCall: 1
+```
+
+For `makeObjectEnqueue({ queueName: "background", jobName: "send", defaults })`,
+selectors read the named properties of argument zero. `defaults` and `options`
+can select an argument or property. Effective job options combine wrapper
+`defaults`, factory-call `options`, then returned-call options, in that order;
+a later supplied property overrides an earlier one. Defaults belong to that
+wrapper, not to every producer on the same queue.
+
+`optionsOnReturnedCall: 1` describes `const send = makeReturnedEnqueue(queue,
+"send"); send(data, options)`. The construction is not itself an enqueue;
+producer locations and option checks refer to actual calls through the
+immutable `const` binding, including another immutable `const` alias. Without
+this setting, existing enqueue roles continue to record the factory call.
+
+For fixed queues, `makeFixedEnqueue(JOB_DEF)` selects `JOB_DEF.name` from a
+local or imported `const` object literal. Named re-exports use the prepared
+module resolver. The bulk wrapper's build callback does not supply a job name;
+only the configured selector does. Resolution stays within the configured
+file universe and uses the same producer/worker graph as `queues edges`.
+
+Property selection requires a direct, static object property. Unresolved
+values, spread objects, computed properties, non-const bindings, and mutated
+objects with observed member writes do not establish a concrete name.
+Wrapper bodies and arbitrary side effects in other calls are not executed
+or inferred; keep job definitions as immutable metadata. Unknown options are
+not treated as empty options or as priority zero. Rewrite these cases as direct immutable
+literals when a static result is required. Configuring a wrapper is explicit;
+functions without a configured role do not become producers.
+
+JavaScript callers can name these config shapes with exported
+`QueueFactoryArgument`, `QueueEnqueueFactoryOptions`, and `QueueFactories`.
+These describe the `queues.factories` config-file value. The existing async
+queue APIs read the root configuration; no direct factory argument is added
+to `queueCheck()`. `check()` and `analyzeProject()` can also select a config
+file through their existing `config` option.
 
 ## Required job options
 

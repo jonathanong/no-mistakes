@@ -72,7 +72,7 @@ impl OptionsReader<'_, '_> {
         let Some(binding) = self.bindings.lookup(name, at) else {
             return Some(JobOptionEvidence::open());
         };
-        let Some(value) = binding.value else {
+        let Some(value) = binding.value() else {
             return Some(JobOptionEvidence::open());
         };
         let at = binding.resolve_at;

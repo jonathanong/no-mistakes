@@ -74,7 +74,7 @@ fn debounce_with_ttl(expr: &Expression<'_>) -> bool {
     })
 }
 
-fn debounce_object(expr: &Expression<'_>) -> bool {
+pub(in crate::queue) fn debounce_object(expr: &Expression<'_>) -> bool {
     let Expression::ObjectExpression(object) = expr else {
         return false;
     };
@@ -114,7 +114,7 @@ fn dedup_uses_active_job(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> b
     })
 }
 
-fn dedup_id_token(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> bool {
+pub(in crate::queue) fn dedup_id_token(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> bool {
     let Expression::ObjectExpression(object) = expr else {
         return visitor.tracks_job_token(expr);
     };

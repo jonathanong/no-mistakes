@@ -1,6 +1,7 @@
 use super::{TsFactContext, TsFactPlan};
 use crate::queue::extract::{
-    needs_job_id_scoping, needs_scheduler_scoping, needs_wait_scoping, waits_in_scope,
+    needs_enqueue_scoping, needs_job_id_scoping, needs_scheduler_scoping, needs_wait_scoping,
+    waits_in_scope,
 };
 use oxc_ast::ast::Program;
 use oxc_semantic::{SemanticBuilder, SemanticBuilderReturn};
@@ -23,6 +24,7 @@ pub(super) fn prepare<'a>(
     let semantic = (needs_semantic
         && plan.queue_project
         && (needs_job_id_scoping(source)
+            || needs_enqueue_scoping(source, &context.queue_factory_roles)
             || needs_scheduler_scoping(source, &context.queue_factory_roles)
             || (record_waits && needs_wait_scoping(source, &context.queue_factory_roles))))
     .then(|| {

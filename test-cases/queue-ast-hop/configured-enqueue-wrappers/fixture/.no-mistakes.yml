@@ -1,0 +1,41 @@
+version: 2
+reportUnusedDisableDirectives: ignore
+projects:
+  backend:
+    type: server
+    root: .
+    queues:
+      enqueues: [enqueues/*.ts]
+      workers: [workers/*.ts]
+queues:
+  requiredJobOptions: [attempts, removeOnComplete]
+  factories:
+    queue:
+      - callee: createQueue
+        name: 0
+    worker:
+      - callee: createWorker
+        name: 0
+        processor: 1
+    enqueue:
+      - callee: makeObjectEnqueue
+        queue: { arg: 0, property: queueName }
+        job: { arg: 0, property: jobName }
+        defaults: { arg: 0, property: defaults }
+        optionsOnReturnedCall: 1
+      - callee: makeObjectProducer
+        queue: { arg: 0, property: queueName }
+        job: { arg: 0, property: jobName }
+        defaults: { arg: 0, property: defaults }
+      - callee: makeReturnedEnqueue
+        queue: 0
+        job: 1
+        optionsOnReturnedCall: 1
+      - callee: makeFixedEnqueue
+        queueName: background
+        job: { arg: 0, property: name }
+        optionsOnReturnedCall: 1
+      - callee: makeFixedBulkEnqueue
+        queueName: background
+        job: { arg: 0, property: name }
+        optionsOnReturnedCall: 1

@@ -36,6 +36,7 @@ pub(crate) enum ProducerBinding {
     Named(String),
     Local(u32),
     Flow(String),
+    QueueName(String),
 }
 
 #[derive(Debug, Clone)]
@@ -89,6 +90,8 @@ pub(crate) struct RateLimitSite {
 #[derive(Debug, Default, Clone)]
 pub(crate) struct FileFacts {
     pub imports: Vec<ImportBinding>,
+    pub enqueue_wrappers: Vec<super::enqueue_wrapper::WrapperSite>,
+    pub exported_enqueue_properties: HashMap<String, HashMap<String, String>>,
     pub queue_bindings: HashMap<String, String>,
     pub queue_declarations: HashMap<u32, LocalQueue>,
     pub queue_exports: HashMap<String, String>,

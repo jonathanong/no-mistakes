@@ -483,6 +483,12 @@ Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 those language edges into the existing report. They do not get private graph
 shapes.
 
+Configured TypeScript queue enqueue wrappers support object-argument property
+selectors, immutable returned-callable aliases with per-call options, and
+fixed queues with local/imported const object job definitions. These share
+producer/worker edges and option checks with positional factories; unresolved,
+spread, and mutable definitions abstain. See [queue configuration](configuration/queues.md).
+
 **HTTP clients.** Static client calls produce `http` edges to matching route
 files, the same way TS `fetch` and Swift `Endpoint` literals do.
 

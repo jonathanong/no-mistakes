@@ -17,7 +17,7 @@ pub struct ObjectBinding<'a> {
     bare_var: bool,
     pub visible_from: u32,
     pub resolve_at: u32,
-    pub value: Option<&'a Expression<'a>>,
+    pub init: Option<&'a Expression<'a>>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -36,6 +36,15 @@ struct Scope {
 }
 
 impl<'a> ObjectBinding<'a> {
+    pub fn value(&self) -> Option<&'a Expression<'a>> {
+        self.init.filter(|expr| {
+            matches!(
+                expr,
+                Expression::ObjectExpression(_) | Expression::Identifier(_)
+            )
+        })
+    }
+
     pub fn in_scope<'b>(bindings: &'b [Self], name: &str, at: u32) -> Option<&'b Self> {
         bindings
             .iter()
@@ -90,7 +99,7 @@ impl<'a> Collector<'a> {
             bare_var: false,
             visible_from,
             resolve_at: visible_from,
-            value: None,
+            init: None,
         });
     }
 
@@ -153,23 +162,10 @@ impl<'a> Collector<'a> {
         } else {
             declarator.span.end
         };
-        let value = if kind == VariableDeclarationKind::Const {
-            match &declarator.id {
-                BindingPattern::BindingIdentifier(_) => declarator
-                    .init
-                    .as_ref()
-                    .map(crate::codebase::ts_source::unwrap_ts_wrappers)
-                    .filter(|expr| {
-                        matches!(
-                            expr,
-                            Expression::ObjectExpression(_) | Expression::Identifier(_)
-                        )
-                    }),
-                _ => None,
-            }
-        } else {
-            None
-        };
+        let init = (kind == VariableDeclarationKind::Const)
+            .then(|| declarator.init.as_ref())
+            .flatten()
+            .map(crate::codebase::ts_source::unwrap_ts_wrappers);
         visit::bind_pattern(
             self,
             &declarator.id,
@@ -177,7 +173,7 @@ impl<'a> Collector<'a> {
             visible_from,
             declarator.span.end.saturating_sub(1),
             var && declarator.init.is_none(),
-            value,
+            init,
         );
     }
 }

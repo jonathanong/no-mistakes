@@ -3,19 +3,20 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy)]
-pub(in crate::queue) enum Want {
+pub(in crate::queue) enum Want<'a> {
+    Property(&'a str),
     Queue,
     Either,
     Definition,
 }
 
-pub(super) fn lookup<R: ImportResolverFacade>(
+pub(in crate::queue) fn lookup<R: ImportResolverFacade>(
     facts: &std::collections::HashMap<PathBuf, FileFacts>,
     resolver: &R,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
     path: &Path,
     local: &str,
-    want: Want,
+    want: Want<'_>,
 ) -> Option<String> {
     Follow::new(facts, resolver, remapper).resolve(path, local, want)
 }
@@ -53,7 +54,7 @@ pub(in crate::queue) fn lookup_export<R: ImportResolverFacade>(
     path: &Path,
     specifier: &str,
     imported: &str,
-    want: Want,
+    want: Want<'_>,
 ) -> Option<String> {
     Follow::new(facts, resolver, remapper).follow_source(path, specifier, imported, want)
 }
@@ -93,7 +94,7 @@ impl<'a, R: ImportResolverFacade> Follow<'a, R> {
         }
     }
 
-    fn resolve(&mut self, path: &Path, local: &str, want: Want) -> Option<String> {
+    fn resolve(&mut self, path: &Path, local: &str, want: Want<'_>) -> Option<String> {
         let file = self.facts.get(path)?;
         // A local import wins over an `export { ... as local } from` of the same name.
         let (specifier, imported) = file
@@ -109,7 +110,7 @@ impl<'a, R: ImportResolverFacade> Follow<'a, R> {
         path: &Path,
         specifier: &str,
         imported: &str,
-        want: Want,
+        want: Want<'_>,
     ) -> Option<String> {
         let resolved = self.resolver.resolve(specifier, path)?;
         let resolved = self.remapper.remap(&resolved)?;
@@ -122,13 +123,16 @@ impl<'a, R: ImportResolverFacade> Follow<'a, R> {
         self.export_named(&resolved, imported, want)
     }
 
-    fn export_named(&mut self, path: &Path, imported: &str, want: Want) -> Option<String> {
+    fn export_named(&mut self, path: &Path, imported: &str, want: Want<'_>) -> Option<String> {
         let other = self.facts.get(path)?;
         let direct = match want {
             Want::Definition => self.local_definition(path, other, imported),
             _ => direct_export(other, imported, want),
         };
-        if direct.is_some() {
+        if direct.is_some()
+            || matches!(want, Want::Property(_))
+                && other.exported_enqueue_properties.contains_key(imported)
+        {
             return direct;
         }
         if let Some((specifier, name)) = other.export_from.get(imported).cloned() {
@@ -136,10 +140,9 @@ impl<'a, R: ImportResolverFacade> Follow<'a, R> {
                 return Some(value);
             }
         }
-        if other.string_imports.contains_key(imported) {
-            if let Some(value) = self.resolve(path, imported, want) {
-                return Some(value);
-            }
+        if let Some(value) = self.resolve(path, export::imported_local(other, imported, want), want)
+        {
+            return Some(value);
         }
         for specifier in &other.star_exports {
             let Some(next) = self
@@ -182,14 +185,6 @@ impl<'a, R: ImportResolverFacade> Follow<'a, R> {
     }
 }
 
-fn direct_export(file: &FileFacts, imported: &str, want: Want) -> Option<String> {
-    match want {
-        Want::Queue => file.queue_exports.get(imported).cloned(),
-        Want::Definition => None,
-        Want::Either => file
-            .exported_strings
-            .get(imported)
-            .cloned()
-            .or_else(|| file.queue_exports.get(imported).cloned()),
-    }
-}
+#[path = "factory_resolve_export.rs"]
+mod export;
+use export::direct_export;

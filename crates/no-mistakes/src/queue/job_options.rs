@@ -23,7 +23,7 @@ pub(crate) use defaults::{
 };
 pub(crate) use judge::judge_into_facts;
 pub(crate) use note::note_call;
-pub(super) use walk::finish;
+pub(super) use walk::{finish, read as read_evidence};
 
 pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopLevelConfig) {
     let policy = (!queues.required_job_options.is_empty()

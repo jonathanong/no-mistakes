@@ -1,0 +1,7 @@
+version: 2
+queues:
+  factories:
+    enqueue:
+      - callee: makeEnqueue
+        queue: 0
+        job: { arg: 1, property: name, extra: true }

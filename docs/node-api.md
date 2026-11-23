@@ -479,6 +479,18 @@ configuration, not an inline `queueCheck()` option. A `missing-job-option`
 finding lists the absent keys in `message`. Abstained calls are omitted from
 the findings array; their warnings stay on the queue report diagnostics.
 
+## Queue factory configuration types
+
+`QueueFactoryArgument`, `QueueFactoryPropertyArgument`,
+`QueueEnqueueFactoryOptions`, `QueueFactoriesOptions`, and `QueueFactories`
+are exported configuration types for the selected file's `queues.factories`.
+They cover positional/property selectors, fixed queue names, wrapper defaults,
+and returned-call options. They do not add a direct `factories` argument to
+`queues()`, `queueEdges()`, `queueCheck()`, or `analyzeProject()`; those async
+queue entrypoints load the root config and share the canonical queue graph.
+`check()` and `analyzeProject()` also support their existing explicit config
+path selection. See [queue configuration](configuration/queues.md).
+
 ## Deprecated APIs
 
 `related(options)` is a deprecated compatibility alias for `dependents(options)`.

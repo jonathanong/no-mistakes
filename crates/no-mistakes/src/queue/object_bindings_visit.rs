@@ -12,7 +12,7 @@ pub(super) fn bind_pattern<'a>(
     visible_from: u32,
     resolve_at: u32,
     bare_var: bool,
-    value: Option<&'a Expression<'a>>,
+    init: Option<&'a Expression<'a>>,
 ) {
     if let BindingPattern::BindingIdentifier(id) = pattern {
         collector.bindings.insert(super::ObjectBinding {
@@ -23,7 +23,7 @@ pub(super) fn bind_pattern<'a>(
             bare_var,
             visible_from,
             resolve_at,
-            value,
+            init,
         });
         return;
     }
@@ -38,7 +38,7 @@ pub(super) fn bind_pattern<'a>(
             bare_var,
             visible_from,
             resolve_at: visible_from,
-            value: None,
+            init: None,
         });
     }
 }

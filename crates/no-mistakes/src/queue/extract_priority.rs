@@ -53,7 +53,7 @@ pub(crate) fn from_job_object(
     object: &ObjectExpression<'_>,
     numbers: &HashMap<String, f64>,
 ) -> EnqueuePriority {
-    own_key(object, "opts", |value| {
+    own_key(object, "opts", EnqueuePriority::Unprioritized, |value| {
         from_options_expression(value, numbers)
     })
 }
@@ -62,10 +62,20 @@ fn from_options_expression(
     expr: &Expression<'_>,
     numbers: &HashMap<String, f64>,
 ) -> EnqueuePriority {
+    from_options_with_default(expr, numbers, EnqueuePriority::Unprioritized)
+}
+
+pub(super) fn from_options_with_default(
+    expr: &Expression<'_>,
+    numbers: &HashMap<String, f64>,
+    default: EnqueuePriority,
+) -> EnqueuePriority {
     let Expression::ObjectExpression(object) = expr.get_inner_expression() else {
         return EnqueuePriority::Dynamic;
     };
-    own_key(object, "priority", |value| classify_value(value, numbers))
+    own_key(object, "priority", default, |value| {
+        classify_value(value, numbers)
+    })
 }
 
 fn classify_value(expr: &Expression<'_>, numbers: &HashMap<String, f64>) -> EnqueuePriority {
@@ -79,6 +89,7 @@ fn classify_value(expr: &Expression<'_>, numbers: &HashMap<String, f64>) -> Enqu
 fn own_key(
     object: &ObjectExpression<'_>,
     key: &str,
+    default: EnqueuePriority,
     mut classify: impl FnMut(&Expression<'_>) -> EnqueuePriority,
 ) -> EnqueuePriority {
     let mut found = None;
@@ -107,7 +118,7 @@ fn own_key(
     if open {
         EnqueuePriority::Dynamic
     } else {
-        found.unwrap_or(EnqueuePriority::Unprioritized)
+        found.unwrap_or(default)
     }
 }
 

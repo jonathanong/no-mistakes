@@ -7,7 +7,16 @@ no-mistakes queues check --format json
 ```
 
 Use this before finishing queue edits so every configured enqueue/worker path is
-connected. `check` is empty when the graph is consistent. Findings use these
+connected. `check` is empty when the graph is consistent. For explicitly configured enqueue wrappers, object-argument selectors,
+fixed-queue job definitions, and `optionsOnReturnedCall` feed these same
+checks. Returned-call options are judged at the call site: invalid `jobId`,
+mixed priorities, debounce TTL, and required job options are not lost at the
+factory declaration. Wrapper defaults are applied before per-call overrides.
+Unresolved properties, spread definitions, and mutable bindings do not invent
+producer names or worker edges. See
+[factory configuration](../configuration/queues.md#configured-enqueue-selectors-and-returned-callables).
+
+Findings use these
 `kind` values:
 
 | `kind` | Meaning |

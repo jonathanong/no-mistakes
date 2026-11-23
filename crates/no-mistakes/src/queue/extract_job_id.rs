@@ -13,7 +13,8 @@ const KIND: &str = "invalid-job-id";
 
 #[path = "extract_job_id_scope.rs"]
 mod scope;
-use scope::{imported, referenced_symbol};
+use scope::imported;
+pub(super) use scope::referenced_symbol;
 pub(super) use scope::{
     is_imported_callee, note_const, note_flow_binding, note_queue_binding, queue_identifier,
 };
@@ -24,6 +25,7 @@ enum Receiver {
         symbol: SymbolId,
     },
     Flow(SymbolId),
+    Wrapper(usize),
 }
 
 pub(super) struct PendingCheck {
@@ -69,6 +71,17 @@ pub(super) fn note_factory_options(
     reader.options(job, options);
     let evidence = reader.evidence;
     publish(visitor, receiver, evidence);
+}
+
+pub(super) fn note_wrapper_options(
+    visitor: &mut QueueVisitor<'_>,
+    wrapper: usize,
+    options: &Expression<'_>,
+) {
+    let mut reader = Reader::new(visitor);
+    reader.job_id(None, options);
+    let evidence = reader.evidence;
+    publish(visitor, Receiver::Wrapper(wrapper), evidence);
 }
 
 pub(super) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
@@ -132,6 +145,14 @@ pub(super) fn finish(visitor: &mut QueueVisitor<'_>) {
                         && visitor.job_id_queues.contains(&symbol)) =>
             {
                 Some(binding)
+            }
+            Receiver::Wrapper(index) => {
+                let checks = pending
+                    .evidence
+                    .into_iter()
+                    .filter_map(|item| item.finding(&visitor.job_id_consts));
+                visitor.facts.enqueue_wrappers[index].checks.extend(checks);
+                continue;
             }
             Receiver::Flow(symbol) if visitor.job_id_flows.contains(&symbol) => None,
             _ => continue,

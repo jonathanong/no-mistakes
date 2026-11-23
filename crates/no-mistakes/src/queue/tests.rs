@@ -1,4 +1,5 @@
 mod collisions;
+mod enqueue_wrappers;
 mod extract;
 mod factory_detectors;
 mod factory_false_positives;

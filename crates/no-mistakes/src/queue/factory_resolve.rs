@@ -19,6 +19,7 @@ pub(super) fn resolve_imported_queue_names<R: ImportResolverFacade>(
         }
     }
     declarations::resolve_names(facts, resolver, remapper);
+    super::enqueue_wrapper::resolve(facts, resolver, remapper);
 }
 
 enum Update {

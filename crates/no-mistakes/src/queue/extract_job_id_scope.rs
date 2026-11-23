@@ -44,7 +44,7 @@ fn stable_binding(visitor: &QueueVisitor<'_>, pattern: &BindingPattern<'_>) -> O
     (!visitor.scoping?.symbol_is_mutated(symbol)).then_some(symbol)
 }
 
-pub(super) fn referenced_symbol(
+pub(in crate::queue) fn referenced_symbol(
     visitor: &QueueVisitor<'_>,
     id: &IdentifierReference<'_>,
 ) -> Option<SymbolId> {

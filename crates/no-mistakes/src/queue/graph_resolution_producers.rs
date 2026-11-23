@@ -103,6 +103,12 @@ pub(super) fn resolved_binding<R: ImportResolverFacade>(
 ) -> Option<QueueKey> {
     let binding = match binding {
         ProducerBinding::Named(binding) => binding,
+        ProducerBinding::QueueName(name) => {
+            return Some(QueueKey {
+                queue_file: definitions.get(name)?.clone(),
+                queue_name: name.clone(),
+            });
+        }
         ProducerBinding::Flow(queue_name) => {
             return Some(QueueKey {
                 queue_file: path.to_path_buf(),
