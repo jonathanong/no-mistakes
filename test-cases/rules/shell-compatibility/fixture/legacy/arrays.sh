@@ -48,3 +48,5 @@ collect "${items[@]}"
 # no-mistakes-disable-next-line bash-empty-array-nounset -- Conditional population is guaranteed by the caller.
 collect "${items[@]}"
 collect "${items[@]}" # no-mistakes-disable-line bash-empty-array-nounset -- Conditional population is guaranteed.
+declare -a literal=stable
+collect "${literal[@]}"
