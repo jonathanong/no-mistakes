@@ -72,6 +72,8 @@ export interface ResolvedTrigger {
   targets: string[];
   /** Effective changed-test expansion policy; present only for structured triggers. */
   includeChangedTests?: boolean;
+  /** Suppress this path trigger only when a trusted changes report is supplied. */
+  supersededByChanges?: boolean;
   source: "triggers" | "projects";
 }
 

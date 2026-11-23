@@ -28,6 +28,7 @@ const jsonApis = createJsonApis({
   analyzeProject: "analyzeProjectJson",
   callSites: "callSitesJson",
   check: "checkJson",
+  changesDiff: "changesDiffJson",
   resolveConfig: "resolveConfigJson",
   ciEnv: "ciEnvJson",
   ciImpact: "ciImpactJson",
@@ -145,6 +146,7 @@ module.exports.infraOutputs = jsonApis.infraOutputs;
 module.exports.infraResourceRefs = jsonApis.infraResourceRefs;
 module.exports.infraTestFor = jsonApis.infraTestFor;
 module.exports.lockfileDiff = jsonApis.lockfileDiff;
+module.exports.changesDiff = jsonApis.changesDiff;
 module.exports.validateMermaidMarkdown = jsonApis.validateMermaidMarkdown;
 module.exports.playwrightCheck = jsonApis.playwrightCheck;
 module.exports.playwrightEdges = jsonApis.playwrightEdges;

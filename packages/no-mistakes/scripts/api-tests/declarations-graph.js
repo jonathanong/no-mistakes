@@ -154,7 +154,7 @@ test("test plan declarations require current results but accept saved legacy pla
     /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/,
     /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/,
     /limitPercent\?: never;[\s\S]*limitFiles\?: never;/,
-    /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false;/,
+    /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false(?:;|\s*\})/,
     /export interface TestPlanIncompleteness \{/,
     /export type TestPlanIncompletenessKind = "dependency-baseline-missing";/,
     /incomplete\?: TestPlanIncompleteness\[\];/,

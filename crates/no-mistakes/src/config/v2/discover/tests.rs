@@ -186,6 +186,7 @@ fn named_triggers_are_validated_for_every_test_plan_framework() {
             name: "resources".to_string(),
             paths: vec!["[".to_string()],
             targets: Vec::new(),
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
     let error = validate_v2_config(&config, Path::new("config.yml"))
@@ -210,6 +211,7 @@ fn changed_test_policy_is_rejected_for_programmatic_legacy_named_trigger() {
             name: "legacy".to_string(),
             paths: vec!["src/**".to_string()],
             targets: Vec::new(),
+            superseded_by_changes: false,
             include_changed_tests: Some(false),
         });
     let error = validate_v2_config(&config, Path::new("config.yml"))

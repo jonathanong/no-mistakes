@@ -384,3 +384,16 @@ Helper globs select only the prepared visible-file inventory. Declared-only
 policies do not report dynamic projects as incomplete. For effective policies,
 inspect `incomplete` as well as findings: unresolved values require a static
 rewrite. This policy never executes config or discovers additional source files.
+
+
+### Keyed changes from local trees
+
+Use `changes diff --base-root before --head-root after --config changes.yml`
+to produce a schemaVersion 1 categorized report without Git or network access.
+Pass its JSON file to `tests plan <framework> --changes changes.json` alongside
+normal changed-file inputs. Invalid/incomplete reports or unclassified paths
+select the full suite; inspect `fallback_reason` and warnings. Matchers use
+configured test-source globs and literal ID templates. A trusted report can
+supersede a path trigger marked `supersededByChanges`; without the flag that
+trigger is unchanged. See `docs/configuration/changes.md` for the shared schema.
+The async APIs are `changesDiff(options)` and `testsPlan({ changes, ...options })`.

@@ -565,3 +565,19 @@ test("GitHub Actions run command policy exports named option types", () => {
     /export type \* from "\.\/github-actions-run-command-policy-types";/,
   );
 });
+
+test("changes diff and planner changes have exported public contracts", () => {
+  const changes = readFileSync(join(packageRoot, "changes-types.d.ts"), "utf8");
+  assert.match(changes, /export interface KeyChanges/);
+  assert.match(changes, /export interface ChangesDiffOptions/);
+  assert.match(changes, /export type ChangesReport/);
+  assert.match(changes, /export function changesDiff/);
+  assert.match(changes, /baseRoot: string/);
+  assert.match(changes, /headRoot: string/);
+  assert.match(changes, /schemaVersion: 1/);
+  assert.match(readFileSync(join(packageRoot, "test-types.d.ts"), "utf8"), /changes\?: string/);
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \{ changesDiff \} from "\.\/changes-types"/,
+  );
+});

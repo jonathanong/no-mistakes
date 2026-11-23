@@ -1,0 +1,57 @@
+---
+source: crates/no-mistakes/tests/cli_changes_diff.rs
+expression: "serde_json::to_string_pretty(report).unwrap()"
+---
+{
+  "schemaVersion": 1,
+  "catalogs": {
+    "changed": [
+      "label.welcome",
+      "retained",
+      "shared"
+    ],
+    "added": [
+      "introduced",
+      "label.new"
+    ],
+    "removed": [
+      "label.old",
+      "retired"
+    ]
+  },
+  "contracts": {
+    "changed": [
+      "contracts/view.txt"
+    ],
+    "added": [
+      "contracts/added.txt"
+    ],
+    "removed": [
+      "contracts/removed.txt"
+    ]
+  },
+  "dotted": {
+    "changed": [
+      "profile.picture"
+    ],
+    "added": [],
+    "removed": []
+  },
+  "fixtures": {
+    "changed": [
+      "profile.avatar",
+      "profile.description"
+    ],
+    "added": [
+      "profile.new"
+    ],
+    "removed": [
+      "profile.legacy"
+    ]
+  },
+  "unclassified": [
+    ".notice",
+    "ignored/data.txt"
+  ],
+  "complete": true
+}

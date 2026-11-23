@@ -1,0 +1,4 @@
+// Localized labels
+"alpha" = "Old";
+"moving" = "Hello, \"world\"!\nNext line \UD83D\UDE80";
+"removed" = "Remove";

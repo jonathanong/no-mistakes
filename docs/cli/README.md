@@ -197,3 +197,10 @@ no-mistakes dependencies src/api.mts --relationship import --format json
 
 Use [`Graph edges`](../graph-edges.md) for the complete supported edge-kind and
 relationship-filter list.
+
+## Categorized directory changes
+
+The [`changes`](changes.md) command group provides local comparison.
+
+[`changes diff`](changes-diff.md) compares caller-provided local trees and emits
+semantic IDs for [`tests plan --changes`](tests-plan.md#semantic-change-reports).

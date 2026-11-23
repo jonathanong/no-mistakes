@@ -14,6 +14,7 @@ include!("plan_extra_inputs.rs");
 mod plan_vitest_setup;
 
 mod changed_inventory;
+pub(crate) mod changes;
 pub(crate) use changed_inventory::generate_plan_with_prepared;
 mod dependency_seeds;
 mod fallback;

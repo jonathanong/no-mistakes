@@ -1,0 +1,7 @@
+categories:
+  catalogs:
+    rules:
+      - paths: ["locales/**/*.strings"]
+        id: { keysOf: strings }
+      - paths: ["locales/*.resx"]
+        id: { keysOf: resx }

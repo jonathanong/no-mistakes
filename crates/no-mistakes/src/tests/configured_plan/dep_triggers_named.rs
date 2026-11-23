@@ -8,9 +8,9 @@ use no_mistakes::config::v2::schema::NamedFullSuiteTrigger;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(super) fn apply_named_triggers(
+pub(super) fn apply_named_triggers<'a>(
     root: &Path,
-    triggers: &[NamedFullSuiteTrigger],
+    triggers: impl Iterator<Item = &'a NamedFullSuiteTrigger>,
     changed_files: &[PathBuf],
     discovered_test_files: &HashSet<PathBuf>,
     ignored_sets: &[HashSet<PathBuf>],

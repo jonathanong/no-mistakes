@@ -66,12 +66,14 @@ mod diagnostics;
 pub(crate) use diagnostics::diagnostics_snapshot_impl;
 #[cfg(not(coverage))]
 pub use diagnostics::diagnostics_snapshot_json;
+mod changes_diff;
 mod filesystem;
 pub(crate) mod infra_swift;
 mod lock_status;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod lock_status_tests;
 mod lockfile_diff;
+pub(crate) use changes_diff::changes_diff_json_impl;
 #[cfg(feature = "mermaid-validation")]
 mod mermaid;
 pub(crate) mod options;

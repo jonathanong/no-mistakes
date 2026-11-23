@@ -4,6 +4,7 @@ pub use super::test_plan::{
     TestPlanIgnoredChangedTestsFramework, TestPlanLimit, TestPlanPercent,
     TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
+pub use crate::changes::config::{ChangeCategory, ChangeRule, ChangesConfig, IdRule, KeysOf};
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -97,6 +98,8 @@ pub struct NoMistakesConfig {
     pub ci: CiConfig,
     /// Changed-file validation command mappings (`no-mistakes impacted-checks`).
     pub checks: ChecksConfig,
+    #[serde(skip_serializing_if = "ChangesConfig::is_empty")]
+    pub changes: ChangesConfig,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

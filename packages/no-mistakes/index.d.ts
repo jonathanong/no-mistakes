@@ -202,3 +202,5 @@ export function reactCheck(
 export function reactUsages(
   options: WithInvocationOptions<ProjectOptions & { target: string }>,
 ): Promise<WithInvocationResult<ReactUsagesReport>>;
+
+export { changesDiff } from "./changes-types";

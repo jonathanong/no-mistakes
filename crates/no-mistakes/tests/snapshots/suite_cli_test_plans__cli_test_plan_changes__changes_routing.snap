@@ -1,0 +1,88 @@
+---
+source: crates/no-mistakes/tests/cli_test_plan_changes.rs
+expression: "serde_json::to_string_pretty(&summaries).unwrap()"
+---
+{
+  "changes_only": {
+    "selected": [
+      "tests/reader.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "both_inputs": {
+    "selected": [
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "path_only": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "fixture-path trigger changed: data/example.json",
+    "warnings": []
+  },
+  "without_input": {
+    "selected": [],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "targeted": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Unmatched IDs in changes category `fixtures`: missing.id",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "missing_trigger": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Unmatched IDs in changes category `legacy`: missing.path. No fallback trigger named `missing-trigger`",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "empty_trigger": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Unmatched IDs in changes category `empty`: missing.id. Fallback trigger `empty` has no discovered tests for vitest project `empty`",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "empty_changes": {
+    "selected": [],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "path_and_changes": {
+    "selected": [
+      "tests/reader.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  }
+}

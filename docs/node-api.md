@@ -470,6 +470,7 @@ remain failures. See
 | `react analyze\|check\|usages`             | `reactAnalyze`, `reactCheck`, `reactUsages`                                                                                                                                                                                                                                |
 | `infra resource-refs\|outputs\|test-for`   | `infraResourceRefs`, `infraOutputs`, `infraTestFor`                                                                                                                                                                                                                        |
 | `swift importers\|test-targets`            | `swiftImporters`, `swiftTestTargets`                                                                                                                                                                                                                                       |
+| `changes diff` | `changesDiff({ baseRoot, headRoot, config })` |
 | `lockfile diff`                            | `lockfileDiff(options)`                                                                                                                                                                                                                                                    |
 | `ci impact`                                | `ciImpact(options)`                                                                                                                                                                                                                                                        |
 | `ci env`                                   | `ciEnv(options)`                                                                                                                                                                                                                                                           |
@@ -561,6 +562,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `infraOutputs` | `infraOutputs(options)` |
 | `infraResourceRefs` | `infraResourceRefs(options)` |
 | `infraTestFor` | `infraTestFor(options)` |
+| `changesDiff` | `changesDiff(options)` |
 | `lockfileDiff` | `lockfileDiff(options)` |
 | `validateMermaidMarkdown` | `validateMermaidMarkdown(options)` |
 | `playwrightCheck` | `playwrightCheck(options)` |
@@ -1120,3 +1122,20 @@ refuse unresolved SQL. The command and this asynchronous API share one prepared
 analysis. Ordinary `check()` and `analyzeProject()` check reports use the same
 rule and standard suppressions. See the [rule](rules/postgres-lock-inventory.md)
 and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
+
+
+## Categorized local changes
+
+`changesDiff({ baseRoot, headRoot, config })` asynchronously compares two local
+roots without Git or network access. It returns the CLI's schemaVersion 1
+report, including `complete: false` and reasons for unreadable roots. Use
+`changesDiff<"fixtures" | "localization">(...)` to name configured category
+fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
+`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `ChangesConfig`,
+`ChangeCategory`, `ChangeRule`, `ChangeIdRule`, `KeyedDiffOptions`, and
+`KeyedDiffFormat`.
+
+`testsPlan({ root, changes: "changes.json", framework: "vitest" })` consumes the
+same saved report as CLI `tests plan --changes`. Invalid or incomplete input
+selects the full suite with a structured reason. Configured matchers reuse
+prepared source contents. See [changes configuration](configuration/changes.md).

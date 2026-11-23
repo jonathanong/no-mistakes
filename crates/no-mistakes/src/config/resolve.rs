@@ -63,6 +63,8 @@ pub struct ResolvedTrigger {
     pub targets: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub include_changed_tests: Option<bool>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub superseded_by_changes: bool,
     pub source: &'static str,
 }
 

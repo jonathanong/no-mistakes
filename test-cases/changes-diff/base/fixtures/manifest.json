@@ -1,0 +1,6 @@
+{"fixtures": [
+  {"id": "profile.avatar", "status": 200},
+  {"id": "profile.description", "status": 200},
+  {"id": "profile.legacy", "status": 200},
+  {"id": "profile.unchanged", "status": 200}
+]}

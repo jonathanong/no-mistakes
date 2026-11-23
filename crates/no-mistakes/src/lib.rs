@@ -4,6 +4,7 @@ pub mod ast;
 #[cfg(feature = "test-instrumentation")]
 #[doc(hidden)]
 pub mod benchmark_support;
+pub mod changes;
 mod check_discovery;
 mod check_parallel;
 mod check_runner;

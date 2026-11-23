@@ -1,18 +1,59 @@
 use super::{ResolutionKind, ResolvedPackage};
+use anyhow::{ensure, Context, Result};
+use serde_json::{Map, Value};
 
 pub fn parse(content: &str) -> Vec<ResolvedPackage> {
     let Ok(root) = serde_json::from_str::<serde_json::Value>(content) else {
         return Vec::new();
     };
+    parse_root(&root)
+}
+
+fn parse_root(root: &Value) -> Vec<ResolvedPackage> {
     let version = root
         .get("lockfileVersion")
         .and_then(|v| v.as_u64())
         .unwrap_or(1);
     if version >= 2 {
-        parse_v2(&root)
+        parse_v2(root)
     } else {
-        parse_v1(&root)
+        parse_v1(root)
     }
+}
+
+pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>> {
+    let root: Value = serde_json::from_str(content).context("invalid npm lockfile JSON")?;
+    match root.get("lockfileVersion").and_then(Value::as_u64) {
+        Some(1) if root.get("dependencies").is_none() => {}
+        Some(1) => {
+            let dependencies = root["dependencies"]
+                .as_object()
+                .context("invalid npm dependencies")?;
+            validate_records(dependencies, true)?;
+        }
+        Some(2 | 3) => {
+            let packages = root
+                .get("packages")
+                .and_then(Value::as_object)
+                .context("invalid npm packages")?;
+            validate_records(packages, false)?;
+        }
+        _ => anyhow::bail!("unsupported npm lockfile version"),
+    }
+    Ok(parse_root(&root))
+}
+
+fn validate_records(records: &Map<String, Value>, nested: bool) -> Result<()> {
+    for (name, record) in records {
+        ensure!(record.is_object(), "invalid npm package record {name:?}");
+        if let Some(dependencies) = record.get("dependencies").filter(|_| nested) {
+            let dependencies = dependencies
+                .as_object()
+                .context("invalid nested npm dependencies")?;
+            validate_records(dependencies, true)?;
+        }
+    }
+    Ok(())
 }
 
 fn parse_v2(root: &serde_json::Value) -> Vec<ResolvedPackage> {

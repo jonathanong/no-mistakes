@@ -232,3 +232,7 @@ their owning package rather than globally.
 If the configured package graph cannot trace a native source/project change but
 native tests are discoverable, the plan falls back to the framework-scoped
 discovered tests and sets `fallback_triggered`/`fallback_reason`.
+
+Semantic reports can replace configured broad path triggers through
+[`changes.categories` and `supersededByChanges`](changes.md). Without a report,
+existing trigger and lockfile routing behavior is unchanged.

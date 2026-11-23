@@ -10,5 +10,6 @@ pub(super) const SECTIONS: &[&str] = &[
     "rules",
     "ci",
     "checks",
+    "changes",
     "reactTraits",
 ];

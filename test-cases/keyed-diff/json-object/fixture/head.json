@@ -1,0 +1,14 @@
+{
+  "moving": {
+    "version": "1.0.0",
+    "url": "/moving"
+  },
+  "alpha": {
+    "version": "2.0.0",
+    "url": "/alpha"
+  },
+  "added": {
+    "version": "1.0.0",
+    "url": "/added"
+  }
+}

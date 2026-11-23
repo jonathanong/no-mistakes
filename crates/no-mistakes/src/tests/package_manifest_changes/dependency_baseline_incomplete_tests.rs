@@ -35,6 +35,7 @@ fn plan(root: &Path, base: Option<&str>) -> crate::tests::TestPlan {
             root.join("pnpm-lock.yaml"),
         ],
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

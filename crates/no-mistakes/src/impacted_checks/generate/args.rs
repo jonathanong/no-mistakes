@@ -55,6 +55,7 @@ pub(crate) fn plan_args_for(
         from_git_diff: None,
         changed_file,
         changed_files: args.changed_files.clone(),
+        changes: None,
         diff: args.diff.clone(),
         diff_stdin: args.diff_stdin,
         diff_command: args.diff_command.clone(),
