@@ -73,6 +73,7 @@ mod lock_status;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod lock_status_tests;
 mod lockfile_diff;
+#[cfg(not(coverage))]
 pub(crate) use changes_diff::changes_diff_json_impl;
 #[cfg(feature = "mermaid-validation")]
 mod mermaid;
