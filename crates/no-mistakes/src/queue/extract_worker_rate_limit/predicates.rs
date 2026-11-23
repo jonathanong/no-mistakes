@@ -41,6 +41,33 @@ pub(super) fn is_worker_new(visitor: &QueueVisitor<'_>, new_expr: &NewExpression
     }
 }
 
+pub(super) fn is_known_non_worker_new(
+    visitor: &QueueVisitor<'_>,
+    new_expr: &NewExpression<'_>,
+) -> bool {
+    match new_expr.callee.get_inner_expression() {
+        Expression::Identifier(id) => {
+            if visitor.scoping.is_none() {
+                return true;
+            }
+            referenced_symbol(visitor, id).is_some_and(|symbol| {
+                is_class_or_function(visitor, symbol) || is_imported_symbol(visitor, symbol)
+            })
+        }
+        Expression::StaticMemberExpression(member) => {
+            let Expression::Identifier(ns) = member.object.get_inner_expression() else {
+                return false;
+            };
+            visitor
+                .namespace_imports
+                .get(ns.name.as_str())
+                .is_some_and(|source| is_queue_package(source))
+                && (visitor.scoping.is_none() || is_imported_callee(visitor, &member.object))
+        }
+        _ => false,
+    }
+}
+
 pub(super) fn is_worker_factory_call(
     visitor: &QueueVisitor<'_>,
     call: &CallExpression<'_>,

@@ -21,6 +21,12 @@ pub(super) fn findings(
     workers: &[InternalWorker],
     facts: &HashMap<PathBuf, FileFacts>,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
+    if facts
+        .values()
+        .all(|file| file.worker_rate_limits.is_empty())
+    {
+        return (Vec::new(), Vec::new());
+    }
     let workers_by_index = workers_by_file_index(workers);
     let mut checks = Vec::new();
     let mut diagnostics = Vec::new();

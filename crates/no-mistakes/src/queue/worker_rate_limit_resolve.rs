@@ -134,7 +134,11 @@ fn follow_file<R: ImportResolverFacade>(
             ExportedWorkerBinding::NonWorker => ResolvedExport::NonWorker,
         };
     }
-    if let Some((specifier, imported)) = file.export_from.get(exported) {
+    if let Some((specifier, imported)) = file
+        .export_from
+        .get(exported)
+        .or_else(|| file.worker_namespace_exports.get(exported))
+    {
         return follow_source(
             facts, resolver, remapper, path, specifier, imported, visited,
         );
@@ -146,6 +150,9 @@ fn follow_file<R: ImportResolverFacade>(
         return follow_local_import(facts, resolver, remapper, path, file, local, visited);
     }
     for specifier in &file.star_exports {
+        if is_queue_package(specifier) {
+            continue;
+        }
         let result = follow_source(
             facts, resolver, remapper, path, specifier, exported, visited,
         );

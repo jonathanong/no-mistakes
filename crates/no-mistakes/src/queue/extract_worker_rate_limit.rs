@@ -39,6 +39,7 @@ pub(super) enum ModuleInit {
     NonWorker,
     Alias(String),
     Imported(String),
+    Namespace { source: String, exported: String },
 }
 
 pub(super) struct PendingCall {

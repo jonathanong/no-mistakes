@@ -1,8 +1,20 @@
 import { Queue } from "bullmq";
 import * as bullmq from "bullmq";
-import DefaultLimiter, { cycleA, cyclicExport, renamedWorker } from "./reexport";
+import DefaultLimiter, {
+  cycleA,
+  cyclicExport,
+  nsWorkerExport,
+  reexportedNsWorker,
+  renamedWorker,
+  starOnlyWorker,
+} from "./reexport";
 import * as reexportNs from "./reexport";
-import defaultHelper, { bullNsExport, renamedUnknown, unknownExport } from "./source";
+import defaultHelper, {
+  bullNsExport,
+  createEdgeWorker,
+  renamedUnknown,
+  unknownExport,
+} from "./source";
 import { missingWorker } from "./missing";
 
 declare const globalWorker: { rateLimit(ms: number): Promise<void> };
@@ -30,6 +42,11 @@ export async function runEdges() {
   const fromNs = reexportNs.renamedWorker;
   await fromNs.rateLimit(200);
 
+  await nsWorkerExport.rateLimit(210);
+  await reexportedNsWorker.rateLimit(220);
+  await starOnlyWorker.rateLimit(230);
+  await (await createEdgeWorker("edge-jobs", async () => {})).rateLimit(240);
+
   const bullAlias = bullmq;
   await (bullAlias as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(300);
   await (bullNsExport as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(310);
@@ -39,6 +56,7 @@ export async function runEdges() {
 
   await (Queue as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(500);
   await (bullmq.Queue as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(550);
+  await (new bullmq.Queue("edge-jobs") as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(560);
   await (defaultHelper as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(600);
   await DefaultLimiter.rateLimit(700);
   await new (getCtor())().rateLimit(710);

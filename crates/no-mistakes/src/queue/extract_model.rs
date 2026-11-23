@@ -142,4 +142,5 @@ pub(crate) struct FileFacts {
     pub worker_bindings: HashMap<String, ExportedWorkerBinding>,
     pub worker_exports: HashMap<String, ExportedWorkerBinding>,
     pub worker_import_aliases: HashMap<String, String>,
+    pub worker_namespace_exports: HashMap<String, (String, String)>,
 }

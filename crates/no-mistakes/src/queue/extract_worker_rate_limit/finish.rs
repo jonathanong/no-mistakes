@@ -36,6 +36,12 @@ fn finish_module_exports(visitor: &mut QueueVisitor<'_>, state: &State) {
                     .worker_import_aliases
                     .insert(name.clone(), local);
             }
+            Some(ResolvedModule::Namespace(source, exported)) => {
+                visitor
+                    .facts
+                    .worker_namespace_exports
+                    .insert(name.clone(), (source, exported));
+            }
             None => {}
         }
     }
@@ -55,11 +61,31 @@ fn finish_module_exports(visitor: &mut QueueVisitor<'_>, state: &State) {
     for (exported, binding) in copied {
         visitor.facts.worker_exports.insert(exported, binding);
     }
+    let copied_ns: Vec<_> = visitor
+        .facts
+        .reexports
+        .iter()
+        .filter_map(|(exported, local)| {
+            visitor
+                .facts
+                .worker_namespace_exports
+                .get(local)
+                .cloned()
+                .map(|target| (exported.clone(), target))
+        })
+        .collect();
+    for (exported, target) in copied_ns {
+        visitor
+            .facts
+            .worker_namespace_exports
+            .insert(exported, target);
+    }
 }
 
 enum ResolvedModule {
     Binding(ExportedWorkerBinding),
     Imported(String),
+    Namespace(String, String),
 }
 
 fn resolve_module_binding(
@@ -78,6 +104,9 @@ fn resolve_module_binding(
             .map(|idx| ResolvedModule::Binding(ExportedWorkerBinding::Worker(idx))),
         ModuleInit::NonWorker => Some(ResolvedModule::Binding(ExportedWorkerBinding::NonWorker)),
         ModuleInit::Imported(local) => Some(ResolvedModule::Imported(local.clone())),
+        ModuleInit::Namespace { source, exported } => {
+            Some(ResolvedModule::Namespace(source.clone(), exported.clone()))
+        }
         ModuleInit::Alias(next) => resolve_module_binding(next, state, visited),
     }
 }

@@ -2,9 +2,14 @@ import { Worker } from "bullmq";
 import * as bullmq from "bullmq";
 export { cyclicExport } from "./reexport";
 
+export function createEdgeWorker(name: string, processor: () => Promise<void>) {
+  return new Worker(name, processor);
+}
+
 const innerWorker = new Worker("edge-jobs", async () => {});
 const innerAlias = innerWorker;
 export { innerAlias as renamedWorker };
+export const starOnlyWorker = new Worker("edge-jobs", async () => {});
 export const unknownExport = getDynamic();
 export { unknownExport as renamedUnknown };
 export const bullNsExport = bullmq;
