@@ -4,11 +4,12 @@ use super::{
 };
 use crate::diagnostics::InvocationObserver;
 use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
 pub(crate) struct DisableCommentIndex<S> {
     source: S,
-    header: OnceLock<FxHashMap<Box<str>, u32>>,
+    header: OnceLock<HashMap<Box<str>, u32>>,
     lines: [OnceLock<Mutex<LineDirectives>>; 2],
 }
 
@@ -31,7 +32,7 @@ impl<S: AsRef<str>> DisableCommentIndex<S> {
         let source = self.source.as_ref();
         let header = self.header.get_or_init(|| {
             record(observer, "suppression.header_builds", 1);
-            let mut header = FxHashMap::default();
+            let mut header = HashMap::new();
             scan_file_directives(source, |line, part| {
                 let rule = named_rule(part);
                 if !rule.is_empty() && !header.contains_key(rule) {

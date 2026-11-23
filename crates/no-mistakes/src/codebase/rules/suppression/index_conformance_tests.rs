@@ -7,6 +7,11 @@ use crate::codebase::ts_source::{
 fn indexed_matching_conforms_to_the_directive_parser() {
     let cases: &[(&str, &[&str], &[u32])] = &[
         (
+            "fixtures/rules/disable-directive-audit/unregistered-header.ts",
+            &["future-rule", "forbidden-calls"],
+            &[],
+        ),
+        (
             "fixtures/rules/disable-directive-audit/boundaries-crlf.rs",
             &["real-crlf"],
             &[],
