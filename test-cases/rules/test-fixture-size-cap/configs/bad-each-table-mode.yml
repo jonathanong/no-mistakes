@@ -1,0 +1,5 @@
+rules:
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      eachTableMode: everything

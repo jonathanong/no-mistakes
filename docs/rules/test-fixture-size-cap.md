@@ -7,10 +7,9 @@ form stays off until `eachCalls` names a callee.
 
 The rule is opt-in. With no `threshold`, it reports nothing. It does not cap
 source-file bytes. When `eachCalls` names a callee, the each form reads numeric
-elements as cardinalities. It is meant for scale or size tables. A numeric
-element of a table whose callee is not listed is a test input. `exemptions`
-allow one exact cardinality; they do not cover boundary-value tables, because
-those inputs change with each limit.
+elements as cardinalities. Use `eachTableMode: all-elements` when the same
+callee runs scale tests and mixed boundary tests. `exemptions` allow exact
+cardinalities.
 
 ```yaml
 rules:
@@ -20,6 +19,9 @@ rules:
       threshold: 1000
       exemptions:
         - 1024
+      eachCalls:
+        - it.each
+      eachTableMode: all-elements
       scopes:
         tests:
           - "*.test.ts"
@@ -52,12 +54,8 @@ literal cardinality strictly greater than `threshold`:
   `new Array(1, 2, 3)` and `Array(1, 2, 3)` are element lists, not lengths.
   The callee must be the identifier `Array`. `window.Array` is not matched,
   and the rule does not resolve bindings.
-- Calls named by `eachCalls` when the first argument is an array. Each numeric
-  literal element is read as a cardinality and reported on its own. This form
-  is meant for scale or size tables. Records, holes, spreads, nested arrays,
-  and other non-literals are skipped, and literal siblings in the same list
-  are still reported. `eachCalls` defaults to `[]`, so a boundary-value table
-  stays silent.
+- Calls named by `eachCalls` when the first argument is a literal array.
+  `eachTableMode` controls which table elements count and where findings appear.
 
 `1_001` and `0x400` use their integer values. `1_024` and `0x400` are the same
 cardinality. A value equal to `threshold` is allowed. An entry in `exemptions`
@@ -82,6 +80,13 @@ for scale or size tables. `Array.from`, `Array(N)`, and `new Array` are checked
 whether or not `eachCalls` is set. `it.each` and `test.each` are not checked
 unless they are listed.
 
+`eachTableMode` controls findings for configured `eachCalls`.
+
+| Mode | Behavior |
+| --- | --- |
+| `per-element` (default) | Reports each oversized numeric literal at the top level of the table. Records, holes, spreads, nested arrays, and other non-literals are skipped. |
+| `all-elements` | Reports once on the opening bracket when there is at least one numeric cell and every numeric cell is a non-exempt integer cardinality above the threshold. Reads flat cells and cells in literal row arrays one level deep. Skips string, boolean, and null literals and holes. An unresolved cell, spread, record, deeper array, or invalid cardinality keeps the table silent. |
+
 `scopes.tests` and `scopes.helpers` default to `[]`. Empty scopes scan
 nothing. A file is in scope when its repository-relative path matches either
 glob. Helpers are scanned the same way as tests. `include` and `exclude`
@@ -95,6 +100,8 @@ const boundary = Array.from({ length: 1_000 }, () => ({ name: "widget" }));
 const width = Array.from({ length: 1_024 }, () => ({ name: "widget" }));
 const listed = new Array(1, 2, 3);
 it.each([{ port: 5432 }])("record %j", () => {});
+it.each([12, 1_600])("mixed size %i", () => {});
+it.each([[48], [1_800]])("mixed row %i", () => {});
 // src/orders.ts
 export const rows = Array.from({ length: 5_000 }, () => ({ name: "order" }));
 ```
@@ -105,21 +112,21 @@ export const rows = Array.from({ length: 5_000 }, () => ({ name: "order" }));
 // widgets.test.ts
 const rows = Array.from({ length: 1_001 }, () => ({ name: "widget" }));
 const wide = Array(10_000);
-// Reports 10_000 and 100_000 only when eachCalls lists it.each.
-it.each([10_000, "widget", 100_000])("scale %i", () => {});
+// The table produces one finding with all-elements.
+it.each([[1_200], [1_400]])("scale %i", () => {});
 ```
 
 ## Fix
 
 Lower the literal to the threshold or build the rows from a small explicit
 list. Add an exact integer to `exemptions` when a listed cardinality is
-intentional. List a callee in `eachCalls` only for scale or size tables.
-A record element is skipped; numeric siblings in the same list are still
-checked.
+intentional. Use `all-elements` when a callee named in `eachCalls` also
+runs mixed boundary tests.
 
 ## Suppression
 
-Use a line or file directive when a literal size is intentional:
+Use a line or file directive when a literal size is intentional. For
+`all-elements`, use the line with the opening bracket of the table.
 
 ```ts
 // no-mistakes-disable-next-line test-fixture-size-cap

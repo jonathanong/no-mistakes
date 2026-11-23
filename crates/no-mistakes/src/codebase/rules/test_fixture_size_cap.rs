@@ -22,7 +22,16 @@ pub(super) struct Options {
     pub(super) threshold: Option<u64>,
     pub(super) exemptions: Vec<u64>,
     pub(super) each_calls: Vec<String>,
+    pub(super) each_table_mode: EachTableMode,
     pub(super) scopes: Scopes,
+}
+
+#[derive(Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(super) enum EachTableMode {
+    #[default]
+    PerElement,
+    AllElements,
 }
 
 #[derive(Deserialize, Default)]
@@ -36,6 +45,7 @@ pub(super) struct Compiled {
     pub(super) threshold: Option<u64>,
     pub(super) exemptions: BTreeSet<u64>,
     pub(super) each_calls: Vec<(String, String)>,
+    pub(super) each_table_mode: EachTableMode,
     tests: GlobMatcher,
     helpers: GlobMatcher,
 }
@@ -109,6 +119,7 @@ pub(super) fn compile_options(opts: &Options) -> Result<Compiled> {
         threshold: opts.threshold,
         exemptions: opts.exemptions.iter().copied().collect(),
         each_calls,
+        each_table_mode: opts.each_table_mode,
         tests: GlobMatcher::new(&opts.scopes.tests, &format!("{RULE_ID} scopes.tests"))?,
         helpers: GlobMatcher::new(&opts.scopes.helpers, &format!("{RULE_ID} scopes.helpers"))?,
     })

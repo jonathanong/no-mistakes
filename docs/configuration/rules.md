@@ -862,8 +862,10 @@ clears an earlier `Array.from` length. `threshold` has no default: omitting it r
 `exemptions` defaults to `[]`, `eachCalls` defaults to `[]`, and both
 scope lists default to `[]`. When `eachCalls` names a callee, numeric elements
 are cardinalities for scale or size tables. A cardinality equal to the threshold is allowed.
-An exact exemption is allowed even when it is larger. List a callee in
-`eachCalls` only for those tables.
+An exact exemption is allowed even when it is larger. `eachTableMode` defaults
+to `per-element`. Use `all-elements` to report once when a table contains at
+least one numeric cell and all numeric cells are over the threshold and
+outside the exemptions.
 
 ## PostgreSQL lock inventory baseline
 

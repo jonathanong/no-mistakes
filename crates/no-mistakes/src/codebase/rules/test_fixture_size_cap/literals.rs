@@ -1,7 +1,7 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrayExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey,
-    PropertyKind,
+    ArrayExpression, ArrayExpressionElement, Expression, ObjectExpression, ObjectProperty,
+    ObjectPropertyKind, PropertyKey, PropertyKind,
 };
 use oxc_span::Span;
 
@@ -86,6 +86,35 @@ pub(super) fn numeric_list(array: &ArrayExpression) -> Vec<(f64, Span)> {
         numbers.push((literal.value, literal.span));
     }
     numbers
+}
+
+pub(super) fn count_oversized_table_cells(
+    array: &ArrayExpression,
+    is_oversized: impl Fn(f64) -> bool,
+) -> Option<usize> {
+    array
+        .elements
+        .iter()
+        .flat_map(
+            |element| match element.as_expression().map(unwrap_ts_wrappers) {
+                Some(Expression::ArrayExpression(row)) => row.elements.as_slice(),
+                _ => std::slice::from_ref(element),
+            },
+        )
+        .try_fold(0, |count, element| {
+            if matches!(element, ArrayExpressionElement::Elision(_)) {
+                return Some(count);
+            }
+            match unwrap_ts_wrappers(element.as_expression()?) {
+                Expression::NumericLiteral(literal) => {
+                    is_oversized(literal.value).then_some(count + 1)
+                }
+                Expression::StringLiteral(_)
+                | Expression::BooleanLiteral(_)
+                | Expression::NullLiteral(_) => Some(count),
+                _ => None,
+            }
+        })
 }
 
 pub(super) fn integer_cardinality(value: f64) -> Option<u64> {

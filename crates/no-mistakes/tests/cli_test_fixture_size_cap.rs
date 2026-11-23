@@ -70,3 +70,23 @@ fn test_fixture_size_cap_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn test_fixture_size_cap_each_table_mode_json_matches_snapshot() {
+    let fixture = rules_path(RULE, "fixture", "each-table-mode");
+    assert_saved_fixture(
+        "test_fixture_size_cap_each_table_mode",
+        &[
+            (
+                "all_elements",
+                fixture.clone(),
+                rules_path(RULE, "configs", "all-elements.yml"),
+            ),
+            (
+                "default",
+                fixture,
+                rules_path(RULE, "configs", "it-each.yml"),
+            ),
+        ],
+    );
+}

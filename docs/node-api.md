@@ -917,9 +917,10 @@ configuration to flag broad literal patterns in `key` and `restore-keys`. The
 `analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
 Set `options.threshold` to cap literal `Array.from` lengths and single-argument `Array`
 and `new Array` lengths in `scopes.tests` and `scopes.helpers`. `eachCalls` defaults
-to `[]`. When it names a callee, numeric elements are cardinalities for scale or
-size tables. Omitting `threshold` reports nothing. Use `exemptions` for an exact
-intentional size. See the
+to `[]`. Use `eachTableMode: "all-elements"` to report a configured table once
+when all its numeric cells exceed the threshold and none are exempt. The
+default is `"per-element"`. The package exports `TestFixtureSizeCapOptions`
+and `TestFixtureSizeCapEachTableMode` for typing rule configurations. See the
 [rule documentation](rules/test-fixture-size-cap.md).
 
 `vite-optimize-deps-nested-imports` is available through asynchronous `check()` and

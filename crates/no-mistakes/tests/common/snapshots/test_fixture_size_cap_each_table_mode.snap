@@ -1,0 +1,122 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_elements": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 13,
+          "message": "it.each table has 2 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_300, , 1_700])(\"scale scalar %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 25,
+          "message": "new Array length 1500 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const direct = new Array(1_500);"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 8,
+          "message": "it.each table has 3 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each(["
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 13,
+          "message": "it.each size 1300 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_300, , 1_700])(\"scale scalar %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 13,
+          "message": "it.each size 1700 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_300, , 1_700])(\"scale scalar %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 14,
+          "message": "it.each size 1900 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_000, 1_900])(\"threshold %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 15,
+          "message": "it.each size 2100 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_024, 2_100])(\"exempt %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 18,
+          "message": "it.each size 1300 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_300, size])(\"dynamic value %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 20,
+          "message": "it.each size 1300 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_300, 1.5])(\"fraction %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 21,
+          "message": "it.each size 1300 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_300, [[1_400]]])(\"deeper array %i\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 22,
+          "message": "it.each size 1300 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([1_300, { size: 1_400 }])(\"record %j\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 25,
+          "message": "new Array length 1500 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const direct = new Array(1_500);"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 6,
+          "message": "it.each size 1600 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([12, 1_600])(\"mixed scalar %i\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
