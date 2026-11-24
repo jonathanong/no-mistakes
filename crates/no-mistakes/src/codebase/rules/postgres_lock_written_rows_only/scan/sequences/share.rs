@@ -1,5 +1,6 @@
 use super::*;
 
+mod key_writes;
 mod potential;
 mod rows_by_relation;
 
@@ -8,28 +9,32 @@ use rows_by_relation::{EarlierUpdates, LaterWrites};
 
 pub(super) fn scan(
     output: &mut Output<'_>,
-    file: &str,
-    source: &str,
+    (file, source): (&str, &str),
     calls: &[EmbeddedSqlCall],
     grouped: &BTreeMap<usize, Vec<&SqlStatementFileFacts>>,
     unresolved: &BTreeSet<u32>,
+    catalog: unique::CatalogContext<'_, '_>,
 ) {
+    let key_writes = key_writes::KeyWrites {
+        catalog,
+        unresolved,
+    };
     let CallOrder {
         mut ordered,
         uncertain_writes,
-        uncertain_deletes,
+        uncertain_key_writes,
         potential,
-    } = classify_calls(output, (file, source), calls, grouped, unresolved);
+    } = classify_calls(output, (file, source), calls, grouped, &key_writes);
     ordered.sort_unstable_by_key(|(transaction, call, _)| (*transaction, call.execution_range.1));
     let mut current = None;
     let mut written = LaterWrites::default();
-    let mut deleted = LaterWrites::default();
+    let mut key_written = LaterWrites::default();
     let earlier = EarlierUpdates::collect(&ordered);
     for (transaction, call, facts) in ordered.into_iter().rev() {
         if current != Some(transaction) {
             current = Some(transaction);
             written = LaterWrites::default();
-            deleted = LaterWrites::default();
+            key_written = LaterWrites::default();
         }
         let access = &facts.lock_writes;
         let mut reported = BTreeSet::new();
@@ -44,9 +49,9 @@ pub(super) fn scan(
                 if reported.contains(&relation) {
                     continue;
                 }
-                let deletes_only = lock.mode == SequenceMode::KeyShare;
-                let (later, uncertain) = if deletes_only {
-                    (&deleted, uncertain_deletes.get(&transaction))
+                let key_share = lock.mode == SequenceMode::KeyShare;
+                let (later, uncertain) = if key_share {
+                    (&key_written, uncertain_key_writes.get(&transaction))
                 } else {
                     (&written, uncertain_writes.get(&transaction))
                 };
@@ -88,7 +93,7 @@ pub(super) fn scan(
                     }
                 } else if !later.relations.is_empty()
                     || uncertain.is_some_and(|writes| !writes.is_empty())
-                    || potential.may_follow(call, None, deletes_only)
+                    || potential.may_follow(call, None, key_share)
                 {
                     output.unresolved(
                         &site,
@@ -102,8 +107,8 @@ pub(super) fn scan(
             for index in statement.writes.clone() {
                 let row = &access.writes[index];
                 written.insert(row, call);
-                if statement.deletes.binary_search(&index).is_ok() {
-                    deleted.insert(row, call);
+                if key_writes.matches(call, access, statement, index) {
+                    key_written.insert(row, call);
                 }
             }
         }
@@ -113,7 +118,7 @@ pub(super) fn scan(
 struct CallOrder<'a> {
     ordered: Vec<(Transaction, &'a EmbeddedSqlCall, &'a SqlStatementFileFacts)>,
     uncertain_writes: BTreeMap<Transaction, relations::Writes<'a>>,
-    uncertain_deletes: BTreeMap<Transaction, relations::Writes<'a>>,
+    uncertain_key_writes: BTreeMap<Transaction, relations::Writes<'a>>,
     potential: potential::PotentialWrites<'a>,
 }
 
@@ -122,17 +127,17 @@ fn classify_calls<'a>(
     (file, source): (&str, &str),
     calls: &'a [EmbeddedSqlCall],
     grouped: &'a BTreeMap<usize, Vec<&'a SqlStatementFileFacts>>,
-    unresolved: &BTreeSet<u32>,
+    key_writes: &key_writes::KeyWrites<'_, '_>,
 ) -> CallOrder<'a> {
     let mut ordered = Vec::new();
     let mut uncertain_writes = BTreeMap::<_, relations::Writes<'_>>::new();
-    let mut uncertain_deletes = BTreeMap::<_, relations::Writes<'_>>::new();
+    let mut uncertain_key_writes = BTreeMap::<_, relations::Writes<'_>>::new();
     let candidates = variants::groups(calls, grouped);
-    let potential = potential::PotentialWrites::collect(candidates.clone());
+    let potential = potential::PotentialWrites::collect(candidates.clone(), key_writes);
     for (call, versions) in candidates {
         let proven = match versions {
             [facts] if !facts.parse_failed => {
-                ordered_transaction(call, unresolved).map(|tx| (tx, *facts))
+                ordered_transaction(call, key_writes.unresolved).map(|tx| (tx, *facts))
             }
             _ => None,
         };
@@ -151,19 +156,24 @@ fn classify_calls<'a>(
                         .iter()
                         .filter_map(|row| row.relation.as_deref()),
                 );
-                uncertain_deletes.entry(transaction).or_default().extend(
+                uncertain_key_writes.entry(transaction).or_default().extend(
                     access
                         .share_statements
                         .iter()
-                        .flat_map(|statement| &statement.deletes)
-                        .filter_map(|&index| access.writes[index].relation.as_deref()),
+                        .flat_map(|statement| {
+                            statement
+                                .writes
+                                .clone()
+                                .filter(|&index| key_writes.matches(call, access, statement, index))
+                        })
+                        .filter_map(|index| access.writes[index].relation.as_deref()),
                 );
             }
         }
         if !known_autocommit(call)
-            && versions
-                .iter()
-                .any(|facts| !facts.parse_failed && potential.may_follow_lock(call, facts))
+            && versions.iter().any(|facts| {
+                !facts.parse_failed && potential.may_follow_lock(call, facts, key_writes)
+            })
         {
             output.unresolved(
                 &Site { file, source, call },
@@ -174,7 +184,7 @@ fn classify_calls<'a>(
     CallOrder {
         ordered,
         uncertain_writes,
-        uncertain_deletes,
+        uncertain_key_writes,
         potential,
     }
 }

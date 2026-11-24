@@ -7,6 +7,7 @@ const { test } = require("node:test");
 const root = path.resolve(__dirname, "../..");
 const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
 const job = (name) => workflowJob(workflow, name);
+const benchmarkWorkflow = readFileSync(path.join(root, ".github/workflows/benchmarks.yml"), "utf8");
 const results = JSON.parse(
   readFileSync(path.join(root, "test-cases/ci-speed/fixture/aggregate-results.json"), "utf8"),
 );
@@ -18,9 +19,16 @@ test("CI reports and gates stop on workflow cancellation and still run after fai
     "javascript-tests",
     "native-tests",
     "tests-gate",
-    "benchmark-gate",
   ]) {
     assert.match(job(name), /^    if: \$\{\{ !cancelled\(\) \}\}$/m, name);
+  }
+  assert.match(
+    workflowJob(benchmarkWorkflow, "benchmark-gate"),
+    /^    if: \$\{\{ !cancelled\(\) \}\}$/m,
+    "benchmark-gate",
+  );
+  for (const name of ["bench", "benchmark-shards", "frontend-lifecycle-smoke", "benchmark-gate"]) {
+    assert.throws(() => job(name), `${name} must not remain in ci.yml`);
   }
 });
 
@@ -37,7 +45,7 @@ test("JavaScript coverage rejects any unsuccessful shard result", () => {
 });
 
 test("Benchmarks enforces change detection and any required benchmark jobs", () => {
-  const script = job("benchmark-gate")
+  const script = workflowJob(benchmarkWorkflow, "benchmark-gate")
     .split("        run: |\n")[1]
     .replace(/^          /gm, "");
   const passed = { CHANGE_RESULT: "success", BUILD_RESULT: "success", SHARD_RESULT: "success" };

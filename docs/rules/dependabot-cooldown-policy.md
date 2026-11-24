@@ -13,6 +13,7 @@ are checked. Explicit SemVer cooldown values use the same floor.
 
 The rule resolves YAML aliases and `<<` merge keys before checking each entry,
 including chains of merges and sequences such as `<<: [*primary, *fallback]`.
+A merge that cannot be applied, such as a scalar `<<: 7`, is a failed input rather than a dropped key.
 Explicit keys take precedence over merged keys. Earlier mappings in a merge
 sequence take precedence over later mappings.
 

@@ -4,6 +4,7 @@ pub(crate) use shell_words::Word;
 
 pub(super) fn vitest_argv(script: &str) -> Vec<Vec<Word>> {
     shell_words::commands(script)
+        .commands
         .into_iter()
         .filter_map(|command| invocation(&command))
         .collect()

@@ -12,7 +12,12 @@ pub(super) fn run(
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
     if let Some(found) = crate::codebase::rules::github_actions_workflow_files::dispatch::run(
-        rule_id, root, config, files, sources,
+        rule_id,
+        root,
+        config,
+        files,
+        sources,
+        defer_suppression,
     ) {
         return Some(found);
     }

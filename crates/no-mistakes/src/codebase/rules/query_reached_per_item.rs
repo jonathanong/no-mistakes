@@ -17,6 +17,7 @@ pub(crate) use config::graph_plan;
 use config::{exempt, Options, Sinks};
 use traces::{prefer_nontransaction, source_node, Reach};
 pub const RULE_ID: &str = "query-reached-per-item";
+const SINK_SITES_METRIC: &str = "query_reached_per_item.sink_sites";
 pub(crate) fn check_with_graph_and_session(
     root: &Path,
     config: &NoMistakesConfig,
@@ -42,7 +43,11 @@ pub(crate) fn check_with_graph_and_session(
         );
         prerequisites::require_sources(graph, facts, &filter, session)?;
         let scoped_sites = candidates::select(graph, facts, &filter);
+        let observer = crate::diagnostics::current();
         let effects = if scoped_sites.is_empty() {
+            if let Some(observer) = &observer {
+                observer.increment(SINK_SITES_METRIC, 0);
+            }
             &[]
         } else {
             options.effects.as_slice()
@@ -53,11 +58,8 @@ pub(crate) fn check_with_graph_and_session(
             let mut sinks: BTreeMap<NodeId, Vec<(&ResolvedCallSite, bool)>> = BTreeMap::new();
             let mut excluded = Vec::new();
             let resolved_sites = graph.resolved_call_sites();
-            if let Some(observer) = crate::diagnostics::current() {
-                observer.increment(
-                    "query_reached_per_item.sink_sites",
-                    resolved_sites.len() as u64,
-                );
+            if let Some(observer) = &observer {
+                observer.increment(SINK_SITES_METRIC, resolved_sites.len() as u64);
             }
             for site in resolved_sites {
                 if site

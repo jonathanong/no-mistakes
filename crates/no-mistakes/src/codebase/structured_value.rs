@@ -1,17 +1,27 @@
 mod merge_keys;
 
-use merge_keys::expand_merge_keys;
+pub(crate) use merge_keys::expand_merge_keys;
+use merge_keys::{expand_merge_keys_indexed, merge_line};
 use serde::Deserialize;
 use serde_yaml::Value;
 use std::borrow::Cow;
 use std::path::Path;
 
-pub(crate) fn expand_yaml_mapping_if_merged(value: &Value) -> Cow<'_, Value> {
-    if value.get("<<").is_some() {
-        Cow::Owned(expand_merge_keys(value.clone()))
-    } else {
-        Cow::Borrowed(value)
+fn expand_with_context(value: &mut Value) -> Result<(), String> {
+    expand_merge_keys(value).map_err(|error| merge_error(&error))
+}
+
+pub(crate) fn expand_yaml_mapping_if_merged(value: &Value) -> Result<Cow<'_, Value>, String> {
+    if value.get("<<").is_none() {
+        return Ok(Cow::Borrowed(value));
     }
+    let mut expanded = value.clone();
+    expand_with_context(&mut expanded)?;
+    Ok(Cow::Owned(expanded))
+}
+
+fn merge_error(error: &str) -> String {
+    format!("failed to apply YAML merge keys ({error})")
 }
 
 pub(crate) struct YamlDocuments {
@@ -28,9 +38,10 @@ pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String
     if is_jsonc_path(path) {
         parse_jsonc(source)
     } else {
-        serde_yaml::from_str(source)
-            .map(expand_merge_keys)
-            .map_err(|error| format!("failed to parse YAML ({error})"))
+        let mut value: Value = serde_yaml::from_str(source)
+            .map_err(|error| format!("failed to parse YAML ({error})"))?;
+        expand_with_context(&mut value)?;
+        Ok(value)
     }
 }
 
@@ -39,9 +50,15 @@ pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String
 pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
     let mut values = Vec::new();
     let mut errors = Vec::new();
-    for document in serde_yaml::Deserializer::from_str(source) {
+    for (doc_index, document) in serde_yaml::Deserializer::from_str(source).enumerate() {
         match Value::deserialize(document) {
-            Ok(value) => values.push(expand_merge_keys(value)),
+            Ok(mut value) => match expand_merge_keys_indexed(&mut value) {
+                Ok(()) => values.push(value),
+                Err((merge_index, error)) => errors.push((
+                    merge_line(source, doc_index, merge_index),
+                    merge_error(&error),
+                )),
+            },
             Err(error) => {
                 let reported = error
                     .location()

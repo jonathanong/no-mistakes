@@ -507,6 +507,14 @@ strictly below the workflow step's timeout. The option defaults to `false`.
 The comparison uses the values in the workflow. Unknown operands follow
 `options.unanalyzable`.
 
+For [`github-actions-env-policy`](../rules/github-actions-env-policy.md),
+`options.required` maps an `env:` name to its only allowed value and
+`options.forbidden` lists names that must not appear. Both default to empty,
+which reports nothing. Workflow, job, step and composite `runs.steps` scopes are
+read. A required value written as `${{ }}` cannot be judged statically and
+follows `options.unanalyzable` (default `advise`). See the
+[env policy options](../rules/github-actions-env-policy.md#options-and-defaults).
+
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),
 `options.assumeWriteWhenUnspecified` defaults to `false`. Leave it off unless
 the repository or organization default `GITHUB_TOKEN` can write. When it is

@@ -80,6 +80,21 @@ export function collectDiagnostics(
   options: Api.ExecutedPostgresSqlOptions<boolean>,
 ): Promise<DiagnosticsResult<Api.ExecutedPostgresSql[] | Api.ExecutedPostgresSqlReport>>;
 
+export function collectDiagnostics(
+  operation: "queueCheck",
+  options: Api.WithInvocationOptions<Api.QueueCheckOptions & { includeDiagnostics: true }>,
+): Promise<DiagnosticsResult<Api.WithInvocationResult<Api.QueueCheckReport>>>;
+export function collectDiagnostics(
+  operation: "queueCheck",
+  options?: Api.WithInvocationOptions<Api.QueueCheckOptions & { includeDiagnostics?: false }>,
+): Promise<DiagnosticsResult<Api.QueueCheckFinding[]>>;
+export function collectDiagnostics(
+  operation: "queueCheck",
+  options?: Api.WithInvocationOptions<Api.QueueCheckOptions>,
+): Promise<
+  DiagnosticsResult<Api.QueueCheckFinding[] | Api.WithInvocationResult<Api.QueueCheckReport>>
+>;
+
 /** Arguments must satisfy every operation in a selector union. */
 export type DiagnosticArguments<K extends keyof DiagnosticOperations> = (
   K extends unknown ? (...args: Parameters<DiagnosticOperations[K]>) => void : never

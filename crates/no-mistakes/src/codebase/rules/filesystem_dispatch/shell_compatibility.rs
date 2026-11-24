@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 mod bash;
 mod lex;
+mod read_targets;
 mod zsh;
 
 pub use bash::RULE_ID as BASH_EMPTY_ARRAY_NOUNSET;
@@ -41,7 +42,10 @@ pub(super) fn check_with_sources(
             rule,
             all_files,
             sources,
-            |path| !bash || matcher.is_match(&relative_slash_path(root, path)),
+            |path| {
+                matcher.is_match(&relative_slash_path(root, path))
+                    || (!bash && zsh::likely_shell_file(path))
+            },
         )?;
         let batch: Vec<_> = files
             .par_iter()

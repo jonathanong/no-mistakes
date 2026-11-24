@@ -1,0 +1,7 @@
+base: &base
+  x: 1
+shared: &shared
+  <<: *base
+copy: *shared
+broken:
+  <<: 7

@@ -1,3 +1,5 @@
+mod heredoc;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Word {
     pub(crate) text: String,
@@ -17,7 +19,13 @@ struct Scan {
     double: bool,
 }
 
-pub(in crate::codebase::rules) fn commands(script: &str) -> Vec<Vec<Word>> {
+pub(in crate::codebase::rules) struct ScriptCommands {
+    pub(crate) commands: Vec<Vec<Word>>,
+    pub(crate) unterminated_heredoc: bool,
+}
+
+pub(in crate::codebase::rules) fn commands(script: &str) -> ScriptCommands {
+    let (script, unterminated_heredoc) = heredoc::mask(script);
     let mut scan = Scan {
         out: Vec::new(),
         command: Vec::new(),
@@ -53,7 +61,10 @@ pub(in crate::codebase::rules) fn commands(script: &str) -> Vec<Vec<Word>> {
     }
     scan.finish_word();
     scan.finish_command();
-    scan.out
+    ScriptCommands {
+        commands: scan.out,
+        unterminated_heredoc,
+    }
 }
 
 impl Scan {

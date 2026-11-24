@@ -22,7 +22,7 @@ check already acquires the required parent KEY SHARE lock.
 | `table-lock` | `LOCK TABLE` in any mode without a proven later DDL purpose in the same transaction. | Use a bounded row lock, or make the DDL ordering explicit. |
 | `constant-advisory-lock` | Literal or constant keys (including builtin `hashtext` / `hashtextextended` of constants) to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
 | `row-lock-outside-transaction` | A row lock on a known non-transaction executor, unless the same SQL statement writes the locked relation. | Move the lock and write into one transaction. |
-| `share-lock-then-write` | A known `FOR SHARE` followed by an update or delete, or `FOR KEY SHARE` followed by a delete, on the same row in the same transaction. | Choose a lock mode that matches the write, or use the conditional write directly. |
+| `share-lock-then-write` | A known `FOR SHARE` followed by an update or delete, or `FOR KEY SHARE` followed by a delete or catalog-proven key-column update, on the same row in the same transaction. | Choose a lock mode that matches the write, or use the conditional write directly. |
 | `redundant-prelock` | Advisory-only: a discarded `SELECT 1 FOR UPDATE` immediately precedes a conditional write with the same provable key. | Remove the unused pre-lock and let the conditional write decide the race. |
 
 The four established checks default to `advise`. The two sequence checks are
@@ -87,9 +87,12 @@ Comparable equality predicates must have the same bound key. When the check
 cannot compare the keys, it follows `unanalyzableSql`. An earlier proven
 `FOR UPDATE` on the same row already holds the stronger lock.
 
-`FOR KEY SHARE` matches a later delete. PostgreSQL takes a conflicting lock
-for updates that set key columns, which this check leaves outside its scope.
-`FOR KEY SHARE` is compatible with the lock taken by non-key updates.
+`FOR KEY SHARE` matches a later delete or an update that can change a key
+column of the locked relation. Set `schemaCatalogPath` to identify key columns
+from valid, immediate, non-partial unique indexes on plain columns. The check
+uses explicit assignment targets, including tuple assignments. An assignment
+such as `SET id = id` preserves the key, and non-key updates are compatible
+with `FOR KEY SHARE`. The catalog is needed for key-column updates.
 
 ```sql
 SELECT 1 FROM accounts WHERE id = $1 FOR SHARE;

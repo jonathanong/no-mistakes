@@ -18,8 +18,9 @@ Use `no-mistakes dependents <file> --format json` instead of `related`.
 The alias uses the same analysis and emits one warning line on stderr when it
 executes. Its stdout, including JSON, and exit status remain unchanged.
 Use the async `dependents(options)` Node API or the `dependents` report type in
-`analyzeProject()` for new calls. The compatibility function has an `@deprecated`
-tag without adding runtime logging to Node calls.
+`analyzeProject()` for new calls. The `related()` compatibility function and the
+`{ type: "related", ... }` report request carry TypeScript `@deprecated`
+annotations. Node calls omit the CLI deprecation warning.
 
 ## Retain impact queries where their semantics are needed
 

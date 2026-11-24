@@ -1,0 +1,11 @@
+name: Reusable with a scalar merge
+on:
+  workflow_call:
+concurrency:
+  <<: 7
+  group: scalar-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

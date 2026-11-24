@@ -1,4 +1,4 @@
-# A merge value that is not a mapping does not invent `legacy`.
+# A merge value that is not a mapping cannot be applied, so the file is unanalyzable.
 label: &label plain
 runtime:
   <<: *label

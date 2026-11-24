@@ -1,10 +1,10 @@
-use super::*;
+use super::{key_writes::KeyWrites, *};
 use crate::codebase::postgres::idents::relation_suffix_key;
 
 #[derive(Default)]
 pub(super) struct PotentialWrites<'a> {
     writes: ByScope<'a>,
-    deletes: ByScope<'a>,
+    key_writes: ByScope<'a>,
 }
 
 #[derive(Default)]
@@ -17,6 +17,7 @@ struct ByScope<'a> {
 impl<'a> PotentialWrites<'a> {
     pub fn collect(
         candidates: impl Iterator<Item = (&'a EmbeddedSqlCall, &'a [&'a SqlStatementFileFacts])>,
+        key_writes: &KeyWrites<'_, '_>,
     ) -> Self {
         let mut potential = Self::default();
         for (call, versions) in candidates.filter(|(call, _)| !known_autocommit(call)) {
@@ -32,16 +33,16 @@ impl<'a> PotentialWrites<'a> {
                         .writes
                         .insert(call, write.relation.as_deref(), positions);
                 }
-                for &index in access
-                    .share_statements
-                    .iter()
-                    .flat_map(|statement| &statement.deletes)
-                {
-                    potential.deletes.insert(
-                        call,
-                        access.writes[index].relation.as_deref(),
-                        positions,
-                    );
+                for statement in &access.share_statements {
+                    for index in statement.writes.clone() {
+                        if key_writes.matches(call, access, statement, index) {
+                            potential.key_writes.insert(
+                                call,
+                                access.writes[index].relation.as_deref(),
+                                positions,
+                            );
+                        }
+                    }
                 }
             }
         }
@@ -52,19 +53,24 @@ impl<'a> PotentialWrites<'a> {
         &self,
         call: &EmbeddedSqlCall,
         relation: Option<&str>,
-        deletes_only: bool,
+        key_share: bool,
     ) -> bool {
-        let index = if deletes_only {
-            &self.deletes
+        let index = if key_share {
+            &self.key_writes
         } else {
             &self.writes
         };
         index.may_follow(call, relation)
     }
 
-    pub fn may_follow_lock(&self, call: &EmbeddedSqlCall, facts: &SqlStatementFileFacts) -> bool {
+    pub fn may_follow_lock(
+        &self,
+        call: &EmbeddedSqlCall,
+        facts: &SqlStatementFileFacts,
+        key_writes: &KeyWrites<'_, '_>,
+    ) -> bool {
         let mut inside_batch = LatestWrites::default();
-        let mut batch_deletes = LatestWrites::default();
+        let mut batch_key_writes = LatestWrites::default();
         for statement in facts.lock_writes.share_statements.iter().rev() {
             if statement.locks.iter().any(|lock| {
                 if lock.mode == SequenceMode::Update {
@@ -73,10 +79,10 @@ impl<'a> PotentialWrites<'a> {
                 let relation = lock
                     .row
                     .and_then(|index| facts.lock_writes.locks[index].relation.as_deref());
-                let deletes_only = lock.mode == SequenceMode::KeyShare;
-                self.may_follow(call, relation, deletes_only)
-                    || if deletes_only {
-                        &batch_deletes
+                let key_share = lock.mode == SequenceMode::KeyShare;
+                self.may_follow(call, relation, key_share)
+                    || if key_share {
+                        &batch_key_writes
                     } else {
                         &inside_batch
                     }
@@ -87,8 +93,8 @@ impl<'a> PotentialWrites<'a> {
             for index in statement.writes.clone() {
                 let relation = facts.lock_writes.writes[index].relation.as_deref();
                 inside_batch.insert(relation, 1);
-                if statement.deletes.binary_search(&index).is_ok() {
-                    batch_deletes.insert(relation, 1);
+                if key_writes.matches(call, &facts.lock_writes, statement, index) {
+                    batch_key_writes.insert(relation, 1);
                 }
             }
         }
