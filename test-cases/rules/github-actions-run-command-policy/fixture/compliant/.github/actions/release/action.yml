@@ -5,3 +5,7 @@ runs:
   steps:
     - shell: bash
       run: gh api --method GET -f x=1 repos/my-org/my-repo/labels
+    - shell: bash
+      run: $GITHUB_ACTION_PATH/build-images.sh --tag "$TAG"
+    - shell: bash
+      run: "${{ github.action_path }}/scripts/publish.sh" --dry-run

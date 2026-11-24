@@ -3,47 +3,17 @@
 const { posix } = require("node:path");
 const { options, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { unwrapExpression } = require("./async-ast");
 const { memberPropertyName } = require("./logical-call");
-const { importSpecifierName } = require("./module-mock-helpers");
+const {
+  isFrameworkMockType,
+  isFrameworkReceiver,
+  referenceBinding,
+  resolveImportTarget,
+  typeArgParams,
+} = require("./test-no-typed-enqueue-fake-helpers");
 
 const id = "test-no-typed-enqueue-fake";
-const frameworkModules = new Map([
-  ["vi", "vitest"],
-  ["jest", "@jest/globals"],
-]);
-
-function referenceBinding(identifier, sourceCode) {
-  const scope = sourceCode.getScope(identifier);
-  return scope.references.find((reference) => reference.identifier === identifier)?.resolved;
-}
-
-function importDefinition(binding) {
-  const def = binding?.defs.length === 1 ? binding.defs[0] : null;
-  return def?.type === "ImportBinding" && def.parent?.type === "ImportDeclaration" ? def : null;
-}
-
-function runtimeImport(def) {
-  return def && def.node.importKind !== "type" && def.parent.importKind !== "type";
-}
-
-function isFrameworkReceiver(receiver, sourceCode) {
-  if (receiver.type === "Identifier") {
-    const binding = referenceBinding(receiver, sourceCode);
-    if (!binding?.defs.length) return frameworkModules.has(receiver.name);
-    const def = importDefinition(binding);
-    return (
-      runtimeImport(def) &&
-      frameworkModules.get(importSpecifierName(def.node)) === def.parent.source.value
-    );
-  }
-  if (receiver.type !== "MemberExpression" || receiver.object.type !== "Identifier") return false;
-  const def = importDefinition(referenceBinding(receiver.object, sourceCode));
-  return (
-    runtimeImport(def) &&
-    def.node.type === "ImportNamespaceSpecifier" &&
-    frameworkModules.get(memberPropertyName(receiver)) === def.parent.source.value
-  );
-}
 
 function exportPattern(pattern) {
   if (pattern === undefined) return null;
@@ -82,34 +52,68 @@ module.exports = rule(
     if (!exportMatcher && moduleGlobs.length === 0) return {};
     const { sourceCode } = context;
     const suppressed = ruleSuppression(context, id);
+
+    function matchesTarget(node) {
+      const target = resolveImportTarget(node, sourceCode);
+      return (
+        Boolean(target) &&
+        (!exportMatcher || exportMatcher.test(target.name)) &&
+        (moduleGlobs.length === 0 ||
+          moduleGlobs.some((glob) => posix.matchesGlob(target.module, glob)))
+      );
+    }
+
+    function matchesParameters(typeNode) {
+      const typeName = typeNode?.type === "TSTypeReference" ? typeNode.typeName : null;
+      if (
+        typeName?.type !== "Identifier" ||
+        typeName.name !== "Parameters" ||
+        referenceBinding(typeName, sourceCode)?.defs.length
+      ) {
+        return false;
+      }
+      const args = typeArgParams(typeNode);
+      return (
+        args?.length === 1 && args[0]?.type === "TSTypeQuery" && matchesTarget(args[0].exprName)
+      );
+    }
+
+    function hasTypedEnqueueArg(params) {
+      return Boolean(
+        params?.some(
+          (param) =>
+            (param?.type === "TSTypeQuery" && matchesTarget(param.exprName)) ||
+            matchesParameters(param) ||
+            (param?.type === "TSFunctionType" &&
+              param.params.some((arg) => matchesParameters(arg.typeAnnotation?.typeAnnotation))),
+        ),
+      );
+    }
+
+    function report(node) {
+      if (!suppressed(node)) context.report({ node, messageId: "typedEnqueueFake" });
+    }
+
     return {
       CallExpression(node) {
-        const types = node.typeArguments?.params;
-        const query = types?.[0];
-        if (
-          types?.length !== 1 ||
-          query.type !== "TSTypeQuery" ||
-          query.exprName.type !== "Identifier"
-        )
-          return;
         const { callee } = node;
-        if (
-          callee.type !== "MemberExpression" ||
-          memberPropertyName(callee) !== "fn" ||
-          !isFrameworkReceiver(callee.object, sourceCode)
-        )
-          return;
-        const target = importDefinition(referenceBinding(query.exprName, sourceCode));
-        if (!target || target.node.type === "ImportNamespaceSpecifier") return;
-        const name = importSpecifierName(target.node) ?? "default";
-        if (exportMatcher && !exportMatcher.test(name)) return;
-        if (
-          moduleGlobs.length > 0 &&
-          !moduleGlobs.some((glob) => posix.matchesGlob(target.parent.source.value, glob))
-        ) {
+        if (callee.type !== "MemberExpression" || !isFrameworkReceiver(callee.object, sourceCode)) {
           return;
         }
-        if (!suppressed(node)) context.report({ node, messageId: "typedEnqueueFake" });
+        const method = memberPropertyName(callee);
+        if (method === "fn" && hasTypedEnqueueArg(typeArgParams(node))) {
+          report(node);
+        } else if (method === "mocked" && matchesTarget(unwrapExpression(node.arguments[0]))) {
+          report(node);
+        }
+      },
+      TSTypeReference(node) {
+        if (
+          isFrameworkMockType(node.typeName, sourceCode) &&
+          hasTypedEnqueueArg(typeArgParams(node))
+        ) {
+          report(node);
+        }
       },
     };
   },
