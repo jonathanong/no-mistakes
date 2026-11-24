@@ -16,8 +16,8 @@ strings and mocked object-store keys are not filesystem paths merely because
 they contain `/tmp/`.
 
 Paths can be string literals, untagged expression-free templates, or static
-Node `path.join` / `path.resolve` results. The rule follows one local `const`
-alias for a sink argument and one for the root of a join or resolve call.
+Node `path.join` / `path.resolve` results. The rule follows chains of stable
+local `const` aliases for sink arguments and for the root of a join or resolve call.
 The segments after the root must be literal strings, with at least one
 non-empty segment.
 
@@ -48,8 +48,8 @@ resolve the bindings.
 ## Allowed
 
 Use `mkdtemp`, `mkdtempSync`, `mkdtempDisposable`, or `mkdtempDisposableSync`
-for a unique directory. Prefixes passed directly or through a single local
-`const` alias are allowed. Disposable variants also support `using` /
+for a unique directory. Prefixes passed directly or through local `const`
+aliases are allowed. Disposable variants also support `using` /
 `await using` declarations when the runtime supports them.
 
 ```ts
@@ -109,7 +109,7 @@ before the first code token to apply a broader suppression.
 
 - Concatenation such as `tmpdir() + "/result.json"`, templates with
   interpolations, and `new URL("file:///tmp/result.json")` fall outside the check.
-- The rule leaves shell syntax, runtime path segments, alias chains, and paths
+- The rule leaves shell syntax, runtime path segments, and paths
   from helper functions, mutable bindings, or imports unanalyzed.
 - In a checked argument position, any literal beginning with `/tmp/` or
   `/var/tmp/` can produce a finding, including non-path text passed in a
