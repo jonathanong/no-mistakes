@@ -108,7 +108,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
   const setups = steps(workflow).filter((step) => /uses: pnpm\/setup@/.test(step));
   const retries = setups.filter((step) => /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step));
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 30);
+  assert.equal(setups.length, 32);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);
