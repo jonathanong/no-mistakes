@@ -8,6 +8,7 @@ macro_rules! filesystem_rules {
             AST_GREP_IGNORE_FRESHNESS => ast_grep_ignore_freshness::check_with_files => "",
             DEPENDABOT_COOLDOWN_POLICY => dependabot_cooldown_policy::check_with_files => "      minimumDays: 7\n",
             GITHUB_ACTIONS_ACTION_INPUT_POLICY => github_actions_action_input_policy::check_with_files => "",
+            GITHUB_ACTIONS_ENV_POLICY => github_actions_workflow_files::env_policy::check_with_files => "",
             GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => github_actions_action_timeout_pair::check_with_files => "",
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files => "",
             GITHUB_ACTIONS_JOB_TIMEOUTS => github_actions_job_timeouts::check_with_files => "",

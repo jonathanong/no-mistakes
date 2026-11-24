@@ -13,7 +13,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     fn refresh_argument(&self, value: &mut Value) {
         #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-        super::super::effects::call_value_work_tests::record_refresh_visit();
+        super::super::effects::hooks::record_refresh_visit();
         match value {
             Value::Prefix(_, _, Some(id)) => {
                 if self.invalidated_builders.contains(id) {

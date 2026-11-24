@@ -1,0 +1,9 @@
+name: setup
+description: Example composite action
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo one
+      env:
+        BASH_ENV: ./composite-init.sh

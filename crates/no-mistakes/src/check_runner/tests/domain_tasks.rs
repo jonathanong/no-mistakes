@@ -15,6 +15,7 @@ fn empty_task<T>(findings: T) -> CheckTask<T> {
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
+        analysis_warnings: Vec::new(),
         warning: None,
         duration: Duration::ZERO,
     }

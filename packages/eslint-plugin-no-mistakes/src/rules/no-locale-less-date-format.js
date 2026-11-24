@@ -1,7 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { unwrapExpression } = require("./async-ast");
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 
 const DEFAULT_METHODS = ["toLocaleString", "toLocaleDateString", "toLocaleTimeString"];
 
@@ -15,6 +15,20 @@ function methodName(member) {
     return key.quasis[0].value.cooked;
   }
   return null;
+}
+
+function isImmediateResolvedOptionsCall(node) {
+  const expr = unwrapTransparentParent(node);
+  const member = expr.parent;
+  if (
+    member?.type !== "MemberExpression" ||
+    member.object !== expr ||
+    methodName(member) !== "resolvedOptions"
+  ) {
+    return false;
+  }
+  const call = unwrapTransparentParent(member);
+  return call.parent?.type === "CallExpression" && call.parent.callee === call;
 }
 
 function isUnshadowedGlobal(identifier, sourceCode, evalScopes) {
@@ -79,7 +93,15 @@ module.exports = rule(
       const namespace = unwrapExpression(callee.object);
       if (namespace.type !== "Identifier") return;
       const name = `${namespace.name}.${member}`;
-      if (constructors.has(name)) checkLocale(node, name, namespace);
+      if (!constructors.has(name)) return;
+      if (
+        namespace.name === "Intl" &&
+        member.endsWith("Format") &&
+        isImmediateResolvedOptionsCall(node)
+      ) {
+        return;
+      }
+      checkLocale(node, name, namespace);
     }
 
     return {

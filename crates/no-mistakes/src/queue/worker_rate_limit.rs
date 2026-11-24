@@ -1,5 +1,6 @@
 use crate::queue::extract::FileFacts;
-use crate::queue::extract_model::WorkerRateLimitTarget;
+use crate::queue::extract_helpers::is_queue_package;
+use crate::queue::extract_model::{ExportedWorkerBinding, WorkerRateLimitTarget};
 use crate::queue::graph_model::{CheckFinding, InternalWorker};
 use crate::queue::source::relative_string;
 use crate::queue::types::{Diagnostic, Severity};
@@ -13,8 +14,12 @@ pub(in crate::queue) use resolve_exports::resolve;
 
 pub(crate) const WORKER_RATE_LIMIT_KIND: &str = "worker-rate-limit-per-process";
 
-const UNRESOLVED_MESSAGE: &str =
+pub const WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE: &str =
     "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve";
+
+pub fn is_worker_rate_limit_unresolved_diagnostic(diagnostic: &Diagnostic) -> bool {
+    diagnostic.message == WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE
+}
 
 pub(super) fn findings(
     root: &Path,
@@ -42,19 +47,22 @@ pub(super) fn findings(
                     file: origin,
                     worker_index,
                 } => {
-                    let worker = workers_by_index
-                        .get(&(origin.as_path(), *worker_index))
-                        .copied();
+                    let worker = worker_index
+                        .and_then(|idx| workers_by_index.get(&(origin.as_path(), idx)).copied());
                     checks.push(finding(root, path, site.line, worker));
                 }
                 WorkerRateLimitTarget::Unresolved
                 | WorkerRateLimitTarget::Imported { .. }
-                | WorkerRateLimitTarget::Namespace { .. } => {
+                | WorkerRateLimitTarget::Namespace { .. }
+                | WorkerRateLimitTarget::ConstructedImported { .. }
+                | WorkerRateLimitTarget::ConstructedNamespace { .. }
+                | WorkerRateLimitTarget::CallImported { .. }
+                | WorkerRateLimitTarget::CallNamespace { .. } => {
                     diagnostics.push(Diagnostic {
                         severity: Severity::Warning,
                         file: relative_string(root, path),
                         line: site.line,
-                        message: UNRESOLVED_MESSAGE.to_string(),
+                        message: WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE.to_string(),
                     });
                 }
             }
@@ -100,4 +108,20 @@ fn workers_by_file_index(workers: &[InternalWorker]) -> HashMap<(&Path, usize), 
         *index += 1;
     }
     out
+}
+
+fn is_queue_module(file: &FileFacts) -> bool {
+    file.has_queue_package_import
+        || !file.workers.is_empty()
+        || !file.producers.is_empty()
+        || !file.queue_bindings.is_empty()
+        || !file.queue_exports.is_empty()
+        || !file.enqueue_wrappers.is_empty()
+        || file.star_exports.iter().any(|spec| is_queue_package(spec))
+        || file.worker_exports.values().any(|binding| {
+            matches!(
+                binding,
+                ExportedWorkerBinding::Worker(_) | ExportedWorkerBinding::WorkerClass
+            )
+        })
 }

@@ -1,0 +1,4 @@
+# no-mistakes-disable-file github-actions-env-policy
+env:
+  NODE_OPTIONS: --inspect
+jobs: {}

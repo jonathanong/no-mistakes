@@ -40,7 +40,7 @@ pub(crate) fn source_may_have_queue_facts(
         || contains_bytes(haystack, b"new Worker")
         || contains_bytes(haystack, b"FlowProducer")
         || contains_bytes(haystack, b"upsertJobScheduler")
-        || contains_bytes(haystack, b"rateLimit")
+        || (contains_bytes(haystack, b"rateLimit") && contains_bytes(haystack, b"import"))
         || contains_bytes(haystack, b"export *")
         || factory_names
             .iter()

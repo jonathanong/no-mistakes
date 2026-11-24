@@ -1,0 +1,8 @@
+# A merge inside a merged mapping supplies the banned key.
+inner: &inner
+  legacy:
+    enabled: true
+outer: &outer
+  <<: *inner
+runtime:
+  <<: *outer

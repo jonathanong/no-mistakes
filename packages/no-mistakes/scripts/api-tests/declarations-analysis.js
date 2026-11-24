@@ -169,3 +169,14 @@ test("INSERT facts expose named exported declaration contracts", () => {
   );
   assert.match(insert, /diagnostics: PostgresSqlDiagnostic\[\]/);
 });
+
+test("analyzeProject deprecates the related report request", () => {
+  const analyzeProjectDeclarations = readFileSync(
+    join(packageRoot, "analyze-project-types.d.ts"),
+    "utf8",
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /\/\*\* @deprecated Use "dependents" instead\. \*\/\s+type: "related";\s+id\?: string;\s+} & BatchedTraverseOptions/,
+  );
+});

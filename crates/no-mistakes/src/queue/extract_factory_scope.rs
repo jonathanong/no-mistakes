@@ -100,6 +100,7 @@ pub(crate) fn visit_class<'a>(visitor: &mut QueueVisitor<'a>, class: &Class<'a>)
         mask_name(visitor, id.name.as_str());
         visitor.facts.const_numbers.remove(id.name.as_str());
     }
+    crate::queue::extract_worker_rate_limit::note_class(visitor, class);
     walk::walk_class(visitor, class);
     visitor.job_frames = frames;
     visitor.facts.const_numbers = numbers;

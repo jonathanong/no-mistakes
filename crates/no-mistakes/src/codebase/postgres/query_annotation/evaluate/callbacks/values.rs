@@ -16,7 +16,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) {
         self.retain_temporary_values(values);
         #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-        super::super::effects::call_value_work_tests::record_callback_visits(values.len());
+        super::super::effects::hooks::record_callback_visits(values.len());
         for value in values {
             match value {
                 Value::Aggregate(values)

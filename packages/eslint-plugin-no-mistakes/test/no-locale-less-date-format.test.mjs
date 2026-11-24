@@ -16,6 +16,13 @@ const cases = [
     oxlint: true,
   },
   {
+    name: "Intl format constructors used only for immediate resolvedOptions are exempt while stored or passed instances are reported",
+    file: "intl-resolved-options.mjs",
+    options: { methods: [], constructors },
+    lines: [6, 8, 10, 11],
+    oxlint: true,
+  },
+  {
     name: "Intl constructors are ignored by default",
     file: "intl-constructors.mjs",
     lines: [],

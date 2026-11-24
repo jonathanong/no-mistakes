@@ -4,6 +4,7 @@ mod export_offset_gaps;
 mod facts;
 mod import_targets;
 mod incomplete;
+mod load_lex_tests;
 mod namespace_uses;
 mod readers;
 mod support;

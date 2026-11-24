@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-env-policy
+    scope: repository
+    options:
+      unanalyzable: ignore
+      required:
+        BASH_ENV: /dev/null
+      forbidden:
+        - NODE_OPTIONS

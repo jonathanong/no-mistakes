@@ -1,4 +1,4 @@
-use super::{no_poll_wait_job, pr_diff_range};
+use super::{env_policy, no_poll_wait_job, pr_diff_range};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
@@ -12,8 +12,16 @@ pub(in crate::codebase::rules) fn run(
     config: &NoMistakesConfig,
     files: &[PathBuf],
     sources: &SourceStore,
+    defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
     match rule_id {
+        env_policy::RULE_ID => Some(env_policy::check_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        )),
         no_poll_wait_job::RULE_ID => Some(no_poll_wait_job::check_with_files_and_sources(
             root, config, files, sources,
         )),

@@ -1,0 +1,29 @@
+{
+  "total_count": 4,
+  "workflow_runs": [
+    {
+      "id": 400,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "dddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": 300,
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "id": 250,
+      "status": "completed",
+      "conclusion": "cancelled",
+      "head_sha": "9999999999999999999999999999999999999999"
+    },
+    {
+      "id": 100,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

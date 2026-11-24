@@ -1,0 +1,7 @@
+# A scalar item in a merge sequence cannot be applied, so the file is unanalyzable.
+first: &first
+  legacy:
+    enabled: true
+note: &note plain
+runtime:
+  <<: [*first, *note]

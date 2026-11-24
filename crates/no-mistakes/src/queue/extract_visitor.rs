@@ -27,6 +27,7 @@ pub(super) struct QueueVisitor<'a> {
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
     pub flow_bindings: HashSet<u32>,
+    pub non_queue_declarations: HashSet<u32>,
     pub configured_factory_names: &'a [String],
     pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     pub queue_name_index: HashMap<String, usize>,
@@ -87,6 +88,11 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_new_expression(&mut self, new_expr: &oxc_ast::ast::NewExpression<'a>) {
         self.note_constructed_worker(new_expr);
         walk::walk_new_expression(self, new_expr);
+    }
+
+    fn visit_assignment_expression(&mut self, expr: &oxc_ast::ast::AssignmentExpression<'a>) {
+        super::extract_worker_rate_limit::note_assignment(self, expr);
+        walk::walk_assignment_expression(self, expr);
     }
 
     fn visit_export_named_declaration(&mut self, decl: &oxc_ast::ast::ExportNamedDeclaration<'a>) {

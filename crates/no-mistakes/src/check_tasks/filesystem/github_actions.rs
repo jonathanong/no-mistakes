@@ -26,6 +26,10 @@ const CHECKS: &[(&str, WorkflowCheck)] = &[
         rules::github_actions_job_permissions::diagnostics_with_files_and_sources,
     ),
     (
+        rules::github_actions_env_policy::RULE_ID,
+        rules::github_actions_env_policy::diagnostics_with_files_and_sources,
+    ),
+    (
         rules::github_actions_run_command_policy::RULE_ID,
         rules::github_actions_run_command_policy::diagnostics_with_files_and_sources,
     ),

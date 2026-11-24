@@ -69,6 +69,15 @@ pub enum Severity {
     Error,
 }
 
+impl fmt::Display for Severity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Severity::Warning => f.write_str("warning"),
+            Severity::Error => f.write_str("error"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Diagnostic {

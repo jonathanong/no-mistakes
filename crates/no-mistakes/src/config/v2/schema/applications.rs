@@ -16,6 +16,7 @@ impl RuleDef {
     /// intentionally remains infallible for existing programmatic callers.
     pub fn try_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self) -> Result<T> {
         super::super::analysis_policy::validate_inventory_policy(self)?;
+        self.configured_effort()?;
         super::postgres_executors::validate(self)?;
         if matches!(&self.options, serde_yaml::Value::Null)
             || matches!(&self.options, serde_yaml::Value::Mapping(options) if options.is_empty())

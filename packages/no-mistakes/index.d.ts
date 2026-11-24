@@ -39,9 +39,6 @@ import type {
   PlaywrightCoverageReport,
   PlaywrightRelatedOptions,
   ProjectOptions,
-  QueueCheckFinding,
-  QueueEdge,
-  QueueReport,
   ReactComponentFacts,
   ReactUsagesReport,
   ReactViolation,
@@ -75,6 +72,7 @@ export type * from "./queue-factory-types";
 export * from "./types";
 export * from "./index-ci-infra";
 export * from "./index-postgres-lock-inventory";
+export * from "./index-queues";
 
 export function dependencies(
   options: WithInvocationOptions<TraversePathsOptions>,
@@ -170,14 +168,6 @@ export function playwrightRelated(
 export function playwrightTests(
   options?: WithInvocationOptions<PlaywrightOptions>,
 ): Promise<unknown>;
-export function queues(
-  options?: WithInvocationOptions<ProjectOptions>,
-): Promise<WithInvocationResult<QueueReport>>;
-export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
-export function queueRelated(options: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
-export function queueCheck(
-  options?: WithInvocationOptions<ProjectOptions>,
-): Promise<QueueCheckFinding[]>;
 export function serverRoutes(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<WithInvocationResult<ServerRoutesReport>>;

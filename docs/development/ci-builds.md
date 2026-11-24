@@ -87,12 +87,14 @@ The current validation graph is organized as follows:
   Rust tests` therefore runs one `cargo test --no-run` over every listed target
   (same `profileArgs`, `--locked` and `-p`) under a 20 minute cap, with live
   cargo output, and the 15 minute `Run macOS-dependent Rust tests` step only
-  runs them. The cap is below the 35 minutes the build step holds, and the
-  restore of the input sidecar stays in the compile step because running it
-  again would mark files changed since capture fresh and force a rebuild. No
-  existing timeout value changed; the compile phase, which used to share one
-  15 minute step with the tests, now has its own 20 minute allowance within
-  the job's 45 minute cap.
+  runs them. A separately bounded step replays the saved input timestamps
+  once before compilation. In run 45364121571, that replay took 30 seconds
+  and Cargo finished the compile in 19m34s. Sharing one step deadline caused
+  the runner to terminate the step after Cargo listed both test binaries.
+  The compile and test step caps remain inside the job's 45-minute limit.
+  Keep the timestamp replay ahead of compilation because replaying it again
+  would mark changed files fresh and force a rebuild.
+  [macOS smoke job](https://github.com/jonathanong/no-mistakes/actions/runs/45364121571/job/138343765816)
   The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
   `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
   `main` and manual dispatch, where they are unchanged. The trade-off is that
@@ -1133,6 +1135,26 @@ Test CI cancels superseded in-progress runs only for pull requests. An active
 main run can finish and upload Rust coverage when another merge lands. GitHub's
 default concurrency queue can still replace an older pending main run before
 its jobs start.
+
+Benchmarks run in the dedicated
+[Benchmarks workflow](../../.github/workflows/benchmarks.yml), which triggers on
+`pull_request` and pushes to `main`. Its `changes` job resolves the diff base
+with [`push-diff-base.cjs`](../../.github/scripts/push-diff-base.cjs) and
+selects shards with
+[`benchmark-change-scope.cjs`](../../.github/scripts/benchmark-change-scope.cjs),
+supporting pull-request opt-in markers. On pushes to `main`, `push-diff-base.cjs`
+diffs from the head SHA of the most recent successful
+`Benchmarks` push run on the same branch (`conclusion: success`, falling back to
+all shards when no prior ancestor run is available) so commits skipped by
+ref-keyed concurrency remain covered. The `bench` producer builds the benchmark binaries on
+`ubuntu-24.04-arm`, followed by the `benchmark-shards` matrix (one job per
+shard), `frontend-lifecycle-smoke`, and the `Benchmarks` gate (`benchmark-gate`),
+with per-job `id-token: write` on the shard and smoke jobs. Concurrency is
+grouped per pull request (cancelling superseded PR runs) and per ref on `main`
+(`cancel-in-progress` false, so a started `main` run completes while GitHub
+keeps only the newest waiting `main` run). `Benchmarks` is not a required check,
+and cache retention tracks each handoff cache's source run by ID so an active
+run keeps its handoff.
 
 Rust coverage floors use one `cargo llvm-cov report --json --summary-only`
 export and [a totals checker](../../.github/scripts/rust-coverage-floors.cjs).

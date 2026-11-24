@@ -18,6 +18,11 @@ fn github_actions_no_poll_wait_job_json_matches_snapshot() {
                 rules_path(RULE, "configs", "report.yml"),
             ),
             (
+                "nested-and-heredoc",
+                rules_path(RULE, "fixture", "nested-and-heredoc"),
+                rules_path(RULE, "configs", "report.yml"),
+            ),
+            (
                 "unconfigured",
                 rules_path(RULE, "fixture", "report"),
                 rules_path(RULE, "configs", "unconfigured.yml"),

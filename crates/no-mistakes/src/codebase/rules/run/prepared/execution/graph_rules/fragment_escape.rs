@@ -44,6 +44,8 @@ pub(super) fn collect(
                     for gap in report.gaps {
                         session.record_check_failure(gap);
                     }
+                } else if let Some(gap) = report.gaps.first() {
+                    anyhow::bail!("{}: {}", gap.consumer, gap.message);
                 }
                 findings.extend(report.findings);
                 Ok(())

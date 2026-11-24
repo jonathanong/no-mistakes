@@ -73,6 +73,14 @@ fn worker_rate_limit_reports_resolved_workers_and_abstains_when_unresolved() {
         "only unresolved receivers abstain: {diagnostics:?}"
     );
     assert_eq!(diagnostics.len(), 4, "diagnostics: {diagnostics:?}");
+    assert!(
+        check.iter().any(|finding| {
+            finding["file"].as_str() == Some("subclass-worker.ts")
+                && finding["sourceLine"].as_str()
+                    == Some("await new ExampleWorker().rateLimit(1000);")
+        }),
+        "Worker subclasses must be reported: {check:?}"
+    );
     insta::assert_snapshot!(serde_json::to_string_pretty(&json!({
         "check": check,
         "diagnostics": diagnostics,
@@ -99,14 +107,37 @@ fn worker_rate_limit_handles_reexports_defaults_aliases_and_unresolved_edges() {
     assert_eq!(
         findings,
         vec![
-            ("caller.ts", 40, Some("edge-jobs")),
-            ("caller.ts", 43, Some("edge-jobs")),
-            ("caller.ts", 45, Some("edge-jobs")),
-            ("caller.ts", 46, Some("edge-jobs")),
-            ("caller.ts", 47, Some("edge-jobs")),
-            ("caller.ts", 48, Some("edge-jobs")),
+            ("caller.ts", 63, Some("edge-jobs")),
+            ("caller.ts", 66, Some("edge-jobs")),
+            ("caller.ts", 68, Some("edge-jobs")),
+            ("caller.ts", 69, Some("edge-jobs")),
+            ("caller.ts", 70, Some("edge-jobs")),
+            ("caller.ts", 71, Some("edge-jobs")),
+            ("caller.ts", 123, None),
+            ("caller.ts", 124, None),
+            ("caller.ts", 125, None),
+            ("caller.ts", 126, None),
+            ("caller.ts", 127, None),
+            ("caller.ts", 128, None),
+            ("caller.ts", 129, None),
+            ("caller.ts", 130, None),
+            ("caller.ts", 131, None),
+            ("caller.ts", 132, None),
+            ("caller.ts", 133, None),
+            ("caller.ts", 173, None),
+            ("caller.ts", 175, None),
+            ("caller.ts", 179, None),
+            ("caller.ts", 181, None),
+            ("caller.ts", 187, None),
+            ("caller.ts", 188, None),
+            ("caller.ts", 189, None),
+            ("caller.ts", 190, Some("edge-jobs")),
+            ("caller.ts", 192, None),
+            ("caller.ts", 193, None),
+            ("caller.ts", 194, None),
+            ("caller.ts", 204, None),
         ],
-        "only resolved re-exported worker aliases and awaited factories are reported: {:?}",
+        "only resolved re-exported worker aliases, subclasses, and awaited factories are reported: {:?}",
         report.check
     );
     let diag_lines: Vec<_> = report
@@ -118,20 +149,23 @@ fn worker_rate_limit_handles_reexports_defaults_aliases_and_unresolved_edges() {
     assert_eq!(
         diag_lines,
         vec![
-            ("caller.ts", 62),
-            ("caller.ts", 63),
-            ("caller.ts", 65),
-            ("caller.ts", 66),
-            ("caller.ts", 67),
-            ("caller.ts", 68),
-            ("caller.ts", 69),
-            ("caller.ts", 70),
-            ("caller.ts", 71),
-            ("caller.ts", 72),
-            ("caller.ts", 75),
-            ("caller.ts", 80),
+            ("caller.ts", 90),
+            ("caller.ts", 91),
+            ("caller.ts", 92),
+            ("caller.ts", 93),
+            ("caller.ts", 143),
+            ("caller.ts", 144),
+            ("caller.ts", 145),
+            ("caller.ts", 146),
+            ("caller.ts", 147),
+            ("caller.ts", 150),
+            ("caller.ts", 153),
+            ("caller.ts", 156),
+            ("caller.ts", 163),
+            ("caller.ts", 201),
+            ("caller.ts", 209),
         ],
-        "unresolved calls abstain while non-workers stay silent: {:?}",
+        "only unresolved queue-module bindings abstain while unrelated receivers stay silent: {:?}",
         report.diagnostics
     );
 }

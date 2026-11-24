@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-lock-inventory
+    scope: repository
+    options:
+      executorNames: []
+      baselineFile: baseline.json
+      sqlInclude: ["**/*.sql"]
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      executorNames: []
+      sqlInclude: ["**/*.sql"]
