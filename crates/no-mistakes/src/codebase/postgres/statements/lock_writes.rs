@@ -154,10 +154,16 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, '_, '_, ADVANCED> {
             Statement::Commit { .. } | Statement::Rollback { .. } => {
                 self.out.transaction_boundary = true
             }
-            Statement::Update(_) | Statement::Delete(_) => {
-                if let Some(row) = sequences::write(statement, self.positions) {
+            Statement::Update(update) => self.out.writes.push(sequences::write(
+                &update.table,
+                update.selection.as_ref(),
+                update.from.is_some(),
+                self.positions,
+            )),
+            Statement::Delete(delete) => {
+                if let Some(row) = sequences::delete(delete, self.positions) {
                     if let Some(sequence) = self.sequence.as_deref_mut() {
-                        sequence.record_write(statement, self.out.writes.len());
+                        sequence.record_delete(self.out.writes.len());
                     }
                     self.out.writes.push(row);
                 }

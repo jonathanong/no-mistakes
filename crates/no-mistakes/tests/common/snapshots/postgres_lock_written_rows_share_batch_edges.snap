@@ -29,6 +29,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR KEY SHARE;",
           "target": "unanalyzable"
+        },
+        {
+          "file": "src/row-key-proof.ts",
+          "line": 13,
+          "message": "src/row-key-proof.ts:13: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock mode or common row key; use explicit lock clauses and comparable row predicates",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/row-key-proof.ts",
+          "line": 20,
+          "message": "src/row-key-proof.ts:20: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = 1 FOR SHARE`);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/row-key-proof.ts",
+          "line": 7,
+          "message": "src/row-key-proof.ts:7: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
         }
       ],
       "codebase": [],

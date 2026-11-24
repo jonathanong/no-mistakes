@@ -160,8 +160,11 @@ fn postgres_lock_written_rows_share_batch_edges_check_json_snapshot() {
         &[("advise", "share-lock-batch-edges", "share-uncertainty.yml")],
     );
     let advise = &reports["advise"]["report"];
-    assert_eq!(lines(advise, "advisories", "share-lock-then-write"), [30]);
-    assert_eq!(lines(advise, "advisories", "unanalyzable"), [6, 37]);
+    assert_eq!(
+        lines(advise, "advisories", "share-lock-then-write"),
+        [7, 20, 30]
+    );
+    assert_eq!(lines(advise, "advisories", "unanalyzable"), [6, 13, 37]);
 }
 
 #[test]
