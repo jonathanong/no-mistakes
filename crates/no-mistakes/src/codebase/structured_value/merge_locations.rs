@@ -53,12 +53,8 @@ impl MergeLocations {
                     continue;
                 }
                 Event::Scalar(_, _, anchor, _) => (anchor, Kind::Scalar),
-                Event::Alias(anchor) => {
-                    let Some(&target) = anchors.get(&anchor) else {
-                        break;
-                    };
-                    (0, Kind::Alias(target))
-                }
+                // The parser emits Alias only after emitting its anchor node.
+                Event::Alias(anchor) => (0, Kind::Alias(anchors[&anchor])),
                 _ => continue,
             };
             let collection = matches!(kind, Kind::Mapping(_) | Kind::Sequence(_));
@@ -96,8 +92,8 @@ impl MergeLocations {
             key.as_str()
                 .and_then(|key| lines.get(&key.as_ptr()).copied())
         })
-        .err()?
-        .0
+        .err()
+        .and_then(|(line, _)| line)
     }
 
     // The replay moves YAML keys in place. Their string allocations retain

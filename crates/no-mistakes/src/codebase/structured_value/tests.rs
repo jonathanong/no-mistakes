@@ -307,3 +307,37 @@ fn reports_the_key_that_survives_merge_precedence() {
     assert_eq!(documents.errors.len(), 1);
     assert_eq!(documents.errors[0].0, 4);
 }
+
+#[test]
+fn reports_a_failed_merge_inside_an_earlier_sequence_source() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/nested-source-error.yml"
+    );
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.ends_with("at line 4"), "{error}");
+}
+
+#[test]
+fn detects_a_merge_inside_a_tagged_mapping() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/tagged-merge-error.yml"
+    );
+    let value = serde_yaml::from_str(source).unwrap();
+    let error = super::expand_yaml_mapping_if_merged(&value).unwrap_err();
+    assert!(error.contains("failed to apply YAML merge keys"), "{error}");
+}
+
+#[test]
+fn locates_a_merge_error_before_a_later_yaml_syntax_error() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/merge-before-syntax-error.yml"
+    );
+    let documents = parse_yaml_documents(source);
+    assert_eq!(documents.values.len(), 1);
+    assert_eq!(documents.errors.len(), 2);
+    assert_eq!(documents.errors[0].0, 5);
+    assert!(documents.errors[0]
+        .1
+        .contains("failed to apply YAML merge keys"));
+    assert!(documents.errors[1].1.contains("failed to parse YAML"));
+}

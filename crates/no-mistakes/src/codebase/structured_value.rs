@@ -117,9 +117,8 @@ pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
             let value = documents
                 .find(|(index, _)| *index == doc_index)
                 .and_then(|(_, document)| Value::deserialize(document).ok());
-            errors[error_index].0 = locations
-                .locate(doc_index, value)
-                .unwrap_or_else(|| locations.document_start(doc_index));
+            let document_start = locations.document_start(doc_index);
+            errors[error_index].0 = locations.locate(doc_index, value).unwrap_or(document_start);
         }
     }
     YamlDocuments { values, errors }
