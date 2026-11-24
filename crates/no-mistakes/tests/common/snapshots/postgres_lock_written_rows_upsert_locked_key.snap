@@ -1,0 +1,149 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/controls.ts",
+          "line": 12,
+          "message": "src/controls.ts:12: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 19,
+          "message": "src/controls.ts:19: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 5,
+          "message": "src/controls.ts:5: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = 1 FOR UPDATE`);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "matching": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/matches.ts",
+          "line": 14,
+          "message": "src/matches.ts:14: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: the following multi-row upsert can affect the locked key; cannot prove the pre-lock is redundant",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/matches.ts",
+          "line": 5,
+          "message": "src/matches.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "trigger_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/matches.ts",
+          "line": 14,
+          "message": "src/matches.ts:14: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: the following multi-row upsert can affect the locked key; cannot prove the pre-lock is redundant",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/matches.ts",
+          "line": 5,
+          "message": "src/matches.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 16,
+          "message": "src/matches.ts:16: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO jobs (id, state, touched_at)",
+          "target": "touched_at"
+        },
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 18,
+          "message": "src/matches.ts:18: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state, touched_at = EXCLUDED.touched_at",
+          "target": "touched_at"
+        },
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 7,
+          "message": "src/matches.ts:7: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO jobs (id, state, touched_at) VALUES ($1, 'done', $2)",
+          "target": "touched_at"
+        },
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 8,
+          "message": "src/matches.ts:8: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state, touched_at = EXCLUDED.touched_at",
+          "target": "touched_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "written_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

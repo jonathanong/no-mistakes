@@ -18,6 +18,42 @@ fn lines_in_file(report: &Value, category: &str, target: &str, file: Option<&str
 }
 
 #[test]
+fn postgres_lock_written_rows_upsert_locked_key_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_upsert_locked_key",
+        &[
+            ("matching", "upsert-locked-key", "upsert-locked-key.yml"),
+            (
+                "trigger_column",
+                "upsert-locked-key",
+                "upsert-trigger-column.yml",
+            ),
+            (
+                "written_only",
+                "upsert-locked-key",
+                "upsert-written-only.yml",
+            ),
+            ("controls", "upsert-locked-key", "upsert-controls.yml"),
+        ],
+    );
+    for case in ["matching", "trigger_column", "written_only"] {
+        let report = &reports[case]["report"];
+        assert!(lines(report, "rules", "row-lock-unwritten-relation").is_empty());
+    }
+    let report = &reports["matching"]["report"];
+    assert_eq!(lines(report, "advisories", "redundant-prelock"), [5]);
+    assert_eq!(lines(report, "advisories", "unanalyzable"), [14]);
+    assert_eq!(
+        lines(
+            &reports["controls"]["report"],
+            "rules",
+            "row-lock-unwritten-relation"
+        ),
+        [5, 12, 19]
+    );
+}
+
+#[test]
 fn postgres_lock_written_rows_advisory_ban_existing_check_json_snapshot() {
     let reports = snapshot(
         "postgres_lock_written_rows_advisory_ban_existing",

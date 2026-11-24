@@ -10,13 +10,14 @@ use sqlparser::ast::{
 mod expressions;
 mod upsert;
 use expressions::{plain_assignments, plain_value};
-pub(super) fn collect(
+pub(super) fn collect<const ADVANCED: bool>(
     statement: &Statement,
     out: &mut LockWriteFacts,
     positions: PlaceholderPositions<'_>,
+    redundant_prelocks: bool,
 ) {
     match statement {
-        Statement::Query(query) => {
+        Statement::Query(query) if redundant_prelocks => {
             out.prelock_attempt = query
                 .locks
                 .iter()
@@ -25,17 +26,20 @@ pub(super) fn collect(
                 out.prelock = locked_key(query, positions);
             }
         }
-        Statement::Update(update) => {
+        Statement::Update(update) if redundant_prelocks => {
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
-        Statement::Insert(insert) => {
+        Statement::Insert(insert) if ADVANCED => {
             if let Some(keys) = upsert::upsert_keys(insert, positions) {
-                if keys.len() == 1 {
-                    out.conditional_write_keys = keys;
-                    out.conditional_write_unique = true;
-                } else {
-                    out.multi_row_upsert_keys = Some(keys.into_boxed_slice());
+                if redundant_prelocks {
+                    if keys.len() == 1 {
+                        out.conditional_write_keys = keys.clone();
+                        out.conditional_write_unique = true;
+                    } else {
+                        out.multi_row_upsert_keys = Some(keys.clone().into_boxed_slice());
+                    }
                 }
+                out.upsert_write_keys.extend(keys);
             }
         }
         _ => {}

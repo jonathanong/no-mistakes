@@ -26,6 +26,7 @@ pub(crate) struct LockWriteFacts {
     pub ddl_recovery_complete: bool,
     pub locks: Vec<RowAccess>,
     pub writes: Vec<RowAccess>,
+    pub upsert_write_keys: Vec<RowAccess>,
     pub trigger_writes: Vec<crate::codebase::postgres::CatalogTriggerWrite>,
     pub table_locks: Vec<Option<String>>,
     pub transaction_boundary: bool,
@@ -56,10 +57,9 @@ pub(super) fn collect<const ADVANCED: bool>(
     modes: Option<&Segments<'_>>,
 ) -> LockWriteFacts {
     let mut out = LockWriteFacts::default();
-    if let (true, [statement]) = (redundant_prelocks, statements) {
-        prelock::collect(statement, &mut out, positions);
-    }
+    let redundant_prelocks = redundant_prelocks && statements.len() == 1;
     for statement in statements {
+        prelock::collect::<ADVANCED>(statement, &mut out, positions, redundant_prelocks);
         if matches!(statement, Statement::Prepare { .. }) {
             continue;
         }
