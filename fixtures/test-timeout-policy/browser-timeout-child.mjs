@@ -62,7 +62,7 @@ export async function browserFixture(
     );
     const lifecycleProbe = fileURLToPath(new URL("./browser-lifecycle-probe.mjs", import.meta.url));
     await writeFile(
-      join(directory, "vitest.config.mts"),
+      join(directory, "vitest.config.mjs"),
       fixtureTemplate("browser-timeout-child-template-2.txt", [
         JSON.stringify(plugin),
         story?.imports ?? "",
@@ -87,18 +87,23 @@ export async function browserFixture(
         fixtureTemplate("browser-timeout-child-template-1.txt", [source]),
       );
     const cli = join(dirname(require.resolve("vitest/package.json")), "vitest.mjs");
-    const child = spawn(process.execPath, [cli, "run", "--root", directory, "--maxWorkers=1"], {
-      cwd: directory,
-      stdio: ["ignore", "pipe", "pipe"],
-      detached: true,
-      env: {
-        ...process.env,
-        ...environment,
-        BROWSER_LIFECYCLE_RECEIPT_FILE: join(directory, "lifecycle.jsonl"),
+    const containment = browserChildContainment(storybook);
+    const child = spawn(
+      process.execPath,
+      [cli, "run", "--configLoader", "native", "--root", directory, "--maxWorkers=1"],
+      {
+        cwd: directory,
+        stdio: ["ignore", "pipe", "pipe"],
+        detached: true,
+        env: {
+          ...process.env,
+          ...environment,
+          BROWSER_LIFECYCLE_RECEIPT_FILE: join(directory, "lifecycle.jsonl"),
+        },
       },
-    });
+    );
     removable = false;
-    const outcome = await observeSdkChild(child, browserChildContainment(storybook));
+    const outcome = await observeSdkChild(child, containment);
     removable = outcome.drained;
     await recordBrowserChildDiagnostics(outcome, {
       child,
@@ -124,13 +129,22 @@ export async function browserFixture(
         await writeFile(join(artifacts, "optimizer.jsonl"), records.optimizer);
         await writeFile(join(artifacts, "browser-console.log"), records.browserConsole);
         await writeFile(
-          join(artifacts, "vitest.config.mts"),
-          await readFile(join(directory, "vitest.config.mts")),
+          join(artifacts, "vitest.config.mjs"),
+          await readFile(join(directory, "vitest.config.mjs")),
         );
         await writeFile(join(artifacts, "output.log"), outcome.output);
       } catch (error) {
         console.warn(`Browser SDK artifacts unavailable: ${error.message}`);
       }
+    if (outcome.result.signal !== null) {
+      const elapsedMs = Math.round(outcome.lifecycle?.elapsedMs ?? 0);
+      const reason = outcome.forcedCleanup
+        ? `watchdog (${containment.watchdogMs} ms)`
+        : "external signal";
+      throw new Error(
+        `Browser SDK child terminated by ${outcome.result.signal} (${reason}) after ${elapsedMs} ms\n${outcome.output}`,
+      );
+    }
     return {
       ...outcome.result,
       output: outcome.output,
