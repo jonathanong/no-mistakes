@@ -26,7 +26,7 @@ Use `--write-baseline` only after reviewing the inventory:
 ```sh
 no-mistakes postgres lock-inventory --root . --config .no-mistakes.yml --write-baseline
 git add .no-mistakes/postgres-locks.json
-no-mistakes postgres lock-inventory --root . --config .no-mistakes.yml
+no-mistakes check --root .
 ```
 
 When the configured baseline does not exist, the explicit option creates the

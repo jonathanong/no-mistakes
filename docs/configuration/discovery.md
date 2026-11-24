@@ -19,8 +19,10 @@ duplicate named entries in a list section across fragments are errors naming
 their source files. Existing single-file duplicate validation remains in
 force. Unknown section directories, unsupported extensions, and config files
 directly inside `.no-mistakes/` are errors. Dotfiles and Markdown files in
-section directories are ignored. Fragment paths resolve from the repository
-root.
+section directories are ignored. Discovery reserves
+`.no-mistakes/postgres-locks.json` for the default
+[PostgreSQL lock inventory baseline](../rules/postgres-lock-inventory.md).
+Fragment paths resolve from the repository root.
 
 An explicit `--config <path>` selects one file only and does not include
 `.no-mistakes/` fragments.

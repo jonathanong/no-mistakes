@@ -47,7 +47,9 @@ names for calls into stored routines.
 ## Options
 
 `baselineFile` selects the JSON baseline and defaults to
-`.no-mistakes/postgres-locks.json`; `baseline` is its alias. Configure helper
+`.no-mistakes/postgres-locks.json`; `baseline` is its alias. Automatic
+configuration discovery reserves that default path for the baseline. Place a
+custom baseline outside the `.no-mistakes/` fragment directory. Configure helper
 TypeScript/SQL function names with `helpers`. TypeScript matches case exactly.
 PostgreSQL folds unquoted names to lowercase. Quoted SQL names containing
 uppercase letters require an exact configured spelling.

@@ -22,6 +22,7 @@ pub use types::{
 };
 
 pub const RULE_ID: &str = "postgres-lock-inventory";
+pub(crate) const DEFAULT_BASELINE_FILE: &str = ".no-mistakes/postgres-locks.json";
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
 
 pub(crate) fn standalone_application(config: &NoMistakesConfig) -> Result<&RuleDef> {

@@ -1,4 +1,16 @@
 use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
+#[path = "common/git_tracked_rule.rs"]
+mod git_tracked_rule;
+
+#[test]
+fn postgres_lock_inventory_tracked_default_baseline_check_json_snapshot() {
+    let root = git_tracked_rule::materialize_rule("postgres-lock-inventory", "default-baseline");
+    let cases = [("tracked", root.path().to_path_buf(), Default::default())];
+    let reports =
+        assert_saved_fixture_report("postgres_lock_inventory_default_baseline", &cases, &[], &[]);
+    assert_eq!(reports["tracked"]["exitCode"], 0);
+    assert_eq!(reports["tracked"]["report"]["rules"], serde_json::json!([]));
+}
 
 #[test]
 fn postgres_lock_inventory_check_json_snapshot() {

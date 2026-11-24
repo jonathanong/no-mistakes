@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use super::super::schema::{ConfigProvenance, NoMistakesConfig};
 use super::provenance::record_provenance;
+use crate::codebase::rules::postgres_lock_inventory::DEFAULT_BASELINE_FILE;
 use crate::config::source_locations::ConfigPath;
 
 #[derive(Clone, Debug)]
@@ -53,7 +54,10 @@ pub(crate) fn classify_fragment(root: &Path, path: &Path) -> Result<Option<Strin
         .file_name()
         .is_some_and(|name| name.to_string_lossy().starts_with('.'));
     if parts.len() < 2 {
-        if dotfile || path.extension().is_some_and(|extension| extension == "md") {
+        if dotfile
+            || path.extension().is_some_and(|extension| extension == "md")
+            || path.ends_with(DEFAULT_BASELINE_FILE)
+        {
             return Ok(None);
         }
         anyhow::bail!(
