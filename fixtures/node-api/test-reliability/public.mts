@@ -14,6 +14,7 @@ const externalSuite: TestReliabilityAllowlistEntry = {
 export const retries: TestNoRetriesOptions = {
   maxRetries: 1,
   testCommands: [["pnpm", "test:unit"]],
+  files: ["config/browser-options.ts"],
   allowlist: [externalSuite],
 };
 export const serial: PlaywrightNoSerialOptions = {

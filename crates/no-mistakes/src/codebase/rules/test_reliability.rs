@@ -1,6 +1,7 @@
 use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -10,6 +11,7 @@ use std::path::{Path, PathBuf};
 pub(crate) mod ast;
 mod findings;
 mod options;
+pub(crate) mod playwright_provenance;
 mod scope;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
@@ -34,6 +36,7 @@ pub(crate) struct Location {
     line: usize,
     project: Option<String>,
     origin: Origin,
+    pub(crate) playwright_import: Option<playwright_provenance::ImportRef>,
 }
 
 enum Shape {
@@ -56,17 +59,24 @@ pub(crate) fn check_prepared(
 ) -> Result<Vec<RuleFinding>> {
     let paths = scope::ConfigPaths::new(inputs.root, config)?;
     super::run_rule_applications(config, rule_id, |rule| {
-        let (max_retries, allowlist, test_commands) = if rule_id == TEST_NO_RETRIES {
+        let (max_retries, allowlist, test_commands, factory_files) = if rule_id == TEST_NO_RETRIES {
             let options: RetryOptions = rule.try_rule_options()?;
             options::validate_test_commands(&options.test_commands)?;
+            let factory_files = options.factory_files()?;
             (
                 options.max_retries,
                 options.allowlist,
                 options.test_commands,
+                factory_files,
             )
         } else {
             let options: SerialOptions = rule.try_rule_options()?;
-            (0, options.allowlist, Vec::new())
+            (
+                0,
+                options.allowlist,
+                Vec::new(),
+                GlobMatcher::new(&[], rule_id)?,
+            )
         };
         let allowlist = Allowlist::compile(rule_id, allowlist)?;
         let files = super::selected_rule_files_with_sources(
@@ -79,7 +89,7 @@ pub(crate) fn check_prepared(
         let findings: Result<Vec<_>> = files
             .par_iter()
             .map(|path| {
-                let source = paths.source(inputs.root, path, rule);
+                let source = paths.source(inputs.root, path, rule, &factory_files);
                 let workflow = rule_id == TEST_NO_RETRIES && paths.workflow(path);
                 if source.is_none() && !workflow {
                     return Ok(None);

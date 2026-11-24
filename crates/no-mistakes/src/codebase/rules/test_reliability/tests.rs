@@ -62,6 +62,32 @@ fn filesystem_library_returns_the_unanalyzable_input() {
 }
 
 #[test]
+fn filesystem_library_finds_local_playwright_bindings() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/test-no-retries")
+        .canonicalize()
+        .unwrap();
+    let root = fixture.join("fixture/local-playwright");
+    let config = fixture.join("configs/local-playwright.yml");
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+    assert_eq!(findings.len(), 7, "{findings:?}");
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "tests/local.spec.ts")
+            .count(),
+        5
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "config/browser-options.ts")
+            .count(),
+        2
+    );
+}
+
+#[test]
 fn merging_fact_plans_keeps_both_runner_demands_for_a_shared_test() {
     let fixture = library_fixture();
     let shared_test = fixture.join("reliability.spec.ts");

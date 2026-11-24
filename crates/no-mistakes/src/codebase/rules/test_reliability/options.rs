@@ -1,3 +1,4 @@
+use crate::codebase::rules::path_filter::GlobMatcher;
 use anyhow::{ensure, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use serde::Deserialize;
@@ -9,6 +10,17 @@ pub(super) struct RetryOptions {
     pub(super) max_retries: u64,
     pub(super) allowlist: Vec<AllowEntry>,
     pub(super) test_commands: Vec<Vec<String>>,
+    pub(super) files: Vec<String>,
+}
+
+impl RetryOptions {
+    pub(super) fn factory_files(&self) -> Result<GlobMatcher> {
+        ensure!(
+            self.files.iter().all(|glob| !glob.trim().is_empty()),
+            "test-no-retries: options.files entries must be nonempty globs"
+        );
+        GlobMatcher::new(&self.files, "test-no-retries options.files")
+    }
 }
 
 #[derive(Default, Deserialize)]

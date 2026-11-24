@@ -11,6 +11,8 @@ fn test_reliability_check_json_snapshot() {
         "blank-reason",
         "malformed",
         "static-shapes",
+        "local-playwright",
+        "local-playwright-default",
     ]
     .map(|name| {
         let root = match name {
@@ -18,6 +20,9 @@ fn test_reliability_check_json_snapshot() {
                 rules_path("test-no-retries", "fixture", "workflow-action")
             }
             "malformed" | "static-shapes" => rules_path("test-no-retries", "fixture", name),
+            "local-playwright" | "local-playwright-default" => {
+                rules_path("test-no-retries", "fixture", "local-playwright")
+            }
             _ => root.clone(),
         };
         (
@@ -54,7 +59,14 @@ fn test_reliability_invalid_options_check_json_snapshot() {
 #[test]
 fn test_reliability_rejects_invalid_scope_globs() {
     let root = rules_path("test-no-retries", "fixture", "workflow-action");
-    for name in ["invalid-rule-glob", "invalid-runner-glob"] {
+    for (name, diagnostic) in [
+        ("invalid-rule-glob", "tests/[browser"),
+        ("invalid-runner-glob", "tests/[browser"),
+        (
+            "blank-factory-glob",
+            "options.files entries must be nonempty globs",
+        ),
+    ] {
         let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
             .args(["--lock-timeout", "0", "check", "--root"])
             .arg(&root)
@@ -69,6 +81,6 @@ fn test_reliability_rejects_invalid_scope_globs() {
             .unwrap();
         let error = String::from_utf8_lossy(&output.stderr);
         assert_eq!(output.status.code(), Some(2), "{name}: {error}");
-        assert!(error.contains("tests/[browser"), "{name}: {error}");
+        assert!(error.contains(diagnostic), "{name}: {error}");
     }
 }

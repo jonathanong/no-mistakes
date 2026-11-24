@@ -49,6 +49,7 @@ pub(super) fn collect_partitions(
             with_imports(CheckFactPlan {
                 vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
                 test_reliability_paths: plan.test_reliability_paths.clone(),
+                playwright_fixture_support: plan.playwright_fixture_support,
                 ..CheckFactPlan::default()
             }),
         ),
@@ -68,6 +69,7 @@ pub(super) fn collect_partitions(
         let mut call_plan = with_imports(CheckFactPlan {
             vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
             test_reliability_paths: plan.test_reliability_paths.clone(),
+            playwright_fixture_support: plan.playwright_fixture_support,
             ..CheckFactPlan::default()
         });
         call_plan.graph.call_sites = true;

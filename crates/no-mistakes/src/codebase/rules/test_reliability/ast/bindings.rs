@@ -1,3 +1,4 @@
+use super::super::playwright_provenance::ImportRef;
 use crate::ast::{js_literal, module_export_name};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
@@ -17,6 +18,7 @@ pub(super) enum Runner {
 pub(super) struct Bindings<'scope, 'ast> {
     semantic: &'scope Semantic<'ast>,
     imports: FxHashMap<SymbolId, (Runner, Option<Cow<'ast, str>>)>,
+    other_imports: FxHashMap<SymbolId, ImportRef>,
     vitest_globals: bool,
 }
 
@@ -25,8 +27,10 @@ impl<'scope, 'ast> Bindings<'scope, 'ast> {
         program: &'ast Program<'ast>,
         semantic: &'scope Semantic<'ast>,
         vitest_globals: bool,
+        collect_fixture_imports: bool,
     ) -> Self {
         let mut imports = FxHashMap::default();
+        let mut other_imports = FxHashMap::default();
         for statement in &program.body {
             let Statement::ImportDeclaration(import) = statement else {
                 continue;
@@ -34,12 +38,16 @@ impl<'scope, 'ast> Bindings<'scope, 'ast> {
             if import.import_kind.is_type() {
                 continue;
             }
-            let runner = match js_literal(&import.source).as_ref() {
-                "vitest" | "vitest/config" | "vite" => Runner::Vitest,
-                "@playwright/test" => Runner::Playwright,
-                "@jest/globals" => Runner::Jest,
-                _ => continue,
+            let source = js_literal(&import.source);
+            let runner = match source.as_ref() {
+                "vitest" | "vitest/config" | "vite" => Some(Runner::Vitest),
+                "@playwright/test" => Some(Runner::Playwright),
+                "@jest/globals" => Some(Runner::Jest),
+                _ => None,
             };
+            if runner.is_none() && !collect_fixture_imports {
+                continue;
+            }
             for specifier in import.specifiers.iter().flatten() {
                 let (local, name) = match specifier {
                     ImportDeclarationSpecifier::ImportSpecifier(binding)
@@ -50,16 +58,29 @@ impl<'scope, 'ast> Bindings<'scope, 'ast> {
                     ImportDeclarationSpecifier::ImportNamespaceSpecifier(binding) => {
                         (&binding.local, None)
                     }
+                    ImportDeclarationSpecifier::ImportDefaultSpecifier(binding)
+                        if runner.is_none() =>
+                    {
+                        (&binding.local, Some(Cow::Borrowed("default")))
+                    }
                     _ => continue,
                 };
                 if let Some(symbol) = local.symbol_id.get() {
-                    imports.insert(symbol, (runner, name));
+                    if let Some(runner) = runner {
+                        imports.insert(symbol, (runner, name));
+                    } else {
+                        other_imports.insert(
+                            symbol,
+                            ImportRef::new(&source, name.as_deref().unwrap_or("*")),
+                        );
+                    }
                 }
             }
         }
         Self {
             semantic,
             imports,
+            other_imports,
             vitest_globals,
         }
     }
@@ -89,6 +110,28 @@ impl<'scope, 'ast> Bindings<'scope, 'ast> {
             return None;
         }
         declaration.init.as_ref()
+    }
+
+    pub(super) fn import_origin(
+        &self,
+        symbol: SymbolId,
+        namespace_member: Option<&str>,
+    ) -> Option<ImportRef> {
+        if let Some((Runner::Playwright, name)) = self.imports.get(&symbol) {
+            return Some(ImportRef::new(
+                "@playwright/test",
+                match (name.as_deref(), namespace_member) {
+                    (Some(name), None) | (None, Some(name)) => name,
+                    _ => return None,
+                },
+            ));
+        }
+        let origin = self.other_imports.get(&symbol)?;
+        if origin.name.as_ref() == "*" {
+            Some(ImportRef::new(&origin.specifier, namespace_member?))
+        } else {
+            namespace_member.is_none().then(|| origin.clone())
+        }
     }
 
     pub(super) fn call<'b>(

@@ -27,10 +27,9 @@ pub(super) fn source_findings(
         id,
         max_retries,
         allowlist,
-        facts
-            .test_reliability
-            .iter()
-            .filter(|location| demand.includes(location.origin)),
+        facts.test_reliability.iter().filter(|location| {
+            location.playwright_import.is_none() && demand.includes(location.origin)
+        }),
     ))
 }
 

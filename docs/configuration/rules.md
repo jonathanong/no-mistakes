@@ -782,8 +782,9 @@ values as incomplete. Config is never executed.
 
 [`test-no-retries`](../rules/test-no-retries.md) caps literal retries in Vitest,
 Playwright, Jest, and supported GitHub Actions steps. Set `options.maxRetries`
-to set the cap and `options.testCommands` to identify test command prefixes in
-workflow scripts. [`playwright-no-serial`](../rules/playwright-no-serial.md)
+to set the cap, `options.testCommands` to identify test command prefixes in
+workflow scripts, and `options.files` to select Playwright config factory
+modules. [`playwright-no-serial`](../rules/playwright-no-serial.md)
 checks literal Playwright settings that force serial execution. Each rule
 accepts `options.allowlist` entries with a `path` glob or a `project` name and a
 required `reason`.

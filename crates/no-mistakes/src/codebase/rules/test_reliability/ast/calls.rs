@@ -1,5 +1,7 @@
+use super::super::playwright_provenance::ImportRef;
 use super::bindings::Runner::{Jest, Playwright, Vitest};
 use super::{literal_object, literal_string_is, property, retry_count, Collector, Origin, Shape};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::CallExpression;
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
@@ -13,14 +15,15 @@ enum TestCall {
 
 impl<'a> Visit<'a> for Collector<'_, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Some((kind, origin)) = self
+        if let Some((kind, origin, playwright_import)) = self
             .test_call(call)
-            .filter(|(_, origin)| self.demand.includes(*origin))
+            .filter(|(_, origin, _)| self.demand.includes(*origin))
         {
             let start = self.locations.len();
             self.record_call(call, kind);
             for location in &mut self.locations[start..] {
                 location.origin = origin;
+                location.playwright_import.clone_from(&playwright_import);
             }
         }
         walk::walk_call_expression(self, call);
@@ -28,9 +31,14 @@ impl<'a> Visit<'a> for Collector<'_, '_> {
 }
 
 impl Collector<'_, '_> {
-    fn test_call(&self, call: &CallExpression<'_>) -> Option<(TestCall, Origin)> {
-        let (runner, members, vitest_global) = self.bindings.call(&call.callee)?;
-        Some(match (runner, members.as_slice()) {
+    fn test_call(
+        &self,
+        call: &CallExpression<'_>,
+    ) -> Option<(TestCall, Origin, Option<ImportRef>)> {
+        let Some((runner, members, vitest_global)) = self.bindings.call(&call.callee) else {
+            return self.playwright_fixture_call(call);
+        };
+        let (kind, origin) = match (runner, members.as_slice()) {
             (Vitest, ["test" | "it" | "describe", ..]) => {
                 let origin = if vitest_global {
                     Origin::VitestGlobal
@@ -47,7 +55,40 @@ impl Collector<'_, '_> {
             }
             (Jest, ["jest", "retryTimes"]) => (TestCall::JestRetry, Origin::Standard),
             _ => return None,
-        })
+        };
+        Some((kind, origin, None))
+    }
+
+    fn playwright_fixture_call(
+        &self,
+        call: &CallExpression<'_>,
+    ) -> Option<(TestCall, Origin, Option<ImportRef>)> {
+        if !self.demand.playwright_tests {
+            return None;
+        }
+        let member = unwrap_ts_wrappers(&call.callee).as_member_expression()?;
+        let (kind, describe) = match member.static_property_name()?.as_str()? {
+            "configure" => (TestCall::PlaywrightConfigure, member.object()),
+            "serial" => (TestCall::PlaywrightSerial, member.object()),
+            "only" | "skip" | "fixme" => {
+                let serial = unwrap_ts_wrappers(member.object()).as_member_expression()?;
+                if serial.static_property_name()?.as_str()? != "serial" {
+                    return None;
+                }
+                (TestCall::PlaywrightSerial, serial.object())
+            }
+            _ => return None,
+        };
+        let describe = unwrap_ts_wrappers(describe).as_member_expression()?;
+        if describe.static_property_name()?.as_str()? != "describe" {
+            return None;
+        }
+        let import = self
+            .bindings
+            .playwright_value_origin(describe.object())?
+            .import;
+        let pending = (!import.is_playwright_test()).then_some(import);
+        Some((kind, Origin::Playwright, pending))
     }
 
     fn record_call(&mut self, call: &CallExpression<'_>, kind: TestCall) {

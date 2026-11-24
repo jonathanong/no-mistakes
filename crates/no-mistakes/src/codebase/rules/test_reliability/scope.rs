@@ -1,4 +1,6 @@
+use super::options::RetryOptions;
 use super::{configured, PLAYWRIGHT_NO_SERIAL, TEST_NO_RETRIES};
+use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::codebase::rules::selected_rule_files_with_sources;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{is_test_file, relative_slash_path, SourceStore};
@@ -12,15 +14,22 @@ use std::sync::Arc;
 pub struct SourceDemand {
     pub(crate) vitest_config: bool,
     pub(crate) playwright_config: bool,
+    pub(crate) playwright_factory: bool,
     pub(crate) standard_tests: bool,
     pub(crate) playwright_tests: bool,
     pub(crate) vitest_globals: bool,
 }
 
 impl SourceDemand {
+    #[doc(hidden)]
+    pub fn includes_playwright_tests(self) -> bool {
+        self.playwright_tests
+    }
+
     pub(crate) fn include(&mut self, other: Self) {
         self.vitest_config |= other.vitest_config;
         self.playwright_config |= other.playwright_config;
+        self.playwright_factory |= other.playwright_factory;
         self.standard_tests |= other.standard_tests;
         self.playwright_tests |= other.playwright_tests;
         self.vitest_globals |= other.vitest_globals;
@@ -28,6 +37,7 @@ impl SourceDemand {
     pub(super) fn includes(self, origin: Origin) -> bool {
         match origin {
             Origin::Settings => true,
+            Origin::PlaywrightFactory => self.playwright_factory,
             Origin::Standard => self.standard_tests,
             Origin::VitestGlobal => self.standard_tests && self.vitest_globals,
             Origin::Playwright => self.playwright_tests,
@@ -38,6 +48,7 @@ impl SourceDemand {
 #[derive(Clone, Copy)]
 pub(super) enum Origin {
     Settings,
+    PlaywrightFactory,
     Standard,
     VitestGlobal,
     Playwright,
@@ -86,6 +97,7 @@ impl ConfigPaths {
         root: &Path,
         path: &Path,
         rule: &crate::config::v2::schema::RuleDef,
+        factory_files: &GlobMatcher,
     ) -> Option<SourceDemand> {
         if !matches!(
             path.extension().and_then(|ext| ext.to_str()),
@@ -97,6 +109,7 @@ impl ConfigPaths {
             && is_config(path, self.vitest.as_ref(), &["vitest", "vite"]);
         let playwright_config = is_config(path, self.playwright.as_ref(), &["playwright"]);
         let relative = relative_slash_path(root, path);
+        let playwright_factory = factory_files.is_match(&relative);
         let test_source = !vitest_config && !playwright_config;
         let default_test_name = is_test_file(&relative) || relative.starts_with("__tests__/");
         let explicit_scope = !rule.include.is_empty();
@@ -105,15 +118,19 @@ impl ConfigPaths {
         let playwright_tests = test_source
             && (default_test_name || explicit_scope || self.playwright_custom_paths)
             && self.playwright_test_paths.includes(&relative);
-        (vitest_config || playwright_config || standard_tests || playwright_tests).then_some(
-            SourceDemand {
+        (vitest_config
+            || playwright_config
+            || playwright_factory
+            || standard_tests
+            || playwright_tests)
+            .then_some(SourceDemand {
                 vitest_config,
                 playwright_config,
+                playwright_factory,
                 standard_tests,
                 playwright_tests,
                 vitest_globals: !rule.tests.vitest.is_empty(),
-            },
-        )
+            })
     }
 }
 
@@ -152,8 +169,14 @@ pub fn required_files(
     let paths = ConfigPaths::new(root, config)?;
     for id in [TEST_NO_RETRIES, PLAYWRIGHT_NO_SERIAL] {
         for rule in config.rule_applications(id) {
+            let options: RetryOptions = if id == TEST_NO_RETRIES {
+                rule.rule_options()
+            } else {
+                RetryOptions::default()
+            };
+            let factory_files = options.factory_files()?;
             for path in selected_rule_files_with_sources(root, config, rule, files, sources)? {
-                if let Some(demand) = paths.source(root, &path, rule) {
+                if let Some(demand) = paths.source(root, &path, rule, &factory_files) {
                     selected.entry(path).or_default().include(demand);
                 }
             }

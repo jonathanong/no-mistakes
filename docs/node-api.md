@@ -1056,6 +1056,8 @@ and source suppressions apply to declaration diagnostics.
 `check()` and batched `analyzeProject()` check queries using the existing
 `checkJson` binding. Import `TestNoRetriesOptions`, `PlaywrightNoSerialOptions`,
 and `TestReliabilityAllowlistEntry` from `no-mistakes` to type rule options.
+`TestNoRetriesOptions.files` selects Playwright config factory modules by
+repository-relative glob.
 Both rules return standard `RuleFinding` entries.
 
 PostgreSQL executor options accept `extraExecutorNames` in the asynchronous

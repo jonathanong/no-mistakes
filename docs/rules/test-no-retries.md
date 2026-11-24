@@ -11,6 +11,7 @@ rules:
   - rule: test-no-retries
     scope: repository
     options:
+      files: [config/browser-options.ts]
       testCommands:
         - [pnpm, test:unit]
       allowlist:
@@ -27,7 +28,7 @@ Enable the rule to keep the first failing result visible in local runs and CI.
 | Runner | Settings and calls |
 | --- | --- |
 | Vitest | `test.retry` in configuration, including inline project configuration, and `retry` in test and suite options. |
-| Playwright | `retries` in configuration, including inline project configuration, and in `test.describe.configure()`. |
+| Playwright | `retries` in configuration, inline projects, selected config factories, and `test.describe.configure()` calls on Playwright's `test` or local fixtures extended from it. |
 | Jest | `jest.retryTimes()`. |
 | GitHub Actions | The `nick-fields/retry` and `Wandalen/wretry.action` actions, and Bash or `sh` rerun loops containing a configured test command. |
 
@@ -37,6 +38,7 @@ Enable the rule to keep the first failing result visible in local runs and CI.
 | --- | --- | --- |
 | `maxRetries` | `0` | Nonnegative integer cap on additional attempts. |
 | `testCommands` | `[]` | Literal argument prefixes that identify test commands in workflow scripts. For `[pnpm, test:unit]`, `pnpm test:unit -- --changed` matches. An empty list disables shell loop matching. |
+| `files` | `[]` | Repository-relative globs for Playwright config factory modules in the rule's scope. The rule checks object literals returned directly by functions declared in an export, including inline projects. |
 | `allowlist` | `[]` | Exceptions with exactly one of `path` (repository-relative glob) and `project` (literal runner project name). Each entry requires a nonempty `reason`. Use a path for a test file, workflow, or whole config. |
 
 The rule checks recognized actions even when `testCommands` is empty. Both
@@ -87,15 +89,20 @@ in TypeScript or JavaScript.
 ## Limits
 
 The rule reads configuration objects exported directly or via a local
-constant, and reports a recognized retry setting when its count is computed.
-Configuration assembled at runtime and reruns inside external scripts need
-review. For custom config names, set
+constant and reports a recognized retry setting whose count it cannot verify.
+Set `options.files` for modules that return literal Playwright configuration,
+such as `config/browser-options.ts` when the config calls
+`defineConfig(createBrowserOptions())`. Findings point to the returned
+`retries` property. Configuration assembled at runtime and reruns inside
+external scripts need review. For custom config names, set
 `tests.vitest.configs` and `tests.playwright.configs`. Test calls are checked
 in `.test` and `.spec` files and under `__tests__`. Use `include` for a
 different layout. When set, `tests.playwright.testInclude` selects the files
 for Playwright calls. `tests.playwright.testExclude` excludes Playwright calls
-while Vitest and Jest calls keep their own scope. Bind the rule application
-to a Vitest project with `rules[].tests.vitest` to check global Vitest calls.
+while Vitest and Jest calls keep their own scope. Playwright calls can use
+local imports, re-exports, and static `test.extend()` chains. Ambiguous or
+cyclic fixture exports need separate review. Bind the rule application to a
+Vitest project with `rules[].tests.vitest` to check global Vitest calls.
 Workflow discovery uses `ci.workflowDirs`. An unreadable or malformed input
 appears in the JSON `incomplete` list.
 

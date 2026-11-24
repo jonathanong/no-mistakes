@@ -239,6 +239,11 @@ test("check rule options compile from the package root", () => {
   );
 });
 
+test("test-no-retries exposes optional config factory path globs", () => {
+  const declaration = readFileSync(join(packageRoot, "test-reliability-types.d.ts"), "utf8");
+  assert.match(declaration, /export interface TestNoRetriesOptions \{[^}]*files\?: string\[\];/);
+});
+
 test("production export test-only options require explicit production and test scope", () => {
   const declaration = readFileSync(
     join(packageRoot, "production-exports-test-only-types.d.ts"),

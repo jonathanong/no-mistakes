@@ -18,6 +18,8 @@ pub struct CheckFactPlan {
     pub test_reliability_paths: Arc<
         std::collections::BTreeMap<PathBuf, crate::codebase::rules::test_reliability::SourceDemand>,
     >,
+    #[doc(hidden)]
+    pub playwright_fixture_support: bool,
     /// Exact call-source demand; broad `graph.call_sites` remains independent.
     #[doc(hidden)]
     pub call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,

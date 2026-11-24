@@ -18,6 +18,7 @@ pub(super) fn demands_by_path(
             call_site_paths: request.plan.call_site_paths.clone(),
             vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
             test_reliability_paths: request.plan.test_reliability_paths.clone(),
+            playwright_fixture_support: request.plan.playwright_fixture_support,
             graph_context: request.plan.graph_context.clone(),
             integration_runner_configs: request.plan.integration_runner_configs.clone(),
             ..CheckFactPlan::default()
@@ -91,6 +92,7 @@ pub(super) fn demands_by_path(
             let supplemental_plan = CheckFactPlan {
                 vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
                 test_reliability_paths: request.plan.test_reliability_paths.clone(),
+                playwright_fixture_support: request.plan.playwright_fixture_support,
                 ..CheckFactPlan::default()
             };
             plans.extend(

@@ -47,6 +47,10 @@ impl PreparedFactDemand {
             no_mistakes::codebase::rules::test_reliability::required_files(
                 root, config, files, sources,
             )?;
+        plan.playwright_fixture_support = plan
+            .test_reliability_paths
+            .values()
+            .any(|demand| demand.includes_playwright_tests());
         self.test_reliability_files = plan.test_reliability_paths.keys().cloned().collect();
         self.vitest_default_exclude_files =
             plan.vitest_default_exclude_paths.iter().cloned().collect();

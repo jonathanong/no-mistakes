@@ -154,7 +154,9 @@ impl<'ast> Collector<'_, 'ast> {
     }
 }
 
-fn project_name<'a>(object: &'a ObjectExpression<'a>) -> Option<std::borrow::Cow<'a, str>> {
+pub(super) fn project_name<'a>(
+    object: &'a ObjectExpression<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
     match unwrap_ts_wrappers(&property(object, "name")?.value) {
         Expression::StringLiteral(name) => Some(js_literal(name)),
         _ => None,

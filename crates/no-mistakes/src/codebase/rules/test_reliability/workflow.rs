@@ -32,6 +32,7 @@ pub(super) fn collect(
                     shape: Shape::Retry("GitHub Actions retry action", retries),
                     project: None,
                     origin: Origin::Settings,
+                    playwright_import: None,
                 });
             }
             let Some(script) = step.get("run").and_then(Value::as_str) else {
@@ -44,6 +45,7 @@ pub(super) fn collect(
                         shape: Shape::Retry("GitHub Actions test rerun loop", retries),
                         project: None,
                         origin: Origin::Settings,
+                        playwright_import: None,
                     });
                 }
             }

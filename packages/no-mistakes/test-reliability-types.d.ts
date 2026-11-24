@@ -8,6 +8,7 @@ export interface TestNoRetriesOptions {
   maxRetries?: number;
   allowlist?: TestReliabilityAllowlistEntry[];
   testCommands?: string[][];
+  files?: string[];
 }
 
 /** Options for the `playwright-no-serial` check rule. */

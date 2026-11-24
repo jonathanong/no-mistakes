@@ -20,7 +20,8 @@ order.
 
 ## What it catches
 
-- `test.describe.configure({ mode: "serial" })` and `test.describe.serial()`.
+- `test.describe.configure({ mode: "serial" })` and `test.describe.serial()`,
+  including local fixtures statically extended from Playwright's `test`.
 - `workers: 1` and `fullyParallel: false` in Playwright configuration or an
   inline project.
 
@@ -66,14 +67,15 @@ line. To suppress a file, add `// no-mistakes-disable-file playwright-no-serial`
 ## Limits
 
 The rule reads configuration objects exported directly or via a local
-constant, and statically identifiable calls to Playwright's `test`.
+constant, and statically identifiable calls to Playwright's `test`. Local
+imports, re-exports, and static `test.extend()` chains can identify that binding.
 Set `tests.playwright.configs` for custom config names.
 Use `include` for calls outside `.test` and `.spec` files and `__tests__`
 directories. When set, `tests.playwright.testInclude` selects the files for
 Playwright calls. `tests.playwright.testExclude` excludes Playwright calls.
-Computed configuration, omitted options, and CLI worker flags need separate
-review. An unreadable or malformed input appears in the JSON `incomplete`
-list.
+Ambiguous or cyclic fixture exports, computed configuration, omitted options,
+and CLI worker flags need separate review. An unreadable or malformed selected
+test or config appears in the JSON `incomplete` list.
 
 ## Related rules
 

@@ -8,7 +8,10 @@ use oxc_span::{GetSpan, Span};
 
 mod bindings;
 mod calls;
+mod playwright_bindings;
+pub(crate) use playwright_bindings::fixture_initializers;
 mod configs;
+mod factories;
 
 use bindings::Bindings;
 
@@ -18,7 +21,12 @@ pub(crate) fn collect<'a>(
     program: &'a Program<'a>,
     semantic: &Semantic<'a>,
 ) -> Vec<Location> {
-    let bindings = Bindings::new(program, semantic, demand.vitest_globals);
+    let bindings = Bindings::new(
+        program,
+        semantic,
+        demand.vitest_globals,
+        demand.playwright_tests,
+    );
     let mut collector = Collector {
         bindings,
         demand,
@@ -29,6 +37,9 @@ pub(crate) fn collect<'a>(
     };
     if demand.vitest_config || demand.playwright_config {
         collector.collect_config(program, demand);
+    }
+    if demand.playwright_factory {
+        collector.collect_playwright_factory(program);
     }
     if demand.standard_tests || demand.playwright_tests {
         collector.visit_program(program);
@@ -56,6 +67,7 @@ impl Collector<'_, '_> {
                 .partition_point(|offset| *offset <= span.start as usize),
             project: project.map(str::to_owned),
             origin: Origin::Settings,
+            playwright_import: None,
         }
     }
 

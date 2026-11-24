@@ -38,6 +38,10 @@ pub(super) fn prepare_call_site_facts(
         super::vitest_default_excludes::required_files(root, config, files)?;
     plan.test_reliability_paths =
         super::test_reliability::required_files(root, config, files, sources)?;
+    plan.playwright_fixture_support = plan
+        .test_reliability_paths
+        .values()
+        .any(|demand| demand.includes_playwright_tests());
     let lock_inventory_helpers = crate::codebase::postgres::helper_call_site_files(
         root,
         config,
