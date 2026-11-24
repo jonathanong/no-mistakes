@@ -205,6 +205,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "legacy/reads.sh",
+          "line": 26,
+          "message": "Array `dashed` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${dashed[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for d in \"${dashed[@]}\"; do echo \"$d\"; done",
+          "target": "dashed"
+        },
+        {
+          "file": "legacy/reads.sh",
           "line": 8,
           "message": "Array `globs` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${globs[@]+...} to guard it and keep the original array selector.",
           "rule": "bash-empty-array-nounset",

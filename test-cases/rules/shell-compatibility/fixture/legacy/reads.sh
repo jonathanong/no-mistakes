@@ -22,3 +22,5 @@ readarray -t -O 1 more < "$1"
 for m in "${more[@]}"; do echo "$m"; done
 IFS=',' read -r first _ <<< "$1"
 echo "$first"
+mapfile -t -- dashed < "$1"
+for d in "${dashed[@]}"; do echo "$d"; done
