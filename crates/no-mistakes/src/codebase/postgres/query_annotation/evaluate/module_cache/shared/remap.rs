@@ -4,6 +4,31 @@ use crate::fx::FxHashMap;
 use std::sync::Arc;
 
 pub(super) fn remap_scope(scope: &Scope, remap: &[Environment]) -> Scope {
+    remap_scope_with(scope, &|env| remap.get(env).copied().unwrap_or(env))
+}
+
+pub(in crate::codebase::postgres::query_annotation) fn remap_captured_scope(
+    scope: &Scope,
+    old_env: Environment,
+    new_env: Environment,
+    prefix: usize,
+) -> Option<Scope> {
+    if !scope
+        .values()
+        .all(|value| envs_within(value, old_env, prefix))
+    {
+        return None;
+    }
+    Some(remap_scope_with(scope, &|env| {
+        if env == old_env {
+            new_env
+        } else {
+            env
+        }
+    }))
+}
+
+fn remap_scope_with(scope: &Scope, remap: &impl Fn(Environment) -> Environment) -> Scope {
     if !scope.values().any(|value| needs_remap(value, remap)) {
         return scope.clone();
     }
@@ -14,12 +39,23 @@ pub(super) fn remap_scope(scope: &Scope, remap: &[Environment]) -> Scope {
     Scope::from(values)
 }
 
-fn needs_remap(value: &Value, remap: &[Environment]) -> bool {
+fn envs_within(value: &Value, old_env: Environment, prefix: usize) -> bool {
     match value {
-        Value::Function(_, _, env) => remap
-            .get(*env)
-            .copied()
-            .is_some_and(|mapped| mapped != *env),
+        Value::Function(_, _, env) => *env == old_env || *env < prefix,
+        Value::Promise(inner) | Value::Evaluated(inner, _) => envs_within(inner, old_env, prefix),
+        Value::Aggregate(items)
+        | Value::References(items)
+        | Value::Object(items)
+        | Value::Record(items, _)
+        | Value::Joined(items)
+        | Value::Possible(items) => items.iter().all(|item| envs_within(item, old_env, prefix)),
+        _ => true,
+    }
+}
+
+fn needs_remap(value: &Value, remap: &impl Fn(Environment) -> Environment) -> bool {
+    match value {
+        Value::Function(_, _, env) => remap(*env) != *env,
         Value::Promise(inner) | Value::Evaluated(inner, _) => needs_remap(inner, remap),
         Value::Aggregate(items)
         | Value::References(items)
@@ -27,20 +63,11 @@ fn needs_remap(value: &Value, remap: &[Environment]) -> bool {
         | Value::Record(items, _)
         | Value::Joined(items)
         | Value::Possible(items) => items.iter().any(|item| needs_remap(item, remap)),
-        Value::Prefix(..)
-        | Value::Arguments(_)
-        | Value::Array(_)
-        | Value::Number(_)
-        | Value::Boolean(_)
-        | Value::Failure(_)
-        | Value::Unknown
-        | Value::Primitive
-        | Value::Unsupported
-        | Value::SlotDeletion => false,
+        _ => false,
     }
 }
 
-fn remap_values(items: &Values, remap: &[Environment]) -> Values {
+fn remap_values(items: &Values, remap: &impl Fn(Environment) -> Environment) -> Values {
     Values::from(
         items
             .iter()
@@ -49,13 +76,11 @@ fn remap_values(items: &Values, remap: &[Environment]) -> Values {
     )
 }
 
-fn remap_value(value: &Value, remap: &[Environment]) -> Value {
+fn remap_value(value: &Value, remap: &impl Fn(Environment) -> Environment) -> Value {
     match value {
-        Value::Function(function, path, env) => Value::Function(
-            Arc::clone(function),
-            Arc::clone(path),
-            remap.get(*env).copied().unwrap_or(*env),
-        ),
+        Value::Function(function, path, env) => {
+            Value::Function(Arc::clone(function), Arc::clone(path), remap(*env))
+        }
         Value::Promise(inner) => Value::Promise(Box::new(remap_value(inner, remap))),
         Value::Evaluated(inner, exact) => {
             Value::Evaluated(Box::new(remap_value(inner, remap)), *exact)

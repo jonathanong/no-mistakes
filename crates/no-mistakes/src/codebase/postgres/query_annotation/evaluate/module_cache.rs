@@ -1,4 +1,4 @@
-use super::{Environment, Evaluator};
+use super::{Environment, Evaluator, Scope};
 use crate::codebase::postgres::query_annotation::module_ids::{ModuleId, ModuleIds};
 use crate::fx::FxHashMap;
 use std::ops::{Deref, DerefMut};
@@ -13,6 +13,10 @@ pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     pub(in crate::codebase::postgres::query_annotation) shared: Option<Arc<shared::SharedInit>>,
     pub(in crate::codebase::postgres::query_annotation) sources:
         source_dependencies::SourceDependencies,
+    pub(in crate::codebase::postgres::query_annotation) capture_on_init:
+        FxHashMap<ModuleId, Vec<(Environment, Scope)>>,
+    pub(in crate::codebase::postgres::query_annotation) captured_inits:
+        FxHashMap<ModuleId, (Environment, Scope)>,
 }
 
 pub(in crate::codebase::postgres::query_annotation) mod shared;
@@ -32,6 +36,8 @@ impl ModuleCache {
             values: FxHashMap::default(),
             shared: None,
             sources: Default::default(),
+            capture_on_init: FxHashMap::default(),
+            captured_inits: FxHashMap::default(),
         }
     }
 }

@@ -74,13 +74,39 @@ fn discover_handles_precise_records_and_cycles() {
 }
 
 #[test]
-fn executor_scan_covers_branch_tagged_optional_call_flow_and_non_name_callee() {
-    let ids = Arc::new(ModuleIds::new([PathBuf::from("m.mts")]));
+fn purity_check_accepts_pure_local_scalar_call_and_rejects_impure_constructs() {
+    let path = PathBuf::from("m.mts");
+    let ids = Arc::new(ModuleIds::new([path.clone()]));
+    let resolve = |_: &str, _: &std::path::Path| None;
     let mut globals = std::collections::BTreeMap::new();
+    globals.insert(
+        "pure_fn".to_string(),
+        Expr::Function(Arc::new(Function {
+            start: 0,
+            params: vec!["x".into()],
+            body: vec![
+                Step::Reserve(vec!["y".into()]),
+                Step::Bind(
+                    "y".into(),
+                    Expr::Template(vec![Expr::Name("x".into()), Expr::Text("!".into())]),
+                ),
+                Step::Return(Expr::Binary(
+                    "+".into(),
+                    Box::new(Expr::Name("y".into())),
+                    Box::new(Expr::Text(".".into())),
+                )),
+            ],
+            supported: true,
+            asynchronous: false,
+            arrow: false,
+            self_name: None,
+            append_callback: None,
+        })),
+    );
     globals.insert(
         "stateful".to_string(),
         Expr::Function(Arc::new(Function {
-            start: 0,
+            start: 10,
             params: Vec::new(),
             body: vec![Step::Effect(Expr::Name("arguments".into()))],
             supported: true,
@@ -90,37 +116,62 @@ fn executor_scan_covers_branch_tagged_optional_call_flow_and_non_name_callee() {
             append_callback: None,
         })),
     );
-    let facts = QueryAnnotationFileFacts {
-        globals,
-        roots: vec![Step::Branch(
-            Expr::Tagged(
-                "sql".into(),
-                vec![Expr::Text("a".into())],
-                vec![Expr::OptionalCall {
-                    call: Box::new(Expr::Call {
-                        callee: Box::new(Expr::Member(
-                            Box::new(Expr::Name("obj".into())),
-                            "m".into(),
-                        )),
-                        args: vec![Expr::Flow(vec![Step::Return(Expr::Text("x".into()))])],
-                        start: 0,
-                        end: 1,
-                    }),
-                    children: vec![Expr::Text("c".into())],
-                }],
-            ),
-            vec![Step::Effect(Expr::Call {
-                callee: Box::new(Expr::Name("stateful".into())),
-                args: Vec::new(),
-                start: 2,
-                end: 3,
-            })],
-            vec![],
+    let pure_facts = QueryAnnotationFileFacts {
+        globals: globals.clone(),
+        roots: vec![Step::Bind(
+            "label".into(),
+            Expr::Call {
+                callee: Box::new(Expr::Name("pure_fn".into())),
+                args: vec![Expr::Text("ok".into())],
+                start: 0,
+                end: 1,
+            },
         )],
         ..Default::default()
     };
-    let file = make_file(&facts, Vec::new(), &ids);
-    assert!(executor_scan::has_uncacheable_top_level(&file));
+    let pure_file = make_file(&pure_facts, Vec::new(), &ids);
+    assert!(executor_scan::is_statically_pure_top_level(
+        &pure_file, &path, &resolve
+    ));
+
+    let unresolved_facts = QueryAnnotationFileFacts {
+        precise_records: true,
+        ..Default::default()
+    };
+    let unresolved_file = make_file(&unresolved_facts, vec!["./missing.mts"], &ids);
+    assert!(!executor_scan::is_statically_pure_top_level(
+        &unresolved_file,
+        &path,
+        &resolve
+    ));
+
+    let impure_facts = QueryAnnotationFileFacts {
+        globals,
+        roots: vec![Step::Effect(Expr::Call {
+            callee: Box::new(Expr::Name("stateful".into())),
+            args: Vec::new(),
+            start: 2,
+            end: 3,
+        })],
+        ..Default::default()
+    };
+    let impure_file = make_file(&impure_facts, Vec::new(), &ids);
+    assert!(!executor_scan::is_statically_pure_top_level(
+        &impure_file,
+        &path,
+        &resolve
+    ));
+
+    let array_facts = QueryAnnotationFileFacts {
+        roots: vec![Step::Bind("arr".into(), Expr::Array(vec![Expr::Number(1)]))],
+        ..Default::default()
+    };
+    let array_file = make_file(&array_facts, Vec::new(), &ids);
+    assert!(!executor_scan::is_statically_pure_top_level(
+        &array_file,
+        &path,
+        &resolve
+    ));
 }
 
 #[test]

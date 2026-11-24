@@ -41,8 +41,9 @@ sources and release settings and are not acceptance evidence for this revision.
   selected helper. Its 66 modules contain 306,751 source bytes and 7,245 lines.
   Scoped seeds reduce 65 roots to one.
 - [`annotation-excluded-shared-initials`](../../fixtures/performance/annotation-excluded-shared-initials):
-  the former scalar-cache winning case remains a control. It now uses ordinary
-  per-root initialization.
+  the scalar-cache winning case remains a control. Multi-root profiles now reuse
+  statically pure shared modules through the per-profile shared-initialization
+  cache; see [CLI diagnostics](../cli/diagnostics.md).
 
 The first two fixtures use `.mts` files, with no JSX. Their configurations
 explicitly include source and test locations, then exclude the tests. Their
@@ -93,10 +94,12 @@ also do not replace another run of the large consumer.
 ## Work diagnostics
 
 `--verbose-timings` reports roots before/after scope selection, excluded roots
-retained/pruned, and actual module initialization starts. The removed shared
-cache has `shared_init.disabled: 1`, zero hits, misses and builds, and zero build
-duration. The before-scope comparison performs extra resolver work only with
-verbose observation. Default execution and coarse timings skip it.
+retained/pruned, actual module initialization starts, and per-profile
+shared-initialization cache counts (`shared_init.disabled`, `builds`,
+`cache_hits`, `cache_misses`, and `build` duration); see
+[CLI diagnostics](../cli/diagnostics.md). The before-scope comparison performs
+extra resolver work only with verbose observation. Default execution and coarse
+timings skip it.
 
 Async `collectDiagnostics("check", options)` and
 `collectDiagnostics("analyzeProject", options)` expose these counters in the

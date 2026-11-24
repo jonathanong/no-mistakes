@@ -1,11 +1,14 @@
 use super::super::{
-    module_cache::ModuleCache, ArgumentObjects, CapturedBindings, Environment, Evaluator, Scope,
-    Value,
+    module_cache::{shared::remap::remap_captured_scope, ModuleCache},
+    ArgumentObjects, CapturedBindings, Environment, Evaluator, File, Scope, Value,
 };
-use crate::codebase::postgres::query_annotation::module_ids::ModuleId;
+use crate::codebase::dependencies::extract::ImportKind;
+use crate::codebase::postgres::query_annotation::{
+    module_ids::ModuleId, project::shared_init::executor_scan::is_statically_pure_top_level,
+};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub(super) struct RunSnapshot {
     pub(super) scopes: Vec<Scope>,
@@ -53,7 +56,7 @@ impl RunSnapshot {
         snapshot
     }
 
-    pub(super) fn restore<F: Fn(&str, &Path) -> Option<std::path::PathBuf>>(
+    pub(super) fn restore<F: Fn(&str, &Path) -> Option<PathBuf>>(
         &self,
         evaluator: &mut Evaluator<'_, F>,
     ) {
@@ -93,108 +96,94 @@ impl RunSnapshot {
         drop(timing);
     }
 
-    /// Promote a module into the root snapshot only when its initialization
-    /// leaves every pre-existing scope, builder, argument, capture, and event
-    /// untouched so unrelated entrypoints cannot observe its side effects.
-    pub(super) fn try_promote_module<F: Fn(&str, &Path) -> Option<std::path::PathBuf>>(
-        &mut self,
-        evaluator: &mut Evaluator<'_, F>,
-        target: &Path,
-        unpromotable: &mut FxHashSet<ModuleId>,
-    ) {
-        let id = evaluator.module_ids().id(target);
-        if self.modules.contains_key(&id) || unpromotable.contains(&id) {
-            return;
-        }
-        let before_events = evaluator.event_log.len();
-        let before_next_builder = evaluator.next_builder;
-        evaluator.module_environment(target);
-        if self.is_pure_extension(evaluator, before_events, before_next_builder) {
-            self.scopes.clone_from(&evaluator.scopes);
-            self.modules.clone_from(&evaluator.modules);
-            return;
-        }
-        rollback_events(evaluator, before_events);
-        unpromotable.insert(id);
-        self.restore(evaluator);
-    }
-
-    /// Promote a lazily loaded module once loaded by >= 2 tasks with >= 2 remaining.
-    pub(super) fn promote_reused<F: Fn(&str, &Path) -> Option<std::path::PathBuf>>(
+    pub(super) fn promote_reused<F: Fn(&str, &Path) -> Option<PathBuf>>(
         &mut self,
         evaluator: &mut Evaluator<'_, F>,
         unpromotable: &mut FxHashSet<ModuleId>,
-        loaded_counts: &mut FxHashMap<ModuleId, u8>,
         remaining_tasks: usize,
-    ) -> bool {
+    ) {
         if evaluator.modules.sources.is_tracking() || evaluator.modules.len() <= self.modules.len()
         {
-            return false;
+            return;
         }
-        let mut candidates: Vec<_> = evaluator
+        let mut captured: Vec<_> = evaluator.modules.captured_inits.drain().collect();
+        captured.sort_unstable_by_key(|(id, _)| *id);
+        for (id, (old_env, scope)) in captured {
+            self.modules.capture_on_init.remove(&id);
+            if !self.modules.contains_key(&id)
+                && !unpromotable.contains(&id)
+                && !self.try_install_captured(id, old_env, &scope)
+            {
+                unpromotable.insert(id);
+            }
+        }
+        if remaining_tasks < 2 {
+            return;
+        }
+        let mut newly_loaded: Vec<_> = evaluator
             .modules
             .keys()
             .copied()
-            .filter(|id| !self.modules.contains_key(id) && !unpromotable.contains(id))
             .filter(|id| {
-                let count = loaded_counts.entry(*id).or_insert(0);
-                *count = count.saturating_add(1);
-                *count >= 2 && remaining_tasks >= 2
+                !self.modules.contains_key(id)
+                    && !self.modules.capture_on_init.contains_key(id)
+                    && !unpromotable.contains(id)
             })
             .collect();
-        if candidates.is_empty() {
-            return false;
-        }
-        candidates.sort_unstable();
-        self.restore(evaluator);
-        for id in candidates {
-            if !self.modules.contains_key(&id) && !unpromotable.contains(&id) {
-                let target = evaluator.module_ids().path(id).to_path_buf();
-                self.try_promote_module(evaluator, &target, unpromotable);
+        newly_loaded.sort_unstable();
+        for id in newly_loaded {
+            let target = evaluator.module_ids().path(id);
+            let Some(file) = evaluator
+                .files
+                .get(target)
+                .filter(|f| is_statically_pure_top_level(f, target, &evaluator.resolve))
+            else {
+                unpromotable.insert(id);
+                continue;
+            };
+            if let Some(deps) = self.static_dep_snapshots(evaluator, file, target) {
+                self.modules.capture_on_init.insert(id, deps);
             }
         }
+    }
+
+    fn try_install_captured(&mut self, id: ModuleId, old_env: Environment, scope: &Scope) -> bool {
+        if scope.contains_reference() {
+            return false;
+        }
+        let prefix = self.scopes.len();
+        let Some(remapped) = remap_captured_scope(scope, old_env, prefix, prefix) else {
+            return false;
+        };
+        self.scopes.push(remapped);
+        self.modules.insert(id, prefix);
         true
     }
 
-    fn is_pure_extension<F>(
+    fn static_dep_snapshots<F: Fn(&str, &Path) -> Option<PathBuf>>(
         &self,
         evaluator: &Evaluator<'_, F>,
-        before_events: usize,
-        before_next_builder: u64,
-    ) -> bool {
-        let prefix = self.scopes.len();
-        evaluator.event_log.len() == before_events
-            && evaluator.next_builder == before_next_builder
-            && evaluator.scopes.len() >= prefix
-            && evaluator.scopes[..prefix]
-                .iter()
-                .zip(&self.scopes)
-                .all(|(current, base)| current.same_bindings(base))
-            && evaluator.invalidated_builders == self.invalidated
-            && evaluator.builder_updates == self.builder_updates
-            && evaluator.deleted_argument_slots == self.deleted
-            && evaluator.definite_deleted_argument_slots == self.definite
-            && evaluator.disconnected_argument_slots == self.disconnected
-            && evaluator.recreated_argument_slots == self.recreated
-            && evaluator.mapped_arguments == self.mapped
-            && evaluator.fresh_mapped_parameters == self.fresh
-            && evaluator.argument_objects == self.objects
-            && evaluator.argument_extra_slots == self.extra_slots
-            && evaluator.captured_bindings == self.captured_bindings
-            && evaluator.captured_binding_readers == self.captured_binding_readers
-            && evaluator.mapped_argument_owners == self.mapped_argument_owners
-            && evaluator.mapped_parameter_indices == self.mapped_parameter_indices
-            && evaluator.untrusted_array_intrinsics == self.untrusted_array_intrinsics
-    }
-}
-
-fn rollback_events<F>(evaluator: &mut Evaluator<'_, F>, before_events: usize) {
-    for key in evaluator.event_log.drain(before_events..).rev() {
-        if let Some(entries) = evaluator.events.get_mut(&key) {
-            entries.pop();
-            if entries.is_empty() {
-                evaluator.events.remove(&key);
+        file: &File<'_>,
+        path: &Path,
+    ) -> Option<Vec<(Environment, Scope)>> {
+        let ids = evaluator.module_ids();
+        let mut deps = Vec::new();
+        for import in &file.module.ts.imports {
+            if import.kind != ImportKind::Static || import.function_scope.is_some() {
+                continue;
             }
+            let Some(target) = file
+                .module
+                .target(&import.specifier, path, &evaluator.resolve)
+            else {
+                continue;
+            };
+            if !evaluator.files.contains_key(target) {
+                continue;
+            }
+            let &dep_env = self.modules.get(&ids.id(target))?;
+            deps.push((dep_env, self.scopes[dep_env].clone()));
         }
+        Some(deps)
     }
 }

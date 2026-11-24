@@ -110,6 +110,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         self.record_alternative_module_initial(path, env);
+        if let Some(expected_deps) = self.modules.capture_on_init.remove(&module_id) {
+            let deps_unchanged = expected_deps.iter().all(|(dep_env, expected)| {
+                self.scopes
+                    .get(*dep_env)
+                    .is_some_and(|cur| cur.same_bindings(expected) || cur == expected)
+            });
+            if deps_unchanged && !self.scopes[env].contains_reference() {
+                self.modules
+                    .captured_inits
+                    .insert(module_id, (env, self.scopes[env].clone()));
+            }
+        }
         env
     }
 }

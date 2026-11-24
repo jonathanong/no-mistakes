@@ -4,7 +4,7 @@ use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-mod remap;
+pub(in crate::codebase::postgres::query_annotation) mod remap;
 use remap::remap_scope;
 
 #[derive(Clone)]

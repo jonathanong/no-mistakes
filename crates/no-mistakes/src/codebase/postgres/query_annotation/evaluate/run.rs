@@ -86,11 +86,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let mut snapshot = RunSnapshot::capture(self);
         let mut unpromotable = FxHashSet::default();
-        let mut loaded_counts = FxHashMap::default();
         let mut completed = 0usize;
-        let mut needs_restore = false;
         for call in runnable_unmodeled {
-            if needs_restore {
+            if completed > 0 {
                 snapshot.restore(self);
             }
             let timing = super::super::progress::timing("postgres.annotation.unmodeled_call");
@@ -98,29 +96,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             drop(timing);
             completed += 1;
             if completed < total_tasks {
-                needs_restore = !snapshot.promote_reused(
-                    self,
-                    &mut unpromotable,
-                    &mut loaded_counts,
-                    total_tasks - completed,
-                );
+                snapshot.promote_reused(self, &mut unpromotable, total_tasks - completed);
             }
         }
         for function in runnable_functions {
             // Speculative entrypoints share initialized facts, never effects
             // from an unrelated function considered earlier in name order.
-            if needs_restore {
+            if completed > 0 {
                 snapshot.restore(self);
             }
             self.run_entrypoint(path, &function);
             completed += 1;
             if completed < total_tasks {
-                needs_restore = !snapshot.promote_reused(
-                    self,
-                    &mut unpromotable,
-                    &mut loaded_counts,
-                    total_tasks - completed,
-                );
+                snapshot.promote_reused(self, &mut unpromotable, total_tasks - completed);
             }
         }
     }

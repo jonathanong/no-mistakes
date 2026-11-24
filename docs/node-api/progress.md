@@ -98,9 +98,10 @@ The same wrapper accepts `"analyzeProject"` and returns its normal result plus
 request-scoped diagnostics. `diagnostics.work["postgres.annotation.prefix_after_empty_skips"]`
 counts replacement-value walks omitted when the incoming prefix map is empty.
 These still contribute to `prefix_walks` and `prefix_walks_completed`; node and
-container counters reflect actual visits only. Annotation counters include module
-initializations; the removed shared-initialization cache reports zero builds,
-hits, misses and build duration. Verbose observation performs extra diagnostic work, including
+container counters reflect actual visits only. Annotation counters include module initializations and per-profile
+shared-initialization cache counters (`shared_init.*`); see
+[CLI diagnostics](../cli/diagnostics.md). Verbose observation performs extra
+diagnostic work, including
 the former root-selection comparison. Measure ordinary performance with
 observation disabled. Plain API calls preserve their existing result shape.
 See the [verbose diagnostics contract](../node-api.md) for

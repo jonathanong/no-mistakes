@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 mod candidates;
-mod executor_scan;
+pub(in crate::codebase::postgres::query_annotation) mod executor_scan;
 
 pub(super) enum SharedInitStatus {
     Enabled {
@@ -80,7 +80,7 @@ pub(super) fn build(
                 uncacheable.insert(id);
                 continue;
             };
-            if executor_scan::has_uncacheable_top_level(file) {
+            if !executor_scan::is_statically_pure_top_level(file, target, resolve) {
                 uncacheable.insert(id);
                 continue;
             }

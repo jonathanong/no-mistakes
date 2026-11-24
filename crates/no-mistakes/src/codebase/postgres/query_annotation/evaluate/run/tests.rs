@@ -280,24 +280,37 @@ fn missing_prepared_eager_and_runtime_modules_remain_observed_on_cache_hits() {
 }
 
 #[test]
-fn try_promote_module_rolls_back_events_and_skips_unpromotable() {
+fn promote_reused_captures_pure_without_extra_init_and_skips_impure() {
     use crate::codebase::postgres::query_annotation::{Expr, QueryAnnotationFileFacts, Step};
     use std::sync::Arc;
     let impure = PathBuf::from("impure.mts");
-    let mut facts = QueryAnnotationFileFacts::default();
-    facts.roots.push(Step::Effect(Expr::Call {
+    let pure = PathBuf::from("pure.mts");
+    let mut impure_facts = QueryAnnotationFileFacts::default();
+    impure_facts.roots.push(Step::Effect(Expr::Call {
         callee: Box::new(Expr::Name("query".into())),
         args: vec![Expr::Text("SELECT 1".into())],
         start: 10,
         end: 25,
     }));
+    let mut pure_facts = QueryAnnotationFileFacts::default();
+    pure_facts
+        .roots
+        .push(Step::Bind("label".into(), Expr::Text("ok".into())));
     let mut files = FxHashMap::default();
     files.insert(
         impure.clone(),
         File {
-            facts: &facts,
+            facts: &impure_facts,
             module: Arc::new(Module::new(Arc::new(TsFileFacts::default()))),
             executors: [(10, 25)].into_iter().collect(),
+        },
+    );
+    files.insert(
+        pure.clone(),
+        File {
+            facts: &pure_facts,
+            module: Arc::new(Module::new(Arc::new(TsFileFacts::default()))),
+            executors: Default::default(),
         },
     );
     let mut evaluator = super::super::Evaluator {
@@ -332,10 +345,21 @@ fn try_promote_module_rolls_back_events_and_skips_unpromotable() {
     };
     let mut snapshot = super::RunSnapshot::capture(&evaluator);
     let mut unpromotable = crate::fx::FxHashSet::default();
-    snapshot.try_promote_module(&mut evaluator, &impure, &mut unpromotable);
-    assert!(evaluator.events.is_empty());
-    assert!(evaluator.event_log.is_empty());
-    assert!(unpromotable.contains(&evaluator.module_ids().id(&impure)));
-    snapshot.try_promote_module(&mut evaluator, &impure, &mut unpromotable);
-    assert!(evaluator.events.is_empty());
+    let impure_id = evaluator.module_ids().id(&impure);
+    let pure_id = evaluator.module_ids().id(&pure);
+
+    // Task 0 loads both impure and pure modules naturally.
+    evaluator.module_environment(&impure);
+    evaluator.module_environment(&pure);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 3);
+    assert!(unpromotable.contains(&impure_id));
+    assert!(snapshot.modules.capture_on_init.contains_key(&pure_id));
+    assert!(!snapshot.modules.contains_key(&pure_id));
+
+    // Task 1 restores snapshot and loads pure module naturally -> captured in-place.
+    snapshot.restore(&mut evaluator);
+    evaluator.module_environment(&pure);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 2);
+    assert!(snapshot.modules.contains_key(&pure_id));
+    assert!(!snapshot.modules.capture_on_init.contains_key(&pure_id));
 }

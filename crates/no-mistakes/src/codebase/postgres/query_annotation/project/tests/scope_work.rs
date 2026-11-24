@@ -145,6 +145,53 @@ fn multi_entrypoint_root_reuses_pure_imports_and_keeps_impure_isolated() {
 }
 
 #[test]
+fn disabled_multitask_root_with_impure_lazy_module_never_adds_initializations() {
+    let (report, diagnostics) =
+        observed_check(&fixture("helper-tracing-disabled-impure-multitask"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.roots_after_scoping"], 1);
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 1);
+    assert_eq!(
+        work["postgres.annotation.module_initializations"], 5,
+        "1 root + 4 task loads of impure module must not add a throwaway promotion init: {work:?}"
+    );
+}
+
+#[test]
+fn enabled_shared_init_with_impure_candidate_never_adds_initializations() {
+    let (report, diagnostics) =
+        observed_check(&fixture("helper-tracing-shared-init-impure-candidate"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.roots_after_scoping"], 2);
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.builds"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.cache_misses"], 1);
+    assert_eq!(
+        work["postgres.annotation.module_initializations"], 4,
+        "2 roots + 2 root loads of impure candidate must not add a throwaway build init: {work:?}"
+    );
+}
+
+#[test]
+fn shared_init_disabled_reasons_report_disabled_counter() {
+    let (_, no_shared) = observed_check(&fixture("helper-tracing-shared-init-no-shared-imports"));
+    assert_eq!(
+        no_shared.work["postgres.annotation.shared_init.disabled"],
+        1
+    );
+    let (_, failed_sources) =
+        observed_check(&fixture("helper-tracing-shared-init-failed-sql-sources"));
+    assert_eq!(
+        failed_sources.work["postgres.annotation.shared_init.disabled"],
+        1
+    );
+}
+
+#[test]
 fn unrelated_large_excluded_test_modules_are_pruned_before_evaluation() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/performance/annotation-excluded-callers-unrelated");
