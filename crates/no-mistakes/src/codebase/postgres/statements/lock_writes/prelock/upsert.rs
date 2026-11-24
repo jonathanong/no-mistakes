@@ -6,10 +6,15 @@ use sqlparser::ast::{
     TableObject,
 };
 
+pub(super) struct UpsertKeys {
+    pub(super) keys: Vec<RowAccess>,
+    pub(super) unconditional: bool,
+}
+
 pub(super) fn upsert_keys(
     insert: &Insert,
     positions: PlaceholderPositions<'_>,
-) -> Option<Vec<RowAccess>> {
+) -> Option<UpsertKeys> {
     let TableObject::TableName(relation) = &insert.table else {
         return None;
     };
@@ -46,13 +51,14 @@ pub(super) fn upsert_keys(
         .table_alias
         .as_ref()
         .map_or_else(|| relation.clone(), |alias| ident_key(&alias.alias));
+    let unconditional = update.selection.is_none();
     if let Some(predicate) = &update.selection {
         and_keys(predicate, &qualifier, positions, &mut Vec::new())?;
     }
     let target_index = insert.columns.iter().position(|name| {
         matches!(name.0.as_slice(), [ObjectNamePart::Identifier(id)] if ident_key(id) == column)
     })?;
-    values
+    let keys = values
         .rows
         .iter()
         .map(|row| {
@@ -70,5 +76,9 @@ pub(super) fn upsert_keys(
                 .row(relation.clone()),
             )
         })
-        .collect()
+        .collect::<Option<Vec<_>>>()?;
+    Some(UpsertKeys {
+        keys,
+        unconditional,
+    })
 }

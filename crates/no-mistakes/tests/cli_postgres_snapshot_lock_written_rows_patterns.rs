@@ -49,7 +49,15 @@ fn postgres_lock_written_rows_upsert_locked_key_check_json_snapshot() {
             "rules",
             "row-lock-unwritten-relation"
         ),
-        [5, 12, 19]
+        [5, 12, 22, 28, 38]
+    );
+    assert_eq!(
+        lines(
+            &reports["controls"]["report"],
+            "advisories",
+            "redundant-prelock"
+        ),
+        [28]
     );
 }
 

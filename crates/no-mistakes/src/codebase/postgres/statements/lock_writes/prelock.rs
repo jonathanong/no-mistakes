@@ -30,16 +30,18 @@ pub(super) fn collect<const ADVANCED: bool>(
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
         Statement::Insert(insert) if ADVANCED => {
-            if let Some(keys) = upsert::upsert_keys(insert, positions) {
+            if let Some(upsert) = upsert::upsert_keys(insert, positions) {
                 if redundant_prelocks {
-                    if keys.len() == 1 {
-                        out.conditional_write_keys = keys.clone();
+                    if upsert.keys.len() == 1 {
+                        out.conditional_write_keys = upsert.keys.clone();
                         out.conditional_write_unique = true;
                     } else {
-                        out.multi_row_upsert_keys = Some(keys.clone().into_boxed_slice());
+                        out.multi_row_upsert_keys = Some(upsert.keys.clone().into_boxed_slice());
                     }
                 }
-                out.upsert_write_keys.extend(keys);
+                if upsert.unconditional {
+                    out.upsert_write_keys.extend(upsert.keys);
+                }
             }
         }
         _ => {}

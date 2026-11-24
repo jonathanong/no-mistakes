@@ -173,12 +173,14 @@ export async function updateChild(childId: string, name: string) {
 ```
 
 The same relation and key are locked and updated within one transaction.
-An `INSERT ... ON CONFLICT (column) DO UPDATE` in that transaction can also
-satisfy the lock. The conflict column and one of the statically known
-`VALUES` keys must match the locked column and key. This applies to both
-single-row and multi-row `VALUES`, independently of the redundancy advisory
-or any `triggerMaintainedColumns` configuration. A different conflict column,
-a different key value, and `ON CONFLICT DO NOTHING` leave the finding in place.
+An unconditional `INSERT ... ON CONFLICT (column) DO UPDATE` in that
+transaction can also satisfy the lock. The relation, conflict column, and one
+of the statically known `VALUES` keys must match the locked relation, column,
+and key. This applies to both single-row and multi-row `VALUES`, independently
+of the redundancy advisory or any `triggerMaintainedColumns` configuration. A
+different table, a different conflict column, a different key value,
+`ON CONFLICT DO NOTHING`, and a conditional `DO UPDATE ... WHERE` leave the
+finding in place.
 
 A top-level helper with a straight-line body of static executor calls can accept
 an executor parameter. Each invocation through a known transaction substitutes

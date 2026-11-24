@@ -5,7 +5,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "controls": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/controls.ts",
+          "line": 28,
+          "message": "src/controls.ts:28: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -21,8 +30,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/controls.ts",
-          "line": 19,
-          "message": "src/controls.ts:19: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "line": 22,
+          "message": "src/controls.ts:22: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 28,
+          "message": "src/controls.ts:28: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 38,
+          "message": "src/controls.ts:38: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "row-lock-unwritten-relation"
