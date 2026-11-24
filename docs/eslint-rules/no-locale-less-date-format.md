@@ -41,7 +41,12 @@ formatDate(date);
   methods with that name.
 - `constructors` defaults to an empty list. Each entry selects a member of a
   global namespace by its dotted name and checks both calls and `new`
-  expressions. A local binding that shadows the namespace is ignored.
+  expressions. A local binding that shadows the namespace is ignored. An
+  `Intl.*Format` constructor or call whose only use is an immediate
+  `.resolvedOptions()` call (such as
+  `Intl.DateTimeFormat().resolvedOptions().timeZone` or
+  `new Intl.DateTimeFormat().resolvedOptions().timeZone`) is exempt; storing
+  the instance in a variable or passing it elsewhere is still reported.
 - `allowUndefinedLocale` permits global `undefined` or a `void` expression as
   the explicit first argument. Omitting the locale still produces a finding.
 

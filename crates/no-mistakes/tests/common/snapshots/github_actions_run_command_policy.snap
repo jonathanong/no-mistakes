@@ -125,6 +125,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/dynamic.yml",
+          "line": 18,
+          "message": ".github/workflows/dynamic.yml:18: job `dynamic` step 6 invokes dynamic command `$GITHUB_ACTION_PATH/$TOOL`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $GITHUB_ACTION_PATH/$TOOL --flag",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
           "line": 8,
           "message": ".github/workflows/dynamic.yml:8: job `dynamic` step 1 invokes dynamic command `$CMD`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
           "rule": "github-actions-run-command-policy",
@@ -183,6 +191,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/dynamic.yml:14: job `dynamic` step 4 passes a dynamic script to `bash -c`, which cannot be statically checked against configured command policies. Inline the literal command or run it directly.",
           "rule": "github-actions-run-command-policy",
           "sourceLine": "run: bash -c \"$SCRIPT\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 18,
+          "message": ".github/workflows/dynamic.yml:18: job `dynamic` step 6 invokes dynamic command `$GITHUB_ACTION_PATH/$TOOL`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $GITHUB_ACTION_PATH/$TOOL --flag",
           "target": "unanalyzable"
         },
         {

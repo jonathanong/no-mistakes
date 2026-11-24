@@ -12,3 +12,7 @@ jobs:
         run: gh api "repos/my-org/my-repo/labels
       - name: Dynamic shell -c
         run: bash -c "$SCRIPT"
+      - name: Variable-prefixed literal script path
+        run: $GITHUB_ACTION_PATH/build-images.sh --tag "$TAG"
+      - name: Variable-prefixed dynamic command segment
+        run: $GITHUB_ACTION_PATH/$TOOL --flag

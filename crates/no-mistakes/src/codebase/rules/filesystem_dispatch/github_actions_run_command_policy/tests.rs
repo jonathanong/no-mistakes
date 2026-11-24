@@ -228,7 +228,52 @@ fn standalone_and_diagnostics_entrypoints_match_saved_fixtures() {
     )
     .unwrap();
     assert!(diag.findings.is_empty());
-    assert_eq!(diag.advisories.len(), 4);
+    assert_eq!(diag.advisories.len(), 5);
+}
+
+#[test]
+fn abstains_on_literal_script_paths_not_matching_any_policy_command() {
+    let compiled = default_policy();
+    for script in [
+        r#"$GITHUB_ACTION_PATH/build-images.sh --tag "$TAG""#,
+        r#""$GITHUB_ACTION_PATH/build-images.sh" --tag "$TAG""#,
+        r#"${GITHUB_ACTION_PATH}/scripts/deploy.sh --env staging"#,
+        r#"${{ github.action_path }}/scripts/publish.sh"#,
+        r#"$ACTION_DIR\scripts\build.cmd --release"#,
+    ] {
+        let hits = scan_script(script, &compiled);
+        assert!(
+            hits.is_empty(),
+            "expected abstention for `{script}`, got {hits:?}"
+        );
+    }
+    for script in [
+        r#"$BIN_DIR/gh api -f x=1 repos/my-org/my-repo/labels"#,
+        r#"$BIN_DIR/bash -c "$SCRIPT""#,
+        r#"$GITHUB_ACTION_PATH/$TOOL --flag"#,
+        r#"$GITHUB_ACTION_PATH/run-${TOOL}.sh"#,
+        r#"${TOOL} --flag"#,
+        r#"$(echo /bin/build.sh) --flag"#,
+        r#"`echo /bin/build.sh` --flag"#,
+        r#"${FOO:-/bin/build.sh} --flag"#,
+        r#"$DIR/* --flag"#,
+        r#"$DIR/ --flag"#,
+    ] {
+        let hits = scan_script(script, &compiled);
+        assert!(
+            !hits.is_empty()
+                && hits
+                    .iter()
+                    .all(|hit| matches!(hit.kind, HitKind::Unanalyzable { .. })),
+            "expected advisory for `{script}`, got {hits:?}"
+        );
+    }
+    let nested = scan_script(
+        r#"$GITHUB_ACTION_PATH/build-images.sh --tag "$(gh api -f x=1 repos/my-org/my-repo/labels)""#,
+        &compiled,
+    );
+    assert_eq!(nested.len(), 1, "{nested:?}");
+    assert!(matches!(nested[0].kind, HitKind::MissingAnyRequired { .. }));
 }
 
 #[test]

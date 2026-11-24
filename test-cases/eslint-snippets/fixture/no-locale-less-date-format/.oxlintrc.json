@@ -9,7 +9,7 @@
   "rules": { "no-mistakes/no-locale-less-date-format": "error" },
   "overrides": [
     {
-      "files": ["intl-constructors.mjs", "shadowed-intl.mjs"],
+      "files": ["intl-constructors.mjs", "intl-resolved-options.mjs", "shadowed-intl.mjs"],
       "rules": {
         "no-mistakes/no-locale-less-date-format": [
           "error",
