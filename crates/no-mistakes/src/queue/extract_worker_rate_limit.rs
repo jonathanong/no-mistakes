@@ -1,83 +1,83 @@
-use crate::fx::FxHashMap;
 use crate::queue::extract_helpers::binding_name;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{
-    BindingIdentifier, BindingPattern, CallExpression, Declaration, ExportDefaultDeclaration,
-    ExportDefaultDeclarationKind, Program, Statement, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    AssignmentExpression, AssignmentTarget, BindingIdentifier, BindingPattern, CallExpression,
+    Class, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind, Program, Statement,
+    VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
-use oxc_syntax::symbol::SymbolId;
-use std::collections::HashMap;
 
+mod classes;
 mod classify;
+mod classify_module;
 mod finish;
+mod finish_exports;
 mod predicates;
+mod state;
 
 pub(super) use predicates::is_worker_constructor_callee;
+pub(super) use state::State;
+use state::{LocalClassInit, LocalInit, ModuleClassInit, ModuleInit, PendingCall, PendingReceiver};
 
-#[derive(Default)]
-pub(super) struct State {
-    pub(super) worker_call_indices: HashMap<u32, usize>,
-    pub(super) local_bindings: FxHashMap<SymbolId, LocalInit>,
-    pub(super) module_bindings: HashMap<String, ModuleInit>,
-    pub(super) pending_calls: Vec<PendingCall>,
-}
-
-#[derive(Clone)]
-pub(super) enum LocalInit {
-    WorkerSpan(u32),
-    NonWorker,
-    Alias(SymbolId),
-    Imported(String),
-    Namespace { source: String, exported: String },
-}
-
-#[derive(Clone)]
-pub(super) enum ModuleInit {
-    WorkerSpan(u32),
-    NonWorker,
-    Alias(String),
-    Imported(String),
-    Namespace { source: String, exported: String },
-}
-
-pub(super) struct PendingCall {
-    pub(super) line: usize,
-    pub(super) receiver: PendingReceiver,
-}
-
-pub(super) enum PendingReceiver {
-    WorkerSpan(u32),
-    Local(SymbolId),
-    Imported(String),
-    Namespace { source: String, exported: String },
-    Unresolved,
-}
-
-impl State {
-    pub(super) fn note_worker_span(&mut self, span_start: u32, worker_index: usize) {
-        self.worker_call_indices.insert(span_start, worker_index);
-    }
+pub(super) fn note_class(visitor: &mut QueueVisitor<'_>, class: &Class<'_>) {
+    let Some(id) = &class.id else {
+        return;
+    };
+    let Some(symbol) = id.symbol_id.get() else {
+        return;
+    };
+    let init = classes::classify_local_class(visitor, class);
+    visitor.worker_rate_limit.local_classes.insert(symbol, init);
 }
 
 pub(super) fn note_variable(visitor: &mut QueueVisitor<'_>, decl: &VariableDeclarator<'_>) {
     let Some(init) = &decl.init else {
         return;
     };
-    if let (Some(scoping), BindingPattern::BindingIdentifier(id)) = (visitor.scoping, &decl.id) {
-        if let Some(symbol) = id.symbol_id.get() {
-            if !scoping.symbol_is_mutated(symbol)
-                && scoping.symbol_redeclarations(symbol).is_empty()
-            {
-                if let Some(local_init) = classify::classify_local_init(visitor, init) {
-                    visitor
-                        .worker_rate_limit
-                        .local_bindings
-                        .insert(symbol, local_init);
-                }
-            }
-        }
+    let (Some(scoping), BindingPattern::BindingIdentifier(id)) = (visitor.scoping, &decl.id) else {
+        return;
+    };
+    let Some(symbol) = id.symbol_id.get() else {
+        return;
+    };
+    let Some(local_init) = classify::classify_local_init(visitor, init) else {
+        return;
+    };
+    if !scoping.symbol_is_mutated(symbol) && scoping.symbol_redeclarations(symbol).is_empty() {
+        visitor
+            .worker_rate_limit
+            .local_bindings
+            .insert(symbol, local_init);
+    } else if !matches!(local_init, LocalInit::NonWorker | LocalInit::WorkerClass) {
+        visitor
+            .worker_rate_limit
+            .mutated_origins
+            .entry(symbol)
+            .or_default()
+            .push(local_init);
+    }
+}
+
+pub(super) fn note_assignment(visitor: &mut QueueVisitor<'_>, expr: &AssignmentExpression<'_>) {
+    if !predicates::is_value_assignment(expr.operator) {
+        return;
+    }
+    let AssignmentTarget::AssignmentTargetIdentifier(id) = &expr.left else {
+        return;
+    };
+    let Some(symbol) = predicates::referenced_symbol(visitor, id) else {
+        return;
+    };
+    let Some(local_init) = classify::classify_local_init(visitor, &expr.right) else {
+        return;
+    };
+    if !matches!(local_init, LocalInit::NonWorker | LocalInit::WorkerClass) {
+        visitor
+            .worker_rate_limit
+            .mutated_origins
+            .entry(symbol)
+            .or_default()
+            .push(local_init);
     }
 }
 
@@ -85,18 +85,38 @@ pub(super) fn note_export_default(
     visitor: &mut QueueVisitor<'_>,
     export: &ExportDefaultDeclaration<'_>,
 ) {
-    let init = match &export.declaration {
-        ExportDefaultDeclarationKind::FunctionDeclaration(_)
-        | ExportDefaultDeclarationKind::ClassDeclaration(_) => Some(ModuleInit::NonWorker),
-        kind => kind
-            .as_expression()
-            .and_then(|expr| classify::classify_module_init(visitor, expr)),
-    };
-    if let Some(module_init) = init {
-        visitor
-            .worker_rate_limit
-            .module_bindings
-            .insert("default".to_string(), module_init);
+    match &export.declaration {
+        ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
+            note_non_worker_id(visitor, func.id.as_ref());
+            visitor
+                .worker_rate_limit
+                .module_bindings
+                .insert("default".to_string(), ModuleInit::NonWorker);
+        }
+        ExportDefaultDeclarationKind::ClassDeclaration(class) => {
+            let class_init = classes::classify_module_class(visitor, class);
+            if let Some(id) = &class.id {
+                visitor
+                    .worker_rate_limit
+                    .module_classes
+                    .insert(id.name.to_string(), class_init.clone());
+            }
+            visitor
+                .worker_rate_limit
+                .module_classes
+                .insert("default".to_string(), class_init);
+        }
+        kind => {
+            if let Some(module_init) = kind
+                .as_expression()
+                .and_then(|expr| classify_module::classify_module_init(visitor, expr))
+            {
+                visitor
+                    .worker_rate_limit
+                    .module_bindings
+                    .insert("default".to_string(), module_init);
+            }
+        }
     }
 }
 
@@ -123,7 +143,7 @@ fn record_top_level_decls(visitor: &mut QueueVisitor<'_>, program: &Program<'_>)
         match stmt {
             Statement::VariableDeclaration(var_decl) => record_module_consts(visitor, var_decl),
             Statement::FunctionDeclaration(func) => note_non_worker_id(visitor, func.id.as_ref()),
-            Statement::ClassDeclaration(class) => note_non_worker_id(visitor, class.id.as_ref()),
+            Statement::ClassDeclaration(class) => record_module_class(visitor, class),
             Statement::ExportDeclaration(export) => match &export.declaration {
                 Declaration::VariableDeclaration(var_decl) => {
                     record_module_consts(visitor, var_decl)
@@ -131,14 +151,23 @@ fn record_top_level_decls(visitor: &mut QueueVisitor<'_>, program: &Program<'_>)
                 Declaration::FunctionDeclaration(func) => {
                     note_non_worker_id(visitor, func.id.as_ref())
                 }
-                Declaration::ClassDeclaration(class) => {
-                    note_non_worker_id(visitor, class.id.as_ref())
-                }
+                Declaration::ClassDeclaration(class) => record_module_class(visitor, class),
                 _ => {}
             },
             _ => {}
         }
     }
+}
+
+fn record_module_class(visitor: &mut QueueVisitor<'_>, class: &Class<'_>) {
+    let Some(id) = &class.id else {
+        return;
+    };
+    let class_init = classes::classify_module_class(visitor, class);
+    visitor
+        .worker_rate_limit
+        .module_classes
+        .insert(id.name.to_string(), class_init);
 }
 
 fn note_non_worker_id(visitor: &mut QueueVisitor<'_>, id: Option<&BindingIdentifier<'_>>) {
@@ -159,7 +188,7 @@ fn record_module_consts(visitor: &mut QueueVisitor<'_>, decl: &VariableDeclarati
         else {
             continue;
         };
-        if let Some(module_init) = classify::classify_module_init(visitor, init) {
+        if let Some(module_init) = classify_module::classify_module_init(visitor, init) {
             visitor
                 .worker_rate_limit
                 .module_bindings

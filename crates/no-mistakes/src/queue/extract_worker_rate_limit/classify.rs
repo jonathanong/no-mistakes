@@ -1,41 +1,12 @@
 use super::predicates::{
-    is_class_or_function, is_imported_symbol, is_known_non_worker_new, is_non_worker_expr,
-    is_queue_factory_call, is_worker_factory_call, is_worker_new, namespace_member,
-    referenced_symbol, unwrap_worker_init,
+    is_class, is_class_or_function, is_function, is_imported_symbol, is_non_worker_expr,
+    is_queue_factory_call, is_queue_package_import, is_worker_ctor_expr, is_worker_factory_call,
+    is_worker_new, namespace_member, referenced_symbol, unwrap_worker_init,
 };
-use super::{LocalInit, ModuleInit, PendingReceiver};
+use super::{LocalInit, PendingReceiver};
+use crate::queue::extract_helpers::is_queue_package;
 use crate::queue::extract_visitor::QueueVisitor;
-use oxc_ast::ast::{CallExpression, Expression, IdentifierReference};
-
-enum DirectKind {
-    WorkerSpan(u32),
-    NonWorker,
-}
-
-fn classify_direct(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> Option<DirectKind> {
-    match expr {
-        Expression::NewExpression(new_expr) => {
-            if is_worker_new(visitor, new_expr) {
-                Some(DirectKind::WorkerSpan(new_expr.span.start))
-            } else if is_known_non_worker_new(visitor, new_expr) {
-                Some(DirectKind::NonWorker)
-            } else {
-                None
-            }
-        }
-        Expression::CallExpression(call_expr) => {
-            if is_worker_factory_call(visitor, call_expr) {
-                Some(DirectKind::WorkerSpan(call_expr.span.start))
-            } else if is_queue_factory_call(visitor, call_expr) {
-                Some(DirectKind::NonWorker)
-            } else {
-                None
-            }
-        }
-        other if is_non_worker_expr(other) => Some(DirectKind::NonWorker),
-        _ => None,
-    }
-}
+use oxc_ast::ast::{CallExpression, Expression, IdentifierReference, NewExpression};
 
 pub(super) fn rate_limit_receiver<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {
     match call.callee.get_inner_expression() {
@@ -56,20 +27,75 @@ pub(super) fn classify_receiver(
     expr: &Expression<'_>,
 ) -> Option<PendingReceiver> {
     let expr = unwrap_worker_init(expr);
-    if let Some(direct) = classify_direct(visitor, expr) {
-        return match direct {
-            DirectKind::WorkerSpan(span) => Some(PendingReceiver::WorkerSpan(span)),
-            DirectKind::NonWorker => None,
-        };
-    }
     match expr {
+        Expression::NewExpression(new_expr) => classify_new_receiver(visitor, new_expr),
+        Expression::CallExpression(call_expr) => classify_call_receiver(visitor, call_expr),
         Expression::Identifier(id) => classify_ident_receiver(visitor, id),
-        Expression::StaticMemberExpression(member) => Some(
-            namespace_member(visitor, member)
-                .map(|(source, exported)| PendingReceiver::Namespace { source, exported })
-                .unwrap_or(PendingReceiver::Unresolved),
-        ),
-        _ => Some(PendingReceiver::Unresolved),
+        Expression::StaticMemberExpression(member) => {
+            let (source, exported) = namespace_member(visitor, member)?;
+            (!is_queue_package(&source)).then_some(PendingReceiver::Namespace { source, exported })
+        }
+        _ => None,
+    }
+}
+
+fn classify_new_receiver(
+    visitor: &QueueVisitor<'_>,
+    new_expr: &NewExpression<'_>,
+) -> Option<PendingReceiver> {
+    if is_worker_new(visitor, new_expr) {
+        return Some(PendingReceiver::WorkerSpan(new_expr.span.start));
+    }
+    match new_expr.callee.get_inner_expression() {
+        Expression::Identifier(id) => {
+            let symbol = referenced_symbol(visitor, id)?;
+            if is_imported_symbol(visitor, symbol) {
+                let name = id.name.as_str();
+                (!visitor.namespace_imports.contains_key(name)
+                    && !is_queue_package_import(visitor, name))
+                .then(|| PendingReceiver::ConstructedImported(name.to_string()))
+            } else if is_class(visitor, symbol) {
+                Some(PendingReceiver::ConstructedLocalClass(symbol))
+            } else if !is_function(visitor, symbol) {
+                Some(PendingReceiver::ConstructedLocalBinding(symbol))
+            } else {
+                None
+            }
+        }
+        Expression::StaticMemberExpression(member) => {
+            let (source, exported) = namespace_member(visitor, member)?;
+            (!is_queue_package(&source))
+                .then_some(PendingReceiver::ConstructedNamespace { source, exported })
+        }
+        _ => None,
+    }
+}
+
+fn classify_call_receiver(
+    visitor: &QueueVisitor<'_>,
+    call_expr: &CallExpression<'_>,
+) -> Option<PendingReceiver> {
+    if is_worker_factory_call(visitor, call_expr) {
+        return Some(PendingReceiver::WorkerSpan(call_expr.span.start));
+    }
+    if is_queue_factory_call(visitor, call_expr) {
+        return None;
+    }
+    match call_expr.callee.get_inner_expression() {
+        Expression::Identifier(id) => {
+            let symbol = referenced_symbol(visitor, id)?;
+            let name = id.name.as_str();
+            (is_imported_symbol(visitor, symbol)
+                && !visitor.namespace_imports.contains_key(name)
+                && !is_queue_package_import(visitor, name))
+            .then(|| PendingReceiver::CallImported(name.to_string()))
+        }
+        Expression::StaticMemberExpression(member) => {
+            let (source, exported) = namespace_member(visitor, member)?;
+            (!is_queue_package(&source))
+                .then_some(PendingReceiver::CallNamespace { source, exported })
+        }
+        _ => None,
     }
 }
 
@@ -77,12 +103,12 @@ fn classify_ident_receiver(
     visitor: &QueueVisitor<'_>,
     id: &IdentifierReference<'_>,
 ) -> Option<PendingReceiver> {
-    let Some(symbol) = referenced_symbol(visitor, id) else {
-        return Some(PendingReceiver::Unresolved);
-    };
+    let symbol = referenced_symbol(visitor, id)?;
     if is_imported_symbol(visitor, symbol) {
-        return (!visitor.namespace_imports.contains_key(id.name.as_str()))
-            .then(|| PendingReceiver::Imported(id.name.to_string()));
+        let name = id.name.as_str();
+        return (!visitor.namespace_imports.contains_key(name)
+            && !is_queue_package_import(visitor, name))
+        .then(|| PendingReceiver::Imported(name.to_string()));
     }
     if is_class_or_function(visitor, symbol) {
         return None;
@@ -95,56 +121,63 @@ pub(super) fn classify_local_init(
     init: &Expression<'_>,
 ) -> Option<LocalInit> {
     let expr = unwrap_worker_init(init);
-    if let Some(direct) = classify_direct(visitor, expr) {
-        return Some(match direct {
-            DirectKind::WorkerSpan(span) => LocalInit::WorkerSpan(span),
-            DirectKind::NonWorker => LocalInit::NonWorker,
-        });
+    if is_worker_ctor_expr(visitor, expr) {
+        return Some(LocalInit::WorkerClass);
+    }
+    if is_non_worker_expr(expr) {
+        return Some(LocalInit::NonWorker);
     }
     match expr {
+        Expression::NewExpression(new_expr) => {
+            Some(match classify_new_receiver(visitor, new_expr) {
+                Some(PendingReceiver::WorkerSpan(span)) => LocalInit::WorkerSpan(span),
+                Some(PendingReceiver::ConstructedLocalClass(sym)) => {
+                    LocalInit::ConstructedLocalClass(sym)
+                }
+                Some(PendingReceiver::ConstructedLocalBinding(sym)) => {
+                    LocalInit::ConstructedLocalBinding(sym)
+                }
+                Some(PendingReceiver::ConstructedImported(local)) => {
+                    LocalInit::ConstructedImported(local)
+                }
+                Some(PendingReceiver::ConstructedNamespace { source, exported }) => {
+                    LocalInit::ConstructedNamespace { source, exported }
+                }
+                _ => LocalInit::NonWorker,
+            })
+        }
+        Expression::CallExpression(call_expr) => match classify_call_receiver(visitor, call_expr) {
+            Some(PendingReceiver::WorkerSpan(span)) => Some(LocalInit::WorkerSpan(span)),
+            Some(PendingReceiver::CallImported(local)) => Some(LocalInit::CallImported(local)),
+            Some(PendingReceiver::CallNamespace { source, exported }) => {
+                Some(LocalInit::CallNamespace { source, exported })
+            }
+            _ => None,
+        },
         Expression::Identifier(id) => {
             let symbol = referenced_symbol(visitor, id)?;
             if is_imported_symbol(visitor, symbol) {
+                let name = id.name.as_str();
                 return Some(
-                    if visitor.namespace_imports.contains_key(id.name.as_str()) {
+                    if visitor.namespace_imports.contains_key(name)
+                        || is_queue_package_import(visitor, name)
+                    {
                         LocalInit::NonWorker
                     } else {
-                        LocalInit::Imported(id.name.to_string())
+                        LocalInit::Imported(name.to_string())
                     },
                 );
             }
             Some(LocalInit::Alias(symbol))
         }
-        Expression::StaticMemberExpression(member) => namespace_member(visitor, member)
-            .map(|(source, exported)| LocalInit::Namespace { source, exported }),
-        _ => None,
-    }
-}
-
-pub(super) fn classify_module_init(
-    visitor: &QueueVisitor<'_>,
-    init: &Expression<'_>,
-) -> Option<ModuleInit> {
-    let expr = unwrap_worker_init(init);
-    if let Some(direct) = classify_direct(visitor, expr) {
-        return Some(match direct {
-            DirectKind::WorkerSpan(span) => ModuleInit::WorkerSpan(span),
-            DirectKind::NonWorker => ModuleInit::NonWorker,
-        });
-    }
-    match expr {
-        Expression::Identifier(id) => {
-            let name = id.name.as_str();
-            Some(if visitor.namespace_imports.contains_key(name) {
-                ModuleInit::NonWorker
-            } else if visitor.facts.imports.iter().any(|imp| imp.local == name) {
-                ModuleInit::Imported(name.to_string())
+        Expression::StaticMemberExpression(member) => {
+            let (source, exported) = namespace_member(visitor, member)?;
+            Some(if is_queue_package(&source) {
+                LocalInit::NonWorker
             } else {
-                ModuleInit::Alias(name.to_string())
+                LocalInit::Namespace { source, exported }
             })
         }
-        Expression::StaticMemberExpression(member) => namespace_member(visitor, member)
-            .map(|(source, exported)| ModuleInit::Namespace { source, exported }),
         _ => None,
     }
 }

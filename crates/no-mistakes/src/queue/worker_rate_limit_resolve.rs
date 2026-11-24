@@ -1,26 +1,79 @@
 use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::codebase::ts_source::FrozenPathRemapper;
 use crate::queue::extract::FileFacts;
-use crate::queue::extract_helpers::is_queue_package;
-use crate::queue::extract_model::{ExportedWorkerBinding, WorkerRateLimitTarget};
+use crate::queue::extract_model::WorkerRateLimitTarget;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+
+#[path = "worker_rate_limit_resolve_follow.rs"]
+mod follow;
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub(super) enum ResolveMode {
+    Instance,
+    Constructor,
+    CallReturn,
+}
+
+pub(super) enum ResolvedExport {
+    Worker(PathBuf, Option<usize>),
+    QueueUnresolved,
+    NonWorker,
+}
+
+#[derive(Clone, Copy, Default)]
+pub(super) struct FollowState {
+    pub(super) seen_queue: bool,
+    pub(super) from_class_base: bool,
+}
+
+pub(super) struct ResolveCtx<'a, R> {
+    pub(super) facts: &'a HashMap<PathBuf, FileFacts>,
+    pub(super) resolver: &'a R,
+    pub(super) remapper: &'a FrozenPathRemapper,
+}
 
 pub(in crate::queue) fn resolve<R: ImportResolverFacade>(
     facts: &mut HashMap<PathBuf, FileFacts>,
     resolver: &R,
     remapper: &FrozenPathRemapper,
 ) {
+    let ctx = ResolveCtx {
+        facts,
+        resolver,
+        remapper,
+    };
     let mut updates: Vec<(PathBuf, usize, Option<WorkerRateLimitTarget>)> = Vec::new();
     for (path, file) in facts.iter() {
         for (index, site) in file.worker_rate_limits.iter().enumerate() {
             let resolved = match &site.target {
                 WorkerRateLimitTarget::Imported { local } => {
-                    resolve_imported(facts, resolver, remapper, path, file, local)
+                    ctx.resolve_imported(path, file, local, ResolveMode::Instance, site.mutated)
                 }
                 WorkerRateLimitTarget::Namespace { source, exported } => {
-                    resolve_export(facts, resolver, remapper, path, source, exported)
+                    ctx.resolve_export(path, source, exported, ResolveMode::Instance, site.mutated)
                 }
+                WorkerRateLimitTarget::ConstructedImported { local } => {
+                    ctx.resolve_imported(path, file, local, ResolveMode::Constructor, site.mutated)
+                }
+                WorkerRateLimitTarget::ConstructedNamespace { source, exported } => ctx
+                    .resolve_export(
+                        path,
+                        source,
+                        exported,
+                        ResolveMode::Constructor,
+                        site.mutated,
+                    ),
+                WorkerRateLimitTarget::CallImported { local } => {
+                    ctx.resolve_imported(path, file, local, ResolveMode::CallReturn, site.mutated)
+                }
+                WorkerRateLimitTarget::CallNamespace { source, exported } => ctx.resolve_export(
+                    path,
+                    source,
+                    exported,
+                    ResolveMode::CallReturn,
+                    site.mutated,
+                ),
                 _ => continue,
             };
             updates.push((path.clone(), index, resolved));
@@ -37,151 +90,43 @@ pub(in crate::queue) fn resolve<R: ImportResolverFacade>(
     }
 }
 
-fn resolve_imported<R: ImportResolverFacade>(
-    facts: &HashMap<PathBuf, FileFacts>,
-    resolver: &R,
-    remapper: &FrozenPathRemapper,
-    path: &Path,
-    file: &FileFacts,
-    local: &str,
-) -> Option<WorkerRateLimitTarget> {
-    file.imports.iter().find(|imp| imp.local == local).map_or(
-        Some(WorkerRateLimitTarget::Unresolved),
-        |binding| {
-            resolve_export(
-                facts,
-                resolver,
-                remapper,
-                path,
-                &binding.source,
-                &binding.imported,
-            )
-        },
-    )
-}
-
-fn resolve_export<R: ImportResolverFacade>(
-    facts: &HashMap<PathBuf, FileFacts>,
-    resolver: &R,
-    remapper: &FrozenPathRemapper,
-    path: &Path,
-    specifier: &str,
-    exported: &str,
-) -> Option<WorkerRateLimitTarget> {
-    let mut visited = HashSet::new();
-    match follow_source(
-        facts,
-        resolver,
-        remapper,
-        path,
-        specifier,
-        exported,
-        &mut visited,
-    ) {
-        ResolvedExport::Worker(file, worker_index) => {
-            Some(WorkerRateLimitTarget::ResolvedWorker { file, worker_index })
-        }
-        ResolvedExport::NonWorker => None,
-        ResolvedExport::Unresolved => Some(WorkerRateLimitTarget::Unresolved),
+impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
+    fn resolve_imported(
+        &self,
+        path: &Path,
+        file: &FileFacts,
+        local: &str,
+        mode: ResolveMode,
+        mutated: bool,
+    ) -> Option<WorkerRateLimitTarget> {
+        let binding = file.imports.iter().find(|imp| imp.local == local)?;
+        self.resolve_export(path, &binding.source, &binding.imported, mode, mutated)
     }
-}
 
-enum ResolvedExport {
-    Worker(PathBuf, usize),
-    NonWorker,
-    Unresolved,
-}
-
-fn follow_source<R: ImportResolverFacade>(
-    facts: &HashMap<PathBuf, FileFacts>,
-    resolver: &R,
-    remapper: &FrozenPathRemapper,
-    path: &Path,
-    specifier: &str,
-    exported: &str,
-    visited: &mut HashSet<(PathBuf, String)>,
-) -> ResolvedExport {
-    if is_queue_package(specifier) {
-        return ResolvedExport::NonWorker;
-    }
-    let Some(target) = resolver
-        .resolve(specifier, path)
-        .and_then(|resolved| remapper.remap(&resolved))
-    else {
-        return ResolvedExport::Unresolved;
-    };
-    if !visited.insert((target.clone(), exported.to_string())) {
-        return ResolvedExport::Unresolved;
-    }
-    follow_file(facts, resolver, remapper, &target, exported, visited)
-}
-
-fn follow_file<R: ImportResolverFacade>(
-    facts: &HashMap<PathBuf, FileFacts>,
-    resolver: &R,
-    remapper: &FrozenPathRemapper,
-    path: &Path,
-    exported: &str,
-    visited: &mut HashSet<(PathBuf, String)>,
-) -> ResolvedExport {
-    // `path` is remapped from `facts.keys()`.
-    let file = &facts[path];
-    if let Some(binding) = file.worker_exports.get(exported) {
-        return match *binding {
-            ExportedWorkerBinding::Worker(index) => {
-                ResolvedExport::Worker(path.to_path_buf(), index)
+    fn resolve_export(
+        &self,
+        path: &Path,
+        specifier: &str,
+        exported: &str,
+        mode: ResolveMode,
+        mutated: bool,
+    ) -> Option<WorkerRateLimitTarget> {
+        let mut visited = HashSet::new();
+        match self.follow_source(
+            path,
+            specifier,
+            exported,
+            mode,
+            FollowState::default(),
+            &mut visited,
+        ) {
+            ResolvedExport::Worker(file, worker_index) if !mutated => {
+                Some(WorkerRateLimitTarget::ResolvedWorker { file, worker_index })
             }
-            ExportedWorkerBinding::NonWorker => ResolvedExport::NonWorker,
-        };
-    }
-    if let Some((specifier, imported)) = file
-        .export_from
-        .get(exported)
-        .or_else(|| file.worker_namespace_exports.get(exported))
-    {
-        return follow_source(
-            facts, resolver, remapper, path, specifier, imported, visited,
-        );
-    }
-    if let Some(local) = file.worker_import_aliases.get(exported).map(String::as_str) {
-        return follow_local_import(facts, resolver, remapper, path, file, local, visited);
-    }
-    if let Some((_, local)) = file.reexports.iter().find(|(exp, _)| exp == exported) {
-        return follow_local_import(facts, resolver, remapper, path, file, local, visited);
-    }
-    for specifier in &file.star_exports {
-        if is_queue_package(specifier) {
-            continue;
-        }
-        let result = follow_source(
-            facts, resolver, remapper, path, specifier, exported, visited,
-        );
-        if !matches!(result, ResolvedExport::Unresolved) {
-            return result;
+            ResolvedExport::Worker(..) | ResolvedExport::QueueUnresolved => {
+                Some(WorkerRateLimitTarget::Unresolved)
+            }
+            ResolvedExport::NonWorker => None,
         }
     }
-    ResolvedExport::Unresolved
-}
-
-fn follow_local_import<R: ImportResolverFacade>(
-    facts: &HashMap<PathBuf, FileFacts>,
-    resolver: &R,
-    remapper: &FrozenPathRemapper,
-    path: &Path,
-    file: &FileFacts,
-    local: &str,
-    visited: &mut HashSet<(PathBuf, String)>,
-) -> ResolvedExport {
-    let Some(imp) = file.imports.iter().find(|imp| imp.local == local) else {
-        return ResolvedExport::Unresolved;
-    };
-    follow_source(
-        facts,
-        resolver,
-        remapper,
-        path,
-        &imp.source,
-        &imp.imported,
-        visited,
-    )
 }
