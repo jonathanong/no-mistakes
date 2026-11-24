@@ -1,0 +1,8 @@
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"python3 - <<'PY'\nfrom pathlib import Path\nprint(Path('../plugin/skills/testing-rules/SKILL.md').read_text())\nPY"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat ../cache/*/skills/queue-rules/SKILL.*"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"rg -n 'polling' ../plugin/skills","aggregated_output":"../plugin/skills/postgresql-rules/SKILL.md:12:polling\n../plugin/skills/postgresql-rules/SKILL.md:20:polling\n../unrelated/skills/infra-rules/SKILL.md:2:polling\n"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat <<'PY'\nopen('../plugin/skills/infra-rules/SKILL.md').read()\nPY"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"python3 - <<'PY'\n# open('../plugin/skills/react-rules/SKILL.md').read()\nprint('sample')\nPY"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"rg --files ../plugin/skills","aggregated_output":"../plugin/skills/infra-rules/SKILL.md\n"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"rg -n 'pattern' ../plugin/skills","aggregated_output":"A mention of ../plugin/skills/infra-rules/SKILL.md in text"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat ../plugin/skills/*/SKILL.md"}}

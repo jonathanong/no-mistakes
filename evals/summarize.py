@@ -18,9 +18,8 @@ Two things it does that reading the HTML report does not:
 2.  **A should-fire aggregate.** It counts trigger across every case except the
     `-neg-` slugs and the `neg-hard` flow, which are the cases where firing is
     the failure. That is the single number standing for "the description
-    carries the agent on its own". Every case runs `claude-sonnet-5-5`, so it is a
-    Claude number; Codex reads the same description but is never evaluated
-    here (see `evals/HISTORY.md`, "Codex reads the same description").
+    carries the agent on its own". Keep reports grouped by runner because
+    Claude and Codex use different agents and trigger checks.
 
 It also lists every case whose plugin arm scores below its baseline arm. The
 plugin must never make an answer worse, so `with < without` is a defect to
@@ -52,7 +51,19 @@ def _is_should_fire(name: str) -> bool:
 
 
 def _errors(runs) -> list:
-    return [r["error"] for r in runs if r.get("error")]
+    errors = []
+    for run in runs:
+        if run.get("error"):
+            errors.append(run["error"])
+        elif run.get("isolationFindings"):
+            errors.append("attempt flagged by the isolation audit")
+        elif run.get("judgeWithheld"):
+            errors.append("attempt awaiting a judge verdict")
+        else:
+            grader_errors = [grader["error"] for grader in run.get("graders", []) if "error" in grader]
+            if grader_errors:
+                errors.append("judge error: " + ", ".join(grader_errors))
+    return errors
 
 
 def _fired(runs) -> int:
@@ -125,25 +136,13 @@ def summarize(path: str) -> bool:
         print(f"    !!  {len(errors)} RUNS FAILED — these numbers are NOT a result.")
         for message, count in sorted(seen.items(), key=lambda kv: -kv[1]):
             print(f"    !!  {count:>4}x {message}")
-        print(
-            "    !!  A failed run scores 0 in BOTH arms, so the table below reads"
-        )
-        print(
-            "    !!  as a clean Δ of 0.00 rather than as the missing data it is."
-        )
+        print("    !!  The affected cases have no numeric content score below.")
         print()
 
-    # `partial` is the other way a run stops short. A `--max-cost-usd` ceiling or
-    # an interruption leaves completed runs with no per-run `error`, so nothing
-    # above catches it — but the cases that finished are an order-dependent
-    # prefix of the suite, not a sample of it, and an aggregate over them reads
-    # like a result for the whole tag set.
     partial = bool(report.get("partial"))
     if partial:
         print(f"    !!  PARTIAL RUN — {report.get('partialReason') or 'no reason given'}")
-        print("    !!  The cases below are the prefix that finished, not the suite")
-        print("    !!  that was asked for. Per-case rows stand; the aggregate is")
-        print("    !!  suppressed, since its denominator is an accident of ordering.")
+        print("    !!  Per-case scores are shown where available. The aggregate is suppressed.")
         print()
 
     print(f"    {'case':<38} {'fired':>7} {'with':>6} {'without':>8} {'delta':>7}")

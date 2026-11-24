@@ -2,14 +2,54 @@
 """On-disk attempts for the Codex rules runner.
 
 Each attempt writes its JSONL transcript before grading. `result.json` is the
-completion marker. A later invocation loads that marker and does not exec again.
+grading marker. A later invocation uses the saved exec to retry judge errors.
 `aggregate-result.json` is rewritten from the markers so a crash keeps the
 attempts that already finished.
 """
+import hashlib
 import json
 from pathlib import Path
 
-from codex_rules_grade import aggregate_report
+from codex_rules_env import exec_argv, plugin_files
+from codex_rules_grade import aggregate_report, judge_argv, judge_error_count, judge_prompt
+
+
+def _digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def check_run_inputs(output: Path, cases: list, runs: int | None, plugin_src: Path) -> None:
+    """Bind future paid resumes to the inputs that produced this directory."""
+    inputs = {
+        "agent": exec_argv("codex", Path("workspace"), Path("last-message.txt"), ""),
+        "judge": judge_argv() + [judge_prompt("", "")],
+        "plugin": {
+            path.relative_to(plugin_src).as_posix(): _digest(path.read_bytes())
+            for path in plugin_files(plugin_src)
+        },
+        "cases": {
+            case["name"]: {
+                "prompt": _digest(case["prompt"].encode("utf-8")),
+                "timeoutSeconds": case["timeout_seconds"],
+                "runs": case["runs"] if runs is None else runs,
+                "graders": {
+                    path.name: _digest(path.read_bytes())
+                    for path in (case["dir"] / "graders").glob("*.md")
+                },
+            }
+            for case in cases
+        },
+    }
+    manifest = output / "run-inputs.json"
+    fingerprint = _digest(json.dumps(inputs, sort_keys=True).encode("utf-8"))
+    expected = {"version": 1, "sha256": fingerprint}
+    if manifest.is_file():
+        if json.loads(manifest.read_text()) != expected:
+            raise SystemExit("refusing resume: run inputs changed; use a new --output directory")
+    elif (output / "attempts").exists() or (output / "aggregate-result.json").exists():
+        raise SystemExit("refusing resume: saved run has no input fingerprint; use a new --output directory")
+    else:
+        _atomic_json(manifest, expected)
 
 
 def slot(output: Path, case_name: str, arm: str, index: int) -> Path:
@@ -86,10 +126,34 @@ def save_result(path: Path, row: dict) -> None:
     _atomic_json(path / "result.json", row)
 
 
+def in_progress(output: Path) -> bool:
+    aggregate = output / "aggregate-result.json"
+    if not aggregate.is_file():
+        return False
+    report = json.loads(aggregate.read_text())
+    return report.get("inProgress", report.get("partial", False))
+
+
 def write_aggregate(output: Path, cases: list, *, partial: bool) -> dict:
     report = aggregate_report(cases)
-    report["partial"] = partial
-    report["partialReason"] = "codex rules run still in progress" if partial else None
+    rows = [row for case in cases for arm in case["arms"].values() for row in arm]
+    judge_errors = sum(judge_error_count(row) for row in rows)
+    flagged = sum(bool(row.get("isolationFindings")) for row in rows)
+    withheld = sum(bool(row.get("judgeWithheld")) and not row.get("isolationFindings") for row in rows)
+    report["inProgress"] = partial
+    report["judgeErrorCount"] = judge_errors
+    report["isolationFlaggedAttempts"] = flagged
+    reasons = []
+    if partial:
+        reasons.append("codex rules run still in progress")
+    if judge_errors:
+        reasons.append(f"{judge_errors} judge error(s)")
+    if flagged:
+        reasons.append(f"{flagged} attempt(s) flagged by the isolation audit")
+    if withheld:
+        reasons.append(f"{withheld} attempt(s) awaiting a judge verdict")
+    report["partial"] = bool(reasons)
+    report["partialReason"] = ", ".join(reasons) or None
     output.mkdir(parents=True, exist_ok=True)
     _atomic_json(output / "aggregate-result.json", report)
     return report
