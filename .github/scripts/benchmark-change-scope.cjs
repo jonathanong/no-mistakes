@@ -32,7 +32,7 @@ function affectsEveryBenchmark(path) {
   return (
     path === "Cargo.toml" ||
     path === "Cargo.lock" ||
-    path === ".github/workflows/ci.yml" ||
+    path === ".github/workflows/benchmarks.yml" ||
     path === ".github/scripts/benchmark-change-scope.cjs" ||
     path === ".github/scripts/benchmark-handoff.sh" ||
     path === "tests/js/benchmark-change-scope.test.js" ||

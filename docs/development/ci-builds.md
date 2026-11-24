@@ -1128,6 +1128,24 @@ main run can finish and upload Rust coverage when another merge lands. GitHub's
 default concurrency queue can still replace an older pending main run before
 its jobs start.
 
+Benchmarks run in their own
+[Benchmarks workflow](../../.github/workflows/benchmarks.yml), not in Test CI.
+The `bench` build (about 27 minutes on `ubuntu-24.04-arm`) and the
+`benchmark-shards` matrix, `frontend-lifecycle-smoke`, and the `Benchmarks`
+gate moved unchanged: one matrix job per shard, the same pinned actions,
+CodSpeed setup, caches, timeouts, and per-job `id-token: write` on the shard and
+smoke jobs. Its `changes` job runs the same
+[`benchmark-change-scope.cjs`](../../.github/scripts/benchmark-change-scope.cjs),
+so the `benchmarks` and `benchmark-scope` outputs and the pull-request opt-in
+markers are unchanged. It triggers on `pull_request` and pushes to `main`; Test
+CI's measurement refs and `workflow_dispatch` never ran benchmarks. Test CI's
+end-to-end time on `main` no longer includes the benchmark build or shards.
+Its concurrency group is one per pull request and one per ref on `main`, and
+both cancel superseded runs: CodSpeed compares against the nearest benchmarked
+ancestor, so a cancelled `main` run only moves the baseline back one commit.
+`Benchmarks` is not a required check. Cache retention still looks up each
+handoff cache's source run by ID, so a running Benchmarks run keeps its handoff.
+
 Rust coverage floors use one `cargo llvm-cov report --json --summary-only`
 export and [a totals checker](../../.github/scripts/rust-coverage-floors.cjs).
 The checker sums covered and total counts across export records and compares

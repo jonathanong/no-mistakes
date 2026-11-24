@@ -4,6 +4,7 @@ const path = require("node:path");
 const { test } = require("node:test");
 const workflow = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
+const benchmarkWorkflow = readFileSync(path.join(__dirname, "../workflows/benchmarks.yml"), "utf8");
 const steps = (body) => body.split("      - name: ").slice(1);
 const paths = (step) =>
   step
@@ -94,7 +95,7 @@ test("dependency caches are main-only, dependency-only and shared across compati
 });
 
 test("benchmark PRs use artifact transport while main may save and probe the handoff cache", () => {
-  const body = job("bench");
+  const body = benchmarkWorkflow.split("\n  bench:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
   for (const name of ["Cache benchmark executables", "Confirm exact benchmark cache is available"])
     assert.match(
       body.split(`- name: ${name}\n`)[1].split("\n      - name:")[0],
