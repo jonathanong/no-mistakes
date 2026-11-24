@@ -56,7 +56,11 @@ fn parallel_readers_share_one_rwlock_scan_on_dense_source() {
     let work = observer.snapshot().work;
     assert_eq!(work.get("suppression.header_builds"), Some(&1));
     assert_eq!(work.get("suppression.line_index_builds"), Some(&1));
-    assert_eq!(work.get("suppression.line_visits"), Some(&3_105));
+    let last_finding_line = base.last().unwrap().line as u64;
+    assert_eq!(
+        work.get("suppression.line_visits"),
+        Some(&last_finding_line)
+    );
     assert_eq!(work.get("suppression.standalone_fallbacks"), None);
 }
 

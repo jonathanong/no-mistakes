@@ -3,8 +3,8 @@
 
 The two arms share one config, one workspace copy, and one exec plan.
 The with arm also installs plugins/no-mistakes-rules through a marketplace
-that lists that plugin and nothing else. Neither arm reads the caller's
-home directory.
+that lists that plugin and nothing else. The isolated configuration does
+not restrict what host files a sandboxed command can read.
 """
 import json
 import os
@@ -51,11 +51,21 @@ def _mentions_rules(text: str) -> bool:
     return False
 
 
+def _plugin_children(root: Path):
+    return (path for path in root.iterdir() if path.name != ".git" and not path.is_symlink())
+
+
+def plugin_files(root: Path):
+    for child in _plugin_children(root):
+        if child.is_dir():
+            yield from plugin_files(child)
+        elif child.is_file():
+            yield child
+
+
 def _copy_tree(src: Path, dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    for child in src.iterdir():
-        if child.name == ".git" or child.is_symlink():
-            continue
+    for child in _plugin_children(src):
         target = dest / child.name
         if child.is_dir():
             _copy_tree(child, target)

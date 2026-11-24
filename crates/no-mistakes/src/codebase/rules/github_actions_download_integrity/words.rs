@@ -18,7 +18,6 @@ pub(in crate::codebase::rules) struct Command {
     pub(in crate::codebase::rules) words: Vec<Word>,
 }
 
-mod heredoc;
 mod scan;
 
 pub(in crate::codebase::rules) struct Parse {

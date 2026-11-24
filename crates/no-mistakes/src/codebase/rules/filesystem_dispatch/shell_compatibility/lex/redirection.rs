@@ -1,6 +1,5 @@
-mod delimiter;
-
 use super::{Lexer, Shell, Word};
+use crate::codebase::shell_heredoc::{self, CarriageReturn, Document, Operator};
 
 impl<'a> Lexer<'a> {
     pub(super) fn is_fd_prefix(&self, word: &str) -> bool {
@@ -12,15 +11,23 @@ impl<'a> Lexer<'a> {
     }
 
     pub(super) fn redirection(&mut self) -> Option<Word<'a>> {
-        if self.take("<<<") || self.take("&>>") || self.take("&>") {
-            return self.redirect_word();
-        }
-        if self.take("<<") {
-            let strip_tabs = self.take("-");
+        if let Some(operator) = shell_heredoc::operator(self.rest().as_bytes(), false) {
+            self.offset += operator.width();
             let word = self.redirect_word()?;
-            let delimiter = delimiter::unquote(word.raw)?;
-            self.heredocs.push((delimiter, strip_tabs));
-            return None;
+            return match operator {
+                Operator::HereString => Some(word),
+                Operator::Document { strip_tabs } => {
+                    let delimiter = shell_heredoc::unquote(word.raw)?;
+                    self.heredocs.push(Document {
+                        delimiter,
+                        strip_tabs,
+                    });
+                    None
+                }
+            };
+        }
+        if self.take("&>>") || self.take("&>") {
+            return self.redirect_word();
         }
         self.advance();
         if self
@@ -55,24 +62,18 @@ impl<'a> Lexer<'a> {
     }
 
     pub(super) fn skip_heredocs(&mut self) {
-        for (delimiter, strip_tabs) in std::mem::take(&mut self.heredocs) {
-            while self.current().is_some() {
-                let rest = self.rest();
-                let (line, width) = rest
-                    .split_once('\n')
-                    .map_or((rest, rest.len()), |(line, _)| (line, line.len() + 1));
-                self.offset += width;
-                self.line += 1;
-                let line = line.strip_suffix('\r').unwrap_or(line);
-                let line = if strip_tabs {
-                    line.trim_start_matches('\t')
-                } else {
-                    line
-                };
-                if line == delimiter {
-                    break;
-                }
-            }
+        let source = self.source.as_bytes();
+        for document in self.heredocs.drain(..) {
+            let body = shell_heredoc::skip_body(
+                source,
+                self.offset,
+                document.delimiter.bytes(),
+                document.strip_tabs,
+                CarriageReturn::StripTrailing,
+            );
+            self.line += body.newlines
+                + usize::from(body.end > self.offset && source[body.end - 1] != b'\n');
+            self.offset = body.end;
         }
     }
 }

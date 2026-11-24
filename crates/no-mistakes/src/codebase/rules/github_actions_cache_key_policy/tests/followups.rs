@@ -102,13 +102,6 @@ fn checksum_and_lockfile_must_share_one_command() {
 
 #[test]
 fn here_strings_and_arithmetic_shifts_do_not_swallow_output_writes() {
-    assert!(output_syntax::heredoc_start("cat <<< \"note\"").is_none());
-    assert!(output_syntax::heredoc_start("size=$((1<<3))").is_none());
-    assert_eq!(
-        output_syntax::heredoc_start("echo $((1<<3)); cat >> \"$GITHUB_OUTPUT\" <<EOF")
-            .map(|(delim, _, _)| delim),
-        Some("EOF".into())
-    );
     assert_eq!(
         names(
             "digest=$(sha256sum widgets.lock)\n\
@@ -243,8 +236,6 @@ fn checksum_pipes_and_redirects_still_name_the_lockfile() {
         "sha256sum < widgets.lock | cut -c1-64",
         "widgets.lock"
     ));
-    assert!(output_syntax::heredoc_start("cat <<< \"note\"").is_none());
-    assert!(output_syntax::heredoc_start("size=$(( 1 << 2 ))").is_none());
 }
 
 #[test]

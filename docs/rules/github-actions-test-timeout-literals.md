@@ -112,6 +112,9 @@ Use `no-mistakes-disable-next-line github-actions-test-timeout-literals` or
 `no-mistakes-disable-file` for a one-off test exception.
 Line and next-line suppressions require an exact finding line.
 Use file suppression when the exception applies to the full file.
+The scanner skips such a file after reading its suppression header. When
+`--include-suppressed` or unused-directive auditing is active, it scans the file
+to determine which findings the directive suppresses.
 
 Stale allow reporting retains this rule's established diagnostic messages and
 severity for checked inputs. Entries outside the checked scope stay silent;

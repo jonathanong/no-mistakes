@@ -6,10 +6,10 @@ use sqlparser::ast::{
     TableObject,
 };
 
-pub(super) fn upsert_key(
+pub(super) fn upsert_keys(
     insert: &Insert,
     positions: PlaceholderPositions<'_>,
-) -> Option<RowAccess> {
+) -> Option<Vec<RowAccess>> {
     let TableObject::TableName(relation) = &insert.table else {
         return None;
     };
@@ -31,20 +31,12 @@ pub(super) fn upsert_key(
     let SetExpr::Values(values) = source.body.as_ref() else {
         return None;
     };
-    let [values] = values.rows.as_slice() else {
-        return None;
-    };
     if source.with.is_some()
         || source.limit_clause.is_some()
         || source.fetch.is_some()
         || generated_name(relation, positions)
         || generated(key, positions)
         || !plain_assignments(&update.assignments)
-        || values.content.len() != insert.columns.len()
-        || !values
-            .content
-            .iter()
-            .all(|value| plain_value(value).is_some())
     {
         return None;
     }
@@ -60,6 +52,23 @@ pub(super) fn upsert_key(
     let target_index = insert.columns.iter().position(|name| {
         matches!(name.0.as_slice(), [ObjectNamePart::Identifier(id)] if ident_key(id) == column)
     })?;
-    let value = plain_value(&values.content[target_index])?.to_string();
-    Some(Key { column, value }.row(relation))
+    values
+        .rows
+        .iter()
+        .map(|row| {
+            if row.content.len() != insert.columns.len()
+                || !row.content.iter().all(|value| plain_value(value).is_some())
+            {
+                return None;
+            }
+            let value = plain_value(&row.content[target_index])?.to_string();
+            Some(
+                Key {
+                    column: column.clone(),
+                    value,
+                }
+                .row(relation.clone()),
+            )
+        })
+        .collect()
 }

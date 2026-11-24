@@ -5,17 +5,17 @@
         Print cases x arms x runs and exit. This does not call a model.
 
     python3 evals/codex_rules.py --regrade --output <dir>
-        Recompute skill-fired from saved transcripts. No exec and no judge.
+        Recompute skill-fired and audit findings from saved transcripts.
 
     python3 evals/codex_rules.py --run --tag rules --runs 3 --output <dir>
         Run both arms. Requires CODEX_AUTH_FILE or CODEX_API_KEY for the
         spare-budget Codex account. Refuses ~/.codex and ~/.claude.
 
 The default command is the preview. --run is what spends money. --regrade
-only updates skill-fired on attempts that already have result.json. Each
+updates skill-fired and the isolation audit on attempts with result.json. Each
 attempt writes its JSONL transcript under --output before the next attempt
-starts. Running the same command again skips attempts that already have
-result.json.
+starts. Running the same command again reuses saved execs and retries judge
+errors.
 """
 import argparse
 import fnmatch
@@ -47,10 +47,12 @@ from codex_rules_grade import (
     format_trigger,
     grade_run,
     judge_argv,
+    judge_error_count,
     parse_frontmatter,
     passed_from_judge_output,
     skill_fired,
 )
+from codex_rules_trigger import external_path_findings
 
 _HERE = Path(__file__).resolve().parent
 
@@ -307,28 +309,47 @@ def _saved_path(value) -> Path | None:
     return Path(value)
 
 
-def _grade_result(case: dict, result: dict, judge) -> dict:
-    error = _attempt_error(result)
-    if error:
-        return {"error": error, "graders": []}
-    return grade_run(
-        case["dir"],
+def _isolation_findings(result: dict) -> list:
+    return external_path_findings(
         result["stdout"],
-        result["last_message"],
-        judge,
-        _saved_path(result.get("plugin_root")),
-        marketplace_root=_saved_path(result.get("marketplace_root")),
-        attempt_root=_saved_path(result.get("attempt_root")),
+        _saved_path(result.get("attempt_root")),
         cwd=_saved_path(result.get("cwd")),
     )
+
+
+def _grade_result(case: dict, result: dict, judge, previous: dict | None) -> dict:
+    findings = _isolation_findings(result)
+    error = _attempt_error(result)
+    if error:
+        row = {"error": error, "graders": []}
+    else:
+        row = grade_run(
+            case["dir"],
+            result["stdout"],
+            result["last_message"],
+            judge,
+            _saved_path(result.get("plugin_root")),
+            marketplace_root=_saved_path(result.get("marketplace_root")),
+            attempt_root=_saved_path(result.get("attempt_root")),
+            cwd=_saved_path(result.get("cwd")),
+            previous=previous,
+            judge_allowed=not findings,
+        )
+        if findings:
+            row["judgeWithheld"] = True
+    if findings:
+        row["isolationFindings"] = findings
+    return row
 
 
 def _one_attempt(case, arm, index, output, run_exec, judge, user_home, auth_file, api_key, plugin_src, keep_temp):
     path = store.slot(output, case["name"], arm, index)
     done = store.read_result(path)
-    if done is not None:
+    if done is not None and not (judge_error_count(done) or done.get("judgeWithheld")):
         return done
     finished = store.read_exec(path)
+    if done is not None and finished is None:
+        raise SystemExit(f"cannot regrade saved attempt without exec data: {case['name']} {arm} {index}")
     if finished is None:
         root = Path(tempfile.mkdtemp(prefix="codex-rules-"))
         try:
@@ -355,12 +376,12 @@ def _one_attempt(case, arm, index, output, run_exec, judge, user_home, auth_file
                 result[key] = plan.get(key)
             store.save_exec(path, result)
             finished = result
-            row = _grade_result(case, finished, judge)
+            row = _grade_result(case, finished, judge, done)
         finally:
             if not keep_temp:
                 shutil.rmtree(root, ignore_errors=True)
     else:
-        row = _grade_result(case, finished, judge)
+        row = _grade_result(case, finished, judge, done)
     row["transcript"] = store.transcript_rel(case["name"], arm, index)
     store.save_result(path, row)
     return row
@@ -382,7 +403,7 @@ def run_suite(
 ) -> dict:
     if runs is not None and runs < 1:
         raise SystemExit("refusing: --runs must be >= 1")
-    output.mkdir(parents=True, exist_ok=True)
+    store.check_run_inputs(output, cases, runs, plugin_src)
     if check_plugins and _needs_exec(cases, runs, output):
         preflight(user_home, auth_file, api_key, plugin_src, list_fn)
     rows = []
@@ -412,14 +433,23 @@ def run_suite(
 
 
 def _regrade_slot(case: dict, path: Path, row: dict) -> dict:
-    if row.get("error"):
-        return row
     finished = store.read_exec(path)
     if finished is None:
         return row
+    updated = dict(row)
+    findings = _isolation_findings(finished)
+    if findings:
+        updated["isolationFindings"] = findings
+    else:
+        updated.pop("isolationFindings", None)
+    count = judge_error_count(updated)
+    if count:
+        updated["judgeErrorCount"] = count
+    if row.get("error"):
+        return updated
     grader = case["dir"] / "graders" / "skill-fired.md"
     if not grader.is_file():
-        return row
+        return updated
     meta, _body = parse_frontmatter(grader.read_text())
     passed = skill_fired(
         meta,
@@ -430,12 +460,11 @@ def _regrade_slot(case: dict, path: Path, row: dict) -> dict:
         cwd=_saved_path(finished.get("cwd")),
     )
     graders = []
-    for item in row.get("graders", []):
+    for item in updated.get("graders", []):
         if item.get("name") == "skill-fired":
             item = dict(item)
             item["passed"] = passed
         graders.append(item)
-    updated = dict(row)
     updated["graders"] = graders
     return updated
 
@@ -488,9 +517,10 @@ def _still_partial(output: Path) -> bool:
 
 
 def regrade_output(selected: list, output: Path) -> dict:
-    """Recompute skill-fired from saved transcripts. Does not exec or judge."""
+    """Recompute transcript checks from saved attempts. Does not exec or judge."""
+    partial = store.in_progress(output) or _still_partial(output)
     rows = _saved_rows(output, {case["name"] for case in selected})
-    return store.write_aggregate(output, rows, partial=_still_partial(output))
+    return store.write_aggregate(output, rows, partial=partial)
 
 
 def main(argv: list | None = None) -> int:
@@ -499,7 +529,7 @@ def main(argv: list | None = None) -> int:
     parser.add_argument(
         "--regrade",
         action="store_true",
-        help="recompute skill-fired from saved transcripts; no exec and no judge",
+        help="recompute skill-fired and audit findings from saved transcripts; no model calls",
     )
     parser.add_argument("--all", action="store_true", help="run every rules case")
     parser.add_argument("--tag", action="append", default=[])
@@ -564,7 +594,7 @@ def main(argv: list | None = None) -> int:
         keep_temp=args.keep_temp,
     )
     print(format_trigger(report))
-    return 0
+    return int(report["partial"])
 
 
 if __name__ == "__main__":

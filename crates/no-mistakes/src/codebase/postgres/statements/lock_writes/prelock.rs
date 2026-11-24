@@ -29,9 +29,13 @@ pub(super) fn collect(
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
         Statement::Insert(insert) => {
-            if let Some(key) = upsert::upsert_key(insert, positions) {
-                out.conditional_write_keys.push(key);
-                out.conditional_write_unique = true;
+            if let Some(keys) = upsert::upsert_keys(insert, positions) {
+                if keys.len() == 1 {
+                    out.conditional_write_keys = keys;
+                    out.conditional_write_unique = true;
+                } else {
+                    out.multi_row_upsert_keys = Some(keys.into_boxed_slice());
+                }
             }
         }
         _ => {}
