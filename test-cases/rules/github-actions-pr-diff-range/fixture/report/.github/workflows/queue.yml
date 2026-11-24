@@ -8,3 +8,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - run: echo "${{ github.event.pull_request.base.sha }}"
+  read-through-env:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - run: echo "$BASE"

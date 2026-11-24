@@ -36,17 +36,30 @@ fn two_dot_and_two_argument_base_head_ranges_are_reported() {
 }
 
 #[test]
-fn base_paired_with_github_sha_is_reported_in_every_form() {
+fn base_paired_with_github_sha_is_reported_when_other_events_can_run() {
     for range in [
         format!("{BASE}...${{{{ github.sha }}}}"),
         format!("{BASE}..${{{{ github.sha }}}}"),
         "origin/${{ github.base_ref }} ${{ github.sha }}".to_string(),
     ] {
         assert_eq!(
-            hits("pull_request", &format!("git diff {range}")),
+            hits("[pull_request, push]", &format!("git diff {range}")),
             1,
             "{range}"
         );
+        // A merge_group workflow also reports the empty pull_request read.
+        let reads = range.contains("pull_request.");
+        assert_eq!(
+            hits("[pull_request, merge_group]", &format!("git diff {range}")),
+            1 + usize::from(reads),
+            "{range}"
+        );
+        assert_eq!(
+            hits("pull_request", &format!("git diff {range}")),
+            0,
+            "{range}"
+        );
+        assert_eq!(hits("pull_request_target", &format!("git diff {range}")), 0);
     }
 }
 
@@ -209,14 +222,25 @@ fn saved_fixtures_report_only_unsound_ranges() {
             .len()
     };
     let workflow = |file: &str| format!(".github/workflows/{file}");
-    assert_eq!(
-        run("report", &[&workflow("pull.yml"), &workflow("queue.yml")]),
-        5
-    );
+    let report = [
+        workflow("paired.yml"),
+        workflow("pull.yml"),
+        workflow("queue.yml"),
+    ];
+    assert_eq!(run("report", &[&report[0], &report[1], &report[2]]), 6);
     let pass = [
         workflow("pass.yml"),
         workflow("pull-only.yml"),
         workflow("push.yml"),
     ];
     assert_eq!(run("pass", &[&pass[0], &pass[1], &pass[2]]), 0);
+}
+
+#[test]
+fn environment_reads_point_at_the_env_entry() {
+    let yaml = format!(
+        "on: merge_group\njobs:\n  a:\n    env:\n      B: {BASE}\n    steps:\n      - run: echo \"$B\"\n"
+    );
+    let found = check_source(WF, &yaml);
+    assert_eq!(found.iter().map(|hit| hit.line).collect::<Vec<_>>(), [5]);
 }

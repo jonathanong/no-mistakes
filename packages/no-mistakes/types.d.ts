@@ -52,6 +52,7 @@ export type * from "./postgres-column-check-constraints-types";
 export type * from "./postgres-grouping-not-aggregation-types";
 
 export type * from "./github-actions-download-integrity-types";
+export type * from "./github-actions-no-poll-wait-job-types";
 export type * from "./github-actions-run-command-policy-types";
 export type * from "./workflow-topology-policy-types";
 

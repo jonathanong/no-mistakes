@@ -1,18 +1,21 @@
 use super::diff::{ranges, Form, Range};
 use super::exprs::{extract, End};
+use super::yaml_shapes::{env_of, events, get, guards};
 use super::RULE_ID;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::codebase::rules::github_actions_workflow_files::gha_kind;
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::scalar_name;
 use crate::codebase::rules::github_actions_workflow_files::script_line::yaml_line;
 use crate::codebase::rules::RuleFinding;
-use serde_yaml::{Mapping, Value};
+use serde_yaml::Value;
 use std::collections::BTreeMap;
 
 const PULL_REQUEST_READ: &str = "github.event.pull_request.";
 
 struct Step<'a> {
     rel: &'a str,
+    source: &'a str,
+    mixed: bool,
     job: &'a str,
     index: usize,
     script: &'a str,
@@ -34,6 +37,7 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
         .iter()
         .any(|name| matches!(name.as_str(), "pull_request" | "pull_request_target"));
     let queue = events.iter().any(|name| name == "merge_group");
+    let mixed = queue || events.iter().any(|name| name == "push");
     let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) else {
         return Vec::new();
     };
@@ -63,6 +67,8 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
             env.extend(env_of(get(step, "env")));
             let step = Step {
                 rel,
+                source,
+                mixed,
                 job: &name,
                 index: index + 1,
                 script,
@@ -83,14 +89,18 @@ fn judge(step: &Step, pull: bool, queue: bool) -> Vec<RuleFinding> {
     if pull {
         let (text, exprs) = extract(step.script);
         for range in ranges(&text, &exprs, &step.env) {
-            if let Some(reason) = reason(&range) {
+            if let Some(reason) = reason(&range, step.mixed) {
                 out.push(finding(step, range.line, "diff", reason));
             }
         }
     }
     if queue && !step.guarded {
-        if let Some(line) = pull_request_read(step) {
-            out.push(finding(step, line, PULL_REQUEST_READ, MERGE_GROUP));
+        match pull_request_read(step) {
+            Some(Read::Script(line)) => {
+                out.push(finding(step, line, PULL_REQUEST_READ, MERGE_GROUP));
+            }
+            Some(Read::Env(line)) => out.push(finding_at(step, line, MERGE_GROUP)),
+            None => {}
         }
     }
     out
@@ -110,12 +120,12 @@ const MERGE_GROUP: &str = "reads `github.event.pull_request.*` in a workflow tri
     `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with \
     `github.event_name`";
 
-fn reason(range: &Range) -> Option<&'static str> {
+fn reason(range: &Range, mixed: bool) -> Option<&'static str> {
     let ends = [range.left, range.right];
     let base = ends
         .iter()
         .any(|end| matches!(end, End::BaseSha | End::BaseRef));
-    if base && ends.contains(&End::GithubSha) {
+    if mixed && base && ends.contains(&End::GithubSha) {
         return Some(PAIRED);
     }
     let both = ends.contains(&End::BaseSha) && ends.contains(&End::HeadSha);
@@ -124,6 +134,10 @@ fn reason(range: &Range) -> Option<&'static str> {
 
 fn finding(step: &Step, script_line: usize, token: &str, reason: &str) -> RuleFinding {
     let line = yaml_line(step.located, step.script, script_line, token);
+    finding_at(step, line, reason)
+}
+
+fn finding_at(step: &Step, line: usize, reason: &str) -> RuleFinding {
     RuleFinding {
         causes: Vec::new(),
         rule: RULE_ID.to_string(),
@@ -138,56 +152,31 @@ fn finding(step: &Step, script_line: usize, token: &str, reason: &str) -> RuleFi
     }
 }
 
-fn pull_request_read(step: &Step) -> Option<usize> {
-    let referenced = step.env.iter().any(|(name, value)| {
+enum Read {
+    Script(usize),
+    Env(usize),
+}
+
+fn pull_request_read(step: &Step) -> Option<Read> {
+    if let Some(index) = step
+        .script
+        .lines()
+        .position(|line| line.contains(PULL_REQUEST_READ))
+    {
+        return Some(Read::Script(index + 1));
+    }
+    let (name, _) = step.env.iter().find(|(name, value)| {
         value.contains(PULL_REQUEST_READ)
             && (step.script.contains(&format!("${name}"))
                 || step.script.contains(&format!("${{{name}}}")))
-    });
-    let direct = step
-        .script
+    })?;
+    Some(Read::Env(env_line(step.source, name).unwrap_or(1)))
+}
+
+fn env_line(source: &str, name: &str) -> Option<usize> {
+    let key = format!("{name}:");
+    source
         .lines()
-        .position(|line| line.contains(PULL_REQUEST_READ));
-    match direct {
-        Some(index) => Some(index + 1),
-        None => referenced.then_some(1),
-    }
-}
-
-fn guards(condition: Option<&Value>) -> bool {
-    condition
-        .and_then(Value::as_str)
-        .is_some_and(|text| text.contains("github.event_name"))
-}
-
-fn events(value: &Value) -> Vec<String> {
-    let Some(on) = value
-        .get("on")
-        .or_else(|| value.as_mapping()?.get(Value::Bool(true)))
-    else {
-        return Vec::new();
-    };
-    match on {
-        Value::String(name) => vec![name.clone()],
-        Value::Sequence(names) => names.iter().filter_map(string).collect(),
-        Value::Mapping(map) => map.keys().filter_map(string).collect(),
-        _ => Vec::new(),
-    }
-}
-
-fn string(value: &Value) -> Option<String> {
-    value.as_str().map(str::to_string)
-}
-
-fn env_of(value: Option<&Value>) -> BTreeMap<String, String> {
-    let Some(map) = value.and_then(Value::as_mapping) else {
-        return BTreeMap::new();
-    };
-    map.iter()
-        .filter_map(|(key, value)| Some((key.as_str()?.to_string(), value.as_str()?.to_string())))
-        .collect()
-}
-
-fn get<'a>(map: &'a Mapping, key: &str) -> Option<&'a Value> {
-    map.get(Value::String(key.to_owned()))
+        .position(|line| line.trim_start().starts_with(&key) && line.contains(PULL_REQUEST_READ))
+        .map(|index| index + 1)
 }

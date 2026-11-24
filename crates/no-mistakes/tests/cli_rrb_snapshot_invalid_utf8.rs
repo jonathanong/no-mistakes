@@ -105,6 +105,14 @@ fn invalid_utf8_github_actions() {
                 "github_actions_action_input_policy",
                 "github-actions-action-input-policy",
             ),
+            c(
+                "github_actions_no_poll_wait_job",
+                "github-actions-no-poll-wait-job",
+            ),
+            c(
+                "github_actions_pr_diff_range",
+                "github-actions-pr-diff-range",
+            ),
         ],
         &[],
         &[],
@@ -153,6 +161,16 @@ fn invalid_utf8_github_actions() {
         &report,
         "github_actions_action_input_policy",
         "github-actions-action-input-policy",
+    );
+    assert_definite(
+        &report,
+        "github_actions_no_poll_wait_job",
+        "github-actions-no-poll-wait-job",
+    );
+    assert_definite(
+        &report,
+        "github_actions_pr_diff_range",
+        "github-actions-pr-diff-range",
     );
 }
 

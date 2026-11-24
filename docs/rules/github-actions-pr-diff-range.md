@@ -30,11 +30,17 @@ a `git diff` whose range is:
   `github.event.pull_request.head.sha`, in either order, or
 - a range of any form (`..`, `...`, or two arguments) that pairs
   `github.event.pull_request.base.sha`, or `github.base_ref` (also written
-  `origin/${{ github.base_ref }}`), with `github.sha`.
+  `origin/${{ github.base_ref }}`), with `github.sha`. This pairing is judged
+  only when the workflow can also run on `push` or `merge_group`, where
+  `github.sha` means something else. In a workflow triggered only by
+  `pull_request` or `pull_request_target`, `github.sha` is the merge commit, so
+  `git diff origin/${{ github.base_ref }}...${{ github.sha }}` is a correct
+  change set and is not reported.
 
 In a workflow triggered by `merge_group`, it reports a step that reads
-`github.event.pull_request.*`, which is empty there. A step or job whose `if`
-mentions `github.event_name` is treated as guarded and is not reported.
+`github.event.pull_request.*`, which is empty there. A read through an `env`
+variable is reported on the `env` entry. A step or job whose `if` mentions
+`github.event_name` is treated as guarded and is not reported.
 
 A range end is recognized when it is the expression itself, optionally behind
 `origin/`, or a `$NAME` / `${NAME}` variable that a workflow, job, or step
@@ -90,8 +96,8 @@ jobs:
 Use a three-dot diff with sufficient `fetch-depth`, or diff the merge commit
 with `git diff HEAD^1 HEAD`. For a merge-queue run, use
 `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`.
-Never pair `github.event.pull_request.base.sha` or `github.base_ref` with
-`github.sha`.
+In a workflow that also runs on `push` or `merge_group`, do not pair
+`github.event.pull_request.base.sha` or `github.base_ref` with `github.sha`.
 
 ## Analysis
 

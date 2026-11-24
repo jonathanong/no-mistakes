@@ -122,6 +122,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "github_actions_no_poll_wait_job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/compact.yml",
+          "line": 8,
+          "message": ".github/workflows/compact.yml:8: job `unit` step 1 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "target": "unit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_pr_diff_range": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/compact.yml",
+          "line": 8,
+          "message": ".github/workflows/compact.yml:8: job `unit` step 1 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "target": "unit"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "github_actions_step_timeouts": {
     "exitCode": 1,
     "report": {

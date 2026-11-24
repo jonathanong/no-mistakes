@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 mod diff;
 mod exprs;
 mod runs;
+mod yaml_shapes;
 
 pub const RULE_ID: &str = "github-actions-pr-diff-range";
 

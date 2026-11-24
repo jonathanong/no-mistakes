@@ -188,6 +188,7 @@ test("check rule options compile from the package root", () => {
     [
       join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/github-actions-no-poll-wait-job/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
@@ -510,6 +511,21 @@ test("workflow topology policy exports the reusable workflow lock option", () =>
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/workflow-topology-policy-types";/,
+  );
+});
+
+test("GitHub Actions no-poll-wait-job exports its option type", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-no-poll-wait-job-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface GithubActionsNoPollWaitJobOptions\b/);
+  for (const field of ["pollCommands?: string[];", "ignoreForLoops?: boolean;"]) {
+    assert.ok(declarations.includes(field), `missing ${field}`);
+  }
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-no-poll-wait-job-types";/,
   );
 });
 
