@@ -1,6 +1,5 @@
 use crate::edge_index::PreparedRelationshipIndex;
 use crate::queue::extract::FileFacts;
-use crate::queue::extract_model::ProducerBinding;
 use crate::queue::source::relative_string;
 use crate::queue::types::{
     Diagnostic, Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, QueueProducer, QueueWorker,
@@ -104,7 +103,7 @@ pub(super) fn diagnostics(
     out.extend(
         producers
             .iter()
-            .filter_map(|p| unresolved_producer(root, facts, p)),
+            .filter_map(|p| unresolved_producer(root, p)),
     );
     out.extend(workers.iter().filter_map(|w| unresolved_worker(root, w)));
     dedup_sorted(out)
@@ -131,33 +130,7 @@ pub(super) fn dedup_sorted<T: Ord>(mut values: Vec<T>) -> Vec<T> {
     values
 }
 
-/// A receiver that never connects to a queue constructor, factory or import
-/// (`new Set().add(x)`) is not a producer. See docs/cli/queues-check.md.
-fn connects_to_queue(facts: &HashMap<PathBuf, FileFacts>, producer: &InternalProducer) -> bool {
-    if producer.queue.is_some() {
-        return true;
-    }
-    let file = facts.get(&producer.site.file);
-    match &producer.site.binding {
-        ProducerBinding::Local(at) => file.is_some_and(|f| f.queue_declarations.contains_key(at)),
-        ProducerBinding::Named(name) => file.is_some_and(|f| {
-            f.queue_bindings.contains_key(name)
-                || f.pending_queue_bindings.contains_key(name)
-                || f.imports.iter().any(|import| &import.local == name)
-        }),
-        ProducerBinding::Unknown => false,
-        ProducerBinding::Flow(_) | ProducerBinding::QueueName(_) => true,
-    }
-}
-
-fn unresolved_producer(
-    root: &Path,
-    facts: &HashMap<PathBuf, FileFacts>,
-    producer: &InternalProducer,
-) -> Option<Diagnostic> {
-    if !connects_to_queue(facts, producer) {
-        return None;
-    }
+fn unresolved_producer(root: &Path, producer: &InternalProducer) -> Option<Diagnostic> {
     (producer.queue.is_none() || producer.site.job.is_none()).then(|| Diagnostic {
         severity: Severity::Warning,
         file: relative_string(root, &producer.site.file),

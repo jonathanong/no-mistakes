@@ -14,10 +14,13 @@ in JSON/YAML (and append a `## diagnostics` section in `--format md`).
 `queues check` prints only unresolved worker `.rateLimit()` receiver
 diagnostics to `stderr`, as `warning: <file>:<line> <message>`, without changing
 the exit code when there are no findings. Pass `--include-diagnostics` to print
-every queue diagnostic to `stderr` as well. A `.add(...)` call is a producer
-only when its receiver connects to a queue constructor, configured factory, or
-queue import, so `new Set().add(x)` never produces a
-`dynamic or unresolved queue producer` diagnostic.
+every queue diagnostic to `stderr` as well. A `.add(...)` or `.addBulk(...)`
+call on a `const` local initialized to a provable non-queue JavaScript built-in
+(`new Set(...)`, `new Map(...)`, `new WeakSet(...)`, `new WeakMap(...)`, an
+array literal, or a primitive/function literal) is ignored and never produces a
+`dynamic or unresolved queue producer` diagnostic. Function parameters,
+configured enqueue wrappers whose queue does not resolve, and imported names
+(including an imported `Set`) still emit `dynamic or unresolved queue producer`.
 
 Use this before finishing queue edits so every configured enqueue/worker path is
 connected. `check` is empty when the graph is consistent. For explicitly configured enqueue wrappers, object-argument selectors,
