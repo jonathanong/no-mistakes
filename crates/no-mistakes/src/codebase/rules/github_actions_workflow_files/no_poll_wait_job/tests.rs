@@ -1,4 +1,5 @@
 use super::loops::poll_loops;
+use crate::codebase::rules::RuleFinding;
 
 fn polls() -> Vec<Vec<String>> {
     vec![vec!["gh".into(), "run".into(), "view".into()]]
@@ -57,4 +58,76 @@ fn abstains_on_unbalanced_scripts_and_heredocs() {
 fn unconfigured_commands_are_not_reported() {
     let script = "until curl -fs https://example.invalid/ready; do sleep 2; done";
     assert!(lines(script, false).is_empty());
+}
+
+#[test]
+fn loops_are_ordered_and_prefixes_do_not_hide_polls() {
+    let two = "until gh run view 1; do sleep 1; done\nuntil gh run view 2; do sleep 1; done";
+    assert_eq!(lines(two, false), vec![1, 2]);
+    assert_eq!(
+        lines("until FOO=1 gh run view 1; do sleep 1; done", false),
+        vec![1]
+    );
+    assert_eq!(
+        lines("until `gh run view 1`; do sleep 1; done", false),
+        vec![1]
+    );
+    assert_eq!(
+        lines("while s=$(gh run view 1); do sleep 1; done", false),
+        vec![1]
+    );
+    assert!(lines("until echo gh run view 1; do sleep 1; done", false).is_empty());
+}
+
+fn fixture(name: &str, config: &str) -> Result<Vec<RuleFinding>, anyhow::Error> {
+    let base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-no-poll-wait-job");
+    let root = crate::codebase::ts_resolver::normalize_path(&base.join("fixture").join(name));
+    let config =
+        serde_yaml::from_str(&std::fs::read_to_string(base.join("configs").join(config)).unwrap())
+            .unwrap();
+    let names: &[&str] = match name {
+        "report" => &[
+            ".github/actions/wait/action.yml",
+            ".github/workflows/wait.yml",
+        ],
+        "pass" => &[".github/workflows/pass.yml"],
+        _ => &[".github/workflows/retry.yml"],
+    };
+    let files: Vec<_> = names.iter().map(|file| root.join(file)).collect();
+    super::check_with_files(&root, &config, &files)
+}
+
+#[test]
+fn saved_fixtures_report_only_configured_waiting_loops() {
+    assert_eq!(fixture("report", "report.yml").unwrap().len(), 4);
+    assert!(fixture("pass", "report.yml").unwrap().is_empty());
+    assert!(fixture("report", "unconfigured.yml").unwrap().is_empty());
+    assert_eq!(fixture("bounded", "report.yml").unwrap().len(), 1);
+    assert!(fixture("bounded", "bounded.yml").unwrap().is_empty());
+}
+
+#[test]
+fn blank_poll_commands_are_configuration_errors() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: super::RULE_ID.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        options: serde_yaml::from_str("pollCommands: ['  ']").unwrap(),
+        ..Default::default()
+    });
+    let error = super::check_with_files(std::path::Path::new("."), &config, &[]).unwrap_err();
+    assert!(error.to_string().contains("must name a command"), "{error}");
+}
+
+#[test]
+fn unplaceable_and_folded_scripts_still_report_a_line() {
+    let polls = polls();
+    let flow = "jobs: {a: {steps: [{run: \"until gh run view 1; do sleep 1; done\"}]}}\n";
+    let found = super::runs::check_source(".github/workflows/ci.yml", flow, &polls, false);
+    assert_eq!(found.iter().map(|hit| hit.line).collect::<Vec<_>>(), [1]);
+    let folded = "jobs:\n  a:\n    steps:\n      - run: >\n          until gh run view 1;\n          do sleep 1; done\n";
+    let found = super::runs::check_source(".github/workflows/ci.yml", folded, &polls, false);
+    assert_eq!(found.len(), 1);
+    assert!(found[0].line >= 4, "{}", found[0].line);
 }

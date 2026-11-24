@@ -57,6 +57,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/actions/wait/action.yml",
+          "line": 7,
+          "message": ".github/actions/wait/action.yml:7: composite step 1 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "run: until gh run view 123; do sleep 30; done"
+        },
+        {
           "file": ".github/workflows/wait.yml",
           "line": 15,
           "message": ".github/workflows/wait.yml:15: job `wait-while` step 1 waits in a `while` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",

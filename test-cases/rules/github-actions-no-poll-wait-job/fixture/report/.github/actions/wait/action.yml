@@ -1,0 +1,7 @@
+name: wait
+description: Wait for a run.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: until gh run view 123; do sleep 30; done

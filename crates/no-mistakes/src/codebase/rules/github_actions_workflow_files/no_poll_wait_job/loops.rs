@@ -112,10 +112,7 @@ fn at_command_position(flat: &str, wanted: &str) -> bool {
         let before = &flat[..index];
         let after = flat[index + wanted.len()..].chars().next();
         let ends = after.is_none_or(|ch| ch.is_whitespace() || matches!(ch, ')' | '`' | '"'));
-        let starts = before.is_empty()
-            || before.ends_with("$(")
-            || before.ends_with('`')
-            || before.ends_with("=$(");
+        let starts = before.is_empty() || before.ends_with("$(") || before.ends_with('`');
         starts && ends
     })
 }
