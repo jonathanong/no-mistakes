@@ -65,8 +65,31 @@ fn excluded_callers_of_large_helpers_remain_roots_without_shared_cache_work() {
 fn multi_entrypoint_root_reuses_pure_imports_and_keeps_impure_isolated() {
     let (report, diagnostics) = observed_check(&fixture("helper-tracing-entrypoint-reuse"));
     assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
-    let rules = report["rules"].as_array().unwrap();
-    assert_eq!(rules.len(), 2, "{report}");
+    let mut actual: Vec<(&str, &str, u64)> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            (
+                finding["rule"].as_str().unwrap(),
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    actual.sort_unstable();
+    assert_eq!(
+        actual,
+        vec![
+            ("postgres-require-query-annotation", "src/root.mts", 42),
+            (
+                "postgres-require-query-annotation",
+                "src/shared/impure.mts",
+                3
+            ),
+        ],
+        "{report}"
+    );
     let work = diagnostics.work;
     assert_eq!(work["postgres.annotation.roots_after_scoping"], 2);
     assert!(
