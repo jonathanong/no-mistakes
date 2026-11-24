@@ -1,0 +1,13 @@
+name: Reusable with nested merge in on
+x-call: &call
+  workflow_call:
+x-events: &events
+  <<: *call
+on:
+  <<: *events
+concurrency: nested-on-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
