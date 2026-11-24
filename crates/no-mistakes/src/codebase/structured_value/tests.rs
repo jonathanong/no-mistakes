@@ -223,3 +223,50 @@ fn converts_json_integers_that_do_not_fit_i64() {
     assert!(value["u"].as_i64().is_none());
     assert_eq!(value["u"].as_u64(), Some(u64::MAX));
 }
+
+#[test]
+fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
+    let nested_list = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/sequence-nested-list.yml"
+    );
+    let error =
+        parse_structured_value(Path::new("sequence-nested-list.yml"), nested_list).unwrap_err();
+    assert!(
+        error.contains("expected a mapping for merging, but found sequence"),
+        "{error}"
+    );
+    let nested_docs = parse_yaml_documents(nested_list);
+    assert_eq!(nested_docs.errors.len(), 1);
+    assert_eq!(nested_docs.errors[0].0, 2);
+
+    let quoted_fallback = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/quoted-key-fallback.yml"
+    );
+    let quoted_docs = parse_yaml_documents(quoted_fallback);
+    assert_eq!(quoted_docs.values.len(), 1);
+    assert_eq!(quoted_docs.errors.len(), 1);
+    assert_eq!(quoted_docs.errors[0].0, 2);
+
+    let aliased_fallback = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/aliased-merge-fallback.yml"
+    );
+    let aliased_docs = parse_yaml_documents(aliased_fallback);
+    assert!(aliased_docs.values.is_empty());
+    assert_eq!(aliased_docs.errors.len(), 1);
+    assert_eq!(aliased_docs.errors[0].0, 4);
+
+    let compact_flow = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/compact-flow-and-false-tokens.yml"
+    );
+    let compact_docs = parse_yaml_documents(compact_flow);
+    assert_eq!(compact_docs.values.len(), 2);
+    assert_eq!(compact_docs.errors.len(), 1);
+    assert_eq!(compact_docs.errors[0].0, 8);
+
+    let compact_brace = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/compact-brace-flow.yml"
+    );
+    let brace_docs = parse_yaml_documents(compact_brace);
+    assert_eq!(brace_docs.errors.len(), 1);
+    assert_eq!(brace_docs.errors[0].0, 1);
+}
