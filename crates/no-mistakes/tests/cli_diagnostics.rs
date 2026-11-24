@@ -45,6 +45,12 @@ fn annotation_scope_counters_are_verbose_only_and_preserve_json() {
         err.contains("[timing] postgres.annotation.shared_init.build: 0.000ms"),
         "{err}"
     );
+    assert!(
+        err.contains(
+            "[note] postgres.annotation.shared_init.profile[0]: disabled (reason=fewer_than_two_roots, roots=1)"
+        ),
+        "{err}"
+    );
     let mut timing_args = args.to_vec();
     timing_args.push("--timings");
     let coarse = run(&timing_args);

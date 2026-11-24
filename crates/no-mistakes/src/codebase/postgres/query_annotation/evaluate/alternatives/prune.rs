@@ -29,9 +29,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &mut self.captured_bindings,
         )
     }
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn prune_snapshot_state(
-        &mut self,
-    ) {
+    pub(in crate::codebase::postgres::query_annotation) fn prune_snapshot_state(&mut self) {
         let indices = frames::compact_modules(
             &mut self.scopes,
             &mut self.modules,

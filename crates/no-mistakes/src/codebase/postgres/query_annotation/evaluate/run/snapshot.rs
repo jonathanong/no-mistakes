@@ -119,31 +119,39 @@ impl RunSnapshot {
         self.restore(evaluator);
     }
 
-    pub(super) fn promote_loaded<F: Fn(&str, &Path) -> Option<std::path::PathBuf>>(
+    /// Promote a lazily loaded module once loaded by >= 2 tasks with >= 2 remaining.
+    pub(super) fn promote_reused<F: Fn(&str, &Path) -> Option<std::path::PathBuf>>(
         &mut self,
         evaluator: &mut Evaluator<'_, F>,
         unpromotable: &mut FxHashSet<ModuleId>,
+        loaded_counts: &mut FxHashMap<ModuleId, u8>,
+        remaining_tasks: usize,
     ) -> bool {
-        if evaluator.modules.len() <= self.modules.len() {
+        if evaluator.modules.sources.is_tracking() || evaluator.modules.len() <= self.modules.len()
+        {
             return false;
         }
-        let mut candidates = evaluator
+        let mut candidates: Vec<_> = evaluator
             .modules
             .keys()
             .copied()
             .filter(|id| !self.modules.contains_key(id) && !unpromotable.contains(id))
-            .collect::<Vec<_>>();
+            .filter(|id| {
+                let count = loaded_counts.entry(*id).or_insert(0);
+                *count = count.saturating_add(1);
+                *count >= 2 && remaining_tasks >= 2
+            })
+            .collect();
         if candidates.is_empty() {
             return false;
         }
         candidates.sort_unstable();
         self.restore(evaluator);
         for id in candidates {
-            if self.modules.contains_key(&id) || unpromotable.contains(&id) {
-                continue;
+            if !self.modules.contains_key(&id) && !unpromotable.contains(&id) {
+                let target = evaluator.module_ids().path(id).to_path_buf();
+                self.try_promote_module(evaluator, &target, unpromotable);
             }
-            let target = evaluator.module_ids().path(id).to_path_buf();
-            self.try_promote_module(evaluator, &target, unpromotable);
         }
         true
     }

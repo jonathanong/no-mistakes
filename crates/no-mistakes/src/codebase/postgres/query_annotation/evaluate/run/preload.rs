@@ -1,61 +1,9 @@
-use super::super::Evaluator;
-use super::snapshot::RunSnapshot;
-use crate::codebase::postgres::query_annotation::module_ids::ModuleId;
-use crate::codebase::postgres::query_annotation::{Expr, Function, Step};
-use crate::fx::FxHashSet;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use crate::codebase::postgres::query_annotation::{Expr, Step};
+use crate::fx::{FxHashMap, FxHashSet};
 
-pub(super) fn preload_referenced_imports<F: Fn(&str, &Path) -> Option<PathBuf>>(
-    evaluator: &mut Evaluator<'_, F>,
-    path: &Path,
-    unmodeled: &[&Expr],
-    functions: &[Arc<Function>],
-    snapshot: &mut RunSnapshot,
-    unpromotable: &mut FxHashSet<ModuleId>,
-) {
-    if evaluator.modules.sources.is_tracking() {
-        return;
-    }
-    let file = &evaluator.files[path];
-    let imports = &file.module.imports;
-    if imports.is_empty() {
-        return;
-    }
-    let mut names = FxHashSet::default();
-    for call in unmodeled {
-        collect_expr_names(call, imports, &mut names);
-    }
-    for function in functions {
-        collect_steps_names(&function.body, imports, &mut names);
-    }
-    if names.is_empty() {
-        return;
-    }
-    let mut targets = names
-        .into_iter()
-        .filter_map(|name| {
-            let index = imports.get(name)?;
-            let binding = &file.module.ts.imported_bindings[*index];
-            let target = file
-                .module
-                .target(&binding.specifier, path, &evaluator.resolve)?;
-            evaluator
-                .files
-                .contains_key(target)
-                .then(|| target.to_path_buf())
-        })
-        .collect::<Vec<_>>();
-    targets.sort();
-    targets.dedup();
-    for target in targets {
-        snapshot.try_promote_module(evaluator, &target, unpromotable);
-    }
-}
-
-fn collect_steps_names<'a>(
+pub(in crate::codebase::postgres::query_annotation) fn collect_steps_names<'a>(
     steps: &'a [Step],
-    imports: &crate::fx::FxHashMap<String, usize>,
+    imports: &FxHashMap<String, usize>,
     names: &mut FxHashSet<&'a str>,
 ) {
     if names.len() == imports.len() {
@@ -78,7 +26,7 @@ fn collect_steps_names<'a>(
     }
 }
 
-fn collect_expr_names<'a>(
+pub(in crate::codebase::postgres::query_annotation) fn collect_expr_names<'a>(
     expr: &'a Expr,
     imports: &crate::fx::FxHashMap<String, usize>,
     names: &mut FxHashSet<&'a str>,

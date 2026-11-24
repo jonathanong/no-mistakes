@@ -52,8 +52,28 @@ impl super::InvocationObserver {
             kind: TimingKind::Serial,
         });
         let mut output = format_block(&snapshot, self.verbose, peak_rss_kib);
+        output.push_str(&self.note_block());
         output.push_str(&self.resource_block());
         output.push_str(&self.hot_file_block());
+        output
+    }
+
+    fn note_block(&self) -> String {
+        let Some(notes) = &self.notes else {
+            return String::new();
+        };
+        let mut lines = notes
+            .lock()
+            .expect("diagnostics notes mutex must not be poisoned")
+            .clone();
+        if lines.is_empty() {
+            return String::new();
+        }
+        lines.sort();
+        let mut output = String::new();
+        for line in lines {
+            let _ = writeln!(output, "[note] {line}");
+        }
         output
     }
 }

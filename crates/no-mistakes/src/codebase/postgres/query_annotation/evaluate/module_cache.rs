@@ -10,10 +10,12 @@ use std::sync::{Arc, OnceLock};
 pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     ids: OnceLock<Arc<ModuleIds>>,
     values: FxHashMap<ModuleId, Environment>,
+    pub(in crate::codebase::postgres::query_annotation) shared: Option<Arc<shared::SharedInit>>,
     pub(in crate::codebase::postgres::query_annotation) sources:
         source_dependencies::SourceDependencies,
 }
 
+pub(in crate::codebase::postgres::query_annotation) mod shared;
 pub(in crate::codebase::postgres::query_annotation) mod source_dependencies;
 
 impl PartialEq for ModuleCache {
@@ -28,6 +30,7 @@ impl ModuleCache {
         Self {
             ids: OnceLock::from(ids),
             values: FxHashMap::default(),
+            shared: None,
             sources: Default::default(),
         }
     }

@@ -41,13 +41,4 @@ pub(super) fn roots(
         "postgres.annotation.excluded_roots_pruned",
         excluded.saturating_sub(retained) as u64,
     );
-    observer.increment("postgres.annotation.shared_init.disabled", 1);
-    observer.increment("postgres.annotation.shared_init.cache_hits", 0);
-    observer.increment("postgres.annotation.shared_init.cache_misses", 0);
-    observer.increment("postgres.annotation.shared_init.builds", 0);
-    observer.record_duration(
-        "postgres.annotation.shared_init.build",
-        std::time::Duration::ZERO,
-        TimingKind::Parallel,
-    );
 }

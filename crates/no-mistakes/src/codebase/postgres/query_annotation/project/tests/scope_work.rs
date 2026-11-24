@@ -21,7 +21,7 @@ fn excluded_root_counts_do_not_include_in_scope_importers_that_are_also_pruned()
 }
 
 #[test]
-fn excluded_callers_of_large_helpers_remain_roots_without_shared_cache_work() {
+fn excluded_callers_of_large_helpers_share_pure_imported_modules() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/performance/annotation-excluded-callers-large");
     let (report, diagnostics) = observed_check(&root);
@@ -32,7 +32,15 @@ fn excluded_callers_of_large_helpers_remain_roots_without_shared_cache_work() {
     assert_eq!(work["postgres.annotation.roots_after_scoping"], 65);
     assert_eq!(work["postgres.annotation.excluded_roots_retained"], 64);
     assert_eq!(work["postgres.annotation.excluded_roots_pruned"], 0);
-    assert_eq!(work["postgres.annotation.shared_init.disabled"], 1);
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
+    assert!(
+        work["postgres.annotation.shared_init.builds"] >= 1,
+        "{work:?}"
+    );
+    assert!(
+        work["postgres.annotation.shared_init.cache_hits"] >= 64,
+        "{work:?}"
+    );
     assert_eq!(
         work.get("postgres.annotation.prefix_walks")
             .copied()
@@ -42,23 +50,61 @@ fn excluded_callers_of_large_helpers_remain_roots_without_shared_cache_work() {
     let builds = work["postgres.annotation.dense_prefix_summary_builds"];
     let skips = work["postgres.annotation.prefix_unchanged_binding_skips"];
     assert!(builds > 0 && builds <= skips, "{work:?}");
-    for metric in ["cache_hits", "cache_misses", "builds"] {
-        assert_eq!(
-            work[&*format!("postgres.annotation.shared_init.{metric}")],
-            0
-        );
-    }
     assert_eq!(
         work["postgres.annotation.module_initializations"],
         work["postgres.annotation.module"]
     );
     assert!(
-        work["postgres.annotation.module_initializations"] <= 300,
-        "multi-entrypoint roots must reuse pure imported module initializations instead of repeating them per entrypoint: {work:?}"
+        work["postgres.annotation.module_initializations"] <= 70,
+        "shared pure helper must initialize once across all 65 roots: {work:?}"
     );
-    assert!(diagnostics.timings.iter().any(|timing| {
-        timing.label == "postgres.annotation.shared_init.build" && timing.duration.is_zero()
-    }));
+}
+
+#[test]
+fn shared_roots_default_config_reuses_pure_imports_and_keeps_impure_isolated() {
+    let (report, diagnostics) = observed_check(&fixture("helper-tracing-shared-roots-default"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    let mut actual: Vec<(&str, &str, u64)> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            (
+                finding["rule"].as_str().unwrap(),
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    actual.sort_unstable();
+    assert_eq!(
+        actual,
+        vec![
+            (
+                "postgres-require-query-annotation",
+                "src/roots/root-15.mts",
+                8
+            ),
+            (
+                "postgres-require-query-annotation",
+                "src/shared/impure.mts",
+                3
+            ),
+        ],
+        "{report}"
+    );
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.roots_after_scoping"], 17);
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.builds"], 4);
+    assert!(
+        work["postgres.annotation.shared_init.cache_hits"] >= 64,
+        "{work:?}"
+    );
+    assert!(
+        work["postgres.annotation.module_initializations"] <= 24,
+        "16 roots sharing 4 pure modules must initialize each pure module once: {work:?}"
+    );
 }
 
 #[test]
@@ -93,7 +139,7 @@ fn multi_entrypoint_root_reuses_pure_imports_and_keeps_impure_isolated() {
     let work = diagnostics.work;
     assert_eq!(work["postgres.annotation.roots_after_scoping"], 2);
     assert!(
-        work["postgres.annotation.module_initializations"] <= 8,
+        work["postgres.annotation.module_initializations"] <= 12,
         "pure direct and lazy transitive imports must not re-initialize on every entrypoint: {work:?}"
     );
 }

@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod entrypoints;
-mod preload;
+pub(in crate::codebase::postgres::query_annotation) mod preload;
 mod reachability;
 mod snapshot;
 
@@ -86,14 +86,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let mut snapshot = RunSnapshot::capture(self);
         let mut unpromotable = FxHashSet::default();
-        preload::preload_referenced_imports(
-            self,
-            path,
-            &runnable_unmodeled,
-            &runnable_functions,
-            &mut snapshot,
-            &mut unpromotable,
-        );
+        let mut loaded_counts = FxHashMap::default();
         let mut completed = 0usize;
         let mut needs_restore = false;
         for call in runnable_unmodeled {
@@ -105,7 +98,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             drop(timing);
             completed += 1;
             if completed < total_tasks {
-                needs_restore = !snapshot.promote_loaded(self, &mut unpromotable);
+                needs_restore = !snapshot.promote_reused(
+                    self,
+                    &mut unpromotable,
+                    &mut loaded_counts,
+                    total_tasks - completed,
+                );
             }
         }
         for function in runnable_functions {
@@ -117,7 +115,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             self.run_entrypoint(path, &function);
             completed += 1;
             if completed < total_tasks {
-                needs_restore = !snapshot.promote_loaded(self, &mut unpromotable);
+                needs_restore = !snapshot.promote_reused(
+                    self,
+                    &mut unpromotable,
+                    &mut loaded_counts,
+                    total_tasks - completed,
+                );
             }
         }
     }

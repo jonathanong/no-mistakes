@@ -1,7 +1,7 @@
 use super::super::evaluate::{
     module_cache::source_dependencies::SourceDependencies, ExecutionEvents,
 };
-use super::{evaluator, merge, prepare::Profile};
+use super::{evaluator, merge, prepare::Profile, shared_init};
 use crate::codebase::postgres::EmbeddedSqlOptions;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
@@ -27,7 +27,8 @@ pub(super) fn evaluate(
     // profiles without keeping every profile's state until the pass finishes.
     profiles
         .into_par_iter()
-        .map(|profile| {
+        .enumerate()
+        .map(|(profile_index, profile)| {
             crate::diagnostics::with_observer(observer.clone(), || {
                 let Profile {
                     options,
@@ -36,11 +37,24 @@ pub(super) fn evaluate(
                     untrusted_array_intrinsics,
                     failed_sources,
                 } = profile;
+                let shared_status = shared_init::build(
+                    &files,
+                    &roots,
+                    resolve,
+                    untrusted_array_intrinsics,
+                    &failed_sources,
+                    observer.as_deref(),
+                );
+                if let Some(observer) = &observer {
+                    shared_init::record(observer, profile_index, roots.len(), &shared_status);
+                }
+                let shared = shared_status.shared();
                 let mut per_file = root_tasks(roots)
                     .map(|path| {
                         let events = crate::diagnostics::with_observer(observer.clone(), || {
                             let mut evaluator =
                                 evaluator::new(&files, resolve, untrusted_array_intrinsics);
+                            evaluator.modules.shared = shared.clone();
                             evaluator.modules.sources =
                                 SourceDependencies::new(std::sync::Arc::clone(&failed_sources));
                             super::super::progress::trace(

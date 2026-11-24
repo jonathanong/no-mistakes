@@ -49,6 +49,7 @@ pub struct InvocationObserver {
     started: Instant,
     timings: Mutex<Vec<TimingDiagnostic>>,
     work: Option<Box<WorkCounters>>,
+    notes: Option<Mutex<Vec<String>>>,
     source_reads: Option<DashMap<PathBuf, AtomicU64, FxBuildHasher>>,
     pub(super) progress: Option<Mutex<ProgressState>>,
 }
@@ -66,6 +67,7 @@ impl InvocationObserver {
             started: Instant::now(),
             timings: Mutex::new(Vec::new()),
             work: verbose.then(|| Box::new(WorkCounters::new())),
+            notes: verbose.then(|| Mutex::new(Vec::new())),
             source_reads: verbose.then(|| DashMap::with_hasher(FxBuildHasher)),
             progress: progress.then(|| Mutex::new(ProgressState::default())),
         })
@@ -118,6 +120,16 @@ impl InvocationObserver {
             return;
         };
         work.increment(metric, amount);
+    }
+
+    pub fn record_note(&self, note: String) {
+        let Some(notes) = &self.notes else {
+            return;
+        };
+        notes
+            .lock()
+            .expect("diagnostics notes mutex must not be poisoned")
+            .push(note);
     }
 
     pub(crate) fn record_source_read(&self, path: &Path) {

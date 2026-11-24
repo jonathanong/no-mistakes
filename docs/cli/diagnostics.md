@@ -315,11 +315,19 @@ resolver targets, so verbose resolver counters include that diagnostic work.
 Neither ordinary execution nor `--timings` alone performs this comparison.
 No files are read or parsed again. These aggregate counts sum across profiles.
 
-The cross-root scalar cache was removed after a downstream CPU regression.
-`postgres.annotation.shared_init.disabled` counts profiles with that cache
-disabled. Its `cache_hits`, `cache_misses`, and `builds` counters are explicitly
-zero, and `postgres.annotation.shared_init.build` reports zero duration because
-no shared initial state is built. The ordinary per-root module cache remains.
+Profiles with at least two roots, no failed SQL prerequisite sources, and at
+least one statically shared imported module build a per-profile pure module
+cache (`postgres.annotation.shared_init.builds`,
+`postgres.annotation.shared_init.cache_hits`,
+`postgres.annotation.shared_init.cache_misses`, and
+`postgres.annotation.shared_init.build`). Pure imported modules are initialized
+once and remapped on demand into each root that imports them; impure or cyclic
+modules stay isolated per root. `postgres.annotation.shared_init.disabled`
+counts profiles that skip this cache, and `--verbose-timings` emits one
+`[note] postgres.annotation.shared_init.profile[N]: ...` line per profile with
+either `enabled` counts or `disabled (reason=...)` (`fewer_than_two_roots`,
+`failed_sql_sources`, or `no_shared_imports`). The ordinary per-root module
+cache remains.
 An excluded test importing a scoped helper can remain a contextual root even
 when no included file imports that test. Equal before/after counts make that
 case visible; lower root counts alone do not establish lower CPU cost.
