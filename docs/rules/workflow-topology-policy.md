@@ -339,10 +339,14 @@ has no source map. A forbidden-event finding in a tagged file is reported
 on line 1. A multi-document file is not one workflow, so its events are
 not reported.
 
-The workflow parser expands YAML merge keys throughout the document before
-reading triggers, concurrency, jobs, and steps. If a merge cannot be applied,
-the parser reports a malformed workflow even when the only merge is inside a
-job or a step.
+The topology parser expands plain YAML 1.1 merge keys throughout the
+document before reading triggers, concurrency, jobs, and steps. Quoted
+`"<<"` keys remain literal. A merge that cannot be applied is reported as
+a malformed workflow even when it appears only inside a job or step.
+
+This expansion is an offline analysis convention. GitHub Actions supports
+anchors and aliases under YAML 1.2. Use an alias for a whole mapping or
+write explicit keys in workflows that GitHub runs.
 
 When `forbidReusableWorkflowConcurrency` is `true`, every malformed-workflow
 diagnostic is reported as a check failure, even for a file that is not a

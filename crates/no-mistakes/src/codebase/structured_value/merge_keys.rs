@@ -9,7 +9,7 @@ use serde_yaml::{Mapping, Value};
 /// not a mapping, or a sequence of mappings, cannot be applied and is returned
 /// as an error instead of being dropped.
 pub(crate) fn expand_merge_keys(value: &mut Value) -> Result<(), String> {
-    expand_located(value, &|_| None).map_err(|(_, message)| message)
+    expand_located(value, &|_| Some(0)).map_err(|(_, message)| message)
 }
 
 pub(super) fn expand_located(
@@ -20,8 +20,8 @@ pub(super) fn expand_located(
     while let Some(value) = pending.pop() {
         match value {
             Value::Mapping(mapping) => {
-                if let Some((key, merge)) = mapping.shift_remove_entry("<<") {
-                    merge_sources(mapping, merge, line_for_key(&key), line_for_key)?;
+                if let Some((merge, line)) = take_merge(mapping, line_for_key) {
+                    merge_sources(mapping, merge, line, line_for_key)?;
                 }
                 let start = pending.len();
                 pending.extend(mapping.values_mut());
@@ -35,6 +35,20 @@ pub(super) fn expand_located(
     Ok(())
 }
 
+fn take_merge(
+    mapping: &mut Mapping,
+    line_for_key: &impl Fn(&Value) -> Option<usize>,
+) -> Option<(Value, Option<usize>)> {
+    if !mapping.contains_key("<<") {
+        return None;
+    }
+    let key = mapping.keys().find(|key| key.as_str() == Some("<<"))?;
+    let line = line_for_key(key)?;
+    mapping
+        .shift_remove("<<")
+        .map(|merge| (merge, (line != 0).then_some(line)))
+}
+
 fn merge_sources(
     mapping: &mut Mapping,
     merge: Value,
@@ -46,9 +60,8 @@ fn merge_sources(
     // Each source's explicit keys win over its own merge, which is consumed
     // before later sequence sources. No merge source is copied or revisited.
     while let Some(mut source) = pending.pop() {
-        if let Some((key, merge)) = source.shift_remove_entry("<<") {
-            push_merge_sources(merge, &mut pending)
-                .map_err(|message| (line_for_key(&key), message))?;
+        if let Some((merge, line)) = take_merge(&mut source, line_for_key) {
+            push_merge_sources(merge, &mut pending).map_err(|message| (line, message))?;
         }
         for (key, value) in source {
             mapping.entry(key).or_insert(value);

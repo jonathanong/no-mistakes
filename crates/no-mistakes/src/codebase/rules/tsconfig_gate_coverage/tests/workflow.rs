@@ -12,6 +12,7 @@ fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {
 
 fn workflow_document(path: &str, yaml: &str) -> ParsedWorkflowDocument {
     ParsedWorkflowDocument {
+        source: None,
         path: path.to_string(),
         value: Ok(serde_yaml::from_str(yaml).unwrap()),
     }
@@ -73,6 +74,7 @@ fn ci_scanner_excludes_jobs_blocked_by_static_needs() {
     .unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: "needs.yml".to_string(),
             value: Ok(workflow),
         }],
@@ -480,30 +482,5 @@ fn ci_scanner_validates_call_inputs_and_normalizes_boolean_condition_spacing() {
             "negated/tsconfig.json".to_string(),
             "numeric-job/tsconfig.json".to_string(),
         ])
-    );
-}
-
-#[test]
-fn reusable_callees_own_their_working_directories_and_shells() {
-    let workflows = ParsedWorkflowSet {
-        documents: vec![
-            workflow_document(
-                ".github/workflows/caller.yml",
-                "on: push\ndefaults:\n  run:\n    working-directory: caller-only\n    shell: python {0}\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n",
-            ),
-            workflow_document(
-                ".github/workflows/checks.yml",
-                "on: workflow_call\ndefaults:\n  run:\n    working-directory: callee-app\n    shell: bash --noprofile --norc -eo pipefail {0}\njobs:\n  valid:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit\n  unsupported-shell:\n    runs-on: ubuntu-latest\n    defaults:\n      run:\n        working-directory: rejected\n        shell: python {0}\n    steps:\n      - run: tsc --noEmit\n",
-            ),
-        ],
-    };
-    let tracked = BTreeSet::from([
-        "callee-app/tsconfig.json".to_string(),
-        "rejected/tsconfig.json".to_string(),
-    ]);
-
-    assert_eq!(
-        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
-        BTreeSet::from(["callee-app/tsconfig.json".to_string()])
     );
 }

@@ -12,12 +12,21 @@ fn expand_with_context(value: &mut Value) -> Result<(), String> {
     expand_merge_keys(value).map_err(|error| merge_error(&error))
 }
 
-pub(crate) fn expand_yaml_mapping_if_merged(value: &Value) -> Result<Cow<'_, Value>, String> {
+pub(crate) fn expand_yaml_mapping_if_merged<'a>(
+    value: &'a Value,
+    source: Option<&str>,
+) -> Result<Cow<'a, Value>, String> {
     if !contains_merge(value) {
         return Ok(Cow::Borrowed(value));
     }
     let mut expanded = value.clone();
-    expand_with_context(&mut expanded)?;
+    if let Some(source) = source {
+        MergeLocations::parse(source)
+            .expand(0, &mut expanded)
+            .map_err(|(_, error)| merge_error(&error))?;
+    } else {
+        expand_with_context(&mut expanded)?;
+    }
     Ok(Cow::Owned(expanded))
 }
 
@@ -69,10 +78,11 @@ pub(crate) fn parse_structured_value_located(
     }
     let mut value: Value = serde_yaml::from_str(source)
         .map_err(|error| (None, format!("failed to parse YAML ({error})")))?;
-    expand_with_context(&mut value).map_err(|message| {
-        let line = MergeLocations::parse(source).locate(0, serde_yaml::from_str(source).ok());
-        (line, message)
-    })?;
+    if contains_merge(&value) {
+        MergeLocations::parse(source)
+            .expand(0, &mut value)
+            .map_err(|(line, error)| (line, merge_error(&error)))?;
+    }
     Ok(value)
 }
 
@@ -81,16 +91,22 @@ pub(crate) fn parse_structured_value_located(
 pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
     let mut values = Vec::new();
     let mut errors = Vec::new();
-    let mut unlocated = Vec::new();
+    let mut locations = None;
     for (doc_index, document) in serde_yaml::Deserializer::from_str(source).enumerate() {
         match Value::deserialize(document) {
-            Ok(mut value) => match expand_with_context(&mut value) {
-                Ok(()) => values.push(value),
-                Err(message) => {
-                    unlocated.push((doc_index, errors.len()));
-                    errors.push((1, message));
+            Ok(mut value) => {
+                if contains_merge(&value) {
+                    let locations = locations.get_or_insert_with(|| MergeLocations::parse(source));
+                    if let Err((line, error)) = locations.expand(doc_index, &mut value) {
+                        errors.push((
+                            line.unwrap_or_else(|| locations.document_start(doc_index)),
+                            merge_error(&error),
+                        ));
+                        continue;
+                    }
                 }
-            },
+                values.push(value);
+            }
             Err(error) => {
                 let reported = error
                     .location()
@@ -108,17 +124,6 @@ pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
                 }
                 errors.push((line, message));
             }
-        }
-    }
-    if !unlocated.is_empty() {
-        let locations = MergeLocations::parse(source);
-        let mut documents = serde_yaml::Deserializer::from_str(source).enumerate();
-        for (doc_index, error_index) in unlocated {
-            let value = documents
-                .find(|(index, _)| *index == doc_index)
-                .and_then(|(_, document)| Value::deserialize(document).ok());
-            let document_start = locations.document_start(doc_index);
-            errors[error_index].0 = locations.locate(doc_index, value).unwrap_or(document_start);
         }
     }
     YamlDocuments { values, errors }

@@ -8,3 +8,5 @@ rules:
           bannedKeys: [runtime.legacy.enabled]
         - files: [required.yml]
           requiredKeys: [runtime.owner]
+        - files: [quoted.yml]
+          requiredKeys: [runtime.enabled, "runtime.options.<<", extra.enabled]

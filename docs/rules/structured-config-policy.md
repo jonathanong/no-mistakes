@@ -205,7 +205,10 @@ an unavailable document as an absent optional config key.
 ## Suppression
 
 Use a top-of-file `no-mistakes-disable-file structured-config-policy` directive
-for generated config that cannot be edited. Findings currently report line 1.
+for generated config that cannot be edited. Ordinary findings report line 1.
+A failed merge reports the line of its merge key. For a line-specific
+suppression, place `no-mistakes-disable-next-line structured-config-policy`
+immediately above that key.
 
 ## Limitations
 
@@ -233,8 +236,8 @@ mappings, cannot be applied. A scalar, or a scalar item in a sequence, is not
 dropped. The rule reports a merge that cannot be applied at the original
 `<<` key, including keys in flow mappings and anchored mappings that are
 aliased elsewhere. The finding uses `failed to apply YAML merge keys`.
-`options.unanalyzable` does not change that. JSON and JSONC keep a literal `<<`
-key, because merge keys are a YAML 1.1 construct.
+`options.unanalyzable` does not change that. A quoted `"<<"` key is literal,
+as is a `<<` key in JSON or JSONC.
 
 ```yaml
 label: &label plain

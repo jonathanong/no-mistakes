@@ -32,12 +32,12 @@ pub struct ParsedWorkflow {
 }
 
 /// Parse a topology fragment from an already loaded YAML document.
-pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
+pub fn parse_workflow_value(value: &Value, path: &str, source: Option<&str>) -> ParsedWorkflow {
     if !value_primitives::is_record(Some(value)) {
         return malformed_workflow(path, "workflow root must be a mapping");
     }
 
-    let value = match expand_yaml_mapping_if_merged(value) {
+    let value = match expand_yaml_mapping_if_merged(value, source) {
         Ok(value) => value,
         Err(message) => return malformed_workflow(path, &message),
     };

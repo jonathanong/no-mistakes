@@ -243,9 +243,9 @@ fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
         "../../../../../test-cases/structured-value/merge-keys/quoted-key-fallback.yml"
     );
     let quoted_docs = parse_yaml_documents(quoted_fallback);
-    assert_eq!(quoted_docs.values.len(), 1);
-    assert_eq!(quoted_docs.errors.len(), 1);
-    assert_eq!(quoted_docs.errors[0].0, 5);
+    assert!(quoted_docs.errors.is_empty());
+    assert_eq!(quoted_docs.values.len(), 2);
+    assert_eq!(quoted_docs.values[1]["runtime"]["<<"].as_i64(), Some(7));
 
     let aliased_fallback = include_str!(
         "../../../../../test-cases/structured-value/merge-keys/aliased-merge-fallback.yml"
@@ -323,7 +323,7 @@ fn detects_a_merge_inside_a_tagged_mapping() {
         "../../../../../test-cases/structured-value/merge-keys/tagged-merge-error.yml"
     );
     let value = serde_yaml::from_str(source).unwrap();
-    let error = super::expand_yaml_mapping_if_merged(&value).unwrap_err();
+    let error = super::expand_yaml_mapping_if_merged(&value, Some(source)).unwrap_err();
     assert!(error.contains("failed to apply YAML merge keys"), "{error}");
 }
 
