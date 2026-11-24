@@ -2387,16 +2387,15 @@ jobs:
             target/.rustc_info.json
             ${{ runner.temp }}/nm-cargo-inputs
 
-      # The test compile of the changed no-mistakes crate takes 10 to 14 minutes
-      # on a macos-15 runner, so it has its own step and live cargo output; the
-      # test step below compiles nothing. See docs/development/ci-builds.md.
+      - name: Restore macOS test input timestamps
+        timeout-minutes: 3
+        shell: bash
+        run: node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+
       - name: Compile macOS-dependent Rust tests
         timeout-minutes: 20
         shell: bash
-        run: |
-          set -euo pipefail
-          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
-          node .github/scripts/smoke.cjs macos rust-build
+        run: node .github/scripts/smoke.cjs macos rust-build
 
       - name: Run macOS-dependent Rust tests
         timeout-minutes: 15
