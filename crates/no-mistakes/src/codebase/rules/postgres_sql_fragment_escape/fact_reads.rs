@@ -1,6 +1,7 @@
-use super::load_windows::depth_zero_callee;
 pub(super) use super::load_windows::window_loads_module;
+use super::load_windows::{depth_zero_callee, depth_zero_callee_with_jumps};
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::fx::FxHashMap;
 
 pub(super) fn export_site(ts: &TsFileFacts, local: &str) -> Option<u32> {
     ts.namespaces
@@ -54,7 +55,16 @@ pub(super) fn unrecorded_static_specifier(
     window: &str,
     window_start: u32,
 ) -> bool {
-    let Some((index, rest)) = depth_zero_callee(ts, window, window_start) else {
+    unrecorded_static_specifier_with_jumps(ts, window, window_start, None)
+}
+
+pub(super) fn unrecorded_static_specifier_with_jumps(
+    ts: &TsFileFacts,
+    window: &str,
+    window_start: u32,
+    jumps: Option<&FxHashMap<usize, usize>>,
+) -> bool {
+    let Some((index, rest)) = depth_zero_callee_with_jumps(ts, window, window_start, jumps) else {
         return false;
     };
     let offset = window_start.saturating_add(u32::try_from(index).unwrap_or(0));

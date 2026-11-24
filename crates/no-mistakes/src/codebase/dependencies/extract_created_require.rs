@@ -3,6 +3,8 @@ struct CreatedRequireState {
     bindings: FxHashMap<usize, FxHashSet<String>>,
     factories: FxHashSet<String>,
     namespaces: FxHashSet<String>,
+    scoped_factories: FxHashMap<usize, FxHashSet<String>>,
+    scoped_namespaces: FxHashMap<usize, FxHashSet<String>>,
 }
 
 fn note_created_require_import(collector: &mut ImportCollector, import: &ImportDeclaration<'_>) {
@@ -52,6 +54,7 @@ fn record_created_require_declaration(
     if declaration.kind != VariableDeclarationKind::Const {
         return;
     }
+    record_cjs_created_require_factory(collector, declaration);
     for declarator in &declaration.declarations {
         let BindingPattern::BindingIdentifier(local) = &declarator.id else {
             continue;
@@ -77,22 +80,35 @@ fn record_created_require_declaration(
 
 fn created_require_factory(collector: &ImportCollector, callee: &Expression<'_>) -> bool {
     match callee {
-        Expression::Identifier(ident) => factory_unshadowed(
-            collector,
-            &collector.created_requires.factories,
-            ident.name.as_str(),
-        ),
+        Expression::Identifier(ident) => {
+            factory_unshadowed(
+                collector,
+                &collector.created_requires.factories,
+                ident.name.as_str(),
+            ) || scoped_created_require_binding(
+                collector,
+                &collector.created_requires.scoped_factories,
+                ident.name.as_str(),
+            )
+        }
         Expression::StaticMemberExpression(member)
             if !member.optional && member.property.name == "createRequire" =>
         {
-            let Expression::Identifier(ident) = member.object.get_inner_expression() else {
-                return false;
-            };
-            factory_unshadowed(
-                collector,
-                &collector.created_requires.namespaces,
-                ident.name.as_str(),
-            )
+            match member.object.get_inner_expression() {
+                Expression::Identifier(ident) => {
+                    factory_unshadowed(
+                        collector,
+                        &collector.created_requires.namespaces,
+                        ident.name.as_str(),
+                    ) || scoped_created_require_binding(
+                        collector,
+                        &collector.created_requires.scoped_namespaces,
+                        ident.name.as_str(),
+                    )
+                }
+                Expression::CallExpression(call) => is_module_require_call(collector, call),
+                _ => false,
+            }
         }
         _ => false,
     }
@@ -100,6 +116,18 @@ fn created_require_factory(collector: &ImportCollector, callee: &Expression<'_>)
 
 fn factory_unshadowed(collector: &ImportCollector, names: &FxHashSet<String>, name: &str) -> bool {
     names.contains(name) && collector.callee_binding_scope(name).is_none()
+}
+
+fn scoped_created_require_binding(
+    collector: &ImportCollector,
+    scoped: &FxHashMap<usize, FxHashSet<String>>,
+    name: &str,
+) -> bool {
+    collector.callee_binding_scope(name).is_some_and(|scope| {
+        scoped
+            .get(&scope)
+            .is_some_and(|names| names.contains(name))
+    })
 }
 
 fn created_require_kind(

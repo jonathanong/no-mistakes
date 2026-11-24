@@ -21,6 +21,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "widgetColumns"
         },
         {
+          "file": "default-binding.ts",
+          "import": "columns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export default app;",
+          "target": "widgetColumns"
+        },
+        {
           "file": "function-load.ts",
           "import": "columns.ts",
           "line": 3,
