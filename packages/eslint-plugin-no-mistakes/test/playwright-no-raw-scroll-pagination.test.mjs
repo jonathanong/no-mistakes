@@ -18,6 +18,24 @@ const sentinelOptions = {
 const suite = {
   valid: [
     {
+      code: fixture("playwright-no-raw-scroll-pagination/scroll-boundaries.spec.js"),
+      filename: "e2e/scroll-boundaries.spec.js",
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/suppressed-raw-scroll.spec.js"),
+      filename: "e2e/suppressed-raw-scroll.spec.js",
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-shadowed.spec.js"),
+      filename: "e2e/sentinel-shadowed.spec.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-other-locator.spec.js"),
+      filename: "e2e/sentinel-other-locator.spec.js",
+      options: [sentinelOptions],
+    },
+    {
       code: fixture("playwright-no-raw-scroll-pagination/sentinel-only.js"),
       filename: "src/example.js",
       options: [sentinelOptions],
@@ -151,6 +169,11 @@ const suite = {
     },
   ],
   invalid: [
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-receivers.spec.js"),
+      filename: "e2e/sentinel-receivers.spec.js",
+      options: [sentinelOptions],
+    },
     {
       code: fixture("playwright-no-raw-scroll-pagination/sentinel-only.js"),
       filename: "e2e/sentinel-only.spec.js",

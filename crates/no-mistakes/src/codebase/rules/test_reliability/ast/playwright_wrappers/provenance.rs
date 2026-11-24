@@ -1,20 +1,27 @@
 use super::super::bindings::Bindings;
 use super::super::playwright_bindings::ValueTrace;
 use super::body::WrapperBody;
+use crate::codebase::rules::test_reliability::playwright_provenance::ImportRef;
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
-use oxc_ast::ast::{CallExpression, Expression, FunctionBody, IdentifierReference};
+use oxc_ast::ast::{
+    CallExpression, ComputedMemberExpression, Expression, FunctionBody, IdentifierReference,
+    StaticMemberExpression,
+};
 use oxc_ast_visit::Visit;
+
+mod receivers;
 use oxc_semantic::SymbolId;
+use oxc_span::{GetSpan, Span};
 
 impl<'ast> Bindings<'_, 'ast> {
     pub(in crate::codebase::rules::test_reliability::ast) fn non_const_or_destructured_trace(
         &self,
         symbol: SymbolId,
     ) -> ValueTrace {
-        let Some(init) = self.any_var_initializer(symbol) else {
-            return ValueTrace::None;
-        };
-        self.unresolved_if_provenance(init, "non-constant or destructured fixture binding")
+        let mut finder = ProvenanceFinder::new(self);
+        finder.visit_symbol(symbol);
+        finder.finish("non-constant or destructured fixture binding")
     }
 
     pub(in crate::codebase::rules::test_reliability::ast) fn unresolved_if_provenance(
@@ -50,48 +57,46 @@ impl<'ast> Bindings<'_, 'ast> {
 
 struct ProvenanceFinder<'a, 'scope, 'ast> {
     bindings: &'a Bindings<'scope, 'ast>,
-    found: bool,
+    candidates: Vec<ImportRef>,
     visited: FxHashSet<SymbolId>,
+    visited_fields: FxHashSet<Span>,
 }
 
 impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
     fn new(bindings: &'a Bindings<'scope, 'ast>) -> Self {
         Self {
             bindings,
-            found: false,
+            candidates: Vec::new(),
             visited: FxHashSet::default(),
+            visited_fields: FxHashSet::default(),
         }
     }
 
     fn finish(self, reason: &'static str) -> ValueTrace {
-        if self.found {
-            ValueTrace::Unresolved(reason)
-        } else {
-            ValueTrace::None
+        ValueTrace::unresolved(reason, self.candidates)
+    }
+
+    fn record(&mut self, import: ImportRef) {
+        if (import.specifier.as_ref() != "@playwright/test" || import.is_playwright_test())
+            && !self.candidates.contains(&import)
+        {
+            self.candidates.push(import);
         }
     }
-}
 
-impl<'a> Visit<'a> for ProvenanceFinder<'_, '_, '_> {
-    fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
-        if self.found {
-            return;
-        }
-        let Some(symbol) = self.bindings.symbol(ident) else {
-            return;
-        };
-        if self.bindings.import_origin(symbol, None).is_some()
-            || self.bindings.is_namespace_import(symbol)
-        {
-            self.found = true;
-            return;
-        }
+    fn visit_symbol(&mut self, symbol: SymbolId) {
         if !self.visited.insert(symbol) {
+            return;
+        }
+        if let Some(import) = self.bindings.import_origin(symbol, None) {
+            self.record(import);
             return;
         }
         if let Some(init) = self.bindings.any_var_initializer(symbol) {
             self.visit_expression(init);
-            return;
+        }
+        for value in self.bindings.possible_binding_values(symbol) {
+            self.visit_expression(value);
         }
         if let Some((_, body)) = self.bindings.function_def(symbol) {
             match body {
@@ -99,5 +104,52 @@ impl<'a> Visit<'a> for ProvenanceFinder<'_, '_, '_> {
                 WrapperBody::Block(block) => self.visit_function_body(block),
             }
         }
+    }
+
+    fn visit_member(&mut self, object: &Expression<'_>, property: Option<&str>) {
+        let object = unwrap_ts_wrappers(object);
+        if let Expression::Identifier(identifier) = object {
+            if let Some(symbol) = self.bindings.symbol(identifier) {
+                if self.bindings.is_namespace_import(symbol) {
+                    if let Some(import) =
+                        self.bindings.import_origin(symbol, property.or(Some("test")))
+                    {
+                        self.record(import);
+                    }
+                    return;
+                }
+            }
+        }
+        if let Some(class) = self.bindings.receiver_class(object) {
+            if let Some(property) = property {
+                for value in receivers::class_field_values(class, property) {
+                    if self.visited_fields.insert(value.span()) {
+                        self.visit_expression(value);
+                    }
+                }
+            }
+            return;
+        }
+        self.visit_expression(object);
+    }
+}
+
+impl<'a> Visit<'a> for ProvenanceFinder<'_, '_, '_> {
+    fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
+        if let Some(symbol) = self.bindings.symbol(ident) {
+            self.visit_symbol(symbol);
+        }
+    }
+
+    fn visit_static_member_expression(&mut self, expr: &StaticMemberExpression<'a>) {
+        self.visit_member(&expr.object, Some(expr.property.name.as_str()));
+    }
+
+    fn visit_computed_member_expression(&mut self, expr: &ComputedMemberExpression<'a>) {
+        let property = match &expr.expression {
+            Expression::StringLiteral(name) => name.value.as_str(),
+            _ => None,
+        };
+        self.visit_member(&expr.object, property);
     }
 }

@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { childNodes } = require("./test-no-shared-state-helpers");
 const { invokedCall, memberName, methodFromCallee } = require("./playwright-static-call");
+const { resolveAlias } = require("./playwright-static-call-alias");
 const { isRawScrollCall } = require("./playwright-scroll-call");
 
 const PLAYWRIGHT_PATH_PATTERN =
@@ -146,22 +147,58 @@ function mentionsCursorParam(node, cursorParams) {
   return accessorArgs.some((value) => cursorParams.includes(value));
 }
 
-function isSentinelScrollCall(node, locatorNames, testIds) {
-  const callee = node.callee;
-  if (memberName(callee) !== "scrollIntoViewIfNeeded") return false;
+const LOCATOR_BUILDERS = new Set([
+  "locator",
+  "getByTestId",
+  "getByRole",
+  "getByText",
+  "getByLabel",
+  "getByAltText",
+  "getByPlaceholder",
+  "getByTitle",
+]);
+const LOCATOR_REFINEMENTS = new Set(["first", "last", "nth", "filter"]);
 
-  let receiver = callee.object;
-  while (receiver.type === "ChainExpression") receiver = receiver.expression;
-  if (receiver.type === "Identifier") return locatorNames.has(receiver.name);
-  if (receiver.type !== "CallExpression" || memberName(receiver.callee) !== "getByTestId") {
+function sentinelSelector(argument) {
+  if (argument?.type === "Literal") return argument.value;
+  if (argument?.type === "TemplateLiteral" && argument.expressions.length === 0) {
+    return argument.quasis[0].value.cooked;
+  }
+  return null;
+}
+
+function isSentinelScrollCall(node, context, locatorNames, testIds) {
+  if (memberName(node.callee) !== "scrollIntoViewIfNeeded") return false;
+  let receiver = node.callee.object;
+  let named = false;
+  const seen = new Set();
+  for (;;) {
+    if (receiver.type === "ChainExpression") {
+      receiver = receiver.expression;
+      continue;
+    }
+    if (receiver.type === "Identifier") {
+      const alias = resolveAlias(receiver, context, seen);
+      if (alias?.kind !== "init") return false;
+      named ||= locatorNames.has(receiver.name);
+      receiver = alias.init;
+      continue;
+    }
+    if (receiver.type !== "CallExpression") return false;
+    const method = memberName(receiver.callee);
+    if (LOCATOR_REFINEMENTS.has(method)) {
+      receiver = receiver.callee.object;
+      continue;
+    }
+    if (named && LOCATOR_BUILDERS.has(method)) return true;
+    const selector = sentinelSelector(receiver.arguments[0]);
+    if (method === "getByTestId") return testIds.has(selector);
+    if (method === "locator" && typeof selector === "string") {
+      const attribute = /^\[data-testid=(?:"([^"]+)"|'([^']+)'|([\w-]+))\]$/.exec(selector);
+      return !!attribute && testIds.has(attribute[1] ?? attribute[2] ?? attribute[3]);
+    }
     return false;
   }
-
-  const id = receiver.arguments[0];
-  if (id?.type === "TemplateLiteral" && id.expressions.length === 0) {
-    return testIds.has(id.quasis[0].value.cooked);
-  }
-  return id?.type === "Literal" && testIds.has(id.value);
 }
 
 module.exports = rule(
@@ -215,7 +252,10 @@ module.exports = rule(
           hasCursorWait = true;
         }
         if (isRawScrollCall(node, context)) scrollCandidates.push(node);
-        if (checkSentinels && isSentinelScrollCall(node, sentinelLocatorNames, sentinelTestIds)) {
+        if (
+          checkSentinels &&
+          isSentinelScrollCall(node, context, sentinelLocatorNames, sentinelTestIds)
+        ) {
           sentinelCandidates.push(node);
         }
       },

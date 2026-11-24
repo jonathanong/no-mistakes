@@ -12,15 +12,23 @@ const MAX_VALUE_DEPTH: usize = 8;
 
 pub(super) enum ValueTrace {
     Resolved(FixtureInitializer),
-    Unresolved(&'static str),
+    Unresolved(&'static str, Vec<ImportRef>),
     None,
 }
 
 impl ValueTrace {
+    pub(super) fn unresolved(reason: &'static str, candidates: Vec<ImportRef>) -> Self {
+        if candidates.is_empty() {
+            Self::None
+        } else {
+            Self::Unresolved(reason, candidates)
+        }
+    }
+
     pub(super) fn into_resolved(self) -> Option<FixtureInitializer> {
         match self {
             Self::Resolved(init) => Some(init),
-            Self::Unresolved(_) | Self::None => None,
+            Self::Unresolved(..) | Self::None => None,
         }
     }
 }

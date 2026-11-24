@@ -68,7 +68,15 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
                 start = offset + 1;
                 token_start = true;
             }
-            '&' | '|' if chars.next_if(|(_, next)| *next == character).is_some() => {
+            '|' if arithmetic_parens.is_none() => {
+                found.push(&script[start..offset]);
+                start = chars
+                    .next_if(|(_, next)| matches!(next, '|' | '&'))
+                    .map_or(offset + 1, |(next, _)| next + 1);
+                token_start = true;
+            }
+            '&' if arithmetic_parens.is_none()
+                && chars.next_if(|(_, next)| *next == '&').is_some() => {
                 found.push(&script[start..offset]);
                 start = offset + 2;
                 token_start = true;
@@ -78,6 +86,35 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
     }
     found.push(&script[start..]);
     found
+}
+
+pub(super) fn expands_any(segment: &str, variables: &[String]) -> bool {
+    if variables.is_empty() {
+        return false;
+    }
+    let mut chars = segment.char_indices();
+    let mut quote = None;
+    while let Some((offset, ch)) = chars.next() {
+        match ch {
+            '\\' if quote != Some('\'') => {
+                chars.next();
+            }
+            '\'' | '"' if quote.is_none() => quote = Some(ch),
+            ch if quote == Some(ch) => quote = None,
+            '$' if quote != Some('\'') => {
+                let tail = &segment[offset + 1..];
+                let name = tail.strip_prefix('{').unwrap_or(tail);
+                let end = name
+                    .find(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+                    .unwrap_or(name.len());
+                if variables.iter().any(|variable| variable == &name[..end]) {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
 }
 
 struct HereDoc {
