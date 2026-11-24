@@ -215,6 +215,23 @@ fn sibling_report(report: &serde_json::Value) -> serde_json::Value {
 }
 
 #[test]
+fn postgres_sql_fragment_escape_slash_lexing_snapshot() {
+    let root = rules_path("postgres-sql-fragment-escape", "fixtures", "slash-lexing");
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_slash_lexing",
+        &[("slash_lexing", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["slash_lexing"]["report"];
+    let findings = report["rules"].as_array().expect("findings");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0]["file"], "slash-forms.js");
+    assert_eq!(findings[0]["sourceLine"], "widgetColumns.append(extra);");
+    assert!(report["incomplete"].is_null(), "{report}");
+}
+
+#[test]
 fn postgres_sql_fragment_escape_import_resolution_snapshot() {
     let root = rules_path(
         "postgres-sql-fragment-escape",

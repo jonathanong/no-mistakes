@@ -25,7 +25,7 @@ enum Quote {
     Ansi,
 }
 
-pub(super) fn unquote(raw: &str) -> Option<String> {
+pub(crate) fn unquote(raw: &str) -> Option<String> {
     let mut bytes = raw.bytes().peekable();
     let mut delimiter = Vec::new();
     let mut quote = Quote::Unquoted;
