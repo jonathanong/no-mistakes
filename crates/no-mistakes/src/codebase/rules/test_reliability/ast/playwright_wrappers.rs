@@ -2,15 +2,18 @@ use super::bindings::Bindings;
 use crate::codebase::rules::test_reliability::playwright_provenance::{WrapperCall, WrapperSummary};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
-use oxc_ast::ast::{Expression, FormalParameters, FunctionBody, Statement};
-use oxc_ast::AstKind;
+use oxc_ast::ast::{CallExpression, Expression};
 use oxc_semantic::SymbolId;
+
+mod body;
+use body::{collect_returns, WrapperBody};
 
 const MAX_WRAPPER_DEPTH: usize = 8;
 
-enum WrapperBody<'ast> {
-    Expr(&'ast Expression<'ast>),
-    Block(&'ast FunctionBody<'ast>),
+struct ParamSearch<'a> {
+    params: &'a FxHashMap<SymbolId, usize>,
+    depth: usize,
+    visited: &'a mut FxHashSet<SymbolId>,
 }
 
 impl<'ast> Bindings<'_, 'ast> {
@@ -55,8 +58,13 @@ impl<'ast> Bindings<'_, 'ast> {
         let mut param_index = None;
         let mut wrappers = Vec::new();
         let mut derived_at = None;
+        let mut search = ParamSearch {
+            params: &params,
+            depth,
+            visited,
+        };
         for expr in returns {
-            let branch = self.param_origin(expr, &params, depth, visited)?;
+            let branch = self.param_origin(expr, &mut search)?;
             if param_index.is_some_and(|prev| prev != branch.param_index) {
                 return None;
             }
@@ -74,9 +82,7 @@ impl<'ast> Bindings<'_, 'ast> {
     fn param_origin(
         &self,
         expr: &'ast Expression<'ast>,
-        params: &FxHashMap<SymbolId, usize>,
-        depth: usize,
-        visited: &mut FxHashSet<SymbolId>,
+        search: &mut ParamSearch<'_>,
     ) -> Option<WrapperSummary> {
         let mut value = unwrap_ts_wrappers(expr);
         let mut wrappers = Vec::new();
@@ -84,7 +90,7 @@ impl<'ast> Bindings<'_, 'ast> {
         loop {
             match value {
                 Expression::Identifier(identifier) => {
-                    if let Some(&param_index) = params.get(&self.symbol(identifier)?) {
+                    if let Some(&param_index) = search.params.get(&self.symbol(identifier)?) {
                         return Some(WrapperSummary {
                             param_index,
                             wrappers,
@@ -95,70 +101,74 @@ impl<'ast> Bindings<'_, 'ast> {
                 }
                 Expression::CallExpression(call) if !call.optional => {
                     let callee = unwrap_ts_wrappers(&call.callee);
-                    if let Some(member) = callee.as_member_expression() {
-                        if member.static_property_name().and_then(|n| n.as_str()) == Some("extend")
-                        {
-                            derived_at.get_or_insert(call.span.start);
-                            value = unwrap_ts_wrappers(member.object());
-                            continue;
-                        }
-                    }
-                    if let Some(inner) = self.local_callee_summary(callee, depth + 1, visited) {
-                        extend_unique(&mut wrappers, inner.wrappers);
-                        derived_at = derived_at.or(inner.derived_at);
-                        value = unwrap_ts_wrappers(
-                            call.arguments.get(inner.param_index)?.as_expression()?,
-                        );
+                    if let Some(next) = self.unwrap_local_call(
+                        call,
+                        callee,
+                        search,
+                        &mut wrappers,
+                        &mut derived_at,
+                    ) {
+                        value = next;
                         continue;
                     }
-                    let import = self.callee_import_origin(callee)?;
-                    for (arg_index, arg) in call.arguments.iter().enumerate() {
-                        let Some(arg_expr) = arg.as_expression() else {
-                            continue;
-                        };
-                        if let Some(mut inner) =
-                            self.param_origin(arg_expr, params, depth + 1, visited)
-                        {
-                            inner.wrappers.push(WrapperCall {
-                                callee: import,
-                                arg_index,
-                            });
-                            extend_unique(&mut inner.wrappers, wrappers);
-                            inner.derived_at = derived_at.or(inner.derived_at);
-                            return Some(inner);
-                        }
-                    }
-                    return None;
+                    return self.imported_param_call(call, callee, search, wrappers, derived_at);
                 }
                 _ => return None,
             }
         }
     }
 
-    fn function_def(&self, symbol: SymbolId) -> Option<(&'ast FormalParameters<'ast>, WrapperBody<'ast>)> {
-        let scope = self.semantic.scoping();
-        match self.semantic.nodes().kind(scope.symbol_declaration(symbol)) {
-            AstKind::Function(func) => Some((&func.params, WrapperBody::Block(func.body.as_deref()?))),
-            AstKind::VariableDeclarator(decl)
-                if scope.symbol_flags(symbol).is_const_variable()
-                    && decl.id.is_binding_identifier() =>
-            {
-                match unwrap_ts_wrappers(decl.init.as_ref()?) {
-                    Expression::ArrowFunctionExpression(arrow) => {
-                        let body = arrow
-                            .get_expression()
-                            .map(WrapperBody::Expr)
-                            .or_else(|| arrow.get_function_body().map(WrapperBody::Block))?;
-                        Some((&arrow.params, body))
-                    }
-                    Expression::FunctionExpression(func) => {
-                        Some((&func.params, WrapperBody::Block(func.body.as_deref()?)))
-                    }
-                    _ => None,
-                }
+    fn unwrap_local_call(
+        &self,
+        call: &'ast CallExpression<'ast>,
+        callee: &'ast Expression<'ast>,
+        search: &mut ParamSearch<'_>,
+        wrappers: &mut Vec<WrapperCall>,
+        derived_at: &mut Option<u32>,
+    ) -> Option<&'ast Expression<'ast>> {
+        if let Some(member) = callee.as_member_expression() {
+            if member.static_property_name().and_then(|n| n.as_str()) == Some("extend") {
+                derived_at.get_or_insert(call.span.start);
+                return Some(unwrap_ts_wrappers(member.object()));
             }
-            _ => None,
         }
+        let inner = self.local_callee_summary(callee, search.depth + 1, search.visited)?;
+        extend_unique(wrappers, inner.wrappers);
+        *derived_at = derived_at.or(inner.derived_at);
+        Some(unwrap_ts_wrappers(
+            call.arguments.get(inner.param_index)?.as_expression()?,
+        ))
+    }
+
+    fn imported_param_call(
+        &self,
+        call: &'ast CallExpression<'ast>,
+        callee: &'ast Expression<'ast>,
+        search: &mut ParamSearch<'_>,
+        wrappers: Vec<WrapperCall>,
+        derived_at: Option<u32>,
+    ) -> Option<WrapperSummary> {
+        let import = self.callee_import_origin(callee)?;
+        let mut nested = ParamSearch {
+            params: search.params,
+            depth: search.depth + 1,
+            visited: search.visited,
+        };
+        for (arg_index, arg) in call.arguments.iter().enumerate() {
+            let Some(arg_expr) = arg.as_expression() else {
+                continue;
+            };
+            if let Some(mut inner) = self.param_origin(arg_expr, &mut nested) {
+                inner.wrappers.push(WrapperCall {
+                    callee: import,
+                    arg_index,
+                });
+                extend_unique(&mut inner.wrappers, wrappers);
+                inner.derived_at = derived_at.or(inner.derived_at);
+                return Some(inner);
+            }
+        }
+        None
     }
 }
 
@@ -168,27 +178,4 @@ fn extend_unique(target: &mut Vec<WrapperCall>, extra: Vec<WrapperCall>) {
             target.push(item);
         }
     }
-}
-
-fn collect_returns<'ast>(stmts: &'ast [Statement<'ast>], out: &mut Vec<&'ast Expression<'ast>>) -> bool {
-    for stmt in stmts {
-        match stmt {
-            Statement::ReturnStatement(ret) => {
-                let Some(arg) = ret.argument.as_ref() else { return false };
-                out.push(arg);
-            }
-            Statement::BlockStatement(block) if !collect_returns(&block.body, out) => return false,
-            Statement::IfStatement(if_stmt)
-                if !collect_returns(std::slice::from_ref(&if_stmt.consequent), out)
-                    || if_stmt
-                        .alternate
-                        .as_ref()
-                        .is_some_and(|alt| !collect_returns(std::slice::from_ref(alt), out)) =>
-            {
-                return false;
-            }
-            _ => {}
-        }
-    }
-    true
 }
