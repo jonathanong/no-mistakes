@@ -45,7 +45,8 @@ The current validation graph is organized as follows:
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
   On `main`, Windows runs six Rust shards and six real-addon API shards and
-  macOS runs two of each, with every selected case still executed once.
+  macOS runs three Rust shards and two real-addon API shards, with every
+  selected case still executed once.
   macOS has two tiers because GitHub allows only five concurrent macOS jobs
   account-wide, so macOS runners are the queue bottleneck. Windows is not
   queue-bound, but its 14 jobs were about a quarter of pull request CI cost and

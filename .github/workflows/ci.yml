@@ -1928,11 +1928,15 @@ jobs:
           - os: macos-15
             target: aarch64-apple-darwin
             shard: 1
-            total: 2
+            total: 3
           - os: macos-15
             target: aarch64-apple-darwin
             shard: 2
-            total: 2
+            total: 3
+          - os: macos-15
+            target: aarch64-apple-darwin
+            shard: 3
+            total: 3
 
     steps:
       - name: Exclude workspace from Microsoft Defender
