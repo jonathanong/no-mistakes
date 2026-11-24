@@ -57,6 +57,10 @@ export type QueueWaitFindingKind = "enqueue-and-wait" | "enqueue-and-wait-declar
 
 export type QueueRateLimitFindingKind = "shared-queue-rate-limit" | "worker-rate-limit-per-process";
 
+export type QueuePolicyFindingKind = "unbounded-job-retention" | "queue-job-state-as-record";
+
+export type QueueFindingSeverity = "advisory";
+
 export interface QueueCheckFinding {
   kind: string;
   file: string;
@@ -65,6 +69,7 @@ export interface QueueCheckFinding {
   queueName: string | null;
   job: string | null;
   message: string;
+  severity?: QueueFindingSeverity;
 }
 
 export interface QueueCheckOptions extends ProjectOptions {

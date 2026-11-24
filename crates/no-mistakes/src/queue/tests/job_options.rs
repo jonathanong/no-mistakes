@@ -417,7 +417,7 @@ fn stamp_clears_previous_requirements_when_the_selected_config_is_empty() {
         ..FileFacts::default()
     };
     facts.insert(PathBuf::from("widgets.ts"), file);
-    crate::queue::job_options::stamp(&mut facts, &Default::default());
+    crate::queue::job_options::stamp(Path::new("."), &mut facts, &Default::default()).unwrap();
     assert!(facts
         .values()
         .next()

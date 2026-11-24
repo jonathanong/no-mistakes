@@ -89,7 +89,13 @@ pub(super) fn print_check(
         Format::Md => {
             println!("# Queue check");
             for f in findings {
-                println!("- `{}`:{} {}", f.file, f.line, f.message);
+                println!(
+                    "- `{}`:{} {}{}",
+                    f.file,
+                    f.line,
+                    if f.is_blocking() { "" } else { "(advisory) " },
+                    f.message
+                );
             }
             if include_diagnostics {
                 println!("## diagnostics");
@@ -106,7 +112,8 @@ pub(super) fn print_check(
         Format::Human => {
             for f in findings {
                 println!(
-                    "{}[{}] {}:{} {}",
+                    "{}{}[{}] {}:{} {}",
+                    if f.is_blocking() { "" } else { "advisory: " },
                     f.kind,
                     f.job.as_deref().unwrap_or("*"),
                     f.file,

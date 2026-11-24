@@ -171,7 +171,7 @@ fn check_fact_plan(
             .queues
             .factories
             .clone()
-            .with_project_wait_scopes(traversal.config()),
+            .with_analysis_policies(traversal.config()),
         react,
         react_usages,
         symbols: symbols || react_usages,

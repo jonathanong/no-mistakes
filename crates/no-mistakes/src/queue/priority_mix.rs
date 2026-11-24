@@ -82,6 +82,7 @@ fn emit(
     reported
         .iter()
         .map(|producer| CheckFinding {
+            severity: super::graph_model::QueueFindingSeverity::Blocking,
             kind: "mixed-priority".to_string(),
             file: relative_string(root, &producer.site.file),
             line: producer.site.line,

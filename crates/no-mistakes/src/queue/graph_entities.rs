@@ -33,6 +33,7 @@ impl InternalProducer {
 
     pub(super) fn unmatched(&self, root: &Path) -> CheckFinding {
         CheckFinding {
+            severity: super::graph_model::QueueFindingSeverity::Blocking,
             kind: "unmatched-producer".to_string(),
             file: relative_string(root, &self.site.file),
             line: self.site.line,
@@ -90,6 +91,7 @@ impl InternalWorker {
 
     pub(super) fn unmatched(&self, root: &Path, job: &JobKey) -> CheckFinding {
         CheckFinding {
+            severity: super::graph_model::QueueFindingSeverity::Blocking,
             kind: "unmatched-worker".to_string(),
             file: relative_string(root, &self.site.file),
             line: self.site.line,

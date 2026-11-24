@@ -53,6 +53,7 @@ pub(super) fn queue_cycles(
                 .cloned()
                 .unwrap_or_else(|| (root.to_path_buf(), 1));
             CheckFinding {
+                severity: super::graph_model::QueueFindingSeverity::Blocking,
                 kind: "queue-cycle".to_string(),
                 file: relative_string(root, &file),
                 line,
@@ -91,6 +92,7 @@ pub(super) fn self_dedup_findings(
         if let (Some(source), Some(target)) = queues {
             if source.queue_name == target.queue_name {
                 checks.push(CheckFinding {
+                    severity: super::graph_model::QueueFindingSeverity::Blocking,
                     kind: "self-dedup-enqueue".to_string(),
                     file: relative_string(root, &producer.site.file),
                     line: producer.site.line,

@@ -89,6 +89,7 @@ fn finding(root: &Path, path: &Path, line: usize, worker: Option<&InternalWorker
         None => "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.".to_string(),
     };
     CheckFinding {
+        severity: super::graph_model::QueueFindingSeverity::Blocking,
         kind: WORKER_RATE_LIMIT_KIND.to_string(),
         file: relative_string(root, path),
         line,

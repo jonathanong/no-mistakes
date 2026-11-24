@@ -12,10 +12,10 @@ pub(super) fn evidence<'a>(
     for layer in layers {
         match layer {
             Selected::Missing => {}
-            Selected::Unknown => evidence.open = true,
+            Selected::Unknown => evidence.mark_open(),
             Selected::Value(expr) => match local_value(visitor, expr) {
                 Some(expr) => evidence.absorb(&crate::queue::job_options::read_evidence(expr)),
-                None => evidence.open = true,
+                None => evidence.mark_open(),
             },
         }
     }

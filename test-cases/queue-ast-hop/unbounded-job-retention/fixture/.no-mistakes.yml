@@ -1,0 +1,16 @@
+version: 2
+queues:
+  requiredJobOptions:
+    - removeOnFail
+  unboundedJobRetention:
+    allowPaths:
+      - ./allowed.ts
+  factories:
+    queue:
+      - callee: makeQueue
+        name: 0
+    enqueue:
+      - callee: submitJob
+        queue: 0
+        job: 1
+        options: 3

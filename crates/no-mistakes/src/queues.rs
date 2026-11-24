@@ -104,11 +104,17 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
                 format,
                 *include_diagnostics,
             )?;
-            Ok(if report.check.is_empty() {
-                ExitCode::SUCCESS
-            } else {
-                ExitCode::from(1)
-            })
+            Ok(
+                if !report
+                    .check
+                    .iter()
+                    .any(no_mistakes::queue::CheckFinding::is_blocking)
+                {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::from(1)
+                },
+            )
         }
     }
 }

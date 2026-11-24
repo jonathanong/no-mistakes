@@ -42,7 +42,7 @@ Findings use these
 | `unmatched-worker-unresolved-producers` | A producer for this handler did not resolve, so the handler is not known to be dead. The message names those producer lines. A producer with neither a resolved queue nor a resolved job is listed on every unmatched worker. |
 | `self-dedup-enqueue` | A processor enqueues its own job on its own queue with `deduplication.id` or `jobId` taken from the active job. The job binding is a parameter named `job`, or otherwise the processor's first parameter: `task.id` / `task.deduplicationId`, or a destructured `{ name, id }`. A nested callback is not that binding unless one of its parameters is named `job`. A local function or `const` callback passed by name is tied to its configured worker even when declared earlier. A copied `const id = task.id` or `const id = task.deduplicationId` remains a job token within its lexical scope, as does a destructured `const { id } = task` or `const { deduplicationId } = task`. A defaulted binding such as `const { deduplicationId: dedup = "fallback" } = task` is not a token. Unrelated values and shadowed parameters do not. A configured enqueue factory does the same check on its `options` argument. The queue drops that add while the job is active. Publish a new id, or enqueue a different job. The same job name on a different queue is not a finding. If the worker queue or the target queue does not resolve, the check abstains and emits a diagnostic. |
 | `enqueue-and-wait` | Waiting on a job result holds a worker or request slot. Return control instead of blocking on the result. The check covers calls to `addAndWait`, `waitUntilFinished`, and explicitly configured wrappers. |
-| `shared-queue-rate-limit` | A processor throws `RateLimitError` (`new RateLimitError()` or `Worker.RateLimitError()`) or calls `.rateLimit()` on a queue whose producers enqueue more than one job name. That limit stalls every job on the queue. Move that job kind to its own queue, or use per-group rate limits. One known job name is not a finding. A producer on that queue with no resolved job name, or a worker queue that does not resolve, abstains with a diagnostic instead of a finding. The throw or call has to sit in the processor passed to `new Worker` or a configured worker factory. A helper outside that processor is not a finding. |
+| `shared-queue-rate-limit` | A processor throws an imported queue `RateLimitError` or calls `.rateLimit()` on its worker when the queue has producers for more than one job name. That limit stalls every job on the queue. Move that job kind to its own queue, or use per-group rate limits. One known job name is not a finding. A producer on that queue with no resolved job name, or a worker queue that does not resolve, abstains with a diagnostic instead of a finding. The throw or call has to sit in the processor passed to `new Worker` or a configured worker factory. A helper outside that processor is not a finding. |
 | `worker-rate-limit-per-process` | `.rateLimit(...)` (or `["rateLimit"](...)`) is called on a binding that resolves to a `Worker` / `TestWorker` from `bullmq` or `glide-mq`, a subclass of one, or a configured `queues.factories.worker` factory. A worker-level rate limit delays jobs inside one worker process only, so N processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait instead. Unresolved receivers whose binding originates from a queue module or worker construction abstain with a diagnostic; unrelated receivers are not reported. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`. See [Per-process worker rate limit](#per-process-worker-rate-limit). |
 | `enqueue-and-wait-declaration` | An explicitly matched wait-wrapper declaration is forbidden by `queues.factories.forbidEnqueueAndWaitDeclarations`. Replace it with enqueue-only behavior; the fix hint is included in `message`. Disabled by default. |
 | `debounce-ttl` | `deduplication: { mode: "debounce", ttl }` sets a `ttl` that debounce mode ignores. Remove `ttl`, or use a mode that reads it. |
@@ -52,6 +52,8 @@ Findings use these
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
 | `mixed-priority` | Producers on one queue enqueue both priority 0 and a priority greater than 0. See [Mixed priority](#mixed-priority). |
 | `missing-job-option` | A producer omits one or more keys from [`queues.requiredJobOptions`](../configuration/queues.md#required-job-options). One finding lists every missing key in configuration order. `message` is `job options missing {keys}`. |
+| `unbounded-job-retention` | An enabled retention policy finds a terminal job state that can be kept indefinitely. See [Unbounded job retention](#unbounded-job-retention). |
+| `queue-job-state-as-record` | An enabled advisory finds recovery driven by the state of a job or terminal job listing. See [Queue job state as the record of work](#queue-job-state-as-the-record-of-work). |
 
 The wait check recognizes member calls such as `this.queue.addAndWait(...)`
 and literal computed members such as `queue["addAndWait"](...)`. It also
@@ -174,6 +176,72 @@ or an unresolved queue name. The queue-name warning is emitted only when a
 per-queue override is configured, because that override might exempt the
 queue. A call that already sets every required key is not abstained when
 `defaultJobOptions` itself is open.
+
+## Unbounded job retention
+
+Enable `queues.unboundedJobRetention` to report `unbounded-job-retention`.
+The check uses the same resolved jobs and queue defaults as required job
+options. It reports a literal unbounded setting at the location that sets it
+and a missing setting at a producer after applying its queue defaults.
+An explicit producer option takes precedence over its queue default.
+Unresolved values and keys an unresolved spread may replace abstain. If
+`queues.requiredJobOptions` also requires a missing retention key, the
+retention finding covers that key.
+
+```ts
+// Reported for removeOnFail.
+new Queue("widgets", { defaultJobOptions: { removeOnComplete: true, removeOnFail: false } });
+```
+
+```ts
+// Accepted. Completed jobs are removed immediately and failed jobs have an age and count limit.
+new Queue("widgets", {
+  defaultJobOptions: { removeOnComplete: true, removeOnFail: { age: 86400, count: 1000 } },
+});
+```
+
+Fix the finding by setting `true`, a numeric count, or an object with a count
+or age limit. A bounded inspection window is compatible with the check.
+Keep the durable work record in the database. Configure an allowed path for
+intentional exceptions, or use a [suppression directive](#suppression) for a
+site in the aggregate check.
+
+## Queue job state as the record of work
+
+Enable `queues.jobStateAsRecord` to report the `queue-job-state-as-record`
+advisory. It flags a conditional retry, removal, or enqueue guarded by the
+state of a job obtained through `getJob`. It also flags an enqueue or retry
+fed by a failed or completed job listing. Queue bindings must resolve. An
+unrelated object with a method called `getState`, or a dashboard that just
+displays a job's status, does not trigger the check.
+
+```ts
+// Reported. Job retention can remove the record this recovery reads.
+const job = await widgets.getJob(id);
+if ((await job?.getState()) === "failed") await job.retry();
+```
+
+```ts
+// Accepted. Pending work comes from durable state.
+for (const row of await pendingWidgets(db, 100)) {
+  await widgets.add("build", { id: row.id });
+}
+```
+
+Fix by recording work state in the database and re-enqueuing from pending
+rows. Put allowed operator tooling in `allowPaths` or use a
+[suppression directive](#suppression) in the aggregate check. The advisory
+appears with `severity: "advisory"` and does not cause a nonzero exit status.
+
+## Shared queue rate limit
+
+The processor can throw a queue package's `RateLimitError` through a named,
+renamed, or namespace import, or through `Worker.RateLimitError()`. A direct
+or literal computed `rateLimit` call must resolve to the associated worker.
+A configured worker factory can also pass a parameter typed as an imported
+`Worker` or `TestWorker`. A local processor shared by multiple worker instances
+is checked for each queue. Calls on a different receiver, such as an API
+client that exposes its own `rateLimit` method, do not trigger this finding.
 
 ## Per-process worker rate limit
 

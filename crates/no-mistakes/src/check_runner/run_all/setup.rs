@@ -64,7 +64,7 @@ pub(super) fn build(
             .queues
             .factories
             .clone()
-            .with_project_wait_scopes(config),
+            .with_analysis_policies(config),
         dynamic_import_rules,
         boundary_rules: enabled.boundary_rules,
         nextjs_api_routes: enabled.nextjs_api_routes,

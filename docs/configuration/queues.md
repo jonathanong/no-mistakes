@@ -209,6 +209,27 @@ catalog-aware queue API.
 Same-file constant options and spreads resolve from the binding at each use.
 See [`queues check`](../cli/queues-check.md#required-job-options).
 
+## Queue retention and job-state policies
+
+Set either top-level object to opt in. An empty object uses that policy's defaults.
+
+```yaml
+queues:
+  unboundedJobRetention:
+    keys: [removeOnComplete, removeOnFail]
+    allowPaths: [admin/inspect.ts]
+  jobStateAsRecord:
+    allowPaths: [admin/**]
+```
+
+`unboundedJobRetention.keys` defaults to both displayed keys. Use a one-key
+list to enforce one terminal state or `[]` to enforce neither. `allowPaths`
+contains repository-relative globs and defaults to `[]` for each policy.
+`jobStateAsRecord` emits advisories and does not change the exit status.
+See [retention](../cli/queues-check.md#unbounded-job-retention) and
+[job-state-driven work](../cli/queues-check.md#queue-job-state-as-the-record-of-work).
+
+
 ```yaml
 queues:
   requiredJobOptions: [attempts, removeOnComplete, backoff]

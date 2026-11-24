@@ -1,6 +1,12 @@
 use super::*;
 
 pub(crate) fn queues_configured(config: &NoMistakesConfig) -> bool {
+    config.queues.unbounded_job_retention.is_some()
+        || config.queues.job_state_as_record.is_some()
+        || queue_topology_configured(config)
+}
+
+pub(super) fn queue_topology_configured(config: &NoMistakesConfig) -> bool {
     config
         .projects
         .values()

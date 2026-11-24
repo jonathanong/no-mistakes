@@ -1,6 +1,5 @@
 use crate::queue::extract_helpers::binding_name;
 use crate::queue::extract_visitor::QueueVisitor;
-use crate::queue::source::line_number;
 use oxc_ast::ast::{
     AssignmentExpression, AssignmentTarget, BindingIdentifier, BindingPattern, CallExpression,
     Class, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind, Program, Statement,
@@ -124,11 +123,12 @@ pub(super) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_
     let Some(object) = classify::rate_limit_receiver(call) else {
         return;
     };
+    visitor.note_rate_limit_call(call.span.start, object);
     let Some(receiver) = classify::classify_receiver(visitor, object) else {
         return;
     };
     visitor.worker_rate_limit.pending_calls.push(PendingCall {
-        line: line_number(visitor.source, call.span.start),
+        start: call.span.start,
         receiver,
     });
 }

@@ -1,0 +1,6 @@
+version: 2
+queues:
+  unboundedJobRetention:
+    keys: [removeOnComplete]
+  jobStateAsRecord:
+    allowPaths: [./consumer.ts]

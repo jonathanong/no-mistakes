@@ -1,0 +1,7 @@
+version: 2
+queues:
+  factories:
+    worker:
+      - callee: createWorker
+        name: 0
+        processor: 1

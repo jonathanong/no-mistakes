@@ -83,7 +83,7 @@ fn analyze_project_inner<T>(
                 .queues
                 .factories
                 .clone()
-                .with_project_wait_scopes(config)
+                .with_analysis_policies(config)
         })
         .unwrap_or_default();
     let files = visible_files
@@ -118,6 +118,7 @@ fn analyze_project_inner<T>(
     crate::invocation::check_timeout()?;
     let mut facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
     if let Some(config) = loaded_config.as_ref() {
+        super::job_state_scope::filter_sites(root, &config.queues, &mut facts)?;
         crate::queue::globs::record_empty_globs(
             root,
             config.as_ref(),
@@ -125,7 +126,7 @@ fn analyze_project_inner<T>(
             &files,
             &mut facts,
         );
-        crate::queue::job_options::stamp(&mut facts, &config.queues);
+        crate::queue::job_options::stamp(root, &mut facts, &config.queues)?;
     }
 
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(

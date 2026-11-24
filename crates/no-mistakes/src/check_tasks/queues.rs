@@ -19,7 +19,7 @@ pub(crate) fn run_queue_check(
         no_mistakes::diagnostics::TimingKind::Parallel,
         || -> Result<_> {
             Ok(if enabled {
-                let report =
+                let mut report =
                     no_mistakes::queue::analyze_project_with_prepared_facts_and_catalog_and_session(
                         root,
                         prepared_tsconfig_catalog,
@@ -28,12 +28,17 @@ pub(crate) fn run_queue_check(
                         facts,
                         session,
                     )?;
-                let analysis_warnings = report
-                    .diagnostics
-                    .iter()
-                    .filter(|diagnostic| is_worker_rate_limit_unresolved_diagnostic(diagnostic))
-                    .map(format_aggregate_warning)
-                    .collect();
+                let analysis_warnings = if super::configured::queue_topology_configured(config) {
+                    report
+                        .diagnostics
+                        .iter()
+                        .filter(|diagnostic| is_worker_rate_limit_unresolved_diagnostic(diagnostic))
+                        .map(format_aggregate_warning)
+                        .collect()
+                } else {
+                    report.check.retain(CheckFinding::is_opt_in_policy);
+                    Vec::new()
+                };
                 (report.check, analysis_warnings)
             } else {
                 (Vec::new(), Vec::new())

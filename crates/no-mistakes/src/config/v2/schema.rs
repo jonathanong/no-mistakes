@@ -111,7 +111,7 @@ pub struct ReactTraitsConfig {
 
 #[path = "schema/queues_top.rs"]
 mod queues_top;
-pub use queues_top::QueuesTopLevelConfig;
+pub use queues_top::{JobStateAsRecordConfig, QueuesTopLevelConfig, UnboundedJobRetentionConfig};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]

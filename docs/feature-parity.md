@@ -498,6 +498,11 @@ Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 those language edges into the existing report. They do not get private graph
 shapes.
 
+The TS/JS queue check supports opt-in [retention and job-state policies](configuration/queues.md#queue-retention-and-job-state-policies).
+Retention uses the required-option resolution. Job-state findings are advisory
+and need a resolved queue binding. The CLI, `queueCheck`, and `analyzeProject`
+share these facts.
+
 Configured TypeScript queue enqueue wrappers support object-argument property
 selectors, immutable returned-callable aliases with per-call options, and
 fixed queues with local/imported const object job definitions. These share

@@ -67,8 +67,10 @@ import type {
   WritePlanningImpactArtifactsOptions,
   PlanningImpactArtifacts,
 } from "./types";
+export type { QueueFindingSeverity, QueuePolicyFindingKind } from "./queue-report-types";
 export type { QueueRateLimitFindingKind, QueueWaitFindingKind } from "./queue-report-types";
 export type * from "./queue-factory-types";
+export type * from "./queue-policy-types";
 export * from "./types";
 export * from "./index-ci-infra";
 export * from "./index-postgres-lock-inventory";

@@ -20,6 +20,7 @@ mod graph_model;
 mod graph_related;
 mod graph_resolution;
 mod job_options;
+pub(crate) mod job_state;
 mod lang;
 mod number_scope;
 mod object_bindings;
@@ -40,7 +41,7 @@ pub use graph::{
 };
 pub use graph_model::{
     format_aggregate_warning, format_diagnostic, CheckFinding, CheckReport, PreparedProjectReport,
-    ProjectReport,
+    ProjectReport, QueueFindingSeverity,
 };
 pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};

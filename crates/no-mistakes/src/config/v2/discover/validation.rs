@@ -33,6 +33,7 @@ pub(super) fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Resu
             )?;
         }
     }
+    validate_queue_policies(&config.queues)?;
     check_commands::validate(config)?;
     swift_commands::validate(&config.tests.swift)?;
     for (name, project) in &config.tests.vitest.projects {
@@ -40,5 +41,44 @@ pub(super) fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Resu
     }
     targeted_triggers::validate(config, path)?;
     path_globs::validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
+    Ok(())
+}
+
+fn validate_queue_policies(queues: &crate::config::v2::schema::QueuesTopLevelConfig) -> Result<()> {
+    use crate::config::source_locations::ConfigPath;
+    if let Some(retention) = &queues.unbounded_job_retention {
+        for key in &retention.keys {
+            if !matches!(key.as_str(), "removeOnComplete" | "removeOnFail") {
+                anyhow::bail!("queues.unboundedJobRetention.keys contains unsupported key `{key}`");
+            }
+        }
+    }
+    let policies = [
+        (
+            "unboundedJobRetention",
+            queues
+                .unbounded_job_retention
+                .as_ref()
+                .map(|policy| &policy.allow_paths),
+        ),
+        (
+            "jobStateAsRecord",
+            queues
+                .job_state_as_record
+                .as_ref()
+                .map(|policy| &policy.allow_paths),
+        ),
+    ];
+    for (policy, paths) in policies {
+        if let Some(paths) = paths {
+            path_globs::validate_globs(paths, &format!("queues.{policy}.allowPaths"), |index| {
+                ConfigPath::default()
+                    .key("queues")
+                    .key(policy)
+                    .key("allowPaths")
+                    .index(index)
+            })?;
+        }
+    }
     Ok(())
 }

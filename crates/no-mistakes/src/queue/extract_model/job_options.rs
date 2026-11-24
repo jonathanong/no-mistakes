@@ -1,4 +1,5 @@
 use super::ProducerBinding;
+use crate::queue::job_options::RetentionEvidence;
 use oxc_ast::ast::IdentifierReference;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -7,6 +8,7 @@ use std::path::PathBuf;
 pub(crate) struct JobOptionSpread {
     pub name: String,
     pub at: u32,
+    after: RetentionEvidence,
 }
 
 impl From<&IdentifierReference<'_>> for JobOptionSpread {
@@ -14,6 +16,7 @@ impl From<&IdentifierReference<'_>> for JobOptionSpread {
         Self {
             name: id.name.to_string(),
             at: id.span.start,
+            after: RetentionEvidence::default(),
         }
     }
 }
@@ -24,22 +27,41 @@ pub(crate) struct JobOptionEvidence {
     pub keys: BTreeSet<String>,
     pub open: bool,
     pub spreads: Vec<JobOptionSpread>,
-    /// When set, finish folds each name in `spreads` as this member, in order.
-    pub member: Option<String>,
+    pub(in crate::queue) retention: RetentionEvidence,
+    /// Initial options when the pending spreads supply the whole `opts` member.
+    pub before_opts_spreads: Option<Box<Self>>,
 }
 
 impl JobOptionEvidence {
     pub(crate) fn open() -> Self {
-        Self {
-            open: true,
-            ..Self::default()
-        }
+        let mut evidence = Self::default();
+        evidence.mark_open();
+        evidence
+    }
+
+    pub(crate) fn mark_open(&mut self) {
+        self.open = true;
+        *self.retention_tail() = RetentionEvidence::UNKNOWN;
+    }
+
+    pub(in crate::queue) fn retention_tail(&mut self) -> &mut RetentionEvidence {
+        self.spreads
+            .last_mut()
+            .map_or(&mut self.retention, |spread| &mut spread.after)
     }
 
     pub(crate) fn absorb(&mut self, other: &Self) {
         self.keys.extend(other.keys.iter().cloned());
-        self.spreads.extend(other.spreads.iter().cloned());
         self.open |= other.open;
+        self.retention_tail().overlay(other.retention);
+        self.spreads.extend(other.spreads.iter().cloned());
+    }
+
+    pub(crate) fn resolve_spreads(&mut self, mut lookup: impl FnMut(&JobOptionSpread) -> Self) {
+        for spread in std::mem::take(&mut self.spreads) {
+            self.absorb(&lookup(&spread));
+            self.retention.overlay(spread.after);
+        }
     }
 }
 
@@ -56,12 +78,14 @@ pub(crate) struct JobOptionSite {
 #[derive(Debug, Clone)]
 pub(crate) struct QueueDefaultOptions {
     pub declaration: u32,
+    pub line: usize,
     pub queue_name: Option<String>,
     pub evidence: JobOptionEvidence,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct JobOptionFinding {
+    pub kind: &'static str,
     pub line: usize,
     pub queue_file: Option<PathBuf>,
     pub queue_name: Option<String>,

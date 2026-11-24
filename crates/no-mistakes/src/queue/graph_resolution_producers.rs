@@ -32,33 +32,42 @@ pub(in crate::queue) fn resolve_producers<R: ImportResolverFacade>(
                 queue,
             });
         }
-        for (binding, check) in &file.job_id_sites {
-            let resolved = match binding {
-                JobIdQueue::Named(binding) => resolved_binding(
-                    &local,
-                    facts,
-                    resolver,
-                    remapper,
-                    path,
-                    binding,
-                    definitions,
-                )
-                .is_some(),
-                JobIdQueue::Namespace { source, exported } => lookup_export(
-                    facts,
-                    resolver,
-                    remapper,
-                    path,
-                    source,
-                    exported,
-                    Want::Queue,
-                )
-                .is_some_and(|name| definitions.contains_key(&name)),
-            };
-            if resolved {
-                checks.push((path.clone(), check.clone()));
-            }
-        }
+        let resolves = |binding: &JobIdQueue| match binding {
+            JobIdQueue::Named(binding) => resolved_binding(
+                &local,
+                facts,
+                resolver,
+                remapper,
+                path,
+                binding,
+                definitions,
+            )
+            .is_some(),
+            JobIdQueue::Namespace { source, exported } => lookup_export(
+                facts,
+                resolver,
+                remapper,
+                path,
+                source,
+                exported,
+                Want::Queue,
+            )
+            .is_some_and(|name| definitions.contains_key(&name)),
+        };
+        checks.extend(
+            file.job_id_sites
+                .iter()
+                .filter(|(binding, _)| resolves(binding))
+                .map(|(_, check)| (path.clone(), check.clone())),
+        );
+        checks.extend(
+            file.job_state_sites
+                .iter()
+                .filter(|site| {
+                    resolves(&site.origin) && site.destination.as_ref().is_none_or(&resolves)
+                })
+                .map(|site| (path.clone(), site.check.clone())),
+        );
         let queues = file
             .opaque_priority_bindings
             .iter()

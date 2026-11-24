@@ -83,6 +83,7 @@ pub(super) fn analyze_with<T>(
         parse_failures,
     )?;
     let mut facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
+    super::job_state_scope::filter_sites(root, &config.queues, &mut facts)?;
     let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         tsconfig_catalog,
@@ -90,7 +91,7 @@ pub(super) fn analyze_with<T>(
         session,
     )
     .with_queue_compatibility(root);
-    crate::queue::job_options::stamp(&mut facts, &config.queues);
+    crate::queue::job_options::stamp(root, &mut facts, &config.queues)?;
     let (lang_producers, lang_workers) =
         crate::queue::lang::language_queue_sites(root, session, config, filter.as_ref())?;
     let report = resolve_queue_relationships_with_resolver(

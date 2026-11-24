@@ -13,6 +13,8 @@ mod flow;
 mod judge;
 #[path = "job_options_note.rs"]
 mod note;
+#[path = "job_options_retention.rs"]
+mod retention;
 #[path = "job_options_site.rs"]
 mod site;
 #[path = "job_options_walk.rs"]
@@ -23,18 +25,47 @@ pub(crate) use defaults::{
 };
 pub(crate) use judge::judge_into_facts;
 pub(crate) use note::note_call;
+pub(super) use retention::RetentionEvidence;
+pub(super) use retention::KIND as RETENTION_KIND;
 pub(super) use walk::{finish, read as read_evidence};
 
-pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopLevelConfig) {
+pub(crate) fn stamp(
+    root: &Path,
+    facts: &mut HashMap<PathBuf, FileFacts>,
+    queues: &QueuesTopLevelConfig,
+) -> anyhow::Result<()> {
     let policy = (!queues.required_job_options.is_empty()
         || !queues.required_job_options_by_queue.is_empty())
     .then(|| RequiredJobOptions {
         global: queues.required_job_options.clone(),
         by_queue: queues.required_job_options_by_queue.clone(),
     });
-    for file in facts.values_mut() {
+    let retention = queues.unbounded_job_retention.as_ref();
+    let allow_paths = retention
+        .map(|policy| {
+            policy
+                .allow_paths
+                .iter()
+                .map(|path| path.trim_start_matches("./").to_owned())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    let allow = super::graph_model::build_filter(&allow_paths)?;
+    let retention_keys: Option<std::sync::Arc<[String]>> = retention
+        .filter(|policy| !policy.keys.is_empty())
+        .map(|policy| policy.keys.clone().into());
+    for (path, file) in facts {
         file.required_job_options.clone_from(&policy);
+        file.unbounded_job_retention = if allow
+            .as_ref()
+            .is_some_and(|allow| allow.is_match(path.strip_prefix(root).unwrap_or(path)))
+        {
+            None
+        } else {
+            retention_keys.clone()
+        };
     }
+    Ok(())
 }
 
 pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
@@ -42,6 +73,11 @@ pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> 
     for (path, file) in facts {
         for check in &file.checks {
             out.push(CheckFinding {
+                severity: if check.kind == super::job_state::KIND {
+                    super::graph_model::QueueFindingSeverity::Advisory
+                } else {
+                    super::graph_model::QueueFindingSeverity::Blocking
+                },
                 kind: check.kind.clone(),
                 file: relative_string(root, path),
                 line: check.line,
@@ -53,7 +89,8 @@ pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> 
         }
         for finding in &file.job_option_findings {
             out.push(CheckFinding {
-                kind: "missing-job-option".to_string(),
+                severity: super::graph_model::QueueFindingSeverity::Blocking,
+                kind: finding.kind.to_string(),
                 file: relative_string(root, path),
                 line: finding.line,
                 queue_file: finding

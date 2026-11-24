@@ -21,16 +21,17 @@ pub(super) fn read_object(object: &ObjectExpression<'_>) -> JobOptionEvidence {
             ObjectPropertyKind::ObjectProperty(property) => {
                 match crate::ast::property_key_name(&property.key) {
                     Some(name) => {
+                        out.retention_tail().record(&name, property);
                         out.keys.insert(name.into_owned());
                     }
-                    None => out.open = true,
+                    None => out.mark_open(),
                 }
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
                 match spread.argument.get_inner_expression() {
                     Expression::ObjectExpression(inner) => out.absorb(&read_object(inner)),
                     Expression::Identifier(id) => out.spreads.push((&**id).into()),
-                    _ => out.open = true,
+                    _ => out.mark_open(),
                 }
             }
         }
@@ -81,8 +82,14 @@ pub(in crate::queue) fn finish(facts: &mut FileFacts, bindings: &ObjectBindings<
         .iter_mut()
         .map(|wrapper| &mut wrapper.options);
     for site in facts.job_option_sites.iter_mut().chain(wrappers) {
-        if site.evidence.member.take().is_some() {
-            resolver.fold_members(&mut site.evidence);
+        if let Some(mut initial) = site.evidence.before_opts_spreads.take() {
+            resolver.fold_keys(&mut initial);
+            for spread in &site.evidence.spreads {
+                if let Some(member) = resolver.opts_member(spread) {
+                    *initial = member;
+                }
+            }
+            site.evidence = *initial;
         } else {
             resolver.fold_keys(&mut site.evidence);
         }
@@ -98,17 +105,7 @@ struct SpreadResolver<'binding, 'ast> {
 
 impl SpreadResolver<'_, '_> {
     fn fold_keys(&mut self, evidence: &mut JobOptionEvidence) {
-        for spread in std::mem::take(&mut evidence.spreads) {
-            evidence.absorb(&self.option_keys(&spread));
-        }
-    }
-
-    fn fold_members(&mut self, evidence: &mut JobOptionEvidence) {
-        for spread in std::mem::take(&mut evidence.spreads) {
-            if let Some(member) = self.opts_member(&spread) {
-                *evidence = member;
-            }
-        }
+        evidence.resolve_spreads(|spread| self.option_keys(spread));
     }
 
     fn option_keys(&mut self, spread: &JobOptionSpread) -> JobOptionEvidence {

@@ -37,3 +37,54 @@ fn queue_required_options_use_the_selected_config_in_prepared_reports() {
         }
     }
 }
+
+#[test]
+fn queue_policies_match_standalone_and_analyze_project() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/queue-policy-config");
+    let input = |options: Value| crate::napi_api::options::test_json_arg(options.to_string());
+    let standalone =
+        crate::napi_api::queue_check_json_impl(input(json!({ "root": root }))).unwrap();
+    let standalone: Value = serde_json::from_str(&standalone).unwrap();
+    let findings = standalone.as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding["kind"] == "unbounded-job-retention"));
+    assert!(findings
+        .iter()
+        .any(|finding| finding["kind"] == "queue-job-state-as-record"
+            && finding["severity"] == "advisory"));
+
+    let reports = json!([{ "type": "queueCheck" }, { "type": "check" }, { "type": "queueEdges" }]);
+    for (config, expected) in [
+        (".no-mistakes.yml", standalone.clone()),
+        (
+            "advisory.yml",
+            Value::Array(
+                findings
+                    .iter()
+                    .filter(|finding| finding["severity"] == "advisory")
+                    .cloned()
+                    .collect(),
+            ),
+        ),
+        ("off.yml", json!([])),
+    ] {
+        let output = analyze_project_json_impl(input(json!({
+            "root": root,
+            "config": root.join(config),
+            "reports": reports,
+        })))
+        .unwrap();
+        let output: Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(
+            output["reports"][0]["result"], expected,
+            "{config}: {output}"
+        );
+        assert_eq!(
+            output["reports"][1]["result"]["queues"], expected,
+            "{config}: {output}"
+        );
+    }
+}

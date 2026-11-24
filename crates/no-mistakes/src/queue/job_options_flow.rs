@@ -1,6 +1,6 @@
 use super::super::extract_model::JobOptionEvidence;
 use super::super::extract_visitor::QueueVisitor;
-use super::site::{member_string, push_site};
+use super::site::{member_string, positional_args_open, push_site};
 use super::walk::{read, read_member};
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{
@@ -22,17 +22,11 @@ pub(super) fn note_scheduler(
 }
 
 fn scheduler_template(call: &CallExpression<'_>) -> (Option<String>, JobOptionEvidence) {
+    if positional_args_open(&call.arguments, 2) {
+        return (None, JobOptionEvidence::open());
+    }
     let Some(arg) = call.arguments.get(2) else {
-        let evidence = if call
-            .arguments
-            .iter()
-            .any(|arg| matches!(arg, Argument::SpreadElement(_)))
-        {
-            JobOptionEvidence::open()
-        } else {
-            JobOptionEvidence::default()
-        };
-        return (None, evidence);
+        return (None, JobOptionEvidence::default());
     };
     let Some(expr) = arg.as_expression() else {
         return (None, JobOptionEvidence::open());
@@ -45,7 +39,7 @@ fn scheduler_template(call: &CallExpression<'_>) -> (Option<String>, JobOptionEv
         Expression::Identifier(id) => (
             None,
             JobOptionEvidence {
-                member: Some("opts".to_string()),
+                before_opts_spreads: Some(Box::default()),
                 spreads: vec![(&**id).into()],
                 ..JobOptionEvidence::default()
             },
@@ -140,8 +134,11 @@ fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
         }
     }
     if !pending.is_empty() {
-        evidence.member = Some("opts".to_string());
-        evidence.spreads = pending;
+        return Some(JobOptionEvidence {
+            before_opts_spreads: Some(Box::new(evidence)),
+            spreads: pending,
+            ..JobOptionEvidence::default()
+        });
     }
     Some(evidence)
 }

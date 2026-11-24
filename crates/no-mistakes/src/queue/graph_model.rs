@@ -20,6 +20,35 @@ pub struct CheckFinding {
     pub queue_name: Option<String>,
     pub job: Option<String>,
     pub message: String,
+    #[serde(skip_serializing_if = "QueueFindingSeverity::is_blocking")]
+    pub severity: QueueFindingSeverity,
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum QueueFindingSeverity {
+    Blocking,
+    Advisory,
+}
+
+impl QueueFindingSeverity {
+    fn is_blocking(&self) -> bool {
+        *self == Self::Blocking
+    }
+}
+
+impl CheckFinding {
+    pub fn is_blocking(&self) -> bool {
+        self.severity.is_blocking()
+    }
+
+    #[doc(hidden)]
+    pub fn is_opt_in_policy(&self) -> bool {
+        matches!(
+            self.kind.as_str(),
+            super::job_options::RETENTION_KIND | super::job_state::KIND
+        )
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

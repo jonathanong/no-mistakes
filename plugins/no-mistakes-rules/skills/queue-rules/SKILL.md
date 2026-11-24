@@ -13,6 +13,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT enqueue inside a transaction that may roll back; enqueue after commit. Exception: when the enqueue is the only durable handoff (a consumer whose idempotency row is its only record), enqueue inside the transaction so a failed enqueue rolls the row back; the enqueue must tolerate collisions, and the worker must be idempotent and treat a missing row as a retry.
 - MUST NOT rename a job or change its payload incompatibly in one step while jobs of the old shape can exist (queued, delayed, retrying); ship worker support for both shapes, then switch producers, then drop the old once no old-shape jobs remain queued, delayed, or retrying.
 - MUST NOT assume a unique job id prevents duplicate runs; it only dedupes enqueues. Make the work idempotent.
+- SHOULD NOT keep completed or failed jobs without a bound. Set a count or age limit for any inspection window, and keep the durable record of the work in the database.
 - SHOULD NOT key dedup ids by entity alone when distinct events must each run. A retained job still holds its id.
 - MUST NOT size a global per-key cap as if it were per-process worker concurrency.
 - MUST NOT ship a job whose only failure recovery is the dead-letter queue; add a reconciler or document the accepted loss.

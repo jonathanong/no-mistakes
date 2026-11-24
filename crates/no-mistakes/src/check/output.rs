@@ -35,7 +35,8 @@ fn print_check_md(results: &CheckResults) {
     }
     println!("## queues");
     for f in &results.queues {
-        println!("- `{}`:{} {}", f.file, f.line, f.message);
+        let level = if f.is_blocking() { "" } else { "(advisory) " };
+        println!("- `{}`:{} {level}{}", f.file, f.line, f.message);
     }
     println!("## rules");
     for f in &results.rules {
@@ -90,7 +91,8 @@ fn print_check_human(results: &CheckResults) {
 fn print_queue_human(findings: &[CheckFinding]) {
     for f in findings {
         println!(
-            "{}[{}] {}:{} {}",
+            "{}{}[{}] {}:{} {}",
+            if f.is_blocking() { "" } else { "advisory: " },
             f.kind,
             f.job.as_deref().unwrap_or("*"),
             f.file,

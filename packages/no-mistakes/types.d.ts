@@ -10,6 +10,7 @@ export * from "./swift-command-types";
 export * from "./test-audit-types";
 export * from "./report-types";
 export type * from "./queue-factory-types";
+export type * from "./queue-policy-types";
 export * from "./server-contract-types";
 export * from "./ci-types";
 export * from "./workflow-topology-types";

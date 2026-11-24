@@ -1,7 +1,10 @@
 use super::super::extract_model::{
-    FileFacts, JobOptionEvidence, JobOptionFinding, JobOptionSite, LocalQueue, RequiredJobOptions,
+    FileFacts, JobOptionEvidence, JobOptionFinding, JobOptionSite, LocalQueue, QueueDefaultOptions,
+    RequiredJobOptions,
 };
-use std::collections::{BTreeSet, HashMap};
+use super::retention::{self, RetentionValue};
+use crate::fx::FxHashMap;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 const CALL_OPEN: &str =
@@ -13,19 +16,60 @@ const NAME_OPEN: &str = "job options were not judged because the queue name did 
 pub(crate) fn judge_into_facts(facts: &mut HashMap<PathBuf, FileFacts>) {
     if !facts
         .values()
-        .any(|file| file.required_job_options.is_some())
+        .any(|file| file.required_job_options.is_some() || file.unbounded_job_retention.is_some())
     {
         return;
     }
     let defaults = index_defaults(facts);
     let mut notes = Vec::new();
     for (path, file) in facts.iter() {
-        let Some(policy) = file.required_job_options.clone() else {
-            continue;
-        };
+        let required = file.required_job_options.as_ref();
+        let retention = file.unbounded_job_retention.as_deref().unwrap_or_default();
         for site in &file.job_option_sites {
-            if let Some(note) = judge_site(path, site, &policy, &defaults) {
+            if site.binding.is_some() && site.queue_name.is_none() {
+                continue;
+            }
+            let inherited = site
+                .queue_file
+                .as_deref()
+                .and_then(|file| defaults.get(file))
+                .and_then(|queues| queues.get(site.queue_name.as_deref()?));
+            let unbounded = retention
+                .iter()
+                .filter(|key| retention::unbounded_at_site(site, inherited, key))
+                .map(String::as_str)
+                .collect::<Vec<_>>();
+            if !unbounded.is_empty() {
+                let message = retention::message(&unbounded);
+                notes.push(site_finding(path, site, retention::KIND, message));
+            }
+            if let Some(note) = required
+                .and_then(|policy| judge_required(path, site, policy, inherited, &unbounded))
+            {
                 notes.push(note);
+            }
+        }
+        if !retention.is_empty() {
+            for options in &file.queue_defaults {
+                let unbounded = retention
+                    .iter()
+                    .filter(|key| options.evidence.retention.get(key) == RetentionValue::Unbounded)
+                    .map(String::as_str)
+                    .collect::<Vec<_>>();
+                if !unbounded.is_empty() {
+                    notes.push(Note {
+                        path: path.clone(),
+                        line: options.line,
+                        body: NoteBody::Finding(JobOptionFinding {
+                            kind: retention::KIND,
+                            line: options.line,
+                            queue_file: Some(path.clone()),
+                            queue_name: default_queue_name(file, options).map(str::to_owned),
+                            job: None,
+                            message: retention::message(&unbounded),
+                        }),
+                    });
+                }
             }
         }
     }
@@ -38,25 +82,36 @@ pub(crate) fn judge_into_facts(facts: &mut HashMap<PathBuf, FileFacts>) {
     }
 }
 
+fn default_queue_name<'a>(
+    file: &'a FileFacts,
+    options: &'a QueueDefaultOptions,
+) -> Option<&'a str> {
+    options.queue_name.as_deref().or_else(|| {
+        match file.queue_declarations.get(&options.declaration)? {
+            LocalQueue::Known(name) => Some(name.as_str()),
+            _ => None,
+        }
+    })
+}
+
 fn index_defaults(
     facts: &HashMap<PathBuf, FileFacts>,
-) -> HashMap<(PathBuf, String), JobOptionEvidence> {
-    let mut out: HashMap<(PathBuf, String), JobOptionEvidence> = HashMap::new();
+) -> FxHashMap<&Path, FxHashMap<&str, JobOptionEvidence>> {
+    let mut out = FxHashMap::<_, FxHashMap<_, JobOptionEvidence>>::default();
     for (path, file) in facts {
-        for defaults in &file.queue_defaults {
-            let name = defaults.queue_name.clone().or_else(|| {
-                let LocalQueue::Known(name) = file.queue_declarations.get(&defaults.declaration)?
-                else {
-                    return None;
-                };
-                Some(name.clone())
-            });
-            let Some(name) = name else {
+        for options in &file.queue_defaults {
+            let Some(name) = default_queue_name(file, options) else {
                 continue;
             };
-            let entry = out.entry((path.clone(), name)).or_default();
-            entry.open |= defaults.evidence.open;
-            entry.keys.extend(defaults.evidence.keys.iter().cloned());
+            out.entry(path.as_path())
+                .or_default()
+                .entry(name)
+                .and_modify(|entry| {
+                    entry.open |= options.evidence.open;
+                    entry.keys.extend(options.evidence.keys.iter().cloned());
+                    entry.retention.reconcile(options.evidence.retention);
+                })
+                .or_insert_with(|| options.evidence.clone());
         }
     }
     out
@@ -73,15 +128,13 @@ enum NoteBody {
     Finding(JobOptionFinding),
 }
 
-fn judge_site(
+fn judge_required(
     path: &Path,
     site: &JobOptionSite,
     policy: &RequiredJobOptions,
-    defaults: &HashMap<(PathBuf, String), JobOptionEvidence>,
+    defaults: Option<&JobOptionEvidence>,
+    unbounded: &[&str],
 ) -> Option<Note> {
-    if site.binding.is_some() && site.queue_name.is_none() {
-        return None;
-    }
     if site.queue_name.is_none() && !policy.by_queue.is_empty() {
         return Some(diagnostic(path, site.line, NAME_OPEN));
     }
@@ -92,34 +145,28 @@ fn judge_site(
     if site.evidence.open {
         return Some(diagnostic(path, site.line, CALL_OPEN));
     }
-    if missing(required, &site.evidence.keys).is_empty() {
-        return None;
-    }
-    let defaults = site.queue_file.as_ref().and_then(|file| {
-        site.queue_name
-            .as_ref()
-            .map(|name| defaults.get(&(file.clone(), name.clone())))
-    });
-    let Some(Some(defaults)) = defaults else {
-        return Some(finding(path, site, required, &site.evidence.keys));
-    };
-    if defaults.open {
-        return Some(diagnostic(path, site.line, DEFAULTS_OPEN));
-    }
-    let mut present = site.evidence.keys.clone();
-    present.extend(defaults.keys.iter().cloned());
-    if missing(required, &present).is_empty() {
-        return None;
-    }
-    Some(finding(path, site, required, &present))
-}
-
-fn missing<'a>(required: &'a [String], present: &BTreeSet<String>) -> Vec<&'a str> {
-    required
+    let mut missing = required
         .iter()
-        .filter(|key| !present.contains(key.as_str()))
         .map(String::as_str)
-        .collect()
+        .filter(|key| !site.evidence.keys.contains(*key) && !unbounded.contains(key))
+        .collect::<Vec<_>>();
+    if missing.is_empty() {
+        return None;
+    }
+    if let Some(defaults) = defaults {
+        if defaults.open {
+            return Some(diagnostic(path, site.line, DEFAULTS_OPEN));
+        }
+        missing.retain(|key| !defaults.keys.contains(*key));
+    }
+    (!missing.is_empty()).then(|| {
+        site_finding(
+            path,
+            site,
+            "missing-job-option",
+            format!("job options missing {}", missing.join(", ")),
+        )
+    })
 }
 
 fn diagnostic(path: &Path, line: usize, message: &str) -> Note {
@@ -130,24 +177,17 @@ fn diagnostic(path: &Path, line: usize, message: &str) -> Note {
     }
 }
 
-fn finding(
-    path: &Path,
-    site: &JobOptionSite,
-    required: &[String],
-    present: &BTreeSet<String>,
-) -> Note {
+fn site_finding(path: &Path, site: &JobOptionSite, kind: &'static str, message: String) -> Note {
     Note {
         path: path.to_path_buf(),
         line: site.line,
         body: NoteBody::Finding(JobOptionFinding {
+            kind,
             line: site.line,
             queue_file: site.queue_file.clone(),
             queue_name: site.queue_name.clone(),
             job: site.job.clone(),
-            message: format!(
-                "job options missing {}",
-                missing(required, present).join(", ")
-            ),
+            message,
         }),
     }
 }

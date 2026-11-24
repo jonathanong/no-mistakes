@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 mod catalog;
 mod fact_sources;
+mod job_state_scope;
 mod resolve;
 mod standalone;
 use fact_sources::{queue_project_facts_from_shared, queue_project_facts_from_ts};

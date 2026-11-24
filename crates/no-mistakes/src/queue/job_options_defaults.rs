@@ -1,6 +1,6 @@
 use super::super::extract_model::{JobOptionEvidence, QueueDefaultOptions};
 use super::super::extract_visitor::QueueVisitor;
-use super::site::{evidence_at, push_site};
+use super::site::{evidence_at, positional_args_open, push_site};
 use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
@@ -15,7 +15,12 @@ pub(crate) fn note_factory_defaults(
     name_index: usize,
     call: &CallExpression<'_>,
 ) {
-    let mut recorded = blank(declaration, queue_name.map(str::to_string));
+    let mut recorded = blank(
+        visitor,
+        call.span.start,
+        declaration,
+        queue_name.map(str::to_string),
+    );
     for (index, arg) in call.arguments.iter().enumerate() {
         if index == name_index {
             continue;
@@ -31,13 +36,17 @@ pub(crate) fn note_constructed_defaults(
     new_expr: &oxc_ast::ast::NewExpression<'_>,
 ) {
     let mut recorded = blank(
+        visitor,
+        new_expr.span.start,
         declaration,
         new_expr
             .arguments
             .first()
             .and_then(|arg| visitor.literal_arg(arg)),
     );
-    if let Some(arg) = new_expr.arguments.get(1) {
+    if positional_args_open(&new_expr.arguments, 1) {
+        recorded.evidence = JobOptionEvidence::open();
+    } else if let Some(arg) = new_expr.arguments.get(1) {
         note_options_argument(arg, &visitor.object_bindings, &mut recorded);
     }
     visitor.facts.queue_defaults.push(recorded);
@@ -60,9 +69,15 @@ pub(crate) fn note_argument_options(
     );
 }
 
-fn blank(declaration: u32, queue_name: Option<String>) -> QueueDefaultOptions {
+fn blank(
+    visitor: &QueueVisitor<'_>,
+    start: u32,
+    declaration: u32,
+    queue_name: Option<String>,
+) -> QueueDefaultOptions {
     QueueDefaultOptions {
         declaration,
+        line: super::super::source::line_number(visitor.source, start),
         queue_name,
         evidence: JobOptionEvidence::default(),
     }

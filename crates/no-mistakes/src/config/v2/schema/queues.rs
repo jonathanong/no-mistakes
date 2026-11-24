@@ -15,6 +15,8 @@ pub struct QueueFactoryRoles {
     /// Each project's `queues.waitScopes`, prefixed like other project globs.
     /// An empty scope list means every file of that project.
     pub wait_scopes: Vec<ProjectWaitScopes>,
+    #[doc(hidden)]
+    pub record_job_state: bool,
 }
 
 #[path = "queues_wait.rs"]
@@ -85,6 +87,7 @@ impl QueueFactoryRoles {
             .merge(&other.enqueue_and_wait_patterns)?;
         self.forbid_enqueue_and_wait_declarations |= other.forbid_enqueue_and_wait_declarations;
         wait::merge(&mut self.wait_scopes, &other.wait_scopes);
+        self.record_job_state |= other.record_job_state;
         self.dedup_callees();
         Ok(())
     }

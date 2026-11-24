@@ -1,0 +1,87 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "consumer.ts",
+          "job": null,
+          "kind": "queue-job-state-as-record",
+          "line": 12,
+          "message": "`retry()` depends on retained queue job state. Decide what work is pending from a durable record, then enqueue it.",
+          "queueFile": null,
+          "queueName": null,
+          "severity": "advisory",
+          "sourceLine": "if (await job?.isFailed()) await job.retry();"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "both": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "consumer.ts",
+          "job": "build",
+          "kind": "unbounded-job-retention",
+          "line": 7,
+          "message": "job retention is unbounded for removeOnFail. Set a count or age limit.",
+          "queueFile": "consumer.ts",
+          "queueName": "widgets",
+          "sourceLine": "await widgets.add(\"build\", { id });"
+        },
+        {
+          "file": "consumer.ts",
+          "job": null,
+          "kind": "queue-job-state-as-record",
+          "line": 12,
+          "message": "`retry()` depends on retained queue job state. Decide what work is pending from a durable record, then enqueue it.",
+          "queueFile": null,
+          "queueName": null,
+          "severity": "advisory",
+          "sourceLine": "if (await job?.isFailed()) await job.retry();"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exempt": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

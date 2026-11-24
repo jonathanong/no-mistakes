@@ -26,7 +26,8 @@ pub(crate) fn source_may_have_queue_facts(
         return true;
     }
     let haystack = source.as_bytes();
-    contains_bytes(haystack, b"bullmq")
+    (roles.record_job_state && super::job_state::needs_scoping(source))
+        || contains_bytes(haystack, b"bullmq")
         || contains_bytes(haystack, b"glide-mq")
         // Seed on the identifier, not `.add`: whitespace or `/* */` after the
         // dot (`q.\n add`, `q. add`, `q./*c*/add`) is still a static member

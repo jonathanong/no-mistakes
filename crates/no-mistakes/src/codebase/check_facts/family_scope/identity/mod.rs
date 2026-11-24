@@ -29,7 +29,7 @@ fn queue_plan(root: &Path) -> CheckFactPlan {
             .queues
             .factories
             .clone()
-            .with_project_wait_scopes(&config),
+            .with_analysis_policies(&config),
         ..Default::default()
     }
 }

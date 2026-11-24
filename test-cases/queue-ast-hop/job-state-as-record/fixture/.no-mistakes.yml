@@ -1,0 +1,8 @@
+version: 2
+queues:
+  factories:
+    queue:
+      - { callee: buildQueue, name: 0 }
+  jobStateAsRecord:
+    allowPaths:
+      - operations.ts

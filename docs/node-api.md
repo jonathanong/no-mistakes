@@ -484,6 +484,11 @@ remain failures. See
 Pass `{ includeDiagnostics: true }` to `queueCheck()` (or `{ type: "queueCheck", includeDiagnostics: true }` in `analyzeProject()`, typed by `QueueCheckOptions` and `BatchedQueueCheckOptions`) to receive a `QueueCheckReport` (`{ findings, diagnostics }`) instead of the default bare `QueueCheckFinding[]` array.
 Aggregate `check()` also surfaces unresolved `worker-rate-limit-per-process` receiver diagnostics in `CheckReport.warnings` without turning a clean run into a failure.
 Import the exported `QueueRateLimitFindingKind` type for the rate-limit-specific values `"shared-queue-rate-limit" | "worker-rate-limit-per-process"`.
+`queueCheck()` and `analyzeProject()` with a `queueCheck` report use the selected
+[queue retention and job-state policies](configuration/queues.md#queue-retention-and-job-state-policies).
+`QueuePolicyFindingKind` names their findings. A job-state advisory has
+`QueueCheckFinding.severity` set to `"advisory"`.
+
 `queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
 Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
 name patterns with `queues.factories.enqueueAndWaitPatterns` (default `[]`),

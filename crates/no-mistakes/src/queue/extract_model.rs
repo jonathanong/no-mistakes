@@ -128,6 +128,7 @@ pub(crate) struct FileFacts {
     pub referenced_jobs_dynamic: bool,
     pub checks: Vec<LocalCheck>,
     pub job_id_sites: Vec<(JobIdQueue, LocalCheck)>,
+    pub job_state_sites: Vec<super::job_state::Site>,
     /// Same-file `const` integers seen while extracting this file.
     pub const_numbers: HashMap<String, f64>,
     /// Bindings whose bulk enqueue list was not a closed list of object literals.
@@ -138,6 +139,7 @@ pub(crate) struct FileFacts {
     pub queue_defaults: Vec<QueueDefaultOptions>,
     pub job_option_findings: Vec<JobOptionFinding>,
     pub required_job_options: Option<RequiredJobOptions>,
+    pub unbounded_job_retention: Option<std::sync::Arc<[String]>>,
     pub has_queue_package_import: bool,
     pub worker_rate_limits: Vec<WorkerRateLimitCall>,
     pub worker_bindings: HashMap<String, ExportedWorkerBinding>,

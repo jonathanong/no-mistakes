@@ -24,6 +24,8 @@ pub(super) fn prepare<'a>(
     let semantic = (needs_semantic
         && plan.queue_project
         && (needs_job_id_scoping(source)
+            || (context.queue_factory_roles.record_job_state
+                && crate::queue::job_state::needs_scoping(source))
             || needs_enqueue_scoping(source, &context.queue_factory_roles)
             || needs_rate_limit_scoping(source)
             || needs_scheduler_scoping(source, &context.queue_factory_roles)

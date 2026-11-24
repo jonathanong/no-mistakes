@@ -179,7 +179,10 @@ fn timing_metadata(
 fn has_failures(results: &check_runner::CheckResults) -> bool {
     !results.incomplete.is_empty()
         || !results.react.is_empty()
-        || !results.queues.is_empty()
+        || results
+            .queues
+            .iter()
+            .any(no_mistakes::queue::CheckFinding::is_blocking)
         || !results.rules.is_empty()
         || !results.integration.is_empty()
         || !results.codebase.is_empty()

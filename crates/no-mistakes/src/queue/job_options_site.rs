@@ -5,12 +5,7 @@ use super::walk::read;
 use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 
 pub(super) fn evidence_at(call: &CallExpression<'_>, index: usize) -> JobOptionEvidence {
-    if call
-        .arguments
-        .iter()
-        .take(index + 1)
-        .any(|arg| matches!(arg, Argument::SpreadElement(_)))
-    {
+    if positional_args_open(&call.arguments, index) {
         return JobOptionEvidence::open();
     }
     call.arguments
@@ -18,6 +13,13 @@ pub(super) fn evidence_at(call: &CallExpression<'_>, index: usize) -> JobOptionE
         .and_then(Argument::as_expression)
         .map(read)
         .unwrap_or_default()
+}
+
+pub(super) fn positional_args_open(arguments: &[Argument<'_>], index: usize) -> bool {
+    arguments
+        .iter()
+        .take(index + 1)
+        .any(|argument| matches!(argument, Argument::SpreadElement(_)))
 }
 
 pub(super) fn push_site(

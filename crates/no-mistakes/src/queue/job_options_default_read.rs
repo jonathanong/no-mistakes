@@ -53,13 +53,10 @@ impl OptionsReader<'_, '_> {
             }
             _ => return Some(JobOptionEvidence::open()),
         };
-        for spread in std::mem::take(&mut evidence.spreads) {
-            if let Some(spread) =
-                self.project_binding(&spread.name, spread.at, Projection::OptionKeys)
-            {
-                evidence.absorb(&spread);
-            }
-        }
+        evidence.resolve_spreads(|spread| {
+            self.project_binding(&spread.name, spread.at, Projection::OptionKeys)
+                .unwrap_or_default()
+        });
         Some(evidence)
     }
 

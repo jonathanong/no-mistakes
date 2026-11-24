@@ -81,6 +81,7 @@ fn judge(
         JobNames::Known(names) if names.len() > 1 => {
             let jobs = names.into_iter().collect::<Vec<_>>().join(", ");
             checks.push(CheckFinding {
+                severity: super::graph_model::QueueFindingSeverity::Blocking,
                 kind: "shared-queue-rate-limit".to_string(),
                 file: relative_string(root, path),
                 line,
