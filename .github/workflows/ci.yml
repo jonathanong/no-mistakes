@@ -376,23 +376,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Clippy
-            command: |
-              cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
-              cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
+          - name: all-feature Clippy
+            command: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
             flags: -D warnings
-          - name: check builds
-            command: |
-              RUSTFLAGS="-D warnings --cfg coverage" cargo check --locked --workspace --lib --tests --all-features
-              cargo check --locked --tests --no-default-features -p no-mistakes
+          - name: default-feature Clippy
+            command: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
             flags: -D warnings
-          - name: release warnings and formatting
-            command: |
-              cargo check --locked --workspace --release --lib --bins --benches --no-default-features --features test-instrumentation
-              cargo fmt --all -- --check
+          - name: release warnings
+            command: cargo check --locked --workspace --release --lib --bins --benches --no-default-features --features test-instrumentation
+            flags: -D warnings
+          - name: no-default test check
+            command: cargo check --locked --tests --no-default-features -p no-mistakes
             flags: -D warnings
           - name: PostgreSQL source identities
             command: bash .github/scripts/with-resource-samples.sh node .github/scripts/postgres-source-identities.cjs
+            flags: -D warnings
+          - name: coverage warnings
+            command: cargo check --locked --workspace --lib --tests --all-features
+            flags: -D warnings --cfg coverage
+          - name: formatting
+            command: cargo fmt --all -- --check
             flags: -D warnings
     env:
       RUSTFLAGS: ${{ matrix.flags }}
@@ -407,11 +410,11 @@ jobs:
           toolchain: stable
           components: clippy, rustfmt
       - name: Cache Rust quality artifacts
-        if: ${{ env.COLD_BUILD != 'true' }}
+        if: ${{ matrix.name != 'formatting' && env.COLD_BUILD != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
-          shared-key: ${{ matrix.name == 'release warnings and formatting' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
+          shared-key: ${{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install nextest
@@ -429,9 +432,21 @@ jobs:
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
   quality-js:
-    name: JavaScript policy
+    name: JavaScript policy (${{ matrix.name }})
     runs-on: ubuntu-slim
-    timeout-minutes: 20
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: formatting
+            command: pnpm run fmt:js:check
+          - name: lint
+            command: pnpm run lint:js
+          - name: duplication
+            command: pnpm run lint:duplicates
+          - name: spelling
+            command: pnpm run lint:spell
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -467,21 +482,9 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Run JavaScript policy check (formatting)
+      - name: Run isolated JavaScript policy check
         timeout-minutes: 5
-        run: pnpm run fmt:js:check
-      - name: Run JavaScript policy check (lint)
-        if: ${{ !cancelled() }}
-        timeout-minutes: 5
-        run: pnpm run lint:js
-      - name: Run JavaScript policy check (duplication)
-        if: ${{ !cancelled() }}
-        timeout-minutes: 5
-        run: pnpm run lint:duplicates
-      - name: Run JavaScript policy check (spelling)
-        if: ${{ !cancelled() }}
-        timeout-minutes: 5
-        run: pnpm run lint:spell
+        run: ${{ matrix.command }}
   quality-links:
     name: Documentation links
     runs-on: ubuntu-slim
@@ -716,12 +719,13 @@ jobs:
           if-no-files-found: error
           retention-days: 1
   javascript-shards:
-    name: JavaScript unit tests and coverage
+    name: JavaScript shard (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -761,11 +765,79 @@ jobs:
         timeout-minutes: 2
         run: pnpm run build:js
       - name: Run JavaScript tests
-        timeout-minutes: 10
-        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --reporter=blob
+        timeout-minutes: 4
+        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/4 --reporter=blob
+      - name: Upload JavaScript shard report
+        timeout-minutes: 3
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: javascript-shard-${{ matrix.shard }}
+          path: .vitest/blob
+          include-hidden-files: true
+          compression-level: 1
+          if-no-files-found: error
+          retention-days: 1
+  javascript-coverage:
+    name: Merge JavaScript coverage
+    needs: javascript-shards
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
+          install: false
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Download JavaScript shard reports
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: javascript-shard-*
+          path: .vitest/blob
+          merge-multiple: true
       - name: Enforce merged JavaScript coverage
         timeout-minutes: 5
         run: pnpm exec vitest --merge-reports --coverage --reporter=default --reporter=github-actions
+      - name: Require all JavaScript shards
+        timeout-minutes: 3
+        if: ${{ always() }}
+        env:
+          SHARDS: ${{ needs.javascript-shards.result }}
+        run: test "$SHARDS" = success
       - name: Upload JavaScript coverage to Codecov
         timeout-minutes: 2
         continue-on-error: true
@@ -777,14 +849,14 @@ jobs:
           flags: javascript
           fail_ci_if_error: true
   linux-api-tests:
-    name: Linux N-API tests
+    name: Linux N-API tests (${{ matrix.shard }}/4)
     needs: linux-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1]
+        shard: [1, 2, 3, 4]
     env:
       NATIVE_API_SHARD: ${{ matrix.shard }}
     steps:
@@ -835,11 +907,11 @@ jobs:
         timeout-minutes: 3
         run: chmod +x target/debug/no-mistakes
       - name: Run real N-API API test
-        timeout-minutes: 12
+        timeout-minutes: 4
         id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
-          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 1 linux
+          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 4 linux
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
         timeout-minutes: 2
@@ -863,7 +935,7 @@ jobs:
       # Codecov is reporting only; an outage must not block merges.
   javascript-tests:
     name: JavaScript tests
-    needs: [javascript-shards, linux-api-tests]
+    needs: [javascript-coverage, linux-api-tests]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
@@ -3758,17 +3830,82 @@ jobs:
             exit 1
           fi
 
-  retain-caches:
-    name: Retain caches
-    needs:
-      - linux-runtime
-      - native-build
-      - native-build-macos
-      - native-test-build
-      - native-test-build-macos
-      - standalone-build
-      - rust-coverage-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(needs.*.result, 'success') }}
+  retain-linux-runtime-cache:
+    name: Retain linux-runtime cache
+    needs: linux-runtime
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.linux-runtime.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-build-cache:
+    name: Retain native-build cache
+    needs: native-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-build.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-build-macos-cache:
+    name: Retain native-build-macos cache
+    needs: native-build-macos
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-build-macos.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-test-build-cache:
+    name: Retain native-test-build cache
+    needs: native-test-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-test-build.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-test-build-macos-cache:
+    name: Retain native-test-build-macos cache
+    needs: native-test-build-macos
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-test-build-macos.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-standalone-build-cache:
+    name: Retain standalone-build cache
+    needs: standalone-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.standalone-build.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-rust-coverage-build-cache:
+    name: Retain rust-coverage-build cache
+    needs: rust-coverage-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.rust-coverage-build.result == 'success' }}
     permissions:
       contents: read
       actions: write

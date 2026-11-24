@@ -105,10 +105,8 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
   for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
     assert.doesNotMatch(workflowJob(source, name), /concurrency:|ci-macos-main/);
   assert.doesNotMatch(workflowJob(source, "macos-smoke"), /concurrency:|ci-macos-main/);
-  const retain = workflowJob(source, "retain-caches");
-  assert.match(retain, /contains\(needs\.\*\.result, 'success'\)/);
-  for (const name of ["native-build-macos", "native-test-build-macos"])
-    assert.match(retain, new RegExp(`- ${name}\\n`));
+  for (const name of ["retain-native-build-macos-cache", "retain-native-test-build-macos-cache"])
+    assert.match(workflowJob(source, name), /needs\.[^.]+\.result == 'success'/);
 });
 
 test("the native aggregate accepts a skipped full macOS tier only on pull requests", () => {

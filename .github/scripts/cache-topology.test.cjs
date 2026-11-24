@@ -72,9 +72,10 @@ test("dependency caches are main-only, dependency-only and shared across compati
     assert.match(job(name), /shared-key: linux-runtime-v1/);
   assert.match(
     job("quality-rust"),
-    /shared-key: \$\{\{ matrix.name == 'release warnings and formatting' && 'rust-quality-release-check-v1' \|\| 'linux-runtime-v1' \}\}/,
+    /shared-key: \$\{\{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' \|\| 'linux-runtime-v1' \}\}/,
   );
-  assert.match(job("quality-rust"), /RUSTFLAGS="-D warnings --cfg coverage" cargo check/);
+  assert.match(job("quality-rust"), /matrix.name != 'formatting'/);
+  assert.match(job("quality-rust"), /flags: -D warnings --cfg coverage/);
   assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
   for (const name of [
     "native-build",
@@ -109,7 +110,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 32);
+  assert.equal(setups.length, 34);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);

@@ -7,16 +7,16 @@ const { readWorkflow } = require("./workflow-contract.cjs");
 const workflow = readWorkflow(path.join(__dirname, "../workflows/ci.yml"));
 const linuxApi = workflow.jobs["linux-api-tests"];
 
-test("Linux real N-API tests run as one job", () => {
-  assert.equal(linuxApi.name, "Linux N-API tests");
+test("Linux real N-API tests cover four isolated matrix shards", () => {
+  assert.equal(linuxApi.name, "Linux N-API tests (${{ matrix.shard }}/4)");
   assert.equal(linuxApi.strategy["fail-fast"], false);
-  assert.deepEqual(linuxApi.strategy.matrix.shard, [1]);
+  assert.deepEqual(linuxApi.strategy.matrix.shard, [1, 2, 3, 4]);
   assert.equal(linuxApi.env.NATIVE_API_SHARD, "${{ matrix.shard }}");
 
   const run = linuxApi.steps.find((step) => step.name === "Run real N-API API test");
   assert.ok(run);
-  assert.ok(run["timeout-minutes"] <= 12);
-  assert.match(run.run, /native-api-shards\.cjs\s+"\$NATIVE_API_SHARD"\s+1\s+linux/);
+  assert.ok(run["timeout-minutes"] <= 4);
+  assert.match(run.run, /native-api-shards\.cjs\s+"\$NATIVE_API_SHARD"\s+4\s+linux/);
 });
 
 test("each Linux N-API shard enforces the slow-test gate and uploads a unique report", () => {
@@ -45,7 +45,7 @@ test("JavaScript aggregate fails when the Linux N-API matrix fails or skips", ()
       env: {
         ...process.env,
         RESULTS: JSON.stringify({
-          "javascript-shards": { result: "success" },
+          "javascript-coverage": { result: "success" },
           "linux-api-tests": { result },
         }),
       },

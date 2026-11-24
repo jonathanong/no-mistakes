@@ -46,7 +46,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   );
   assert.match(
     workflowJob("linux-api-tests"),
-    /name: Run real N-API API test\n\s+timeout-minutes: 12\n/,
+    /name: Run real N-API API test\n\s+timeout-minutes: 4\n/,
   );
 });
 
@@ -300,7 +300,7 @@ test("parallel Rust quality retains all-feature, default-feature and no-default 
     "cargo clippy --locked -p no-mistakes --all-targets -- -D warnings",
     "cargo check --locked --tests --no-default-features -p no-mistakes",
   ])
-    assert.ok(job.includes(`              ${command}\n`), command);
+    assert.ok(job.includes(`command: ${command}\n`), command);
   assert.match(job, /run: \$\{\{ matrix\.command \}\}/);
   assert.match(job, /fail-fast: false/);
 });

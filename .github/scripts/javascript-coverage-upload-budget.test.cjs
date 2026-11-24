@@ -5,27 +5,30 @@ const { test } = require("node:test");
 const { readWorkflow } = require("./workflow-contract.cjs");
 
 const workflow = readWorkflow(path.join(__dirname, "../workflows/ci.yml"));
-const job = workflow.jobs["javascript-shards"];
+const job = workflow.jobs["javascript-coverage"];
 const measured = JSON.parse(readFileSync(path.join(__dirname, "fixtures/javascript-coverage-upload-budget.json"), "utf8"));
 const step = (name) => job.steps.find((entry) => entry.name === name);
 
 test("optional JavaScript upload leaves the measured job cleanup reserve", () => {
   const upload = step("Upload JavaScript coverage to Codecov");
-  assert.ok(job["timeout-minutes"] * 60 >= measured.jobLimitSeconds);
+  assert.equal(job["timeout-minutes"] * 60, measured.jobLimitSeconds);
   assert.equal(upload["continue-on-error"], true);
   assert.equal(upload["timeout-minutes"], 2);
-  assert.ok(measured.requiredSeconds + upload["timeout-minutes"] * 60 + measured.cleanupSeconds <= job["timeout-minutes"] * 60);
+  assert.ok(measured.requiredSeconds + measured.cancelledUploadSeconds + measured.cleanupSeconds > measured.jobLimitSeconds);
+  assert.ok(measured.requiredSeconds + upload["timeout-minutes"] * 60 + measured.cleanupSeconds <= measured.jobLimitSeconds);
   assert.equal(upload.with.files, "coverage/lcov.info");
   assert.equal(upload.with.disable_search, true);
   assert.equal(upload.with.flags, "javascript");
 });
 
-test("local JavaScript test and coverage failures remain fatal", () => {
+test("local JavaScript coverage and shard failures remain fatal", () => {
   const merge = step("Enforce merged JavaScript coverage");
-  const tests = step("Run JavaScript tests");
+  const shards = step("Require all JavaScript shards");
   assert.match(merge.run, /--merge-reports --coverage/);
   assert.equal(merge["continue-on-error"] ?? false, false);
-  assert.equal(tests["continue-on-error"] ?? false, false);
+  assert.equal(shards["continue-on-error"] ?? false, false);
+  assert.equal(shards.if, "${{ always() }}");
+  assert.equal(shards.run, 'test "$SHARDS" = success');
   const contracts = workflow.jobs["quality-source"].steps.find((entry) => entry.name === "Test parallel CI contracts");
   assert.ok(contracts.run.includes(".github/scripts/javascript-coverage-upload-budget.test.cjs"));
 });
