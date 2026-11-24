@@ -2,6 +2,9 @@ import { Worker } from "bullmq";
 import * as bullmq from "bullmq";
 export { cyclicExport } from "./reexport";
 
+export class BaseEdgeWorker extends Worker {}
+export class PlainEdgeBase {}
+
 export function createEdgeWorker(name: string, processor: () => Promise<void>) {
   return new Worker(name, processor);
 }

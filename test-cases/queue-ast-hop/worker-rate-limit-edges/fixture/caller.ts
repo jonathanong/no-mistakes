@@ -1,8 +1,12 @@
 import { Queue } from "bullmq";
 import * as bullmq from "bullmq";
 import DefaultLimiter, {
+  CrossFileSubWorker,
+  NsSubWorker,
+  crossFileSubInstance,
   cycleA,
   cyclicExport,
+  nsSubInstance,
   nsWorkerExport,
   reexportedNsWorker,
   renamedWorker,
@@ -10,11 +14,14 @@ import DefaultLimiter, {
 } from "./reexport";
 import * as reexportNs from "./reexport";
 import defaultHelper, {
+  BaseEdgeWorker,
+  PlainEdgeBase,
   bullNsExport,
   createEdgeWorker,
   renamedUnknown,
   unknownExport,
 } from "./source";
+import * as sourceNs from "./source";
 import { missingWorker } from "./missing";
 
 declare const globalWorker: { rateLimit(ms: number): Promise<void> };
@@ -80,4 +87,28 @@ export async function runEdges() {
     return reexportNs.renamedWorker.rateLimit(1500);
   }
   await shadowedNs({ renamedWorker: getDynamic() });
+
+  class LocalExtImported extends BaseEdgeWorker {}
+  class LocalExtNs extends sourceNs.BaseEdgeWorker {}
+  class LocalExtPlain extends PlainEdgeBase {}
+  class LocalExtQueue extends bullmq.Queue {}
+  const subFromNs = new sourceNs.BaseEdgeWorker();
+  await new LocalExtImported().rateLimit(1600);
+  await new LocalExtNs().rateLimit(1610);
+  await subFromNs.rateLimit(1620);
+  await new CrossFileSubWorker().rateLimit(1630);
+  await new NsSubWorker().rateLimit(1640);
+  await crossFileSubInstance.rateLimit(1650);
+  await nsSubInstance.rateLimit(1660);
+  await new LocalExtPlain().rateLimit(1670);
+  await (new LocalExtQueue("q") as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(
+    1680,
+  );
+  await (sourceNs.default() as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(1690);
+  let mutatedImported = unknownExport;
+  mutatedImported = getDynamic();
+  await mutatedImported.rateLimit(1700);
+  let mutatedNs = reexportNs.renamedWorker;
+  mutatedNs = getDynamic();
+  await mutatedNs.rateLimit(1710);
 }

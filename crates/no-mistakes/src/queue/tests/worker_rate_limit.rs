@@ -73,6 +73,14 @@ fn worker_rate_limit_reports_resolved_workers_and_abstains_when_unresolved() {
         "only unresolved receivers abstain: {diagnostics:?}"
     );
     assert_eq!(diagnostics.len(), 4, "diagnostics: {diagnostics:?}");
+    assert!(
+        check.iter().any(|finding| {
+            finding["file"].as_str() == Some("subclass-worker.ts")
+                && finding["sourceLine"].as_str()
+                    == Some("await new ExampleWorker().rateLimit(1000);")
+        }),
+        "Worker subclasses must be reported: {check:?}"
+    );
     insta::assert_snapshot!(serde_json::to_string_pretty(&json!({
         "check": check,
         "diagnostics": diagnostics,
@@ -99,14 +107,21 @@ fn worker_rate_limit_handles_reexports_defaults_aliases_and_unresolved_edges() {
     assert_eq!(
         findings,
         vec![
-            ("caller.ts", 40, Some("edge-jobs")),
-            ("caller.ts", 43, Some("edge-jobs")),
-            ("caller.ts", 45, Some("edge-jobs")),
-            ("caller.ts", 46, Some("edge-jobs")),
             ("caller.ts", 47, Some("edge-jobs")),
-            ("caller.ts", 48, Some("edge-jobs")),
+            ("caller.ts", 50, Some("edge-jobs")),
+            ("caller.ts", 52, Some("edge-jobs")),
+            ("caller.ts", 53, Some("edge-jobs")),
+            ("caller.ts", 54, Some("edge-jobs")),
+            ("caller.ts", 55, Some("edge-jobs")),
+            ("caller.ts", 96, None),
+            ("caller.ts", 97, None),
+            ("caller.ts", 98, None),
+            ("caller.ts", 99, None),
+            ("caller.ts", 100, None),
+            ("caller.ts", 101, None),
+            ("caller.ts", 102, None),
         ],
-        "only resolved re-exported worker aliases and awaited factories are reported: {:?}",
+        "only resolved re-exported worker aliases, subclasses, and awaited factories are reported: {:?}",
         report.check
     );
     let diag_lines: Vec<_> = report
@@ -118,20 +133,15 @@ fn worker_rate_limit_handles_reexports_defaults_aliases_and_unresolved_edges() {
     assert_eq!(
         diag_lines,
         vec![
-            ("caller.ts", 62),
-            ("caller.ts", 63),
-            ("caller.ts", 65),
-            ("caller.ts", 66),
-            ("caller.ts", 67),
-            ("caller.ts", 68),
-            ("caller.ts", 69),
-            ("caller.ts", 70),
-            ("caller.ts", 71),
-            ("caller.ts", 72),
+            ("caller.ts", 74),
             ("caller.ts", 75),
-            ("caller.ts", 80),
+            ("caller.ts", 76),
+            ("caller.ts", 77),
+            ("caller.ts", 107),
+            ("caller.ts", 110),
+            ("caller.ts", 113),
         ],
-        "unresolved calls abstain while non-workers stay silent: {:?}",
+        "only unresolved queue-module bindings abstain while unrelated receivers stay silent: {:?}",
         report.diagnostics
     );
 }
