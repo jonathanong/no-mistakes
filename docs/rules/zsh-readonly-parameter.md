@@ -21,8 +21,11 @@ directly or through `env`. The rule recognizes `-S zsh -f`, `-S/bin/zsh -f`,
 `--split-string zsh -f`, and `--split-string=zsh -f`, with support for
 `-i` (`--ignore-environment`) and the `--` option separator. Quote individual
 arguments with spaces. Quoting the entire `'zsh -f'` names a single executable.
-Use `options.files` to add repository-relative globs for sourced files and
-other shebang forms. The option defaults to an empty list. The standard rule
+Only files that look like shell scripts are read to look for a shebang: files
+with no extension, a `.sh` or `.zsh` extension, or an executable bit. A zsh file
+with neither a `.zsh` extension nor a zsh shebang, or with another extension and
+no executable bit, needs an `options.files` glob. Use `options.files` to add
+repository-relative globs for sourced files and other shebang forms. The option defaults to an empty list. The standard rule
 and project `include` and `exclude` filters further restrict the scope. The
 rule works without ShellCheck.
 
@@ -32,6 +35,10 @@ The finding points to the line that assigns or declares `status`. The rule
 recognizes direct assignments and parameter declarations with `local`,
 `typeset`, or `declare`. Function declarations and queries in `typeset -f`
 mode use a separate namespace.
+Only `status` is checked. Other read-only zsh parameters stay out until each is
+verified against the zsh parameter manual (`zshparam`). Scripts embedded in a
+workflow `run:` block are not scanned, whatever the step's `shell:`. Move the
+script to a file and list it in `options.files`.
 It checks the name `status` from the [zsh parameter manual](https://zsh.sourceforge.io/Doc/Release/Parameters.html#Parameters-Set-By-The-Shell).
 It uses lexical command positions and skips nested substitutions and
 here-document bodies, including bodies introduced with ANSI-C quoted

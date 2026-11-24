@@ -156,6 +156,102 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "single"
         },
         {
+          "file": "legacy/reads.sh",
+          "line": 10,
+          "message": "Array `unquoted` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unquoted[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for u in \"${unquoted[@]}\"; do echo \"$u\"; done",
+          "target": "unquoted"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 12,
+          "message": "Array `args` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${args[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for a in \"${args[@]}\"; do echo \"$a\"; done",
+          "target": "args"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 14,
+          "message": "Array `requested` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${requested[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for r in \"${requested[@]}\"; do echo \"$r\"; done",
+          "target": "requested"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 18,
+          "message": "Array `pieces` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${pieces[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for p in \"${pieces[@]}\"; do echo \"$p\"; done",
+          "target": "pieces"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 20,
+          "message": "Array `lines` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${lines[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for l in \"${lines[@]}\"; do echo \"$l\"; done",
+          "target": "lines"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 22,
+          "message": "Array `more` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${more[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for m in \"${more[@]}\"; do echo \"$m\"; done",
+          "target": "more"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 26,
+          "message": "Array `dashed` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${dashed[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for d in \"${dashed[@]}\"; do echo \"$d\"; done",
+          "target": "dashed"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 28,
+          "message": "Array `prefixed` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${prefixed[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for v in \"${prefixed[@]}\"; do echo \"$v\"; done",
+          "target": "prefixed"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 31,
+          "message": "Array `quoted` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${quoted[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for q in \"${quoted[@]}\"; do echo \"$q\"; done",
+          "target": "quoted"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 33,
+          "message": "Array `mapped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${mapped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for k in \"${mapped[@]}\"; do echo \"$k\"; done",
+          "target": "mapped"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 39,
+          "message": "Array `escaped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${escaped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for e in \"${escaped[@]}\"; do echo \"$e\"; done",
+          "target": "escaped"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 8,
+          "message": "Array `globs` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${globs[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for g in \"${globs[@]}\"; do echo \"$g\"; done",
+          "target": "globs"
+        },
+        {
           "file": "legacy/redirections.sh",
           "line": 11,
           "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
