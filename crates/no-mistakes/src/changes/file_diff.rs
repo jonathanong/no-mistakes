@@ -77,7 +77,10 @@ fn compare_readable<'a>(
     ))
 }
 
-#[expect(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "internal helper carries path, rule matches, and old/new file projections"
+)]
 fn classify<'a>(
     path: &str,
     rules: &Rules<'a>,
