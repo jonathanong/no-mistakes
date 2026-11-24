@@ -1,0 +1,41 @@
+---
+source: crates/no-mistakes/tests/cli_test_plan_changes.rs
+expression: "serde_json::to_string_pretty(&summaries).unwrap()"
+---
+{
+  "fixture_only": {
+    "selected": [
+      "tests/avatar.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "source_only": {
+    "selected": [
+      "tests/cart.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "both": {
+    "selected": [
+      "tests/avatar.test.ts",
+      "tests/cart.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "both_with_lockfile": {
+    "selected": [
+      "tests/avatar.test.ts",
+      "tests/cart.test.ts",
+      "tests/widget.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  }
+}

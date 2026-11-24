@@ -375,14 +375,21 @@ match templates, fallback triggers and exclusions are declared in
 [changes configuration](../configuration/changes.md).
 
 ```sh
-no-mistakes tests plan vitest --root after --changes changes.json --format json
+no-mistakes tests plan vitest --root after --changes changes.json --changed-file src/cart.ts --format json
 ```
 
-Changed, added and removed IDs select matching test files in addition to the
-ordinary plan. Missing files, invalid JSON or schema, `complete: false`, unknown
-categories, and any `unclassified` path select the full suite with a structured
-`fallback_reason` and warning. This safety fallback does not require opting into
-`--global-config-fallback`.
+Relative `--changes` paths resolve against `--root` (matching `--config`); pass
+a parent-relative path such as `../changes.json` or an absolute path if the
+report sits outside `--root`.
+
+Changed, added and removed IDs select matching test files in union with the
+ordinary plan: tests linked to changed source files (`--changed-file` or
+`--base`) and tests linked to bumped lockfile packages (with `--base`) join the
+selected tests without triggering a full-suite fallback. Missing files, invalid
+JSON or schema, `complete: false`, unknown categories, and any `unclassified`
+path (a file matched by a category's `paths` that no rule in it could classify)
+select the full suite with a structured `fallback_reason` and warning. This
+safety fallback does not require opting into `--global-config-fallback`.
 
 A path trigger marked `supersededByChanges` is suppressed only for a trusted
 report. Without the flag, existing path-trigger behavior is unchanged. Unmatched

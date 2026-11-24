@@ -22,8 +22,6 @@ expression: "serde_json::to_string_pretty(report).unwrap()"
     "added": [],
     "removed": []
   },
-  "unclassified": [
-    "data/ignored/notes.json"
-  ],
+  "unclassified": [],
   "complete": true
 }

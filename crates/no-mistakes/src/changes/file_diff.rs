@@ -1,5 +1,5 @@
 use super::report::Observation;
-use super::rules::{Id, Rules};
+use super::rules::{Id, Rule, Rules};
 use super::Snapshot;
 use crate::codebase::keyed_diff;
 
@@ -20,7 +20,17 @@ pub(super) fn compare<'a>(
     if !base.knows(path) || !head.knows(path) {
         return None;
     }
-    match compare_readable(path, base, head, rules) {
+    let matches: Vec<_> = rules
+        .selectors
+        .matches(path)
+        .into_iter()
+        .map(|index| &rules.rules[index])
+        .filter(|rule| !rule.is_excluded(path, &rules.excludes))
+        .collect();
+    if matches.is_empty() {
+        return None;
+    }
+    match compare_readable(path, base, head, rules, &matches) {
         Ok(diff) => diff,
         Err(reason) => Some(FileDiff {
             reasons: vec![reason],
@@ -34,6 +44,7 @@ fn compare_readable<'a>(
     base: &Snapshot,
     head: &Snapshot,
     rules: &Rules<'a>,
+    matches: &[&Rule<'a>],
 ) -> Result<Option<FileDiff<'a>>, String> {
     if base.is_link(path) || head.is_link(path) {
         let old = base.link_identity(path)?;
@@ -42,6 +53,7 @@ fn compare_readable<'a>(
         return Ok(classify(
             path,
             rules,
+            matches,
             old.as_deref(),
             new.as_deref(),
             unchanged,
@@ -53,34 +65,21 @@ fn compare_readable<'a>(
     let old = base.bytes(path, &base_source)?;
     let new = head.bytes(path, &head_source)?;
     let unchanged = old == new;
-    Ok(classify(path, rules, old, new, unchanged, false))
+    Ok(classify(path, rules, matches, old, new, unchanged, false))
 }
 
 fn classify<'a>(
     path: &str,
     rules: &Rules<'a>,
+    matches: &[&Rule<'a>],
     old: Option<&[u8]>,
     new: Option<&[u8]>,
     unchanged: bool,
     link: bool,
 ) -> Option<FileDiff<'a>> {
     let mut result = FileDiff::default();
-    let matches: Vec<_> = rules
-        .selectors
-        .matches(path)
-        .into_iter()
-        .map(|index| &rules.rules[index])
-        .filter(|rule| !rule.is_excluded(path, &rules.excludes))
-        .collect();
-    if matches.is_empty() {
-        if unchanged {
-            return None;
-        }
-        result.unclassified = Some(path.to_owned());
-        return Some(result);
-    }
     let mut parsed = vec![None; rules.keyed.len()];
-    for rule in matches {
+    for &rule in matches {
         let changes = match rule.id {
             Id::Path => path_change(path.to_owned(), old, new, unchanged),
             Id::FromPath {

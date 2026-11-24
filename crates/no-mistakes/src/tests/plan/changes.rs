@@ -23,7 +23,7 @@ pub(crate) struct ChangesInput {
 
 impl ChangesInput {
     pub(crate) fn load(prepared: &PreparedTestPlanRequest) -> Option<Self> {
-        let path = prepared.root.join(prepared.args().changes.as_ref()?);
+        let path = no_mistakes::config::resolve(&prepared.root, prepared.args().changes.as_ref()?);
         let file = relative_path(&prepared.root, &path);
         let report = prepared
             .source_store()

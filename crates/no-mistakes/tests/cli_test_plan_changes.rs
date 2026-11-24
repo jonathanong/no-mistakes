@@ -183,3 +183,221 @@ fn changes_rejects_direct_test_owner_mode() {
         "{error}"
     );
 }
+
+fn union_fixture_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/tests-plan-changes-union")
+}
+
+fn diff_json(base: &Path, head: &Path) -> Value {
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["changes", "diff", "--base-root"])
+        .arg(base)
+        .arg("--head-root")
+        .arg(head)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    serde_json::from_slice(&output.stdout).unwrap()
+}
+
+fn git_cmd(root: &Path, args: &[&str]) -> String {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(root)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git {args:?}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8_lossy(&output.stdout).trim().to_owned()
+}
+
+#[test]
+fn changes_unions_fixture_source_and_lockfile_without_unclassified_fallback() {
+    let source = union_fixture_root();
+    let patches = source.join("patches");
+    let reports = source.join("reports");
+    let mut summaries = serde_json::Map::new();
+
+    // 1. Fixture only
+    let fix_head = crate::saved_fixture::materialize_path(&source.join("base"));
+    std::fs::copy(
+        patches.join("avatar.json"),
+        fix_head.path().join("fixtures/avatar.json"),
+    )
+    .unwrap();
+    let fix_diff = diff_json(&source.join("base"), fix_head.path());
+    let expected_fix: Value = serde_json::from_str(
+        &std::fs::read_to_string(reports.join("fixture-changed.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(fix_diff, expected_fix);
+    let fix_plan = plan(
+        fix_head.path(),
+        "1",
+        &[
+            "--changes",
+            reports.join("fixture-changed.json").to_str().unwrap(),
+            "--changed-file",
+            "fixtures/avatar.json",
+        ],
+    );
+    assert_eq!(selected_files(&fix_plan), ["tests/avatar.test.ts"]);
+    assert_eq!(fix_plan["fallback_triggered"], false);
+    summaries.insert("fixture_only".into(), summary(&fix_plan));
+
+    // 2. Source only
+    let src_head = crate::saved_fixture::materialize_path(&source.join("base"));
+    std::fs::copy(patches.join("cart.ts"), src_head.path().join("src/cart.ts")).unwrap();
+    let src_diff = diff_json(&source.join("base"), src_head.path());
+    let expected_empty: Value =
+        serde_json::from_str(&std::fs::read_to_string(reports.join("empty.json")).unwrap())
+            .unwrap();
+    assert_eq!(src_diff, expected_empty);
+    let src_plan = plan(
+        src_head.path(),
+        "1",
+        &[
+            "--changes",
+            reports.join("empty.json").to_str().unwrap(),
+            "--changed-file",
+            "src/cart.ts",
+        ],
+    );
+    assert_eq!(selected_files(&src_plan), ["tests/cart.test.ts"]);
+    assert_eq!(src_plan["fallback_triggered"], false);
+    summaries.insert("source_only".into(), summary(&src_plan));
+
+    // 3. Both fixture and source
+    let both_diff = diff_json(&source.join("base"), &source.join("head"));
+    assert_eq!(both_diff, expected_fix);
+    let both_plan = plan(
+        &source.join("head"),
+        "1",
+        &[
+            "--changes",
+            "../reports/fixture-changed.json",
+            "--changed-file",
+            "fixtures/avatar.json",
+            "--changed-file",
+            "src/cart.ts",
+        ],
+    );
+    assert_eq!(
+        selected_files(&both_plan),
+        ["tests/avatar.test.ts", "tests/cart.test.ts"]
+    );
+    assert_eq!(both_plan["fallback_triggered"], false);
+    summaries.insert("both".into(), summary(&both_plan));
+
+    // 4. Both fixture, source, and lockfile bump (with --base)
+    let repo = crate::saved_fixture::materialize_path(&source.join("base"));
+    git_cmd(repo.path(), &["init", "-b", "main"]);
+    git_cmd(
+        repo.path(),
+        &["config", "user.email", "test@example.invalid"],
+    );
+    git_cmd(repo.path(), &["config", "user.name", "Test"]);
+    git_cmd(repo.path(), &["add", "."]);
+    git_cmd(repo.path(), &["commit", "-m", "base"]);
+    let base_sha = git_cmd(repo.path(), &["rev-parse", "HEAD"]);
+    std::fs::copy(
+        patches.join("avatar.json"),
+        repo.path().join("fixtures/avatar.json"),
+    )
+    .unwrap();
+    std::fs::copy(patches.join("cart.ts"), repo.path().join("src/cart.ts")).unwrap();
+    std::fs::copy(
+        patches.join("package.json"),
+        repo.path().join("package.json"),
+    )
+    .unwrap();
+    std::fs::copy(
+        patches.join("pnpm-lock.yaml"),
+        repo.path().join("pnpm-lock.yaml"),
+    )
+    .unwrap();
+    git_cmd(repo.path(), &["add", "."]);
+    git_cmd(repo.path(), &["commit", "-m", "head"]);
+    let lock_diff = diff_json(&source.join("base"), repo.path());
+    assert_eq!(lock_diff, expected_fix);
+    let lock_plan = plan(
+        repo.path(),
+        "1",
+        &[
+            "--base",
+            &base_sha,
+            "--changes",
+            reports.join("fixture-changed.json").to_str().unwrap(),
+        ],
+    );
+    assert_eq!(
+        selected_files(&lock_plan),
+        [
+            "tests/avatar.test.ts",
+            "tests/cart.test.ts",
+            "tests/widget.test.ts",
+        ]
+    );
+    assert_eq!(lock_plan["fallback_triggered"], false);
+    summaries.insert("both_with_lockfile".into(), summary(&lock_plan));
+
+    insta::assert_snapshot!(
+        "changes_union_routing",
+        serde_json::to_string_pretty(&summaries).unwrap()
+    );
+}
+
+#[test]
+fn changes_relative_path_resolves_against_root_like_config() {
+    let source = union_fixture_root();
+    let head = source.join("head");
+    let other_cwd = tempfile::tempdir().unwrap();
+    for changes_arg in [
+        "../reports/fixture-changed.json",
+        source
+            .join("reports/fixture-changed.json")
+            .to_str()
+            .unwrap(),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .current_dir(other_cwd.path())
+            .args(["tests", "plan", "vitest", "--root"])
+            .arg(&head)
+            .args([
+                "--config",
+                ".no-mistakes.yml",
+                "--changes",
+                changes_arg,
+                "--changed-file",
+                "fixtures/avatar.json",
+                "--changed-file",
+                "src/cart.ts",
+                "--format",
+                "json",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{changes_arg}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(
+            report["fallback_triggered"], false,
+            "{changes_arg}: {report:#}"
+        );
+        assert_eq!(
+            selected_files(&report),
+            ["tests/avatar.test.ts", "tests/cart.test.ts"],
+            "{changes_arg}"
+        );
+    }
+}

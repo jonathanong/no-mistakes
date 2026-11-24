@@ -50,9 +50,6 @@ expression: "serde_json::to_string_pretty(report).unwrap()"
       "profile.legacy"
     ]
   },
-  "unclassified": [
-    ".notice",
-    "ignored/data.txt"
-  ],
+  "unclassified": [],
   "complete": true
 }

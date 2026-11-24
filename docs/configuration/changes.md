@@ -56,7 +56,9 @@ reports them as `changed` rather than `removed`).
 
 `exclude` is scoped per category: excluding a path in one category prevents only
 that category's rules from matching it. Another category whose `paths` match the
-path still classifies and diffs it, and any changed path matched by no category
+path still classifies and diffs it, and any path matched by no category is left
+out (ordinary source files are handled by `--changed-file` and the import
+graph). A changed path that a category matches but no rule in it can classify
 goes into `unclassified`. Category names `schemaVersion`, `complete`,
 `unclassified`, and `reasons` are reserved for report metadata.
 
