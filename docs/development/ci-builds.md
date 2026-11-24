@@ -82,9 +82,9 @@ The current validation graph is organized as follows:
   Object and console code page harness (`tests/windows_job_object.rs`), the
   portable CLI invocation tests (`tests/windows_invocation.rs`, which includes
   `tests/cli_invocation.rs`), the cross-process lock and rename API tests,
-  drive-letter and UNC path normalization, case-insensitive path aliases, and
-  the Windows native package resolution tests. Those cases cover path
-  separators, case-insensitive paths, CRLF output, file locking and native
+  drive-letter and UNC path normalization, and the Windows native package
+  resolution tests. Those cases cover path separators, drive letters, CRLF
+  output, file locking and native
   runtime loading. The full Windows jobs run unchanged on pushes to `main` and
   manual dispatch; the same trade-off and release check as macOS apply. Pull
   requests from forks skip the Defender exclusion step, as before.

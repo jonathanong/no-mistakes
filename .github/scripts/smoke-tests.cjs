@@ -95,14 +95,9 @@ const windows = {
       names: ["healthy reports retain identity and drive and UNC paths retain their meaning"],
     },
     {
-      file: "packages/no-mistakes/scripts/planning-impact-artifacts.test.js",
-      names: ["rejects reserved artifact manifests through case-insensitive path aliases"],
-    },
-    {
       file: nativePackage,
       names: [
         "resolves the Windows executable from the same optional package",
-        "uses a local staged Windows CLI with an .exe suffix",
         "Windows verifies CLI presence without Unix execute-bit semantics",
       ],
     },
