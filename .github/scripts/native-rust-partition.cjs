@@ -25,23 +25,33 @@ function weightedCases(cases, entries, evidence) {
   });
 }
 
-function outlierPartition(cases, entries, index, evidence = costs) {
-  if (index !== 1 && index !== 2) throw new Error("outlier partition requires shard 1 or 2");
+function outlierPartition(cases, entries, index, count = 2, evidence = costs) {
+  if (
+    !Number.isInteger(count) ||
+    count < 2 ||
+    !Number.isInteger(index) ||
+    index < 1 ||
+    index > count
+  )
+    throw new Error(`outlier partition requires shard in 1..=${count}`);
   const weighted = weightedCases(cases, entries, evidence);
-  const loads = [0, 0];
+  const loads = Array(count).fill(0);
   const assignments = new Map();
   for (const row of [...weighted].sort((a, b) => b.weight - a.weight || compare(a.key, b.key))) {
-    const shard = loads[0] <= loads[1] ? 0 : 1;
+    let shard = 0;
+    for (let candidate = 1; candidate < count; candidate++) {
+      if (loads[candidate] < loads[shard]) shard = candidate;
+    }
     loads[shard] += row.weight;
     assignments.set(row.entry, shard + 1);
   }
   return weighted.filter((row) => assignments.get(row.entry) === index).map((row) => row.entry);
 }
 
-function schedulingSummary(plan, entries, evidence = costs) {
+function schedulingSummary(plan, entries, evidence = costs, count = 2) {
   const weighted = weightedCases(plan, entries, evidence);
   return {
-    strategy: "macOS-two-shard-outlier-LPT",
+    strategy: count === 2 ? "macOS-two-shard-outlier-LPT" : `macOS-${count}-shard-outlier-LPT`,
     interpretation: costs.interpretation,
     defaultWeight: evidence.defaultWeight,
     assignedWeightUnits: weighted.reduce((sum, row) => sum + row.weight, 0),
