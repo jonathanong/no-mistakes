@@ -14,6 +14,22 @@ pub(super) fn module_file(
     module_lookup(graph, catalog, importer, specifier, true)
 }
 
+enum LookupState {
+    External,
+    Ambiguous,
+    Unresolved,
+    Unrecorded,
+}
+
+struct LookupQuery<'a> {
+    catalog: &'a Catalog<'a>,
+    importer: &'a Path,
+    specifier: &'a str,
+    relative: bool,
+    non_source: bool,
+    record_gap: bool,
+}
+
 pub(super) fn module_lookup(
     graph: Option<&DepGraph>,
     catalog: &Catalog<'_>,
@@ -25,59 +41,95 @@ pub(super) fn module_lookup(
     if specifier.starts_with("node:") || is_bare_node_builtin(specifier) {
         return None;
     }
-    let recorded = graph.and_then(|graph| graph.import_target(importer, specifier));
-    if let Some(ImportTarget::File(path)) = recorded {
-        return is_indexable(path).then(|| path.clone());
-    }
+    let state = match graph.and_then(|graph| graph.import_target(importer, specifier)) {
+        Some(ImportTarget::File(path)) => return is_indexable(path).then(|| path.clone()),
+        Some(ImportTarget::External) => LookupState::External,
+        Some(ImportTarget::Ambiguous) => LookupState::Ambiguous,
+        Some(ImportTarget::Unresolved) => LookupState::Unresolved,
+        None => LookupState::Unrecorded,
+    };
     let specifier_path = Path::new(specifier);
-    let relative = specifier.starts_with('.') || specifier_path.is_absolute();
-    if relative && has_explicit_non_source_extension(specifier_path) {
+    let query = LookupQuery {
+        catalog,
+        importer,
+        specifier,
+        relative: specifier.starts_with('.') || specifier_path.is_absolute(),
+        non_source: has_explicit_non_source_extension(specifier_path),
+        record_gap,
+    };
+    if query.relative && query.non_source {
         return None;
     }
-    let trusted = catalog.tags.iter().any(|tag| {
-        !tag.module.is_empty()
-            && !tag.name.is_empty()
-            && super::tags::module_matches(specifier, &tag.module)
-    });
-    let ambient = catalog.ambient_files(specifier);
-    let external = recorded == Some(&ImportTarget::External);
-    let resolution = catalog
-        .resolution
-        .filter(|_| !external)
-        .and_then(|resolution| {
-            resolution.resolve(specifier, importer, relative || (trusted && record_gap))
-        });
-    let ambiguous = recorded == Some(&ImportTarget::Ambiguous);
-    if let Some(Some(path)) = &resolution {
-        if !is_indexable(path) {
-            return None;
+    match state {
+        LookupState::External => query.resolve_ambient(),
+        LookupState::Ambiguous => {
+            if matches!(query.resolve_via_catalog(), Some(Some(path)) if !is_indexable(&path)) {
+                return None;
+            }
+            if query.record_gap {
+                query
+                    .catalog
+                    .record_unresolved(query.importer, query.specifier);
+            }
+            None
         }
-        if !ambiguous {
-            return Some(path.clone());
+        LookupState::Unresolved => {
+            // The graph marks every `#` import as local, even when no mapping exists.
+            query.lookup_fallback(!specifier.starts_with('#'))
         }
+        LookupState::Unrecorded => query.lookup_fallback(false),
     }
-    if !ambiguous {
-        if !external && relative && catalog.resolution.is_none() {
-            let hits = relative_hits(catalog, importer, specifier);
+}
+
+impl LookupQuery<'_> {
+    fn lookup_fallback(&self, unresolved_target: bool) -> Option<PathBuf> {
+        let resolution = self.resolve_via_catalog();
+        if let Some(Some(path)) = resolution {
+            return is_indexable(&path).then_some(path);
+        }
+        if self.relative && self.catalog.resolution.is_none() {
+            let hits = relative_hits(self.catalog, self.importer, self.specifier);
             if hits.len() == 1 {
                 return hits.into_iter().next();
             }
         }
+        let ambient = self.catalog.ambient_files(self.specifier);
         if ambient.len() == 1 {
             return ambient.into_iter().next();
         }
+        if self.record_gap
+            && (!ambient.is_empty()
+                || ((unresolved_target || self.relative || resolution.is_some())
+                    && !self.non_source))
+        {
+            self.catalog
+                .record_unresolved(self.importer, self.specifier);
+        }
+        None
     }
-    // The graph marks every `#` import as local, even when no mapping exists.
-    let unresolved = recorded == Some(&ImportTarget::Unresolved) && !specifier.starts_with('#');
-    if record_gap
-        && (ambiguous
-            || !ambient.is_empty()
-            || ((unresolved || (!external && relative) || resolution.is_some())
-                && !has_explicit_non_source_extension(specifier_path)))
-    {
-        catalog.record_unresolved(importer, specifier);
+
+    fn resolve_ambient(&self) -> Option<PathBuf> {
+        let ambient = self.catalog.ambient_files(self.specifier);
+        if ambient.len() == 1 {
+            return ambient.into_iter().next();
+        }
+        if self.record_gap && !ambient.is_empty() {
+            self.catalog
+                .record_unresolved(self.importer, self.specifier);
+        }
+        None
     }
-    None
+
+    fn resolve_via_catalog(&self) -> Option<Option<PathBuf>> {
+        let resolution = self.catalog.resolution?;
+        let trusted = self.record_gap
+            && self.catalog.tags.iter().any(|tag| {
+                !tag.module.is_empty()
+                    && !tag.name.is_empty()
+                    && super::tags::module_matches(self.specifier, &tag.module)
+            });
+        resolution.resolve(self.specifier, self.importer, self.relative || trusted)
+    }
 }
 
 pub(super) fn import_hit_fragments(
@@ -111,53 +163,4 @@ fn relative_hits(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Vec
         return Vec::new();
     };
     catalog.relative_candidates(parent, stem)
-}
-
-pub(super) fn declare_module_specifiers(source: &str) -> Vec<String> {
-    let mut found = Vec::new();
-    let mut index = 0;
-    while let Some(offset) = source[index..].find("declare") {
-        let at = index + offset;
-        let boundary = at == 0 || !is_ident_byte(source.as_bytes()[at - 1]);
-        let after = at + "declare".len();
-        if boundary {
-            if let Some(name) = module_name_follows(&source[after..]) {
-                found.push(name.to_owned());
-            }
-        }
-        index = after;
-    }
-    found.sort();
-    found.dedup();
-    found
-}
-
-fn module_name_follows(after_declare: &str) -> Option<&str> {
-    let trimmed = after_declare.trim_start();
-    if trimmed.len() == after_declare.len() {
-        return None;
-    }
-    let after_keyword = trimmed.strip_prefix("module")?;
-    if after_keyword.starts_with(|ch: char| is_ident_char(ch)) {
-        return None;
-    }
-    let quoted = after_keyword.trim_start();
-    if quoted.len() == after_keyword.len() {
-        return None;
-    }
-    let quote = quoted.chars().next()?;
-    if !matches!(quote, '\'' | '"') {
-        return None;
-    }
-    let rest = &quoted[1..];
-    let name = &rest[..rest.find(quote)?];
-    (!name.is_empty()).then_some(name)
-}
-
-fn is_ident_byte(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
-}
-
-fn is_ident_char(ch: char) -> bool {
-    ch.is_ascii_alphanumeric() || ch == '_' || ch == '$'
 }

@@ -145,7 +145,7 @@ fn ambient_index(
         let Some(source) = super::source_text::file_text(ts, sources, file) else {
             continue;
         };
-        for specifier in super::modules::declare_module_specifiers(source.as_ref()) {
+        for specifier in super::ambient::declare_module_specifiers(source.as_ref()) {
             index.entry(specifier).or_default().push(file.clone());
         }
     }

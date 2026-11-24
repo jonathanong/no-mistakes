@@ -1,4 +1,4 @@
-use super::super::{alias, modules, resolve, visible};
+use super::super::{alias, ambient, modules, resolve, visible};
 use super::support::{assert_from, catalog, ctx, fragment_facts, import, insert, world};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::dependencies::extract::{ExportedBinding, ImportedBindingKind};
@@ -192,7 +192,7 @@ fn a_bare_star_reexport_without_a_graph_is_not_an_unresolved_warning() {
 
 #[test]
 fn declare_module_skips_an_empty_name_and_an_unclosed_quote() {
-    let specs = modules::declare_module_specifiers(
+    let specs = ambient::declare_module_specifiers(
         "declare module \"\" {}\ndeclare module 'kept' {}\ndeclare module \"open",
     );
     assert_eq!(specs, vec!["kept".to_string()]);

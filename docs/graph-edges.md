@@ -901,3 +901,23 @@ from simple `const` `for...of` bindings over closed local or module-private lite
 The projection uses `assertion-owner` edges and leaves ordinary `call` queries
 unchanged. Filters, early exits, mutation, escaping, and unused rows remain outside
 this proof; see the [rule](rules/coverage-producer-assertion-owner.md).
+
+## Recorded import targets
+
+During the graph import pass, `DepGraph::import_target` records an internal
+`ImportTarget` per `(importer, specifier)` pair for consumers that need the
+resolved target without re-running module resolution:
+
+- `File(PathBuf)` — the specifier resolves to a visible file in the graph's
+  file universe, either through the import resolver (including `require.resolve`
+  and dynamic workspace imports) or through a static workspace package target.
+- `Unresolved` — no visible project file was resolved, and the specifier is
+  classified as project-local: relative or absolute paths (`.`, `/`, `\`, or
+  Windows drive paths such as `C:/`), `#`-prefixed subpath imports, configured
+  TypeScript `paths` aliases, or specifiers recognized by an indexed workspace
+  package. `#`-prefixed specifiers and Windows drive paths count as
+  project-local even when unmapped, favoring recall over precision.
+- `External` — no visible project file was resolved and the specifier is not
+  project-local (for example `node:` builtins and external package specifiers).
+- `Ambiguous` — the same `(importer, specifier)` pair produced different
+  `ImportTarget` values across imports in the same file.

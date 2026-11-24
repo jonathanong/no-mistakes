@@ -163,6 +163,12 @@ and missing code targets of configured path aliases can add an entry.
 A `#` specifier can also add an entry when it matches an `imports` mapping in
 the importing file's indexed workspace package and its local code target is
 missing. Unmapped `#` specifiers and other unknown bare imports stay silent.
+In the shared graph (`ImportTarget`), `#`-prefixed specifiers and Windows drive
+paths both count as project-local (`Unresolved` rather than `External`,
+favoring recall over precision; see
+[recorded import targets](../graph-edges.md#recorded-import-targets)); this
+rule keeps Windows drive paths as unresolved gaps and narrows `#` gaps to
+mapped workspace `imports` entries.
 A use of the configured trusted tag itself is not a fragment; other
 bindings from the same project specifier still follow the ordinary fragment
 checks. `check` exits 1 when the report contains an incomplete entry, even if
