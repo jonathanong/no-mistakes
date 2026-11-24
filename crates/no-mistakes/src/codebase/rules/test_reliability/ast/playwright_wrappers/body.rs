@@ -1,6 +1,10 @@
 use super::super::bindings::Bindings;
+use super::extend_unique;
+use crate::codebase::rules::test_reliability::playwright_provenance::{
+    FixtureInitializer, WrapperCall,
+};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Expression, FormalParameters, FunctionBody, Statement};
+use oxc_ast::ast::{CallExpression, Expression, FormalParameters, FunctionBody, Statement};
 use oxc_ast::AstKind;
 use oxc_semantic::SymbolId;
 
@@ -39,6 +43,78 @@ impl<'ast> Bindings<'_, 'ast> {
             }
             _ => None,
         }
+    }
+
+    pub(in crate::codebase::rules::test_reliability::ast) fn factory_return_origin(
+        &self,
+        symbol: SymbolId,
+        depth: usize,
+    ) -> Option<FixtureInitializer> {
+        let (_, body) = self.function_def(symbol)?;
+        let mut returns = Vec::new();
+        match body {
+            WrapperBody::Expr(expr) => returns.push(expr),
+            WrapperBody::Block(block) => {
+                if !collect_returns(&block.statements, &mut returns) || returns.is_empty() {
+                    return None;
+                }
+            }
+        }
+        let mut import = None;
+        let mut wrappers = Vec::new();
+        let mut derived_at = None;
+        for expr in returns {
+            let branch = self.playwright_value_origin_depth(expr, depth + 1)?;
+            if import.as_ref().is_some_and(|prev| prev != &branch.import) {
+                return None;
+            }
+            import = Some(branch.import);
+            extend_unique(&mut wrappers, branch.wrappers);
+            derived_at = derived_at.or(branch.derived_at);
+        }
+        Some(FixtureInitializer {
+            import: import?,
+            wrappers,
+            derived_at,
+        })
+    }
+
+    pub(in crate::codebase::rules::test_reliability::ast) fn call_value_origin(
+        &self,
+        call: &CallExpression<'_>,
+        callee: &Expression<'_>,
+        depth: usize,
+        wrappers: Vec<WrapperCall>,
+        derived_at: Option<u32>,
+    ) -> Option<FixtureInitializer> {
+        let Some(import) = self.callee_import_origin(callee) else {
+            let Expression::Identifier(id) = callee else {
+                return None;
+            };
+            let mut inner = self.factory_return_origin(self.symbol(id)?, depth)?;
+            extend_unique(&mut inner.wrappers, wrappers);
+            inner.derived_at = derived_at.or(inner.derived_at);
+            return Some(inner);
+        };
+        for (arg_index, arg) in call.arguments.iter().enumerate() {
+            let Some(arg_expr) = arg.as_expression() else {
+                continue;
+            };
+            if let Some(mut inner) = self.playwright_value_origin_depth(arg_expr, depth + 1) {
+                inner.wrappers.push(WrapperCall {
+                    callee: import,
+                    arg_index,
+                });
+                extend_unique(&mut inner.wrappers, wrappers);
+                inner.derived_at = derived_at.or(inner.derived_at);
+                return Some(inner);
+            }
+        }
+        Some(FixtureInitializer {
+            import,
+            wrappers,
+            derived_at,
+        })
     }
 }
 

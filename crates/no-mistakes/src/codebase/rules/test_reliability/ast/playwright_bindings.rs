@@ -1,7 +1,7 @@
 use super::bindings::Bindings;
 use crate::codebase::dependencies::extract::ExportedBinding;
 use crate::codebase::rules::test_reliability::playwright_provenance::{
-    FixtureInitializer, FixtureInitializers, ImportRef, WrapperCall, WrapperSummary,
+    FixtureInitializer, FixtureInitializers, ImportRef, WrapperSummary,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
@@ -43,6 +43,8 @@ pub(crate) fn fixture_initializers<'a>(
         let mut visited = FxHashSet::default();
         if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
             result.wrappers.insert(export.local.clone(), summary);
+        } else if let Some(origin) = bindings.factory_return_origin(symbol, 0) {
+            result.values.insert(export.local.clone(), origin);
         }
     }
     result
@@ -56,7 +58,7 @@ impl Bindings<'_, '_> {
         self.playwright_value_origin_depth(value, 0)
     }
 
-    fn playwright_value_origin_depth(
+    pub(super) fn playwright_value_origin_depth(
         &self,
         value: &Expression<'_>,
         depth: usize,
@@ -102,39 +104,14 @@ impl Bindings<'_, '_> {
                     }
                     let mut visited = FxHashSet::default();
                     if let Some(summary) = self.local_callee_summary(callee, depth, &mut visited) {
-                        for wrapper in summary.wrappers {
-                            if !wrappers.contains(&wrapper) {
-                                wrappers.push(wrapper);
-                            }
-                        }
+                        super::playwright_wrappers::extend_unique(&mut wrappers, summary.wrappers);
                         derived_at = derived_at.or(summary.derived_at);
                         value = unwrap_ts_wrappers(
                             call.arguments.get(summary.param_index)?.as_expression()?,
                         );
                         continue;
                     }
-                    let import = self.callee_import_origin(callee)?;
-                    for (arg_index, arg) in call.arguments.iter().enumerate() {
-                        let Some(arg_expr) = arg.as_expression() else {
-                            continue;
-                        };
-                        if let Some(mut inner) =
-                            self.playwright_value_origin_depth(arg_expr, depth + 1)
-                        {
-                            inner.wrappers.push(WrapperCall {
-                                callee: import,
-                                arg_index,
-                            });
-                            for wrapper in wrappers {
-                                if !inner.wrappers.contains(&wrapper) {
-                                    inner.wrappers.push(wrapper);
-                                }
-                            }
-                            inner.derived_at = derived_at.or(inner.derived_at);
-                            return Some(inner);
-                        }
-                    }
-                    return None;
+                    return self.call_value_origin(call, callee, depth, wrappers, derived_at);
                 }
                 _ => return None,
             }

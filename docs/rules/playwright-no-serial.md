@@ -67,10 +67,10 @@ line. To suppress a file, add `// no-mistakes-disable-file playwright-no-serial`
 ## Limits
 
 The rule reads configuration objects exported directly or via a local
-constant, and statically identifiable calls to Playwright's `test`. Local
-imports, re-exports, static `test.extend()` chains, and repository-local
-wrapper functions that return their argument or its `.extend(...)` result can
-identify that binding. Set `tests.playwright.configs` for custom config names.
+constant, and statically identifiable calls to Playwright's `test`. Local imports, re-exports, static `test.extend()` chains, repository-local
+wrapper functions that return their argument or its `.extend(...)` result, and
+repository-local factory functions that return Playwright's `test` or its
+`.extend(...)` result can identify that binding. Set `tests.playwright.configs` for custom config names.
 Use `include` for calls outside `.test` and `.spec` files and `__tests__`
 directories. When set, `tests.playwright.testInclude` selects the files for
 Playwright calls. `tests.playwright.testExclude` excludes Playwright calls.

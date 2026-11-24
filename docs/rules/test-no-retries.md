@@ -102,8 +102,9 @@ in `.test` and `.spec` files and under `__tests__`. Use `include` for a
 different layout. When set, `tests.playwright.testInclude` selects the files
 for Playwright calls. `tests.playwright.testExclude` excludes Playwright calls
 while Vitest and Jest calls keep their own scope. Playwright calls can use local imports, re-exports, static `test.extend()`
-chains, and repository-local wrapper functions that return their argument or
-its `.extend(...)` result. When a spec calls `<binding>.describe.configure(...)`
+chains, repository-local wrapper functions that return their argument or its
+`.extend(...)` result, and repository-local factory functions that return
+Playwright's `test` or its `.extend(...)` result. When a spec calls `<binding>.describe.configure(...)`
 on an imported binding that cannot be resolved to Playwright's `test` (such as
 an opaque wrapper, an ambiguous or cyclic export, or an unrelated imported
 object with a `.describe.configure` method), the rule never drops it silently:

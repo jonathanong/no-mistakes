@@ -1015,6 +1015,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/factory.spec.mts",
+          "message": "tests/factory.spec.mts:10: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/opaque.spec.mts",
           "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
         },
@@ -1022,6 +1027,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "playwright-no-serial",
           "file": "tests/unrelated.spec.mts",
           "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/factory.spec.mts",
+          "message": "tests/factory.spec.mts:11: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `test-no-retries` `options.fixtures`"
         },
         {
           "consumer": "test-no-retries",
@@ -1052,6 +1062,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
           "rule": "test-no-retries",
           "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 4,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "followed.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 7,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "followedWithArgs.describe.configure({ retries: 2 });",
           "target": "Playwright retries"
         }
       ],
@@ -1093,6 +1119,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
           "rule": "test-no-retries",
           "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 10,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "opaque.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 11,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "opaque.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 4,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "followed.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 7,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "followedWithArgs.describe.configure({ retries: 2 });",
           "target": "Playwright retries"
         },
         {

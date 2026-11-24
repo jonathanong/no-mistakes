@@ -6,6 +6,9 @@ import { badBare, badCycle, badExternal, badMismatch, badSpread, good } from "..
 
 const directWrapped = arrowExpr(base);
 directWrapped.describe.configure({ mode: "serial" });
+const localFactory = () => base.extend({});
+const fromLocalFactory = localFactory();
+fromLocalFactory.describe.configure({ mode: "serial" });
 good.describe.configure({ mode: "serial" });
 badCycle.describe.configure({ mode: "serial" });
 badBare.describe.configure({ mode: "serial" });

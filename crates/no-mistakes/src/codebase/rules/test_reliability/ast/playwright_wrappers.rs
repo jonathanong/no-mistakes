@@ -172,7 +172,7 @@ impl<'ast> Bindings<'_, 'ast> {
     }
 }
 
-fn extend_unique(target: &mut Vec<WrapperCall>, extra: Vec<WrapperCall>) {
+pub(super) fn extend_unique(target: &mut Vec<WrapperCall>, extra: Vec<WrapperCall>) {
     for item in extra {
         if !target.contains(&item) {
             target.push(item);
