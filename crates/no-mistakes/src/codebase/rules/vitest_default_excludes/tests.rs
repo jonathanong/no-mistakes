@@ -123,6 +123,22 @@ fn invalid_options_report_the_problem() {
             "{config}: {error:#}"
         );
     }
+
+    let bad_filter: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    include: ["[unclosed"]
+    options:
+      config: vitest.config.ts
+"#,
+    )
+    .unwrap();
+    let mut errors = BTreeSet::new();
+    collect_config_errors(&root, &bad_filter, &mut errors);
+    let joined = errors.into_iter().collect::<Vec<_>>().join("\n");
+    assert!(joined.contains("[unclosed"), "{joined}");
 }
 
 #[test]

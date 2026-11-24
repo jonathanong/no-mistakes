@@ -334,3 +334,28 @@ fn empty_file_list_is_silent() {
         .unwrap()
         .is_empty());
 }
+
+#[test]
+fn collect_config_errors_reports_filter_include_and_schema_errors() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    include: ["[unclosed"]
+    options:
+      include: ["[bad-glob"]
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      actions: true
+"#,
+    )
+    .unwrap();
+    let mut errors = std::collections::BTreeSet::new();
+    super::collect_config_errors(std::path::Path::new("/repo"), &config, &mut errors);
+    let joined = errors.into_iter().collect::<Vec<_>>().join("\n");
+    assert!(joined.contains("[unclosed"), "{joined}");
+    assert!(joined.contains("options.include"), "{joined}");
+    assert!(joined.contains("options.actions"), "{joined}");
+}
