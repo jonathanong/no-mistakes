@@ -17,6 +17,7 @@ pub(in crate::codebase::postgres::query_annotation) struct CachedModule {
 
 #[derive(Clone, Default)]
 pub(in crate::codebase::postgres::query_annotation) struct SharedInit {
+    pub(in crate::codebase::postgres::query_annotation) untrusted_array_intrinsics: bool,
     pub(in crate::codebase::postgres::query_annotation) modules:
         FxHashMap<ModuleId, Arc<CachedModule>>,
 }
@@ -27,13 +28,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         path: &Path,
         module_id: ModuleId,
     ) -> Option<Environment> {
-        let cached = self
-            .modules
-            .shared
-            .as_ref()?
-            .modules
-            .get(&module_id)?
-            .clone();
+        let shared = self.modules.shared.as_ref()?;
+        if shared.untrusted_array_intrinsics != self.untrusted_array_intrinsics {
+            return None;
+        }
+        let cached = shared.modules.get(&module_id)?.clone();
         if !self.deps_match_cached(&cached) {
             return None;
         }

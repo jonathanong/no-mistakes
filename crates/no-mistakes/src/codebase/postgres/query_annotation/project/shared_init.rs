@@ -66,7 +66,10 @@ pub(super) fn build(
     }
     let total_candidates = graph.order.len();
     let run_build = || {
-        let mut shared = Arc::new(SharedInit::default());
+        let mut shared = Arc::new(SharedInit {
+            untrusted_array_intrinsics,
+            modules: FxHashMap::default(),
+        });
         let mut uncacheable = graph.cyclic;
         for id in graph.order {
             if uncacheable.contains(&id) {
