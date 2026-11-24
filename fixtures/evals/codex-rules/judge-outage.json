@@ -1,0 +1,13 @@
+{
+  "partial": false,
+  "suite": {"ablation": "codex-with-without"},
+  "cases": [
+    {
+      "name": "rules-testing-write-example",
+      "arms": {
+        "with": [{"graders": [{"name": "skill-fired", "passed": true}, {"name": "checks-example", "error": "judge unavailable"}]}],
+        "without": [{"graders": [{"name": "skill-fired", "passed": false}, {"name": "checks-example", "passed": true}]}]
+      }
+    }
+  ]
+}
