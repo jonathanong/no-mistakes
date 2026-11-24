@@ -5,7 +5,7 @@ const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
 const evidence = require("./fixtures/rust-build-deadlines.json");
 const workflows = Object.fromEntries(
-  ["ci", "release"].map((name) => [
+  ["ci", "release", "benchmarks"].map((name) => [
     name,
     readFileSync(path.join(__dirname, `../workflows/${name}.yml`), "utf8"),
   ]),
@@ -40,7 +40,7 @@ test("measured CI exceptions remain finite and below the sum of their bounded st
     "docs-tests",
     "bench",
   ]) {
-    const body = workflowJob(workflows.ci, name);
+    const body = workflowJob(name === "bench" ? workflows.benchmarks : workflows.ci, name);
     const jobSeconds = budget(body);
     const steps = body.split("    steps:\n")[1];
     const limits = [...steps.matchAll(/^        timeout-minutes: (.+)$/gm)].map((m) =>
@@ -59,7 +59,7 @@ test("the generic repository cap is preserved with local measured exceptions", (
   const config = readFileSync(path.join(__dirname, "../../.no-mistakes.yml"), "utf8");
   assert.match(config, /rule: github-actions-job-timeouts[\s\S]*?maxMinutes: 30/);
   assert.match(config, /rule: github-actions-step-timeouts[\s\S]*?maxMinutes: 30/);
-  const lines = workflows.ci.split("\n");
+  const lines = [...workflows.ci.split("\n"), ...workflows.benchmarks.split("\n")];
   for (let i = 0; i < lines.length; i++) {
     if (!lines[i].includes("no-mistakes-disable-next-line github-actions-")) continue;
     assert.match(lines[i], /#3514.*rust-build-deadlines.test.cjs/);
