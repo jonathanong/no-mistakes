@@ -126,6 +126,8 @@ graph. Details:
 - Never serialize parallel work in CI ([CI builds](docs/development/ci-builds.md)).
 - Performance measurement rules and gates:
   [core performance guidance](crates/no-mistakes/AGENTS.md).
+- A PR description shows how the change behaves: a saved-fixture input, the exact command, and
+  its full output before and after. A case table or elided output does not count.
 
 ### Public surface checklist
 
