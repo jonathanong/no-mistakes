@@ -125,8 +125,13 @@ function run(index, count) {
   const plan = casePlan(process.env.RUNNER_OS, manifest.entries, inventory, index, count);
   const batches = batchPlan(plan);
   const scheduling =
-    process.env.RUNNER_OS === "macOS" && count === 2
-      ? require("./native-rust-partition.cjs").schedulingSummary(plan, manifest.entries)
+    process.env.RUNNER_OS === "macOS" && count >= 2
+      ? require("./native-rust-partition.cjs").schedulingSummary(
+          plan,
+          manifest.entries,
+          undefined,
+          count,
+        )
       : undefined;
   fs.writeFileSync(
     "target/native-rust-shard.json",

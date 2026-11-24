@@ -45,7 +45,8 @@ The current validation graph is organized as follows:
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
   On `main`, Windows runs six Rust shards and six real-addon API shards and
-  macOS runs two of each, with every selected case still executed once.
+  macOS runs three Rust shards and two real-addon API shards, with every
+  selected case still executed once.
   macOS has two tiers because GitHub allows only five concurrent macOS jobs
   account-wide, so macOS runners are the queue bottleneck. Windows is not
   queue-bound, but its 14 jobs were about a quarter of pull request CI cost and
@@ -53,7 +54,8 @@ The current validation graph is organized as follows:
   two tiers.
   A pull request runs one `macOS smoke` job (`macos-smoke`) instead of the
   full sharded macOS suite. It builds the CLI and N-API addon, runs
-  `check` on one saved fixture, and runs the explicit OS-dependent list in
+  `check` on a saved fixture and requires the `agents-md-max-size` finding on
+  `AGENTS.md:1`. It runs the explicit OS-dependent list in
   `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
   harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
   check invocation tests, one `analyzeProject` call on a saved fixture through
@@ -454,16 +456,17 @@ query-annotation snapshots, 78.3 for the additional bounded-statement snapshots,
 73.6 for transformed-UUID snapshots, and 71.5 for unanalyzable-schema snapshots.
 The old modulo plan placed four of these five cases together in shard 1.
 
-macOS's two Rust shards now assign the longest known outliers first to the
+macOS's three Rust shards now assign the longest known outliers first to the
 least-loaded shard. The [cost policy](../../.github/scripts/native-rust-costs.json)
 records the source notices and completion timestamps. It uses floored
 lower-bound weights, stable harness
 names and full test names; ties use stable test identity and shard index.
 Unmeasured and new cases receive a default weight of one and remain included.
 Those weights are scheduling units, not predicted seconds. The archived
-373-case inventory produces 185/188 selected cases with equal 430-unit loads,
-separating bounded-statement and query-annotation work. Each selected case
-still runs exactly once, with the original filters, batching and flags.
+373-case inventory produces 114/122/137 selected cases with 287/287/286-unit
+loads across three shards (previously 185/188 with 430-unit loads across two
+shards), separating bounded-statement and query-annotation work. Each selected
+case still runs exactly once, with the original filters, batching and flags.
 Windows retains its existing six-shard assignments.
 
 The existing harness batching already avoids spawning a process per case.
@@ -531,8 +534,10 @@ this run finished. The inventory contained roughly 12.7 GB of active caches at
 inspection. A cache key cannot guarantee retention under repository-wide cache
 pressure. Subsequent macOS Rust shards waited as long as 7m57s before starting;
 in the previous completed run, API shards waited 8m23s to 12m02s. The adjusted
-macOS matrices use two shards per family to reduce repeated setup and runner
-contention, while Windows retains six.
+macOS matrices use three Rust shards (rebalanced from two after 306–381s shard
+1/2 runs left insufficient headroom under the 9-minute deadline) and two API
+shards to reduce repeated setup and runner contention, while Windows retains
+six.
 
 A later completed run `43389713210` at `56c7d9064` passed in **19m49s** with
 70 passing checks. Its macOS Rust producer restored a compatible workspace
