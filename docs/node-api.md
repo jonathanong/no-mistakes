@@ -524,7 +524,8 @@ path selection. See [queue configuration](configuration/queues.md).
 Its CommonJS, ESM, and TypeScript exports remain available with `@deprecated`
 annotations and unchanged options, async results, and errors. Node calls do not
 print the CLI warning. For batched calls, use `{ type: "dependents", files: [...] }`
-in `analyzeProject()`; `{ type: "related", ... }` remains supported.
+in `analyzeProject()`. The `"related"` report type remains supported and has a
+TypeScript `@deprecated` annotation.
 See the [migration guide](migrations/deprecated-surfaces.md).
 
 ## Runtime exports
