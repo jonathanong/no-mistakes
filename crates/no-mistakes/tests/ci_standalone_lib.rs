@@ -73,7 +73,7 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
     let run = test_step["run"].as_str().unwrap();
     assert_eq!(
         run,
-        "node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 1"
+        "node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 3"
     );
     assert_eq!(job["needs"].as_str(), Some("standalone-build"));
     let producer = &workflow["jobs"]["standalone-build"];

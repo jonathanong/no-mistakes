@@ -2698,17 +2698,17 @@ jobs:
           retention-days: 1
 
   standalone-shards:
-    name: Standalone library shard
+    name: Standalone library shard (${{ matrix.shard }}/3)
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
     needs: standalone-build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 8
     strategy:
       fail-fast: false
       matrix:
-        shard: [1]
+        shard: [1, 2, 3]
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -2741,8 +2741,8 @@ jobs:
         timeout-minutes: 5
         uses: ./.github/actions/start-test-postgres
       - name: Test standalone Rust library without a CLI build
-        timeout-minutes: 15
-        run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 1
+        timeout-minutes: 6
+        run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 3
   tests-standalone-lib:
     name: Standalone library tests
     needs: [changes, standalone-build, standalone-shards]

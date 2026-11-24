@@ -245,14 +245,14 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
     current.standaloneBuildStep,
   );
   const stepBudget = stepBudgetSeconds(shards, stepName);
-  assert.equal(stepBudget, 900);
-  assert.ok(coldRequired <= stepBudget, "one shard runs the whole suite");
-  assert.ok(censoredRequired <= stepBudget, "one shard runs the whole suite");
+  assert.equal(stepBudget, 360);
+  assert.ok(coldRequired > stepBudget);
+  assert.ok(censoredRequired > stepBudget);
   assert.equal(jobBudgetSeconds(build), current.standaloneBuildJob);
-  assert.equal(jobBudgetSeconds(shards), 1200);
+  assert.equal(jobBudgetSeconds(shards), 480);
   assert.equal(jobBudgetSeconds(gate), 180);
   assert.match(gate, /needs: \[changes, standalone-build, standalone-shards\]/);
-  assert.match(shards, /shard: \[1\]/);
+  assert.match(shards, /shard: \[1, 2, 3\]/);
   assert.match(shards, /fail-fast: false/);
   assert.match(shards, /standalone-shards\.cjs run/);
 });

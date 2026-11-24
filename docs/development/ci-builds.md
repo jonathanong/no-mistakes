@@ -15,7 +15,6 @@ Shard counts therefore follow measured work, not a fixed default:
 | Linux N-API tests | 4 | 1 | about 46 s of work per shard |
 | JavaScript policy | 4 | 1 job, 4 steps | each check is 20-35 s of work |
 | Rust quality | 7 | 4 | Clippy pair, check builds pair, release warnings with formatting; PostgreSQL source identities stays alone at about 17 minutes |
-| Standalone library shards | 3 | 1 | about 100-150 s of work per shard |
 | Rust coverage shards | 6 | 3 | about 6 minutes per shard |
 | Benchmarks (main and opted-in PRs) | 24 | 4 | two CPU groups and two memory groups run several shards per CodSpeed invocation, each with its own `NO_MISTAKES_BENCH_SHARD` |
 | Cache retention | 7 | 1 | one `Retain caches` job after all producers |
@@ -25,7 +24,8 @@ Left unchanged: gate jobs (`Tests with coverage`, `AST analysis`,
 `Standalone library tests`, `Benchmarks`) because they take seconds and branch
 protection depends on their names; Windows and macOS jobs (owned by the
 Windows/macOS smoke-test work); the producer jobs that already exceed ten
-minutes (`Build instrumented Rust tests`, `Build standalone library tests`,
+minutes (`Build instrumented Rust tests`, `Build standalone library tests`
+(whose three compile shards also fix the standalone shard count),
 `Build benchmarks`, `Rust quality (PostgreSQL source identities)`), since
 splitting a compile is not a cheap change; `Package checks`, `Docs tests` and
 `Build Linux runtime`, which run 2-6 minutes with different cache keys and
@@ -68,7 +68,7 @@ The current validation graph is organized as follows:
   producer before shards start. A collector merges profiles and checks
   complete execution before producing LCOV and applying the existing coverage
   and complexity gates.
-- Standalone library tests build without the CLI, then run in one job from
+- Standalone library tests build without the CLI, then run as three shards from
   the archived test binaries. Native platform jobs build runtime and Rust test
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other

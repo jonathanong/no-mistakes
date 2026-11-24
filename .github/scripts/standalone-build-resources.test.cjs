@@ -27,11 +27,11 @@ test("standalone library compilation stays inside the 16 GB runner", () => {
   );
   assert.match(producer, /"\$CARGO_INCREMENTAL" 3/);
   const shards = workflowJob(workflow, "standalone-shards");
-  assert.match(shards, /shard: \[1\]/);
-  assert.match(shards, /name: Standalone library shard\n/);
+  assert.match(shards, /shard: \[1, 2, 3\]/);
+  assert.match(shards, /Standalone library shard \(\$\{\{ matrix\.shard \}\}\/3\)/);
   assert.match(
     shards,
-    /standalone-shards\.cjs run target\/standalone-bundle \$\{\{ matrix\.shard \}\} 1/,
+    /standalone-shards\.cjs run target\/standalone-bundle \$\{\{ matrix\.shard \}\} 3/,
   );
   const helper = readFileSync(join(root, ".github/scripts/standalone-shards.cjs"), "utf8");
   assert.match(helper, /const SHARDS = 3/);
