@@ -21,7 +21,8 @@ expression: "serde_json::to_string_pretty(report).unwrap()"
   },
   "contracts": {
     "changed": [
-      "contracts/view.txt"
+      "contracts/view.txt",
+      "generated/resource.json"
     ],
     "added": [
       "contracts/added.txt"

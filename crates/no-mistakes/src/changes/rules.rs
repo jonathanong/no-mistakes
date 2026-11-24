@@ -4,7 +4,7 @@ use anyhow::{bail, Context, Result};
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 
 pub(super) struct Rules<'a> {
-    pub excludes: GlobSet,
+    pub excludes: Vec<GlobSet>,
     pub selectors: GlobSet,
     pub rules: Vec<Rule<'a>>,
     pub keyed: Vec<KeyOptions>,
@@ -12,7 +12,15 @@ pub(super) struct Rules<'a> {
 
 pub(super) struct Rule<'a> {
     pub category: &'a str,
+    pub exclude: Option<usize>,
     pub id: Id<'a>,
+}
+
+impl Rule<'_> {
+    pub fn is_excluded(&self, path: &str, excludes: &[GlobSet]) -> bool {
+        self.exclude
+            .is_some_and(|index| excludes[index].is_match(path))
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -28,7 +36,7 @@ pub(super) enum Id<'a> {
 
 impl<'a> Rules<'a> {
     pub fn compile(config: &'a ChangesConfig) -> Result<Self> {
-        let mut excludes = GlobSetBuilder::new();
+        let mut excludes = Vec::new();
         let mut selectors = GlobSetBuilder::new();
         let mut rules = Vec::new();
         let mut keyed = Vec::new();
@@ -41,10 +49,18 @@ impl<'a> Rules<'a> {
             {
                 bail!("invalid changes category name {name:?}");
             }
-            for pattern in &category.exclude {
-                add_glob(&mut excludes, pattern)
-                    .with_context(|| format!("changes category {name:?} exclude"))?;
-            }
+            let exclude = if category.exclude.is_empty() {
+                None
+            } else {
+                let mut builder = GlobSetBuilder::new();
+                for pattern in &category.exclude {
+                    add_glob(&mut builder, pattern)
+                        .with_context(|| format!("changes category {name:?} exclude"))?;
+                }
+                let index = excludes.len();
+                excludes.push(builder.build()?);
+                Some(index)
+            };
             let definitions = std::iter::once((&category.paths, category.id.as_ref()))
                 .filter(|(paths, id)| !paths.is_empty() || id.is_some())
                 .chain(
@@ -62,12 +78,16 @@ impl<'a> Rules<'a> {
                 for pattern in paths {
                     add_glob(&mut selectors, pattern)
                         .with_context(|| format!("changes category {name:?} paths"))?;
-                    rules.push(Rule { category: name, id });
+                    rules.push(Rule {
+                        category: name,
+                        exclude,
+                        id,
+                    });
                 }
             }
         }
         Ok(Self {
-            excludes: excludes.build()?,
+            excludes,
             selectors: selectors.build()?,
             rules,
             keyed,

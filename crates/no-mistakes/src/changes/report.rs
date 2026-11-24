@@ -86,11 +86,12 @@ impl CategoryChanges {
             if !presence.touched {
                 continue;
             }
-            match (presence.before, presence.after) {
-                (true, true) => changes.changed.push(id),
-                (false, true) => changes.added.push(id),
-                (true, false) => changes.removed.push(id),
-                (false, false) => unreachable!("a touched ID was present in either snapshot"),
+            if presence.before && presence.after {
+                changes.changed.push(id);
+            } else if presence.after {
+                changes.added.push(id);
+            } else {
+                changes.removed.push(id);
             }
         }
         changes

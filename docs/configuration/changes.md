@@ -9,7 +9,7 @@ controls [`changes diff`](../cli/changes-diff.md) and
 changes:
   categories:
     fixtures:
-      exclude: ["fixtures/v1/generated/**"]
+      exclude: ["fixtures/v1/responses/generated/**"]
       rules:
         - paths: ["fixtures/v1/responses/**/*.json"]
           id:
@@ -49,9 +49,15 @@ target framework. Apple strings support comments, escapes, and UTF-16 BOMs;
 comment-only or key-order changes are ignored. Resx compares only `<data name>`
 entries' `<value>` children; headers and metadata entries are ignored. IDs are
 combined across rules and locale variants and reported once per category.
+Key presence is merged across a category's files, so adding a new locale file whose
+keys already exist in other locales reports those keys as `changed` rather than
+`added` (and removing a locale file whose keys still exist in other locales
+reports them as `changed` rather than `removed`).
 
-Excludes take precedence across categories: an excluded path is neither
-classified nor unclassified. Category names `schemaVersion`, `complete`,
+`exclude` is scoped per category: excluding a path in one category prevents only
+that category's rules from matching it. Another category whose `paths` match the
+path still classifies and diffs it, and any changed path matched by no category
+goes into `unclassified`. Category names `schemaVersion`, `complete`,
 `unclassified`, and `reasons` are reserved for report metadata.
 
 `tests` limits the test sources searched for each ID. `match` is a literal

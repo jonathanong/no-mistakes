@@ -1,0 +1,5 @@
+{
+  "endpoint.profile": "v1",
+  "endpoint.legacy": "v1",
+  "endpoint.unchanged": "v1"
+}

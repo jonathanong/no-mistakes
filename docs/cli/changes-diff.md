@@ -17,7 +17,9 @@ configuration loader uses the head tree. See [changes configuration](../configur
 Each declared category produces sorted `changed`, `added`, and `removed` IDs.
 A path-only category reports relative paths. `id.fromPath` extracts IDs from a
 path template; `id.keysOf` compares structured contents. Multiple rules and
-locale files combine their IDs within a category. Reordering keys or entries
+locale files combine their IDs within a category; adding a new locale file whose
+keys already exist in other locales reports those keys as `changed` rather than
+`added`. Reordering keys or entries
 without changing their values does not produce a change.
 
 ```json
@@ -34,8 +36,9 @@ versions 1–3, NuGet `packages.lock.json` per target framework, JSON objects or
 keyed arrays, Apple `.strings` (UTF-8 or BOM-marked UTF-16), and .NET `.resx`.
 The localization format is old-style `.strings`, not `.xcstrings`.
 
-Unclassified changed paths appear in `unclassified`; configured excludes do not
-appear in any category or in that list. Unreadable roots or files, malformed
+Category `exclude` globs apply only to the category that declares them; another
+category whose `paths` match the same path still classifies and diffs it, and
+any changed path matched by no category appears in `unclassified`. Unreadable roots or files, malformed
 structured files, and unsupported entries produce `complete: false` with
 `reasons`. An unreadable root still produces valid report JSON and exits 1.
 Complete reports exit 0, even with unclassified paths; the test planner treats

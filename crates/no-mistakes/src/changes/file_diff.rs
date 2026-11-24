@@ -17,7 +17,7 @@ pub(super) fn compare<'a>(
     head: &Snapshot,
     rules: &Rules<'a>,
 ) -> Option<FileDiff<'a>> {
-    if rules.excludes.is_match(path) || !base.knows(path) || !head.knows(path) {
+    if !base.knows(path) || !head.knows(path) {
         return None;
     }
     match compare_readable(path, base, head, rules) {
@@ -41,7 +41,13 @@ fn compare_readable<'a>(
     let new = head.bytes(path, &head_source)?;
     let unchanged = old == new;
     let mut result = FileDiff::default();
-    let matches = rules.selectors.matches(path);
+    let matches: Vec<_> = rules
+        .selectors
+        .matches(path)
+        .into_iter()
+        .map(|index| &rules.rules[index])
+        .filter(|rule| !rule.is_excluded(path, &rules.excludes))
+        .collect();
     if matches.is_empty() {
         if unchanged {
             return Ok(None);
@@ -50,8 +56,7 @@ fn compare_readable<'a>(
         return Ok(Some(result));
     }
     let mut parsed = vec![None; rules.keyed.len()];
-    for index in matches {
-        let rule = &rules.rules[index];
+    for rule in matches {
         let changes = match rule.id {
             Id::Path => path_change(path.to_owned(), old, new, unchanged),
             Id::FromPath {

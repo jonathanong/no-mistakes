@@ -1,4 +1,4 @@
-use super::{diff_entries, KeyChanges, KeyFormat};
+use super::{diff_entries, KeyChanges};
 use crate::codebase::lockfile::{self, ResolutionKind, ResolvedPackage};
 use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
@@ -6,19 +6,23 @@ use std::hash::Hash;
 
 type Packages = BTreeMap<String, HashSet<(String, String, ResolutionKind)>>;
 
-pub(super) fn entries(format: KeyFormat, source: &str) -> Result<Packages> {
-    let packages = match format {
-        KeyFormat::Pnpm => lockfile::pnpm::parse_checked(source)
-            .map_err(|error| anyhow::anyhow!("invalid pnpm lockfile: {error:?}"))?,
-        KeyFormat::Npm => lockfile::npm::parse_checked(source)?,
-        _ => unreachable!(),
-    };
-    Ok(group(packages.into_iter().map(|package| {
+pub(super) fn pnpm_entries(source: &str) -> Result<Packages> {
+    let packages = lockfile::pnpm::parse_checked(source)
+        .map_err(|error| anyhow::anyhow!("invalid pnpm lockfile: {error:?}"))?;
+    Ok(group_owned(packages))
+}
+
+pub(super) fn npm_entries(source: &str) -> Result<Packages> {
+    Ok(group_owned(lockfile::npm::parse_checked(source)?))
+}
+
+fn group_owned(packages: Vec<ResolvedPackage>) -> Packages {
+    group(packages.into_iter().map(|package| {
         (
             package.name,
             (package.version, package.fingerprint, package.kind),
         )
-    })))
+    }))
 }
 
 pub(in crate::codebase) fn diff_packages(

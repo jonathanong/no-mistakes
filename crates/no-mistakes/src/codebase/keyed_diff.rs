@@ -86,9 +86,8 @@ pub(crate) fn diff_with_presence(
     options.validate()?;
     let format = options.format;
     match format {
-        KeyFormat::Pnpm | KeyFormat::Npm => {
-            diff_parsed(format, old, new, |source| packages::entries(format, source))
-        }
+        KeyFormat::Pnpm => diff_parsed(format, old, new, packages::pnpm_entries),
+        KeyFormat::Npm => diff_parsed(format, old, new, packages::npm_entries),
         KeyFormat::Swift => diff_parsed(format, old, new, |source| {
             let pins = parse_resolved_pins(source)
                 .map_err(|error| anyhow::anyhow!("invalid Swift lockfile: {error:?}"))?;

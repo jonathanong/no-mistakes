@@ -209,6 +209,30 @@ fn changes_report_rejects_a_category_without_a_change_list() {
 }
 
 #[test]
+fn changes_diff_scopes_excludes_per_category_so_other_categories_still_diff_keys() {
+    let root = fixture().join("scoped-exclude");
+    let output = run(&root.join("base"), &root.join("head"), None);
+    assert!(output.status.success(), "{:?}", output.stderr);
+    let report = json_report(&output);
+    snapshot("changes_diff_scoped_exclude", &report);
+}
+
+#[test]
+fn changes_diff_rejects_a_missing_explicit_config_when_roots_are_readable() {
+    let root = fixture();
+    let error = changes::diff(&ChangesDiffArgs {
+        base_root: root.join("base"),
+        head_root: root.join("head"),
+        config: Some(PathBuf::from("missing-config.yml")),
+    })
+    .unwrap_err();
+    assert!(
+        format!("{error:#}").contains("missing-config.yml"),
+        "{error:#}"
+    );
+}
+
+#[test]
 fn changes_diff_distinguishes_binary_bytes_from_their_lossy_text_projection() {
     let root = crate::saved_fixture::materialize_path(&fixture().join("raw-source"));
     let invalid_utf8 =
