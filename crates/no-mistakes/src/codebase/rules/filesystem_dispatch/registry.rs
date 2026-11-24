@@ -72,6 +72,8 @@ macro_rules! filesystem_rules {
             TEST_EMAIL_DOMAIN_POLICY => test_email_domain_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/email-domain-options.yml")),
             TEST_FIXTURE_SIZE_CAP => test_fixture_size_cap::check_with_files => "",
             TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files => "",
+            TEST_NO_RETRIES => test_no_retries::check_with_files => "",
+            PLAYWRIGHT_NO_SERIAL => playwright_no_serial::check_with_files => "",
             POSTGRES_CONSTRAINT_VALIDATE => postgres_constraint_validate::check_with_files => "",
             POSTGRES_COLUMN_CHECK_CONSTRAINTS => postgres_column_check_constraints::check_with_files => "",
             POSTGRES_COLUMN_REQUIRES_TRIGGER => postgres_column_requires_trigger::check_with_files => "",

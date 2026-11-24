@@ -906,6 +906,20 @@ to `per-element`. Use `all-elements` to report once when a table contains at
 least one numeric cell and all numeric cells are over the threshold and
 outside the exemptions.
 
+[`test-no-retries`](../rules/test-no-retries.md) is opt-in and bans configured
+retries in Vitest (`test.retry`, test/describe `retry`), Playwright (`retries`,
+`test.describe.configure({ retries })`), Jest (`jest.retryTimes`), and GitHub
+Actions workflows (retry actions such as `nick-fields/retry` and shell rerun
+loops around configured `tests.*` or `ciTestCommands` commands). `maxRetries`
+defaults to `0`. `allow` entries require a non-empty `reason` and at least one
+of `path` or `project`.
+
+[`playwright-no-serial`](../rules/playwright-no-serial.md) is opt-in and bans
+Playwright `test.describe.serial`, `test.describe.configure({ mode: 'serial' })`,
+`workers: 1`, and `fullyParallel: false` in test files and Playwright configs.
+`allow` entries require a non-empty `reason` and at least one of `path` or
+`project`.
+
 ## PostgreSQL lock inventory baseline
 
 The opt-in [`postgres-lock-inventory`](../rules/postgres-lock-inventory.md) rule

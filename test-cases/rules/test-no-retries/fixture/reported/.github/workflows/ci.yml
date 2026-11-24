@@ -1,0 +1,23 @@
+name: CI
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          command: pnpm exec vitest run
+      - uses: nick-fields/retry@v3
+        with:
+          max_attempts: 1
+          command: pnpm exec vitest run
+      # no-mistakes-disable-next-line test-no-retries
+      - uses: wandalen/wretry.action@v3
+        with:
+          attempt_limit: 2
+      - run: |
+          for i in 1 2 3; do
+            pnpm exec vitest run && break
+          done
+      - run: pnpm exec playwright test || pnpm exec playwright test

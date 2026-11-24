@@ -1,0 +1,9 @@
+version: 2
+tests:
+  vitest:
+    configs: ["vitest.config.ts"]
+  playwright:
+    configs: ["playwright.config.ts"]
+rules:
+  - rule: test-no-retries
+    scope: repository

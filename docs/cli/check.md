@@ -359,6 +359,13 @@ inside config factory modules matched by `options.files`. Set `options.config`,
 `options.files`, or both, and optionally set `options.requiredGlobs` to replace
 the default required list.
 
+Enable [`test-no-retries`](../rules/test-no-retries.md) to ban runner retry
+settings in Vitest, Playwright, Jest, and GitHub Actions workflows (`maxRetries`
+defaults to `0`, with scoped `allow` entries requiring a `reason`). Enable
+[`playwright-no-serial`](../rules/playwright-no-serial.md) to ban Playwright
+`test.describe.serial`, `test.describe.configure({ mode: 'serial' })`,
+`workers: 1`, and `fullyParallel: false` with the same `allow` contract.
+
 Enable [`vitest-project-policy`](../rules/vitest-project-policy.md) to check
 literal properties across declared Vitest projects. Its explicit `config` and
 `helpers` path/glob inputs bound source reads using the prepared visible-file

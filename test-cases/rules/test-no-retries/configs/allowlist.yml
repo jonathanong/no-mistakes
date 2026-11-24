@@ -1,0 +1,16 @@
+version: 2
+tests:
+  vitest:
+    configs: ["vitest.config.ts"]
+  playwright:
+    configs: ["playwright.config.ts"]
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      maxRetries: 1
+      allow:
+        - project: smoke
+          reason: external sandbox rate limits during migration
+        - path: "tests/legacy/**"
+          reason: legacy suite scheduled for rewrite

@@ -1,0 +1,212 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowlist": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 15,
+          "message": "directive for `test-no-retries` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line test-no-retries",
+          "target": "test-no-retries"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": "CI `run` script reruns configured test command `vitest` via a shell loop. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "pnpm exec vitest run && break",
+          "target": "vitest"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 23,
+          "message": "CI `run` script reruns configured test command `playwright` via an `||` fallback rerun. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: pnpm exec playwright test || pnpm exec playwright test",
+          "target": "playwright"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": "CI step uses retry action `nick-fields/retry` (maxRetries is 1). Retries hide flaky tests; remove the retry wrapper and fix the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "nick-fields/retry"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright config `retries` is set to 2, exceeding maxRetries (1). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "retries: process.env.CI ? 2 : 0,",
+          "target": "retries"
+        },
+        {
+          "file": "tests/unit.test.ts",
+          "line": 1,
+          "message": "`jest.retryTimes` is set to 3, exceeding maxRetries (1). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(3);",
+          "target": "jest.retryTimes"
+        },
+        {
+          "file": "tests/unit.test.ts",
+          "line": 3,
+          "message": "Vitest `test` option `retry` is set to 2, exceeding maxRetries (1). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "test(\"retries inline\", { retry: 2 }, () => {});",
+          "target": "retry"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 5,
+          "message": "Vitest config `test.retry` is set to 2, exceeding maxRetries (1). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "retry: 2,",
+          "target": "retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "compliant": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": "CI `run` script reruns configured test command `vitest` via a shell loop. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "pnpm exec vitest run && break",
+          "target": "vitest"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 23,
+          "message": "CI `run` script reruns configured test command `playwright` via an `||` fallback rerun. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: pnpm exec playwright test || pnpm exec playwright test",
+          "target": "playwright"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": "CI step uses retry action `nick-fields/retry` (maxRetries is 0). Retries hide flaky tests; remove the retry wrapper and fix the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "nick-fields/retry"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright config `retries` is set to 2, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "retries: process.env.CI ? 2 : 0,",
+          "target": "retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 6,
+          "message": "Playwright project `smoke` `retries` is set to 2, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"smoke\", retries: 2 },",
+          "target": "retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 7,
+          "message": "Playwright project `core` `retries` is set to 1, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"core\", retries: 1 },",
+          "target": "retries"
+        },
+        {
+          "file": "tests/legacy/old.spec.ts",
+          "line": 3,
+          "message": "Playwright `test.describe.configure` `retries` is set to 2, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ retries: 2 });",
+          "target": "test.describe.configure"
+        },
+        {
+          "file": "tests/unit.test.ts",
+          "line": 1,
+          "message": "`jest.retryTimes` is set to 3, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(3);",
+          "target": "jest.retryTimes"
+        },
+        {
+          "file": "tests/unit.test.ts",
+          "line": 3,
+          "message": "Vitest `test` option `retry` is set to 2, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "test(\"retries inline\", { retry: 2 }, () => {});",
+          "target": "retry"
+        },
+        {
+          "file": "tests/unit.test.ts",
+          "line": 5,
+          "message": "Vitest `describe` option `retry` is set to 1, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "describe(\"suite retries\", { retry: 1 }, () => {});",
+          "target": "retry"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 5,
+          "message": "Vitest config `test.retry` is set to 2, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "retry: 2,",
+          "target": "retry"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 7,
+          "message": "Vitest project `smoke` `retry` is set to 2, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ test: { name: \"smoke\", retry: { count: 2 } } },",
+          "target": "retry"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 8,
+          "message": "Vitest project `unit` `retry` is set to 1, exceeding maxRetries (0). Retries hide flaky tests; remove the retry setting and fix the cause of the flake, or add an allow entry with a reason.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ test: { name: \"unit\", retry: { count: 1 } } },",
+          "target": "retry"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

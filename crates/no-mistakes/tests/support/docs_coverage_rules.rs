@@ -195,3 +195,28 @@ pub(super) fn assert_run_command_policy_docs(root: &std::path::Path, rule: &str)
         assert!(read(&root.join(path)).contains(rule), "{path}");
     }
 }
+
+#[test]
+fn test_flake_policy_rules_are_registered_and_documented() {
+    let root = repo_root();
+    let rules = rule_ids_from_source(&root);
+    for rule in [
+        no_mistakes::codebase::rules::TEST_NO_RETRIES,
+        no_mistakes::codebase::rules::PLAYWRIGHT_NO_SERIAL,
+    ] {
+        assert!(rules.contains(rule), "missing rule id {rule}");
+        for path in [
+            format!("docs/rules/{rule}.md"),
+            "docs/rules/README.md".to_string(),
+            "docs/configuration/rules.md".to_string(),
+            "docs/cli/check.md".to_string(),
+            "docs/node-api.md".to_string(),
+            "docs/feature-parity.md".to_string(),
+        ] {
+            assert!(
+                read(&root.join(&path)).contains(rule),
+                "{path} omits {rule}"
+            );
+        }
+    }
+}

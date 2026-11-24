@@ -1235,6 +1235,13 @@ on `test`-shaped object literals in config factory modules matched by
 `options.files` through Rust, CLI `check`, async Node `check()`, and batched
 `analyzeProject()` checks.
 
+Opt-in [`test-no-retries`](rules/test-no-retries.md) checks Vitest, Playwright,
+Jest, and GitHub Actions workflow retry settings (deriving shell test commands
+from configured `tests.*` runners and `ciTestCommands`), and opt-in
+[`playwright-no-serial`](rules/playwright-no-serial.md) checks Playwright
+serial modes, `workers: 1`, and `fullyParallel: false`, across CLI `check`,
+async Node `check()`, and batched `analyzeProject()`.
+
 TS/JS [`vitest-project-policy`](rules/vitest-project-policy.md) checks per-project
 literal properties through CLI `check`, asynchronous Node `check()`, and batched
 `analyzeProject()` checks. Optional `requiredExcludeGlobs` applies the same

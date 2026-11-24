@@ -210,10 +210,12 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-no-poll-wait-job/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/playwright-no-serial/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/shell-compatibility/public.mts"),
       join(repositoryRoot, "fixtures/node-api/test-fixture-size-cap/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/test-no-retries/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
     ],
@@ -596,4 +598,41 @@ test("changes diff and planner changes have exported public contracts", () => {
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
     /export \{ changesDiff \} from "\.\/changes-types"/,
   );
+});
+
+test("test-no-retries and playwright-no-serial export named option types", () => {
+  const retries = readFileSync(join(packageRoot, "test-no-retries-types.d.ts"), "utf8");
+  for (const name of ["TestNoRetriesAllowEntry", "TestNoRetriesOptions"]) {
+    assert.match(retries, new RegExp(`export interface ${name}\\b`));
+  }
+  for (const field of [
+    "path?: string;",
+    "project?: string;",
+    "reason: string;",
+    "maxRetries?: number;",
+    "allow?: TestNoRetriesAllowEntry[];",
+    "files?: string[];",
+    "configs?: string[];",
+    "retryActions?: string[];",
+    "ciTestCommands?: string[];",
+  ]) {
+    assert.ok(retries.includes(field), `missing ${field}`);
+  }
+  const serial = readFileSync(join(packageRoot, "playwright-no-serial-types.d.ts"), "utf8");
+  for (const name of ["PlaywrightNoSerialAllowEntry", "PlaywrightNoSerialOptions"]) {
+    assert.match(serial, new RegExp(`export interface ${name}\\b`));
+  }
+  for (const field of [
+    "path?: string;",
+    "project?: string;",
+    "reason: string;",
+    "allow?: PlaywrightNoSerialAllowEntry[];",
+    "files?: string[];",
+    "configs?: string[];",
+  ]) {
+    assert.ok(serial.includes(field), `missing ${field}`);
+  }
+  const typesIndex = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
+  assert.match(typesIndex, /export type \* from "\.\/test-no-retries-types";/);
+  assert.match(typesIndex, /export type \* from "\.\/playwright-no-serial-types";/);
 });

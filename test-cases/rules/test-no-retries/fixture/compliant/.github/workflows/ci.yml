@@ -1,0 +1,12 @@
+name: CI
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec vitest run
+      - run: pnpm exec vitest run || echo "tests failed"
+      - run: |
+          for item in a b; do
+            echo "$item"
+          done

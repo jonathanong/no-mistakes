@@ -161,6 +161,20 @@ pub(super) fn run(
             sources,
             defer_suppression,
         ),
+        TEST_NO_RETRIES => test_no_retries::check_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        ),
+        PLAYWRIGHT_NO_SERIAL => playwright_no_serial::check_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        ),
         NO_EMPTY_OR_COMMENTS_ONLY_FILES => {
             no_empty_or_comments_only_files::check_with_files_and_sources(
                 root, config, files, sources,

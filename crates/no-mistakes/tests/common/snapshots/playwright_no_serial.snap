@@ -1,0 +1,147 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowlist": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "e2e/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright `test.describe.configure({ mode: 'serial' })` forces sequential execution and hides inter-test state coupling. Make each test independent instead of serializing the suite, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\" });",
+          "target": "test.describe.configure"
+        },
+        {
+          "file": "e2e/checkout.spec.ts",
+          "line": 5,
+          "message": "Playwright `test.describe.serial` forces sequential execution and hides inter-test state coupling. Make each test independent and use `test.describe`, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.serial(\"ordered checkout\", () => {});",
+          "target": "test.describe.serial"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright config sets `workers: 1`, serializing test execution and hiding concurrency flakes. Remove `workers: 1` and isolate shared test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: process.env.CI ? 1 : undefined,",
+          "target": "workers"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 5,
+          "message": "Playwright config sets `fullyParallel: false`, serializing tests within each file and hiding ordering dependencies. Enable parallel execution and isolate test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: false,",
+          "target": "fullyParallel"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 8,
+          "message": "Playwright project `chromium` sets `workers: 1`, serializing test execution and hiding concurrency flakes. Remove `workers: 1` and isolate shared test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"chromium\", workers: 1 },",
+          "target": "workers"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "compliant": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "e2e/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright `test.describe.configure({ mode: 'serial' })` forces sequential execution and hides inter-test state coupling. Make each test independent instead of serializing the suite, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\" });",
+          "target": "test.describe.configure"
+        },
+        {
+          "file": "e2e/checkout.spec.ts",
+          "line": 5,
+          "message": "Playwright `test.describe.serial` forces sequential execution and hides inter-test state coupling. Make each test independent and use `test.describe`, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.serial(\"ordered checkout\", () => {});",
+          "target": "test.describe.serial"
+        },
+        {
+          "file": "e2e/legacy/flow.spec.ts",
+          "line": 3,
+          "message": "Playwright `test.describe.serial` forces sequential execution and hides inter-test state coupling. Make each test independent and use `test.describe`, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.serial(\"legacy flow\", () => {});",
+          "target": "test.describe.serial"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright config sets `workers: 1`, serializing test execution and hiding concurrency flakes. Remove `workers: 1` and isolate shared test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: process.env.CI ? 1 : undefined,",
+          "target": "workers"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 5,
+          "message": "Playwright config sets `fullyParallel: false`, serializing tests within each file and hiding ordering dependencies. Enable parallel execution and isolate test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: false,",
+          "target": "fullyParallel"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 7,
+          "message": "Playwright project `legacy-serial` sets `fullyParallel: false`, serializing tests within each file and hiding ordering dependencies. Enable parallel execution and isolate test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"legacy-serial\", workers: 1, fullyParallel: false },",
+          "target": "fullyParallel"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 7,
+          "message": "Playwright project `legacy-serial` sets `workers: 1`, serializing test execution and hiding concurrency flakes. Remove `workers: 1` and isolate shared test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"legacy-serial\", workers: 1, fullyParallel: false },",
+          "target": "workers"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 8,
+          "message": "Playwright project `chromium` sets `workers: 1`, serializing test execution and hiding concurrency flakes. Remove `workers: 1` and isolate shared test state, or add an allow entry with a reason.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"chromium\", workers: 1 },",
+          "target": "workers"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

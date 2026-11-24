@@ -10,9 +10,11 @@ pub use super::doc_consistency::RULE_ID as DOC_CONSISTENCY;
 pub use super::file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use super::filesystem_dispatch::dependabot_cooldown_policy::RULE_ID as DEPENDABOT_COOLDOWN_POLICY;
 pub use super::filesystem_dispatch::github_actions_run_command_policy::RULE_ID as GITHUB_ACTIONS_RUN_COMMAND_POLICY;
+pub use super::filesystem_dispatch::playwright_no_serial::RULE_ID as PLAYWRIGHT_NO_SERIAL;
 pub use super::filesystem_dispatch::shell_compatibility::{
     BASH_EMPTY_ARRAY_NOUNSET, ZSH_READONLY_PARAMETER,
 };
+pub use super::filesystem_dispatch::test_no_retries::RULE_ID as TEST_NO_RETRIES;
 pub use super::finite_set_consistency::RULE_ID as FINITE_SET_CONSISTENCY;
 pub use super::forbidden_calls::RULE_ID as FORBIDDEN_CALLS;
 pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;

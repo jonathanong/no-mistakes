@@ -290,6 +290,10 @@ mod cli_gha_snapshot_local_action_checkout;
 
 #[path = "cli_snapshot_dependabot_cooldown_policy.rs"]
 mod cli_snapshot_dependabot_cooldown_policy;
+#[path = "cli_snapshot_playwright_no_serial.rs"]
+mod cli_snapshot_playwright_no_serial;
+#[path = "cli_snapshot_test_no_retries.rs"]
+mod cli_snapshot_test_no_retries;
 
 #[path = "cli_snapshot_vitest_default_excludes.rs"]
 mod cli_snapshot_vitest_default_excludes;

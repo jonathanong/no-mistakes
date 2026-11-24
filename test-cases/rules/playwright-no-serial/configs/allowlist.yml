@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      allow:
+        - project: legacy-serial
+          reason: external sandbox does not isolate sessions yet
+        - path: "e2e/legacy/**"
+          reason: legacy checkout flow under migration

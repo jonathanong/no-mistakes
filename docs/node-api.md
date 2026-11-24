@@ -938,6 +938,14 @@ default is `"per-element"`. The package exports `TestFixtureSizeCapOptions`
 and `TestFixtureSizeCapEachTableMode` for typing rule configurations. See the
 [rule documentation](rules/test-fixture-size-cap.md).
 
+`test-no-retries` and `playwright-no-serial` are available through asynchronous
+`check()` and `analyzeProject()` using the same configuration and `RuleFinding`
+report as CLI `check`. The package exports `TestNoRetriesOptions`,
+`TestNoRetriesAllowEntry`, `PlaywrightNoSerialOptions`, and
+`PlaywrightNoSerialAllowEntry` for typing rule configurations. See
+[`test-no-retries`](rules/test-no-retries.md) and
+[`playwright-no-serial`](rules/playwright-no-serial.md).
+
 `vite-optimize-deps-nested-imports` is available through asynchronous `check()` and
 `analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
 `configFiles` and `packages` are required. Optional `includeSources` entries name a

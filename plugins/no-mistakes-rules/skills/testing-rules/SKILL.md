@@ -14,7 +14,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT name a test for behavior it never asserts.
 - SHOULD NOT match error message text; assert type, code, or structured fields.
 - MUST NOT inflate coverage with assertions that cannot detect faults in the exercised behavior, or exclude application logic just to pass a threshold.
-- MUST NOT treat a passing rerun as a fix for a flaky test; find the cause.
+- MUST NOT treat a passing rerun as a fix for a flaky test, or hide flakes behind Vitest `retry`, Playwright `retries`, Jest `retryTimes`, or CI retry actions (enforce with `test-no-retries`); find the cause.
+- MUST NOT lower a coverage threshold or widen a snapshot tolerance, visual baseline, or performance gate to make a flaky or failing test pass; fix the cause.
 - MUST NOT assert something about every item in a collection without asserting it is non-empty; a per-item assertion passes over zero items. Asserting the collection equals `[]` is fine.
 - MUST NOT accept "either outcome is fine" when one outcome is a degraded fallback.
 - MUST NOT write a regression test whose fixture never reaches the bug's precondition; confirm it fails without the fix.
