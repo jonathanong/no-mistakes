@@ -21,9 +21,12 @@ ordinary check findings while the inventory retains physical sites.
 After reviewing the initial inventory, `--write-baseline` can create a missing
 baseline. Commit it. Restore a deleted tracked baseline before rewriting;
 deletion cannot reset the ratchet. Subsequent writes may only prune removed
-sites; they reject new sites or any unanalyzed SQL. Stored routine definitions
-remain unanalyzed because their bodies are outside the shared executable-SQL
-projection. Scope those sources separately and configure helper call names.
+sites. To accept an intentional addition, copy its `file`, `category`, and
+`key` from `added` into the baseline's `sites` array for review. Start with
+rule `include`, `exclude`, and `sqlInclude` settings that select analyzable SQL
+so unresolved inputs do not block initial adoption. Stored routine bodies
+remain unresolved. Executable statements alongside them still count. Omit
+per-rule `effort` and uncertainty options.
 
 Use `await postgresLockInventory({ root, config, writeBaseline: false })` for
 repeated in-process inventory queries. Ordinary `check()` and

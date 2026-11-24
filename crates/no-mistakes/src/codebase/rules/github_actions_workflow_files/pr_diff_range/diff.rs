@@ -41,6 +41,7 @@ const VALUE_FLAGS: &[&str] = &[
 
 pub(super) fn ranges(text: &str, exprs: &[String], env: &BTreeMap<String, String>) -> Vec<Range> {
     commands(text)
+        .commands
         .iter()
         .filter_map(|command| range(command, exprs, env))
         .collect()

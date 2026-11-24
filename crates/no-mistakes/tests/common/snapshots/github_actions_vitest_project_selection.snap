@@ -2,6 +2,43 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "heredocs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 13,
+          "message": ".github/workflows/widgets.yml:13: job `test` step 1 narrows Vitest project `widgets` with positional test file `after-two.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "pnpm exec vitest run --project widgets after-two.test.ts",
+          "target": "after-two.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 21,
+          "message": ".github/workflows/widgets.yml:21: job `test` step 2 narrows Vitest project `widgets` with positional test file `after-separate.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "pnpm exec vitest run --project widgets after-separate.test.ts",
+          "target": "after-separate.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 23,
+          "message": ".github/workflows/widgets.yml:23: job `test` step 3 narrows Vitest project `widgets` with positional test file `before-unclosed.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "pnpm exec vitest run --project widgets before-unclosed.test.ts",
+          "target": "before-unclosed.test.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "report": {
     "exitCode": 1,
     "report": {

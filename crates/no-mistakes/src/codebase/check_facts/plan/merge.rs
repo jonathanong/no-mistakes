@@ -107,6 +107,7 @@ impl CheckFactPlan {
         self.postgres_exact_locations |= other.postgres_exact_locations;
         self.postgres_conflict_locations |= other.postgres_conflict_locations;
         self.postgres_bounds |= other.postgres_bounds;
+        self.postgres_lock_inventory |= other.postgres_lock_inventory;
         self.postgres_json_writes |= other.postgres_json_writes;
         self.postgres_grouping |= other.postgres_grouping;
         self.postgres_index_probes |= other.postgres_index_probes;

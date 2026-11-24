@@ -666,6 +666,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "runtime.legacy.enabled"
         },
         {
+          "file": "nested.yml",
+          "line": 1,
+          "message": "nested.yml: banned config key `runtime.legacy.enabled` is present",
+          "rule": "structured-config-policy",
+          "sourceLine": "# A merge inside a merged mapping supplies the banned key.",
+          "target": "runtime.legacy.enabled"
+        },
+        {
+          "file": "scalar.yml",
+          "line": 1,
+          "message": "scalar.yml: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar)",
+          "rule": "structured-config-policy",
+          "sourceLine": "# A merge value that is not a mapping cannot be applied, so the file is unanalyzable."
+        },
+        {
+          "file": "sequence-scalar-item.yml",
+          "line": 1,
+          "message": "sequence-scalar-item.yml: failed to apply YAML merge keys (expected a mapping for merging, but found scalar)",
+          "rule": "structured-config-policy",
+          "sourceLine": "# A scalar item in a merge sequence cannot be applied, so the file is unanalyzable."
+        },
+        {
           "file": "sequence.yml",
           "line": 1,
           "message": "sequence.yml: banned config key `runtime.legacy.enabled` is present",

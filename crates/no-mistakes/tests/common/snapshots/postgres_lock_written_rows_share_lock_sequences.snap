@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/lock-targets.ts",
           "line": 5,
-          "message": "src/lock-targets.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/lock-targets.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts a JOIN accounts b ON a.parent_id = b.id FOR UPDATE OF a FOR SHARE OF b`);",
           "target": "share-lock-then-write"
@@ -17,7 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 103,
-          "message": "src/query.ts:103: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:103: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -33,7 +33,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 12,
-          "message": "src/query.ts:12: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:12: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -89,7 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 18,
-          "message": "src/query.ts:18: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:18: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE; UPDATE accounts SET touched = true WHERE id = $1`, [id]);",
           "target": "share-lock-then-write"
@@ -97,7 +97,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 189,
-          "message": "src/query.ts:189: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:189: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM \"schema.with.dot\".accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -121,7 +121,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 209,
-          "message": "src/query.ts:209: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:209: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -137,7 +137,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 6,
-          "message": "src/query.ts:6: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:6: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -161,7 +161,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 75,
-          "message": "src/query.ts:75: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:75: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`WITH unused AS (SELECT 1) SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -177,17 +177,41 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 92,
-          "message": "src/query.ts:92: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:92: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
         },
         {
-          "file": "src/query.ts",
-          "line": 98,
-          "message": "src/query.ts:98: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "file": "src/row-sequences.ts",
+          "line": 19,
+          "message": "src/row-sequences.ts:19: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/row-sequences.ts",
+          "line": 26,
+          "message": "src/row-sequences.ts:26: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/row-sequences.ts",
+          "line": 37,
+          "message": "src/row-sequences.ts:37: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock mode or common row key; use explicit lock clauses and comparable row predicates",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/row-sequences.ts",
+          "line": 44,
+          "message": "src/row-sequences.ts:44: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
         },
         {
@@ -345,6 +369,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "src/row-sequences.ts",
+          "line": 37,
+          "message": "src/row-sequences.ts:37: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock mode or common row key; use explicit lock clauses and comparable row predicates",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/variant-sequences.ts",
           "line": 11,
           "message": "src/variant-sequences.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
@@ -369,7 +401,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/lock-targets.ts",
           "line": 5,
-          "message": "src/lock-targets.ts:5: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/lock-targets.ts:5: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts a JOIN accounts b ON a.parent_id = b.id FOR UPDATE OF a FOR SHARE OF b`);",
           "target": "share-lock-then-write"
@@ -377,7 +409,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 103,
-          "message": "src/query.ts:103: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:103: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -385,7 +417,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 12,
-          "message": "src/query.ts:12: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:12: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -393,7 +425,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 18,
-          "message": "src/query.ts:18: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:18: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE; UPDATE accounts SET touched = true WHERE id = $1`, [id]);",
           "target": "share-lock-then-write"
@@ -401,7 +433,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 189,
-          "message": "src/query.ts:189: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:189: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM \"schema.with.dot\".accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -409,7 +441,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 209,
-          "message": "src/query.ts:209: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:209: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -417,7 +449,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 6,
-          "message": "src/query.ts:6: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:6: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -425,7 +457,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 75,
-          "message": "src/query.ts:75: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:75: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`WITH unused AS (SELECT 1) SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
@@ -433,17 +465,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 92,
-          "message": "src/query.ts:92: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "message": "src/query.ts:92: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
         },
         {
-          "file": "src/query.ts",
-          "line": 98,
-          "message": "src/query.ts:98: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "file": "src/row-sequences.ts",
+          "line": 19,
+          "message": "src/row-sequences.ts:19: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/row-sequences.ts",
+          "line": 26,
+          "message": "src/row-sequences.ts:26: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/row-sequences.ts",
+          "line": 44,
+          "message": "src/row-sequences.ts:44: share-lock-then-write: share lock precedes a conflicting write on the same row or relation-wide target; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
           "target": "share-lock-then-write"
         }
       ],

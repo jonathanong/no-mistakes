@@ -161,6 +161,10 @@ Worker count does not change which invocations report. The saved
 locations, their callback targets, and their configured executor provenance.
 File filters select per-item occurrences. Their call paths can reach configured
 sinks through helpers in other files.
+If the selected files contain no per-item candidates, the rule skips the sink
+scan. With `--verbose-timings`, `query_reached_per_item.sink_sites` records zero
+for that application. The [mixed benchmark workload](../../fixtures/performance/query-projection-mixed/README.md)
+exercises this projection alongside other prepared checks.
 Static indexed property types, including `NonNullable<Options['query']>`, preserve
 the selected callable origin. Statically invoked async callbacks preserve returned
 executor metadata. A nullish choice between a typed executor and a configured

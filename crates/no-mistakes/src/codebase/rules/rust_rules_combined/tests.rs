@@ -214,11 +214,18 @@ fn requested_rust_ast_checks_share_one_parse_and_marker_negative_paths_skip_it()
         let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
         let source = sources.read_path(&path).unwrap();
         let calls = std::cell::Cell::new(0);
-        let findings =
-            scan::scan_outputs_with_parser(&root, &path, &work, &source, false, |source| {
+        let findings = scan::scan_outputs_with_parser(
+            &root,
+            &path,
+            &work,
+            &source,
+            Some(&sources),
+            false,
+            |source| {
                 calls.set(calls.get() + 1);
                 syn::parse_file(source)
-            });
+            },
+        );
         assert_eq!(calls.get(), parses, "{name}");
         assert_eq!(
             findings

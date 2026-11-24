@@ -79,7 +79,7 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
                 "share-lock-then-write",
                 Some("src/query.ts")
             ),
-            [6, 12, 18, 75, 92, 98, 103, 189, 209]
+            [6, 12, 18, 75, 92, 103, 189, 209]
         );
         assert_eq!(
             lines_in_file(
@@ -91,6 +91,24 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
             [5]
         );
     }
+    assert_eq!(
+        lines_in_file(
+            &reports["advise"]["report"],
+            "advisories",
+            "share-lock-then-write",
+            Some("src/row-sequences.ts")
+        ),
+        [19, 26, 44]
+    );
+    assert_eq!(
+        lines_in_file(
+            &reports["advise"]["report"],
+            "advisories",
+            "unanalyzable",
+            Some("src/row-sequences.ts")
+        ),
+        [37]
+    );
     assert_eq!(
         lines_in_file(
             &reports["advise"]["report"],
@@ -122,6 +140,25 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_lock_written_rows_share_key_updates_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_share_key_updates",
+        &[
+            ("catalog", "key-share-key-writes", "share-key-writes.yml"),
+            ("no_catalog", "key-share-key-writes", "share-advise.yml"),
+        ],
+    );
+    for (case, expected) in [("catalog", &[5, 23, 35, 41][..]), ("no_catalog", &[41][..])] {
+        let report = &reports[case]["report"];
+        assert_eq!(
+            lines(report, "advisories", "share-lock-then-write"),
+            expected
+        );
+        assert!(lines(report, "advisories", "unanalyzable").is_empty());
+    }
+}
+
+#[test]
 fn postgres_lock_written_rows_share_uncertainty_check_json_snapshot() {
     let reports = snapshot(
         "postgres_lock_written_rows_share_uncertainty",
@@ -133,6 +170,35 @@ fn postgres_lock_written_rows_share_uncertainty_check_json_snapshot() {
         lines(advise, "advisories", "unanalyzable"),
         [8, 16, 22, 29, 37]
     );
+}
+
+#[test]
+fn postgres_lock_written_rows_share_batch_edges_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_share_batch_edges",
+        &[("advise", "share-lock-batch-edges", "share-uncertainty.yml")],
+    );
+    let advise = &reports["advise"]["report"];
+    assert_eq!(
+        lines(advise, "advisories", "share-lock-then-write"),
+        [7, 20, 30]
+    );
+    assert_eq!(lines(advise, "advisories", "unanalyzable"), [6, 13, 37]);
+}
+
+#[test]
+fn postgres_lock_written_rows_redundant_prelock_quoted_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_redundant_prelock_quoted",
+        &[(
+            "advise",
+            "redundant-prelock-quoted",
+            "redundant-no-catalog.yml",
+        )],
+    );
+    let advise = &reports["advise"]["report"];
+    assert_eq!(lines(advise, "advisories", "redundant-prelock"), [12]);
+    assert!(lines(advise, "advisories", "unanalyzable").is_empty());
 }
 
 #[test]
@@ -155,7 +221,19 @@ fn postgres_lock_written_rows_redundant_prelock_boundaries_check_json_snapshot()
         ),
         [5]
     );
-    assert_eq!(lines(advise, "advisories", "redundant-prelock"), [5]);
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "redundant-prelock",
+            Some("src/later-access.ts")
+        ),
+        [19, 27]
+    );
+    assert_eq!(
+        lines(advise, "advisories", "redundant-prelock"),
+        [5, 19, 27]
+    );
     assert_eq!(
         lines_in_file(
             advise,

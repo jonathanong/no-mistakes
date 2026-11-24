@@ -118,6 +118,19 @@ Conditional binding updates retain distinct alternatives without repeatedly
 duplicating earlier possibilities; the helper-prefix projection leaves
 conflicting outcomes unproven when no complete version set is available.
 
+Work-count tests cap traversal of shared scalar records. Argument refresh visits
+zero values when there are no builder changes and only the root for an unrelated
+invalidation. Opaque callback discovery also visits only the root when the
+record contains neither a callback environment nor an argument identity.
+Records with affected builders are still refreshed through their nested values.
+See the [saved performance fixtures](../../fixtures/performance/annotation-scalar-call-values/README.md).
+
+The CLI comparisons use four samples per binary per case in the initial sweep
+and twenty in the targeted jobs-8 recheck of excluded-caller controls. The
+reported medians apply to those workloads and have no confidence intervals.
+Max effort can still do more analysis than low effort.
+See the [benchmark results](https://github.com/jonathanong/no-mistakes/pull/3860).
+
 For an executor call with complete
 [SQL alternatives](../postgres-facts.md#finite-sql-alternatives), the rule uses
 those versions from the shared extractor instead of its separate helper-prefix

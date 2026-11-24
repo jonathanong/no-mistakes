@@ -1,0 +1,9 @@
+defaults: &defaults
+  language: TypeScript
+<<: *defaults
+id: first
+rule:
+  pattern: listWidgets()
+---
+id: second
+<<: 7

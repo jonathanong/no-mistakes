@@ -1,0 +1,19 @@
+name: ci
+on: push
+env:
+  BASH_ENV: /dev/null
+  UNRELATED: value
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BASH_ENV: /dev/null
+    steps:
+      - name: mentions names only in a script
+        run: |
+          echo "BASH_ENV is ./setup.sh"
+          echo "NODE_OPTIONS=--inspect"
+      - name: unconfigured name
+        env:
+          OTHER_OPTIONS: --inspect
+        run: echo ok

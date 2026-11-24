@@ -159,6 +159,7 @@ test("macOS smoke restores main test-harness snapshot before the Rust tests and 
   assert.equal(key(restore), key(producer));
   assert.equal(fallbacks(restore), fallbacks(producer));
   assert.equal(paths(restore), paths(producer));
+  const inputsIndex = index("Restore macOS test input timestamps");
   const compileIndex = index("Compile macOS-dependent Rust tests");
   const testsIndex = index("Run macOS-dependent Rust tests");
   const runtimeRestoreIndex = index("Restore native workspace artifacts built on main");
@@ -166,11 +167,13 @@ test("macOS smoke restores main test-harness snapshot before the Rust tests and 
   assert.ok(testsIndex >= 0, "Missing Run macOS-dependent Rust tests step");
   assert.ok(buildIndex >= 0, "Missing Build native CLI and N-API addon step");
   // The crate-type rewrite invalidates restored test units, so tests run first.
-  assert.ok(index("Restore native test harness") < compileIndex);
+  assert.ok(index("Restore native test harness") < inputsIndex);
+  assert.ok(inputsIndex < compileIndex);
   assert.ok(compileIndex < testsIndex);
   assert.ok(testsIndex < runtimeRestoreIndex, "Restore native runtime artifacts after Rust tests");
   assert.ok(testsIndex < buildIndex);
-  assert.match(all[compileIndex], /cargo-cache-inputs\.cjs restore/);
+  assert.match(all[inputsIndex], /cargo-cache-inputs\.cjs restore/);
+  assert.doesNotMatch(all[compileIndex], /cargo-cache-inputs/);
   // A second restore would stamp files changed since the capture as fresh again.
   assert.doesNotMatch(all[testsIndex], /cargo-cache-inputs/);
 });
@@ -182,6 +185,7 @@ test("macOS smoke compiles its Rust tests in a bounded step of their own", () =>
   const compile = all.find((step) => step.startsWith("Compile macOS-dependent Rust tests"));
   assert.match(compile, /smoke\.cjs macos rust-build/);
   // The compile may not exceed the budget the build step had before it moved.
+  assert.ok(timeout("Restore macOS test input timestamps") <= 3);
   assert.ok(timeout("Compile macOS-dependent Rust tests") <= timeout("Build native CLI"));
   assert.ok(timeout("Compile macOS-dependent Rust tests") <= 30, "step cap needs no suppression");
   assert.equal(timeout("Run macOS-dependent Rust tests"), 15);

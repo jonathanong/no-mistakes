@@ -182,6 +182,20 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "listed/missing.ts"
         },
         {
+          "file": "rules/merge-second-doc.yml",
+          "line": 9,
+          "message": "failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar)",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "<<: 7"
+        },
+        {
+          "file": "rules/merge-sequence-item.yml",
+          "line": 3,
+          "message": "failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar)",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- <<: 7"
+        },
+        {
           "file": "rules/multi.yml",
           "line": 6,
           "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",

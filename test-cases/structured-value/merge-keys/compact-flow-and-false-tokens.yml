@@ -1,0 +1,8 @@
+first: 1
+---
+second: 2
+---
+plain: foo<<:bar
+suffix: <<:bar
+commented: ok # <<: 7
+compact: {a: 1,<<: 7}

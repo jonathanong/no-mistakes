@@ -134,3 +134,27 @@ fn postgres_lock_written_rows_parameter_transactions_check_json_snapshot() {
         );
     }
 }
+
+#[test]
+fn postgres_lock_written_rows_membership_followups_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_membership_followups",
+        &[(
+            "membership",
+            "membership-followups",
+            "parameter-transactions-no-catalog.yml",
+        )],
+    );
+    let report = &reports["membership"]["report"];
+    let advisories = report["advisories"].as_array().unwrap();
+    let mut lines: Vec<_> = advisories
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["target"], "unanalyzable");
+            finding["line"].as_u64().unwrap()
+        })
+        .collect();
+    lines.sort_unstable();
+    assert_eq!(lines, [10, 16, 28, 34]);
+    assert!(report["rules"].as_array().unwrap().is_empty());
+}

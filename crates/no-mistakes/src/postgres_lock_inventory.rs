@@ -67,7 +67,7 @@ pub fn run(options: &PostgresLockInventoryOptions) -> Result<LockInventoryReport
             report.unanalyzed.is_empty(),
             "cannot rewrite lock inventory baseline while SQL is unanalyzed"
         );
-        anyhow::ensure!(!existing || report.added.is_empty(), "lock inventory baseline may only go down; remove newly added lock sites before rewriting it");
+        anyhow::ensure!(!existing || report.added.is_empty(), "lock inventory baseline may only go down; remove newly added lock sites or record them in the baseline after review before rewriting it");
         let mut sites: Vec<_> = report
             .sites
             .iter()

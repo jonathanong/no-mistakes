@@ -4,7 +4,7 @@ const RULE: &str = "github-actions-pr-diff-range";
 
 #[test]
 fn github_actions_pr_diff_range_json_matches_snapshot() {
-    let cases: Vec<_> = ["report", "pass", "suppression"]
+    let cases: Vec<_> = ["report", "pass", "suppression", "env-and-heredoc"]
         .into_iter()
         .map(|name| {
             (

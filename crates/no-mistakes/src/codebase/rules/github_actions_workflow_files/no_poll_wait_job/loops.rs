@@ -19,15 +19,21 @@ const LEADING: &[&str] = &[
 ];
 
 /// Loops (`while`, `until`, `for`) whose condition or body sleeps and runs a
-/// configured poll command. An unbalanced script or a heredoc is not judged.
+/// configured poll command. Judge completed loops before an unfinished here-document.
 pub(super) fn poll_loops(script: &str, polls: &[Vec<String>], skip_for: bool) -> Vec<PollLoop> {
-    if script.contains("<<") {
-        return Vec::new();
-    }
     let mut stack: Vec<Frame> = Vec::new();
     let mut found = Vec::new();
-    for command in commands(script) {
-        let head = command[0].text.as_str();
+    let script = commands(script);
+    for command in script.commands {
+        let start = command
+            .iter()
+            .position(|word| !matches!(word.text.as_str(), "do" | "then" | "else" | "elif" | "if"));
+        let Some(start) = start else {
+            continue;
+        };
+        let command = &command[start..];
+        let first = &command[0];
+        let head = first.text.as_str();
         if head == "done" {
             let Some(frame) = stack.pop() else {
                 return Vec::new();
@@ -45,7 +51,7 @@ pub(super) fn poll_loops(script: &str, polls: &[Vec<String>], skip_for: bool) ->
         let opens = matches!(head, "while" | "until" | "for");
         if opens {
             stack.push(Frame {
-                line: command[0].line,
+                line: first.line,
                 keyword: head.to_string(),
                 sleeps: false,
                 poll: None,
@@ -59,7 +65,7 @@ pub(super) fn poll_loops(script: &str, polls: &[Vec<String>], skip_for: bool) ->
         };
         inspect(&command[usize::from(opens)..], frame, polls);
     }
-    if !stack.is_empty() {
+    if !stack.is_empty() && !script.unterminated_heredoc {
         return Vec::new();
     }
     found.sort_by_key(|item| item.line);

@@ -76,7 +76,7 @@ pub(crate) fn scan_masked_file(
         return Vec::new();
     }
     if !defer_suppression {
-        super::suppress_rule_findings_with_source(&mut findings, &source);
+        super::suppress_rule_findings_for_path(sources, path, &mut findings);
     }
     findings
 }

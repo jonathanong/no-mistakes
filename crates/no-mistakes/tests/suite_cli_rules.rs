@@ -170,6 +170,8 @@ mod cli_gha_snapshot_composite_step_schema;
 mod cli_gha_snapshot_docker_host_ports;
 #[path = "cli_gha_snapshot_download_integrity.rs"]
 mod cli_gha_snapshot_download_integrity;
+#[path = "cli_gha_snapshot_env_policy.rs"]
+mod cli_gha_snapshot_env_policy;
 #[path = "cli_gha_snapshot_job_permissions.rs"]
 mod cli_gha_snapshot_job_permissions;
 #[path = "cli_gha_snapshot_job_timeouts.rs"]

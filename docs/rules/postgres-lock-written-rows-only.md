@@ -22,7 +22,7 @@ check already acquires the required parent KEY SHARE lock.
 | `table-lock` | `LOCK TABLE` in any mode without a proven later DDL purpose in the same transaction. | Use a bounded row lock, or make the DDL ordering explicit. |
 | `constant-advisory-lock` | Literal or constant keys (including builtin `hashtext` / `hashtextextended` of constants) to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
 | `row-lock-outside-transaction` | A row lock on a known non-transaction executor, unless the same SQL statement writes the locked relation. | Move the lock and write into one transaction. |
-| `share-lock-then-write` | A known `FOR SHARE` or `FOR KEY SHARE` lock followed later by an update or delete of the same relation in the same transaction. | Choose a lock mode that matches the write, or use the conditional write directly. |
+| `share-lock-then-write` | A known `FOR SHARE` followed by an update or delete, or `FOR KEY SHARE` followed by a delete or catalog-proven key-column update, on the same row in the same transaction. | Choose a lock mode that matches the write, or use the conditional write directly. |
 | `redundant-prelock` | Advisory-only: a discarded `SELECT 1 FOR UPDATE` immediately precedes a conditional write with the same provable key. | Remove the unused pre-lock and let the conditional write decide the race. |
 
 The four established checks default to `advise`. The two sequence checks are
@@ -81,12 +81,18 @@ matching provable key. CTE names do not establish a base relation identity.
 ## Share lock followed by a write
 
 Enable this check with `checks.share-lock-then-write: advise` (or `fail`). It
-reports a `FOR SHARE` or `FOR KEY SHARE` statement when a later statement in
-the same known transaction updates or deletes the same relation. Competing
-transactions can deadlock if both keep shared locks and then request lock modes
-that conflict with each other. `FOR KEY SHARE` is compatible with
-`FOR NO KEY UPDATE`, so the pattern alone does not prove a deadlock for every
-schema and write shape.
+reports a `FOR SHARE` when a later statement in the same known transaction
+updates or deletes the same row. A relation-wide lock or write can also match.
+Comparable equality predicates must have the same bound key. When the check
+cannot compare the keys, it follows `unanalyzableSql`. An earlier proven
+`FOR UPDATE` on the same row already holds the stronger lock.
+
+`FOR KEY SHARE` matches a later delete or an update that can change a key
+column of the locked relation. Set `schemaCatalogPath` to identify key columns
+from valid, immediate, non-partial unique indexes on plain columns. The check
+uses explicit assignment targets, including tuple assignments. An assignment
+such as `SET id = id` preserves the key, and non-key updates are compatible
+with `FOR KEY SHARE`. The catalog is needed for key-column updates.
 
 ```sql
 SELECT 1 FROM accounts WHERE id = $1 FOR SHARE;
@@ -127,10 +133,9 @@ SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE;
 UPDATE jobs SET state = 'done' WHERE id = $1 AND state = 'running';
 ```
 
-The conditional write already decides whether it can change the row, so remove
-the extra lock when no code needs the locked row value before that write. If
-the transaction does read a selected value, keep the lock and make that use
-clear.
+The conditional write can match zero rows. In that case, the pre-lock may
+still protect work later in the transaction. The check skips the suggestion
+when a later statement in the same transaction can access the locked relation.
 
 For the examples below, opt in with explicit failing severities:
 
@@ -411,8 +416,12 @@ and a `DELETE ... USING` can match the target to that CTE on the same column.
 Use `IS NOT DISTINCT FROM` for a nullable join key. An equality join requires
 a non-null key proven by the CTE predicate or by `schemaCatalogPath` with
 complete coverage when the surrounding SQL leaves that schema evidence intact.
-This proof can clear abstentions from unresolved transaction membership or other
-unresolved SQL in the transaction.
+The rule checks for local proof before consulting the write set of a configured
+transaction. Local proof can also establish that the locked rows are written
+when transaction membership or other calls in the transaction are unresolved.
+Within one SQL statement, repeated PostgreSQL parameter numbers such as `$1`
+identify the same parameter. The rule cannot establish a matching key from
+`?` or `:name` placeholders.
 
 Set `transactionExecutorTypeNames: [TransactionQuery]` to match an awaited
 lock and a later unconditional, awaited write on the same parameter in the

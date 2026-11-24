@@ -208,6 +208,7 @@ test("check rule options compile from the package root", () => {
     [
       join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/github-actions-env-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-no-poll-wait-job/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
@@ -553,6 +554,28 @@ test("GitHub Actions no-poll-wait-job exports its option type", () => {
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/github-actions-no-poll-wait-job-types";/,
+  );
+});
+
+test("GitHub Actions env policy exports named option types", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-env-policy-types.d.ts"),
+    "utf8",
+  );
+  for (const name of ["GithubActionsEnvPolicyValue", "GithubActionsEnvPolicyOptions"]) {
+    assert.match(declarations, new RegExp(`export (?:type|interface) ${name}\\b`));
+  }
+  for (const field of [
+    "required?: Record<string, GithubActionsEnvPolicyValue>;",
+    "forbidden?: string[];",
+    "include?: string[];",
+    "unanalyzable?: Unanalyzable;",
+  ]) {
+    assert.ok(declarations.includes(field), `missing ${field}`);
+  }
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-env-policy-types";/,
   );
 });
 

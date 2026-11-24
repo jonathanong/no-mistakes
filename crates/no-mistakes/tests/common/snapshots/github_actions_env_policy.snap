@@ -1,0 +1,178 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"build\" step 3 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: --inspect",
+          "target": "NODE_OPTIONS"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic-env": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" sets `env` to `${{ fromJSON(vars.JOB_ENV) }}`, which cannot be checked statically. Write a literal `env:` mapping so the env policy can verify it, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "env: ${{ fromJSON(vars.JOB_ENV) }}",
+          "target": "env"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml: job \"build\" step 1 sets `env` to `${{ fromJSON(vars.STEP_ENV) }}`, which cannot be checked statically. Write a literal `env:` mapping so the env policy can verify it, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "env: ${{ fromJSON(vars.STEP_ENV) }}",
+          "target": "env"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted-hash": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" sets forbidden env `A #1`. Remove `A #1` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "\"A #1\": x",
+          "target": "A #1"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" sets env `BASH_ENV` to `./init #2.sh`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: \"./init #2.sh\"",
+          "target": "BASH_ENV"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "violations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 15,
+          "message": ".github/workflows/ci.yml: job \"build\" step 2 sets env `BASH_ENV` to the expression `${{ vars.SHELL_INIT }}`, which cannot be checked statically. Write the literal `/dev/null` so the env policy can verify it, or suppress this line if the expression always resolves to it.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ${{ vars.SHELL_INIT }}",
+          "target": "BASH_ENV"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 30,
+          "message": ".github/workflows/ci.yml: job \"other\" step 2 sets env `BASH_ENV` to the expression `${{ matrix.init }}`, which cannot be checked statically. Write the literal `/dev/null` so the env policy can verify it, or suppress this line if the expression always resolves to it.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ${{ matrix.init }}",
+          "target": "BASH_ENV"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup/action.yml",
+          "line": 9,
+          "message": ".github/actions/setup/action.yml: composite action step 1 sets env `BASH_ENV` to `./composite-init.sh`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ./composite-init.sh",
+          "target": "BASH_ENV"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: --max-old-space-size=4096",
+          "target": "NODE_OPTIONS"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 20,
+          "message": ".github/workflows/ci.yml: job \"build\" step 3 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: --trace-warnings",
+          "target": "NODE_OPTIONS"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 23,
+          "message": ".github/workflows/ci.yml: job \"build\" step 4 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: ${{ matrix.init }}",
+          "target": "NODE_OPTIONS"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: workflow sets env `BASH_ENV` to `./setup.sh`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ./setup.sh",
+          "target": "BASH_ENV"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
