@@ -1,13 +1,16 @@
 use super::diff::{ranges, Form, Range};
+use super::env_read;
 use super::exprs::{extract, End};
 use super::yaml_shapes::{env_of, events, get, guards};
 use super::RULE_ID;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::codebase::rules::github_actions_workflow_files::gha_kind;
+use crate::codebase::rules::github_actions_workflow_files::job_lines::document::Document;
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::scalar_name;
 use crate::codebase::rules::github_actions_workflow_files::script_line::yaml_line;
 use crate::codebase::rules::RuleFinding;
 use serde_yaml::Value;
+use std::cell::OnceCell;
 use std::collections::BTreeMap;
 
 const PULL_REQUEST_READ: &str = "github.event.pull_request.";
@@ -21,6 +24,7 @@ struct Step<'a> {
     script: &'a str,
     env: BTreeMap<String, String>,
     located: Option<&'a StepRun>,
+    document: &'a OnceCell<Option<Document>>,
     guarded: bool,
 }
 
@@ -46,6 +50,7 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
     }
     let located = step_run_lines(source, false);
     let workflow_env = env_of(value.get("env"));
+    let document = OnceCell::new();
     let mut findings = Vec::new();
     for (id, job) in jobs {
         let Some(job) = job.as_mapping() else {
@@ -76,6 +81,7 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
                 located: located
                     .iter()
                     .find(|item| item.job == name && item.step == index + 1),
+                document: &document,
                 guarded: job_guard || guards(get(step, "if")),
             };
             findings.extend(judge(&step, pull, queue));
@@ -166,17 +172,13 @@ fn pull_request_read(step: &Step) -> Option<Read> {
         return Some(Read::Script(index + 1));
     }
     let (name, _) = step.env.iter().find(|(name, value)| {
-        value.contains(PULL_REQUEST_READ)
-            && (step.script.contains(&format!("${name}"))
-                || step.script.contains(&format!("${{{name}}}")))
+        value.contains(PULL_REQUEST_READ) && env_read::references(step.script, name)
     })?;
-    Some(Read::Env(env_line(step.source, name).unwrap_or(1)))
-}
-
-fn env_line(source: &str, name: &str) -> Option<usize> {
-    let key = format!("{name}:");
-    source
-        .lines()
-        .position(|line| line.trim_start().starts_with(&key) && line.contains(PULL_REQUEST_READ))
-        .map(|index| index + 1)
+    let line = step
+        .document
+        .get_or_init(|| Document::parse(step.source))
+        .as_ref()
+        .and_then(|doc| env_read::line(doc, step.job, step.index - 1, name))
+        .unwrap_or_else(|| step.located.map_or(1, |run| run.item_line));
+    Some(Read::Env(line))
 }

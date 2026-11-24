@@ -39,7 +39,9 @@ a `git diff` whose range is:
 
 In a workflow triggered by `merge_group`, it reports a step that reads
 `github.event.pull_request.*`, which is empty there. A read through an `env`
-variable is reported on the `env` entry. A step or job whose `if` mentions
+variable matches the full name in `$NAME` or `${NAME}` and is reported on the
+effective `env` entry. Step entries take precedence over job entries, which
+take precedence over workflow entries. A step or job whose `if` mentions
 `github.event_name` is treated as guarded and is not reported.
 
 A range end is recognized when it is the expression itself, optionally behind
@@ -47,8 +49,8 @@ A range end is recognized when it is the expression itself, optionally behind
 `env` assigns to that expression. Anything not recognized as a diff range is
 silent: another command, a `git diff` flag that takes a separate value
 (`-U 3`, `--output file`), more than two revisions, a revision the rule does
-not know, and invalid YAML. The fetch depth behind a three-dot diff is not
-judged.
+not know, here-document bodies, and invalid YAML. The fetch depth behind a
+three-dot diff is not judged.
 
 ## Options
 

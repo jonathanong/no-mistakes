@@ -19,15 +19,20 @@ const LEADING: &[&str] = &[
 ];
 
 /// Loops (`while`, `until`, `for`) whose condition or body sleeps and runs a
-/// configured poll command. An unbalanced script or a heredoc is not judged.
+/// configured poll command. An unbalanced script is not judged.
 pub(super) fn poll_loops(script: &str, polls: &[Vec<String>], skip_for: bool) -> Vec<PollLoop> {
-    if script.contains("<<") {
-        return Vec::new();
-    }
     let mut stack: Vec<Frame> = Vec::new();
     let mut found = Vec::new();
     for command in commands(script) {
-        let head = command[0].text.as_str();
+        let start = command
+            .iter()
+            .position(|word| !matches!(word.text.as_str(), "do" | "then" | "else" | "elif" | "if"));
+        let Some(start) = start else {
+            continue;
+        };
+        let command = &command[start..];
+        let first = &command[0];
+        let head = first.text.as_str();
         if head == "done" {
             let Some(frame) = stack.pop() else {
                 return Vec::new();
@@ -45,7 +50,7 @@ pub(super) fn poll_loops(script: &str, polls: &[Vec<String>], skip_for: bool) ->
         let opens = matches!(head, "while" | "until" | "for");
         if opens {
             stack.push(Frame {
-                line: command[0].line,
+                line: first.line,
                 keyword: head.to_string(),
                 sleeps: false,
                 poll: None,

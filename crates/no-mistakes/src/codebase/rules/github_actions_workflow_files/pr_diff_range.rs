@@ -6,6 +6,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod diff;
+mod env_read;
 mod exprs;
 mod runs;
 mod yaml_shapes;

@@ -28,15 +28,18 @@ It reports a `while`, `until`, or `for` loop in a `run` script when both hold:
   `echo gh run view` is not a poll.
 
 Each reported loop is one finding on the line of the `while`, `until`, or
-`for` keyword. A loop nested in another loop is judged on its own.
+`for` keyword. A nested loop is judged on its own, including when it starts
+on the same line as the outer loop's `do`. Here-document bodies are skipped,
+so the rule can still inspect real commands before and after them.
 
 These forms are silent:
 
 - `sleep` outside a loop.
 - A loop with no configured poll command, or a poll command with no `sleep`.
 - A script that cannot be parsed as balanced loops: a `while`, `until`, or
-  `for` without its `done`, a stray `done`, or any script that contains a
-  heredoc (`<<`). Invalid YAML is not a finding.
+  `for` without its `done` or a stray `done`. Unterminated here-documents,
+  multiple here-document openers on the same command line, and invalid YAML
+  are also silent.
 - A `for` loop, when `options.ignoreForLoops` is `true`. A `for` loop runs a
   fixed number of times, so a bounded retry is not a wait.
 

@@ -1,0 +1,14 @@
+name: Compare
+on: [pull_request]
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    env:
+      BASE: ${{ github.event.pull_request.base.sha }}
+      HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - run: |
+          cat <<'EXAMPLE'
+          git diff "$BASE" "$HEAD"
+          EXAMPLE
+          git diff "$BASE" "$HEAD"

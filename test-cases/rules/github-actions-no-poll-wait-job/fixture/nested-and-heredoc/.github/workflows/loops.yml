@@ -1,0 +1,32 @@
+name: Wait
+on: [workflow_dispatch]
+jobs:
+  nested:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          while true; do until gh run view 123; do
+            sleep 5
+          done
+          done
+  heredoc:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<'EXAMPLE'
+          until gh run view 234; do sleep 5; done
+          EXAMPLE
+          until gh run view 345; do sleep 5; done
+      - run: |
+          printf '%s\n' '<<'
+          until gh run view 456; do sleep 5; done
+      - run: |
+          cat <<EXAMPLE
+          until gh run view 567; do sleep 5; done
+      - run: |
+          cat <<FIRST <<SECOND
+          SECOND
+          until gh run view 678; do sleep 5; done
+          FIRST
+          text
+          SECOND
