@@ -1141,10 +1141,10 @@ with [`push-diff-base.cjs`](../../.github/scripts/push-diff-base.cjs) and
 selects shards with
 [`benchmark-change-scope.cjs`](../../.github/scripts/benchmark-change-scope.cjs),
 supporting pull-request opt-in markers. On pushes to `main`, `push-diff-base.cjs`
-diffs from the head SHA of the most recent completed (`success` or `failure`)
-`Benchmarks` push run on the same branch (falling back to all shards when no
-prior ancestor run is available) so commits skipped by ref-keyed concurrency
-remain covered. The `bench` producer builds the benchmark binaries on
+diffs from the head SHA of the most recent successful
+`Benchmarks` push run on the same branch (`conclusion: success`, falling back to
+all shards when no prior ancestor run is available) so commits skipped by
+ref-keyed concurrency remain covered. The `bench` producer builds the benchmark binaries on
 `ubuntu-24.04-arm`, followed by the `benchmark-shards` matrix (one job per
 shard), `frontend-lifecycle-smoke`, and the `Benchmarks` gate (`benchmark-gate`),
 with per-job `id-token: write` on the shard and smoke jobs. Concurrency is

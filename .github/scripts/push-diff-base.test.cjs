@@ -4,7 +4,7 @@ const { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } = requir
 const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
-const { selectPreviousRunBase } = require("./push-diff-base.cjs");
+const { resolveDiffBase, selectPreviousRunBase } = require("./push-diff-base.cjs");
 const { readWorkflow } = require("./workflow-contract.cjs");
 
 const root = path.resolve(__dirname, "../..");
@@ -39,7 +39,7 @@ function git(repo, args) {
   return result.stdout.trim();
 }
 
-test("selects the most recent completed push run from saved API fixtures", () => {
+test("selects the most recent successful push run from saved API fixtures", () => {
   assert.equal(
     selectPreviousRunBase(readFixture("previous-completed.json"), "300"),
     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -48,20 +48,12 @@ test("selects the most recent completed push run from saved API fixtures", () =>
     selectPreviousRunBase(readFixture("previous-skipped.json"), "400"),
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   );
+  // A failed run may have failed before evaluating paths; keep looking back for success.
   assert.equal(
     selectPreviousRunBase(readFixture("previous-failed.json"), "300"),
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "1111111111111111111111111111111111111111",
   );
-  assert.equal(selectPreviousRunBase(readFixture("no-previous-run.json"), "300"), "");
-
-  const cliSkipped = runCli([
-    "--select-runs",
-    path.join(fixturesDir, "previous-skipped.json"),
-    "--current-run-id",
-    "400",
-  ]);
-  assert.equal(cliSkipped.status, 0, cliSkipped.stderr);
-  assert.equal(cliSkipped.stdout.trim(), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  assert.equal(selectPreviousRunBase(readFixture("no-previous-run.json"), "400"), "");
 });
 
 test("resolves skipped-commit base on shallow clone and falls back on non-ancestor or missing base", () => {
@@ -70,7 +62,6 @@ test("resolves skipped-commit base on shallow clone and falls back on non-ancest
     const remote = path.join(work, "remote.git");
     const seed = path.join(work, "seed");
     const clone = path.join(work, "clone");
-    const runsFile = path.join(work, "runs.json");
 
     git(work, ["init", "--bare", "-q", remote]);
     git(work, ["init", "-q", "-b", "main", seed]);
@@ -103,108 +94,88 @@ test("resolves skipped-commit base on shallow clone and falls back on non-ancest
     // Shallow clone matching actions/checkout fetch-depth: 2 (only C and B are local).
     git(work, ["clone", "-q", "--no-local", "--depth=2", "--branch", "main", remote, clone]);
 
-    // 1. B was skipped; last completed run was A (outside depth=2). Must fetch A, deepen, and return A.
+    // 1. B was skipped; last successful run was A (outside depth=2). Must fetch A, deepen, and return A.
     const skippedPayload = readFixture("previous-skipped.json");
     skippedPayload.workflow_runs[0].head_sha = commitC;
     skippedPayload.workflow_runs[1].head_sha = commitB;
     skippedPayload.workflow_runs[3].head_sha = commitA;
-    writeFileSync(runsFile, JSON.stringify(skippedPayload));
 
-    const resolved = runCli(
-      [
-        "--event",
-        "push",
-        "--head",
-        commitC,
-        "--current-run-id",
-        "400",
-        "--runs-file",
-        runsFile,
-        "--cwd",
-        clone,
-      ],
-      work,
-    );
-    assert.equal(resolved.status, 0, resolved.stderr);
-    assert.equal(resolved.stdout.trim(), commitA);
+    const resolved = resolveDiffBase({
+      event: "push",
+      head: commitC,
+      currentRunId: "400",
+      runsPayload: skippedPayload,
+      cwd: clone,
+    });
+    assert.equal(resolved.baseSha, commitA);
 
-    // 2. Non-ancestor base (force push): must fall back to empty (full scope).
+    // 2. B failed; must skip B and resolve the earlier successful run at A.
+    const failedPayload = readFixture("previous-failed.json");
+    failedPayload.workflow_runs[0].head_sha = commitB;
+    failedPayload.workflow_runs[1].head_sha = commitA;
+
+    const afterFailure = resolveDiffBase({
+      event: "push",
+      head: commitC,
+      currentRunId: "300",
+      runsPayload: failedPayload,
+      cwd: clone,
+    });
+    assert.equal(afterFailure.baseSha, commitA);
+
+    // 3. Non-ancestor base (force push): must fall back to empty (full scope).
     const nonAncestorPayload = readFixture("previous-completed.json");
     nonAncestorPayload.workflow_runs[1].head_sha = commitX;
-    writeFileSync(runsFile, JSON.stringify(nonAncestorPayload));
 
-    const nonAncestor = runCli(
-      [
-        "--event",
-        "push",
-        "--head",
-        commitC,
-        "--current-run-id",
-        "300",
-        "--runs-file",
-        runsFile,
-        "--cwd",
-        clone,
-      ],
-      work,
-    );
-    assert.equal(nonAncestor.status, 0);
-    assert.equal(nonAncestor.stdout.trim(), "");
-    assert.match(nonAncestor.stderr, /not an ancestor/);
+    const nonAncestor = resolveDiffBase({
+      event: "push",
+      head: commitC,
+      currentRunId: "300",
+      runsPayload: nonAncestorPayload,
+      cwd: clone,
+    });
+    assert.equal(nonAncestor.baseSha, "");
+    assert.match(nonAncestor.reason, /not an ancestor/);
 
-    // 3. Unfetchable base SHA: must fall back to empty (full scope).
+    // 4. Unfetchable base SHA: must fall back to empty (full scope).
     const missingPayload = readFixture("previous-completed.json");
     missingPayload.workflow_runs[1].head_sha = "1234567890abcdef1234567890abcdef12345678";
-    writeFileSync(runsFile, JSON.stringify(missingPayload));
 
-    const missing = runCli(
-      [
-        "--event",
-        "push",
-        "--head",
-        commitC,
-        "--current-run-id",
-        "300",
-        "--runs-file",
-        runsFile,
-        "--cwd",
-        clone,
-      ],
-      work,
-    );
-    assert.equal(missing.status, 0);
-    assert.equal(missing.stdout.trim(), "");
-    assert.match(missing.stderr, /could not be fetched/);
+    const missing = resolveDiffBase({
+      event: "push",
+      head: commitC,
+      currentRunId: "300",
+      runsPayload: missingPayload,
+      cwd: clone,
+    });
+    assert.equal(missing.baseSha, "");
+    assert.match(missing.reason, /could not be fetched/);
 
-    // 4. No previous completed run: must fall back to empty (full scope).
-    const none = runCli(
-      [
-        "--event",
-        "push",
-        "--head",
-        commitC,
-        "--current-run-id",
-        "300",
-        "--runs-file",
-        path.join(fixturesDir, "no-previous-run.json"),
-        "--cwd",
-        clone,
-      ],
-      work,
-    );
-    assert.equal(none.status, 0);
-    assert.equal(none.stdout.trim(), "");
-    assert.match(none.stderr, /no prior completed push run/);
+    // 5. No previous successful run: must fall back to empty (full scope).
+    const none = resolveDiffBase({
+      event: "push",
+      head: commitC,
+      currentRunId: "400",
+      runsPayload: readFixture("no-previous-run.json"),
+      cwd: clone,
+    });
+    assert.equal(none.baseSha, "");
+    assert.match(none.reason, /no prior successful push run/);
 
-    // 5. Pull request keeps its PR base unchanged without querying runs.
+    // 6. CLI: pull_request keeps its PR base unchanged without querying runs.
     const pr = runCli(["--event", "pull_request", "--head", commitC, "--pr-base", commitA], work);
     assert.equal(pr.status, 0, pr.stderr);
     assert.equal(pr.stdout.trim(), commitA);
 
-    // 6. workflow_dispatch falls back to empty (full scope).
+    // 7. CLI: workflow_dispatch falls back to empty (full scope).
     const dispatch = runCli(["--event", "workflow_dispatch", "--head", commitC], work);
     assert.equal(dispatch.status, 0, dispatch.stderr);
     assert.equal(dispatch.stdout.trim(), "");
+
+    // 8. CLI rejects test-only or unknown flags.
+    assert.notEqual(runCli(["--runs-file", "x.json"], work).status, 0);
+    assert.notEqual(runCli(["--select-runs", "x.json"], work).status, 0);
+    assert.notEqual(runCli([], work).status, 0);
   } finally {
     rmSync(work, { recursive: true, force: true });
   }
