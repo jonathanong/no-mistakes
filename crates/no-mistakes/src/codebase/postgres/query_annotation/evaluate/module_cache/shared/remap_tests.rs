@@ -1,4 +1,4 @@
-use super::remap_scope;
+use super::{remap_captured_scope, remap_scope};
 use crate::codebase::postgres::query_annotation::evaluate::{value::Values, Scope, Value};
 use crate::codebase::postgres::query_annotation::Function;
 use crate::fx::FxHashMap;
@@ -74,4 +74,30 @@ fn remap_scope_remaps_all_container_variants_and_preserves_scalars() {
     assert!(remapped["joined"] == Value::Joined(Values::from(vec![expected.clone()])));
     assert!(remapped["possible"] == Value::Possible(Values::from(vec![expected])));
     assert!(remapped["scalar"] == Value::Number(42));
+}
+
+#[test]
+fn remap_captured_scope_remaps_own_env_keeps_prefix_and_rejects_foreign() {
+    let mut values = FxHashMap::default();
+    values.insert("own".into(), dummy_fn(5));
+    values.insert("prefix".into(), dummy_fn(1));
+    values.insert("promise".into(), Value::Promise(Box::new(dummy_fn(5))));
+    values.insert(
+        "evaluated".into(),
+        Value::Evaluated(Box::new(dummy_fn(1)), false),
+    );
+    values.insert(
+        "object".into(),
+        Value::Object(Values::from(vec![dummy_fn(5), Value::Number(7)])),
+    );
+    let scope = Scope::from(values);
+    let remapped = remap_captured_scope(&scope, 5, 2, 2).expect("valid captured scope");
+    assert!(remapped["own"] == dummy_fn(2));
+    assert!(remapped["prefix"] == dummy_fn(1));
+    assert!(remapped["promise"] == Value::Promise(Box::new(dummy_fn(2))));
+    assert!(remapped["evaluated"] == Value::Evaluated(Box::new(dummy_fn(1)), false));
+
+    let mut foreign = FxHashMap::default();
+    foreign.insert("leaked".into(), Value::Promise(Box::new(dummy_fn(9))));
+    assert!(remap_captured_scope(&Scope::from(foreign), 5, 2, 2).is_none());
 }

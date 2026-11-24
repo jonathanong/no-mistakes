@@ -362,4 +362,16 @@ fn promote_reused_captures_pure_without_extra_init_and_skips_impure() {
     snapshot.promote_reused(&mut evaluator, &mut unpromotable, 2);
     assert!(snapshot.modules.contains_key(&pure_id));
     assert!(!snapshot.modules.capture_on_init.contains_key(&pure_id));
+
+    // Direct reference-bearing or foreign-env captured scopes are rejected.
+    let mut ref_vals = FxHashMap::default();
+    ref_vals.insert("arr".into(), super::super::Value::Array(1));
+    evaluator
+        .modules
+        .captured_inits
+        .insert(impure_id, (99, super::super::Scope::from(ref_vals)));
+    unpromotable.remove(&impure_id);
+    evaluator.modules.insert(impure_id, 99);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 1);
+    assert!(unpromotable.contains(&impure_id));
 }

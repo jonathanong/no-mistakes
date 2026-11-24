@@ -282,3 +282,108 @@ fn build_handles_missing_module_ids_cyclic_candidates_and_non_verbose_notes() {
     quiet.record_note("ignored".into());
     super::record(&quiet, 0, 2, &status);
 }
+
+#[test]
+fn purity_check_covers_step_and_callee_edge_cases() {
+    let path = PathBuf::from("edge.mts");
+    let ids = Arc::new(ModuleIds::new([path.clone()]));
+    let resolve = |_: &str, _: &std::path::Path| None;
+    let mut globals = std::collections::BTreeMap::new();
+    globals.insert(
+        "async_fn".into(),
+        Expr::Function(Arc::new(Function {
+            start: 0,
+            params: Vec::new(),
+            body: Vec::new(),
+            supported: true,
+            asynchronous: true,
+            arrow: false,
+            self_name: None,
+            append_callback: None,
+        })),
+    );
+    globals.insert(
+        "named_fn".into(),
+        Expr::Function(Arc::new(Function {
+            start: 1,
+            params: Vec::new(),
+            body: vec![
+                Step::Var("v".into()),
+                Step::Hoisted("h".into(), Expr::Text("ok".into())),
+                Step::Return(Expr::Name("h".into())),
+            ],
+            supported: true,
+            asynchronous: false,
+            arrow: false,
+            self_name: Some("self_fn".into()),
+            append_callback: None,
+        })),
+    );
+    let pure_exprs = QueryAnnotationFileFacts {
+        globals: globals.clone(),
+        roots: vec![
+            Step::Var("x".into()),
+            Step::Bind(
+                "a".into(),
+                Expr::Await(Box::new(Expr::ComputedMember(
+                    Box::new(Expr::Member(Box::new(Expr::Name("obj".into())), "k".into())),
+                    Box::new(Expr::Template(vec![Expr::Text("p".into())])),
+                ))),
+            ),
+            Step::Bind(
+                "b".into(),
+                Expr::Call {
+                    callee: Box::new(Expr::Name("named_fn".into())),
+                    args: vec![Expr::Number(1)],
+                    start: 0,
+                    end: 1,
+                },
+            ),
+        ],
+        ..Default::default()
+    };
+    assert!(executor_scan::is_statically_pure_top_level(
+        &make_file(&pure_exprs, Vec::new(), &ids),
+        &path,
+        &resolve
+    ));
+
+    for bad_root in [
+        Step::Unsupported,
+        Step::Effect(Expr::Call {
+            callee: Box::new(Expr::Member(Box::new(Expr::Name("o".into())), "m".into())),
+            args: Vec::new(),
+            start: 0,
+            end: 1,
+        }),
+        Step::Effect(Expr::Call {
+            callee: Box::new(Expr::Name("missing_fn".into())),
+            args: Vec::new(),
+            start: 0,
+            end: 1,
+        }),
+        Step::Effect(Expr::Call {
+            callee: Box::new(Expr::Name("async_fn".into())),
+            args: Vec::new(),
+            start: 0,
+            end: 1,
+        }),
+        Step::Effect(Expr::Call {
+            callee: Box::new(Expr::Name("named_fn".into())),
+            args: vec![Expr::Array(vec![Expr::Number(1)])],
+            start: 0,
+            end: 1,
+        }),
+    ] {
+        let bad = QueryAnnotationFileFacts {
+            globals: globals.clone(),
+            roots: vec![bad_root],
+            ..Default::default()
+        };
+        assert!(!executor_scan::is_statically_pure_top_level(
+            &make_file(&bad, Vec::new(), &ids),
+            &path,
+            &resolve
+        ));
+    }
+}
