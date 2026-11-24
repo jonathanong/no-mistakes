@@ -4,7 +4,23 @@ Check queue producers, workers, and the enqueue calls those workers make.
 
 ```sh
 no-mistakes queues check --format json
+no-mistakes queues check --format json --include-diagnostics
 ```
+
+Without `--include-diagnostics`, `--format json` and `--format yml` print the
+bare findings array so existing callers keep the same list shape. Pass
+`--include-diagnostics` to return `{ "findings": [...], "diagnostics": [...] }`
+in JSON/YAML (and append a `## diagnostics` section in `--format md`).
+`queues check` prints only unresolved worker `.rateLimit()` receiver
+diagnostics to `stderr`, as `warning: <file>:<line> <message>`, without changing
+the exit code when there are no findings. Pass `--include-diagnostics` to print
+every queue diagnostic to `stderr` as well. A `.add(...)` or `.addBulk(...)`
+call on a `const` local initialized to a provable non-queue JavaScript built-in
+(`new Set(...)`, `new Map(...)`, `new WeakSet(...)`, `new WeakMap(...)`, an
+array literal, or a primitive/function literal) is ignored and never produces a
+`dynamic or unresolved queue producer` diagnostic. Function parameters,
+configured enqueue wrappers whose queue does not resolve, and imported names
+(including an imported `Set`) still emit `dynamic or unresolved queue producer`.
 
 Use this before finishing queue edits so every configured enqueue/worker path is
 connected. `check` is empty when the graph is consistent. For explicitly configured enqueue wrappers, object-argument selectors,
@@ -197,10 +213,14 @@ Abstention warnings are narrowed to receivers whose binding originates from a
 queue module or worker construction: an unresolvable export or a helper call
 from a queue module (not configured under `queues.factories.worker`), a mutated
 local variable initialized with or assigned a worker, or a subclass with an
-unresolvable base inside a queue module. Unrelated receivers — function
-parameters, ambient globals, arbitrary property chains (`x.y.rateLimit()`),
-external non-queue limiters, and imports from modules skipped by the queue
-source filter — emit neither a finding nor a diagnostic.
+unresolvable base inside a queue module. Those warnings appear on
+`QueueReport.diagnostics`, in `queues check --include-diagnostics`, on `stderr`
+from `queues check` and `no-mistakes check`, and in aggregate
+`no-mistakes check --format json` `warnings` (without failing exit code when no
+findings exist). Unrelated receivers — function parameters, ambient globals,
+arbitrary property chains (`x.y.rateLimit()`), external non-queue limiters, and
+imports from modules skipped by the queue source filter — emit neither a
+finding nor a diagnostic.
 
 On a multi-job queue, calling `worker.rateLimit(...)` inside a worker processor
 reports both `shared-queue-rate-limit` and `worker-rate-limit-per-process` on

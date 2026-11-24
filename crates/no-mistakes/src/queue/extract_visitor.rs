@@ -27,6 +27,7 @@ pub(super) struct QueueVisitor<'a> {
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
     pub flow_bindings: HashSet<u32>,
+    pub non_queue_declarations: HashSet<u32>,
     pub configured_factory_names: &'a [String],
     pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     pub queue_name_index: HashMap<String, usize>,

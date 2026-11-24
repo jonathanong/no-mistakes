@@ -6,6 +6,7 @@ fn check_task_sources() -> String {
         include_str!("../../check_tasks/filesystem.rs"),
         include_str!("../../check_tasks/filesystem/redirects.rs"),
         include_str!("../../check_tasks/filesystem/github_actions.rs"),
+        include_str!("../../check_tasks/queues.rs"),
         include_str!("../../check_tasks/react.rs"),
     ]
     .concat()

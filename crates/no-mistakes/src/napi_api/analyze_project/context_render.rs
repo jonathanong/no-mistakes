@@ -26,6 +26,10 @@ fn render_queue_report(
                     .related(&options.files, direction),
             ))
         }
+        "queueCheck" if options.include_diagnostics => Ok(json_raw(&crate::queue::CheckReport {
+            findings: &report.check,
+            diagnostics: &report.diagnostics,
+        })),
         "queueCheck" => Ok(json_raw(&report.check)),
         _ => bail!("unknown queue report type: {report_type}"),
     }

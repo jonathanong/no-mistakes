@@ -64,6 +64,7 @@ function declarationExportNames() {
     "index.d.ts",
     "index-ci-infra.d.ts",
     "index-postgres-lock-inventory.d.ts",
+    "index-queues.d.ts",
     "invocation-types.d.ts",
     "diagnostics-collector.d.ts",
     "executed-postgres-sql-types.d.ts",

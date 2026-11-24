@@ -66,6 +66,8 @@ test(
       declarations,
       /export type QueueRateLimitFindingKind = "shared-queue-rate-limit" \| "worker-rate-limit-per-process";/,
     );
+    assert.match(declarations, /export interface QueueCheckOptions extends ProjectOptions/);
+    assert.match(declarations, /export interface QueueCheckReport \{/);
     assertPublicNodeNextFixtureCompiles(
       "fixtures",
       "node-api",

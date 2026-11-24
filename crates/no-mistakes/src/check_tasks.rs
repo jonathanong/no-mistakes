@@ -4,59 +4,21 @@ use no_mistakes::codebase::rules::{self, RuleFinding};
 use no_mistakes::codebase::unique_exports::{self, PreparedUniqueExportFinding};
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
-use no_mistakes::queue::CheckFinding;
 
 mod configured;
 pub(crate) use configured::{queues_configured, rule_configured, unique_exports_configured};
 mod filesystem;
+mod queues;
 mod react;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
+pub(crate) use queues::run_queue_check;
 pub(crate) use react::run_react_check_with_session;
 
 mod types;
 pub(crate) use types::CheckTask;
-
-pub(crate) fn run_queue_check(
-    root: &std::path::Path,
-    prepared_tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
-    enabled: bool,
-    config: &NoMistakesConfig,
-    facts: &CheckFactMap,
-    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
-) -> Result<CheckTask<Vec<CheckFinding>>> {
-    let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
-        "analysis.queues",
-        no_mistakes::diagnostics::TimingKind::Parallel,
-        || -> Result<_> {
-            Ok(if enabled {
-                no_mistakes::queue::analyze_project_with_prepared_facts_and_catalog_and_session(
-                    root,
-                    prepared_tsconfig_catalog,
-                    config,
-                    &[],
-                    facts,
-                    session,
-                )?
-                .check
-            } else {
-                Vec::new()
-            })
-        },
-    );
-    let findings = findings?;
-    Ok(CheckTask {
-        findings,
-        pre_suppressed: Vec::new(),
-        react_suppression_targets: Vec::new(),
-        suppression_sources: Vec::new(),
-        advisories: Vec::new(),
-        warning: None,
-        duration,
-    })
-}
 
 pub(crate) fn run_rules_check(
     inputs: rules::PreparedRulesCheck<'_>,
@@ -94,6 +56,7 @@ pub(crate) fn run_rules_check(
         react_suppression_targets: Vec::new(),
         suppression_sources,
         advisories,
+        analysis_warnings: Vec::new(),
         warning,
         duration,
     })
@@ -133,6 +96,7 @@ pub(crate) fn run_integration_check(
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
+        analysis_warnings: Vec::new(),
         warning: None,
         duration,
     })
@@ -189,6 +153,7 @@ pub(crate) fn run_codebase_check_with_catalog(
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
+        analysis_warnings: Vec::new(),
         warning: None,
         duration,
     })

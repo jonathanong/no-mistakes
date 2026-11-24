@@ -9,7 +9,7 @@ impl QueueVisitor<'_> {
             .unwrap_or_else(|| ProducerBinding::Named(name.to_string()))
     }
 
-    fn lexical_binding(&self, name: &str, at: u32) -> Option<&ObjectBinding<'_>> {
+    pub(super) fn lexical_binding(&self, name: &str, at: u32) -> Option<&ObjectBinding<'_>> {
         ObjectBinding::in_scope(self.object_bindings.named(name), name, at)
     }
 
