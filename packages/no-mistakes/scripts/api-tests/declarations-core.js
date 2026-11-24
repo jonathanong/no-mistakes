@@ -70,7 +70,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type: "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
+    /type: "dependents"; id\?: string } & BatchedTraverseOptions/,
   );
   assert.doesNotMatch(
     analyzeProjectDeclarations,

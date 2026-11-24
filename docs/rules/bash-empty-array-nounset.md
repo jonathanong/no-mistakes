@@ -29,9 +29,15 @@ The finding points to the expansion line. The check tracks direct array
 initializers and appends and `declare -a` and `local -a` declarations in the
 same file. It follows explicit `set` options in source order, including
 `set -o nounset` and `set +u`. It checks quoted `${name[@]}` and
-`${name[*]}` expansions. A list with a literal element, a scalar initializer,
-or a direct scalar or indexed write to a known array establishes a nonempty
-array. Replacing it with a list that may be empty or using `unset` on the
+`${name[*]}` expansions. A list with at least one element that cannot vanish, a scalar
+initializer, or a direct scalar or indexed write to a known array establishes a
+nonempty array. An element cannot vanish when it is a literal or a
+double-quoted expansion such as `"$selected"`, because a quoted word is always
+one word, even with `nullglob`. An unquoted glob, an unquoted expansion, and
+`"$@"`, `"${name[@]}"`, or `"${!prefix@}"` can produce zero words, so a list made only of those
+may be empty. `read -a` and `read -ra` targets, and `mapfile` and `readarray`
+targets, are tracked as possibly empty arrays because the input can be empty.
+`mapfile -O` keeps the elements the array already had. Replacing it with a list that may be empty or using `unset` on the
 array or a literal indexed operand removes that guarantee. The rule treats
 any element removal as potentially empty because it tracks whether an array
 has elements without counting them.
@@ -61,16 +67,31 @@ nonempty array.
 collect ${items[*]+"${items[*]}"}
 ```
 
+A `read -ra` target is reported when expanded directly.
+
+```bash
+# scripts/legacy/read.sh
+set -u
+IFS=',' read -ra requested <<< "$1"
+collect "${requested[@]}"
+```
+
 ## Valid example
 
-An array with a literal element can be expanded directly.
+An array with a literal element or a quoted expansion can be expanded directly.
 
 ```bash
 # scripts/legacy/run.sh
 set -u
 items=('example')
 collect "${items[@]}"
+candidates=("$selected" "$root"/Tool*.app)
+collect "${candidates[@]}"
 ```
+
+Scripts embedded in a workflow `run:` block are not scanned. The rule reads
+files selected by `options.files`. Move the script to a file and list it there
+to check it.
 
 The check is lexical. It uses source order and skips nested substitutions and
 here-document bodies, including bodies introduced with ANSI-C quoted

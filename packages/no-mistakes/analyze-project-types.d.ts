@@ -70,7 +70,12 @@ export type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "confi
 
 export type AnalyzeProjectReportRequest =
   | ({ type: "dependencies"; id?: string } & BatchedDependencyTraverseOptions)
-  | ({ type: "dependents" | "related"; id?: string } & BatchedTraverseOptions)
+  | ({ type: "dependents"; id?: string } & BatchedTraverseOptions)
+  | ({
+      /** @deprecated Use "dependents" instead. */
+      type: "related";
+      id?: string;
+    } & BatchedTraverseOptions)
   | ({ type: "symbols"; id?: string } & (SymbolsListOptions | SymbolsSignatureImpactOptions))
   | ({ type: "importUsages"; id?: string } & Omit<ImportUsagesOptions, "root">)
   | ({ type: "flow"; id?: string } & BatchedFlowOptions)

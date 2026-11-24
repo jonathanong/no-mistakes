@@ -534,7 +534,8 @@ path selection. See [queue configuration](configuration/queues.md).
 Its CommonJS, ESM, and TypeScript exports remain available with `@deprecated`
 annotations and unchanged options, async results, and errors. Node calls do not
 print the CLI warning. For batched calls, use `{ type: "dependents", files: [...] }`
-in `analyzeProject()`; `{ type: "related", ... }` remains supported.
+in `analyzeProject()`. The `"related"` report type remains supported and has a
+TypeScript `@deprecated` annotation.
 See the [migration guide](migrations/deprecated-surfaces.md).
 
 ## Runtime exports
@@ -1019,6 +1020,13 @@ outcome as CLI `check`. Exported `GithubActionsNoPollWaitJobOptions` describes
 its `pollCommands` and `ignoreForLoops` options. The opt-in
 [`github-actions-pr-diff-range`](rules/github-actions-pr-diff-range.md) has no
 options and uses the same check paths.
+
+The opt-in [`github-actions-env-policy`](rules/github-actions-env-policy.md)
+runs through async `check()` and `analyzeProject()` check reports with the same
+outcome as CLI `check`. Exported `GithubActionsEnvPolicyOptions` and
+`GithubActionsEnvPolicyValue` describe its YAML options. Policy violations appear
+in `CheckReport.rules`; required values written as `${{ }}` expressions appear in
+`CheckReport.advisories` by default.
 
 The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
 runs through async `check()` and `analyzeProject()` check reports with the

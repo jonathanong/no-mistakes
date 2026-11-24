@@ -87,12 +87,14 @@ The current validation graph is organized as follows:
   Rust tests` therefore runs one `cargo test --no-run` over every listed target
   (same `profileArgs`, `--locked` and `-p`) under a 20 minute cap, with live
   cargo output, and the 15 minute `Run macOS-dependent Rust tests` step only
-  runs them. The cap is below the 35 minutes the build step holds, and the
-  restore of the input sidecar stays in the compile step because running it
-  again would mark files changed since capture fresh and force a rebuild. No
-  existing timeout value changed; the compile phase, which used to share one
-  15 minute step with the tests, now has its own 20 minute allowance within
-  the job's 45 minute cap.
+  runs them. A separately bounded step replays the saved input timestamps
+  once before compilation. In run 45364121571, that replay took 30 seconds
+  and Cargo finished the compile in 19m34s. Sharing one step deadline caused
+  the runner to terminate the step after Cargo listed both test binaries.
+  The compile and test step caps remain inside the job's 45-minute limit.
+  Keep the timestamp replay ahead of compilation because replaying it again
+  would mark changed files fresh and force a rebuild.
+  [macOS smoke job](https://github.com/jonathanong/no-mistakes/actions/runs/45364121571/job/138343765816)
   The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
   `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
   `main` and manual dispatch, where they are unchanged. The trade-off is that
