@@ -129,7 +129,7 @@ rules:
   - rule: github-actions-step-timeouts
     scope: repository
     options:
-      include: &ci_budget_workflows [.github/workflows/ci.yml]
+      include: &ci_budget_workflows [.github/workflows/ci.yml, .github/workflows/benchmarks.yml]
       maxMinutes: 30
   - rule: github-actions-job-timeouts
     scope: repository
