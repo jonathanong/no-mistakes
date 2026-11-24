@@ -26,11 +26,11 @@ permissions:
   contents: read
   actions: read
 
-# PRs share a group per PR so superseded runs are cancelled. Every main push gets
-# its own group (per SHA): GitHub replaces an older *pending* run in a shared
-# group even with cancel-in-progress false, which dropped coverage uploads for
-# middle commits when several merges landed together. Linux jobs and coverage
-# stay on that per-commit group.
+# PRs share a group per PR so superseded runs are cancelled. Manual dispatches
+# use a per-run group (`dispatch-<run_id>`) so a push never replaces a pending
+# dispatch. Push runs group by ref and never cancel a started run: a main run
+# that has started completes, and GitHub keeps only the newest waiting main run,
+# so commits pushed in between get no Test CI run.
 # macOS jobs add a job-level group. A push to main shares
 # ci-macos-main-<job>-all for each build and ci-macos-main-<job>-<shard> for
 # each test shard, with cancel-in-progress false: a newer main push drops the
@@ -39,7 +39,7 @@ permissions:
 # dispatch, and other branches use a per-run slot, so they never join
 # ci-macos-main.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || (github.event_name == 'workflow_dispatch' && format('dispatch-{0}', github.run_id) || github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -60,6 +60,9 @@ jobs:
     name: Detect changed paths
     runs-on: ubuntu-slim
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
     outputs:
       timeout-policy-browser: ${{ steps.timeout-policy-browser-paths.outputs.changed }}
       # Path metadata only; Rust and macOS use their own conservative scopes.
@@ -80,12 +83,32 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Resolve diff base
+        id: diff-base
+        timeout-minutes: 2
+        shell: bash
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BASE_SHA=$(node .github/scripts/push-diff-base.cjs \
+            --event "$GITHUB_EVENT_NAME" \
+            --workflow ci.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --head "$HEAD_SHA" \
+            --pr-base "$PR_BASE_SHA" \
+            --current-run-id "$GITHUB_RUN_ID")
+          echo "base-sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
       - name: Check timeout-policy browser paths
         id: timeout-policy-browser-paths
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -109,7 +132,7 @@ jobs:
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -133,7 +156,7 @@ jobs:
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -3303,9 +3326,19 @@ jobs:
       - name: Run ast-grep scan
         timeout-minutes: 2
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          BASE_SHA=$(node .github/scripts/push-diff-base.cjs \
+            --event "$GITHUB_EVENT_NAME" \
+            --workflow ci.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --head "$HEAD_SHA" \
+            --pr-base "$PR_BASE_SHA" \
+            --current-run-id "$GITHUB_RUN_ID")
           if [ -n "${BASE_SHA}" ] && [ "${BASE_SHA}" != "0000000000000000000000000000000000000000" ]; then
             if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
               git fetch --no-tags --depth=1 origin "${BASE_SHA}"

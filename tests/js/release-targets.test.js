@@ -99,8 +99,7 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
     assert.match(timings, /^ {8}continue-on-error: true$/m);
     assert.match(timings, /if-no-files-found: error/);
     const required =
-      native.split("- name: Require Cargo timings report\n")[1]?.split("\n      - name:")[0] ??
-      "";
+      native.split("- name: Require Cargo timings report\n")[1]?.split("\n      - name:")[0] ?? "";
     assert.match(required, /timeout-minutes: 1/);
     assert.doesNotMatch(required, /continue-on-error/);
     assert.match(required, /target\/cargo-timings\/\*\.html/);
@@ -297,13 +296,18 @@ test("CI cancels superseded PR runs but keeps active main coverage runs", () => 
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   const concurrency = workflow.match(/^concurrency:\n((?: {2}[^\n]+\n)+)/m);
   assert.ok(concurrency, "CI must retain workflow-level concurrency");
-  // PRs group per PR number; every other event (main pushes) groups per SHA so a
-  // newer queued run can never replace an older pending main run.
+  // PRs group per PR number, manual dispatches get their own per-run group so
+  // pushes never drop a dispatch, and pushes group per ref so a started main
+  // run completes while only the newest waiting main run is kept.
   assert.match(
     concurrency[1],
-    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| github\.sha \}\}\n/,
+    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| \(github\.event_name == 'workflow_dispatch' && format\('dispatch-\{0\}', github\.run_id\) \|\| github\.ref\) \}\}\n/,
   );
-  assert.doesNotMatch(concurrency[1], /github\.ref/);
+  assert.match(
+    concurrency[1],
+    /github\.event_name == 'workflow_dispatch' && format\('dispatch-\{0\}', github\.run_id\)/,
+  );
+  assert.doesNotMatch(concurrency[1], /github\.sha/);
   assert.match(
     concurrency[1],
     /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/,
