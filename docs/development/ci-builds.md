@@ -3,8 +3,8 @@
 ## Job sizing rule
 
 Jobs that do real work target 5-10 minutes, so split a job that runs longer
-and add no `needs:` hop for a short job. Consolidation may only remove
-duplicated setup. Never serialize parallel work: do not reduce a matrix,
+and add no `needs:` hop for a short job. Aggregate gates are exempt.
+Consolidation may only remove duplicated setup. Never serialize parallel work: do not reduce a matrix,
 run several shards or commands in one job, or turn jobs into steps. Never
 lengthen any workflow's critical path, on pull requests or on `main`. A
 job's `timeout-minutes` must not rise as the result of a consolidation. The

@@ -123,11 +123,8 @@ graph. Details:
 - On a shared machine, run heavy cargo jobs one at a time with capped
   parallelism, prefer CI for coverage, and push early. See
   [shared machines](CONTRIBUTING.md#shared-machines-and-memory).
-- Size CI jobs that do real work to 5–10 minutes: split long jobs, and add no
-  `needs:` hop for a short job. Consolidation may only remove duplicated
-  setup; never serialize parallel work (fewer shards, several shards or
-  commands per job, steps instead of jobs) and never lengthen any workflow's
-  critical path, on PRs or main. Aggregate gates are exempt
+- Size CI jobs to 5–10 minutes by splitting long ones. Never serialize
+  parallel work or lengthen any critical path, PR or main
   ([CI builds](docs/development/ci-builds.md)).
 - Performance measurement rules and gates:
   [core performance guidance](crates/no-mistakes/AGENTS.md).
