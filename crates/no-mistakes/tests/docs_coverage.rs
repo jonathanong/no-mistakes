@@ -374,7 +374,7 @@ fn vitest_default_excludes_is_in_the_public_rule_inventory() {
     ] {
         let content = read(&root.join(path));
         assert!(content.contains(rule), "{path}");
-        assert!(content.contains("files"), "{path}");
+        assert!(content.contains("options.files"), "{path}");
     }
 }
 

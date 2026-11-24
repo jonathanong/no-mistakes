@@ -26,14 +26,22 @@ pub(super) fn scan_file_outputs(
             if !defer_suppression {
                 findings.retain(|(_, finding)| {
                     let mut candidate = vec![finding.clone()];
-                    super::super::source_access::suppress_invalid_utf8(&mut candidate, &error);
+                    super::super::suppress_rule_findings_for_path(sources, path, &mut candidate);
                     !candidate.is_empty()
                 });
             }
             return findings;
         }
     };
-    scan_outputs_with_parser(root, path, work, &content, defer_suppression, parse)
+    scan_outputs_with_parser(
+        root,
+        path,
+        work,
+        &content,
+        Some(sources),
+        defer_suppression,
+        parse,
+    )
 }
 
 pub(super) fn scan_outputs_with_parser(
@@ -41,6 +49,7 @@ pub(super) fn scan_outputs_with_parser(
     path: &Path,
     work: &RustWork,
     content: &str,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
     defer_suppression: bool,
     parse: impl FnOnce(&str) -> syn::Result<syn::File>,
 ) -> Vec<(Option<usize>, RuleFinding)> {
@@ -107,7 +116,14 @@ pub(super) fn scan_outputs_with_parser(
         .filter(|(_, finding)| {
             defer_suppression || {
                 let mut candidate = vec![finding.clone()];
-                super::super::suppress_rule_findings_with_source(&mut candidate, content);
+                match sources {
+                    Some(sources) => {
+                        super::super::suppress_rule_findings_for_path(sources, path, &mut candidate)
+                    }
+                    None => {
+                        super::super::suppress_rule_findings_with_source(&mut candidate, content)
+                    }
+                }
                 !candidate.is_empty()
             }
         })

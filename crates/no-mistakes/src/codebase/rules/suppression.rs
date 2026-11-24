@@ -5,12 +5,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod accounting;
+mod paths;
 pub(crate) use accounting::read_directive_source;
 pub use accounting::{
     suppress_domain_findings_with_source_files, suppress_domain_findings_with_source_locations,
     suppress_domain_findings_with_sources, SuppressedFinding, SuppressionDirective,
     SuppressionDirectiveKind, SuppressionTarget,
 };
+use paths::{finding_source_candidate, markdown_prose, source_path_for_candidate};
 
 pub(crate) fn suppress_rule_findings_with_sources_except(
     root: &Path,
@@ -29,8 +31,30 @@ pub(crate) fn suppress_rule_findings_with_sources(
     suppress_rule_findings_inner(root, findings, Some(sources), &[]);
 }
 
+pub(crate) fn suppress_rule_findings_for_path(
+    sources: &SourceStore,
+    path: &Path,
+    findings: &mut Vec<RuleFinding>,
+) {
+    if findings.is_empty() {
+        return;
+    }
+    let Some(index) = sources.suppressions_for_path(path) else {
+        return;
+    };
+    retain_unsuppressed_with_index(findings, &index);
+}
+
 pub(crate) fn suppress_rule_findings_with_source(findings: &mut Vec<RuleFinding>, source: &str) {
+    note_standalone_fallback();
     let index = DisableCommentIndex::new(source);
+    retain_unsuppressed_with_index(findings, &index);
+}
+
+fn retain_unsuppressed_with_index<S: AsRef<str>>(
+    findings: &mut Vec<RuleFinding>,
+    index: &DisableCommentIndex<S>,
+) {
     findings.retain(|finding| {
         finding.rule == super::allow_audit::RULE_ID
             || index
@@ -38,10 +62,15 @@ pub(crate) fn suppress_rule_findings_with_source(findings: &mut Vec<RuleFinding>
                     &finding.rule,
                     finding.line.try_into().ok(),
                     !markdown_prose(&finding.file),
-                    None,
                 )
                 .is_none()
     });
+}
+
+fn note_standalone_fallback() {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("suppression.standalone_fallbacks", 1);
+    }
 }
 
 pub(super) fn suppress_rule_findings_inner(
@@ -109,9 +138,6 @@ impl<'a> FindingSuppressions<'a> {
             rule,
             line.and_then(|line| line.try_into().ok()),
             source.track_quotes,
-            self.sources
-                .and_then(SourceStore::observer)
-                .map(Arc::as_ref),
         )
     }
 
@@ -128,6 +154,7 @@ impl<'a> FindingSuppressions<'a> {
                 sources.suppressions_for_path(&path)?
             }
             None => {
+                note_standalone_fallback();
                 let path = source_path_for_candidate(self.canonical_root.as_deref()?, candidate)?;
                 let source = Arc::<str>::from(std::fs::read_to_string(path).ok()?);
                 Arc::new(DisableCommentIndex::new(source))
@@ -138,46 +165,6 @@ impl<'a> FindingSuppressions<'a> {
             track_quotes: !markdown_prose(file),
         })
     }
-}
-
-fn finding_source_candidate(
-    root: &Path,
-    file: &str,
-    allow_absolute: bool,
-) -> Option<(PathBuf, bool)> {
-    let path = Path::new(file);
-    if crate::codebase::ts_source::is_portably_absolute_path(path) {
-        return allow_absolute.then(|| (path.to_path_buf(), true));
-    }
-    if path.components().any(|component| {
-        matches!(
-            component,
-            std::path::Component::Prefix(_) | std::path::Component::RootDir
-        )
-    }) || (!allow_absolute
-        && path
-            .components()
-            .any(|component| matches!(component, std::path::Component::ParentDir)))
-    {
-        return None;
-    }
-    Some((root.join(path), false))
-}
-
-fn source_path_for_candidate(canonical_root: &Path, candidate: PathBuf) -> Option<PathBuf> {
-    let canonical_candidate = std::fs::canonicalize(&candidate).ok()?;
-    let metadata = std::fs::metadata(&canonical_candidate).ok()?;
-    (canonical_candidate.starts_with(canonical_root) && metadata.is_file()).then_some(candidate)
-}
-
-fn markdown_prose(file: &str) -> bool {
-    // `.md` and `.markdown` are prose. `.mdx` keeps JavaScript quote tracking.
-    Path::new(file)
-        .extension()
-        .and_then(|extension| extension.to_str())
-        .is_some_and(|extension| {
-            extension.eq_ignore_ascii_case("md") || extension.eq_ignore_ascii_case("markdown")
-        })
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
