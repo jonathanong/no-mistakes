@@ -1,9 +1,10 @@
 //! `ORDER BY` normalization: select aliases, positional references and constant keys.
 use crate::codebase::postgres::{
-    expression_is_constant, parse_postgres_expression, CanonicalOrderKey, SchemaCatalog,
-    SqlConflictInsertFact, SqlInsertSourceShape,
+    expression_is_constant, normalize_catalog_identifier, parse_postgres_expression,
+    CanonicalOrderKey, SchemaCatalog, SqlConflictInsertFact, SqlInsertSourceShape,
 };
 use sqlparser::ast::Expr;
+use std::collections::BTreeSet;
 
 /// Replace a select alias or an integer position with the select-list expression it names.
 pub(super) fn resolve_references(
@@ -85,13 +86,70 @@ pub(super) fn without_constants(
         .collect()
 }
 
-/// Whether the source reads one relation pinned to a single row by a catalog unique key.
+/// Whether the source's inner-joined relations are each pinned to at most one row by a catalog
+/// unique key via constant equalities and join equalities.
 pub(super) fn pins_one_row(insert: &SqlConflictInsertFact, catalog: &SchemaCatalog) -> bool {
-    insert
-        .source
-        .pinned_relation
-        .as_ref()
-        .is_some_and(|pinned| catalog.columns_pin_one_row(&pinned.table, &pinned.columns))
+    let Some(source) = insert.source.pinned_source.as_ref() else {
+        return false;
+    };
+    let mut proven = vec![false; source.relations.len()];
+    let mut pinned: Vec<BTreeSet<String>> = source
+        .relations
+        .iter()
+        .map(|relation| {
+            relation
+                .columns
+                .iter()
+                .map(|column| normalize_catalog_identifier(column))
+                .collect()
+        })
+        .collect();
+    let unique_keys: Vec<Vec<Vec<String>>> = source
+        .relations
+        .iter()
+        .map(|relation| catalog.unique_keys(&relation.table))
+        .collect();
+    let equalities: Vec<(usize, String, usize, String)> = source
+        .join_equalities
+        .iter()
+        .map(|eq| {
+            (
+                eq.left_relation,
+                normalize_catalog_identifier(&eq.left_column),
+                eq.right_relation,
+                normalize_catalog_identifier(&eq.right_column),
+            )
+        })
+        .collect();
+    loop {
+        let mut changed = false;
+        for (index, keys) in unique_keys.iter().enumerate() {
+            if !proven[index]
+                && keys
+                    .iter()
+                    .any(|key| !key.is_empty() && key.iter().all(|col| pinned[index].contains(col)))
+            {
+                proven[index] = true;
+                changed = true;
+            }
+        }
+        for (left, left_col, right, right_col) in &equalities {
+            if (proven[*left] || pinned[*left].contains(left_col))
+                && pinned[*right].insert(right_col.clone())
+            {
+                changed = true;
+            }
+            if (proven[*right] || pinned[*right].contains(right_col))
+                && pinned[*left].insert(left_col.clone())
+            {
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    !proven.is_empty() && proven.into_iter().all(|is_proven| is_proven)
 }
 
 pub(super) fn display_keys(keys: &[CanonicalOrderKey]) -> String {

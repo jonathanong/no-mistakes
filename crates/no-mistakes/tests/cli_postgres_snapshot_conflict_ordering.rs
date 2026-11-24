@@ -95,6 +95,11 @@ fn postgres_conflict_ordering_check_json_snapshot() {
                 repo_case("fail-template-constant-key"),
             ),
             ("pass_order_by_forms", repo_case("pass-order-by-forms")),
+            ("pass_single_row_join", repo_case("pass-single-row-join")),
+            (
+                "fail_single_row_join_lookalikes",
+                repo_case("fail-single-row-join-lookalikes"),
+            ),
             (
                 "canonical_insert",
                 rules_path(rule, "fixture", "canonical-insert"),

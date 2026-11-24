@@ -527,6 +527,75 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fail_single_row_join_lookalikes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/archive.ts",
+          "line": 19,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter order_row.id ASC NULLS LAST, line.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/archive.ts",
+          "line": 33,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter order_row.id ASC NULLS LAST, shipment.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/archive.ts",
+          "line": 47,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter order_row.id ASC NULLS LAST, line.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/archive.ts",
+          "line": 5,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter order_row.id ASC NULLS LAST, line.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/archive.ts",
+          "line": 65,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter order_row.id ASC NULLS LAST, line.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/archive.ts",
+          "line": 79,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter order_row.id ASC NULLS LAST, line.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/archive.ts",
+          "line": 93,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter order_row.id ASC NULLS LAST, line.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail_targetless": {
     "exitCode": 1,
     "report": {
@@ -769,6 +838,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_partial": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_single_row_join": {
     "exitCode": 0,
     "report": {
       "advisories": [],

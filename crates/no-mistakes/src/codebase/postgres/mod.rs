@@ -50,6 +50,7 @@ mod executed_source;
 pub(crate) use catalog::canonical_order_keys;
 pub(crate) use catalog::decoded_parts;
 pub(crate) use catalog::normalize_catalog_path as normalize_schema_catalog_path;
+pub(crate) use catalog::normalize_identifier as normalize_catalog_identifier;
 pub(crate) use catalog::order_by_ascending;
 pub(crate) use catalog::SearchPathResolution;
 pub use catalog::{
@@ -67,8 +68,8 @@ pub use collect::{
 };
 pub use conflict::{
     analyze_conflict_inserts, analyze_conflict_inserts_with_binds, expression_is_constant,
-    SqlConflictInsertFact, SqlConflictTarget, SqlInsertSourceShape, SqlPinnedRelation,
-    SqlSourceRelation,
+    SqlConflictInsertFact, SqlConflictTarget, SqlInsertSourceShape, SqlPinnedJoinEquality,
+    SqlPinnedRelation, SqlPinnedSource, SqlSourceRelation,
 };
 pub use dml::{
     extract_dml_write_targets, find_generated_column_writes, GeneratedColumnWrite, GeneratedTable,

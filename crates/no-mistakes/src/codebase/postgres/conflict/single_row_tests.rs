@@ -67,14 +67,24 @@ fn literal_limits_bound_the_source_to_one_row() {
 
 #[test]
 fn pinned_relations_capture_constant_equalities() {
-    let pinned = |select: &str| source(&insert(select)).pinned_relation;
+    let pinned = |select: &str| {
+        source(&insert(select))
+            .pinned_source
+            .map(|mut s| s.relations.remove(0))
+    };
     let relation = pinned("SELECT o.id, o.total FROM orders o WHERE o.id = $1").unwrap();
     assert_eq!(relation.table, "orders");
     assert_eq!(relation.columns, ["id"]);
 
     // Unaliased, schema-qualified, quoted, reversed and parenthesized forms.
     assert_eq!(
-        pinned("SELECT orders.id, 1 FROM public.orders WHERE (7 = orders.id)")
+        pinned("SELECT orders.id, 1 FROM public.orders WHERE (7 = (orders.id))")
+            .unwrap()
+            .columns,
+        ["id"]
+    );
+    assert_eq!(
+        pinned("SELECT public.orders.id, 1 FROM public.orders WHERE public.orders.id = $1")
             .unwrap()
             .columns,
         ["id"]
@@ -93,13 +103,8 @@ fn pinned_relations_capture_constant_equalities() {
 }
 
 #[test]
-fn pins_require_one_plain_relation_and_constant_values() {
-    let none = |select: &str| {
-        assert!(
-            source(&insert(select)).pinned_relation.is_none(),
-            "{select}"
-        )
-    };
+fn pins_require_plain_relation_and_constant_values() {
+    let none = |select: &str| assert!(source(&insert(select)).pinned_source.is_none(), "{select}");
     none("SELECT id, note FROM orders");
     none("SELECT id, note FROM orders WHERE id > $1");
     none("SELECT id, note FROM orders WHERE id = $1 OR id = $2");
@@ -107,8 +112,8 @@ fn pins_require_one_plain_relation_and_constant_values() {
     none("SELECT id, note FROM orders WHERE id = (SELECT 1)");
     none("SELECT o.id, o.note FROM orders o WHERE orders.id = $1");
     none("SELECT o.id, o.note FROM orders o WHERE x.o.id = $1");
-    none("SELECT id, note FROM orders a, other b WHERE a.id = $1");
-    none("SELECT a.id, a.note FROM orders a JOIN other b ON true WHERE a.id = $1");
+    none("SELECT o.id, o.note FROM orders AS o(id, note) WHERE o.id = $1");
+    none("SELECT o.id, o.note FROM orders o WHERE o.id = $1 GROUP BY GROUPING SETS ((o.id, o.note), ())");
     none("SELECT id, note FROM unnest($1::uuid[]) AS u(id, note) WHERE id = $1");
     none("SELECT id, note FROM (SELECT 1) AS d WHERE id = $1");
     none("SELECT unnest(tags), note FROM orders WHERE id = $1");
@@ -124,12 +129,12 @@ fn ctes_shadow_pinned_catalog_tables() {
         "WITH orders AS (SELECT 1 AS id) INSERT INTO items (id, note) SELECT o.id, 1 FROM orders o WHERE o.id = $1 ON CONFLICT (id) DO NOTHING",
     )
     .unwrap();
-    assert!(shadowed[0].source.pinned_relation.is_none());
+    assert!(shadowed[0].source.pinned_source.is_none());
     let unrelated = analyze_conflict_inserts(
         "WITH picked AS (SELECT 1 AS id) INSERT INTO items (id, note) SELECT o.id, 1 FROM orders o WHERE o.id = $1 ON CONFLICT (id) DO NOTHING",
     )
     .unwrap();
-    assert!(unrelated[0].source.pinned_relation.is_some());
+    assert!(unrelated[0].source.pinned_source.is_some());
 }
 
 #[test]
@@ -199,7 +204,10 @@ fn recovered_interpolations_are_bound_values_only_at_recovered_positions() {
     let pinned = analyze_conflict_inserts_with_binds(sql, &[(1, at)])
         .unwrap()
         .remove(0);
-    assert_eq!(pinned.source.pinned_relation.unwrap().columns, ["id"]);
+    assert_eq!(
+        pinned.source.pinned_source.unwrap().relations[0].columns,
+        ["id"]
+    );
     let pinned = analyze_conflict_inserts(sql).unwrap().remove(0);
-    assert!(pinned.source.pinned_relation.is_none());
+    assert!(pinned.source.pinned_source.is_none());
 }

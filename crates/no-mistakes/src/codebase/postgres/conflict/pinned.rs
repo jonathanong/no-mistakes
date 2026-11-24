@@ -1,32 +1,29 @@
-//! Pin evidence for a single-relation `INSERT ... SELECT` and the constant-value test shared with
-//! the conflict-ordering rule.
-use super::single_row::{is_bind, projection_expr, single_valued};
+//! Pin evidence for single- or inner-joined-relation `INSERT ... SELECT` sources and the
+//! constant-value test shared with the conflict-ordering rule.
+use super::single_row::{projection_expr, single_valued};
 use super::SqlConflictInsertFact;
-use crate::codebase::postgres::parse_postgres_expression;
-use sqlparser::ast::{BinaryOperator, Expr, Query, SetExpr, TableFactor, With};
+use crate::codebase::postgres::idents::{ident_key, object_name_ident};
+use sqlparser::ast::{
+    Expr, GroupByExpr, JoinConstraint, JoinOperator, ObjectName, ObjectNamePart, Query, SetExpr,
+    TableFactor, TableWithJoins, With,
+};
 
-/// A single plain relation whose WHERE equates columns to constants, so a catalog unique key
-/// among those columns bounds the source to one row.
-pub(super) fn pinned_relation(query: &Query, binds: &[(u32, u32)]) -> Option<SqlPinnedRelation> {
+mod predicates;
+pub(super) use predicates::expr_is_constant;
+pub use predicates::expression_is_constant;
+use predicates::{collect_pins, RelationSpec};
+
+/// One or more inner-joined plain relations whose top-level `WHERE` / `ON` equalities may bound
+/// every relation to at most one row via catalog unique keys.
+pub(super) fn pinned_source(query: &Query, binds: &[(u32, u32)]) -> Option<SqlPinnedSource> {
     if query.with.is_some() {
         return None;
     }
     let SetExpr::Select(select) = query.body.as_ref() else {
         return None;
     };
-    let [from] = select.from.as_slice() else {
-        return None;
-    };
-    let TableFactor::Table {
-        name,
-        alias,
-        args: None,
-        ..
-    } = &from.relation
-    else {
-        return None;
-    };
-    if !from.joins.is_empty()
+    if select.from.is_empty()
+        || has_grouping_sets(&select.group_by)
         || !select
             .projection
             .iter()
@@ -34,97 +31,140 @@ pub(super) fn pinned_relation(query: &Query, binds: &[(u32, u32)]) -> Option<Sql
     {
         return None;
     }
-    let qualifier = alias
-        .as_ref()
-        .map(|alias| alias.name.value.clone())
-        .or_else(|| {
-            name.0
-                .last()
-                .map(|part| part.to_string().trim_matches('"').to_owned())
-        })?
-        .to_ascii_lowercase();
-    let mut columns = Vec::new();
-    collect_pins(select.selection.as_ref()?, &qualifier, binds, &mut columns);
-    (!columns.is_empty()).then(|| SqlPinnedRelation {
-        table: name.to_string(),
-        columns,
+    let mut specs = Vec::new();
+    let mut predicates = Vec::new();
+    for from in &select.from {
+        collect_from(from, &mut specs, &mut predicates)?;
+    }
+    if let Some(selection) = select.selection.as_ref() {
+        predicates.push(selection);
+    }
+    let mut relations: Vec<SqlPinnedRelation> = specs
+        .iter()
+        .map(|spec| SqlPinnedRelation {
+            table: spec.table.clone(),
+            columns: Vec::new(),
+        })
+        .collect();
+    let mut join_equalities = Vec::new();
+    for predicate in predicates {
+        collect_pins(
+            predicate,
+            &specs,
+            binds,
+            &mut relations,
+            &mut join_equalities,
+        );
+    }
+    let has_constant_pin = relations
+        .iter()
+        .any(|relation| !relation.columns.is_empty());
+    let all_referenced = has_constant_pin
+        && relations.iter().enumerate().all(|(index, relation)| {
+            !relation.columns.is_empty()
+                || join_equalities
+                    .iter()
+                    .any(|eq| eq.left_relation == index || eq.right_relation == index)
+        });
+    all_referenced.then_some(SqlPinnedSource {
+        relations,
+        join_equalities,
     })
 }
 
-fn collect_pins(expr: &Expr, qualifier: &str, binds: &[(u32, u32)], columns: &mut Vec<String>) {
-    match expr {
-        Expr::Nested(inner) => collect_pins(inner, qualifier, binds, columns),
-        Expr::BinaryOp {
-            left,
-            op: BinaryOperator::And,
-            right,
-        } => {
-            collect_pins(left, qualifier, binds, columns);
-            collect_pins(right, qualifier, binds, columns);
-        }
-        Expr::BinaryOp {
-            left,
-            op: BinaryOperator::Eq,
-            right,
-        } => {
-            for (column, other) in [(left, right), (right, left)] {
-                if let Some(column) =
-                    column_of(column, qualifier, binds).filter(|_| expr_is_constant(other, binds))
-                {
-                    columns.push(column);
-                }
-            }
-        }
-        _ => {}
-    }
+fn has_grouping_sets(group_by: &GroupByExpr) -> bool {
+    matches!(
+        group_by,
+        GroupByExpr::Expressions(exprs, _)
+            if exprs
+                .iter()
+                .any(|expr| matches!(expr, Expr::GroupingSets(_) | Expr::Cube(_) | Expr::Rollup(_)))
+    )
 }
 
-fn column_of(expr: &Expr, qualifier: &str, binds: &[(u32, u32)]) -> Option<String> {
-    match expr {
-        Expr::Nested(inner) => column_of(inner, qualifier, binds),
-        Expr::Identifier(ident) if !is_bind(ident, binds) => Some(ident.to_string()),
-        Expr::CompoundIdentifier(parts) => match parts.as_slice() {
-            [owner, column] if owner.value.eq_ignore_ascii_case(qualifier) => {
-                Some(column.to_string())
-            }
-            _ => None,
-        },
+fn collect_from<'a>(
+    from: &'a TableWithJoins,
+    specs: &mut Vec<RelationSpec>,
+    predicates: &mut Vec<&'a Expr>,
+) -> Option<()> {
+    specs.push(relation_spec(&from.relation)?);
+    for join in &from.joins {
+        match &join.join_operator {
+            JoinOperator::Join(JoinConstraint::On(on))
+            | JoinOperator::Inner(JoinConstraint::On(on)) => predicates.push(on),
+            JoinOperator::CrossJoin(JoinConstraint::None) => {}
+            _ => return None,
+        }
+        specs.push(relation_spec(&join.relation)?);
+    }
+    Some(())
+}
+
+fn relation_spec(factor: &TableFactor) -> Option<RelationSpec> {
+    let TableFactor::Table {
+        name,
+        alias,
+        args: None,
+        ..
+    } = factor
+    else {
+        return None;
+    };
+    if alias
+        .as_ref()
+        .is_some_and(|alias| !alias.columns.is_empty())
+    {
+        return None;
+    }
+    let qualifier = match alias {
+        Some(alias) => ident_key(&alias.name),
+        None => ident_key(object_name_ident(name)?),
+    };
+    let qualified_table = alias.is_none().then(|| two_part_name(name)).flatten();
+    Some(RelationSpec {
+        table: name.to_string(),
+        qualifier,
+        qualified_table,
+    })
+}
+
+fn two_part_name(name: &ObjectName) -> Option<(String, String)> {
+    match name.0.as_slice() {
+        [ObjectNamePart::Identifier(schema), ObjectNamePart::Identifier(table)] => {
+            Some((ident_key(schema), ident_key(table)))
+        }
         _ => None,
     }
 }
 
-pub(super) fn expr_is_constant(expr: &Expr, binds: &[(u32, u32)]) -> bool {
-    match expr {
-        Expr::Value(_) => true,
-        Expr::Identifier(ident) => is_bind(ident, binds),
-        Expr::Nested(inner)
-        | Expr::Cast { expr: inner, .. }
-        | Expr::UnaryOp { expr: inner, .. } => expr_is_constant(inner, binds),
-        _ => false,
-    }
-}
-
-/// Whether `expression` is a literal or bound parameter (possibly cast), so it has the same
-/// value in every row and cannot change the order of rows.
-pub fn expression_is_constant(expression: &str) -> bool {
-    parse_postgres_expression(expression).is_some_and(|expr| expr_is_constant(&expr, &[]))
-}
-
-/// A single plain relation whose `WHERE` equates `columns` to constants.
+/// A plain relation and its columns equated to constants in top-level `WHERE` / `ON` conjuncts.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlPinnedRelation {
     pub table: String,
     pub columns: Vec<String>,
 }
 
-/// Drop pin evidence for inserts whose pinned relation is named like a CTE in scope.
+/// An equality between columns of two distinct relations in a pinned source.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlPinnedJoinEquality {
+    pub left_relation: usize,
+    pub left_column: String,
+    pub right_relation: usize,
+    pub right_column: String,
+}
+
+/// One or more inner-joined plain relations with constant pins and column join equalities.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlPinnedSource {
+    pub relations: Vec<SqlPinnedRelation>,
+    pub join_equalities: Vec<SqlPinnedJoinEquality>,
+}
+
+/// Drop pin evidence for inserts where any pinned relation is named like a CTE in scope.
 pub(super) fn forget_shadowed(inserts: &mut [SqlConflictInsertFact], with: &With) {
     for insert in inserts {
-        let shadowed = insert
-            .source
-            .pinned_relation
-            .as_ref()
-            .is_some_and(|pinned| {
+        let shadowed = insert.source.pinned_source.as_ref().is_some_and(|source| {
+            source.relations.iter().any(|pinned| {
                 let name = pinned
                     .table
                     .rsplit('.')
@@ -134,9 +174,10 @@ pub(super) fn forget_shadowed(inserts: &mut [SqlConflictInsertFact], with: &With
                 with.cte_tables
                     .iter()
                     .any(|cte| cte.alias.name.value.eq_ignore_ascii_case(name))
-            });
+            })
+        });
         if shadowed {
-            insert.source.pinned_relation = None;
+            insert.source.pinned_source = None;
         }
     }
 }
