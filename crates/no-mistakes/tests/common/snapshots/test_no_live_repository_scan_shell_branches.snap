@@ -24,7 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/analyze.test.ts",
           "import": "execSync",
           "line": 12,
-          "message": "live repository scan: `execSync` runs `widget-audit check` after a shell directory change, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
+          "message": "live repository scan: `execSync` runs `widget-audit check` after `cd /repo` or `cd /workspace`, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "execSync(\"cd /repo || cd /workspace && widget-audit check\", { cwd: root });",
           "target": "analyzer subprocess"

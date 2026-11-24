@@ -1,0 +1,27 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "slash_lexing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "slash-forms.js",
+          "import": "columns.ts",
+          "line": 19,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(extra);",
+          "target": "widgetColumns"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

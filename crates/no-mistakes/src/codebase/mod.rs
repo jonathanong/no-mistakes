@@ -20,6 +20,7 @@ pub mod pnpm_lock;
 pub mod postgres;
 pub mod queries;
 pub mod rules;
+pub(crate) mod shell_heredoc;
 pub(crate) mod shell_words;
 pub(crate) mod storybook;
 pub(crate) mod storybook_mdx;

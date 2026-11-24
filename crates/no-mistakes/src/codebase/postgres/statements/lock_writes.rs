@@ -18,10 +18,8 @@ mod trigger_writes;
 use super::value::PlaceholderPositions;
 pub(crate) use advisory::AdvisoryKey;
 use sqlparser::ast::{BinaryOperator, Expr, Query, Statement, TableFactor, Visit, Visitor};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    ops::{ControlFlow, Range},
-};
+use std::collections::{BTreeMap, BTreeSet};
+use std::ops::{ControlFlow, Range};
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LockWriteFacts {
     pub ddl_events: Vec<DdlEvent>,
@@ -41,6 +39,7 @@ pub(crate) struct LockWriteFacts {
     pub prelock_attempt: bool,
     pub conditional_write_keys: Vec<RowAccess>,
     pub conditional_write_unique: bool,
+    pub multi_row_upsert_keys: Option<Box<[RowAccess]>>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RowAccess {

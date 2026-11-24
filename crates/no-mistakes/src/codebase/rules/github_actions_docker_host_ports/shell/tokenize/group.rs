@@ -1,5 +1,6 @@
 use super::commands;
 use super::Tok;
+use crate::codebase::shell_heredoc::{self, CarriageReturn, Document, Operator};
 
 impl<'a> Tok<'a> {
     pub(super) fn capture_backtick(&mut self) -> bool {
@@ -42,25 +43,22 @@ impl<'a> Tok<'a> {
     }
 
     pub(super) fn skip_heredoc(&mut self) -> bool {
-        if self.ch() != '<' || self.chars.get(self.index + 1) != Some(&'<') {
+        let Some(operator) = shell_heredoc::operator(&self.chars[self.index..], false) else {
+            return false;
+        };
+        if matches!(operator, Operator::Document { .. }) && self.arithmetic_shift() {
             return false;
         }
-        if self.chars.get(self.index + 2) == Some(&'<') {
-            // `<<<` is a here-string. Consume it so the next `<<` is not a heredoc.
-            self.flush_word();
-            self.index += 3;
-            return true;
-        }
-        if self.arithmetic_shift() {
-            return false;
-        }
-        // `cat<<EOF` is still a heredoc. The operator is not part of the word.
         self.flush_word();
-        self.index += 2;
-        let strip_tabs = self.bump_if('-');
-        let (delim, next) = super::heredoc::delimiter(self.chars, self.index);
-        self.index = next;
-        self.pending_heredocs.push((delim, strip_tabs));
+        self.index += operator.width();
+        if let Operator::Document { strip_tabs } = operator {
+            let (delimiter, width) = shell_heredoc::char_delimiter(
+                &self.chars[self.index..],
+                shell_heredoc::DelimiterStyle::StripQuotes,
+            );
+            self.index += width;
+            self.pending_heredocs.push(Document { delimiter, strip_tabs });
+        }
         true
     }
 
@@ -139,12 +137,20 @@ impl<'a> Tok<'a> {
         false
     }
 
-    fn bump_if(&mut self, expected: char) -> bool {
-        if self.index < self.chars.len() && self.chars[self.index] == expected {
-            self.index += 1;
-            true
-        } else {
-            false
+    pub(super) fn skip_pending_bodies(&mut self) {
+        for document in self.pending_heredocs.drain(..) {
+            let body = shell_heredoc::skip_body(
+                self.chars,
+                self.index,
+                document.delimiter.chars(),
+                document.strip_tabs,
+                CarriageReturn::Keep,
+            );
+            self.index = body.end;
+            self.line += body.newlines;
+            if !body.terminated {
+                break;
+            }
         }
     }
 }

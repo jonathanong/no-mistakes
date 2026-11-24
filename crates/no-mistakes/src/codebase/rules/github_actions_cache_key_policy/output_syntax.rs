@@ -1,33 +1,3 @@
-pub(super) fn heredoc_start(line: &str) -> Option<(String, bool, bool)> {
-    let at = super::shell_cmd::heredoc_at(line)?;
-    let rest = line[at + 2..].trim_start();
-    let (rest, strip) = rest
-        .strip_prefix('-')
-        .map(|rest| (rest.trim_start(), true))
-        .unwrap_or((rest, false));
-    if rest.is_empty() {
-        return None;
-    }
-    if rest.starts_with(['\'', '"']) {
-        let quote = rest.chars().next()?;
-        let body = &rest[quote.len_utf8()..];
-        let end = body.find(quote)?;
-        return Some((body[..end].to_string(), strip, true));
-    }
-    let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
-    let delim = &rest[..end];
-    (!delim.is_empty()).then(|| (delim.to_string(), strip, false))
-}
-
-pub(super) fn heredoc_end(line: &str, delim: &str, strip: bool) -> bool {
-    let line = if strip {
-        line.trim_start_matches('\t')
-    } else {
-        line
-    };
-    line.trim() == delim
-}
-
 pub(super) fn brace_open(line: &str) -> bool {
     let line = line.trim();
     line == "{" || line.starts_with("{ ") || line.starts_with("{>>") || line.starts_with("{ >>")

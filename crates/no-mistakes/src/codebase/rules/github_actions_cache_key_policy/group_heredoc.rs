@@ -1,7 +1,8 @@
-use super::super::super::output_syntax::{heredoc_end, heredoc_start, inline_assign};
+use super::super::super::output_syntax::inline_assign;
 use super::super::{Event, Write};
 use super::emit::Pending;
 use super::stdout;
+use crate::codebase::shell_heredoc::{line_opener, trimmed_body_lines};
 use crate::fx::FxHashSet;
 
 pub(super) fn take(
@@ -11,11 +12,11 @@ pub(super) fn take(
     outputs: &FxHashSet<String>,
 ) -> Option<usize> {
     let line = lines.get(index)?.trim();
-    let (delim, strip, quoted) = heredoc_start(line)?;
+    let (document, quoted) = line_opener(line)?;
     let binding = stdout::stdout_binding(line, outputs);
-    let mut cursor = index + 1;
-    while cursor < lines.len() && !heredoc_end(lines[cursor], &delim, strip) {
-        if let Some((name, value)) = inline_assign(lines[cursor]) {
+    let (body, consumed) = trimmed_body_lines(&lines[index + 1..], &document);
+    for line in body {
+        if let Some((name, value)) = inline_assign(line) {
             let write = Write {
                 name,
                 value,
@@ -27,10 +28,6 @@ pub(super) fn take(
                 stdout::Stdout::Leave => {}
             }
         }
-        cursor += 1;
     }
-    if cursor < lines.len() {
-        cursor += 1;
-    }
-    Some(cursor)
+    Some(index + 1 + consumed)
 }
