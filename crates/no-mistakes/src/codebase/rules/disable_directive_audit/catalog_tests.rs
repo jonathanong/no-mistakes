@@ -59,16 +59,7 @@ fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {
     for rule in declared
         .iter()
         .map(String::as_str)
-        .chain(
-            crate::config::v2::schema::postgres_executors::RULE_IDS
-                .iter()
-                .copied(),
-        )
-        .chain(
-            super::super::filesystem_dispatch::FILESYSTEM_RULE_IDS
-                .iter()
-                .copied(),
-        )
+        .chain(registered.iter().copied())
     {
         assert!(
             known_rule(rule),
