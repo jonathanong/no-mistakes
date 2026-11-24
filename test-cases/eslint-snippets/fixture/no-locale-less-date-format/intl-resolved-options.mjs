@@ -1,0 +1,11 @@
+const zoneA = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const zoneB = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+const zoneC = Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
+const zoneD = Intl.DateTimeFormat(undefined).resolvedOptions().timeZone;
+const numOpts = new Intl.NumberFormat().resolvedOptions();
+const stored = new Intl.DateTimeFormat();
+stored.resolvedOptions().timeZone;
+const storedCall = Intl.DateTimeFormat();
+storedCall.resolvedOptions().timeZone;
+const formatted = new Intl.DateTimeFormat().format(new Date());
+const passed = readOptions(new Intl.DateTimeFormat());

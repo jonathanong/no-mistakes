@@ -1,6 +1,6 @@
 # `test-no-live-repository-scan`
 
-<!-- cspell:ignore fdir -->
+<!-- cspell:ignore fdir subshells -->
 
 Rejects directory enumeration of the live repository that a Vitest root runs.
 A test that lists `.github/workflows` at module load and then reads and parses
@@ -981,21 +981,22 @@ reports that unresolved root and the live `/repo` scan. The first live scan
 is the finding, so
 `cd fixtures && widget-audit check && cd /repo && widget-audit check` reports
 the `/repo` scan. Leading `NAME=value` assignments are removed from each
-command and may repeat. The rule tracks directories through `&&` and `||`
-from left to right without predicting command exit statuses. A successful
-`cd <dir>` replaces the working directory.
-A failed or skipped `cd` keeps the previous directory. For a `cd <dir>`
-immediately followed by `;`, the rule assumes the directory change succeeds.
+command and may repeat. The rule follows `&&` and `||` from left to right,
+keeping the directory for each possible exit status. A successful `cd <dir>`
+replaces the working directory. A failed or skipped `cd` keeps the previous
+directory. For a `cd <dir>` immediately followed by `;`, the analysis uses the
+new directory on the paths that reach that `cd`.
 For example, with an owned `cwd`,
 `cd fixtures && widget-audit check || cd /repo && widget-audit check`
 can reach the final scan in fixtures or in `/repo`. The finding says the
-analyzer may run after `cd /repo`. A live path takes precedence over an
-unresolved path to the same simple command. `cd .` stays in that directory, so
-the call is a live scan when it has no owned `cwd`. `cd /` is the filesystem root and is a
-live scan. `cd ..` leaves the working directory and is a live scan when that
-directory is not owned. A target with a fixture-directory segment is owned. A
-target that contains `..` plus another name is an unresolved root, so
-`cd ../widgets && widget-audit check` is not owned. `$` and a backtick in
+analyzer may run after `cd /repo`. When more than one live directory can replace
+the owned `cwd`, the finding names each candidate. A live path takes precedence
+over an unresolved path to the same simple command. `cd .` stays in the current
+directory, so the call is a live scan when it has no owned `cwd`. `cd /` scans
+from the filesystem root. `cd ..` leaves the working directory and is a live
+scan when that directory is not owned. A target with a fixture-directory
+segment is owned. A target that contains `..` plus another name stays
+unresolved, as in `cd ../widgets && widget-audit check`. `$` and a backtick in
 unquoted text, or inside double quotes, leave the whole string unmatched, so
 `cd fixtures/$DIR && widget-audit check` is not a finding. Inside single quotes
 they are literal, and a `cd` target that still contains them is an unresolved
@@ -1066,6 +1067,12 @@ is `report`.
 
 `command` must be a non-empty name with no `/`, `\`, or spaces. Each leading
 argument must be a non-empty string.
+
+### Shell limits
+
+The simple-command analysis covers `&&`, `||`, and `;`. Pipelines (`|`),
+background commands (`&`), subshells (`(...)`), and command substitutions
+(`$(...)`) are outside that model.
 
 ## Options
 

@@ -483,7 +483,9 @@ remain failures. See
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
 `queueCheck()` reports `shared-queue-rate-limit` when a processor throws `RateLimitError` or calls `.rateLimit()` on a queue that carries more than one known job name, and abstains when that set is unknown.
-`queueCheck()` also reports `worker-rate-limit-per-process` when `.rateLimit()` is called on a binding that resolves to a `Worker` or configured worker factory, and abstains with a diagnostic on `QueueReport.diagnostics` when the receiver does not resolve.
+`queueCheck()` also reports `worker-rate-limit-per-process` when `.rateLimit()` is called on a binding that resolves to a `Worker`, a `Worker` subclass, or a configured worker factory, and abstains with a diagnostic on `QueueReport.diagnostics` only when an unresolved receiver's binding originates from a queue module or worker construction. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`.
+Pass `{ includeDiagnostics: true }` to `queueCheck()` (or `{ type: "queueCheck", includeDiagnostics: true }` in `analyzeProject()`, typed by `QueueCheckOptions` and `BatchedQueueCheckOptions`) to receive a `QueueCheckReport` (`{ findings, diagnostics }`) instead of the default bare `QueueCheckFinding[]` array.
+Aggregate `check()` also surfaces unresolved `worker-rate-limit-per-process` receiver diagnostics in `CheckReport.warnings` without turning a clean run into a failure.
 Import the exported `QueueRateLimitFindingKind` type for the rate-limit-specific values `"shared-queue-rate-limit" | "worker-rate-limit-per-process"`.
 `queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
 Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
@@ -527,7 +529,8 @@ path selection. See [queue configuration](configuration/queues.md).
 Its CommonJS, ESM, and TypeScript exports remain available with `@deprecated`
 annotations and unchanged options, async results, and errors. Node calls do not
 print the CLI warning. For batched calls, use `{ type: "dependents", files: [...] }`
-in `analyzeProject()`; `{ type: "related", ... }` remains supported.
+in `analyzeProject()`. The `"related"` report type remains supported and has a
+TypeScript `@deprecated` annotation.
 See the [migration guide](migrations/deprecated-surfaces.md).
 
 ## Runtime exports
@@ -1013,6 +1016,13 @@ its `pollCommands` and `ignoreForLoops` options. The opt-in
 [`github-actions-pr-diff-range`](rules/github-actions-pr-diff-range.md) has no
 options and uses the same check paths.
 
+The opt-in [`github-actions-env-policy`](rules/github-actions-env-policy.md)
+runs through async `check()` and `analyzeProject()` check reports with the same
+outcome as CLI `check`. Exported `GithubActionsEnvPolicyOptions` and
+`GithubActionsEnvPolicyValue` describe its YAML options. Policy violations appear
+in `CheckReport.rules`; required values written as `${{ }}` expressions appear in
+`CheckReport.advisories` by default.
+
 The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
 runs through async `check()` and `analyzeProject()` check reports with the
 same outcome as CLI `check`. Configure it in the YAML selected by `config`.
@@ -1030,8 +1040,9 @@ exact version selectors. Configure the rule in the YAML selected by `config`.
 The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
 rule runs through async `check()` using the existing `checkJson` binding and
 through batched `analyzeProject()` check reports. `VitestDefaultExcludesOptions`
-exports optional `config`, `files` (module globs for config factories), and
-`requiredGlobs`. Findings use the standard `RuleFinding` shape.
+exports optional `config` (`options.config`), `files` (`options.files`, module
+globs for config factories), and `requiredGlobs`. Findings use the standard
+`RuleFinding` shape.
 
 The configured [`vitest-project-policy`](rules/vitest-project-policy.md) rule
 runs through `check()` and `analyzeProject()` check queries using the existing
@@ -1126,11 +1137,12 @@ the `LockInventoryReport` fields `sites`, category `counts`, `unanalyzed` SQL
 inputs, `baselineFile`, `added`, `removed`, and `baselineUpdated`, plus optional
 invocation metadata such as `jobsPoolWarning`. Site keys ignore comments and
 whitespace; SQL token changes create new keys. With `writeBaseline: true`, a
-missing baseline is initialized from the analyzed sites. An existing baseline
-can only shrink by pruning stale entries and refuses added sites. Both paths
-refuse unresolved SQL. The command and this asynchronous API share one prepared
-analysis. Ordinary `check()` and `analyzeProject()` check reports use the same
-rule and standard suppressions. See the [rule](rules/postgres-lock-inventory.md)
+missing baseline is initialized from the analyzed sites. For an existing
+baseline, the writer prunes stale entries after any intentional additions have
+been recorded manually. Both paths require all configured SQL to be resolved. The command and this asynchronous API share one prepared
+analysis. A malformed baseline rejects the standalone API call. In
+`check()` and `analyzeProject()` check reports it appears as an
+`invalid-baseline` finding. See the [rule](rules/postgres-lock-inventory.md)
 and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
 
 

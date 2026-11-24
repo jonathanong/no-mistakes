@@ -1,8 +1,11 @@
 use super::{
     helpers::{access, generated_name, qualifier},
-    scope, RowAccess,
+    scope,
+    sequences::Pending,
+    RowAccess, SequenceMode,
 };
 use crate::codebase::postgres::idents::object_name_identity;
+use crate::codebase::postgres::lock_inventory::tokens::RowLockMode;
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::{LockType, Query, SetExpr};
 use std::collections::BTreeSet;
@@ -18,36 +21,69 @@ pub(super) fn collect_advanced(
     positions: PlaceholderPositions<'_>,
     scopes: &[BTreeSet<String>],
     locks: &mut Vec<RowAccess>,
-    mut share_relations: Option<&mut Vec<Option<String>>>,
+    mut sequence: Option<&mut Pending<'_, '_>>,
     top_level: bool,
 ) {
+    let modes = sequence.as_ref().and_then(|sequence| sequence.modes(query));
+    let track = sequence.is_some();
     let rows = if query.locks.iter().all(|lock| lock.of.is_some()) {
-        collect_explicit(query, positions, share_relations.is_some())
+        collect_explicit(query, positions, modes.as_deref(), track)
     } else {
         let row = collect_legacy(query, positions, true);
-        let shared = if row.relation.is_some() {
-            query
-                .locks
-                .iter()
-                .all(|lock| lock.lock_type == LockType::Share)
+        let mode = if row.relation.is_some() {
+            strongest_mode(query, modes.as_deref(), track)
         } else {
-            has_share(query)
+            unknown_share(query, track)
         };
-        vec![(row, shared)]
+        vec![(row, mode)]
     };
-    for (mut lock, shared) in rows {
+    for (mut lock, mode) in rows {
         scope::hide_cte(&mut lock, scopes);
-        if shared {
-            if let Some(relations) = share_relations.as_deref_mut() {
-                relations.push(if top_level {
-                    lock.relation.clone()
-                } else {
-                    None
-                });
+        if let (Some(sequence), Some(mode)) = (sequence.as_deref_mut(), mode) {
+            if mode != SequenceMode::Update || (top_level && guaranteed_update(query, &lock)) {
+                sequence.lock(mode, top_level.then_some(locks.len()));
             }
         }
         locks.push(lock);
     }
+}
+
+fn strongest_mode(
+    query: &Query,
+    modes: Option<&[RowLockMode]>,
+    track: bool,
+) -> Option<SequenceMode> {
+    if !track {
+        return None;
+    }
+    let Some(modes) = modes else {
+        return unknown_share(query, true);
+    };
+    modes.iter().copied().max().and_then(sequence_mode)
+}
+
+fn sequence_mode(mode: RowLockMode) -> Option<SequenceMode> {
+    Some(match mode {
+        RowLockMode::KeyShare => SequenceMode::KeyShare,
+        RowLockMode::Share => SequenceMode::Share,
+        RowLockMode::Update => SequenceMode::Update,
+        RowLockMode::NoKeyUpdate => return None,
+    })
+}
+
+fn guaranteed_update(query: &Query, row: &RowAccess) -> bool {
+    let SetExpr::Select(select) = query.body.as_ref() else {
+        return false;
+    };
+    let [table] = select.from.as_slice() else {
+        return false;
+    };
+    table.joins.is_empty()
+        && row.key.is_some()
+        && query.with.is_none()
+        && query.limit_clause.is_none()
+        && query.fetch.is_none()
+        && query.locks.iter().all(|lock| lock.nonblock.is_none())
 }
 
 pub(super) fn collect_legacy(
@@ -81,11 +117,13 @@ pub(super) fn collect_legacy(
     }
 }
 
-fn has_share(query: &Query) -> bool {
-    query
-        .locks
-        .iter()
-        .any(|lock| lock.lock_type == LockType::Share)
+fn unknown_share(query: &Query, track: bool) -> Option<SequenceMode> {
+    (track
+        && query
+            .locks
+            .iter()
+            .any(|lock| lock.lock_type == LockType::Share))
+    .then_some(SequenceMode::UnknownShare)
 }
 
 fn unresolved() -> RowAccess {

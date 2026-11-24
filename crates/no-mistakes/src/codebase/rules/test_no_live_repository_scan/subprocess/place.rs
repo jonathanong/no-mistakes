@@ -3,6 +3,7 @@ use super::super::provenance::{classify, Verdict};
 use super::command::OptionsSlot;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::PathOrigin;
+use std::fmt::Write;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Directory {
@@ -14,18 +15,21 @@ pub(super) enum Directory {
 pub(super) fn owned_shift(
     base: Directory,
     wrapped: Option<&str>,
-    shell: Option<&str>,
-    multiple_live_dirs: bool,
+    shell: &[Option<&str>],
 ) -> Option<String> {
     if base != Directory::Allowed {
         return None;
     }
-    match (wrapped, shell) {
-        (Some(dir), _) => Some(format!("in `{dir}`")),
-        (None, Some(_)) if multiple_live_dirs => Some("after a shell directory change".to_owned()),
-        (None, Some(dir)) => Some(format!("after `cd {dir}`")),
-        (None, None) => None,
+    if let Some(dir) = wrapped {
+        return Some(format!("in `{dir}`"));
     }
+    let mut changes = shell.iter().flatten();
+    let first = changes.next()?;
+    let mut shift = format!("after `cd {first}`");
+    for dir in changes {
+        let _ = write!(shift, " or `cd {dir}`");
+    }
+    Some(shift)
 }
 
 pub(super) fn live_message(

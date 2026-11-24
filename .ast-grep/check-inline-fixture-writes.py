@@ -13,6 +13,7 @@ baseline does not fail the raw scan. This script is the gate:
 - remaining finding paths must equal the baseline exactly
 - once the baseline exists at --base, the current path set must be a subset
 - an empty baseline at --base is final: no paths may be added again
+- when there is no distinct base, --require-empty-baseline enforces that final state
 """
 
 from __future__ import annotations
@@ -383,7 +384,7 @@ def baseline_at(base: str) -> set[str] | None:
     return set(parse_list(show.stdout))
 
 
-def check(base: str, print_findings: bool) -> None:
+def check(base: str | None, print_findings: bool) -> None:
     findings = collect_findings()
     if print_findings:
         for path in sorted(findings):
@@ -408,7 +409,13 @@ def check(base: str, print_findings: bool) -> None:
         errors.append(f"new inline fixture write: {path}")
     for path in sorted(baseline - expected):
         errors.append(f"stale baseline entry: {path}")
-    errors.extend(shrink_errors(baseline, baseline_at(base), base))
+    if base is None:
+        errors.extend(
+            f"baseline must remain empty without a distinct diff base: {path}"
+            for path in sorted(baseline)
+        )
+    else:
+        errors.extend(shrink_errors(baseline, baseline_at(base), base))
     if errors:
         fail("inline fixture-write check failed:\n" + "\n".join(errors))
 
@@ -485,7 +492,9 @@ def self_test() -> None:
 def main() -> None:
     self_test()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base", required=True)
+    base = parser.add_mutually_exclusive_group(required=True)
+    base.add_argument("--base")
+    base.add_argument("--require-empty-baseline", action="store_true")
     parser.add_argument("--print-findings", action="store_true")
     args = parser.parse_args()
     check(args.base, args.print_findings)

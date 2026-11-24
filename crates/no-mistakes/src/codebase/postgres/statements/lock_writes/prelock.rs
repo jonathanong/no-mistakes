@@ -4,10 +4,12 @@ use super::{
 };
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{
-    Assignment, BinaryOperator, Expr, GroupByExpr, LockType, Query, SelectItem, SetExpr, Statement,
+    BinaryOperator, Expr, GroupByExpr, LockType, Query, SelectItem, SetExpr, Statement,
     TableFactor, TableInheritance, Update, Value,
 };
+mod expressions;
 mod upsert;
+use expressions::{plain_assignments, plain_value};
 pub(super) fn collect(
     statement: &Statement,
     out: &mut LockWriteFacts,
@@ -27,9 +29,13 @@ pub(super) fn collect(
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
         Statement::Insert(insert) => {
-            if let Some(key) = upsert::upsert_key(insert, positions) {
-                out.conditional_write_keys.push(key);
-                out.conditional_write_unique = true;
+            if let Some(keys) = upsert::upsert_keys(insert, positions) {
+                if keys.len() == 1 {
+                    out.conditional_write_keys = keys;
+                    out.conditional_write_unique = true;
+                } else {
+                    out.multi_row_upsert_keys = Some(keys.into_boxed_slice());
+                }
             }
         }
         _ => {}
@@ -147,32 +153,6 @@ fn equality(expr: &Expr, qualifier: &str, positions: PlaceholderPositions<'_>) -
         Some(Key { column, value })
     };
     pair(left, right).or_else(|| pair(right, left))
-}
-
-fn plain_value(expr: &Expr) -> Option<&Value> {
-    match unwrap_expr(expr) {
-        Expr::Value(value)
-            if matches!(
-                value.value,
-                Value::Number(..)
-                    | Value::SingleQuotedString(_)
-                    | Value::Boolean(_)
-                    | Value::Placeholder(_)
-            ) =>
-        {
-            Some(&value.value)
-        }
-        _ => None,
-    }
-}
-
-fn plain_assignments(assignments: &[Assignment]) -> bool {
-    assignments.iter().all(|assignment| {
-        matches!(
-            unwrap_expr(&assignment.value),
-            Expr::Identifier(_) | Expr::CompoundIdentifier(_)
-        ) || plain_value(&assignment.value).is_some()
-    })
 }
 
 fn plain_table(table: &TableFactor) -> Option<bool> {

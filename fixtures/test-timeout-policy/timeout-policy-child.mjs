@@ -34,14 +34,14 @@ export async function fixture(source, config = fixtureTemplate("timeout-policy-c
                 await symlink(registrar, join(directory, 'node_modules/deadline-registrar'), 'dir');
             }
         }
-        await writeFile(join(directory, 'vitest.config.mts'), fixtureTemplate("timeout-policy-child-template-3.txt", [JSON.stringify(plugin), config, maximum, JSON.stringify([
+        await writeFile(join(directory, 'vitest.config.mjs'), fixtureTemplate("timeout-policy-child-template-3.txt", [JSON.stringify(plugin), config, maximum, JSON.stringify([
             'deadline-helper',
             ...(helper?.inlineTransitive ? ['deadline-registrar'] : []),
         ]), JSON.stringify(join(directory, 'runner.mts')), helper?.preserveSymlinks ?? false, JSON.stringify(join(directory, 'node_modules/deadline-helper/index.mjs')), JSON.stringify(join(directory, 'runner.mts'))]));
         await writeFile(join(directory, 'runner.mts'), fixtureTemplate("timeout-policy-child-template-2.txt", [JSON.stringify(vitest), JSON.stringify(policy), maximum, extension, maximum]));
         await writeFile(join(directory, 'case.test.mts'), fixtureTemplate("timeout-policy-child-template-1.txt", [JSON.stringify(vitest), source]));
         const routeArgs = route ? await prepareRunnerRoute(directory, plugin, route, config) : [];
-        const child = spawn(process.execPath, [cli, 'run', '--root', directory, '--maxWorkers=1', ...routeArgs], {
+        const child = spawn(process.execPath, [cli, 'run', '--configLoader', 'native', '--root', directory, '--maxWorkers=1', ...routeArgs], {
             cwd: directory,
             stdio: ['ignore', 'pipe', 'pipe'],
             detached: true,
@@ -58,6 +58,7 @@ export async function fixture(source, config = fixtureTemplate("timeout-policy-c
                 code: outcome.result?.code,
                 signal: outcome.result?.signal,
                 forcedCleanup: outcome.forcedCleanup,
+                elapsedMs: outcome.lifecycle?.elapsedMs,
                 errors: outcome.errors.map((error) => error instanceof Error
                     ? { name: error.name, message: error.message }
                     : { message: String(error) }),
@@ -72,6 +73,12 @@ export async function fixture(source, config = fixtureTemplate("timeout-policy-c
         const { result, output, forcedCleanup } = outcome;
         if (!result)
             throw new Error('SDK child did not close');
+        if (result.signal !== null && !observation.allowSignal) {
+            const elapsedMs = Math.round(outcome.lifecycle?.elapsedMs ?? 0);
+            const watchdogMs = observation.watchdogMs ?? 5000;
+            const reason = forcedCleanup ? `watchdog (${watchdogMs} ms)` : 'external signal';
+            throw new Error(`SDK child terminated by ${result.signal} (${reason}) after ${elapsedMs} ms\n${output}`);
+        }
         const marker = await readFile(join(directory, 'continued.marker'), 'utf8').catch(() => undefined);
         const extensionMarker = await readFile(join(directory, 'extension.marker'), 'utf8').catch(() => undefined);
         const lifecycle = await readFile(join(directory, 'lifecycle.marker'), 'utf8').catch(() => undefined);

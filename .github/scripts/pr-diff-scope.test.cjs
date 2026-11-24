@@ -71,7 +71,7 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
   assert.doesNotMatch(workflowJob(source, "tests-gate"), /MACOS_REQUIRED/);
   assert.match(
     source,
-    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| github\.sha \}\}/,
+    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| \(github\.event_name == 'workflow_dispatch' && format\('dispatch-\{0\}', github\.run_id\) \|\| github\.ref\) \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/,
   );
 
   const mainPush = "github.event_name == 'push' && github.ref == 'refs/heads/main'";

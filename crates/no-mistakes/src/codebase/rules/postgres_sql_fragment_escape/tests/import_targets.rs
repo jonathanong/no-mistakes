@@ -193,9 +193,48 @@ fn a_bare_star_reexport_without_a_graph_is_not_an_unresolved_warning() {
 #[test]
 fn declare_module_skips_an_empty_name_and_an_unclosed_quote() {
     let specs = modules::declare_module_specifiers(
-        "declare module \"\" {}\ndeclare module 'kept' {}\ndeclare module \"open",
+        "declare module \"\" {}\ndeclare module Foo {}\ndeclare module 'kept' {}\ndeclare module \"open",
     );
     assert_eq!(specs, vec!["kept".to_string()]);
+}
+
+struct StubAssetResolver(std::path::PathBuf);
+
+impl super::super::import_resolution::FragmentResolver for StubAssetResolver {
+    fn resolve(
+        &self,
+        _specifier: &str,
+        _importer: &std::path::Path,
+        _force: bool,
+    ) -> Option<Option<std::path::PathBuf>> {
+        Some(Some(self.0.clone()))
+    }
+}
+
+#[test]
+fn ambiguous_target_resolving_to_non_source_asset_records_no_gap() {
+    let mut world = world();
+    let escape = world.escape.clone();
+    merge_import_target(
+        &mut world.graph.import_targets,
+        &escape,
+        "pkg/asset",
+        ImportTarget::Ambiguous,
+    );
+    let resolver = StubAssetResolver(std::path::PathBuf::from("/repo/data.json"));
+    let mut catalog =
+        super::super::fragments::Catalog::build(&world.facts, &world.tags, None, Some(&resolver));
+    assert_eq!(
+        modules::module_file(
+            Some(&world.graph),
+            &world.facts,
+            &catalog,
+            &escape,
+            "pkg/asset"
+        ),
+        None
+    );
+    assert!(catalog.take_unresolved().is_empty());
 }
 
 #[test]

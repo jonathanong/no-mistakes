@@ -1,5 +1,11 @@
 # Debug metadata in CI builds
 
+## Job sizing rule
+
+"Never serialize parallel work."
+
+For job sizing, see the `github-actions-authoring` skill.
+
 ## Parallel CI layout and measured baseline
 
 The pull-request workflow splits compilation-heavy checks into producer and
@@ -39,7 +45,8 @@ The current validation graph is organized as follows:
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
   On `main`, Windows runs six Rust shards and six real-addon API shards and
-  macOS runs two of each, with every selected case still executed once.
+  macOS runs three Rust shards and two real-addon API shards, with every
+  selected case still executed once.
   macOS has two tiers because GitHub allows only five concurrent macOS jobs
   account-wide, so macOS runners are the queue bottleneck. Windows is not
   queue-bound, but its 14 jobs were about a quarter of pull request CI cost and
@@ -47,7 +54,8 @@ The current validation graph is organized as follows:
   two tiers.
   A pull request runs one `macOS smoke` job (`macos-smoke`) instead of the
   full sharded macOS suite. It builds the CLI and N-API addon, runs
-  `check` on one saved fixture, and runs the explicit OS-dependent list in
+  `check` on a saved fixture and requires the `agents-md-max-size` finding on
+  `AGENTS.md:1`. It runs the explicit OS-dependent list in
   `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
   harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
   check invocation tests, one `analyzeProject` call on a saved fixture through
@@ -81,12 +89,14 @@ The current validation graph is organized as follows:
   Rust tests` therefore runs one `cargo test --no-run` over every listed target
   (same `profileArgs`, `--locked` and `-p`) under a 20 minute cap, with live
   cargo output, and the 15 minute `Run macOS-dependent Rust tests` step only
-  runs them. The cap is below the 35 minutes the build step holds, and the
-  restore of the input sidecar stays in the compile step because running it
-  again would mark files changed since capture fresh and force a rebuild. No
-  existing timeout value changed; the compile phase, which used to share one
-  15 minute step with the tests, now has its own 20 minute allowance within
-  the job's 45 minute cap.
+  runs them. A separately bounded step replays the saved input timestamps
+  once before compilation. In run 45364121571, that replay took 30 seconds
+  and Cargo finished the compile in 19m34s. Sharing one step deadline caused
+  the runner to terminate the step after Cargo listed both test binaries.
+  The compile and test step caps remain inside the job's 45-minute limit.
+  Keep the timestamp replay ahead of compilation because replaying it again
+  would mark changed files fresh and force a rebuild.
+  [macOS smoke job](https://github.com/jonathanong/no-mistakes/actions/runs/45364121571/job/138343765816)
   The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
   `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
   `main` and manual dispatch, where they are unchanged. The trade-off is that
@@ -120,8 +130,8 @@ The current validation graph is organized as follows:
   `cancel-in-progress` stays false, so the running job finishes and a newer
   main push drops only the older pending job in that slot. Pull requests,
   manual dispatch, and other branches use a per-run group and do not join
-  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` stay
-  on the workflow's per-commit group. The group names use the literal job id.
+  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` use
+  the workflow's per-ref group. The group names use the literal job id.
   `Native tests` accepts a cancelled macOS job only for a push to `main`.
   A superseded build is cancelled before its test job starts, so that test job
   is skipped; `Native tests` accepts that skip only when the producer was
@@ -216,7 +226,10 @@ complete store, then the newest creation time and ID, rather than a newer
 partial store. Different lockfiles, platforms, architectures, and unknown key
 formats remain separate.
 
-Cleanup runs after successful main producers, after main CI, and on PR closure.
+Cleanup runs after successful main producers, on PR closure, and when a
+main-push run of Test CI or Benchmarks finishes. A run can save caches before a
+later job fails, so cleanup also runs after unsuccessful completions.
+
 After deduplication it evicts least-recently-accessed main workspace snapshots
 until the inventory fits an 8 GiB budget. These build caches can be recreated;
 open PRs, unknown families, release dependencies, and active benchmark handoffs
@@ -446,16 +459,17 @@ query-annotation snapshots, 78.3 for the additional bounded-statement snapshots,
 73.6 for transformed-UUID snapshots, and 71.5 for unanalyzable-schema snapshots.
 The old modulo plan placed four of these five cases together in shard 1.
 
-macOS's two Rust shards now assign the longest known outliers first to the
+macOS's three Rust shards now assign the longest known outliers first to the
 least-loaded shard. The [cost policy](../../.github/scripts/native-rust-costs.json)
 records the source notices and completion timestamps. It uses floored
 lower-bound weights, stable harness
 names and full test names; ties use stable test identity and shard index.
 Unmeasured and new cases receive a default weight of one and remain included.
 Those weights are scheduling units, not predicted seconds. The archived
-373-case inventory produces 185/188 selected cases with equal 430-unit loads,
-separating bounded-statement and query-annotation work. Each selected case
-still runs exactly once, with the original filters, batching and flags.
+373-case inventory produces 114/122/137 selected cases with 287/287/286-unit
+loads across three shards (previously 185/188 with 430-unit loads across two
+shards), separating bounded-statement and query-annotation work. Each selected
+case still runs exactly once, with the original filters, batching and flags.
 Windows retains its existing six-shard assignments.
 
 The existing harness batching already avoids spawning a process per case.
@@ -523,8 +537,10 @@ this run finished. The inventory contained roughly 12.7 GB of active caches at
 inspection. A cache key cannot guarantee retention under repository-wide cache
 pressure. Subsequent macOS Rust shards waited as long as 7m57s before starting;
 in the previous completed run, API shards waited 8m23s to 12m02s. The adjusted
-macOS matrices use two shards per family to reduce repeated setup and runner
-contention, while Windows retains six.
+macOS matrices use three Rust shards (rebalanced from two after 306–381s shard
+1/2 runs left insufficient headroom under the 9-minute deadline) and two API
+shards to reduce repeated setup and runner contention, while Windows retains
+six.
 
 A later completed run `43389713210` at `56c7d9064` passed in **19m49s** with
 70 passing checks. Its macOS Rust producer restored a compatible workspace
@@ -1124,9 +1140,36 @@ including passing and suppressed controls. All six cases still run in the
 real-addon suite under the same 5,000 ms gate; no exemption or retry is added.
 
 Test CI cancels superseded in-progress runs only for pull requests. An active
-main run can finish and upload Rust coverage when another merge lands. GitHub's
-default concurrency queue can still replace an older pending main run before
-its jobs start.
+main run always finishes and uploads Rust coverage when another merge lands.
+Push runs group by ref, so a new main run waits for the one in progress and
+GitHub keeps only the newest waiting run: a commit superseded while waiting
+gets no Test CI run or Codecov upload. Manual `workflow_dispatch` runs use a
+per-run group (`dispatch-<run_id>`) so pushes never replace a pending dispatch.
+Because middle push commits can be skipped, push path-scoping steps resolve
+their diff base through
+[`push-diff-base.cjs`](../../.github/scripts/push-diff-base.cjs) from the most
+recent successful Test CI push run on the branch, falling back to full scope
+when no prior ancestor run is available.
+
+Benchmarks run in the dedicated
+[Benchmarks workflow](../../.github/workflows/benchmarks.yml), which triggers on
+`pull_request` and pushes to `main`. Its `changes` job resolves the diff base
+with [`push-diff-base.cjs`](../../.github/scripts/push-diff-base.cjs) and
+selects shards with
+[`benchmark-change-scope.cjs`](../../.github/scripts/benchmark-change-scope.cjs),
+supporting pull-request opt-in markers. On pushes to `main`, `push-diff-base.cjs`
+diffs from the head SHA of the most recent successful
+`Benchmarks` push run on the same branch (`conclusion: success`, falling back to
+all shards when no prior ancestor run is available) so commits skipped by
+ref-keyed concurrency remain covered. The `bench` producer builds the benchmark binaries on
+`ubuntu-24.04-arm`, followed by the `benchmark-shards` matrix (one job per
+shard), `frontend-lifecycle-smoke`, and the `Benchmarks` gate (`benchmark-gate`),
+with per-job `id-token: write` on the shard and smoke jobs. Concurrency is
+grouped per pull request (cancelling superseded PR runs) and per ref on `main`
+(`cancel-in-progress` false, so a started `main` run completes while GitHub
+keeps only the newest waiting `main` run). `Benchmarks` is not a required check,
+and cache retention tracks each handoff cache's source run by ID so an active
+run keeps its handoff.
 
 Rust coverage floors use one `cargo llvm-cov report --json --summary-only`
 export and [a totals checker](../../.github/scripts/rust-coverage-floors.cjs).

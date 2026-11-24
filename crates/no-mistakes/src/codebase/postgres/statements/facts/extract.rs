@@ -1,6 +1,5 @@
 use super::*;
-use crate::codebase::postgres::lock_inventory::{self, Collector};
-
+use crate::codebase::postgres::lock_inventory::{recovery_tokens, Collector};
 pub(super) fn extract_from_parsed_and_sources(
     sql: &str,
     prepared_sql: &PreparedSql<'_>,
@@ -48,8 +47,8 @@ pub(super) fn extract_from_parsed_and_sources(
     let mut temporary_relations = bounds::TemporaryRelations::default();
     let mut prepared = PreparedStatements::default();
     let mut lifecycle = LifecycleBuilder::default();
-    let mut lock_inventory = Collector::new(prepared_sql);
-    let inventory_tokens = lock_inventory::recovery_tokens(sources.tokens, sources.policy.tokens);
+    let mut lock_inventory = sources.policy.lock_inventory(prepared_sql);
+    let inventory_tokens = recovery_tokens(sources.tokens, sources.policy.tokens);
     for (index, source_statement) in statements.iter().enumerate() {
         let recovered_source = sources
             .tokens
@@ -73,9 +72,12 @@ pub(super) fn extract_from_parsed_and_sources(
             .flatten();
         let mut executed = Vec::new();
         wrappers::walk_executed(source_statement, &mut executed);
-        let recovery_tokens = inventory_tokens(index);
         for statement in executed {
-            lock_inventory.collect(statement, recovery_tokens, |span| tokens.source_at(span));
+            if let Some(inventory) = &mut lock_inventory {
+                inventory.collect(statement, inventory_tokens(index), |span| {
+                    tokens.source_at(span)
+                });
+            }
             if let Some(locations) = &mut locations {
                 locations.collect(statement);
             }
@@ -142,19 +144,15 @@ pub(super) fn extract_from_parsed_and_sources(
             .collect_index_probes
             .then_some(&mut index_probes),
     );
-    let lock_writes = sources.projection.locks(
+    let lock_writes = sources.locks(
         statements,
         placeholder_positions,
-        (
-            sources.policy.share_lock_writes,
-            sources.policy.redundant_prelocks,
-        ),
+        prepared_sql,
+        lock_inventory.as_ref(),
     );
     let (statement_kinds, setting_uses, clause_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
     let mut facts = SqlStatementFileFacts {
-        lock_inventory: lock_inventory.finish(&function_calls),
-        lock_inventory_unanalyzed: lock_inventory::unanalyzed_routines(statements),
         lock_writes,
         statement_kinds,
         setting_uses,
@@ -183,6 +181,7 @@ pub(super) fn extract_from_parsed_and_sources(
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
         ..Default::default()
     };
+    Collector::finish_projection(lock_inventory, &mut facts, statements);
     facts.variant_locations = locations.map(|locations| {
         locations::finish(
             locations,

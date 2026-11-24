@@ -36,10 +36,6 @@ pub(super) fn look(chars: &[char], index: usize) -> Option<Look> {
 pub(super) fn skip_body(chars: &[char], index: usize, line: usize, opener: &Opener) -> Body {
     let mut index = index;
     let mut line = line;
-    if chars.get(index) == Some(&'\n') {
-        index += 1;
-        line += 1;
-    }
     loop {
         if index >= chars.len() {
             return Body {
@@ -92,7 +88,7 @@ fn delim(chars: &[char], mut index: usize) -> (String, usize) {
             index += 1;
             break;
         }
-        if quote.is_none() && (ch.is_whitespace() || ch == ';') {
+        if quote.is_none() && (ch.is_whitespace() || matches!(ch, ';' | '|' | '&' | '<' | '>' | '(' | ')')) {
             break;
         }
         text.push(ch);

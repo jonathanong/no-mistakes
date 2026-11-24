@@ -37,6 +37,11 @@ fn github_actions_test_timeout_literals_json_matches_snapshot() {
             // `src/other.test.mts` has a literal and is outside the default include.
             ("pass", rules_path(RULE, "fixture", "pass"), default),
             (
+                "file_disabled",
+                rules_path(RULE, "fixture", "file-disabled"),
+                std::path::PathBuf::new(),
+            ),
+            (
                 "allow_matching",
                 rules_path(RULE, "fixture", "allow"),
                 rules_path(RULE, "configs", "allow-matching.yml"),

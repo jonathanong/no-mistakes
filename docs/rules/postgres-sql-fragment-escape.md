@@ -58,25 +58,39 @@ canonical graph prerequisite and their own diagnostics. An ESLint-only setup
 omits this cross-file check. An empty `trustedSqlTags` list produces no
 findings and adds no graph or catalog demand.
 
-A sourced `export { name } from` or `export * as name from` with a missing
-recorded offset produces an `incomplete` entry when the target exports a
-fragment. A direct `import()` or `require()` with a computed argument or
-missing literal specifier fact produces one specifier gap when a binding or
-call in the loading file reaches a proven exported SQL fragment. Dependency
-coverage gaps also recognize configured tagged queries. A readable source
-is required to attach a finding to its line. Use a literal specifier to make
-the target analyzable.
+A sourced `export { name } from`, `export * as name from`, or local
+`export { name }` / `export default name` with a missing recorded offset
+produces an `incomplete` entry when the target exports a fragment. A direct
+`import()` or `require()` with a computed argument or missing literal specifier
+fact produces one specifier gap when a binding or call in the loading file
+reaches a proven exported SQL fragment. Dependency coverage gaps also recognize
+configured tagged queries. A readable source is required to attach a finding to
+its line. Use a literal specifier to make the target analyzable.
 
 Literal loads through a `const` initialized by `createRequire(...)` from
-`node:module` or `module` use the recorded call offset. For example,
-`load("./columns.js")` can identify the module even when the loader is named
-`load`. The rule also uses these facts for type-position imports and imports in
-function bodies and call arguments.
+`node:module` or `module` — imported via ES `import`, destructured or read from
+`require("module")` / `require("node:module")`, or called directly via
+`require("module").createRequire(...)` — use the recorded call offset. For
+example, `load("./columns.js")` can identify the module even when the loader is
+named `load`. The rule also uses these facts for type-position imports and
+imports in function bodies and call arguments.
+
+Bounded source-text reads still exist in four places and do not re-parse files:
+scanning `declare module "..."` headers for ambient module targets, reading
+`import alias = ...` / `import alias = require(...)` fallbacks when namespace
+facts are absent or opaque, slicing call and declarator windows to align
+recorded call offsets and detect unrecorded direct `import()` / `require()`
+specifiers, and extracting computed member keys in dynamic call/append
+expressions.
 
 ## Wall time
 
 Measured on 2026-11-20 on one machine. This is a point-in-time comparison,
-not a performance budget. The tree is 301 TypeScript files: one tag module
+not a performance budget. The two runners do not perform equivalent analyses:
+Typed ESLint constructs a full TypeScript typechecked program and requests
+semantic diagnostics across the project and TypeScript library, whereas
+`no-mistakes check` runs AST and prepared-fact checks without a TypeScript
+typechecker. The tree is 301 TypeScript files: one tag module
 and 300 modules that default-import it, export an interpolation-free tagged
 template, and call `.append` on that export. The check config sets
 `trustedSqlTags` to that module's default export. Each runner discards one
@@ -129,11 +143,13 @@ reported line identifies the write, rebind, or escape.
 - `const parts = require(...)`, `import ext = require(...)`, and
   `await import(...)`, including `.then`. A member on that call, such as
   `require("./producer").version`, is not the whole module.
-- An `export { local as public }` of an imported fragment, and an exported
-  binding whose value is a member of an imported namespace.
+- An `export { local as public }` or `export default local` of an imported
+  fragment, and an exported binding whose value is a member of an imported
+  namespace.
 
 Literal loads through a `const` initialized by `createRequire(...)` are recorded
-by the shared import visitor, including calls inside functions. The factory must
+by the shared import visitor, including calls inside functions and CommonJS
+`require("module")` / `require("node:module")` forms. The factory must
 come from `node:module` or `module`. A non-literal argument remains unproven.
 
 A member read that is the sole argument of `.append(...)` is not an escape.
@@ -160,9 +176,13 @@ resolved non-code files are outside this search. Missing paths and aliases
 with a recognized asset extension such as `.json` or `.css` stay silent.
 Missing relative and absolute code imports (including Windows drive paths)
 and missing code targets of configured path aliases can add an entry.
-A `#` specifier can also add an entry when it matches an `imports` mapping in
-the importing file's indexed workspace package and its local code target is
-missing. Unmapped `#` specifiers and other unknown bare imports stay silent.
+In the shared import graph, `#`-prefixed specifiers and Windows drive paths are
+classified as project-local (`ImportTarget::Unresolved` when missing) to favor
+recall over precision; see [graph edges](../graph-edges.md#import-target-classification).
+This rule narrows `#` specifiers against the importing file's indexed workspace
+package `imports` map: a `#` specifier adds an entry when it matches a mapping
+whose local code target is missing, while unmapped `#` specifiers and other
+unknown bare imports stay silent.
 A use of the configured trusted tag itself is not a fragment; other
 bindings from the same project specifier still follow the ordinary fragment
 checks. `check` exits 1 when the report contains an incomplete entry, even if

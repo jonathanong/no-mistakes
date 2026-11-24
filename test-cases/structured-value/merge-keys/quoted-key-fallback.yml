@@ -1,0 +1,5 @@
+first: 1
+--- # second document
+note: '<<: ignored in single quotes'
+runtime:
+  "<<": 7

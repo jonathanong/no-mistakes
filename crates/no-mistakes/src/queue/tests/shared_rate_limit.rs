@@ -71,6 +71,24 @@ fn shared_queue_rate_limit_reports_only_mixed_queues() {
     .unwrap());
 }
 
+#[test]
+fn shared_queue_and_per_process_rate_limit_both_report_on_mixed_queue() {
+    let root = fixture("shared-rate-limit");
+    let report = analyze_project(&root, None, &[]).unwrap();
+    let kinds: Vec<_> = report
+        .check
+        .iter()
+        .filter(|finding| finding.file == "mixed-call.ts" && finding.line == 4)
+        .map(|finding| finding.kind.as_str())
+        .collect();
+    assert_eq!(
+        kinds,
+        vec!["shared-queue-rate-limit", "worker-rate-limit-per-process"],
+        "mixed-queue worker.rateLimit() reports both independent findings: {:?}",
+        report.check
+    );
+}
+
 fn with_source(root: &std::path::Path, file: &str, line: usize, mut value: Value) -> Value {
     let source = fs::read_to_string(root.join(file)).unwrap_or_default();
     let text = source

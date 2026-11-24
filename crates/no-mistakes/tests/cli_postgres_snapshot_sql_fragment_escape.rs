@@ -437,3 +437,39 @@ fn postgres_sql_fragment_escape_load_and_coverage_gaps_snapshot() {
         .unwrap()
         .contains("has a fatal parse error"));
 }
+
+#[test]
+fn postgres_sql_fragment_escape_cjs_create_require_snapshot() {
+    let root = rules_path(
+        "postgres-sql-fragment-escape",
+        "fixtures",
+        "cjs-create-require",
+    );
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_cjs_create_require",
+        &[("cjs", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let cjs = &reports["cjs"];
+    assert_eq!(cjs["exitCode"], 1);
+    let report = &cjs["report"];
+    let findings = report["rules"].as_array().expect("findings");
+    for file in ["destructured.cjs", "direct.cjs"] {
+        assert!(
+            findings.iter().any(|finding| {
+                finding["rule"] == "postgres-sql-fragment-escape"
+                    && finding["file"] == file
+                    && finding["sourceLine"] == "parts.append(extra);"
+            }),
+            "{file}: {findings:?}"
+        );
+    }
+    let gaps = report["incomplete"].as_array().expect("incomplete");
+    assert_eq!(gaps.len(), 1, "{gaps:?}");
+    assert_eq!(gaps[0]["file"], "computed-gap.cjs");
+    assert!(gaps[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("no recorded specifier"));
+}

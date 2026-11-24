@@ -1,0 +1,13 @@
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env: ${{ fromJSON(vars.JOB_ENV) }}
+    steps:
+      - name: dynamic step env
+        env: ${{ fromJSON(vars.STEP_ENV) }}
+        run: echo ok
+      - name: empty env
+        env:
+        run: echo ok

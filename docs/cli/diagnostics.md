@@ -210,6 +210,17 @@ worker pool. `rules.finalize` measures result assembly and any rule-local
 suppression after the join. The enclosing domain also includes prerequisite
 checks and dispatch.
 
+Verbose timings report work done by request-scoped disable-comment indexes.
+Counters appear when the corresponding work is recorded.
+
+| Counter | Work counted |
+| --- | --- |
+| `suppression.header_builds` | File-directive header indexes initialized. Each shared source builds its header at most once per request. |
+| `suppression.line_index_builds` | Line-directive indexes initialized. A source can have separate indexes for scans with and without quote tracking. |
+| `suppression.line_visits` | Lines visited as those indexes extend through requested finding lines. Covered lines are reused on later lookups in the same quote mode. |
+| `suppression.lexer_line_visits` | The subset of line visits that run the inline-comment scanner for `no-mistakes-disable-line`. |
+| `suppression.standalone_fallbacks` | Suppression calls or file lookups that fall back to a standalone index without the request's shared source store. |
+
 For graph-finalization regressions, verbose `check` output separates
 `graph.forward_adjacency_normalization`, `graph.reverse_adjacency_normalization`,
 `graph.canonical_flatten`, and `graph.ordinal_construction`. Playwright-enabled

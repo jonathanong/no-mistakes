@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "sites": [
+    {
+      "key": "63db9981eeef83b4650c5f3b142fc1dc#1",
+      "file": "locks.sql",
+      "category": "for-update"
+    }
+  ]
+}

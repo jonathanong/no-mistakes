@@ -78,15 +78,14 @@ pub(super) fn embedded_call_facts_with_policy(
                     collect_bounds,
                     &call.recovered_placeholder_positions,
                     projection,
-                    policy.collect_json_writes,
-                    policy.collect_index_probes,
-                    policy.collect_body_bounds,
+                    policy.clone(),
                 )
             } else if call.lock_scope_analysis
                 || policy.collect_json_writes
                 || policy.collect_index_probes
                 || policy.collect_body_bounds
                 || policy.collect_grouping
+                || policy.collect_lock_inventory
             {
                 extract_sql_statement_facts_with_policy(
                     sql,

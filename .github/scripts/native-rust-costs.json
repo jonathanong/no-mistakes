@@ -1,7 +1,7 @@
 {
   "version": 1,
   "platform": "macOS",
-  "shards": 2,
+  "shards": 3,
   "defaultWeight": 1,
   "noticeThresholdSeconds": 60,
   "interpretation": "Heuristic scheduling weight units derived from conservative whole-second lower bounds, not exact per-case durations or wall-time forecasts. Unmeasured cases use an equal placeholder weight of 1.",

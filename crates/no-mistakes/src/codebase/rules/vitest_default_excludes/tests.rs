@@ -177,3 +177,32 @@ fn files_option_checks_factory_modules_and_deduplicates_with_config() {
 fn file_suppression_covers_a_malformed_config() {
     assert!(run("malformed-suppressed.yml").is_empty());
 }
+
+#[test]
+fn overlapping_files_and_config_with_test_projects_report_every_line_once() {
+    let root = normalize_path(
+        &Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/vitest-default-excludes/fixture/overlap"),
+    );
+    let config = load(&root, ".no-mistakes.yml");
+    let files = [
+        root.join("vitest.config.ts"),
+        root.join("factories/shared.ts"),
+    ];
+    let findings =
+        super::super::filesystem_dispatch::run_filesystem_rules_with_config(&root, &config, &files)
+            .unwrap();
+    assert_eq!(check_with_files(&root, &config, &files).unwrap(), findings);
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        [
+            ("factories/shared.ts", 6),
+            ("vitest.config.ts", 5),
+            ("vitest.config.ts", 9),
+            ("vitest.config.ts", 14),
+        ]
+    );
+}

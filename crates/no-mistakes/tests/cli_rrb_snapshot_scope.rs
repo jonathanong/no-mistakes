@@ -167,7 +167,9 @@ fn query_projection_work(output: &std::process::Output, metric: &str) -> u64 {
     String::from_utf8_lossy(&output.stderr)
         .lines()
         .find_map(|line| line.strip_prefix(&prefix))
-        .map_or(0, |count| count.parse().unwrap())
+        .unwrap_or_else(|| panic!("missing work counter: {metric}"))
+        .parse()
+        .unwrap()
 }
 
 #[test]

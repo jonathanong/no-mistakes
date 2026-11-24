@@ -272,3 +272,101 @@ fn runner_prepare_limits_call_fact_work_to_configured_sources() {
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].target.as_deref(), Some("missing"));
 }
+
+#[test]
+fn include_discovered_files_overwrites_vitest_default_excludes_from_prepare() {
+    let factories_root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/vitest-default-excludes/fixture/factories"),
+    );
+    let factories_config = no_mistakes::config::v2::load_v2_config(&factories_root, None).unwrap();
+    let factories_snapshot =
+        no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&factories_root);
+    let factories_files = factories_snapshot
+        .paths_for(&factories_root)
+        .as_ref()
+        .clone();
+    let factories_sources = factories_snapshot.source_store_for(&factories_root);
+    let mut plan = CheckFactPlan::default();
+
+    let mut demand =
+        super::prepare(&factories_root, &factories_config, &mut plan, false, false).unwrap();
+    assert!(plan.vitest_default_exclude_paths.is_empty());
+    assert!(!demand.needs_shared_facts());
+
+    demand
+        .include_discovered_files(
+            &factories_root,
+            &factories_config,
+            &factories_files,
+            &factories_sources,
+            &mut plan,
+        )
+        .unwrap();
+    let expected_factories = vec![
+        factories_root.join("config/vitest-bad-factory.ts"),
+        factories_root.join("config/vitest-good-factory.ts"),
+    ];
+    assert_eq!(
+        plan.vitest_default_exclude_paths
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>(),
+        expected_factories
+    );
+    assert!(demand.needs_shared_facts());
+    assert_eq!(demand.primary_files(factories_files), expected_factories);
+
+    let overlap_root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/vitest-default-excludes/fixture/overlap"),
+    );
+    let overlap_config = no_mistakes::config::v2::load_v2_config(&overlap_root, None).unwrap();
+    let overlap_snapshot =
+        no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&overlap_root);
+    let overlap_files = overlap_snapshot.paths_for(&overlap_root).as_ref().clone();
+    let overlap_sources = overlap_snapshot.source_store_for(&overlap_root);
+    let mut overlap_plan = CheckFactPlan::default();
+
+    let mut overlap_demand = super::prepare(
+        &overlap_root,
+        &overlap_config,
+        &mut overlap_plan,
+        false,
+        false,
+    )
+    .unwrap();
+    assert_eq!(
+        overlap_plan
+            .vitest_default_exclude_paths
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>(),
+        vec![overlap_root.join("vitest.config.ts")]
+    );
+    overlap_demand
+        .include_discovered_files(
+            &overlap_root,
+            &overlap_config,
+            &overlap_files,
+            &overlap_sources,
+            &mut overlap_plan,
+        )
+        .unwrap();
+    let expected_overlap = vec![
+        overlap_root.join("factories/shared.ts"),
+        overlap_root.join("vitest.config.ts"),
+    ];
+    assert_eq!(
+        overlap_plan
+            .vitest_default_exclude_paths
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>(),
+        expected_overlap
+    );
+    assert_eq!(
+        overlap_demand.primary_files(overlap_files),
+        expected_overlap
+    );
+}

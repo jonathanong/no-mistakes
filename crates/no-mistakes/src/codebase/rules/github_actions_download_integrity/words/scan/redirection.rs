@@ -17,7 +17,7 @@ impl Scan<'_> {
                     flush_command(&mut self.current, &mut self.commands);
                     self.current.anchor = self.index + 1;
                     self.heredoc_ranges.push(self.index..index);
-                    self.pending = Some(opener);
+                    self.pending.push(opener);
                     self.index = index;
                 }
             }

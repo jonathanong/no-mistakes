@@ -79,14 +79,20 @@
   ],
   "events": {
     "workflow": {
+      "action": "completed",
       "workflow_run": {
         "name": "Test CI",
         "event": "push",
         "head_branch": "main",
         "repository": {
-          "full_name": "jonathanong/no-mistakes"
+          "full_name": "example/widgets"
         },
-        "path": ".github/workflows/ci.yml"
+        "head_repository": {
+          "full_name": "example/widgets"
+        },
+        "path": ".github/workflows/ci.yml",
+        "status": "completed",
+        "conclusion": "success"
       }
     },
     "closed": {
@@ -96,7 +102,7 @@
         "base": {
           "ref": "main",
           "repo": {
-            "full_name": "jonathanong/no-mistakes"
+            "full_name": "example/widgets"
           }
         }
       }
@@ -104,7 +110,7 @@
     "push": {
       "ref": "refs/heads/main",
       "repository": {
-        "full_name": "jonathanong/no-mistakes"
+        "full_name": "example/widgets"
       }
     }
   },

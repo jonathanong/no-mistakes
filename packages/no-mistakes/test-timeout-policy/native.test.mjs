@@ -189,7 +189,9 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.forcedCleanup).toBe(false);
     });
     it("uses separate outer containment for a blocked event loop", { timeout: 10000 }, async () => {
-      const result = await fixture(fixtureSource("native.test-17.txt"));
+      const result = await fixture(fixtureSource("native.test-17.txt"), undefined, "", undefined, {
+        allowSignal: true,
+      });
       expect(result.signal).toBe("SIGKILL");
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(true);

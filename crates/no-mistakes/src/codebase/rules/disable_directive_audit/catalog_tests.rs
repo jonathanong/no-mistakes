@@ -6,11 +6,17 @@ fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {
     let directory = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/codebase/rules");
     let declarations =
         regex::Regex::new(r#"pub const (?:[A-Z_]*RULE_ID): &str =\s*"([^"]+)";"#).unwrap();
+    let includes = regex::Regex::new(r#"(?m)^include!\("([^"]+)"\);"#).unwrap();
     let modules = regex::Regex::new(r"(?m)^pub mod ([a-z_]+);").unwrap();
+    let mut inventory = String::from(include_str!("../mod.rs"));
+    for include in includes.captures_iter(include_str!("../mod.rs")) {
+        inventory.push('\n');
+        inventory.push_str(&std::fs::read_to_string(directory.join(&include[1])).unwrap());
+    }
     let mut declared = BTreeSet::new();
     // Follow the explicit module inventory, not a recursive filesystem walk.
     // This independently catches new core rules missing the manual audit list.
-    for module in modules.captures_iter(include_str!("../mod.rs")) {
+    for module in modules.captures_iter(&inventory) {
         let leaf = directory.join(format!("{}.rs", &module[1]));
         let path = if leaf.is_file() {
             leaf
@@ -53,16 +59,7 @@ fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {
     for rule in declared
         .iter()
         .map(String::as_str)
-        .chain(
-            crate::config::v2::schema::postgres_executors::RULE_IDS
-                .iter()
-                .copied(),
-        )
-        .chain(
-            super::super::filesystem_dispatch::FILESYSTEM_RULE_IDS
-                .iter()
-                .copied(),
-        )
+        .chain(registered.iter().copied())
     {
         assert!(
             known_rule(rule),

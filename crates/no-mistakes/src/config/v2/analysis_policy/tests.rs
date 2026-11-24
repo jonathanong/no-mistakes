@@ -68,6 +68,28 @@ fn default_analysis_adds_no_serialized_fields_or_options() {
 }
 
 #[test]
+fn config_load_and_direct_options_validate_effort_for_disabled_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/rule-analysis-policy/fixture");
+    let path = root.join("invalid-disabled-effort.yml");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let config: NoMistakesConfig = serde_yaml::from_str(&source).unwrap();
+    for error in [
+        super::super::load_v2_config(&root, Some(&path)).unwrap_err(),
+        config.rules[0]
+            .try_rule_options::<serde_yaml::Value>()
+            .unwrap_err(),
+    ] {
+        let error = error.to_string();
+        assert!(
+            error.contains("unique-exports: invalid options.effort"),
+            "{error}"
+        );
+        assert!(error.contains("low") && error.contains("max"), "{error}");
+    }
+}
+
+#[test]
 fn shared_options_do_not_leak_into_rule_specific_deserializers() {
     #[derive(Deserialize, Default)]
     #[serde(deny_unknown_fields)]

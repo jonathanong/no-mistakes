@@ -8,10 +8,34 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "src/adjacency.ts",
+          "line": 18,
+          "message": "src/adjacency.ts:18: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/adjacency.ts",
           "line": 5,
           "message": "src/adjacency.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await tx.query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/later-access.ts",
+          "line": 19,
+          "message": "src/later-access.ts:19: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/later-access.ts",
+          "line": 27,
+          "message": "src/later-access.ts:27: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "redundant-prelock"
         },
         {
@@ -68,6 +92,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/unsupported-sql.ts:53: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM jobs * WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unsupported-sql.ts",
+          "line": 71,
+          "message": "src/unsupported-sql.ts:71: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: the following multi-row upsert can affect the locked key; cannot prove the pre-lock is redundant",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "unanalyzable"
         }
       ],

@@ -123,11 +123,11 @@ graph. Details:
 - On a shared machine, run heavy cargo jobs one at a time with capped
   parallelism, prefer CI for coverage, and push early. See
   [shared machines](CONTRIBUTING.md#shared-machines-and-memory).
-- Size CI jobs that do real work to 5–10 minutes: merge setup-heavy shards,
-  split long jobs, and add no `needs:` hop for a short job. Aggregate gates
-  are exempt ([CI builds](docs/development/ci-builds.md)).
+- Never serialize parallel work ([CI builds](docs/development/ci-builds.md)).
 - Performance measurement rules and gates:
   [core performance guidance](crates/no-mistakes/AGENTS.md).
+- A PR description shows how the change behaves: a saved-fixture input, the exact command, and
+  its full output before and after. A case table or elided output does not count.
 
 ### Public surface checklist
 

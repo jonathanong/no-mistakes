@@ -158,8 +158,9 @@ invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
 
-[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) has a
-strict uncertainty contract instead of these policy overrides.
+[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options)
+always reports incomplete SQL and uses one analysis mode. Its rule options
+reject `unanalyzable` and `unanalyzableSql`.
 
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 also consumes the shared policy, but deliberately stays advisory only: its
@@ -259,13 +260,9 @@ for one rule application. This rule has no low-effort analysis, so
 incomplete-analysis reporting is independent of the `effort` setting. See the
 [rule contract](../rules/shellcheck-runner.md#what-it-catchesrequires).
 
-Rule applications that support alternate effort levels can set
-`options.effort: low` or `options.effort: max`. The repository-level
-`effort` defaults to `max`; a rule option overrides it, and the invocation
-option overrides both. `max` preserves current analysis. `low` is available
-only for rules that explicitly adopt it. If an adopted low-effort rule needs a
-partner check that is absent or outside its configured scope, it warns and
-falls back to `max` for that rule.
+Rule applications share the [effort option](README.md). When a rule's low
+mode requires a partner check that is absent or outside its configured scope,
+the check warns and falls back to `max` for that rule.
 
 [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md#effort)
 supports `low`: prove a literal annotation at the call or through one local
@@ -515,6 +512,14 @@ enable `options.nestedBelowStepTimeout` and name the action input with
 strictly below the workflow step's timeout. The option defaults to `false`.
 The comparison uses the values in the workflow. Unknown operands follow
 `options.unanalyzable`.
+
+For [`github-actions-env-policy`](../rules/github-actions-env-policy.md),
+`options.required` maps an `env:` name to its only allowed value and
+`options.forbidden` lists names that must not appear. Both default to empty,
+which reports nothing. Workflow, job, step and composite `runs.steps` scopes are
+read. A required value written as `${{ }}` cannot be judged statically and
+follows `options.unanalyzable` (default `advise`). See the
+[env policy options](../rules/github-actions-env-policy.md#options-and-defaults).
 
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),
 `options.assumeWriteWhenUnspecified` defaults to `false`. Leave it off unless
@@ -922,4 +927,4 @@ identities rather than line numbers. Added sites and stale entries report;
 unresolved SQL is listed separately and prevents rewriting the baseline.
 Initialize or prune it with
 [`postgres lock-inventory --write-baseline`](../cli/postgres-lock-inventory.md).
-An existing baseline can only lose sites.
+Record reviewed additions manually in the baseline before pruning.

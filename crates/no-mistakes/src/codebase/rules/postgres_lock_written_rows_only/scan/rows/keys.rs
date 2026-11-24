@@ -12,6 +12,9 @@ pub(in super::super) fn compare_keys(
     if std::ptr::eq(lock_call, write_call) && lock_call.caller_transaction_id.is_none() {
         let (lock_column, lock_key) = lock.key.as_ref()?;
         let (write_column, write_key) = write.key.as_ref()?;
+        if lock_key.starts_with([':', '?']) || write_key.starts_with([':', '?']) {
+            return None;
+        }
         return (lock_column == write_column).then_some(lock_key == write_key);
     }
     let (lock_column, lock_key) = proven_key(lock, lock_call)?;
@@ -19,7 +22,13 @@ pub(in super::super) fn compare_keys(
     (lock_column == write_column).then_some(lock_key == write_key)
 }
 
-fn proven_key<'a>(row: &'a RowAccess, call: &EmbeddedSqlCall) -> Option<(&'a str, String)> {
+pub(in super::super) fn proven_key<'a>(
+    row: &'a RowAccess,
+    call: &EmbeddedSqlCall,
+) -> Option<(&'a str, String)> {
+    if row.key_identity_unproven {
+        return None;
+    }
     if let (Some((column, at)), Some(_)) = (&row.recovered_key, call.caller_transaction_id) {
         if call.bound_value_sql != call.sql_text {
             return None;

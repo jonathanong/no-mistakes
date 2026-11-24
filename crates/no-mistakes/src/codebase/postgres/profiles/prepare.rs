@@ -110,6 +110,7 @@ pub(crate) fn prepare_rule_sql_facts(
         postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
         postgres_body_bounds: rule_ids.contains(&"postgres-bounded-statements")
             && super::plan::body_bounds_requested(config),
+        postgres_lock_inventory: rule_ids.contains(&"postgres-lock-inventory"),
         postgres_json_writes: rule_ids.contains(&"postgres-json-relation-ids")
             && config
                 .rule_applications("postgres-json-relation-ids")

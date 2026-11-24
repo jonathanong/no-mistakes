@@ -1,6 +1,6 @@
 use super::{
-    access, generated_name, has_share, object_name_identity, unresolved, PlaceholderPositions,
-    RowAccess,
+    access, generated_name, object_name_identity, sequence_mode, unknown_share, unresolved,
+    PlaceholderPositions, RowAccess, RowLockMode, SequenceMode,
 };
 use crate::codebase::postgres::idents::{ident_key, relation_part_key};
 use sqlparser::ast::{
@@ -11,10 +11,11 @@ use std::collections::BTreeMap;
 pub(super) fn collect_explicit(
     query: &Query,
     positions: PlaceholderPositions<'_>,
+    modes: Option<&[RowLockMode]>,
     track_share: bool,
-) -> Vec<(RowAccess, bool)> {
+) -> Vec<(RowAccess, Option<SequenceMode>)> {
     let SetExpr::Select(select) = query.body.as_ref() else {
-        return vec![(unresolved(), has_share(query))];
+        return vec![(unresolved(), unknown_share(query, track_share))];
     };
     let relations = relation_index(select);
     let target = |lock: &LockClause| {
@@ -34,10 +35,10 @@ pub(super) fn collect_explicit(
         .filter(|lock| track_share && lock.lock_type == LockType::Update)
         .filter_map(|lock| target(lock).map(std::ptr::from_ref))
         .collect();
-    let mut locks = Vec::new();
-    for lock in &query.locks {
+    let mut locks: Vec<(RowAccess, Option<SequenceMode>)> = Vec::new();
+    for (index, lock) in query.locks.iter().enumerate() {
         let Some(factor) = target(lock) else {
-            return vec![(unresolved(), has_share(query))];
+            return vec![(unresolved(), unknown_share(query, track_share))];
         };
         let mut row = access(factor, select.selection.as_ref(), positions);
         if query.locks.len() > 1 && row.key.is_none() {
@@ -51,13 +52,32 @@ pub(super) fn collect_explicit(
                 row.key_identity_unproven |= keyed.key_identity_unproven;
             }
         }
-        let shared = track_share
+        let mode = if let Some(modes) = modes {
+            match modes.get(index).copied().and_then(sequence_mode) {
+                Some(SequenceMode::Share | SequenceMode::KeyShare)
+                    if upgrades.contains(&std::ptr::from_ref(factor)) =>
+                {
+                    None
+                }
+                mode => mode,
+            }
+        } else if track_share
             && lock.lock_type == LockType::Share
-            && !upgrades.contains(&std::ptr::from_ref(factor));
-        if let Some((_, prior_shared)) = locks.iter_mut().find(|(candidate, _)| *candidate == row) {
-            *prior_shared |= shared;
+            && !upgrades.contains(&std::ptr::from_ref(factor))
+        {
+            Some(SequenceMode::UnknownShare)
         } else {
-            locks.push((row, shared));
+            None
+        };
+        if let Some((_, prior)) = locks.iter_mut().find(|(candidate, _)| *candidate == row) {
+            if prior.is_none()
+                || *prior == Some(SequenceMode::Update)
+                || mode == Some(SequenceMode::Share)
+            {
+                *prior = mode.or(*prior);
+            }
+        } else {
+            locks.push((row, mode));
         }
     }
     locks

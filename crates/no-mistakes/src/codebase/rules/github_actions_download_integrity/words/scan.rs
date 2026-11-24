@@ -20,7 +20,7 @@ struct Scan<'a> {
     quoting: Option<char>,
     current: Command,
     commands: Vec<Command>,
-    pending: Option<heredoc::Opener>,
+    pending: Vec<heredoc::Opener>,
     heredoc_ranges: Vec<Range<usize>>,
     unterminated: bool,
     stop: bool,
@@ -53,7 +53,7 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
             words: Vec::new(),
         },
         commands: Vec::new(),
-        pending: None,
+        pending: Vec::new(),
         heredoc_ranges: Vec::new(),
         unterminated: false,
         stop: false,
@@ -69,7 +69,7 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
     flush_command(&mut scan.current, &mut scan.commands);
     Parse {
         commands: scan.commands,
-        unterminated_heredoc: scan.unterminated || scan.pending.is_some(),
+        unterminated_heredoc: scan.unterminated || !scan.pending.is_empty(),
         unterminated_quote: scan.quoting.is_some(),
         unterminated_substitution: scan.unterminated_substitution || scan.in_backticks,
         substitutions: scan.substitutions,
@@ -144,15 +144,8 @@ impl<'a> Scan<'a> {
         flush_command(&mut self.current, &mut self.commands);
         self.current.anchor = self.index + 1;
         if ch == '\n' {
-            if let Some(opener) = self.pending.take() {
-                let body = heredoc::skip_body(self.chars, self.index, self.line, &opener);
-                self.heredoc_ranges.push(self.index + 1..body.index);
-                self.index = body.index;
-                self.line = body.line;
-                if !body.terminated {
-                    self.unterminated = true;
-                    self.stop = true;
-                }
+            if !self.pending.is_empty() {
+                self.skip_heredocs();
                 return true;
             }
             self.line += 1;
@@ -162,6 +155,23 @@ impl<'a> Scan<'a> {
         }
         self.index += 1;
         true
+    }
+
+    fn skip_heredocs(&mut self) {
+        let start = self.index + 1;
+        self.index = start;
+        self.line += 1;
+        for opener in self.pending.drain(..) {
+            let body = heredoc::skip_body(self.chars, self.index, self.line, &opener);
+            self.index = body.index;
+            self.line = body.line;
+            if !body.terminated {
+                self.unterminated = true;
+                self.stop = true;
+                break;
+            }
+        }
+        self.heredoc_ranges.push(start..self.index);
     }
 
     fn whitespace(&mut self, ch: char) -> bool {

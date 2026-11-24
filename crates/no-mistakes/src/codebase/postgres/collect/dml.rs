@@ -46,21 +46,26 @@ pub(super) fn collect(
         })
         .collect::<Result<Vec<_>, _>>()?;
     for file in embedded {
-        facts.extend(if policy.collect_grouping || policy.collect_json_writes {
-            embedded_call_facts_with_policy(
-                file,
-                collect_bounds,
-                false,
-                if policy.collect_grouping {
-                    SqlLocationDemand::Full
-                } else {
-                    SqlLocationDemand::None
-                },
-                policy.clone(),
-            )
-        } else {
-            embedded_call_facts(file, collect_bounds, false)
-        });
+        facts.extend(
+            if policy.collect_grouping
+                || policy.collect_json_writes
+                || policy.collect_lock_inventory
+            {
+                embedded_call_facts_with_policy(
+                    file,
+                    collect_bounds,
+                    false,
+                    if policy.collect_grouping {
+                        SqlLocationDemand::Full
+                    } else {
+                        SqlLocationDemand::None
+                    },
+                    policy.clone(),
+                )
+            } else {
+                embedded_call_facts(file, collect_bounds, false)
+            },
+        );
     }
     facts.sort_by(|left, right| left.path.cmp(&right.path));
     Ok(facts)
