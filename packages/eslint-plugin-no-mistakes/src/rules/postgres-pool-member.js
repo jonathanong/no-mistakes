@@ -38,7 +38,9 @@ function memberEntry(index, node) {
   const classBody = receiver.parent;
   if (!index.has(classBody)) index.set(classBody, new Map());
   const members = index.get(classBody);
-  if (!members.has(id)) members.set(id, { writes: 0, hasListener: false, usesAccessor: false });
+  if (!members.has(id)) {
+    members.set(id, { writes: 0, lastField: null, hasListener: false, usesAccessor: false });
+  }
   return members.get(id);
 }
 

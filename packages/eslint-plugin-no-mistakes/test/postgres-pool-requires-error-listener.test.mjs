@@ -30,6 +30,7 @@ it("snapshots PostgreSQL pool error listener diagnostics", async () => {
       poolCase("destructured-shadowed.js"),
       poolCase("destructured-unsupported.js"),
       poolCase("member-accepted.js"),
+      poolCase("member-constructor-accepted.ts"),
       poolCase("commonjs-accepted.cjs"),
     ],
     invalid: [
@@ -37,6 +38,7 @@ it("snapshots PostgreSQL pool error listener diagnostics", async () => {
       poolCase("identity.ts"),
       poolCase("member-missing.js"),
       poolCase("member-types.ts"),
+      poolCase("member-constructor-missing.ts"),
       poolCase("commonjs-missing.cjs"),
       poolCase("commonjs-missing.cjs", [{ extraModules }]),
       poolCase("nested-destructured.js"),

@@ -17,6 +17,11 @@ function namespaceSource(node, context) {
   );
 }
 
+function poolMemberSource(node, context) {
+  const member = unwrapExpression(node);
+  return memberPropertyName(member) === "Pool" ? namespaceSource(member.object, context) : null;
+}
+
 function objectPropertyValue(node, key) {
   const object = unwrapExpression(node);
   if (object?.type !== "ObjectExpression" || key === "__proto__") return null;
@@ -33,12 +38,13 @@ function objectPropertyValue(node, key) {
   return null;
 }
 
-function destructuredPoolSource(identifier, context) {
+function localPoolSource(identifier, context) {
   const definitions = resolveVariable(identifier, context)?.defs;
   if (definitions?.length !== 1) return null;
   const [definition] = definitions;
   if (definition.type !== "Variable" || definition.parent.kind !== "const") return null;
   const declarator = definition.node;
+  if (declarator.id.type === "Identifier") return poolMemberSource(declarator.init, context);
   const property = definition.name.parent;
   if (
     property?.type !== "Property" ||
@@ -69,13 +75,10 @@ function isPoolConstructor(node, context, modules) {
   const callee = unwrapExpression(node.callee);
   if (callee.type === "Identifier") {
     const imported = importedBinding(callee, context);
-    const source =
-      imported?.name === "Pool" ? imported.source : destructuredPoolSource(callee, context);
+    const source = imported?.name === "Pool" ? imported.source : localPoolSource(callee, context);
     return modules.has(source);
   }
-  return (
-    memberPropertyName(callee) === "Pool" && modules.has(namespaceSource(callee.object, context))
-  );
+  return modules.has(poolMemberSource(callee, context));
 }
 
 module.exports = { isPoolConstructor };

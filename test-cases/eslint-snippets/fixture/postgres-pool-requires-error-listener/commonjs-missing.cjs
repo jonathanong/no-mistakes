@@ -11,3 +11,9 @@ const { connection: { Pool: NestedPool } } = { connection: pg };
 new NestedPool();
 
 new (require("@example/pg-compatible").Pool)();
+
+const DirectPool = require("pg").Pool;
+new DirectPool();
+
+const MemberPool = pg.Pool;
+new MemberPool();

@@ -65,11 +65,11 @@ export const pool = new DatabasePool({ host: "example.invalid" });
 pool.on("error", console.error);
 ```
 
-Both the destructured constructor binding and the module binding resolve
-lexically. In CommonJS, a literal `require("pg")` can supply a destructured
-`Pool` or a `.Pool` member directly or through a stable `const` module binding.
-Parameters or local variables can shadow `Pool`, `pg`, or `require`. The rule
-checks runtime bindings from the configured modules.
+The local constructor and its module binding resolve lexically. The rule follows
+destructuring and direct `const` aliases such as `const Pool = pg.Pool` and
+`const Pool = require("pg").Pool`. `pg` can be a default or namespace import or
+a stable `const` initialized by a literal `require`. Parameters and local
+variables can shadow `Pool`, `pg`, or `require`.
 
 A direct `this` member also works for class-field initializers and assignments.
 
@@ -77,10 +77,11 @@ A direct `this` member also works for class-field initializers and assignments.
 import { Pool } from "pg";
 
 export class Database {
-  #pool = new Pool();
+  private pool: Pool;
 
   constructor() {
-    this.#pool.on("error", console.error);
+    this.pool = new Pool();
+    this.pool.on("error", console.error);
   }
 }
 ```
@@ -121,9 +122,9 @@ separate stable bindings and register each instance explicitly.
 Class member matching follows a directly named `this` property within the
 same class. Static and instance properties are tracked independently. Use a
 field with one recognized write and register directly on `this.pool` or
-`this["pool"]`. An uninitialized runtime field such as TypeScript's
-`pool: Pool` counts as a write, so a later assignment is a second write.
-A TypeScript `declare pool: Pool` field is erased. Receiver aliases, accessors,
+`this["pool"]`. A field without an initializer leaves the constructor assignment
+as the sole write. A later runtime declaration of the same field can still
+replace a pool installed by a field initializer. Receiver aliases, accessors,
 inherited fields, dynamic keys, and deeper chains such as `this.database.pool`
 fall outside this matching.
 

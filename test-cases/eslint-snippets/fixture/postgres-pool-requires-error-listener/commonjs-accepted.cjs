@@ -5,6 +5,8 @@ pool.on("error", console.error);
 
 function localRequire(require) {
   const { Pool } = require("pg");
+  const Alias = require("pg").Pool;
+  new Alias();
   return new Pool();
 }
 
@@ -13,10 +15,16 @@ function localPool(Pool) {
 }
 
 function localNamespace(pg) {
+  const Alias = pg.Pool;
+  new Alias();
   return new pg.Pool();
 }
+
+const MemberPool = pg.Pool;
+const memberPool = new MemberPool();
+memberPool.on("error", console.error);
 
 const { connection: { Pool: UnknownPool } } = require("pg");
 new UnknownPool();
 
-module.exports = { pool, localRequire, localPool, localNamespace };
+module.exports = { pool, memberPool, localRequire, localPool, localNamespace };

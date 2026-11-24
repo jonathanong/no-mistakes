@@ -84,7 +84,10 @@ module.exports = rule(
           if (!isField && !isAccessor) continue;
           const member = memberEntry(members, definition);
           if (!member) continue;
-          if (isField) member.writes += 1;
+          if (isField) {
+            member.lastField = definition;
+            if (definition.value) member.writes += 1;
+          }
           if (isAccessor) member.usesAccessor = true;
         }
       },
@@ -107,7 +110,14 @@ module.exports = rule(
           const binding = poolBinding(node);
           if (binding?.type === "Identifier" && hasBoundErrorListener(binding, context)) continue;
           const member = binding && memberEntry(members, binding);
-          if (member?.writes === 1 && member.hasListener && !member.usesAccessor) continue;
+          if (
+            member?.writes === 1 &&
+            member.hasListener &&
+            !member.usesAccessor &&
+            (binding.type !== "PropertyDefinition" || member.lastField === binding)
+          ) {
+            continue;
+          }
           context.report({ node, messageId: "missingErrorListener" });
         }
       },
