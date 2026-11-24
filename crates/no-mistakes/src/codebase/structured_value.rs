@@ -81,7 +81,7 @@ pub(crate) fn parse_structured_value_located(
     if contains_merge(&value) {
         MergeLocations::parse(source)
             .expand(0, &mut value)
-            .map_err(|(line, error)| (line, merge_error(&error)))?;
+            .map_err(|(line, error)| (Some(line), merge_error(&error)))?;
     }
     Ok(value)
 }
@@ -98,10 +98,7 @@ pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
                 if contains_merge(&value) {
                     let locations = locations.get_or_insert_with(|| MergeLocations::parse(source));
                     if let Err((line, error)) = locations.expand(doc_index, &mut value) {
-                        errors.push((
-                            line.unwrap_or_else(|| locations.document_start(doc_index)),
-                            merge_error(&error),
-                        ));
+                        errors.push((line, merge_error(&error)));
                         continue;
                     }
                 }

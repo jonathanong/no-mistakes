@@ -341,3 +341,23 @@ fn locates_a_merge_error_before_a_later_yaml_syntax_error() {
         .contains("failed to apply YAML merge keys"));
     assert!(documents.errors[1].1.contains("failed to parse YAML"));
 }
+
+#[test]
+fn workflow_merge_supports_values_without_source_text() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/workflow-topology-policy/fixture/valid-nested-merges/.github/workflows/job.yml"
+    );
+    let value = serde_yaml::from_str(source).unwrap();
+    let expanded = super::expand_yaml_mapping_if_merged(&value, None).unwrap();
+    assert_eq!(
+        expanded["jobs"]["verify"]["timeout-minutes"].as_i64(),
+        Some(8)
+    );
+
+    let source = include_str!(
+        "../../../../../test-cases/rules/workflow-topology-policy/fixture/merge-keys/.github/workflows/job-only.yml"
+    );
+    let value = serde_yaml::from_str(source).unwrap();
+    let error = super::expand_yaml_mapping_if_merged(&value, None).unwrap_err();
+    assert!(error.contains("failed to apply YAML merge keys"), "{error}");
+}

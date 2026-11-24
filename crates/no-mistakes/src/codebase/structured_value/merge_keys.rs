@@ -15,7 +15,7 @@ pub(crate) fn expand_merge_keys(value: &mut Value) -> Result<(), String> {
 pub(super) fn expand_located(
     value: &mut Value,
     line_for_key: &impl Fn(&Value) -> Option<usize>,
-) -> Result<(), (Option<usize>, String)> {
+) -> Result<(), (usize, String)> {
     let mut pending = vec![value];
     while let Some(value) = pending.pop() {
         match value {
@@ -38,23 +38,21 @@ pub(super) fn expand_located(
 fn take_merge(
     mapping: &mut Mapping,
     line_for_key: &impl Fn(&Value) -> Option<usize>,
-) -> Option<(Value, Option<usize>)> {
+) -> Option<(Value, usize)> {
     if !mapping.contains_key("<<") {
         return None;
     }
     let key = mapping.keys().find(|key| key.as_str() == Some("<<"))?;
     let line = line_for_key(key)?;
-    mapping
-        .shift_remove("<<")
-        .map(|merge| (merge, (line != 0).then_some(line)))
+    mapping.shift_remove("<<").map(|merge| (merge, line))
 }
 
 fn merge_sources(
     mapping: &mut Mapping,
     merge: Value,
-    line: Option<usize>,
+    line: usize,
     line_for_key: &impl Fn(&Value) -> Option<usize>,
-) -> Result<(), (Option<usize>, String)> {
+) -> Result<(), (usize, String)> {
     let mut pending = Vec::new();
     push_merge_sources(merge, &mut pending).map_err(|message| (line, message))?;
     // Each source's explicit keys win over its own merge, which is consumed

@@ -5,13 +5,8 @@ use serde_yaml::Value;
 
 #[derive(Default)]
 pub(super) struct MergeLocations {
-    documents: Vec<Document>,
+    roots: Vec<Option<usize>>,
     nodes: Vec<Node>,
-}
-
-struct Document {
-    start: usize,
-    root: Option<usize>,
 }
 
 struct Node {
@@ -32,7 +27,7 @@ impl MergeLocations {
         let options = granit_parser::options! { emit_comments: false };
         let mut locations = Self::default();
         let mut anchors = FxHashMap::default();
-        let mut stack = Vec::new();
+        let mut stack: Vec<usize> = Vec::new();
         for event in Parser::new_from_str_with_options(source, options) {
             let Ok((event, span)) = event else {
                 break;
@@ -40,10 +35,7 @@ impl MergeLocations {
             let line = span.start.line();
             let (anchor, kind) = match event {
                 Event::DocumentStart(..) => {
-                    locations.documents.push(Document {
-                        start: line,
-                        root: None,
-                    });
+                    locations.roots.push(None);
                     anchors.clear();
                     continue;
                 }
@@ -67,12 +59,12 @@ impl MergeLocations {
                 anchors.insert(anchor, id);
             }
             if let Some(&parent) = stack.last() {
-                let node: &mut Node = &mut locations.nodes[parent];
-                if let Kind::Mapping(children) | Kind::Sequence(children) = &mut node.kind {
-                    children.push(id);
+                match &mut locations.nodes[parent].kind {
+                    Kind::Mapping(children) | Kind::Sequence(children) => children.push(id),
+                    _ => unreachable!("only collections enter the YAML parent stack"),
                 }
-            } else if let Some(document) = locations.documents.last_mut() {
-                document.root = Some(id);
+            } else {
+                *locations.roots.last_mut().expect("YAML document start") = Some(id);
             }
             locations.nodes.push(Node { line, kind });
             if collection {
@@ -82,21 +74,12 @@ impl MergeLocations {
         locations
     }
 
-    pub(super) fn document_start(&self, index: usize) -> usize {
-        self.documents
-            .get(index)
-            .map_or(1, |document| document.start)
-    }
-
-    pub(super) fn expand(
-        &self,
-        index: usize,
-        value: &mut Value,
-    ) -> Result<(), (Option<usize>, String)> {
+    pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), (usize, String)> {
         let lines = self
-            .documents
+            .roots
             .get(index)
-            .and_then(|document| document.root)
+            .copied()
+            .flatten()
             .map_or_else(FxHashMap::default, |root| self.key_lines(root, value));
         expand_located(value, &|key| {
             key.as_str()
