@@ -388,7 +388,7 @@ scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
 `bannedSettings` checks named settings in SET commands and literal `set_config`
 calls, including recovered routine bodies and static EXECUTE. Opt-in
 `bannedClauses` rejects explicit extension versions and cascading drops, including
-`ALTER TABLE ... DROP COLUMN ... CASCADE` and `TRUNCATE ... CASCADE`, using the
+`ALTER TABLE` column and constraint drops and `TRUNCATE ... CASCADE`, using the
 same SQL-file and finite embedded-alternative scope. See
 [statement policy](rules/postgres-sql-statement-policy.md).
 

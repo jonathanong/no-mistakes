@@ -34,7 +34,7 @@ function importedBinding(identifier, context) {
 
 // `const { sql } = db` is the imported member `db.sql`. A default on the
 // property can bind something else, and a computed identifier key is not static.
-function destructuredImport(identifier, context, { allowDefault = false } = {}) {
+function destructuredImport(identifier, context) {
   const variable = resolveVariable(identifier, context);
   if (!variable) return null;
   if (variable.defs.length !== 1) return null;
@@ -50,7 +50,7 @@ function destructuredImport(identifier, context, { allowDefault = false } = {}) 
   const key = staticKeyName(property);
   if (!key) return null;
   const imported = importedBinding(unwrapExpression(declarator.init), context);
-  if (imported?.kind === "namespace" || (allowDefault && imported?.kind === "default")) {
+  if (imported?.kind === "namespace") {
     return { name: key, source: imported.source };
   }
   return null;

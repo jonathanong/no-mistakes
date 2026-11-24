@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "clause_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/policy.sql",
+          "line": 1,
+          "message": "sql/policy.sql:1: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP EXTENSION IF EXISTS widgets, widget_tools CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 2,
+          "message": "sql/policy.sql:2: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP SEQUENCE IF EXISTS widgets.id_seq, widgets.audit_seq CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 3,
+          "message": "sql/policy.sql:3: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP DOMAIN IF EXISTS widgets.label CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 4,
+          "message": "sql/policy.sql:4: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TRIGGER IF EXISTS audit_change ON widgets.records CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 5,
+          "message": "sql/policy.sql:5: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER TABLE widgets.records",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 7,
+          "message": "sql/policy.sql:7: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER TABLE widgets.archive",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "sql/suppressed.sql",
+          "line": 4,
+          "message": "sql/suppressed.sql:4: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP DOMAIN widgets.label CASCADE;",
+          "target": "clause:drop-cascade"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 3,
+          "message": "src/policy.test.ts:3: SQL must omit CASCADE here. Handle dependent objects explicitly before running this statement",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(`DROP TRIGGER audit_change ON widgets.records CASCADE`);",
+          "target": "clause:drop-cascade"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

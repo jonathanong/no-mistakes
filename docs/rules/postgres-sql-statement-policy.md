@@ -207,6 +207,9 @@ CREATE EXTENSION IF NOT EXISTS widgets VERSION '1.4';
 DROP VIEW widget_summary CASCADE;
 ```
 
+The explicit empty `bannedStatements` list makes this a clause-only policy.
+Omitting that option also enables the seven default statement-kind bans.
+
 Omit `VERSION` to use the server's default extension version. Drop dependent
 objects explicitly in dependency order, then use `RESTRICT` on the original
 drop so unexpected dependencies stop the migration.
@@ -217,11 +220,22 @@ DROP VIEW widget_dashboard RESTRICT;
 DROP VIEW widget_summary RESTRICT;
 ```
 
-For an intentional exception, place the suppression above the statement.
+For an intentional exception, use a next-line directive above the statement,
+a line directive on the statement's first line, or a file directive for a
+dedicated exception file.
 
 ```sql
 -- no-mistakes-disable-next-line postgres-sql-statement-policy
 CREATE EXTENSION IF NOT EXISTS widgets VERSION '1.4';
+```
+
+```sql
+DROP VIEW widget_summary CASCADE; -- no-mistakes-disable-line postgres-sql-statement-policy
+```
+
+```sql
+-- no-mistakes-disable-file postgres-sql-statement-policy
+DROP VIEW widget_summary CASCADE;
 ```
 
 ## Why and when
@@ -261,7 +275,12 @@ name is a configuration error.
 | Clause name | SQL matched |
 | --- | --- |
 | `create-extension-version` | An explicit `VERSION` option in `CREATE EXTENSION`. |
-| `drop-cascade` | `CASCADE` on `DROP VIEW`, `DROP MATERIALIZED VIEW`, `DROP TABLE`, `DROP FUNCTION`, `DROP TYPE`, `DROP SCHEMA`, `DROP INDEX`, `ALTER TABLE ... DROP [COLUMN] ...`, and `TRUNCATE`. |
+| `drop-cascade` | `CASCADE` on `DROP VIEW`, `DROP MATERIALIZED VIEW`, `DROP TABLE`, `DROP FUNCTION`, `DROP TYPE`, `DROP SCHEMA`, `DROP INDEX`, `DROP EXTENSION`, `DROP SEQUENCE`, single-name `DROP DOMAIN`, `DROP TRIGGER ... ON ...`, `ALTER TABLE ... DROP [COLUMN] ...`, `ALTER TABLE ... DROP CONSTRAINT ...`, and `TRUNCATE`. |
+
+Clause coverage excludes `ALTER EXTENSION ... UPDATE TO`, `DROP OWNED ... CASCADE`,
+and multi-name `DROP DOMAIN ... CASCADE`. `CREATE EXTENSION ... CASCADE` installs
+required extensions and falls outside the cascading-drop policy. See
+[PostgreSQL's `CREATE EXTENSION` documentation](https://www.postgresql.org/docs/17/sql-createextension.html).
 
 The rule reports a matched clause once per statement at the statement's start
 with target `clause:<name>`. It checks SQL files selected by `sqlInclude` and
@@ -364,8 +383,9 @@ statement-policy violations.
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-sql-statement-policy` or
-`no-mistakes-disable-file` for an approved exception, rather than silently
-moving the file outside all policy coverage.
+`no-mistakes-disable-line postgres-sql-statement-policy` for an approved
+statement exception. Use `no-mistakes-disable-file postgres-sql-statement-policy`
+for an approved file exception.
 
 SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 

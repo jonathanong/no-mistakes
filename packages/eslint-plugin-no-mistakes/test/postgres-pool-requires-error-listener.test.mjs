@@ -12,7 +12,10 @@ function poolCase(name, options) {
     code: fixture(`${rule}/${name}`),
     filename: `${rule}/${name}`,
     options,
-    languageOptions: name.endsWith(".ts") ? { parser: tsParser } : undefined,
+    languageOptions: {
+      ...(name.endsWith(".ts") ? { parser: tsParser } : {}),
+      ...(name.endsWith(".cjs") ? { sourceType: "commonjs" } : {}),
+    },
   };
 }
 
@@ -26,10 +29,19 @@ it("snapshots PostgreSQL pool error listener diagnostics", async () => {
       poolCase("destructured-accepted.js"),
       poolCase("destructured-shadowed.js"),
       poolCase("destructured-unsupported.js"),
+      poolCase("member-accepted.js"),
+      poolCase("member-constructor-accepted.ts"),
+      poolCase("commonjs-accepted.cjs"),
     ],
     invalid: [
       poolCase("missing.js"),
       poolCase("identity.ts"),
+      poolCase("member-missing.js"),
+      poolCase("member-types.ts"),
+      poolCase("member-constructor-missing.ts"),
+      poolCase("commonjs-missing.cjs"),
+      poolCase("commonjs-missing.cjs", [{ extraModules }]),
+      poolCase("nested-destructured.js"),
       poolCase("extra-modules.js"),
       poolCase("extra-modules.js", [{ extraModules }]),
       poolCase("destructured-missing.js"),
