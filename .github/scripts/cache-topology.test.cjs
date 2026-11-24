@@ -106,9 +106,11 @@ test("benchmark PRs use artifact transport while main may save and probe the han
 
 test("pnpm stores restore on PRs but save only on main", () => {
   const setups = steps(workflow).filter((step) => /uses: pnpm\/setup@/.test(step));
-  const retries = setups.filter((step) => /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step));
+  const retries = setups.filter((step) =>
+    /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
+  );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 32);
+  assert.equal(setups.length, 34);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);
@@ -122,4 +124,20 @@ test("pnpm stores restore on PRs but save only on main", () => {
     assert.doesNotMatch(step, /cache: true/);
     assert.doesNotMatch(step, /save-cache/);
   }
+});
+
+test("Windows smoke restores the workspace snapshot that main's Windows producer saves", () => {
+  const smoke = job("windows-smoke");
+  const restore = steps(smoke).find((step) => /uses: actions\/cache\/restore@/.test(step));
+  assert.ok(restore);
+  assert.doesNotMatch(smoke, /actions\/cache\/save@/);
+  const key = (step) =>
+    step
+      .match(/key: (native-runtime-workspace-v2-.*)\n/)[1]
+      .replaceAll("${{ matrix.target }}", "x86_64-pc-windows-msvc");
+  const producer = steps(job("native-build")).find((step) =>
+    /uses: actions\/cache\/restore@/.test(step),
+  );
+  assert.equal(key(restore), key(producer));
+  assert.equal(paths(restore), paths(producer));
 });

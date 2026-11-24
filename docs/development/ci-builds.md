@@ -38,23 +38,26 @@ The current validation graph is organized as follows:
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
-  Windows runs six Rust shards and six real-addon API shards; macOS runs two of
-  each, with every selected case still executed once.
+  On `main`, Windows runs six Rust shards and six real-addon API shards and
+  macOS runs two of each, with every selected case still executed once.
   macOS has two tiers because GitHub allows only five concurrent macOS jobs
   account-wide, so macOS runners are the queue bottleneck. Windows is not
-  queue-bound and runs its full set on every pull request.
+  queue-bound, but its 14 jobs were about a quarter of pull request CI cost and
+  counted against the account's 40-job concurrency limit, so it has the same
+  two tiers.
   A pull request runs one `macOS smoke` job (`macos-smoke`) instead of the
   full sharded macOS suite. It builds the CLI and N-API addon, runs
   `check` on one saved fixture, and runs the explicit OS-dependent list in
-  `.github/scripts/macos-smoke-tests.cjs`: the macOS invocation and global-lock
+  `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
   harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
   check invocation tests, one `analyzeProject` call on a saved fixture through
   the built addon, and real-addon API tests for the cross-process lock, rename
   semantics, and diagnostics. The dependency-report API tests stay in the full
   suite because their expected output depends on which test first sizes the
   process Rayon pool. The list is explicit,
-  not heuristic, and `macos-smoke-tests.test.cjs` fails when a listed file,
-  test target or test name no longer exists. The job runs for every pull
+  not heuristic, and `smoke-tests.test.cjs` fails when a listed file,
+  test target or test name no longer exists, and `smoke.cjs` fails when a
+  listed Cargo target runs zero tests. The job runs for every pull
   request whose Rust scope is not independent (`rust-pr-scope.cjs`); there is
   no separate macOS path filter.
   The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
@@ -63,11 +66,28 @@ The current validation graph is organized as follows:
   an OS-only regression outside the smoke list surfaces on `main` after merge
   instead of on the pull request. The release workflow is a manual dispatch
   and does not read `main` CI results, so the maintainer must confirm `main` is
-  green, including the full macOS jobs, before dispatching a release. `Native tests` accepts the skipped
+  green, including the full macOS and Windows jobs, before dispatching a release. `Native tests` accepts the skipped
   full macOS jobs on a pull request, requires `macOS smoke` to succeed, and
-  still fails when any Windows job did not succeed. `Tests with coverage` keeps
-  requiring `Native tests` to succeed, and the smoke job is not a separate
-  required check. The release workflow does not use these outputs.
+  likewise accepts the skipped full Windows jobs and requires `Windows smoke`
+  on a pull request. `Tests with coverage` keeps requiring `Native tests` to
+  succeed, and the smoke jobs are not separate required checks. The release
+  workflow does not use these outputs.
+  A pull request likewise runs one `Windows smoke` job (`windows-smoke`,
+  windows-2025) instead of the 14 full Windows jobs (`native-build`,
+  `native-test-build`, six `native-rust-tests` and six `native-api-tests`
+  shards), so a push starts at most one Windows job. It restores the Windows
+  workspace cache that `main` builds, builds the CLI and N-API addon, runs
+  `check` on one saved fixture, runs `analyzeProject` through the built addon,
+  and runs the Windows list in `.github/scripts/smoke-tests.cjs`: the Job
+  Object and console code page harness (`tests/windows_job_object.rs`), the
+  portable CLI invocation tests (`tests/windows_invocation.rs`, which includes
+  `tests/cli_invocation.rs`), the cross-process lock and rename API tests,
+  drive-letter and UNC path normalization, and the Windows native package
+  resolution tests. Those cases cover path separators, drive letters, CRLF
+  output, file locking and native
+  runtime loading. The full Windows jobs run unchanged on pushes to `main` and
+  manual dispatch; the same trade-off and release check as macOS apply. Pull
+  requests from forks skip the Defender exclusion step, as before.
   A push to `main` also places each macOS build in `ci-macos-main-<job>-all` and
   each macOS test shard in `ci-macos-main-<job>-<shard>`.
   `cancel-in-progress` stays false, so the running job finishes and a newer

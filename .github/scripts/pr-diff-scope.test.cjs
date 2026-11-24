@@ -292,3 +292,63 @@ test("pull requests compare Rust paths from the merge base", () => {
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test("pull requests run one Windows smoke job and the full Windows suite runs elsewhere", () => {
+  assert.match(source, /windows: \$\{\{ github\.event_name != 'pull_request' \}\}/);
+  assert.match(
+    source,
+    /windows-smoke: \$\{\{ github\.event_name == 'pull_request' && steps\.rust-paths\.outputs\.rust != 'false' \}\}/,
+  );
+  const fullWindows = [
+    "native-build",
+    "native-test-build",
+    "native-rust-tests",
+    "native-api-tests",
+  ];
+  for (const name of fullWindows) {
+    const body = workflowJob(source, name);
+    assert.match(body, /needs\.changes\.outputs\.windows == 'true'/, name);
+    assert.match(body, /windows-2025/, name);
+  }
+  assert.doesNotMatch(workflowJob(source, "windows-smoke"), /concurrency:/);
+
+  const native = workflowJob(source, "native-tests");
+  assert.match(native, /WINDOWS_REQUIRED: \$\{\{ needs\.changes\.outputs\.windows \}\}/);
+  const needs = native
+    .match(/needs:\s*\[([^\]]+)\]/)[1]
+    .split(",")
+    .map((name) => name.trim());
+  assert.ok(needs.includes("windows-smoke"));
+  const script = native.split("        run: |\n")[1].replace(/^          /gm, "");
+  const success = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
+  const withResult = (names, result) => ({
+    ...success,
+    ...Object.fromEntries(names.map((name) => [name, { result }])),
+  });
+  const gate = (results, windows, rust = "true") =>
+    spawnSync("bash", ["-eu", "-c", script], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        MACOS_REQUIRED: "false",
+        MACOS_EVENT: "pull_request",
+        MACOS_REF: "refs/pull/1/merge",
+        WINDOWS_REQUIRED: windows,
+        RUST_REQUIRED: rust,
+        RESULTS: JSON.stringify(results),
+      },
+    }).status;
+  const skipped = withResult(fullWindows, "skipped");
+
+  // Pull request: the full Windows jobs are skipped and the smoke job must pass.
+  assert.equal(gate(skipped, "false"), 0);
+  assert.equal(gate({ ...skipped, "windows-smoke": { result: "failure" } }, "false"), 1);
+  assert.equal(gate({ ...skipped, "windows-smoke": { result: "skipped" } }, "false"), 1);
+  assert.equal(gate({ ...skipped, "windows-smoke": { result: "skipped" } }, "false", "false"), 0);
+  // Full run: the smoke job is skipped and the full Windows jobs must pass.
+  assert.equal(gate(withResult(["windows-smoke"], "skipped"), "true"), 0);
+  assert.equal(gate(withResult([...fullWindows, "windows-smoke"], "skipped"), "true"), 1);
+  assert.equal(gate({ ...success, "native-api-tests": { result: "failure" } }, "true"), 1);
+  assert.equal(gate({ ...skipped, "native-build": { result: "failure" } }, "false"), 1);
+  assert.equal(gate(skipped, ""), 1);
+});

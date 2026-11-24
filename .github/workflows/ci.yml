@@ -70,6 +70,9 @@ jobs:
       # Pushes and workflow_dispatch run the full suite. Release is a separate workflow.
       macos: ${{ github.event_name != 'pull_request' }}
       macos-smoke: ${{ github.event_name == 'pull_request' && steps.rust-paths.outputs.rust != 'false' }}
+      # Pull requests run one Windows smoke job instead of the full Windows suite.
+      windows: ${{ github.event_name != 'pull_request' }}
+      windows-smoke: ${{ github.event_name == 'pull_request' && steps.rust-paths.outputs.rust != 'false' }}
       rust: ${{ github.event_name != 'pull_request' || steps.rust-paths.outputs.rust != 'false' }}
 
     steps:
@@ -352,7 +355,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/macos-smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs
@@ -1028,7 +1031,7 @@ jobs:
   native-build:
     name: Native build (${{ matrix.name }})
     needs: changes
-    if: ${{ needs.changes.outputs.rust == 'true' }}
+    if: ${{ needs.changes.outputs.rust == 'true' && needs.changes.outputs.windows == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:
@@ -1415,7 +1418,7 @@ jobs:
   native-test-build:
     name: Native Rust compile (${{ matrix.name }})
     needs: changes
-    if: ${{ needs.changes.outputs.rust == 'true' }}
+    if: ${{ needs.changes.outputs.rust == 'true' && needs.changes.outputs.windows == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:
@@ -1795,6 +1798,7 @@ jobs:
   native-rust-tests:
     name: Native Rust tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: [changes, native-test-build]
+    if: ${{ needs.changes.outputs.windows == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -2017,6 +2021,7 @@ jobs:
   native-api-tests:
     name: Native API tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: [changes, native-build]
+    if: ${{ needs.changes.outputs.windows == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -2295,7 +2300,7 @@ jobs:
             target/native-api-tests-summary.md
 
   # PR-only macOS tier: one build, then an explicit OS-dependent test list from
-  # .github/scripts/macos-smoke-tests.cjs. main and workflow_dispatch run the
+  # .github/scripts/smoke-tests.cjs. main and workflow_dispatch run the
   # full sharded macOS jobs instead. See docs/development/ci-builds.md.
   # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   macos-smoke:
@@ -2418,11 +2423,11 @@ jobs:
 
       - name: Run CLI check on a saved fixture
         timeout-minutes: 2
-        run: node .github/scripts/macos-smoke.cjs cli ./target/debug/no-mistakes
+        run: node .github/scripts/smoke.cjs macos cli ./target/debug/no-mistakes
 
       - name: Run macOS-dependent Rust tests
         timeout-minutes: 15
-        run: node .github/scripts/macos-smoke.cjs rust
+        run: node .github/scripts/smoke.cjs macos rust
 
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -2434,11 +2439,175 @@ jobs:
 
       - name: Run analyzeProject on a saved fixture
         timeout-minutes: 2
-        run: node .github/scripts/macos-smoke.cjs napi target/debug/no-mistakes.node
+        run: node .github/scripts/smoke.cjs macos napi target/debug/no-mistakes.node
 
       - name: Run N-API smoke tests
         timeout-minutes: 10
-        run: node .github/scripts/macos-smoke.cjs api target/debug/no-mistakes.node
+        run: node .github/scripts/smoke.cjs macos api target/debug/no-mistakes.node
+
+  # PR-only Windows tier: one build, then an explicit OS-dependent test list from
+  # .github/scripts/smoke-tests.cjs. main and workflow_dispatch run the
+  # full sharded Windows jobs instead. See docs/development/ci-builds.md.
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
+  windows-smoke:
+    name: Windows smoke
+    needs: changes
+    if: ${{ needs.changes.outputs.windows-smoke == 'true' }}
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
+          install: false
+
+      - name: Install Rust
+        id: native-rust-toolchain
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' }}
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
+        with:
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Restore native workspace artifacts built on main
+        id: native-workspace-cache
+        if: ${{ env.COLD_BUILD != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: native-runtime-workspace-v2-x86_64-pc-windows-msvc-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            native-runtime-workspace-v2-x86_64-pc-windows-msvc-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            native-runtime-workspace-v2-x86_64-pc-windows-msvc-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
+
+      # Rewrite crate-type in this job only so one rustc emits the CLI rlib
+      # and Node cdylib. Do not commit that crate-type.
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
+      - name: Build native CLI and N-API addon
+        timeout-minutes: 35
+        shell: bash
+        env:
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          rm -rf target/native-build-diagnostics
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("crates/no-mistakes/Cargo.toml")
+          text = path.read_text()
+          old = 'crate-type = ["rlib"]'
+          new = 'crate-type = ["rlib", "cdylib"]'
+          if old not in text:
+              raise SystemExit(f"expected {old!r} in {path}")
+          path.write_text(text.replace(old, new, 1))
+          PY
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          node .github/scripts/build-native.cjs
+          cp target/debug/no_mistakes.dll target/debug/no-mistakes.node
+
+      - name: Upload native build diagnostics
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: windows-smoke-build-diagnostics
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 1
+          path: |
+            target/native-build-diagnostics
+
+      - name: Run CLI check on a saved fixture
+        timeout-minutes: 2
+        run: node .github/scripts/smoke.cjs windows cli ./target/debug/no-mistakes.exe
+
+      - name: Run Windows-dependent Rust tests
+        timeout-minutes: 15
+        run: node .github/scripts/smoke.cjs windows rust
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: pnpm run build:js
+
+      - name: Run analyzeProject on a saved fixture
+        timeout-minutes: 2
+        run: node .github/scripts/smoke.cjs windows napi target/debug/no-mistakes.node
+
+      - name: Run N-API smoke tests
+        timeout-minutes: 10
+        run: node .github/scripts/smoke.cjs windows api target/debug/no-mistakes.node
 
   native-tests:
     name: Native tests
@@ -2454,6 +2623,7 @@ jobs:
         native-api-tests,
         native-api-tests-macos,
         macos-smoke,
+        windows-smoke,
       ]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
@@ -2467,8 +2637,9 @@ jobs:
           MACOS_REQUIRED: ${{ needs.changes.outputs.macos }}
           MACOS_EVENT: ${{ github.event_name }}
           MACOS_REF: ${{ github.ref }}
+          WINDOWS_REQUIRED: ${{ needs.changes.outputs.windows }}
         run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const mainPush=process.env.MACOS_EVENT==="push"&&process.env.MACOS_REF==="refs/heads/main"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; const producer={ "native-rust-tests-macos":"native-test-build-macos", "native-api-tests-macos":"native-build-macos" }; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (process.env.RUST_REQUIRED==="false" && job.result==="skipped" && /^(native-(build|test-build|rust-tests|api-tests)(-macos)?|macos-smoke)$/.test(name)) continue; if (macos.test(name) && job.result==="skipped" && allow) continue; if (name==="macos-smoke" && job.result==="skipped" && !allow && process.env.MACOS_REQUIRED==="true") continue; if (macos.test(name) && job.result==="cancelled" && mainPush) continue; if (mainPush && job.result==="skipped" && producer[name] && jobs[producer[name]] && jobs[producer[name]].result==="cancelled") continue; console.error(name+": "+job.result); process.exitCode=1; }'
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const mainPush=process.env.MACOS_EVENT==="push"&&process.env.MACOS_REF==="refs/heads/main"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; const windows=/^(native-build|native-test-build|native-rust-tests|native-api-tests)$/; const producer={ "native-rust-tests-macos":"native-test-build-macos", "native-api-tests-macos":"native-build-macos" }; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (process.env.RUST_REQUIRED==="false" && job.result==="skipped" && /^(native-(build|test-build|rust-tests|api-tests)(-macos)?|macos-smoke|windows-smoke)$/.test(name)) continue; if (macos.test(name) && job.result==="skipped" && allow) continue; if (name==="macos-smoke" && job.result==="skipped" && !allow && process.env.MACOS_REQUIRED==="true") continue; if (windows.test(name) && job.result==="skipped" && process.env.WINDOWS_REQUIRED==="false") continue; if (name==="windows-smoke" && job.result==="skipped" && process.env.WINDOWS_REQUIRED==="true") continue; if (macos.test(name) && job.result==="cancelled" && mainPush) continue; if (mainPush && job.result==="skipped" && producer[name] && jobs[producer[name]] && jobs[producer[name]].result==="cancelled") continue; console.error(name+": "+job.result); process.exitCode=1; }'
   standalone-build:
     name: Build standalone library tests
     needs: changes

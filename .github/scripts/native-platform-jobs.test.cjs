@@ -78,7 +78,7 @@ test("native platform jobs retain complete six-shard Windows and two-shard macOS
   }
 });
 
-test("native aggregate requires all eight platform producer and consumer jobs and the macOS smoke job", () => {
+test("native aggregate requires all eight platform producer and consumer jobs and both smoke jobs", () => {
   const body = job("native-tests");
   const needs = body
     .match(/needs:\s*\[([^\]]+)\]/)[1]
@@ -88,7 +88,7 @@ test("native aggregate requires all eight platform producer and consumer jobs an
     .sort();
   assert.deepEqual(
     needs,
-    ["changes", "macos-smoke", ...families.flatMap((name) => [name, `${name}-macos`])].sort(),
+    ["changes", "macos-smoke", "windows-smoke", ...families.flatMap((name) => [name, `${name}-macos`])].sort(),
   );
   assert.match(body, /name: Native tests\n/);
   assert.match(body, /^    if: \$\{\{ !cancelled\(\) \}\}$/m);
