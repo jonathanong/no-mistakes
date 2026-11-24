@@ -295,6 +295,9 @@ jobs:
       - name: Test PostgreSQL setup policy
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
+      - name: Test Codex rules eval runner
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s evals
       - name: Test Rust disk diagnostics
         timeout-minutes: 2
         run: node --test .github/scripts/rust-disk-usage.test.cjs .github/scripts/drop-rust-test-executables.test.cjs
