@@ -4,7 +4,7 @@
 
 "Never serialize parallel work."
 
-For job sizing, see `jong-skills:github-actions-authoring`.
+For job sizing, see the `github-actions-authoring` skill.
 
 ## Parallel CI layout and measured baseline
 
