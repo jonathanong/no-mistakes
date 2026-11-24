@@ -59,8 +59,9 @@ The current validation graph is organized as follows:
   `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
   `main` and manual dispatch, where they are unchanged. The trade-off is that
   an OS-only regression outside the smoke list surfaces on `main` after merge
-  instead of on the pull request. A release needs a green `main`, so such a
-  regression still blocks the release. `Native tests` accepts the skipped
+  instead of on the pull request. The release workflow is a manual dispatch
+  and does not read `main` CI results, so the maintainer must confirm `main` is
+  green, including the full macOS jobs, before dispatching a release. `Native tests` accepts the skipped
   full macOS jobs on a pull request, requires `macOS smoke` to succeed, and
   still fails when any Windows job did not succeed. `Tests with coverage` keeps
   requiring `Native tests` to succeed, and the smoke job is not a separate
