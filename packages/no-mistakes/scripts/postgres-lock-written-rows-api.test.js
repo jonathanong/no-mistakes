@@ -11,6 +11,8 @@ const cases = [
   ["share-lock-sequences", "share-fail.yml", 12, 16],
   ["share-lock-sequences", "share-read-only-fail.yml", 0, 1],
   ["share-lock-sequences", "disabled.yml", 0, 1],
+  ["key-share-key-writes", "share-key-writes.yml", 0, 4],
+  ["key-share-key-writes", "share-advise.yml", 0, 1],
   ["redundant-prelocks", "redundant-advise.yml", 0, 20],
   ["redundant-prelock-boundaries", "redundant-advise.yml", 0, 10],
   ["redundant-prelocks", "redundant-no-catalog.yml", 0, 20],

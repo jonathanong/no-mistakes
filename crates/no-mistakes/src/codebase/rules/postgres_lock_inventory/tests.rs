@@ -303,3 +303,24 @@ fn baseline_path_with_a_regular_file_parent_propagates_the_filesystem_error() {
         Some(std::io::ErrorKind::NotADirectory)
     );
 }
+
+#[test]
+fn cached_baseline_read_failure_keeps_its_io_cause() {
+    use crate::codebase::ts_source::JsonLoadError;
+    let saved = crate::test_support::materialize_saved_fixture(&fixture("invalid-baselines"));
+    let root = saved.path();
+    let baseline_path = root.join("empty.json");
+    let moved = root.join("parked.json");
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&baseline_path));
+    std::fs::rename(&baseline_path, &moved).unwrap();
+    let io = sources.read_path(&baseline_path).unwrap_err();
+    assert_eq!(io.kind(), std::io::ErrorKind::NotFound);
+    std::fs::rename(&moved, &baseline_path).unwrap();
+
+    let error = baseline::read_baseline(root, "empty.json", &sources).unwrap_err();
+    assert!(error.downcast_ref::<baseline::InvalidBaseline>().is_none());
+    let Some(JsonLoadError::Io(cause)) = error.downcast_ref::<JsonLoadError>() else {
+        panic!("expected the cached I/O error: {error:#}");
+    };
+    assert!(std::sync::Arc::ptr_eq(cause, &io));
+}

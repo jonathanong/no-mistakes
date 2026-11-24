@@ -3,7 +3,11 @@ use crate::codebase::postgres::lock_inventory::tokens::Segments;
 mod advisory;
 mod cte_delete;
 mod ddl;
-pub(crate) use {cte_delete::CteWriteLink, ddl::DdlEvent, sequences::SequenceMode};
+pub(crate) use {
+    cte_delete::CteWriteLink,
+    ddl::DdlEvent,
+    sequences::{SequenceMode, ShareStatement},
+};
 mod helpers;
 mod prelock;
 mod row_locks;
@@ -13,7 +17,6 @@ mod settings;
 mod trigger_writes;
 use super::value::PlaceholderPositions;
 pub(crate) use advisory::AdvisoryKey;
-use helpers::generated_name;
 use sqlparser::ast::{BinaryOperator, Expr, Query, Statement, TableFactor, Visit, Visitor};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -154,12 +157,21 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, '_, '_, ADVANCED> {
             Statement::Commit { .. } | Statement::Rollback { .. } => {
                 self.out.transaction_boundary = true
             }
-            Statement::Update(update) => self.out.writes.push(sequences::write(
-                &update.table,
-                update.selection.as_ref(),
-                update.from.is_some(),
-                self.positions,
-            )),
+            Statement::Update(update) => {
+                if let Some(sequence) = self.sequence.as_deref_mut() {
+                    sequence.record_update(
+                        self.out.writes.len(),
+                        &update.assignments,
+                        self.positions,
+                    );
+                }
+                self.out.writes.push(sequences::write(
+                    &update.table,
+                    update.selection.as_ref(),
+                    update.from.is_some(),
+                    self.positions,
+                ));
+            }
             Statement::Delete(delete) => {
                 if let Some(row) = sequences::delete(delete, self.positions) {
                     if let Some(sequence) = self.sequence.as_deref_mut() {
@@ -169,7 +181,7 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, '_, '_, ADVANCED> {
                 }
             }
             Statement::Lock(lock) => self.out.table_locks.extend(lock.tables.iter().map(|table| {
-                (!generated_name(&table.name, self.positions))
+                (!helpers::generated_name(&table.name, self.positions))
                     .then(|| object_name_identity(&table.name))
             })),
             _ => {}

@@ -19,7 +19,7 @@ pub(super) fn scan(
     catalog: unique::CatalogContext<'_, '_>,
 ) {
     if options.track_share_lock_writes {
-        share::scan(output, file, source, calls, grouped, unresolved);
+        share::scan(output, (file, source), calls, grouped, unresolved, catalog);
     }
     if options.track_redundant_prelocks {
         variants::scan_redundant(output, file, source, calls, grouped);
