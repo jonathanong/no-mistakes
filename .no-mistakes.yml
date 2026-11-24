@@ -139,5 +139,5 @@ rules:
       rejectStepExceedingJob: true
       rejectJobAtOrAboveStepSum: true
       allow:
-        - job: .github/workflows/ci.yml#bench
+        - job: .github/workflows/benchmarks.yml#bench
           maxMinutes: 60
