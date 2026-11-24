@@ -5,10 +5,11 @@ use crate::queue::graph_model::{
     ProjectReport,
 };
 use crate::queue::source::relative_string;
+use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::{
     Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, RelationshipEdge, RelationshipNode,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[path = "graph_checks.rs"]
@@ -18,8 +19,9 @@ pub(super) fn build_report(
     producers: Vec<InternalProducer>,
     workers: Vec<InternalWorker>,
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> ProjectReport {
-    build_report_and_relationships(root, producers, workers, facts).0
+    build_report_and_relationships(root, producers, workers, facts, test_scope).0
 }
 
 pub(super) fn build_prepared_report(
@@ -27,8 +29,10 @@ pub(super) fn build_prepared_report(
     producers: Vec<InternalProducer>,
     workers: Vec<InternalWorker>,
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> PreparedProjectReport {
-    let (report, relationships) = build_report_and_relationships(root, producers, workers, facts);
+    let (report, relationships) =
+        build_report_and_relationships(root, producers, workers, facts, test_scope);
     let relationships = PreparedRelationshipIndex::from_edges(
         relationships
             .into_iter()
@@ -46,10 +50,19 @@ fn build_report_and_relationships(
     producers: Vec<InternalProducer>,
     workers: Vec<InternalWorker>,
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> (ProjectReport, Vec<RelationshipEdge>) {
-    let producer_index = index_producers(&producers);
-    let worker_index = index_workers(&workers);
-    let wildcards = wildcard_queues(&workers);
+    let prod_producers: Vec<&InternalProducer> = producers
+        .iter()
+        .filter(|producer| !test_scope.is_match(root, &producer.site.file))
+        .collect();
+    let prod_workers: Vec<&InternalWorker> = workers
+        .iter()
+        .filter(|worker| !test_scope.is_match(root, &worker.site.file))
+        .collect();
+    let producer_index = checks::index_producers(&prod_producers);
+    let worker_index = checks::index_workers(&prod_workers);
+    let wildcards = checks::wildcard_queues(&prod_workers);
     let mut relationships = Vec::new();
     let mut check = Vec::new();
     for (job, producers_for_job) in &producer_index {
@@ -66,9 +79,9 @@ fn build_report_and_relationships(
     }
     check.extend(checks::unmatched_workers(
         root,
-        &workers,
+        &prod_workers,
         &producer_index,
-        &producers,
+        &prod_producers,
     ));
     check.extend(crate::queue::job_options::local_checks(root, facts));
     check.extend(crate::queue::cycles::queue_cycles(
@@ -95,36 +108,6 @@ fn build_report_and_relationships(
     report.producers.sort();
     report.workers.sort();
     (report, relationships)
-}
-
-fn index_producers(producers: &[InternalProducer]) -> HashMap<JobKey, Vec<&InternalProducer>> {
-    producers
-        .iter()
-        .filter_map(|p| p.job_key())
-        .fold(HashMap::new(), |mut map, producer| {
-            map.entry(producer.0)
-                .or_insert_with(Vec::new)
-                .push(producer.1);
-            map
-        })
-}
-
-fn index_workers(workers: &[InternalWorker]) -> HashMap<JobKey, Vec<&InternalWorker>> {
-    workers
-        .iter()
-        .flat_map(InternalWorker::job_keys)
-        .fold(HashMap::new(), |mut map, worker| {
-            map.entry(worker.0).or_insert_with(Vec::new).push(worker.1);
-            map
-        })
-}
-
-fn wildcard_queues(workers: &[InternalWorker]) -> HashSet<QueueKey> {
-    workers
-        .iter()
-        .filter(|w| w.site.wildcard)
-        .filter_map(|w| w.queue.clone())
-        .collect()
 }
 
 fn add_matched_job(

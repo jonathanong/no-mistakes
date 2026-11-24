@@ -1,5 +1,6 @@
 use super::{
-    build_filter, build_prepared_report, build_report, queue_project_facts_from_ts, FileFacts,
+    build_filter, build_prepared_report, build_report, queue_project_facts_from_ts,
+    ConfiguredTestScope, FileFacts,
 };
 use super::{
     InternalProducer, InternalWorker, Path, PathBuf, PreparedProjectReport, ProjectReport,
@@ -41,6 +42,7 @@ fn analyze_project_inner<T>(
         Vec<InternalProducer>,
         Vec<InternalWorker>,
         &HashMap<PathBuf, FileFacts>,
+        &ConfiguredTestScope,
     ) -> T,
 ) -> anyhow::Result<T> {
     let session =
@@ -143,8 +145,14 @@ fn analyze_project_inner<T>(
     let remapper =
         crate::codebase::ts_source::FrozenPathRemapper::from_paths(facts.keys().cloned());
     crate::queue::factory_resolve::resolve_imported_queue_names(&mut facts, &resolver, &remapper);
+    let test_scope = loaded_config
+        .as_ref()
+        .map(|config| {
+            ConfiguredTestScope::from_session(root, config.as_ref(), &visible_paths, &session)
+        })
+        .unwrap_or_else(ConfiguredTestScope::empty);
     let queue_defs = queue_definitions(&facts);
-    let definitions = crate::queue::factory_resolve::definition_files(&facts);
+    let definitions = crate::queue::factory_resolve::definition_files(&facts, root, &test_scope);
     let mut producers =
         resolve_producers(&mut facts, &queue_defs, &definitions, &resolver, &remapper);
     let mut workers = resolve_workers(&facts, &definitions, &resolver, &remapper);
@@ -174,5 +182,5 @@ fn analyze_project_inner<T>(
         &resolver,
         &remapper,
     );
-    Ok(builder(root, producers, workers, &facts))
+    Ok(builder(root, producers, workers, &facts, &test_scope))
 }

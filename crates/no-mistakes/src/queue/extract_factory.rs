@@ -53,12 +53,10 @@ pub(super) fn note_queue_binding(
     let Some(arg) = call.arguments.get(index) else {
         return false;
     };
-    let queue_name = visitor.literal_arg(arg);
+    let (queue_name, queue_import) = visitor.resolve_queue_name_arg(arg);
     if let Some(queue_name) = queue_name.clone() {
         visitor.note_queue_declaration(name, declaration, LocalQueue::Known(queue_name));
-    } else if let Some(imported) =
-        identifier_arg(arg).filter(|name| visitor.facts.string_imports.contains_key(name))
-    {
+    } else if let Some(imported) = queue_import {
         visitor.note_queue_declaration(name, declaration, LocalQueue::ImportedName(imported));
     } else {
         return false;

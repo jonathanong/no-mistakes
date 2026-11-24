@@ -1,6 +1,7 @@
 use super::{follow, FileFacts, ImportResolverFacade, LocalQueue, ProducerBinding, Update};
+use crate::queue::test_scope::ConfiguredTestScope;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub(super) fn resolve_names<R: ImportResolverFacade>(
     facts: &mut HashMap<PathBuf, FileFacts>,
@@ -45,25 +46,40 @@ pub(in crate::queue) fn defined_queue_names(file: &FileFacts) -> impl Iterator<I
 
 pub(in crate::queue) fn definition_files(
     facts: &HashMap<PathBuf, FileFacts>,
+    root: &Path,
+    test_scope: &ConfiguredTestScope,
 ) -> HashMap<String, PathBuf> {
     let mut paths = facts.keys().collect::<Vec<_>>();
     paths.sort();
+    let (test_paths, prod_paths): (Vec<_>, Vec<_>) = paths
+        .into_iter()
+        .partition(|path| test_scope.is_match(root, path));
     let mut out = HashMap::new();
     let mut wrappers = std::collections::BTreeSet::new();
-    for path in paths {
-        let file = &facts[path];
-        for name in defined_queue_names(file) {
-            out.entry(name.to_string()).or_insert_with(|| path.clone());
+    // Module-level queue bindings in non-test files win canonical queue ownership
+    // over function-local handles (such as prefixed test/local helpers) and test files.
+    for group in [&prod_paths, &test_paths] {
+        for path in group {
+            for name in facts[*path].queue_bindings.values() {
+                out.entry(name.clone()).or_insert_with(|| (*path).clone());
+            }
         }
-        for producer in &file.producers {
-            match &producer.binding {
-                ProducerBinding::Flow(name) => {
-                    out.entry(name.clone()).or_insert_with(|| path.clone());
+        for path in group {
+            let file = &facts[*path];
+            for name in defined_queue_names(file) {
+                out.entry(name.to_string())
+                    .or_insert_with(|| (*path).clone());
+            }
+            for producer in &file.producers {
+                match &producer.binding {
+                    ProducerBinding::Flow(name) => {
+                        out.entry(name.clone()).or_insert_with(|| (*path).clone());
+                    }
+                    ProducerBinding::QueueName(name) => {
+                        wrappers.insert(name.clone());
+                    }
+                    _ => {}
                 }
-                ProducerBinding::QueueName(name) => {
-                    wrappers.insert(name.clone());
-                }
-                _ => {}
             }
         }
     }

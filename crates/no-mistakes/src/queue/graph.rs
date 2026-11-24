@@ -4,6 +4,7 @@ use crate::queue::graph_build::{build_prepared_report, build_report};
 use crate::queue::graph_model::PreparedProjectReport;
 use crate::queue::graph_model::{build_filter, InternalProducer, InternalWorker, ProjectReport};
 use crate::queue::resolver::{load_tsconfig_from_visible, queue_import_resolver};
+use crate::queue::test_scope::ConfiguredTestScope;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -12,6 +13,7 @@ mod fact_sources;
 mod resolve;
 mod standalone;
 use fact_sources::{queue_project_facts_from_shared, queue_project_facts_from_ts};
+use resolve::resolve_legacy_queue_relationships;
 pub(super) use resolve::resolve_queue_relationships_with_resolver;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -63,6 +65,7 @@ fn analyze_project_with_facts_inner<T>(
         Vec<InternalProducer>,
         Vec<InternalWorker>,
         &HashMap<PathBuf, FileFacts>,
+        &ConfiguredTestScope,
     ) -> T,
 ) -> anyhow::Result<T> {
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
@@ -154,6 +157,7 @@ fn analyze_project_with_prepared_facts_inner<T>(
         Vec<InternalProducer>,
         Vec<InternalWorker>,
         &HashMap<PathBuf, FileFacts>,
+        &ConfiguredTestScope,
     ) -> T,
 ) -> anyhow::Result<T> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
@@ -166,29 +170,4 @@ fn analyze_project_with_prepared_facts_inner<T>(
         shared,
         builder,
     ))
-}
-
-fn resolve_legacy_queue_relationships<T>(
-    root: &Path,
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
-    filter: Option<&globset::GlobSet>,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    builder: impl FnOnce(
-        &Path,
-        Vec<InternalProducer>,
-        Vec<InternalWorker>,
-        &HashMap<PathBuf, FileFacts>,
-    ) -> T,
-) -> T {
-    let facts = queue_project_facts_from_shared(shared, filter, root);
-    let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
-    let base_resolver = queue_import_resolver(tsconfig, root, &visible_files);
-    let workspace = crate::codebase::workspaces::load_indexed_from_files(root, shared.files())
-        .unwrap_or_default();
-    let resolver = crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(
-        &base_resolver,
-        &workspace,
-        &visible_files,
-    );
-    resolve_queue_relationships_with_resolver(root, &facts, &resolver, builder)
 }

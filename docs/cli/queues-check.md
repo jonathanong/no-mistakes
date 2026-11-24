@@ -37,8 +37,8 @@ Findings use these
 
 | `kind` | Meaning |
 | --- | --- |
-| `unmatched-producer` | A job is enqueued and no worker handles it. |
-| `unmatched-worker` | A worker handles a job that no producer enqueues. |
+| `unmatched-producer` | A production job is enqueued and no production worker handles it. Files matched by configured `tests.*` scopes are excluded by default; see [Producer and worker matching](#producer-and-worker-matching). |
+| `unmatched-worker` | A production worker handles a job that no production producer enqueues. Files matched by configured `tests.*` scopes are excluded by default; see [Producer and worker matching](#producer-and-worker-matching). |
 | `unmatched-worker-unresolved-producers` | A producer for this handler did not resolve, so the handler is not known to be dead. The message names those producer lines. A producer with neither a resolved queue nor a resolved job is listed on every unmatched worker. |
 | `self-dedup-enqueue` | A processor enqueues its own job on its own queue with `deduplication.id` or `jobId` taken from the active job. The job binding is a parameter named `job`, or otherwise the processor's first parameter: `task.id` / `task.deduplicationId`, or a destructured `{ name, id }`. A nested callback is not that binding unless one of its parameters is named `job`. A local function or `const` callback passed by name is tied to its configured worker even when declared earlier. A copied `const id = task.id` or `const id = task.deduplicationId` remains a job token within its lexical scope, as does a destructured `const { id } = task` or `const { deduplicationId } = task`. A defaulted binding such as `const { deduplicationId: dedup = "fallback" } = task` is not a token. Unrelated values and shadowed parameters do not. A configured enqueue factory does the same check on its `options` argument. The queue drops that add while the job is active. Publish a new id, or enqueue a different job. The same job name on a different queue is not a finding. If the worker queue or the target queue does not resolve, the check abstains and emits a diagnostic. |
 | `enqueue-and-wait` | Waiting on a job result holds a worker or request slot. Return control instead of blocking on the result. The check covers calls to `addAndWait`, `waitUntilFinished`, and explicitly configured wrappers. |
@@ -95,6 +95,32 @@ helper does not adopt that helper module's job names.
 The scheduler template check takes same-file binding declarations from the
 queue processor index, which already visits the file to resolve named
 callbacks. It groups those declarations by name on the first binding lookup.
+
+## Producer and worker matching
+
+`unmatched-producer`, `unmatched-worker`, `unmatched-worker-unresolved-producers`,
+and production `queues edges` pair production producers with production workers:
+
+- **Configured test scopes are excluded by default:** Files matched by declared
+  `tests.*` scopes in `.no-mistakes.yml` (or a declared Vitest/Playwright
+  config) are excluded from `unmatched-producer`, `unmatched-worker`,
+  `unmatched-worker-unresolved-producers`, and production `queues edges`. No
+  hardcoded filename conventions (`*.test.*`, `__tests__`) are applied when no
+  test scope is declared.
+- **Test-file producers without workers:** A producer inside a configured test
+  scope is not reported as `unmatched-producer` even when no worker exists
+  anywhere, because integration and harness tests commonly enqueue synthetic
+  jobs against partial fixtures. Symmetrically, a worker inside a configured
+  test scope never satisfies a production producer, and a test-file producer
+  never satisfies a production worker.
+- **Same-file raw `new Worker` and configured worker factories:** A raw
+  `new Worker(<queueName>, ...)` (or `new TestWorker(...)`) or a configured
+  `queues.factories.worker` call (including namespace calls and options such as
+  `{ prefix }`) counts as a matching worker for producers on the same queue name,
+  including when the file creates its own `new Queue(<queueName>, ...)` or
+  `createQueue(<queueName>, ...)` handle, aliases an imported queue-name
+  constant, or passes `queue.name`. Non-test files win canonical queue
+  ownership over test files that construct the same queue name.
 
 ## Mixed priority
 

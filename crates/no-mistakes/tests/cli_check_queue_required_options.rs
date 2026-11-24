@@ -110,3 +110,56 @@ fn queue_job_state_as_record_selected_config_check_json_snapshot() {
     assert_eq!(arr[0]["kind"], "job-state-as-record");
     assert_eq!(arr[0]["severity"], "advisory");
 }
+
+#[test]
+fn queue_test_scope_and_same_file_workers_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/test-scope-and-same-file-workers/fixture");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "queue_test_scope_and_same_file_workers",
+        &[("default", root.clone(), PathBuf::new())],
+        &[],
+        &[],
+    );
+    assert_eq!(reports["default"]["exitCode"], 1);
+    let queues = reports["default"]["report"]["queues"].as_array().unwrap();
+    assert_eq!(queues.len(), 1, "{queues:?}");
+    assert_eq!(queues[0]["kind"], "unmatched-producer");
+    assert_eq!(queues[0]["file"], "apps/api/orphan-enqueue.mts");
+    assert_eq!(queues[0]["job"], "never-handled");
+
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args([
+            "queues",
+            "--root",
+            root.to_str().unwrap(),
+            "--format",
+            "json",
+            "check",
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let findings: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let arr = findings.as_array().unwrap();
+    assert_eq!(arr.len(), 1, "{findings}");
+    assert_eq!(arr[0]["file"], "apps/api/orphan-enqueue.mts");
+
+    let edges_output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args([
+            "queues",
+            "--root",
+            root.to_str().unwrap(),
+            "--format",
+            "json",
+            "edges",
+        ])
+        .output()
+        .unwrap();
+    assert!(edges_output.status.success());
+    let edges: serde_json::Value = serde_json::from_slice(&edges_output.stdout).unwrap();
+    for edge in edges.as_array().unwrap() {
+        assert!(!edge["from"].as_str().unwrap().contains("/integration/"));
+        assert!(!edge["to"].as_str().unwrap().contains("/integration/"));
+    }
+}

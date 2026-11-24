@@ -29,6 +29,7 @@ mod priority_mix;
 mod rate_limit;
 mod resolver;
 mod source;
+mod test_scope;
 mod types;
 mod worker_rate_limit;
 

@@ -74,15 +74,11 @@ impl QueueVisitor<'_> {
         if !self.is_worker_constructor(&new_expr.callee) {
             return;
         }
-        let first = new_expr.arguments.first();
-        let queue_name = first.and_then(|arg| self.literal_arg(arg));
-        let queue_name_import = if queue_name.is_none() {
-            first
-                .and_then(crate::queue::extract_factory::identifier_arg)
-                .filter(|name| self.facts.string_imports.contains_key(name))
-        } else {
-            None
-        };
+        let (queue_name, queue_name_import) = new_expr
+            .arguments
+            .first()
+            .map(|arg| self.resolve_queue_name_arg(arg))
+            .unwrap_or((None, None));
         let processor_specifier = new_expr
             .arguments
             .get(1)

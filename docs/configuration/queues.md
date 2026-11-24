@@ -171,7 +171,12 @@ deterministic virtual anchor `queue:<name>` (for example, `queue:mail#welcome`)
 instead of anchoring on an arbitrary caller file. The bulk wrapper's build
 callback does not supply a job name; only the configured selector does.
 Resolution stays within the configured file universe and uses the same
-producer/worker graph as `queues edges`.
+producer/worker graph as `queues edges`. Files matched by configured `tests.*`
+scopes are excluded from `unmatched-producer`, `unmatched-worker`, and
+production `queues edges` by default (with no hardcoded filename conventions);
+same-file raw `new Worker(<queueName>, ...)` and configured worker factories
+match producers on that queue name. See
+[`queues check`](../cli/queues-check.md#producer-and-worker-matching).
 
 Property selection requires a direct, static object property. Unresolved
 values, spread objects, computed properties, non-const bindings, and mutated
