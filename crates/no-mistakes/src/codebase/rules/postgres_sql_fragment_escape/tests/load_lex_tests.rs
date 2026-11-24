@@ -41,7 +41,7 @@ fn saved_slash_forms_pin_visible_call_parens() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/slash-lexing/slash-forms.js"
     ));
-    let pairs = matching_parens(source);
+    let pairs = matching_parens(source.trim_end());
     let regex_call = source.find("record(/").expect("regex argument") + "record".len();
     let regex_call_end = source.find("/g);").expect("regex closing slash") + "/g".len();
     assert_eq!(pairs.get(&regex_call), Some(&regex_call_end));
@@ -51,6 +51,7 @@ fn saved_slash_forms_pin_visible_call_parens() {
         ("afterBracket(", Some(1)),
         ("afterBrace(", None),
         ("afterIncrement(", None),
+        ("singleDivisor(", Some(1)),
     ] {
         let open = source.find(marker).expect(marker) + marker.len() - 1;
         assert_eq!(

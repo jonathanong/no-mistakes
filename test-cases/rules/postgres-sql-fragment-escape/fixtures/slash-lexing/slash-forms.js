@@ -18,3 +18,6 @@ record(count++ / afterIncrement() / 2);
 export function extend(extra) {
   widgetColumns.append(extra);
 }
+
+const singleDivisor = () => 2;
+record(count++ / singleDivisor());
