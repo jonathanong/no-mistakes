@@ -2,6 +2,7 @@ use super::matcher::{self, MatchOutcome};
 use super::options::CompiledOptions;
 use crate::codebase::rules::github_actions_download_integrity::words::{self, Word};
 
+mod dynamic;
 mod shell_c;
 
 pub(super) const MAX_NESTED_DEPTH: usize = 4;
@@ -76,6 +77,9 @@ pub(super) fn scan_nested(
         let cmd_word = &command.words[at];
         let cmd_line = cmd_word.line + line_offset;
         if matcher::is_dynamic_word(cmd_word, command.dynamic) {
+            if dynamic::abstains_on_literal_script_path(&cmd_word.text, compiled) {
+                continue;
+            }
             let detail = format!(
                 "invokes dynamic command `{}`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
                 cmd_word.text

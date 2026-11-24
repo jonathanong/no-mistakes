@@ -66,6 +66,7 @@ pub(super) fn collect(
                         !plan.postgres_dml,
                         demand,
                         crate::codebase::postgres::statements::StatementPolicySources {
+                            collect_lock_inventory: plan.postgres_lock_inventory,
                             collect_json_writes: plan.postgres_json_writes,
                             collect_index_probes: plan.postgres_index_probes,
                             collect_body_bounds: plan.postgres_body_bounds,

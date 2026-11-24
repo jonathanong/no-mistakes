@@ -1,4 +1,4 @@
-use super::{baseline, RULE_ID};
+use super::{baseline, DEFAULT_BASELINE_FILE, RULE_ID};
 use crate::codebase::postgres::{
     effective_sql_include, embedded::ExecutorOption, EmbeddedSqlOptions, PostgresSchemaOptions,
     TrustedSqlTag,
@@ -44,7 +44,7 @@ impl CompiledOptions {
         let baseline_file = baseline::relative_path(
             opts.baseline_file
                 .as_deref()
-                .unwrap_or(".no-mistakes/postgres-locks.json"),
+                .unwrap_or(DEFAULT_BASELINE_FILE),
         )?;
         let helpers: BTreeSet<_> = opts.helpers.into_iter().collect();
         ensure!(

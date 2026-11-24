@@ -43,6 +43,14 @@ fn a_star_namespace_reexport_records_its_own_offset() {
     );
 }
 
+#[test]
+fn a_default_identifier_export_records_its_local_offset() {
+    let source = "import { widgetColumns as app } from './columns';\nexport default app;\n";
+    let facts = namespaces(source);
+    let offset = u32::try_from(source.find("export default").expect("export")).expect("offset");
+    assert_eq!(facts.export_name_offsets, vec![("app".to_string(), offset)]);
+}
+
 fn quoted_loads(source: &str) -> Vec<(u32, String)> {
     let mut found = Vec::new();
     let mut rest = source;

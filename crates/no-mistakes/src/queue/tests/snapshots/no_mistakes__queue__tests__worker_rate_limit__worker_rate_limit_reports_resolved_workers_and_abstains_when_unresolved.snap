@@ -153,36 +153,96 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
       "job": null,
       "message": "`.rateLimit()` on the `alerts` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
       "sourceLine": "await factoryWorkers.exportedWorker.rateLimit(500);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "subclass-worker.ts",
+      "line": 18,
+      "queueFile": null,
+      "queueName": null,
+      "job": null,
+      "message": "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await new ExampleWorker().rateLimit(1000);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "subclass-worker.ts",
+      "line": 20,
+      "queueFile": null,
+      "queueName": null,
+      "job": null,
+      "message": "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await child.rateLimit(900);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "subclass-worker.ts",
+      "line": 21,
+      "queueFile": null,
+      "queueName": null,
+      "job": null,
+      "message": "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await new NsWorker().rateLimit(800);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "subclass-worker.ts",
+      "line": 22,
+      "queueFile": null,
+      "queueName": null,
+      "job": null,
+      "message": "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await new ExportedWorker().rateLimit(700);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "subclass-worker.ts",
+      "line": 23,
+      "queueFile": null,
+      "queueName": null,
+      "job": null,
+      "message": "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await new SubExportedWorker().rateLimit(600);"
+    },
+    {
+      "kind": "worker-rate-limit-per-process",
+      "file": "subclass-worker.ts",
+      "line": 24,
+      "queueFile": null,
+      "queueName": null,
+      "job": null,
+      "message": "`.rateLimit()` on a worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+      "sourceLine": "await exportedSubInstance.rateLimit(500);"
     }
   ],
   "diagnostics": [
     {
       "severity": "warning",
       "file": "unresolved.ts",
-      "line": 5,
-      "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
-      "sourceLine": "await target.rateLimit(1000);"
-    },
-    {
-      "severity": "warning",
-      "file": "unresolved.ts",
-      "line": 10,
+      "line": 16,
       "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
       "sourceLine": "await unknownWorker.rateLimit(1000);"
     },
     {
       "severity": "warning",
       "file": "unresolved.ts",
-      "line": 16,
+      "line": 22,
       "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
       "sourceLine": "await mutable.rateLimit(1000);"
     },
     {
       "severity": "warning",
       "file": "unresolved.ts",
-      "line": 22,
+      "line": 26,
       "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
-      "sourceLine": "await holder.worker.rateLimit(1000);"
+      "sourceLine": "await assignedLater.rateLimit(1000);"
+    },
+    {
+      "severity": "warning",
+      "file": "unresolved.ts",
+      "line": 38,
+      "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+      "sourceLine": "await new DynamicBaseWorker().rateLimit(1000);"
     }
   ]
 }

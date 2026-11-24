@@ -104,6 +104,7 @@ pub struct CheckFactPlan {
     /// Opted-in row-bound projection within the shared SQL statement fact pass.
     pub postgres_bounds: bool,
     /// Literal JSON relation keys, collected only for their configured consumer.
+    pub postgres_lock_inventory: bool,
     pub postgres_json_writes: bool,
     pub postgres_grouping: bool,
     pub postgres_index_probes: bool,

@@ -14,9 +14,12 @@ impl SourceStore {
         let slots = self.disable_comments.get_or_init(DashMap::new);
         let slot = once_lock_slot(slots, normalized);
         slot.get_or_init(|| {
-            self.read_source_path(path)
-                .ok()
-                .map(|source| Arc::new(DisableCommentIndex::new(source)))
+            self.read_source_path(path).ok().map(|source| {
+                Arc::new(DisableCommentIndex::new_observed(
+                    source,
+                    self.observer.clone(),
+                ))
+            })
         })
         .clone()
     }

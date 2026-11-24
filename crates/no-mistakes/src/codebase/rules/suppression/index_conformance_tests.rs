@@ -86,7 +86,7 @@ fn indexed_matching_conforms_to_the_directive_parser() {
                     .or(quoted);
                 for (track_quotes, expected) in [(true, quoted), (false, prose)] {
                     assert_eq!(
-                        index.matching(rule, line, track_quotes, None),
+                        index.matching(rule, line, track_quotes),
                         expected,
                         "{path}, rule {rule:?}, line {line:?}, track_quotes={track_quotes}",
                     );

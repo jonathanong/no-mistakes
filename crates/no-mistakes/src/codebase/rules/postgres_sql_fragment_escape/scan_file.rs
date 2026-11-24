@@ -117,14 +117,17 @@ pub(super) fn one(
         if export.specifier.is_some() || exported_value(ts, &export.local) {
             continue;
         }
+        let fragments = name_fragments(&ctx, &export.local);
+        if fragments.is_empty() {
+            continue;
+        }
         if let Some(offset) = export_site(ts, &export.local) {
-            emit(
-                &mut findings,
-                root,
-                &ctx,
-                offset,
-                &name_fragments(&ctx, &export.local),
-            );
+            emit(&mut findings, root, &ctx, offset, &fragments);
+        } else {
+            gaps.push(gap(
+                file,
+                super::load_gap::missing_local_export_gap(&relative, &export.local),
+            ));
         }
     }
     for message in missing_sourced_export_gaps(&ctx, &relative) {

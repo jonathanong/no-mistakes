@@ -8,10 +8,32 @@ inputs such as queue options.
 
 ## What it catches
 
-The rule reports `vi.fn<typeof enqueueEmail>()` and
-`jest.fn<typeof enqueueEmail>()` when `enqueueEmail` resolves to a configured
-import. An aliased import matches by the original export name. A local binding
-that shadows the import stays allowed.
+The rule reports Vitest and Jest enqueue fakes whose parameter contract is
+copied from a configured import:
+
+- Direct or namespace `vi.fn` / `jest.fn` calls typed with `typeof enqueueEmail`,
+  `typeof queues.enqueueEmail`, or `Parameters<typeof enqueueEmail>` (including
+  inside a function type parameter such as
+  `vi.fn<(...args: Parameters<typeof enqueueEmail>) => Promise<void>>()`).
+- Framework mock wrapper types `Mock<...>` and `MockedFunction<...>` (imported
+  from `vitest`, `@jest/globals`, or `jest-mock`, or qualified on a framework
+  namespace such as `jest.MockedFunction<typeof enqueueEmail>`) carrying the
+  same target type arguments.
+- Mock casts `vi.mocked(enqueueEmail)`, `jest.mocked(enqueueEmail)`, and
+  `vi.mocked(queues.enqueueEmail)`.
+- Both `@typescript-eslint/parser` v6+ (`typeArguments`) and pre-v6
+  (`typeParameters`) AST shapes.
+
+An aliased import matches by the original export name. A local binding that
+shadows the import, framework receiver, `Mock`/`MockedFunction`, or
+`Parameters` stays allowed.
+
+## Out of scope
+
+The rule runs on single-file syntax without a TypeScript type checker, so it
+does not follow indirect type aliases (`type Fn = typeof enqueueEmail; vi.fn<Fn>()`),
+custom non-framework wrapper types, or fakes that declare an explicit argument
+tuple while referencing only `ReturnType<typeof enqueueEmail>`.
 
 ## Disallowed
 

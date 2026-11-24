@@ -35,7 +35,11 @@ pub(super) fn check_file(
     let Some(source) = super::super::read_language_source(sources, path) else {
         return Vec::new();
     };
-    check_source(&rel, &source, opts, defer_suppression)
+    let mut findings = check_source(&rel, &source, opts, true);
+    if !defer_suppression {
+        super::super::suppress_rule_findings_for_path(sources, path, &mut findings);
+    }
+    findings
 }
 
 pub(super) fn check_source(

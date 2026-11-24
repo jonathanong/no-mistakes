@@ -118,25 +118,19 @@ pub(crate) fn extract_sql_lock_scope_facts(
     collect_bounds: bool,
     positions: &[(u32, u32)],
     demand: SqlLocationDemand,
-    collect_json_writes: bool,
-    collect_index_probes: bool,
-    collect_body_bounds: bool,
+    policy: super::StatementPolicySources<'_>,
 ) -> SqlStatementFileFacts {
     extract_sql_statement_facts_with_placeholder_positions(
         sql,
         collect_bounds,
         Some(positions),
         demand,
-        if collect_body_bounds {
+        if policy.collect_body_bounds {
             StatementProjection::BodyBoundsLockScope
         } else {
             StatementProjection::LockScope
         },
-        super::StatementPolicySources {
-            collect_json_writes,
-            collect_index_probes,
-            ..Default::default()
-        },
+        policy,
     )
 }
 

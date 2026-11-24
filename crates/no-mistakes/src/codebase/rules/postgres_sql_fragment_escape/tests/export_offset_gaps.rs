@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 #[test]
-fn local_export_without_offset_is_not_a_gap() {
+fn local_default_export_without_offset_is_a_gap() {
     let mut consumer = TsFileFacts::default();
     consumer.imported_bindings.push(import(
         "./columns",
@@ -30,14 +30,14 @@ fn local_export_without_offset_is_not_a_gap() {
         report
             .gaps
             .iter()
-            .all(|gap| !gap.message.contains("export offset")),
+            .any(|gap| gap.message.contains("export offset for `app`")),
         "{:?}",
         report.gaps
     );
 }
 
 #[test]
-fn namespace_reexport_without_offset_is_not_a_gap() {
+fn namespace_reexport_without_offset_is_a_gap() {
     let mut consumer = TsFileFacts::default();
     consumer.imported_bindings.push(import(
         "./columns",
@@ -51,6 +51,26 @@ fn namespace_reexport_without_offset_is_not_a_gap() {
         exported: "sdk".to_string(),
     });
     consumer.source = Some(Arc::<str>::from("export { sdk };\n"));
+    let report = scan_fact_miss("reexport.ts", consumer);
+    assert!(
+        report
+            .gaps
+            .iter()
+            .any(|gap| gap.message.contains("export offset for `sdk`")),
+        "{:?}",
+        report.gaps
+    );
+}
+
+#[test]
+fn non_fragment_local_export_without_offset_is_not_a_gap() {
+    let mut consumer = TsFileFacts::default();
+    consumer.exported_bindings.push(ExportedBinding {
+        specifier: None,
+        local: "plain".to_string(),
+        exported: "default".to_string(),
+    });
+    consumer.source = Some(Arc::<str>::from("export default plain;\n"));
     let report = scan_fact_miss("reexport.ts", consumer);
     assert!(
         report

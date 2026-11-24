@@ -89,6 +89,11 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
         walk::walk_new_expression(self, new_expr);
     }
 
+    fn visit_assignment_expression(&mut self, expr: &oxc_ast::ast::AssignmentExpression<'a>) {
+        super::extract_worker_rate_limit::note_assignment(self, expr);
+        walk::walk_assignment_expression(self, expr);
+    }
+
     fn visit_export_named_declaration(&mut self, decl: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
         super::extract_factory::note_export(self, decl);
         walk::walk_export_named_declaration(self, decl);
