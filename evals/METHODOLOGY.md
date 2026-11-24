@@ -459,8 +459,13 @@ transcript without `result.json` stays unfinished.
 The runner records each audit finding as a completed-command index and a
 reason, with details in the original transcript. An audit flag makes the
 attempt unavailable for scoring. New flagged attempts withhold LLM judging.
-Review the saved transcript for context. The audit covers recognized paths
-only and can miss host reads.
+Review the saved transcript for context. Standard process-stream and discard
+devices (`/dev/null`, `/dev/stdout`, `/dev/stderr`, `/dev/tty`) are exempt from
+the audit. The audit covers recognized paths only and can miss host reads,
+including symlinks (paths are normalized without resolving links), unexpanded
+variables or command substitutions such as `$PWD`, `$TMPDIR`, `~user`, and
+`$(...)`, unlisted reader commands or wrappers (such as `env`, `xargs`,
+`base64`, `jq`, or `git -C`), and non-literal Python paths.
 
 A judge failure sets `error` on the LLM grader and increments
 `judgeErrorCount` for the attempt and suite. The report stays partial and

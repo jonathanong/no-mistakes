@@ -41,3 +41,10 @@ class TranscriptTriggerTest(unittest.TestCase):
                 {"commandIndex": 13, "reason": "attempt-auth-file"},
             ],
         )
+
+    def test_safe_device_redirects_are_exempt_while_outside_redirects_flag(self):
+        transcript = (FIXTURES / "safe-device-redirects.jsonl").read_text(encoding="utf-8")
+        self.assertEqual(
+            trigger.external_path_findings(transcript, ATTEMPT, cwd=ATTEMPT / "workspace"),
+            [{"commandIndex": 10, "reason": "outside-attempt-root"}],
+        )

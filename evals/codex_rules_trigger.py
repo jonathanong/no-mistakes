@@ -333,11 +333,23 @@ def _audit_under(path: Path | str, roots: tuple[Path, ...]) -> bool:
     return any(_is_under(candidate, root) for root in roots)
 
 
+_SAFE_DEVICE_PATHS = frozenset(
+    {
+        Path("/dev/null"),
+        Path("/dev/stdout"),
+        Path("/dev/stderr"),
+        Path("/dev/tty"),
+    }
+)
+
+
 def _audit_reason(token: str, cwd: Path | None, roots: tuple[Path, ...]) -> str | None:
     path = _locate(token, cwd, roots[0])
     if path is None:
         return None
     path = _audit_path(path)
+    if path in _SAFE_DEVICE_PATHS:
+        return None
     if any(path == root / "codex-home" / "auth.json" for root in roots):
         return "attempt-auth-file"
     if not any(_is_under(path, root) for root in roots):

@@ -1,0 +1,10 @@
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"ls skills 2>/dev/null"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat notes.txt > /dev/null"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat /dev/null"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat notes.txt >/dev/null 2>&1"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"echo msg > /dev/stdout"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"echo msg > /dev/stderr"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"echo msg > /dev/tty"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat notes.txt | head"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cd -"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"echo leak > /outside/leak.txt"}}
