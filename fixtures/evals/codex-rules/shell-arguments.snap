@@ -70,5 +70,13 @@
   {
     "commandIndex": 31,
     "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 33,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 35,
+    "reason": "outside-attempt-root"
   }
 ]

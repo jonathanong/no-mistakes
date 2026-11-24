@@ -291,11 +291,17 @@ def _reader_tokens(argv: list) -> list:
     return _file_tokens(argv)
 
 
+# Each long option has a shortest unambiguous spelling within its GNU tool.
 _TEXT_PROGRAM_OPTIONS = {
-    "sed": {"e": "--expression", "f": "--file"},
+    "sed": {
+        "e": ("--expression", "--e"), "f": ("--file", "--fi"),
+        "i": ("--in-place", "--i"),
+    },
     "awk": {
-        "e": "--source", "E": "--exec", "f": "--file", "F": "--field-separator",
-        "i": "--include", "l": "--load", "v": "--assign",
+        "e": ("--source", "--so"), "E": ("--exec", "--e"),
+        "f": ("--file", "--fil"), "F": ("--field-separator", "--fie"),
+        "i": ("--include", "--i"), "l": ("--load", "--lo"),
+        "v": ("--assign", "--a"),
     },
 }
 
@@ -320,14 +326,18 @@ def _text_program_files(argv: list, name: str) -> list:
             continue
         if arg.startswith("--"):
             option, _, attached = arg.partition("=")
-            flag = next((short for short, long in options.items() if long == option), "")
+            flag = next(
+                (short for short, (long, prefix) in options.items()
+                 if option.startswith(prefix) and long.startswith(option)),
+                "",
+            )
             separate = "=" not in arg
         else:
             option_index = next((i for i, char in enumerate(arg[1:], 1) if char in options), 0)
             flag = arg[option_index] if option_index else ""
             attached = arg[option_index + 1:]
             separate = not attached
-        if not flag:
+        if not flag or (name == "sed" and flag == "i"):
             continue
         explicit_program |= flag in ("e", "E", "f")
         if separate:

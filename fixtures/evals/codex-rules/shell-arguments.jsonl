@@ -29,3 +29,7 @@
 {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -i /outside/include.awk 'BEGIN { print 1 }' input.txt", "cwd": "/attempt/workspace"}}
 {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -l /outside/filter.so 'BEGIN { print 1 }' input.txt", "cwd": "/attempt/workspace"}}
 {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk '/item/ {print}' -v /outside/input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -i.safe '/item/d' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk --fil /outside/filter.awk input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk --fie /separator '/item/ {print}' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed --fil /outside/filter.sed input.txt", "cwd": "/attempt/workspace"}}
