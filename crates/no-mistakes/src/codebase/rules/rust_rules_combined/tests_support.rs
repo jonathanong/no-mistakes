@@ -44,6 +44,7 @@ pub(super) fn scan_file_with_source_and_deferred_suppression(
         path,
         work,
         content,
+        None,
         defer_suppression,
         syn::parse_file,
     )

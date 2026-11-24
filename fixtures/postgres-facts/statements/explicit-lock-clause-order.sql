@@ -1,0 +1,2 @@
+SELECT 1 FROM accounts AS a WHERE a.id = $1 FOR KEY SHARE OF a FOR SHARE OF a;
+SELECT 1 FROM accounts AS a WHERE a.id = $1 FOR SHARE OF a FOR KEY SHARE OF a;

@@ -367,7 +367,10 @@ table callbacks, configuration, and `no-mistakes` suppression directives.
 Opt-in. `singleExportPattern?: string` matches the imported export name with a
 regular expression. `moduleGlobs?: string[]` selects import specifiers and
 narrows the export pattern when both are configured. The rule reports Vitest
-and Jest mock constructors typed with `typeof` a matching imported binding.
+and Jest mock constructors and mock wrapper types (`Mock<...>` and
+`MockedFunction<...>`) that copy the type of a matching import, including
+`typeof` on a namespace member and `Parameters<typeof enqueueEmail>`. It also
+reports `vi.mocked` and `jest.mocked` casts of matching imports.
 See [the rule reference](eslint-rules/test-no-typed-enqueue-fake.md).
 
 ### `test-no-wall-time-assertions`

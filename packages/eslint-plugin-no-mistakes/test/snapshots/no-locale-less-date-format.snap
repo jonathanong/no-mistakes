@@ -489,6 +489,64 @@
     "rule": "no-locale-less-date-format"
   },
   {
+    "file": "no-locale-less-date-format/intl-resolved-options.mjs",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 41,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/intl-resolved-options.mjs",
+        "line": 6,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 41,
+        "endLine": 8,
+        "file": "no-locale-less-date-format/intl-resolved-options.mjs",
+        "line": 8,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 44,
+        "endLine": 10,
+        "file": "no-locale-less-date-format/intl-resolved-options.mjs",
+        "line": 10,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 53,
+        "endLine": 11,
+        "file": "no-locale-less-date-format/intl-resolved-options.mjs",
+        "line": 11,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "Intl format constructors used only for immediate resolvedOptions are exempt while stored or passed instances are reported",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "Intl.NumberFormat"
+      ],
+      "methods": []
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
     "file": "no-locale-less-date-format/matching-receivers.mjs",
     "findings": [
       {

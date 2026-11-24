@@ -1,1 +1,1 @@
-export default { test: { projects: ['./vitest.standalone.config.mts'] } }
+export default { test: { projects: ['./vitest.standalone.config.mjs'] } }

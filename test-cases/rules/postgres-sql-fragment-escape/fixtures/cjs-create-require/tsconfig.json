@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "paths": {
+      "@example/sql": ["./sql.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.cjs"]
+}

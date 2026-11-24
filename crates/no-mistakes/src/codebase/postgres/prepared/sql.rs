@@ -90,6 +90,7 @@ pub(super) fn collect(
                                 tokens: Some(statement_sources),
                                 schema: schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
                                 functions,
+                                collect_lock_inventory: plan.postgres_lock_inventory,
                                 collect_json_writes: plan.postgres_json_writes,
                                 collect_grouping: plan.postgres_grouping,
                                 grouping_complete: grouping_complete.as_deref(),
