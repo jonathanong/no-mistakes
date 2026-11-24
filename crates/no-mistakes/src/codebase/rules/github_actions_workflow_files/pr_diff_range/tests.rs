@@ -244,3 +244,22 @@ fn environment_reads_point_at_the_env_entry() {
     let found = check_source(WF, &yaml);
     assert_eq!(found.iter().map(|hit| hit.line).collect::<Vec<_>>(), [5]);
 }
+
+#[test]
+fn shell_guard_anchors_keywords_after_heredoc_bodies() {
+    let yaml = |run: &str| {
+        format!(
+            "on: [pull_request, merge_group]\njobs:\n  a:\n    env:\n      EVENT_NAME: ${{{{ github.event_name }}}}\n      PR_BASE_SHA: {BASE}\n    steps:\n      - run: |\n{run}"
+        )
+    };
+    let only_in_then = concat!(
+        "          if [ \"$EVENT_NAME\" = \"pull_request\" ]; then\n",
+        "            cat <<EOF\n",
+        "          $PR_BASE_SHA\n",
+        "          EOF\n",
+        "          fi\n",
+    );
+    assert_eq!(count(&yaml(only_in_then)), 0);
+    let after_fi = format!("{only_in_then}          git diff \"$PR_BASE_SHA\" HEAD\n");
+    assert_eq!(count(&yaml(&after_fi)), 1);
+}

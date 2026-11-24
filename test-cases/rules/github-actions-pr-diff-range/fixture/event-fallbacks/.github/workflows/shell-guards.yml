@@ -72,3 +72,26 @@ jobs:
               echo "$PR_BASE_SHA"
             fi
           fi
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            cat > body.md <<EOF
+          PR build
+          EOF
+          else
+            git diff "$PR_BASE_SHA" HEAD
+          fi
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            cat > body.md <<EOF
+          PR build
+          EOF
+          elif [ "$EVENT_NAME" = "merge_group" ]; then
+            git diff "$PR_BASE_SHA" HEAD
+          fi
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            cat > body.md <<EOF
+          PR build
+          EOF
+          fi
+          git diff "$PR_BASE_SHA" HEAD

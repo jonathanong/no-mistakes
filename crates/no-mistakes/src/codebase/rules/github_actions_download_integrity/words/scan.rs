@@ -172,6 +172,7 @@ impl<'a> Scan<'a> {
             }
         }
         self.heredoc_ranges.push(start..self.index);
+        self.current.anchor = self.index;
     }
 
     fn whitespace(&mut self, ch: char) -> bool {
