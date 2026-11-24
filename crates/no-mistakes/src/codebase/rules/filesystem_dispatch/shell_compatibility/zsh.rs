@@ -1,7 +1,26 @@
 use super::lex::{assignment, command_words, Lexer, Shell};
 use crate::codebase::shell_words::{split_quoted_words, Whitespace};
+use std::path::Path;
 
 pub const RULE_ID: &str = "zsh-readonly-parameter";
+
+// Skips reading files that cannot plausibly be zsh scripts: no extension, `.sh`, `.zsh`, or executable.
+pub(super) fn likely_shell_file(path: &Path) -> bool {
+    path.extension()
+        .is_none_or(|ext| matches!(ext.to_str(), Some("sh" | "zsh")))
+        || executable(path)
+}
+
+#[cfg(unix)]
+fn executable(path: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::metadata(path).is_ok_and(|meta| meta.permissions().mode() & 0o111 != 0)
+}
+
+#[cfg(not(unix))]
+fn executable(_: &Path) -> bool {
+    false
+}
 
 pub(super) fn has_shebang(source: &str) -> bool {
     let Some(header) = source

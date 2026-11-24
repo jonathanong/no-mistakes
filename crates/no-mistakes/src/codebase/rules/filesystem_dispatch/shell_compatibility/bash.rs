@@ -1,4 +1,5 @@
 use super::lex::{assignment, command_words, identifier, Lexer, Shell, Word};
+use super::read_targets::targets;
 use crate::codebase::shell_words::{split_quoted_words, Whitespace};
 use crate::fx::FxHashMap;
 
@@ -16,6 +17,16 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
                     .flat_map(|word| word.refs.iter().copied())
                     .filter(|(name, _)| arrays.get(name) == Some(&false)),
             );
+        }
+        if let Some(read) = targets(words) {
+            for name in read.names {
+                if read.keep {
+                    arrays.entry(name).or_insert(false);
+                } else {
+                    arrays.insert(name, false);
+                }
+            }
+            return;
         }
         let mut command = command_words(words).peekable();
         let Some(first) = command.peek() else {
