@@ -27,7 +27,14 @@ test("documentation links retry the saved checker only for gateway failures", ()
   const depth = checkout.with?.["fetch-depth"];
   assert.ok(depth === 0 || depth >= 2, "PR link scope needs the merge checkout's first parent");
   const initial = job.steps.find((step) => step.id === "links");
+  const internal = job.steps.find((step) => step.id === "internal-links");
   const retry = job.steps.find((step) => step.run?.includes("lychee-gateway.cjs"));
+  assert.equal(internal.if, "${{ steps.link-inputs.outputs.has-offline-inputs == 'true' }}");
+  assert.equal(internal.with.fail, true);
+  assert.equal(internal.with.failIfEmpty, true);
+  assert.match(internal.with.args, /--offline\b/);
+  assert.match(internal.with.args, /--files-from "\$RUNNER_TEMP\/lychee-offline-inputs\.txt"/);
+  assert.notEqual(internal["continue-on-error"], true);
   assert.equal(initial["continue-on-error"], true);
   assert.equal(initial.if, "${{ steps.link-inputs.outputs.has-inputs == 'true' }}");
   assert.equal(initial.with.failIfEmpty, "${{ github.event_name != 'pull_request' }}");

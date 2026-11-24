@@ -7,9 +7,17 @@ const { test } = require("node:test");
 
 const script = path.join(__dirname, "lychee-inputs.cjs");
 const fixture = path.resolve(__dirname, "../../test-cases/ci/lychee-inputs");
+const fullPatterns = [
+  "README.md",
+  "docs/**/*.md",
+  "plugins/*/skills/**/*.md",
+  "packages/*/README.md",
+  "crates/*/README.md",
+  "AGENTS.md",
+];
 
-function selectedInputs(directory, event) {
-  return execFileSync(process.execPath, [script], {
+function selectedInputs(directory, event, extraArgs = []) {
+  return execFileSync(process.execPath, [script, ...extraArgs], {
     cwd: directory,
     encoding: "utf8",
     env: { ...process.env, GITHUB_EVENT_NAME: event },
@@ -40,7 +48,7 @@ test("PR link sources come from the merge checkout's changes", (context) => {
     );
 
   git("init", "-b", "main");
-  git("add", "docs/unchanged.md");
+  git("add", "docs/unchanged.md", "docs/target.md", "docs/linker.md");
   git("commit", "-m", "Base documentation");
   git("switch", "-c", "feature");
   git("add", "src/change.txt");
@@ -48,6 +56,7 @@ test("PR link sources come from the merge checkout's changes", (context) => {
   git("switch", "main");
   git("merge", "--no-ff", "feature");
   assert.deepEqual(selectedInputs(directory, "pull_request"), []);
+  assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), []);
 
   git("switch", "feature");
   git("add", "docs/changed [draft].md");
@@ -55,6 +64,7 @@ test("PR link sources come from the merge checkout's changes", (context) => {
   git("switch", "main");
   git("merge", "--no-ff", "feature");
   assert.deepEqual(selectedInputs(directory, "pull_request"), ["docs/changed [[]draft[]].md"]);
+  assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), []);
 
   git("switch", "feature");
   git("rm", "docs/changed [draft].md");
@@ -62,17 +72,36 @@ test("PR link sources come from the merge checkout's changes", (context) => {
   git("switch", "main");
   git("merge", "--no-ff", "feature");
   assert.deepEqual(selectedInputs(directory, "pull_request"), []);
+  assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), fullPatterns);
+
+  git("switch", "feature");
+  git("mv", "docs/target.md", "docs/target-renamed.md");
+  git("commit", "-m", "Rename linked page");
+  git("switch", "main");
+  git("merge", "--no-ff", "feature");
+  assert.deepEqual(selectedInputs(directory, "pull_request"), ["docs/target-renamed.md"]);
+  assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), fullPatterns);
+
+  git("switch", "feature");
+  git("rm", "src/change.txt");
+  git("commit", "-m", "Delete a non-doc file");
+  git("switch", "main");
+  git("merge", "--no-ff", "feature");
+  assert.deepEqual(selectedInputs(directory, "pull_request"), []);
+  assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), fullPatterns);
+
+  git("switch", "feature");
+  git("add", ".lycheeignore");
+  git("commit", "-m", "Change link-check config only");
+  git("switch", "main");
+  git("merge", "--no-ff", "feature");
+  assert.deepEqual(selectedInputs(directory, "pull_request"), fullPatterns);
+  assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), []);
 });
 
 test("pushes and manual runs use the full documentation patterns", () => {
   for (const event of ["push", "workflow_dispatch"]) {
-    assert.deepEqual(selectedInputs(fixture, event), [
-      "README.md",
-      "docs/**/*.md",
-      "plugins/*/skills/**/*.md",
-      "packages/*/README.md",
-      "crates/*/README.md",
-      "AGENTS.md",
-    ]);
+    assert.deepEqual(selectedInputs(fixture, event), fullPatterns);
+    assert.deepEqual(selectedInputs(fixture, event, ["--offline"]), []);
   }
 });

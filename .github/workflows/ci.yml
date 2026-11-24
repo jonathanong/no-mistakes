@@ -509,11 +509,31 @@ jobs:
         shell: bash
         run: |
           node .github/scripts/lychee-inputs.cjs > "$RUNNER_TEMP/lychee-inputs.txt"
+          node .github/scripts/lychee-inputs.cjs --offline > "$RUNNER_TEMP/lychee-offline-inputs.txt"
           if [[ -s "$RUNNER_TEMP/lychee-inputs.txt" ]]; then
             echo "has-inputs=true" >> "$GITHUB_OUTPUT"
           else
             echo "No changed documentation link sources."
           fi
+          if [[ -s "$RUNNER_TEMP/lychee-offline-inputs.txt" ]]; then
+            echo "has-offline-inputs=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run Lychee (internal links)
+        id: internal-links
+        if: ${{ steps.link-inputs.outputs.has-offline-inputs == 'true' }}
+        timeout-minutes: 2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: >-
+            --offline
+            --no-progress
+            --remap '^https://github\.com/jonathanong/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
+            --exclude-path ^fixtures/
+            --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$'
+            --files-from "$RUNNER_TEMP/lychee-offline-inputs.txt"
+          fail: true
+          failIfEmpty: true
+          output: lychee/internal-out.md
       - name: Run Lychee
         id: links
         if: ${{ steps.link-inputs.outputs.has-inputs == 'true' }}
