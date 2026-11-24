@@ -32,82 +32,8 @@ use cli_docs_helpers::{
 mod docs_coverage_commands;
 #[path = "support/docs_coverage_rules.rs"]
 mod docs_coverage_rules;
-
-#[test]
-fn ast_grep_ignore_freshness_documents_tracked_inventory_controls() {
-    let rule = no_mistakes::codebase::rules::AST_GREP_IGNORE_FRESHNESS;
-    assert_eq!(rule, "ast-grep-ignore-freshness");
-    assert!(rule_ids_from_source(&repo_root()).contains(rule));
-    let body = read(&repo_root().join(format!("docs/rules/{rule}.md")));
-    for phrase in [
-        "files",
-        "sgconfig.yml",
-        "tracked",
-        "untracked",
-        "dotfile",
-        "glob",
-        "---",
-        "flow",
-        "directory",
-    ] {
-        assert!(body.contains(phrase), "missing {phrase}");
-    }
-}
-
-#[test]
-fn github_actions_action_input_policy_is_in_the_public_rule_inventory() {
-    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_ACTION_INPUT_POLICY;
-    assert_eq!(rule, "github-actions-action-input-policy");
-    assert!(rule_ids_from_source(&repo_root()).contains(rule));
-    let body = read(&repo_root().join(format!("docs/rules/{rule}.md")));
-    for option in ["actions:", "uses:", "require:", "ban:", "include:"] {
-        assert!(body.contains(option), "missing {option}");
-    }
-}
-
-#[test]
-fn github_actions_job_permissions_is_in_the_public_rule_inventory() {
-    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_JOB_PERMISSIONS;
-    assert_eq!(rule, "github-actions-job-permissions");
-    assert!(rule_ids_from_source(&repo_root()).contains(rule));
-    assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
-}
-
-#[test]
-fn column_check_constraints_is_in_the_public_rule_inventory() {
-    let rule = no_mistakes::codebase::rules::POSTGRES_COLUMN_CHECK_CONSTRAINTS;
-    assert_eq!(rule, "postgres-column-check-constraints");
-    assert!(rule_ids_from_source(&repo_root()).contains(rule));
-    let body = read(&repo_root().join(format!("docs/rules/{rule}.md")));
-    for option in [
-        "schemaCatalogPath",
-        "columns:",
-        "pattern:",
-        "types:",
-        "require:",
-        "severity: advisory",
-        "allow:",
-        "reason:",
-    ] {
-        assert!(body.contains(option), "missing {option}");
-    }
-}
-
-#[test]
-fn postgres_pool_error_listener_rule_has_public_documentation() {
-    let page = "postgres-pool-requires-error-listener.md";
-    let docs = repo_root().join("docs/eslint-rules");
-    assert!(read(&docs.join("README.md")).contains(page));
-    let body = read(&docs.join(page));
-    for contract in [
-        "extraModules",
-        "once",
-        "addListener",
-        "no-mistakes-disable-file",
-    ] {
-        assert!(body.contains(contract), "missing {contract}");
-    }
-}
+#[path = "support/docs_rule_inventory_checks.rs"]
+mod docs_rule_inventory_checks;
 
 #[test]
 fn identifier_inventory_includes_root_and_agent_documents() {

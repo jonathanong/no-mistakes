@@ -1,0 +1,16 @@
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo one
+        env:
+          BASH_ENV: ./setup.sh # no-mistakes-disable-line github-actions-env-policy
+      - run: echo two
+        env:
+          # no-mistakes-disable-next-line github-actions-env-policy
+          NODE_OPTIONS: --inspect
+      - run: echo three
+        env:
+          NODE_OPTIONS: --inspect

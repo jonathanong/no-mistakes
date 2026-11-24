@@ -1,0 +1,10 @@
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      "A #1": x
+      BASH_ENV: "./init #2.sh"
+    steps:
+      - run: echo ok
