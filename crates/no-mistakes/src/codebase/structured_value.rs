@@ -6,12 +6,26 @@ use serde_yaml::Value;
 use std::borrow::Cow;
 use std::path::Path;
 
-pub(crate) fn expand_yaml_mapping_if_merged(value: &Value) -> Cow<'_, Value> {
-    if value.get("<<").is_some() {
-        Cow::Owned(expand_merge_keys(value.clone()))
-    } else {
-        Cow::Borrowed(value)
+/// Expand merge keys in `value`. A merge that cannot be applied is an error.
+pub(crate) fn expand_yaml_merge_keys(value: &mut Value) -> Result<(), String> {
+    expand_merge_keys(value)
+}
+
+fn expand_with_context(value: &mut Value) -> Result<(), String> {
+    expand_merge_keys(value).map_err(|error| merge_error(&error))
+}
+
+pub(crate) fn expand_yaml_mapping_if_merged(value: &Value) -> Result<Cow<'_, Value>, String> {
+    if value.get("<<").is_none() {
+        return Ok(Cow::Borrowed(value));
     }
+    let mut expanded = value.clone();
+    expand_with_context(&mut expanded)?;
+    Ok(Cow::Owned(expanded))
+}
+
+fn merge_error(error: &str) -> String {
+    format!("failed to apply YAML merge keys ({error})")
 }
 
 pub(crate) struct YamlDocuments {
@@ -28,9 +42,10 @@ pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String
     if is_jsonc_path(path) {
         parse_jsonc(source)
     } else {
-        serde_yaml::from_str(source)
-            .map(expand_merge_keys)
-            .map_err(|error| format!("failed to parse YAML ({error})"))
+        let mut value: Value = serde_yaml::from_str(source)
+            .map_err(|error| format!("failed to parse YAML ({error})"))?;
+        expand_with_context(&mut value)?;
+        Ok(value)
     }
 }
 
@@ -41,7 +56,10 @@ pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
     let mut errors = Vec::new();
     for document in serde_yaml::Deserializer::from_str(source) {
         match Value::deserialize(document) {
-            Ok(value) => values.push(expand_merge_keys(value)),
+            Ok(mut value) => match expand_with_context(&mut value) {
+                Ok(()) => values.push(value),
+                Err(message) => errors.push((merge_line(source), message)),
+            },
             Err(error) => {
                 let reported = error
                     .location()
@@ -62,6 +80,14 @@ pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
         }
     }
     YamlDocuments { values, errors }
+}
+
+/// The first line that writes a merge key, or line 1 when none is visible.
+fn merge_line(source: &str) -> usize {
+    source
+        .lines()
+        .position(|line| line.trim_start().starts_with("<<:"))
+        .map_or(1, |index| index + 1)
 }
 
 fn is_jsonc_path(path: &Path) -> bool {

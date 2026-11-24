@@ -1,53 +1,70 @@
 use serde_yaml::{Mapping, Value};
 
-/// Copy YAML 1.1 merge keys into their parent mapping.
+/// Copy YAML 1.1 merge keys into their parent mapping, in place.
 ///
-/// `serde_yaml` resolves aliases and then leaves `<<` as an ordinary key.
-/// An explicit key already on the parent wins. In a sequence, an earlier
-/// mapping wins over a later one. A merge value that is not a mapping, or a
-/// sequence of mappings, is dropped.
-pub(super) fn expand_merge_keys(value: Value) -> Value {
-    match value {
-        Value::Sequence(items) => {
-            Value::Sequence(items.into_iter().map(expand_merge_keys).collect())
-        }
-        Value::Mapping(mapping) => Value::Mapping(expand_mapping(mapping)),
-        other => other,
-    }
-}
-
-fn expand_mapping(mut mapping: Mapping) -> Mapping {
-    if let Some(merged) = mapping.shift_remove("<<") {
-        apply_merge(&mut mapping, &expand_merge_keys(merged));
-    }
-    mapping
-        .into_iter()
-        .map(|(key, child)| (key, expand_merge_keys(child)))
-        .collect()
-}
-
-fn apply_merge(mapping: &mut Mapping, merged: &Value) {
-    match merged {
-        Value::Mapping(source) => insert_missing(mapping, source),
-        Value::Sequence(items) => insert_missing(mapping, &overlay_sequence(items)),
-        _ => {}
-    }
-}
-
-fn overlay_sequence(items: &[Value]) -> Mapping {
-    let mut overlay = Mapping::new();
-    for item in items.iter().rev() {
-        if let Value::Mapping(source) = item {
-            for (key, value) in source {
-                overlay.insert(key.clone(), value.clone());
+/// `serde_yaml` resolves aliases and then leaves `<<` as an ordinary key. An
+/// explicit key already on the parent wins. In a sequence, an earlier mapping
+/// wins over a later one. A source's own `<<` is applied before later sources,
+/// so a merge inside a merged mapping is expanded too. A merge value that is
+/// not a mapping, or a sequence of mappings, cannot be applied and is returned
+/// as an error instead of being dropped.
+pub(crate) fn expand_merge_keys(value: &mut Value) -> Result<(), String> {
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            Value::Mapping(mapping) => {
+                merge_sources(mapping)?;
+                pending.extend(mapping.values_mut());
             }
+            Value::Sequence(items) => pending.extend(items),
+            Value::Tagged(tagged) => pending.push(&mut tagged.value),
+            _ => {}
         }
     }
-    overlay
+    Ok(())
 }
 
-fn insert_missing(mapping: &mut Mapping, source: &Mapping) {
-    for (key, value) in source {
-        mapping.entry(key.clone()).or_insert_with(|| value.clone());
+fn merge_sources(mapping: &mut Mapping) -> Result<(), String> {
+    let Some(merge) = mapping.shift_remove("<<") else {
+        return Ok(());
+    };
+    let mut pending = Vec::new();
+    push_merge_sources(merge, &mut pending)?;
+    // Each source's explicit keys win over its own merge, which is consumed
+    // before later sequence sources. No merge source is copied or revisited.
+    while let Some(mut source) = pending.pop() {
+        if let Some(merge) = source.shift_remove("<<") {
+            push_merge_sources(merge, &mut pending)?;
+        }
+        for (key, value) in source {
+            mapping.entry(key).or_insert(value);
+        }
+    }
+    Ok(())
+}
+
+fn push_merge_sources(merge: Value, pending: &mut Vec<Mapping>) -> Result<(), String> {
+    match merge {
+        Value::Mapping(source) => pending.push(source),
+        Value::Sequence(sources) => {
+            let start = pending.len();
+            for source in sources {
+                match source {
+                    Value::Mapping(source) => pending.push(source),
+                    other => return Err(reject(&other, "a mapping")),
+                }
+            }
+            pending[start..].reverse();
+        }
+        other => return Err(reject(&other, "a mapping or list of mappings")),
+    }
+    Ok(())
+}
+
+fn reject(found: &Value, wanted: &str) -> String {
+    match found {
+        Value::Tagged(_) => "unexpected tagged value in merge".to_string(),
+        Value::Sequence(_) => format!("expected {wanted} for merging, but found sequence"),
+        _ => format!("expected {wanted} for merging, but found scalar"),
     }
 }

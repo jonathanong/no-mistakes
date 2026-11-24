@@ -1,0 +1,44 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "merge-keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/multi-document.yml",
+          "message": "Cannot verify reusable workflow concurrency: deserializing from YAML containing more than one document is not supported. Repair the workflow YAML and run the check again."
+        },
+        {
+          "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/scalar-merge.yml",
+          "message": "Cannot verify reusable workflow concurrency: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar). Repair the workflow YAML and run the check again."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/nested-merge-in-on.yml",
+          "line": 8,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: nested-on-build"
+        },
+        {
+          "file": ".github/workflows/nested-merge.yml",
+          "line": 1,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Reusable with nested merge"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

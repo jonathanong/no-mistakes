@@ -226,9 +226,14 @@ runtime:
 With `bannedKeys: [runtime.legacy.enabled]`, the file above is a finding.
 `runtime.legacy.enabled` is `true` after the merge.
 
-A merge value that is not a mapping, and not a sequence of mappings, is
-dropped. It does not invent keys. JSON and JSONC keep a literal `<<` key,
-because merge keys are a YAML 1.1 construct.
+A merge inside a merged mapping is expanded too: the inner mapping's keys are
+copied into the merged mapping, and then into the parent, with the parent's own
+keys winning. A merge value that is not a mapping, and not a sequence of
+mappings, cannot be applied. A scalar, or a scalar item in a sequence, is not
+dropped. The file is reported as unanalyzable with the message `failed to
+apply YAML merge keys`, so it follows `options.unanalyzable` like a YAML syntax
+error. JSON and JSONC keep a literal `<<` key, because merge keys are a YAML 1.1
+construct.
 
 ```yaml
 label: &label plain

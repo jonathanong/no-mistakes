@@ -94,3 +94,17 @@ fn check_json_snapshot_ci_topology_malformed_workflow_diagnostic() {
         );
     });
 }
+
+#[test]
+fn check_json_snapshot_workflow_policy_bans_reusable_concurrency_through_merges() {
+    let cases = [(
+        "merge-keys",
+        rules_path("workflow-topology-policy", "fixture", "merge-keys"),
+        rules_path(
+            "workflow-topology-policy",
+            "configs",
+            "reusable-concurrency.yml",
+        ),
+    )];
+    assert_saved_fixture("workflow_policy_merge_keys", &cases);
+}
