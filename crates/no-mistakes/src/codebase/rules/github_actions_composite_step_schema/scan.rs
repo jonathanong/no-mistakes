@@ -19,7 +19,11 @@ pub(super) fn check_file(
         let Some(source) = super::super::read_language_source(sources, path) else {
             return Vec::new();
         };
-        check_source(&rel, &source, opts)
+        let mut findings = check_source(&rel, &source, opts);
+        if !opts.defer_suppression {
+            super::super::suppress_rule_findings_for_path(sources, path, &mut findings);
+        }
+        findings
     })
 }
 
@@ -29,14 +33,10 @@ fn check_source(rel: &str, source: &str, opts: &CompiledOptions) -> Vec<RuleFind
     {
         return Vec::new();
     }
-    let mut findings = match serde_yaml::from_str::<Value>(source) {
+    match serde_yaml::from_str::<Value>(source) {
         Ok(value) => check_parsed(rel, source, &value, opts),
         Err(err) => vec![invalid_yaml_finding(rel, &err)],
-    };
-    if !opts.defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, source);
     }
-    findings
 }
 
 fn check_parsed(

@@ -168,3 +168,6 @@ fn file_directive_wins_over_both_line_directives() {
 
 #[path = "index_conformance_tests.rs"]
 mod conformance;
+
+#[path = "index_session_tests.rs"]
+mod session;
