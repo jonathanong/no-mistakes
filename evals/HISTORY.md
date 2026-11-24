@@ -19,6 +19,20 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-24 — lock review cases (#3879)
+
+Added synthetic review cases for a child insert followed by a parent key
+update and for removing a job lease based on per-worker concurrency and
+schedule cadence. Both cases grade the failure mechanism and a repair.
+
+On base `3e54e9c50a9cc74f51e74175bd881a53bbea46e5`, Claude CLI 2.1.325
+attempted one PostgreSQL pilot with the base rules and one with the updated
+rules. The configured agent was `claude-sonnet-5-5` and the judge was
+`claude-opus-5-5`. Both reports were partial with `auth_failed`. The agent
+reported `Not logged in` and the judge reported an expired OAuth session.
+There were zero completed attempts and the reports recorded $0. The
+PostgreSQL and queue cases have no model scores.
+
 ## 2026-11-21 — re-baseline under the Sonnet agent and Opus judge
 
 Resets the control arm after the 2026-11-14 move from an Opus agent / Sonnet

@@ -246,11 +246,11 @@ class PreviewAndGradeTest(unittest.TestCase):
             code = codex_rules.main([])
         self.assertEqual(code, 0)
         cases = codex_rules.discover()
-        self.assertEqual(len(cases), 18)
+        self.assertEqual(len(cases), 20)
         text = codex_rules.format_preview(cases, None)
-        self.assertIn("cases: 18\n", text)
+        self.assertIn("cases: 20\n", text)
         self.assertIn("arms: 2 (with, without)\n", text)
-        self.assertIn("attempts: 108 (18 x 2 x 3)\n", text)
+        self.assertIn("attempts: 120 (20 x 2 x 3)\n", text)
         self.assertIn("dollars: unknown (not measured)\n", text)
         self.assertIn("judge model: claude-opus-5-5\n", text)
         self.assertIn(f"agent model: {codex_rules_env.MODEL}\n", text)
@@ -681,7 +681,7 @@ class PreviewAndGradeTest(unittest.TestCase):
     def test_runs_zero_is_not_the_default(self):
         text = codex_rules.format_preview(codex_rules.discover(), 0)
         self.assertIn("runs: 0\n", text)
-        self.assertIn("attempts: 0 (18 x 2 x 0)\n", text)
+        self.assertIn("attempts: 0 (20 x 2 x 0)\n", text)
         with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")):
             self.assertEqual(codex_rules.main(["--runs", "0"]), 0)
             self.assertEqual(
