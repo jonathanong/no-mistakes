@@ -1,0 +1,38 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "jobs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "state": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "jobs_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

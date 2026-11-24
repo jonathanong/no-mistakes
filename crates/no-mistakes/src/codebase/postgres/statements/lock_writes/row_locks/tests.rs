@@ -132,3 +132,20 @@ fn recovered_share_locks_keep_unknown_mode_when_batch_tokens_are_unavailable() {
         assert_eq!(lock.row, Some(index));
     }
 }
+
+#[test]
+fn a_literal_that_looks_like_a_placeholder_keeps_its_sql_quotes() {
+    let facts = share_lock_facts(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/statements/key-share-literal-colon.sql"
+    )));
+    assert!(!facts.parse_failed);
+    let [lock] = facts.lock_writes.locks.as_slice() else {
+        panic!("expected one row lock");
+    };
+    let [write] = facts.lock_writes.writes.as_slice() else {
+        panic!("expected one row write");
+    };
+    assert_eq!(lock.key, Some(("id".into(), "':x'".into())));
+    assert_eq!(write.key, lock.key);
+}

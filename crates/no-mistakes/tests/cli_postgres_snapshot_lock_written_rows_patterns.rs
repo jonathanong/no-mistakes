@@ -140,6 +140,25 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_lock_written_rows_share_key_updates_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_share_key_updates",
+        &[
+            ("catalog", "key-share-key-writes", "share-key-writes.yml"),
+            ("no_catalog", "key-share-key-writes", "share-advise.yml"),
+        ],
+    );
+    for (case, expected) in [("catalog", &[5, 23, 35, 41][..]), ("no_catalog", &[41][..])] {
+        let report = &reports[case]["report"];
+        assert_eq!(
+            lines(report, "advisories", "share-lock-then-write"),
+            expected
+        );
+        assert!(lines(report, "advisories", "unanalyzable").is_empty());
+    }
+}
+
+#[test]
 fn postgres_lock_written_rows_share_uncertainty_check_json_snapshot() {
     let reports = snapshot(
         "postgres_lock_written_rows_share_uncertainty",
