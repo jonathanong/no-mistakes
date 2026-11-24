@@ -1,4 +1,5 @@
 use super::super::bindings::Bindings;
+use super::super::playwright_bindings::ValueTrace;
 use super::extend_unique;
 use crate::codebase::rules::test_reliability::playwright_provenance::{
     FixtureInitializer, WrapperCall,
@@ -49,14 +50,19 @@ impl<'ast> Bindings<'_, 'ast> {
         &self,
         symbol: SymbolId,
         depth: usize,
-    ) -> Option<FixtureInitializer> {
-        let (_, body) = self.function_def(symbol)?;
+    ) -> ValueTrace {
+        let Some((_, body)) = self.function_def(symbol) else {
+            return ValueTrace::None;
+        };
         let mut returns = Vec::new();
         match body {
             WrapperBody::Expr(expr) => returns.push(expr),
             WrapperBody::Block(block) => {
                 if !collect_returns(&block.statements, &mut returns) || returns.is_empty() {
-                    return None;
+                    return self.unresolved_if_body_provenance(
+                        block,
+                        "local factory return could not be traced statically",
+                    );
                 }
             }
         }
@@ -64,18 +70,26 @@ impl<'ast> Bindings<'_, 'ast> {
         let mut wrappers = Vec::new();
         let mut derived_at = None;
         for expr in returns {
-            let branch = self.playwright_value_origin_depth(expr, depth + 1)?;
+            let branch = match self.playwright_value_origin_depth(expr, depth + 1) {
+                ValueTrace::Resolved(init) => init,
+                ValueTrace::Unresolved(reason) => return ValueTrace::Unresolved(reason),
+                ValueTrace::None => return ValueTrace::None,
+            };
             if import.as_ref().is_some_and(|prev| prev != &branch.import) {
-                return None;
+                return ValueTrace::Unresolved(
+                    "local factory returns multiple distinct fixture origins",
+                );
             }
             import = Some(branch.import);
             extend_unique(&mut wrappers, branch.wrappers);
             derived_at = derived_at.or(branch.derived_at);
         }
-        Some(FixtureInitializer {
-            import: import?,
-            wrappers,
-            derived_at,
+        import.map_or(ValueTrace::None, |import| {
+            ValueTrace::Resolved(FixtureInitializer {
+                import,
+                wrappers,
+                derived_at,
+            })
         })
     }
 
@@ -86,31 +100,45 @@ impl<'ast> Bindings<'_, 'ast> {
         depth: usize,
         wrappers: Vec<WrapperCall>,
         derived_at: Option<u32>,
-    ) -> Option<FixtureInitializer> {
+    ) -> ValueTrace {
         let Some(import) = self.callee_import_origin(callee) else {
-            let Expression::Identifier(id) = callee else {
-                return None;
-            };
-            let mut inner = self.factory_return_origin(self.symbol(id)?, depth)?;
-            extend_unique(&mut inner.wrappers, wrappers);
-            inner.derived_at = derived_at.or(inner.derived_at);
-            return Some(inner);
+            if let Expression::Identifier(id) = callee {
+                if let Some(symbol) = self.symbol(id) {
+                    match self.factory_return_origin(symbol, depth) {
+                        ValueTrace::Resolved(mut inner) => {
+                            extend_unique(&mut inner.wrappers, wrappers);
+                            inner.derived_at = derived_at.or(inner.derived_at);
+                            return ValueTrace::Resolved(inner);
+                        }
+                        ValueTrace::Unresolved(reason) => return ValueTrace::Unresolved(reason),
+                        ValueTrace::None => {}
+                    }
+                }
+            }
+            return self.unresolved_if_call_provenance(
+                call,
+                "local wrapper or call in fixture chain could not be traced statically",
+            );
         };
         for (arg_index, arg) in call.arguments.iter().enumerate() {
             let Some(arg_expr) = arg.as_expression() else {
                 continue;
             };
-            if let Some(mut inner) = self.playwright_value_origin_depth(arg_expr, depth + 1) {
-                inner.wrappers.push(WrapperCall {
-                    callee: import,
-                    arg_index,
-                });
-                extend_unique(&mut inner.wrappers, wrappers);
-                inner.derived_at = derived_at.or(inner.derived_at);
-                return Some(inner);
+            match self.playwright_value_origin_depth(arg_expr, depth + 1) {
+                ValueTrace::Resolved(mut inner) => {
+                    inner.wrappers.push(WrapperCall {
+                        callee: import,
+                        arg_index,
+                    });
+                    extend_unique(&mut inner.wrappers, wrappers);
+                    inner.derived_at = derived_at.or(inner.derived_at);
+                    return ValueTrace::Resolved(inner);
+                }
+                ValueTrace::Unresolved(reason) => return ValueTrace::Unresolved(reason),
+                ValueTrace::None => {}
             }
         }
-        Some(FixtureInitializer {
+        ValueTrace::Resolved(FixtureInitializer {
             import,
             wrappers,
             derived_at,
@@ -140,6 +168,14 @@ pub(super) fn collect_returns<'ast>(
             {
                 return false;
             }
+            Statement::SwitchStatement(_)
+            | Statement::TryStatement(_)
+            | Statement::ForStatement(_)
+            | Statement::ForInStatement(_)
+            | Statement::ForOfStatement(_)
+            | Statement::WhileStatement(_)
+            | Statement::DoWhileStatement(_)
+            | Statement::LabeledStatement(_) => return false,
             _ => {}
         }
     }

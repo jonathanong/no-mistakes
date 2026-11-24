@@ -803,6 +803,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "test-no-retries",
           "file": "tests/exports.spec.ts",
           "message": "tests/exports.spec.ts:16: cannot verify whether imported binding `unavailable` (from `../fixtures/unavailable` export `test`) is Playwright's `test`; if it is a Playwright fixture, add its repository-relative module and export to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:22: cannot verify whether `bound` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         }
       ],
       "integration": [],
@@ -1015,8 +1020,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:13: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:14: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/factory.spec.mts",
           "message": "tests/factory.spec.mts:10: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -1025,8 +1050,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:8: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/unrelated.spec.mts",
           "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:14: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:15: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
         {
           "consumer": "test-no-retries",
@@ -1035,8 +1080,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "consumer": "test-no-retries",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
           "file": "tests/opaque.spec.mts",
           "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:9: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
         {
           "consumer": "test-no-retries",
@@ -1092,8 +1147,58 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:13: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:14: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:8: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/unrelated.spec.mts",
           "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:14: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:15: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:9: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
         {
           "consumer": "test-no-retries",

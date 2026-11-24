@@ -72,6 +72,7 @@ impl Collector<'_, '_> {
             playwright_binding: None,
             playwright_wrappers: Vec::new(),
             resolved_playwright_exports: Vec::new(),
+            unresolved_reason: None,
         }
     }
 

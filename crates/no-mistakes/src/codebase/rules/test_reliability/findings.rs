@@ -1,9 +1,13 @@
+mod messages;
+
+pub(super) use messages::unreadable;
+use messages::unresolved_binding_message;
+
 use super::{
     Allowlist, Inputs, Location, RuleFinding, Shape, SourceDemand, PLAYWRIGHT_NO_SERIAL,
     TEST_NO_RETRIES,
 };
 use crate::codebase::check_outcome::{CheckFailure, CheckInputFailure};
-use crate::codebase::ts_source::has_disable_file_comment;
 use crate::fx::FxHashSet;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -31,6 +35,7 @@ pub(super) fn source_findings(
     }
     let mut findings = Vec::new();
     let mut first_unresolved = None;
+    let mut suppressions = None;
     for location in facts
         .test_reliability
         .iter()
@@ -50,7 +55,9 @@ pub(super) fn source_findings(
             .resolved_playwright_exports
             .iter()
             .any(|(m, e)| ctx.fixtures.contains(&(m.clone(), e.to_string())));
-        if location.playwright_import.is_none() || configured {
+        if (location.playwright_import.is_none() && location.unresolved_reason.is_none())
+            || configured
+        {
             findings.push(RuleFinding {
                 rule: id.into(),
                 file: relative.into(),
@@ -63,6 +70,23 @@ pub(super) fn source_findings(
             continue;
         }
         let unresolved = unresolved_binding_message(relative, id, location);
+        let index = suppressions.get_or_insert_with(|| inputs.sources.suppressions_for_path(path));
+        if index
+            .as_ref()
+            .and_then(|idx| idx.matching(id, location.line.try_into().ok(), true))
+            .is_some()
+        {
+            findings.push(RuleFinding {
+                rule: id.into(),
+                file: relative.into(),
+                line: location.line,
+                message: unresolved,
+                import: None,
+                target: Some("unresolved".into()),
+                causes: Vec::new(),
+            });
+            continue;
+        }
         if let Some(session) = inputs
             .session
             .filter(|session| session.partial_checks_enabled())
@@ -81,60 +105,6 @@ pub(super) fn source_findings(
         return Err(CheckInputFailure::source(relative, message).into());
     }
     Ok(findings)
-}
-
-fn unresolved_binding_message(relative: &str, id: &str, location: &Location) -> String {
-    let binding = location
-        .playwright_binding
-        .as_deref()
-        .unwrap_or("test");
-    if let Some((module, export)) = location.resolved_playwright_exports.first() {
-        return format!(
-            "{relative}:{}: cannot verify whether imported binding `{binding}` (from `{module}` export `{export}`) is Playwright's `test`; if it is a Playwright fixture, add `{{ module: \"{module}\", export: \"{export}\" }}` to `{id}` `options.fixtures`",
-            location.line
-        );
-    }
-    let (specifier, export) = location
-        .playwright_import
-        .as_ref()
-        .map_or(("<unknown>", "test"), |import| {
-            (import.specifier.as_ref(), import.name.as_ref())
-        });
-    format!(
-        "{relative}:{}: cannot verify whether imported binding `{binding}` (from `{specifier}` export `{export}`) is Playwright's `test`; if it is a Playwright fixture, add its repository-relative module and export to `{id}` `options.fixtures`",
-        location.line
-    )
-}
-
-pub(super) fn unreadable(
-    inputs: &Inputs<'_>,
-    path: &Path,
-    relative: &str,
-    id: &str,
-    message: String,
-) -> Result<Vec<RuleFinding>> {
-    let message = format!("{message}. Repair this file so {id} can verify its test settings.");
-    if inputs
-        .sources
-        .read_path(path)
-        .is_ok_and(|source| has_disable_file_comment(&source, id))
-    {
-        return Ok(vec![RuleFinding {
-            rule: id.into(),
-            file: relative.into(),
-            line: 1,
-            message,
-            import: None,
-            target: Some("unanalyzable".into()),
-            causes: Vec::new(),
-        }]);
-    }
-    Err(CheckInputFailure {
-        file: Some(PathBuf::from(relative)),
-        property: None,
-        message,
-    }
-    .into())
 }
 
 pub(super) fn findings_for<'a>(

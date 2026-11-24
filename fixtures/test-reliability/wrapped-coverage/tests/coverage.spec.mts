@@ -17,3 +17,23 @@ badExternal.describe.configure({ mode: "serial" });
 badSpread.describe.configure({ mode: "serial" });
 testNs.unrelated.describe.configure({ mode: "serial" });
 ext.describe.configure({ mode: "serial" });
+
+const obj = { t: base };
+obj.t.describe.configure({ mode: "serial" });
+const cond = Math.random() > 0.5 ? base : ext;
+cond.describe.configure({ mode: "serial" });
+function multiOrigin(flag: boolean) {
+  if (flag) {
+    return base;
+  }
+  return ext;
+}
+const fromMulti = multiOrigin(true);
+fromMulti.describe.configure({ mode: "serial" });
+function blockFactory() {
+  return base.extend({});
+}
+let fromBlock = blockFactory();
+fromBlock.describe.configure({ mode: "serial" });
+const wrappedLet = arrowExpr(fromBlock);
+wrappedLet.describe.configure({ mode: "serial" });

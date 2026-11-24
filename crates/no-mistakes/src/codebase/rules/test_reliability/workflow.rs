@@ -36,6 +36,7 @@ pub(super) fn collect(
                     playwright_binding: None,
                     playwright_wrappers: Vec::new(),
                     resolved_playwright_exports: Vec::new(),
+                    unresolved_reason: None,
                 });
             }
             let Some(script) = step.get("run").and_then(Value::as_str) else {
@@ -52,6 +53,7 @@ pub(super) fn collect(
                         playwright_binding: None,
                         playwright_wrappers: Vec::new(),
                         resolved_playwright_exports: Vec::new(),
+                        unresolved_reason: None,
                     });
                 }
             }

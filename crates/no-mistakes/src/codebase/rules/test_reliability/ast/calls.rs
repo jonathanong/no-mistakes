@@ -1,5 +1,6 @@
 use super::super::playwright_provenance::{ImportRef, WrapperCall};
 use super::bindings::Runner::{Jest, Playwright, Vitest};
+use super::playwright_bindings::ValueTrace;
 use super::{literal_object, literal_string_is, property, retry_count, Collector, Origin, Shape};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
@@ -15,9 +16,10 @@ enum TestCall {
 }
 
 struct PendingPlaywright {
-    import: ImportRef,
+    import: Option<ImportRef>,
     binding: Option<Arc<str>>,
     wrappers: Vec<WrapperCall>,
+    unresolved_reason: Option<&'static str>,
 }
 
 impl<'a> Visit<'a> for Collector<'_, '_> {
@@ -31,9 +33,10 @@ impl<'a> Visit<'a> for Collector<'_, '_> {
             if let Some(pending) = pending {
                 for location in &mut self.locations[start..] {
                     location.origin = origin;
-                    location.playwright_import = Some(pending.import.clone());
+                    location.playwright_import.clone_from(&pending.import);
                     location.playwright_binding.clone_from(&pending.binding);
                     location.playwright_wrappers.clone_from(&pending.wrappers);
+                    location.unresolved_reason = pending.unresolved_reason;
                 }
             } else {
                 for location in &mut self.locations[start..] {
@@ -99,14 +102,25 @@ impl Collector<'_, '_> {
             return None;
         }
         let receiver = describe.object();
-        let init = self.bindings.playwright_value_origin(receiver)?;
-        let pending = (!init.import.is_playwright_test() || !init.wrappers.is_empty()).then(|| {
-            PendingPlaywright {
-                import: init.import,
-                binding: receiver_label(receiver),
-                wrappers: init.wrappers,
+        let pending = match self.bindings.playwright_value_origin(receiver) {
+            ValueTrace::Resolved(init) => {
+                (!init.import.is_playwright_test() || !init.wrappers.is_empty()).then(|| {
+                    PendingPlaywright {
+                        import: Some(init.import),
+                        binding: receiver_label(receiver),
+                        wrappers: init.wrappers,
+                        unresolved_reason: None,
+                    }
+                })
             }
-        });
+            ValueTrace::Unresolved(reason) => Some(PendingPlaywright {
+                import: None,
+                binding: receiver_label(receiver),
+                wrappers: Vec::new(),
+                unresolved_reason: Some(reason),
+            }),
+            ValueTrace::None => return None,
+        };
         Some((kind, Origin::Playwright, pending))
     }
 

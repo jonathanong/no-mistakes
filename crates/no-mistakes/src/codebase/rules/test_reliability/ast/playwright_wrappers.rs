@@ -6,6 +6,7 @@ use oxc_ast::ast::{CallExpression, Expression};
 use oxc_semantic::SymbolId;
 
 mod body;
+mod provenance;
 use body::{collect_returns, WrapperBody};
 
 const MAX_WRAPPER_DEPTH: usize = 8;

@@ -112,6 +112,22 @@ impl<'scope, 'ast> Bindings<'scope, 'ast> {
         declaration.init.as_ref()
     }
 
+    pub(super) fn any_var_initializer(&self, symbol: SymbolId) -> Option<&'ast Expression<'ast>> {
+        self.semantic
+            .nodes()
+            .kind(self.semantic.scoping().symbol_declaration(symbol))
+            .as_variable_declarator()?
+            .init
+            .as_ref()
+    }
+
+    pub(super) fn is_namespace_import(&self, symbol: SymbolId) -> bool {
+        self.other_imports
+            .get(&symbol)
+            .is_some_and(|origin| origin.name.as_ref() == "*")
+            || matches!(self.imports.get(&symbol), Some((Runner::Playwright, None)))
+    }
+
     pub(super) fn import_origin(
         &self,
         symbol: SymbolId,

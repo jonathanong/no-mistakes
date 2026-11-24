@@ -10,6 +10,21 @@ use oxc_semantic::{Semantic, SymbolId};
 
 const MAX_VALUE_DEPTH: usize = 8;
 
+pub(super) enum ValueTrace {
+    Resolved(FixtureInitializer),
+    Unresolved(&'static str),
+    None,
+}
+
+impl ValueTrace {
+    pub(super) fn into_resolved(self) -> Option<FixtureInitializer> {
+        match self {
+            Self::Resolved(init) => Some(init),
+            Self::Unresolved(_) | Self::None => None,
+        }
+    }
+}
+
 pub(crate) fn fixture_initializers<'a>(
     program: &'a Program<'a>,
     semantic: &Semantic<'a>,
@@ -34,7 +49,7 @@ pub(crate) fn fixture_initializers<'a>(
                 .filter(|declaration| declaration.id.is_binding_identifier())
                 .and_then(|declaration| declaration.init.as_ref())
             {
-                if let Some(import) = bindings.playwright_value_origin(initializer) {
+                if let Some(import) = bindings.playwright_value_origin(initializer).into_resolved() {
                     result.values.insert(export.local.clone(), import);
                     continue;
                 }
@@ -43,7 +58,7 @@ pub(crate) fn fixture_initializers<'a>(
         let mut visited = FxHashSet::default();
         if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
             result.wrappers.insert(export.local.clone(), summary);
-        } else if let Some(origin) = bindings.factory_return_origin(symbol, 0) {
+        } else if let Some(origin) = bindings.factory_return_origin(symbol, 0).into_resolved() {
             result.values.insert(export.local.clone(), origin);
         }
     }
@@ -51,10 +66,7 @@ pub(crate) fn fixture_initializers<'a>(
 }
 
 impl Bindings<'_, '_> {
-    pub(super) fn playwright_value_origin(
-        &self,
-        value: &Expression<'_>,
-    ) -> Option<FixtureInitializer> {
+    pub(super) fn playwright_value_origin(&self, value: &Expression<'_>) -> ValueTrace {
         self.playwright_value_origin_depth(value, 0)
     }
 
@@ -62,35 +74,54 @@ impl Bindings<'_, '_> {
         &self,
         value: &Expression<'_>,
         depth: usize,
-    ) -> Option<FixtureInitializer> {
+    ) -> ValueTrace {
         if depth >= MAX_VALUE_DEPTH {
-            return None;
+            return self.unresolved_if_provenance(
+                value,
+                "fixture chain exceeded static trace depth",
+            );
         }
         let mut derived_at = None;
         let mut wrappers = Vec::new();
         let mut value = unwrap_ts_wrappers(value);
         loop {
             if let Some(member) = value.as_member_expression() {
-                let property = member.static_property_name()?.as_str()?;
-                let Expression::Identifier(object) = unwrap_ts_wrappers(member.object()) else {
-                    return None;
-                };
-                return Some(FixtureInitializer {
-                    import: self.import_origin(self.symbol(object)?, Some(property))?,
-                    wrappers,
-                    derived_at,
-                });
+                if let Some(property) = member.static_property_name().and_then(|n| n.as_str()) {
+                    if let Expression::Identifier(object) = unwrap_ts_wrappers(member.object()) {
+                        if let Some(import) = self
+                            .symbol(object)
+                            .and_then(|sym| self.import_origin(sym, Some(property)))
+                        {
+                            return ValueTrace::Resolved(FixtureInitializer {
+                                import,
+                                wrappers,
+                                derived_at,
+                            });
+                        }
+                    }
+                }
+                return self.unresolved_if_provenance(
+                    value,
+                    "member access in fixture chain could not be traced statically",
+                );
             }
             match value {
                 Expression::Identifier(identifier) => {
-                    if let Some(import) = self.import_origin(self.symbol(identifier)?, None) {
-                        return Some(FixtureInitializer {
+                    let Some(symbol) = self.symbol(identifier) else {
+                        return ValueTrace::None;
+                    };
+                    if let Some(import) = self.import_origin(symbol, None) {
+                        return ValueTrace::Resolved(FixtureInitializer {
                             import,
                             wrappers,
                             derived_at,
                         });
                     }
-                    value = unwrap_ts_wrappers(self.constant_initializer(identifier)?);
+                    if let Some(init) = self.constant_initializer(identifier) {
+                        value = unwrap_ts_wrappers(init);
+                        continue;
+                    }
+                    return self.non_const_or_destructured_trace(symbol);
                 }
                 Expression::CallExpression(call) if !call.optional => {
                     let callee = unwrap_ts_wrappers(&call.callee);
@@ -104,16 +135,25 @@ impl Bindings<'_, '_> {
                     }
                     let mut visited = FxHashSet::default();
                     if let Some(summary) = self.local_callee_summary(callee, depth, &mut visited) {
-                        super::playwright_wrappers::extend_unique(&mut wrappers, summary.wrappers);
-                        derived_at = derived_at.or(summary.derived_at);
-                        value = unwrap_ts_wrappers(
-                            call.arguments.get(summary.param_index)?.as_expression()?,
-                        );
-                        continue;
+                        if let Some(arg) = call
+                            .arguments
+                            .get(summary.param_index)
+                            .and_then(|arg| arg.as_expression())
+                        {
+                            super::playwright_wrappers::extend_unique(&mut wrappers, summary.wrappers);
+                            derived_at = derived_at.or(summary.derived_at);
+                            value = unwrap_ts_wrappers(arg);
+                            continue;
+                        }
                     }
                     return self.call_value_origin(call, callee, depth, wrappers, derived_at);
                 }
-                _ => return None,
+                _ => {
+                    return self.unresolved_if_provenance(
+                        value,
+                        "expression in fixture chain could not be traced statically",
+                    );
+                }
             }
         }
     }
