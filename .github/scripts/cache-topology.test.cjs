@@ -159,13 +159,20 @@ test("macOS smoke restores main test-harness snapshot before the Rust tests and 
   assert.equal(key(restore), key(producer));
   assert.equal(fallbacks(restore), fallbacks(producer));
   assert.equal(paths(restore), paths(producer));
+  const compileIndex = index("Compile macOS-dependent Rust tests");
+  const testsIndex = index("Run macOS-dependent Rust tests");
+  const runtimeRestoreIndex = index("Restore native workspace artifacts built on main");
+  const buildIndex = index("Build native CLI and N-API addon");
+  assert.ok(testsIndex >= 0, "Missing Run macOS-dependent Rust tests step");
+  assert.ok(buildIndex >= 0, "Missing Build native CLI and N-API addon step");
   // The crate-type rewrite invalidates restored test units, so tests run first.
-  assert.ok(index("Restore native test harness") < index("Compile macOS-dependent Rust tests"));
-  assert.ok(index("Compile macOS-dependent Rust tests") < index("Run macOS-dependent Rust tests"));
-  assert.ok(index("Run macOS-dependent Rust tests") < index("Build native CLI and N-API addon"));
-  assert.match(all[index("Compile macOS-dependent Rust tests")], /cargo-cache-inputs\.cjs restore/);
+  assert.ok(index("Restore native test harness") < compileIndex);
+  assert.ok(compileIndex < testsIndex);
+  assert.ok(testsIndex < runtimeRestoreIndex, "Restore native runtime artifacts after Rust tests");
+  assert.ok(testsIndex < buildIndex);
+  assert.match(all[compileIndex], /cargo-cache-inputs\.cjs restore/);
   // A second restore would stamp files changed since the capture as fresh again.
-  assert.doesNotMatch(all[index("Run macOS-dependent Rust tests")], /cargo-cache-inputs/);
+  assert.doesNotMatch(all[testsIndex], /cargo-cache-inputs/);
 });
 
 test("macOS smoke compiles its Rust tests in a bounded step of their own", () => {
