@@ -1,0 +1,23 @@
+{
+  "total_count": 3,
+  "workflow_runs": [
+    {
+      "id": 300,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "cccccccccccccccccccccccccccccccccccccccc"
+    },
+    {
+      "id": 200,
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "id": 100,
+      "status": "completed",
+      "conclusion": "cancelled",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

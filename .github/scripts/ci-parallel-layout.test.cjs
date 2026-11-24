@@ -22,6 +22,14 @@ test("CI reports and gates stop on workflow cancellation and still run after fai
   ]) {
     assert.match(job(name), /^    if: \$\{\{ !cancelled\(\) \}\}$/m, name);
   }
+  assert.match(
+    workflowJob(benchmarkWorkflow, "benchmark-gate"),
+    /^    if: \$\{\{ !cancelled\(\) \}\}$/m,
+    "benchmark-gate",
+  );
+  for (const name of ["bench", "benchmark-shards", "frontend-lifecycle-smoke", "benchmark-gate"]) {
+    assert.throws(() => job(name), `${name} must not remain in ci.yml`);
+  }
 });
 
 test("JavaScript coverage rejects any unsuccessful shard result", () => {

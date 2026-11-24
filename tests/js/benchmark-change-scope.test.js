@@ -65,6 +65,7 @@ test("conservatively runs every shard for shared benchmark inputs", () => {
     ".github/workflows/benchmarks.yml",
     ".github/scripts/benchmark-change-scope.cjs",
     ".github/scripts/benchmark-handoff.sh",
+    ".github/scripts/push-diff-base.cjs",
     "tests/js/benchmark-change-scope.test.js",
   ]) {
     assert.deepEqual(benchmarkChangeScope(modified([path])), { changed: true, scope: "all" });

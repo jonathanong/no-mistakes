@@ -25,6 +25,9 @@ jobs:
     name: Detect changed paths
     runs-on: ubuntu-slim
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
     outputs:
       benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
       benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
@@ -36,12 +39,32 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Resolve diff base
+        id: diff-base
+        timeout-minutes: 2
+        shell: bash
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BASE_SHA=$(node .github/scripts/push-diff-base.cjs \
+            --event "$GITHUB_EVENT_NAME" \
+            --workflow benchmarks.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --head "$HEAD_SHA" \
+            --pr-base "$PR_BASE_SHA" \
+            --current-run-id "$GITHUB_RUN_ID")
+          echo "base-sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
       - name: Check benchmark paths
         id: benchmark-paths
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
