@@ -72,6 +72,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                             config,
                             facts,
                             &session,
+                            sources.as_ref(),
                         )
                     })
                 },

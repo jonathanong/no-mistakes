@@ -68,6 +68,8 @@ export interface QueueCheckFinding {
 }
 
 export interface QueueCheckOptions extends ProjectOptions {
+  /** Select a no-mistakes config by absolute path or by path relative to root. */
+  config?: string;
   /** Return `{ findings, diagnostics }` instead of a bare findings array. */
   includeDiagnostics?: boolean;
 }
