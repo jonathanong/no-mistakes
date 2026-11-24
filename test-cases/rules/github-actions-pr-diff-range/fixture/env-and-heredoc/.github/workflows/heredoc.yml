@@ -12,3 +12,7 @@ jobs:
           git diff "$BASE" "$HEAD"
           EXAMPLE
           git diff "$BASE" "$HEAD"
+      - run: |
+          git diff "$BASE" "$HEAD"
+          cat <<MISSING
+          git diff "$BASE" "$HEAD"

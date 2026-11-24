@@ -29,17 +29,17 @@ It reports a `while`, `until`, or `for` loop in a `run` script when both hold:
 
 Each reported loop is one finding on the line of the `while`, `until`, or
 `for` keyword. A nested loop is judged on its own, including when it starts
-on the same line as the outer loop's `do`. Here-document bodies are skipped,
-so the rule can still inspect real commands before and after them.
+on the same line as the outer loop's `do`. The rule skips here-document bodies
+in opener order, including when a single line opens several. If a delimiter is
+missing, the rule still reports completed loops before the unfinished body.
 
 These forms are silent:
 
 - `sleep` outside a loop.
 - A loop with no configured poll command, or a poll command with no `sleep`.
-- A script that cannot be parsed as balanced loops: a `while`, `until`, or
-  `for` without its `done` or a stray `done`. Unterminated here-documents,
-  multiple here-document openers on the same command line, and invalid YAML
-  are also silent.
+- Invalid YAML, a stray `done`, and loops with no matching `done`. An
+  unfinished here-document can hide a closing `done`, so the rule only judges
+  completed loops in that case.
 - A `for` loop, when `options.ignoreForLoops` is `true`. A `for` loop runs a
   fixed number of times, so a bounded retry is not a wait.
 

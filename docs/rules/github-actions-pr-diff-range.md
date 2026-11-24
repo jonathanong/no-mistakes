@@ -49,8 +49,10 @@ A range end is recognized when it is the expression itself, optionally behind
 `env` assigns to that expression. Anything not recognized as a diff range is
 silent: another command, a `git diff` flag that takes a separate value
 (`-U 3`, `--output file`), more than two revisions, a revision the rule does
-not know, here-document bodies, and invalid YAML. The fetch depth behind a
-three-dot diff is not judged.
+not know, here-document bodies, and invalid YAML. The scanner skips
+here-document bodies in opener order, including when several open on the same
+line. A missing delimiter leaves earlier diff commands available for analysis.
+The fetch depth behind a three-dot diff is not judged.
 
 ## Options
 

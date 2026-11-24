@@ -1,5 +1,6 @@
 //! Cross-file writes, rebinds, and namespace escapes of exported SQL fragments.
 mod alias;
+mod ambient;
 mod dynamic;
 mod fact_reads;
 mod fragments;

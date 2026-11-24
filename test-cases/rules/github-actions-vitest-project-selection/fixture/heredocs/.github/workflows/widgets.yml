@@ -1,0 +1,25 @@
+name: Widgets
+on: [workflow_dispatch]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat <<FIRST <<'SECOND'
+          pnpm exec vitest run --project widgets ignored-first.test.ts
+          FIRST
+          pnpm exec vitest run --project widgets ignored-second.test.ts
+          SECOND
+          pnpm exec vitest run --project widgets after-two.test.ts
+      - run: |
+          cat <<FIRST; cat <<SECOND
+          first body
+          FIRST
+
+          second body
+          SECOND
+          pnpm exec vitest run --project widgets after-separate.test.ts
+      - run: |
+          pnpm exec vitest run --project widgets before-unclosed.test.ts
+          cat <<MISSING
+          pnpm exec vitest run --project widgets ignored-unclosed.test.ts

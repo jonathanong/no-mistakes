@@ -42,6 +42,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-pr-diff-range",
           "sourceLine": "git diff \"$BASE\" \"$HEAD\"",
           "target": "compare"
+        },
+        {
+          "file": ".github/workflows/heredoc.yml",
+          "line": 16,
+          "message": ".github/workflows/heredoc.yml:16: job `compare` step 2 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "git diff \"$BASE\" \"$HEAD\"",
+          "target": "compare"
         }
       ],
       "warnings": []

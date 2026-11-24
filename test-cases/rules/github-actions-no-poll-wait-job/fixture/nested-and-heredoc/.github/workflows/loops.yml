@@ -30,3 +30,9 @@ jobs:
           FIRST
           text
           SECOND
+          until gh run view 789; do sleep 5; done
+      - run: |
+          until gh run view 890; do sleep 5; done
+          while true; do
+            cat <<MISSING
+            until gh run view 901; do sleep 5; done
