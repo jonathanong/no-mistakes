@@ -145,17 +145,22 @@ jobs:
           && sudo mkswap /swapfile-bench
           && sudo swapon /swapfile-bench
 
+      # cargo-codspeed 5.0.1 appends -Cdebuginfo=2 to RUSTFLAGS; CARGO_ENCODED_RUSTFLAGS
+      # takes precedence in Cargo so line-tables-only keeps function/line symbols for
+      # Valgrind/Callgrind without full DWARF type/variable DIEs.
       # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Build CPU benchmarks
         timeout-minutes: 45
-        run: >-
-          bash .github/scripts/with-resource-samples.sh
-          cargo codspeed build
-          -p no-mistakes
-          --no-default-features
-          --features test-instrumentation
-          --bench core_analysis
-          -m simulation
+        run: |
+          CARGO_ENCODED_RUSTFLAGS="$(printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s' '-D' 'warnings' '-Cdebuginfo=line-tables-only' '-Cstrip=none' '--cfg=codspeed' '--cfg=codspeed_build')"
+          export CARGO_ENCODED_RUSTFLAGS
+          bash .github/scripts/with-resource-samples.sh \
+            cargo codspeed build \
+            -p no-mistakes \
+            --no-default-features \
+            --features test-instrumentation \
+            --bench core_analysis \
+            -m simulation
 
       - name: Verify fresh-process frontend call counts
         timeout-minutes: 2
@@ -169,13 +174,15 @@ jobs:
 
       - name: Build memory benchmarks
         timeout-minutes: 20
-        run: >-
-          cargo codspeed build
-          -p no-mistakes
-          --no-default-features
-          --features test-instrumentation
-          --bench core_analysis
-          -m memory
+        run: |
+          CARGO_ENCODED_RUSTFLAGS="$(printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\x1f%s' '-D' 'warnings' '-Cdebuginfo=line-tables-only' '-Cstrip=none' '--cfg=codspeed' '--cfg=codspeed_build')"
+          export CARGO_ENCODED_RUSTFLAGS
+          cargo codspeed build \
+            -p no-mistakes \
+            --no-default-features \
+            --features test-instrumentation \
+            --bench core_analysis \
+            -m memory
 
       - name: Package benchmark executables
         id: package

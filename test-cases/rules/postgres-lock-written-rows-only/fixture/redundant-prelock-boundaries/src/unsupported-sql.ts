@@ -77,3 +77,21 @@ export async function unsupportedLockOnUnrelatedTable(id: number) {
   await query(`SELECT 1, 2 FROM job_events WHERE job_id = $1 FOR UPDATE`, [id]);
   await query(`UPDATE jobs SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
 }
+
+export async function multipleUnrelatedInsertedRows() {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = 1 FOR UPDATE`);
+  await query(`INSERT INTO jobs (id, state) VALUES (2, 'done'), (3, 'done') ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`);
+}
+
+export async function multipleRowsOnAnotherRelation(id: number, otherId: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`INSERT INTO other_jobs (id, state) VALUES ($1, 'done'), ($2, 'done') ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`, [id, otherId]);
+}
+
+export async function multipleRowsWithComputedValue(id: number, otherId: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`INSERT INTO jobs (id, state) VALUES ($1, 'done'), ($2, upper('done')) ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`, [id, otherId]);
+}

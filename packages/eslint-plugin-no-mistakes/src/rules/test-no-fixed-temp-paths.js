@@ -65,8 +65,14 @@ module.exports = rule(
     const findings = new Set();
     let mocksFilesystem = false;
     function origin(input) {
-      const node = unwrapExpression(input);
-      return unwrapExpression(stableConstInitializer(node, context, new Set())) ?? node;
+      const seen = new Set();
+      let node = unwrapExpression(input);
+      while (node?.type === "Identifier") {
+        const initializer = stableConstInitializer(node, context, seen);
+        if (!initializer) break;
+        node = unwrapExpression(initializer);
+      }
+      return node;
     }
     function recordPath(node) {
       if (isFixedTempPath(node, resolve, origin) && !suppressed(node)) findings.add(node);

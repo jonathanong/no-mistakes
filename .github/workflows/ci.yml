@@ -178,11 +178,11 @@ jobs:
             while ! git merge-base "$BASE_SHA" "$HEAD_SHA" >/dev/null 2>&1; do
               attempts=$((attempts + 1))
               if (( attempts > 4 )); then
-                    node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
                 exit 0
               fi
               if ! git fetch --no-tags --deepen=300 origin "$BASE_SHA" "$HEAD_SHA"; then
-                    node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
                 exit 0
               fi
             done
@@ -295,6 +295,9 @@ jobs:
       - name: Test PostgreSQL setup policy
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
+      - name: Test Codex rules eval runner
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s evals
       - name: Test Rust disk diagnostics
         timeout-minutes: 2
         run: node --test .github/scripts/rust-disk-usage.test.cjs .github/scripts/drop-rust-test-executables.test.cjs
@@ -349,7 +352,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/push-diff-base.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs .github/scripts/ci-no-serialization.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/push-diff-base.test.cjs .github/scripts/fixture-baseline-workflow.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs .github/scripts/ci-no-serialization.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs
@@ -1928,11 +1931,15 @@ jobs:
           - os: macos-15
             target: aarch64-apple-darwin
             shard: 1
-            total: 2
+            total: 3
           - os: macos-15
             target: aarch64-apple-darwin
             shard: 2
-            total: 2
+            total: 3
+          - os: macos-15
+            target: aarch64-apple-darwin
+            shard: 3
+            total: 3
 
     steps:
       - name: Exclude workspace from Microsoft Defender
@@ -3339,17 +3346,15 @@ jobs:
             --head "$HEAD_SHA" \
             --pr-base "$PR_BASE_SHA" \
             --current-run-id "$GITHUB_RUN_ID")
-          if [ -n "${BASE_SHA}" ] && [ "${BASE_SHA}" != "0000000000000000000000000000000000000000" ]; then
+          baseline_args=(--require-empty-baseline)
+          if [[ -n "$BASE_SHA" && "$BASE_SHA" != "$HEAD_SHA" && "$BASE_SHA" != "0000000000000000000000000000000000000000" ]]; then
             if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
-              git fetch --no-tags --depth=1 origin "${BASE_SHA}"
+              git fetch --no-tags --depth=1 origin "$BASE_SHA"
             fi
-            base="${BASE_SHA}"
-          else
-            git fetch --no-tags --depth=1 origin main
-            base="origin/main"
+            baseline_args=(--base "$BASE_SHA")
           fi
           ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg
-          python3 .ast-grep/check-inline-fixture-writes.py --base "${base}"
+          python3 .ast-grep/check-inline-fixture-writes.py "${baseline_args[@]}"
   retain-linux-runtime-cache:
     name: Retain linux-runtime cache
     needs: linux-runtime

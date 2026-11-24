@@ -57,11 +57,11 @@ function vitestArgs(os) {
 }
 
 // A cargo filter that matches nothing exits 0 with "running 0 tests".
-function testsRun(output) {
-  return [...output.matchAll(/^running (\d+) tests?\r?$/gm)].reduce(
-    (total, match) => total + Number(match[1]),
-    0,
+function assertCargoTestsRan(args, output) {
+  const ranTests = [...output.matchAll(/^running (\d+) tests?\r?$/gm)].some(
+    ([, count]) => Number(count) > 0,
   );
+  if (!ranTests) throw new Error(`cargo ${args.join(" ")} ran zero tests; update the smoke list`);
 }
 
 function execute(command, args, env = process.env) {
@@ -76,8 +76,22 @@ function cargo(args) {
   process.stdout.write(result.stdout);
   process.stderr.write(result.stderr);
   if (result.status !== 0) throw new Error(`cargo ${args[0]} failed: ${result.status}`);
-  if (testsRun(result.stdout) === 0)
-    throw new Error(`cargo ${args.join(" ")} ran zero tests; update the smoke list`);
+  assertCargoTestsRan(args, result.stdout);
+}
+
+function assertCliResult({ status, stdout, stderr }) {
+  if (status !== 1)
+    throw new Error(`check exited ${status}, expected a finding. ${stderr}`.trimEnd());
+  const report = JSON.parse(stdout);
+  const found =
+    Array.isArray(report?.rules) &&
+    report.rules.some(
+      (finding) =>
+        finding?.rule === "agents-md-max-size" &&
+        finding.file === "AGENTS.md" &&
+        finding.line === 1,
+    );
+  if (!found) throw new Error(`check did not report agents-md-max-size at AGENTS.md:1\n${stdout}`);
 }
 
 function cli(binary) {
@@ -88,9 +102,7 @@ function cli(binary) {
     { cwd: root, encoding: "utf8" },
   );
   if (result.error) throw result.error;
-  if (result.status !== 0 && result.status !== 1)
-    throw new Error(`check exited ${result.status}: ${result.stderr}`);
-  JSON.parse(result.stdout);
+  assertCliResult(result);
 }
 
 // Order-independent: the dependency API tests in real-napi-api.test.js depend
@@ -135,4 +147,11 @@ if (require.main === module) {
     });
 }
 
-module.exports = { buildCommand, cargoCommands, escape, testsRun, vitestArgs };
+module.exports = {
+  assertCargoTestsRan,
+  assertCliResult,
+  buildCommand,
+  cargoCommands,
+  escape,
+  vitestArgs,
+};

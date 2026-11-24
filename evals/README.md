@@ -514,18 +514,31 @@ Read the pilot `transcript.jsonl` before starting the group run.
 `--output` is a directory. The runner writes `aggregate-result.json` there, in
 the shape `summarize.py` and `power.py` already read (`arms.with` and
 `arms.without`). It also writes `attempts/<case>/<arm>/<n>/transcript.jsonl`
-as soon as that attempt ends, then updates the aggregate. Run the same command
-again to resume; an attempt with `result.json` is skipped. `--runs` must be 1
-or greater. Before any paid attempt, `codex plugin list --json` must show
-`no-mistakes-rules` installed and enabled on the with arm and no plugins on
-the without arm. `skill-fired` on each arm is the primary measure: a finished
-command that reads `<skill>-rules/SKILL.md` from that attempt's installed
-plugin cache or its marketplace copy, including a relative path after `cd`
-and a canonical path after the attempt directory is gone.
-`--regrade` recomputes that bit from the saved transcripts and does not call
-a model. The pass rate is a regression check: `summarize.py` exits 1 when the
-with-arm score is below the without-arm score. A judge failure is recorded on
-that grader and leaves `skill-fired` in place.
+as soon as that attempt ends, then updates the aggregate. Resume with the
+same inputs and effective run counts. `run-inputs.json` binds the directory to
+its plugin contents, agent and judge settings, prompts, and graders. Use a
+fresh directory for changed inputs or to run again from a legacy directory
+without a fingerprint. `--runs` must be 1 or greater.
+
+Before a paid agent attempt, the runner verifies that only the with arm has
+the rules plugin. The primary measure is `skill-fired`: a completed command
+must read the skill from the attempt's installed plugin or marketplace copy.
+`--regrade` updates trigger and isolation findings from saved transcripts
+without model calls, including for legacy reports. The runner reports judge
+failures as incomplete grading and retries failed verdicts on resume using
+the saved transcript and final answer. The summary leaves affected content
+scores blank and exits 1 on a scored with-arm regression.
+
+Both arms use a read-only sandbox with ambient read access. The transcript
+audit flags some accesses outside the attempt and to its credential file.
+Flagged attempts leave the report incomplete and withhold new judge calls.
+
+Run the credential-free isolation and runner tests locally with the same
+command CI uses:
+
+```sh
+python3 -m unittest discover -s evals
+```
 
 Authenticate as the ChatGPT Codex account that has spare budget, not a shared
 or capped login. Pass `CODEX_AUTH_FILE` (a copy of that account's `auth.json`

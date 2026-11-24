@@ -14,6 +14,7 @@ import codex_rules_grade
 import codex_rules_store as store
 import power
 import summarize
+from rules_cases import OFF_TOPIC, RULES_FLOWS
 
 MARKER = "USER_HOME_MARKER_3580"
 REPO = Path(__file__).resolve().parents[1]
@@ -246,11 +247,15 @@ class PreviewAndGradeTest(unittest.TestCase):
             code = codex_rules.main([])
         self.assertEqual(code, 0)
         cases = codex_rules.discover()
-        self.assertEqual(len(cases), 21)
+        expected = {
+            f"rules-{skill.removesuffix('-rules')}-{slug}"
+            for skill, flows in RULES_FLOWS for slug, _, _ in flows
+        } | {f"rules-offtopic-{slug}" for slug, _, _ in OFF_TOPIC}
+        self.assertEqual({case["name"] for case in cases}, expected)
         text = codex_rules.format_preview(cases, None)
-        self.assertIn("cases: 21\n", text)
+        self.assertIn(f"cases: {len(expected)}\n", text)
         self.assertIn("arms: 2 (with, without)\n", text)
-        self.assertIn("attempts: 126 (21 x 2 x 3)\n", text)
+        self.assertIn(f"attempts: {sum(2 * case['runs'] for case in cases)} (", text)
         self.assertIn("dollars: unknown (not measured)\n", text)
         self.assertIn("judge model: claude-opus-5-5\n", text)
         self.assertIn(f"agent model: {codex_rules_env.MODEL}\n", text)
@@ -553,13 +558,15 @@ class PreviewAndGradeTest(unittest.TestCase):
             code = codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]])
         self.assertEqual(code, 0)
         report = json.loads((output / "aggregate-result.json").read_text())
-        self.assertFalse(report["partial"])
+        self.assertTrue(report["partial"])
+        self.assertFalse(report["inProgress"])
+        self.assertEqual(report["partialReason"], "1 judge error(s)")
         (slot / "transcript.jsonl.partial").write_text("{}\n")
         with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")), mock.patch.object(
             codex_rules.subprocess, "Popen", side_effect=AssertionError("model")
         ):
             self.assertEqual(codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]]), 0)
-        self.assertFalse(json.loads((output / "aggregate-result.json").read_text())["partial"])
+        self.assertFalse(json.loads((output / "aggregate-result.json").read_text())["inProgress"])
         (slot / "transcript.jsonl.partial").unlink()
         row = report["cases"][0]["arms"]["with"][0]
         self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in row["graders"]))
@@ -576,7 +583,8 @@ class PreviewAndGradeTest(unittest.TestCase):
             self.assertEqual(codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]]), 0)
         again = json.loads((output / "aggregate-result.json").read_text())
         self.assertTrue(again["partial"])
-        self.assertEqual(again["partialReason"], "codex rules run still in progress")
+        self.assertTrue(again["inProgress"])
+        self.assertEqual(again["partialReason"], "codex rules run still in progress, 1 judge error(s)")
 
     def test_regrade_keeps_a_canonical_read_after_the_attempt_is_deleted(self):
         case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
@@ -638,6 +646,7 @@ class PreviewAndGradeTest(unittest.TestCase):
             code = codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]])
         self.assertEqual(code, 0)
         saved = json.loads((slot / "result.json").read_text())
+        self.assertNotIn("isolationFindings", saved)
         fired = next(item for item in saved["graders"] if item["name"] == "skill-fired")
         self.assertTrue(fired["passed"])
         judged = next(item for item in saved["graders"] if item["name"] == "asserts-error-code-not-text")
@@ -653,8 +662,8 @@ class PreviewAndGradeTest(unittest.TestCase):
 
         def judge(prompt):
             seen.append(prompt)
-            self.assertIn(rubric, prompt)
-            self.assertIn("final answer text", prompt)
+            payload = json.loads(prompt.split("\n\n", 1)[1])
+            self.assertEqual(payload, {"rubric": rubric, "final_answer": "final answer text"})
             self.assertEqual(rubric_meta["type"], "llm")
             return True
 
@@ -679,9 +688,10 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertTrue(_summarize_ok(report))
 
     def test_runs_zero_is_not_the_default(self):
-        text = codex_rules.format_preview(codex_rules.discover(), 0)
+        cases = codex_rules.discover()
+        text = codex_rules.format_preview(cases, 0)
         self.assertIn("runs: 0\n", text)
-        self.assertIn("attempts: 0 (21 x 2 x 0)\n", text)
+        self.assertIn(f"attempts: 0 ({len(cases)} x 2 x 0)\n", text)
         with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")):
             self.assertEqual(codex_rules.main(["--runs", "0"]), 0)
             self.assertEqual(
@@ -706,9 +716,7 @@ class PreviewAndGradeTest(unittest.TestCase):
                 "last_message": "code",
             }
 
-        def judge(_prompt):
-            raise RuntimeError("judge down")
-
+        judge = mock.Mock(side_effect=[RuntimeError("judge down"), True])
         report = codex_rules.run_suite(
             [case],
             1,
@@ -727,17 +735,31 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertTrue(graded)
         self.assertTrue(all(item.get("error") == "judge down" and "passed" not in item for item in graded))
         self.assertIn("with: should-fire 1/1", codex_rules_grade.format_trigger(report))
+        self.assertEqual(row["judgeErrorCount"], 1)
+        self.assertTrue(report["partial"])
+        self.assertEqual(report["partialReason"], "1 judge error(s)")
+        self.assertEqual(report["judgeErrorCount"], 1)
+        self.assertTrue(power._reject(report, "aggregate-result.json"))
+        with mock.patch("sys.stdout") as printed:
+            self.assertFalse(summarize.summarize(output / "aggregate-result.json"))
+        summary = "".join(str(call) for call in printed.write.call_args_list)
+        self.assertIn("judge error: judge down", summary)
+        self.assertNotIn("REGRESSION", summary)
+        regraded = codex_rules.regrade_output([case], output)
+        self.assertTrue(regraded["partial"])
+        self.assertEqual(regraded["judgeErrorCount"], 1)
         calls.clear()
 
         def refuse(_plan):
             raise AssertionError("exec")
 
+        recovered_judge = mock.Mock(return_value=True)
         again = codex_rules.run_suite(
             [case],
             1,
             output,
             refuse,
-            judge,
+            recovered_judge,
             Path("/codex-rules-user-home-unused"),
             None,
             None,
@@ -747,6 +769,10 @@ class PreviewAndGradeTest(unittest.TestCase):
         again_row = again["cases"][0]["arms"]["with"][0]
         self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in again_row["graders"]))
         self.assertNotIn("error", again_row)
+        recovered_judge.assert_called_once()
+        self.assertFalse(again["partial"])
+        self.assertEqual(again["judgeErrorCount"], 0)
+        self.assertEqual(summarize._mean_score([again_row]), 1)
 
     def test_saved_transcript_skips_exec(self):
         case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
@@ -756,6 +782,7 @@ class PreviewAndGradeTest(unittest.TestCase):
         skill = root / "skills" / "testing-rules" / "SKILL.md"
         skill.parent.mkdir(parents=True)
         skill.write_text("skill body\n")
+        store.check_run_inputs(output, [case], 1, codex_rules_env.PLUGIN_SRC)
         store.save_exec(
             store.slot(output, case["name"], "with", 1),
             {
