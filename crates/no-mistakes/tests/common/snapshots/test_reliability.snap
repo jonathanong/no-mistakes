@@ -614,6 +614,51 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "playwright-export-shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/options.ts",
+          "line": 9,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "return { retries: 2, projects: [{ name: \"secondary\" }] };",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/exports.spec.ts",
+          "line": 10,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "relayed.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/exports.spec.ts",
+          "line": 11,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "starred.describe.configure({ mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/exports.spec.ts",
+          "line": 9,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "local.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "static-shapes": {
     "exitCode": 1,
     "report": {

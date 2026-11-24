@@ -13,13 +13,16 @@ fn test_reliability_check_json_snapshot() {
         "static-shapes",
         "local-playwright",
         "local-playwright-default",
+        "playwright-export-shapes",
     ]
     .map(|name| {
         let root = match name {
             "workflow-action" | "blank-reason" => {
                 rules_path("test-no-retries", "fixture", "workflow-action")
             }
-            "malformed" | "static-shapes" => rules_path("test-no-retries", "fixture", name),
+            "malformed" | "static-shapes" | "playwright-export-shapes" => {
+                rules_path("test-no-retries", "fixture", name)
+            }
             "local-playwright" | "local-playwright-default" => {
                 rules_path("test-no-retries", "fixture", "local-playwright")
             }
