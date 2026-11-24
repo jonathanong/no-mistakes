@@ -2,6 +2,8 @@ mod nested;
 mod redirection;
 mod word;
 
+use crate::codebase::shell_heredoc::Document;
+
 pub(super) use word::{assignment, identifier, Word};
 
 pub(super) enum Shell {
@@ -14,7 +16,7 @@ pub(super) struct Lexer<'a> {
     shell: Shell,
     offset: usize,
     pub(super) line: usize,
-    heredocs: Vec<(String, bool)>,
+    heredocs: Vec<Document>,
 }
 
 impl<'a> Lexer<'a> {

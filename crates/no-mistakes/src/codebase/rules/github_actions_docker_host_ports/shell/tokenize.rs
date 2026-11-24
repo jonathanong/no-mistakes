@@ -1,4 +1,5 @@
 use super::{Command, Word};
+use crate::codebase::shell_heredoc::Document;
 
 pub(super) fn commands(script: &str) -> Vec<Command> {
     let chars: Vec<char> = script.chars().collect();
@@ -6,7 +7,6 @@ pub(super) fn commands(script: &str) -> Vec<Command> {
 }
 
 mod group;
-mod heredoc;
 mod quote;
 
 struct Tok<'a> {
@@ -20,7 +20,7 @@ struct Tok<'a> {
     quote: Option<char>,
     command: Command,
     commands: Vec<Command>,
-    pending_heredocs: Vec<(String, bool)>,
+    pending_heredocs: Vec<Document>,
 }
 
 impl<'a> Tok<'a> {
