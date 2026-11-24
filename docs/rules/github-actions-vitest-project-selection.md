@@ -40,6 +40,8 @@ is judged. Package scripts stay out of scope: `pnpm test` and
 the script body is not in the workflow. Leading assignments, the shell words
 `if`, `elif`, `then`, `else`, `do`, `while`, and `until`, and the wrappers
 `sudo`, `command`, `time`, `nice`, `nohup`, and `env` do not hide the command.
+The rule skips text inside here-documents, including when a line opens several.
+If a closing delimiter is missing, the rule still checks earlier invocations.
 
 A positional test file is a finding for a configured project selected with
 `--project` or `--project=<name>`. The same file is a finding when the command

@@ -2,6 +2,59 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "env-and-heredoc": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/env.yml",
+          "line": 14,
+          "message": ".github/workflows/env.yml:14: job `compare` step 2 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "\"BASE\": ${{ github.event.pull_request.head.sha }}",
+          "target": "compare"
+        },
+        {
+          "file": ".github/workflows/env.yml",
+          "line": 4,
+          "message": ".github/workflows/env.yml:4: job `fallback` step 1 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "BASE: ${{ github.event.pull_request.base.sha }}",
+          "target": "fallback"
+        },
+        {
+          "file": ".github/workflows/env.yml",
+          "line": 9,
+          "message": ".github/workflows/env.yml:9: job `compare` step 3 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "BASE: ${{ github.event.pull_request.base.ref }}",
+          "target": "compare"
+        },
+        {
+          "file": ".github/workflows/heredoc.yml",
+          "line": 14,
+          "message": ".github/workflows/heredoc.yml:14: job `compare` step 1 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "git diff \"$BASE\" \"$HEAD\"",
+          "target": "compare"
+        },
+        {
+          "file": ".github/workflows/heredoc.yml",
+          "line": 16,
+          "message": ".github/workflows/heredoc.yml:16: job `compare` step 2 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "git diff \"$BASE\" \"$HEAD\"",
+          "target": "compare"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {
