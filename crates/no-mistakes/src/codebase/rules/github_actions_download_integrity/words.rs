@@ -29,7 +29,7 @@ pub(in crate::codebase::rules) struct Parse {
     pub(in crate::codebase::rules) substitutions: Vec<(usize, String)>,
     pub(super) skip_lines: Vec<usize>,
     // Character offsets in the unmodified shell source.
-    pub(super) heredoc_ranges: Vec<Range<usize>>,
+    pub(in crate::codebase::rules) heredoc_ranges: Vec<Range<usize>>,
 }
 
 pub(in crate::codebase::rules) fn parse(script: &str) -> Parse {

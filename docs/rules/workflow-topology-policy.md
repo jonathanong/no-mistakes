@@ -339,6 +339,19 @@ has no source map. A forbidden-event finding in a tagged file is reported
 on line 1. A multi-document file is not one workflow, so its events are
 not reported.
 
+A workflow whose merge key cannot be applied (`concurrency: {<<: 7}`) is a
+malformed workflow. Merges inside a merged mapping, such as `on: {<<: *events}`
+where `*events` itself merges `*call`, are expanded before triggers and
+concurrency are read.
+
+When `forbidReusableWorkflowConcurrency` is `true`, every malformed-workflow
+diagnostic is reported as a check failure, even for a file that is not a
+`workflow_call` workflow. A file that cannot be parsed cannot be shown to be
+non-reusable, so this over-inclusion is intended: it favors recall over a
+missed reusable workflow. Repair the YAML, or exclude the file from
+`ci.workflowDirs`, to clear it. A file with more than one YAML document is
+malformed in this sense, so its concurrency is not read.
+
 A directory symlink is not followed. `uses: ./actions/link`, where
 `actions/link` is a symlink to `actions/real` and the undeclared secret exists
 only in `actions/real/action.yml`, is not a finding.

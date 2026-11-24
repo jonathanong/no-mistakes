@@ -115,25 +115,88 @@ runtime:
 }
 
 #[test]
-fn sequence_merge_skips_a_scalar_item() {
+fn sequence_merge_with_a_scalar_item_is_an_error() {
     let source = "\
 runtime:
   <<:
     - legacy: { enabled: true }
     - plain
 ";
-    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
-    assert_eq!(value["runtime"]["legacy"]["enabled"].as_bool(), Some(true));
-    assert!(value["runtime"].get("plain").is_none());
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.contains("failed to apply YAML merge keys"), "{error}");
+    assert!(error.contains("found scalar"), "{error}");
 }
 
 #[test]
-fn scalar_merge_does_not_invent_keys() {
+fn scalar_merge_is_an_error_instead_of_being_dropped() {
     let source = "label: &label plain\nruntime:\n  <<: *label\n  version: 1\n";
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.contains("failed to apply YAML merge keys"), "{error}");
+    let empty = "runtime:\n  <<: 7\n";
+    assert!(parse_structured_value(Path::new("app.yml"), empty).is_err());
+}
+
+#[test]
+fn nested_merges_inside_a_merged_mapping_are_expanded() {
+    let source = "\
+inner: &inner
+  owner: inner
+  depth: 3
+middle: &middle
+  <<: *inner
+  owner: middle
+runtime:
+  <<: *middle
+  version: 2
+";
     let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
-    assert_eq!(value["runtime"]["version"].as_i64(), Some(1));
-    assert!(value["runtime"].get("legacy").is_none());
+    assert_eq!(value["runtime"]["version"].as_i64(), Some(2));
+    assert_eq!(value["runtime"]["owner"].as_str(), Some("middle"));
+    assert_eq!(value["runtime"]["depth"].as_i64(), Some(3));
     assert!(value["runtime"].get("<<").is_none());
+}
+
+#[test]
+fn merges_inside_sequence_sources_and_values_are_expanded() {
+    let source = "\
+base: &base
+  deep:
+    <<: &leaf { flag: true }
+list:
+  - <<: *base
+";
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    assert_eq!(value["list"][0]["deep"]["flag"].as_bool(), Some(true));
+}
+
+#[test]
+fn tagged_values_are_searched_for_merge_keys() {
+    let source = "runtime: !custom\n  <<: { legacy: true }\n";
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    let Value::Tagged(tagged) = &value["runtime"] else {
+        panic!("runtime keeps its tag");
+    };
+    assert_eq!(tagged.value["legacy"].as_bool(), Some(true));
+    let bad = "runtime: !custom\n  <<: 7\n";
+    assert!(parse_structured_value(Path::new("app.yml"), bad).is_err());
+    let tagged_merge = "runtime:\n  <<: !custom { legacy: true }\n";
+    assert!(parse_structured_value(Path::new("app.yml"), tagged_merge).is_err());
+}
+
+#[test]
+fn yaml_documents_report_a_merge_that_cannot_be_applied() {
+    let source = "ok: 1\n---\nruntime:\n  <<: 7\n---\nlast: 2\n";
+    let documents = parse_yaml_documents(source);
+    assert_eq!(documents.values.len(), 2);
+    assert_eq!(documents.errors.len(), 1);
+    assert_eq!(documents.errors[0].0, 4);
+    assert!(documents.errors[0].1.contains("merge keys"));
+    let flow = "ok: 1\n---\n{ runtime: { <<: 7 } }\n";
+    assert_eq!(parse_yaml_documents(flow).errors[0].0, 3);
+    let second_doc = "---\na: &a\n  x: 1\nb:\n  <<: *a\n---\n# <<: 7\nnote: \"escaped \\\" <<: 7\"\nitems:\n  - <<: 7\n";
+    assert_eq!(parse_yaml_documents(second_doc).errors[0].0, 10);
+    let second_merge = "a: &a\n  x: 1\ngood:\n  <<: *a\nbad:\n  <<: 7\n";
+    assert_eq!(parse_yaml_documents(second_merge).errors[0].0, 6);
 }
 
 #[test]
@@ -159,4 +222,51 @@ fn converts_json_integers_that_do_not_fit_i64() {
     let value = parse_structured_value(Path::new("n.json"), source).unwrap();
     assert!(value["u"].as_i64().is_none());
     assert_eq!(value["u"].as_u64(), Some(u64::MAX));
+}
+
+#[test]
+fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
+    let nested_list = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/sequence-nested-list.yml"
+    );
+    let error =
+        parse_structured_value(Path::new("sequence-nested-list.yml"), nested_list).unwrap_err();
+    assert!(
+        error.contains("expected a mapping for merging, but found sequence"),
+        "{error}"
+    );
+    let nested_docs = parse_yaml_documents(nested_list);
+    assert_eq!(nested_docs.errors.len(), 1);
+    assert_eq!(nested_docs.errors[0].0, 2);
+
+    let quoted_fallback = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/quoted-key-fallback.yml"
+    );
+    let quoted_docs = parse_yaml_documents(quoted_fallback);
+    assert_eq!(quoted_docs.values.len(), 1);
+    assert_eq!(quoted_docs.errors.len(), 1);
+    assert_eq!(quoted_docs.errors[0].0, 2);
+
+    let aliased_fallback = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/aliased-merge-fallback.yml"
+    );
+    let aliased_docs = parse_yaml_documents(aliased_fallback);
+    assert!(aliased_docs.values.is_empty());
+    assert_eq!(aliased_docs.errors.len(), 1);
+    assert_eq!(aliased_docs.errors[0].0, 4);
+
+    let compact_flow = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/compact-flow-and-false-tokens.yml"
+    );
+    let compact_docs = parse_yaml_documents(compact_flow);
+    assert_eq!(compact_docs.values.len(), 2);
+    assert_eq!(compact_docs.errors.len(), 1);
+    assert_eq!(compact_docs.errors[0].0, 8);
+
+    let compact_brace = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/compact-brace-flow.yml"
+    );
+    let brace_docs = parse_yaml_documents(compact_brace);
+    assert_eq!(brace_docs.errors.len(), 1);
+    assert_eq!(brace_docs.errors[0].0, 1);
 }

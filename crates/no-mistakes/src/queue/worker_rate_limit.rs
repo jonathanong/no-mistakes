@@ -14,8 +14,12 @@ pub(in crate::queue) use resolve_exports::resolve;
 
 pub(crate) const WORKER_RATE_LIMIT_KIND: &str = "worker-rate-limit-per-process";
 
-const UNRESOLVED_MESSAGE: &str =
+pub const WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE: &str =
     "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve";
+
+pub fn is_worker_rate_limit_unresolved_diagnostic(diagnostic: &Diagnostic) -> bool {
+    diagnostic.message == WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE
+}
 
 pub(super) fn findings(
     root: &Path,
@@ -58,7 +62,7 @@ pub(super) fn findings(
                         severity: Severity::Warning,
                         file: relative_string(root, path),
                         line: site.line,
-                        message: UNRESOLVED_MESSAGE.to_string(),
+                        message: WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE.to_string(),
                     });
                 }
             }

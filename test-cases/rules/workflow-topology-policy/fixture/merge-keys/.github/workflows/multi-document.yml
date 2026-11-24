@@ -1,0 +1,16 @@
+name: First document
+on: workflow_call
+concurrency: first-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo first
+---
+name: Second document
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo second

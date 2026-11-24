@@ -35,6 +35,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "nested-and-heredoc": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 19,
+          "message": ".github/workflows/loops.yml:19: job `heredoc` step 1 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "until gh run view 345; do sleep 5; done",
+          "target": "heredoc"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 22,
+          "message": ".github/workflows/loops.yml:22: job `heredoc` step 2 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "until gh run view 456; do sleep 5; done",
+          "target": "heredoc"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 33,
+          "message": ".github/workflows/loops.yml:33: job `heredoc` step 4 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "until gh run view 789; do sleep 5; done",
+          "target": "heredoc"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 35,
+          "message": ".github/workflows/loops.yml:35: job `heredoc` step 5 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "until gh run view 890; do sleep 5; done",
+          "target": "heredoc"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 8,
+          "message": ".github/workflows/loops.yml:8: job `nested` step 1 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "while true; do until gh run view 123; do",
+          "target": "nested"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {

@@ -16,20 +16,6 @@ pub(crate) struct CompletedDomainChecks {
     pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
 }
 
-pub(super) fn collect_warnings(
-    root: &std::path::Path,
-    facts: &no_mistakes::codebase::check_facts::CheckFactMap,
-    config: &no_mistakes::config::v2::NoMistakesConfig,
-    domain: [Option<String>; 7],
-) -> (Vec<String>, usize) {
-    let mut warnings: Vec<String> = domain.into_iter().flatten().collect();
-    let executor_warnings = no_mistakes::codebase::postgres::executor_config_warnings(root, facts);
-    let analysis_warning_count = config.analysis_warnings.len() + executor_warnings.len();
-    warnings.extend(executor_warnings);
-    warnings.extend(config.analysis_warnings.iter().cloned());
-    (warnings, analysis_warning_count)
-}
-
 pub(super) fn timings(d: [Duration; 8]) -> Vec<(&'static str, Duration)> {
     const NAMES: [&str; 8] = [
         "discover",

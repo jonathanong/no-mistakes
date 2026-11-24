@@ -35,6 +35,14 @@ impl<'a> QueueVisitor<'a> {
             }
         }
         let declaration = decl.span.end.saturating_sub(1);
+        if self.binding_is_const
+            && decl
+                .init
+                .as_ref()
+                .is_some_and(|init| self.is_builtin_non_queue_init(init))
+        {
+            self.non_queue_declarations.insert(declaration);
+        }
         if let Some(Expression::NewExpression(new_expr)) = &decl.init {
             if self.is_queue_constructor(&new_expr.callee) {
                 if let Some(queue_name) = new_expr
@@ -94,6 +102,43 @@ impl<'a> QueueVisitor<'a> {
 }
 
 impl QueueVisitor<'_> {
+    fn is_builtin_non_queue_init(&self, expr: &Expression<'_>) -> bool {
+        match expr.get_inner_expression() {
+            Expression::NewExpression(new_expr) => {
+                let Expression::Identifier(id) = new_expr.callee.get_inner_expression() else {
+                    return false;
+                };
+                let name = id.name.as_str();
+                matches!(
+                    name,
+                    "Set"
+                        | "Map"
+                        | "WeakSet"
+                        | "WeakMap"
+                        | "Headers"
+                        | "URLSearchParams"
+                        | "FormData"
+                        | "Array"
+                        | "Date"
+                        | "RegExp"
+                ) && !self.facts.imports.iter().any(|imp| imp.local == name)
+                    && !self.namespace_imports.contains_key(name)
+                    && self.lexical_binding(name, id.span.start).is_none()
+            }
+            Expression::ArrayExpression(_)
+            | Expression::StringLiteral(_)
+            | Expression::NumericLiteral(_)
+            | Expression::BooleanLiteral(_)
+            | Expression::NullLiteral(_)
+            | Expression::BigIntLiteral(_)
+            | Expression::RegExpLiteral(_)
+            | Expression::TemplateLiteral(_)
+            | Expression::FunctionExpression(_)
+            | Expression::ArrowFunctionExpression(_) => true,
+            _ => false,
+        }
+    }
+
     pub fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
         match arg {
             Argument::StringLiteral(value) => Some(js_literal(value).into_owned()),

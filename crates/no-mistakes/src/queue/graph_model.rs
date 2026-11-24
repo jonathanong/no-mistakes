@@ -39,6 +39,27 @@ impl CheckFinding {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CheckReport<'a> {
+    pub findings: &'a [CheckFinding],
+    pub diagnostics: &'a [Diagnostic],
+}
+
+pub fn format_diagnostic(diagnostic: &Diagnostic) -> String {
+    format!(
+        "{}: {}:{} {}",
+        diagnostic.severity, diagnostic.file, diagnostic.line, diagnostic.message
+    )
+}
+
+pub fn format_aggregate_warning(diagnostic: &Diagnostic) -> String {
+    format!(
+        "queues-check: {}:{} {}",
+        diagnostic.file, diagnostic.line, diagnostic.message
+    )
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProjectReport {
     pub producers: Vec<QueueProducer>,
     pub workers: Vec<QueueWorker>,

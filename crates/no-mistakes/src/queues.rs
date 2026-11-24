@@ -1,23 +1,26 @@
 use super::common_graph_args::GraphCommandArgs;
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes::cli::{print_json, resolve_root, root_scoped_edge_depth, Format};
+use no_mistakes::cli::{resolve_root, root_scoped_edge_depth, Format};
 use no_mistakes::queue::{
-    analyze_project, analyze_project_indexed, CheckFinding, Edge, RelatedDirection,
+    analyze_project, analyze_project_indexed, CheckFinding, RelatedDirection,
 };
-use std::collections::BTreeSet;
 use std::process::ExitCode;
+
+mod render;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests;
 
 #[derive(Args)]
 pub(crate) struct QueuesArgs {
     #[command(flatten)]
     common: GraphCommandArgs,
     #[command(subcommand)]
-    command: QueuesCommand,
+    pub(crate) command: QueuesCommand,
 }
 
 #[derive(Subcommand)]
-enum QueuesCommand {
+pub(crate) enum QueuesCommand {
     /// Print queue dependency edges.
     Edges {
         /// Only show edges whose source exactly matches these files/nodes.
@@ -31,11 +34,15 @@ enum QueuesCommand {
         direction: QueueDirection,
     },
     /// Check producers, workers, cycles, waits, and mixed priorities.
-    Check,
+    Check {
+        /// Include queue analysis diagnostics alongside findings in structured output.
+        #[arg(long)]
+        include_diagnostics: bool,
+    },
 }
 
 #[derive(clap::ValueEnum, Clone, Copy)]
-enum QueueDirection {
+pub(crate) enum QueueDirection {
     Deps,
     Dependents,
     Both,
@@ -71,7 +78,7 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
             })?;
             let depth = root_scoped_edge_depth(files, args.common.depth);
             let edges = report.edge_view(files, depth);
-            print_edges(&edges, format)?;
+            render::print_edges(&edges, format)?;
             Ok(ExitCode::SUCCESS)
         }
         QueuesCommand::Related { files, direction } => {
@@ -83,14 +90,22 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
                 )
             })?;
             let edges = report.related(files, (*direction).into());
-            print_related(files, &edges, format)?;
+            render::print_related(files, &edges, format)?;
             Ok(ExitCode::SUCCESS)
         }
-        QueuesCommand::Check => {
+        QueuesCommand::Check {
+            include_diagnostics,
+        } => {
             let report = trace_queue_analysis(|| {
                 analyze_project(&root, args.common.tsconfig.as_deref(), &args.common.filters)
             })?;
-            print_check(&report.check, format)?;
+            render::print_diagnostics_stderr(&report.diagnostics, *include_diagnostics);
+            render::print_check(
+                &report.check,
+                &report.diagnostics,
+                format,
+                *include_diagnostics,
+            )?;
             Ok(if report.check.iter().all(CheckFinding::is_advisory) {
                 ExitCode::SUCCESS
             } else {
@@ -109,86 +124,4 @@ fn trace_queue_analysis<T>(operation: impl FnOnce() -> Result<T>) -> Result<T> {
         ),
         None => operation(),
     }
-}
-
-fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
-    match format {
-        Format::Json => print_json(edges),
-        Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
-        Format::Md => {
-            println!("# Queue edges");
-            for edge in edges {
-                println!("- `{}` -> `{}` ({})", edge.from, edge.to, edge.kind);
-            }
-        }
-        Format::Paths => print_edge_paths(edges),
-        Format::Human => {
-            for edge in edges {
-                println!("{} -> {}", edge.from, edge.to);
-            }
-        }
-    }
-    Ok(())
-}
-
-fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()> {
-    match format {
-        Format::Json => print_json(edges),
-        Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
-        Format::Md => {
-            println!("# Related queue files");
-            for edge in edges {
-                println!("- `{}` -> `{}`", edge.from, edge.to);
-            }
-        }
-        Format::Paths => print_edge_paths(edges),
-        Format::Human => {
-            println!("{}", roots.join(", "));
-            for edge in edges {
-                println!("  {} -> {}", edge.from, edge.to);
-            }
-        }
-    }
-    Ok(())
-}
-
-fn print_edge_paths(edges: &[Edge]) {
-    let paths: BTreeSet<&str> = edges
-        .iter()
-        .flat_map(|e| [e.from.as_str(), e.to.as_str()])
-        .collect();
-    for p in paths {
-        println!("{p}");
-    }
-}
-
-fn print_check(findings: &[CheckFinding], format: Format) -> Result<()> {
-    match format {
-        Format::Json => print_json(findings),
-        Format::Yml => println!("{}", serde_yaml::to_string(findings)?),
-        Format::Md => {
-            println!("# Queue check");
-            for f in findings {
-                println!("- `{}`:{} {}", f.file, f.line, f.message);
-            }
-        }
-        Format::Paths => {
-            for f in findings {
-                println!("{}:{}", f.file, f.line);
-            }
-        }
-        Format::Human => {
-            for f in findings {
-                println!(
-                    "{}[{}] {}:{} {}",
-                    f.kind,
-                    f.job.as_deref().unwrap_or("*"),
-                    f.file,
-                    f.line,
-                    f.message
-                );
-            }
-        }
-    }
-    Ok(())
 }

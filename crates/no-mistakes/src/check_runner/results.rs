@@ -17,6 +17,7 @@ pub(crate) use render::json_value;
 pub(crate) mod suppression;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod suppression_tests;
+mod warnings;
 
 pub(crate) struct FinalizeInput<'a> {
     pub(crate) root: &'a std::path::Path,
@@ -81,6 +82,10 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         include_sql_verdicts,
     } = input;
     let pre_suppressed = suppression::take_pre_suppressed(&mut completed);
+    let warnings::CollectedWarnings {
+        warnings,
+        analysis_warning_count,
+    } = warnings::collect(root, facts, config, react_warning, &mut completed);
     let CompletedDomainChecks {
         mut react,
         mut queues,
@@ -104,20 +109,6 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     advisories::merge_sql(&mut advisories, root, sources, facts, &sql_verdicts);
     advisories.extend(std::mem::take(&mut rules.advisories));
     advisories.extend(std::mem::take(&mut filesystem_rules.advisories));
-    let (warnings, analysis_warning_count) = empty::collect_warnings(
-        root,
-        facts,
-        config,
-        [
-            react_warning,
-            react.warning,
-            queues.warning,
-            rules.warning,
-            integration.warning,
-            codebase.warning,
-            filesystem_rules.warning,
-        ],
-    );
     let accounting = suppression::apply_if_requested(
         retain_suppression,
         suppression::Inputs {

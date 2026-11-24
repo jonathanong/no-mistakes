@@ -99,6 +99,7 @@ fn extract_queue_facts<'a>(
         worker_classes: HashSet::new(),
         flow_classes: HashSet::new(),
         flow_bindings: HashSet::new(),
+        non_queue_declarations: HashSet::new(),
         configured_factory_names: factory_names,
         roles,
         queue_name_index: HashMap::new(),
@@ -126,6 +127,15 @@ fn extract_queue_facts<'a>(
     };
     super::number_scope::seed_program(&mut visitor, program);
     visitor.visit_program(program);
+    if !visitor.non_queue_declarations.is_empty() {
+        visitor.facts.producers.retain(|producer| {
+            !matches!(
+                producer.binding,
+                crate::queue::extract_model::ProducerBinding::Local(at)
+                    if visitor.non_queue_declarations.contains(&at)
+            )
+        });
+    }
     super::enqueue_wrapper::collect_exports(&mut visitor, program);
     super::extract_job_id::finish(&mut visitor);
     super::extract_worker_rate_limit::finish(&mut visitor, program);

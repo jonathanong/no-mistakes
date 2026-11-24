@@ -5,8 +5,13 @@ use super::expression_references;
 use super::model;
 use super::value_primitives;
 use super::workflow_values;
-use crate::codebase::structured_value::expand_yaml_mapping_if_merged;
 use serde_yaml::Value;
+
+mod malformed;
+mod merged;
+
+pub(crate) use malformed::malformed_workflow;
+use malformed::workflow_basename;
 
 /// A `needs.<callJobKey>.outputs.<output>` reference found anywhere in a
 /// job (its own scalars, its `if:`, or a step's `if:`), keyed by the
@@ -32,9 +37,15 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
         return malformed_workflow(path, "workflow root must be a mapping");
     }
 
-    let value = expand_yaml_mapping_if_merged(value);
-    let on = value.get("on").map(expand_yaml_mapping_if_merged);
-    let triggers = workflow_values::parse_triggers(on.as_deref());
+    let merged::MergedSections {
+        root: value,
+        on,
+        concurrency,
+    } = match merged::merged_sections(value) {
+        Ok(sections) => sections,
+        Err(message) => return malformed_workflow(path, &message),
+    };
+    let triggers = workflow_values::parse_triggers(on.as_ref());
     let workflow_permissions =
         crate::codebase::ci_graph::parse::parse_permission_spec(value.get("permissions"));
     let job_entries: Vec<(String, &Value)> = match value.get("jobs") {
@@ -106,9 +117,8 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
         );
     }
 
-    let concurrency = value.get("concurrency").map(expand_yaml_mapping_if_merged);
-    let concurrency = workflow_values::parse_concurrency(concurrency.as_deref());
-    let workflow_call = workflow_values::parse_workflow_call(on.as_deref());
+    let concurrency = workflow_values::parse_concurrency(concurrency.as_ref());
+    let workflow_call = workflow_values::parse_workflow_call(on.as_ref());
     let mut job_ids: Vec<String> = jobs.iter().map(|job| job.id.clone()).collect();
     job_ids.sort();
 
@@ -168,33 +178,4 @@ fn add_job_edges(
             workflow_values::call_edge(job_id, &uses, job),
         ));
     }
-}
-
-pub(crate) fn malformed_workflow(path: &str, message: &str) -> ParsedWorkflow {
-    ParsedWorkflow {
-        node: model::WorkflowNode {
-            id: path.to_string(),
-            path: path.to_string(),
-            name: workflow_basename(path),
-            callable: false,
-            workflow_call: None,
-            triggers: Vec::new(),
-            job_ids: Vec::new(),
-            concurrency: None,
-            env: None,
-            secret_references: None,
-        },
-        jobs: Vec::new(),
-        edges: Vec::new(),
-        diagnostics: vec![model::WorkflowTopologyDiagnostic::new(
-            model::DiagnosticCode::MalformedWorkflow,
-            message.to_string(),
-            path,
-        )],
-        output_references: Vec::new(),
-    }
-}
-
-fn workflow_basename(path: &str) -> String {
-    path.rsplit('/').next().unwrap_or(path).to_string()
 }

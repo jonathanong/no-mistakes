@@ -31,7 +31,12 @@ pub(super) fn env_of(value: Option<&Value>) -> BTreeMap<String, String> {
         return BTreeMap::new();
     };
     map.iter()
-        .filter_map(|(key, value)| Some((key.as_str()?.to_string(), value.as_str()?.to_string())))
+        .filter_map(|(key, value)| {
+            Some((
+                key.as_str()?.to_owned(),
+                value.as_str().unwrap_or_default().to_owned(),
+            ))
+        })
         .collect()
 }
 

@@ -1,0 +1,13 @@
+version: 2
+queues:
+  factories:
+    enqueue:
+      - callee: enqueueDynamic
+        queue: { arg: 0, property: queueName }
+        job: { arg: 0, property: jobName }
+projects:
+  workers:
+    root: .
+    queues:
+      enqueues: ["**/*.ts"]
+      workers: ["**/*.ts"]

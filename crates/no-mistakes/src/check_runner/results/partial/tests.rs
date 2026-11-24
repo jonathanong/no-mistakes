@@ -7,6 +7,7 @@ fn task(warning: Option<String>) -> CheckTask<Vec<&'static str>> {
         pre_suppressed: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
+        analysis_warnings: Vec::new(),
         warning,
         duration: Duration::from_millis(7),
     }

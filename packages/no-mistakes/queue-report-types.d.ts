@@ -1,3 +1,5 @@
+import type { ProjectOptions } from "./traversal-types";
+
 export interface QueueReport {
   producers: QueueProducer[];
   workers: QueueWorker[];
@@ -66,4 +68,14 @@ export interface QueueCheckFinding {
   job: string | null;
   message: string;
   severity?: QueueCheckSeverity;
+}
+
+export interface QueueCheckOptions extends ProjectOptions {
+  /** Return `{ findings, diagnostics }` instead of a bare findings array. */
+  includeDiagnostics?: boolean;
+}
+
+export interface QueueCheckReport {
+  findings: QueueCheckFinding[];
+  diagnostics: QueueDiagnostic[];
 }
