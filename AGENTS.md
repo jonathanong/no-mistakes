@@ -123,9 +123,7 @@ graph. Details:
 - On a shared machine, run heavy cargo jobs one at a time with capped
   parallelism, prefer CI for coverage, and push early. See
   [shared machines](CONTRIBUTING.md#shared-machines-and-memory).
-- Size CI jobs to 5–10 minutes by splitting long ones. Never serialize
-  parallel work or lengthen any critical path, PR or main
-  ([CI builds](docs/development/ci-builds.md)).
+- Never serialize parallel work in CI ([CI builds](docs/development/ci-builds.md)).
 - Performance measurement rules and gates:
   [core performance guidance](crates/no-mistakes/AGENTS.md).
 
