@@ -52,6 +52,7 @@ pub(super) fn classify_local_class(
                 LocalClassInit::Dynamic
             }
         }
+        Expression::NullLiteral(_) => LocalClassInit::NonWorker,
         _ => LocalClassInit::Dynamic,
     }
 }
@@ -91,6 +92,7 @@ pub(super) fn classify_module_class(
                 ModuleClassInit::Dynamic
             }
         }
+        Expression::NullLiteral(_) => ModuleClassInit::NonWorker,
         _ => ModuleClassInit::Dynamic,
     }
 }

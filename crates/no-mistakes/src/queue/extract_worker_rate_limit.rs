@@ -48,7 +48,7 @@ pub(super) fn note_variable(visitor: &mut QueueVisitor<'_>, decl: &VariableDecla
             .worker_rate_limit
             .local_bindings
             .insert(symbol, local_init);
-    } else if !matches!(local_init, LocalInit::NonWorker) {
+    } else if !matches!(local_init, LocalInit::NonWorker | LocalInit::WorkerClass) {
         visitor
             .worker_rate_limit
             .mutated_origins
@@ -59,6 +59,9 @@ pub(super) fn note_variable(visitor: &mut QueueVisitor<'_>, decl: &VariableDecla
 }
 
 pub(super) fn note_assignment(visitor: &mut QueueVisitor<'_>, expr: &AssignmentExpression<'_>) {
+    if !predicates::is_value_assignment(expr.operator) {
+        return;
+    }
     let AssignmentTarget::AssignmentTargetIdentifier(id) = &expr.left else {
         return;
     };
@@ -68,7 +71,7 @@ pub(super) fn note_assignment(visitor: &mut QueueVisitor<'_>, expr: &AssignmentE
     let Some(local_init) = classify::classify_local_init(visitor, &expr.right) else {
         return;
     };
-    if !matches!(local_init, LocalInit::NonWorker) {
+    if !matches!(local_init, LocalInit::NonWorker | LocalInit::WorkerClass) {
         visitor
             .worker_rate_limit
             .mutated_origins
@@ -83,7 +86,8 @@ pub(super) fn note_export_default(
     export: &ExportDefaultDeclaration<'_>,
 ) {
     match &export.declaration {
-        ExportDefaultDeclarationKind::FunctionDeclaration(_) => {
+        ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
+            note_non_worker_id(visitor, func.id.as_ref());
             visitor
                 .worker_rate_limit
                 .module_bindings
@@ -91,6 +95,12 @@ pub(super) fn note_export_default(
         }
         ExportDefaultDeclarationKind::ClassDeclaration(class) => {
             let class_init = classes::classify_module_class(visitor, class);
+            if let Some(id) = &class.id {
+                visitor
+                    .worker_rate_limit
+                    .module_classes
+                    .insert(id.name.to_string(), class_init.clone());
+            }
             visitor
                 .worker_rate_limit
                 .module_classes

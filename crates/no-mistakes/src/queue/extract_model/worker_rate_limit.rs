@@ -42,4 +42,5 @@ pub(crate) enum WorkerRateLimitTarget {
 pub(crate) struct WorkerRateLimitCall {
     pub line: usize,
     pub target: WorkerRateLimitTarget,
+    pub mutated: bool,
 }

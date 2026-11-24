@@ -2,7 +2,8 @@ use crate::queue::extract_helpers::is_queue_package;
 use crate::queue::extract_job_id::is_imported_callee;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
-    CallExpression, Expression, IdentifierReference, NewExpression, StaticMemberExpression,
+    AssignmentOperator, CallExpression, Expression, IdentifierReference, NewExpression,
+    StaticMemberExpression,
 };
 use oxc_syntax::symbol::SymbolId;
 
@@ -140,4 +141,8 @@ pub(super) fn is_function(visitor: &QueueVisitor<'_>, symbol: SymbolId) -> bool 
 
 pub(super) fn is_class_or_function(visitor: &QueueVisitor<'_>, symbol: SymbolId) -> bool {
     is_class(visitor, symbol) || is_function(visitor, symbol)
+}
+
+pub(super) fn is_value_assignment(operator: AssignmentOperator) -> bool {
+    operator == AssignmentOperator::Assign || operator.is_logical()
 }

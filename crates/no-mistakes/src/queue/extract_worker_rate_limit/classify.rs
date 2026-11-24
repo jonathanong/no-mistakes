@@ -1,7 +1,7 @@
 use super::predicates::{
-    is_class, is_class_or_function, is_imported_symbol, is_non_worker_expr, is_queue_factory_call,
-    is_queue_package_import, is_worker_factory_call, is_worker_new, namespace_member,
-    referenced_symbol, unwrap_worker_init,
+    is_class, is_class_or_function, is_function, is_imported_symbol, is_non_worker_expr,
+    is_queue_factory_call, is_queue_package_import, is_worker_ctor_expr, is_worker_factory_call,
+    is_worker_new, namespace_member, referenced_symbol, unwrap_worker_init,
 };
 use super::{LocalInit, PendingReceiver};
 use crate::queue::extract_helpers::is_queue_package;
@@ -56,6 +56,8 @@ fn classify_new_receiver(
                 .then(|| PendingReceiver::ConstructedImported(name.to_string()))
             } else if is_class(visitor, symbol) {
                 Some(PendingReceiver::ConstructedLocalClass(symbol))
+            } else if !is_function(visitor, symbol) {
+                Some(PendingReceiver::ConstructedLocalBinding(symbol))
             } else {
                 None
             }
@@ -119,6 +121,9 @@ pub(super) fn classify_local_init(
     init: &Expression<'_>,
 ) -> Option<LocalInit> {
     let expr = unwrap_worker_init(init);
+    if is_worker_ctor_expr(visitor, expr) {
+        return Some(LocalInit::WorkerClass);
+    }
     if is_non_worker_expr(expr) {
         return Some(LocalInit::NonWorker);
     }
@@ -128,6 +133,9 @@ pub(super) fn classify_local_init(
                 Some(PendingReceiver::WorkerSpan(span)) => LocalInit::WorkerSpan(span),
                 Some(PendingReceiver::ConstructedLocalClass(sym)) => {
                     LocalInit::ConstructedLocalClass(sym)
+                }
+                Some(PendingReceiver::ConstructedLocalBinding(sym)) => {
+                    LocalInit::ConstructedLocalBinding(sym)
                 }
                 Some(PendingReceiver::ConstructedImported(local)) => {
                     LocalInit::ConstructedImported(local)

@@ -21,6 +21,12 @@ pub(super) enum ResolvedExport {
     NonWorker,
 }
 
+#[derive(Clone, Copy, Default)]
+pub(super) struct FollowState {
+    pub(super) seen_queue: bool,
+    pub(super) from_class_base: bool,
+}
+
 pub(super) struct ResolveCtx<'a, R> {
     pub(super) facts: &'a HashMap<PathBuf, FileFacts>,
     pub(super) resolver: &'a R,
@@ -42,23 +48,32 @@ pub(in crate::queue) fn resolve<R: ImportResolverFacade>(
         for (index, site) in file.worker_rate_limits.iter().enumerate() {
             let resolved = match &site.target {
                 WorkerRateLimitTarget::Imported { local } => {
-                    ctx.resolve_imported(path, file, local, ResolveMode::Instance)
+                    ctx.resolve_imported(path, file, local, ResolveMode::Instance, site.mutated)
                 }
                 WorkerRateLimitTarget::Namespace { source, exported } => {
-                    ctx.resolve_export(path, source, exported, ResolveMode::Instance)
+                    ctx.resolve_export(path, source, exported, ResolveMode::Instance, site.mutated)
                 }
                 WorkerRateLimitTarget::ConstructedImported { local } => {
-                    ctx.resolve_imported(path, file, local, ResolveMode::Constructor)
+                    ctx.resolve_imported(path, file, local, ResolveMode::Constructor, site.mutated)
                 }
-                WorkerRateLimitTarget::ConstructedNamespace { source, exported } => {
-                    ctx.resolve_export(path, source, exported, ResolveMode::Constructor)
-                }
+                WorkerRateLimitTarget::ConstructedNamespace { source, exported } => ctx
+                    .resolve_export(
+                        path,
+                        source,
+                        exported,
+                        ResolveMode::Constructor,
+                        site.mutated,
+                    ),
                 WorkerRateLimitTarget::CallImported { local } => {
-                    ctx.resolve_imported(path, file, local, ResolveMode::CallReturn)
+                    ctx.resolve_imported(path, file, local, ResolveMode::CallReturn, site.mutated)
                 }
-                WorkerRateLimitTarget::CallNamespace { source, exported } => {
-                    ctx.resolve_export(path, source, exported, ResolveMode::CallReturn)
-                }
+                WorkerRateLimitTarget::CallNamespace { source, exported } => ctx.resolve_export(
+                    path,
+                    source,
+                    exported,
+                    ResolveMode::CallReturn,
+                    site.mutated,
+                ),
                 _ => continue,
             };
             updates.push((path.clone(), index, resolved));
@@ -82,9 +97,10 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         file: &FileFacts,
         local: &str,
         mode: ResolveMode,
+        mutated: bool,
     ) -> Option<WorkerRateLimitTarget> {
         let binding = file.imports.iter().find(|imp| imp.local == local)?;
-        self.resolve_export(path, &binding.source, &binding.imported, mode)
+        self.resolve_export(path, &binding.source, &binding.imported, mode, mutated)
     }
 
     fn resolve_export(
@@ -93,13 +109,23 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         specifier: &str,
         exported: &str,
         mode: ResolveMode,
+        mutated: bool,
     ) -> Option<WorkerRateLimitTarget> {
         let mut visited = HashSet::new();
-        match self.follow_source(path, specifier, exported, mode, false, &mut visited) {
-            ResolvedExport::Worker(file, worker_index) => {
+        match self.follow_source(
+            path,
+            specifier,
+            exported,
+            mode,
+            FollowState::default(),
+            &mut visited,
+        ) {
+            ResolvedExport::Worker(file, worker_index) if !mutated => {
                 Some(WorkerRateLimitTarget::ResolvedWorker { file, worker_index })
             }
-            ResolvedExport::QueueUnresolved => Some(WorkerRateLimitTarget::Unresolved),
+            ResolvedExport::Worker(..) | ResolvedExport::QueueUnresolved => {
+                Some(WorkerRateLimitTarget::Unresolved)
+            }
             ResolvedExport::NonWorker => None,
         }
     }

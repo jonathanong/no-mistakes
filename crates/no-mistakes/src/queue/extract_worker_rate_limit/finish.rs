@@ -12,10 +12,11 @@ pub(super) fn finish(visitor: &mut QueueVisitor<'_>) {
     finish_module_classes(visitor, &state);
     finish_module_exports(visitor, &state);
     for call in std::mem::take(&mut state.pending_calls) {
-        if let Some(target) = resolve_pending(visitor, &state, call.receiver) {
+        if let Some((target, mutated)) = resolve_pending(visitor, &state, call.receiver) {
             visitor.facts.worker_rate_limits.push(WorkerRateLimitCall {
                 line: call.line,
                 target,
+                mutated,
             });
         }
     }
@@ -25,31 +26,64 @@ fn resolve_pending(
     visitor: &QueueVisitor<'_>,
     state: &State,
     receiver: PendingReceiver,
-) -> Option<WorkerRateLimitTarget> {
-    match receiver {
-        PendingReceiver::WorkerSpan(span) => Some(WorkerRateLimitTarget::LocalWorker(
-            state.worker_call_indices.get(&span).copied(),
-        )),
-        PendingReceiver::ConstructedLocalClass(sym) => resolve_local_class(visitor, state, sym),
+) -> Option<(WorkerRateLimitTarget, bool)> {
+    if let PendingReceiver::Local(symbol) = receiver {
+        let mut visited = HashSet::new();
+        return resolve_local_symbol(visitor, state, symbol, &mut visited);
+    }
+    let target = match receiver {
+        PendingReceiver::WorkerSpan(span) => {
+            WorkerRateLimitTarget::LocalWorker(state.worker_call_indices.get(&span).copied())
+        }
+        PendingReceiver::ConstructedLocalClass(sym) => resolve_local_class(visitor, state, sym)?,
+        PendingReceiver::ConstructedLocalBinding(sym) => resolve_local_ctor(visitor, state, sym)?,
         PendingReceiver::ConstructedImported(local) => {
-            Some(WorkerRateLimitTarget::ConstructedImported { local })
+            WorkerRateLimitTarget::ConstructedImported { local }
         }
         PendingReceiver::ConstructedNamespace { source, exported } => {
-            Some(WorkerRateLimitTarget::ConstructedNamespace { source, exported })
+            WorkerRateLimitTarget::ConstructedNamespace { source, exported }
         }
-        PendingReceiver::Imported(local) => Some(WorkerRateLimitTarget::Imported { local }),
+        PendingReceiver::Imported(local) => WorkerRateLimitTarget::Imported { local },
         PendingReceiver::Namespace { source, exported } => {
-            Some(WorkerRateLimitTarget::Namespace { source, exported })
+            WorkerRateLimitTarget::Namespace { source, exported }
         }
-        PendingReceiver::CallImported(local) => Some(WorkerRateLimitTarget::CallImported { local }),
+        PendingReceiver::CallImported(local) => WorkerRateLimitTarget::CallImported { local },
         PendingReceiver::CallNamespace { source, exported } => {
-            Some(WorkerRateLimitTarget::CallNamespace { source, exported })
+            WorkerRateLimitTarget::CallNamespace { source, exported }
         }
-        PendingReceiver::Local(symbol) => {
-            let mut visited = HashSet::new();
-            resolve_local_symbol(visitor, state, symbol, &mut visited)
+        PendingReceiver::Local(_) => return None,
+    };
+    Some((target, false))
+}
+
+fn resolve_local_ctor(
+    visitor: &QueueVisitor<'_>,
+    state: &State,
+    mut current: SymbolId,
+) -> Option<WorkerRateLimitTarget> {
+    let mut visited = HashSet::new();
+    while visited.insert(current) {
+        if state.local_classes.contains_key(&current) {
+            return resolve_local_class(visitor, state, current);
+        }
+        match state.local_bindings.get(&current)? {
+            LocalInit::WorkerClass => return Some(WorkerRateLimitTarget::LocalWorker(None)),
+            LocalInit::Alias(next) => current = *next,
+            LocalInit::Imported(local) => {
+                return Some(WorkerRateLimitTarget::ConstructedImported {
+                    local: local.clone(),
+                });
+            }
+            LocalInit::Namespace { source, exported } => {
+                return Some(WorkerRateLimitTarget::ConstructedNamespace {
+                    source: source.clone(),
+                    exported: exported.clone(),
+                });
+            }
+            _ => return None,
         }
     }
+    None
 }
 
 fn resolve_local_symbol(
@@ -57,7 +91,7 @@ fn resolve_local_symbol(
     state: &State,
     mut current: SymbolId,
     visited: &mut HashSet<SymbolId>,
-) -> Option<WorkerRateLimitTarget> {
+) -> Option<(WorkerRateLimitTarget, bool)> {
     while visited.insert(current) {
         if let Some(origins) = state.mutated_origins.get(&current) {
             return resolve_mutated(visitor, state, origins, visited);
@@ -81,40 +115,42 @@ fn resolve_local_init(
     state: &State,
     init: &LocalInit,
     visited: &mut HashSet<SymbolId>,
-) -> Option<WorkerRateLimitTarget> {
-    match init {
-        LocalInit::WorkerSpan(span) => Some(WorkerRateLimitTarget::LocalWorker(
-            state.worker_call_indices.get(span).copied(),
-        )),
-        LocalInit::ConstructedLocalClass(sym) => resolve_local_class(visitor, state, *sym),
-        LocalInit::ConstructedImported(local) => Some(WorkerRateLimitTarget::ConstructedImported {
+) -> Option<(WorkerRateLimitTarget, bool)> {
+    if let LocalInit::Alias(next) = init {
+        return resolve_local_symbol(visitor, state, *next, visited);
+    }
+    let target = match init {
+        LocalInit::WorkerSpan(span) => {
+            WorkerRateLimitTarget::LocalWorker(state.worker_call_indices.get(span).copied())
+        }
+        LocalInit::ConstructedLocalClass(sym) => resolve_local_class(visitor, state, *sym)?,
+        LocalInit::ConstructedLocalBinding(sym) => resolve_local_ctor(visitor, state, *sym)?,
+        LocalInit::ConstructedImported(local) => WorkerRateLimitTarget::ConstructedImported {
             local: local.clone(),
-        }),
+        },
         LocalInit::ConstructedNamespace { source, exported } => {
-            Some(WorkerRateLimitTarget::ConstructedNamespace {
+            WorkerRateLimitTarget::ConstructedNamespace {
                 source: source.clone(),
                 exported: exported.clone(),
-            })
+            }
         }
-        LocalInit::Imported(local) => Some(WorkerRateLimitTarget::Imported {
+        LocalInit::Imported(local) => WorkerRateLimitTarget::Imported {
             local: local.clone(),
-        }),
-        LocalInit::Namespace { source, exported } => Some(WorkerRateLimitTarget::Namespace {
+        },
+        LocalInit::Namespace { source, exported } => WorkerRateLimitTarget::Namespace {
             source: source.clone(),
             exported: exported.clone(),
-        }),
-        LocalInit::CallImported(local) => Some(WorkerRateLimitTarget::CallImported {
+        },
+        LocalInit::CallImported(local) => WorkerRateLimitTarget::CallImported {
             local: local.clone(),
-        }),
-        LocalInit::CallNamespace { source, exported } => {
-            Some(WorkerRateLimitTarget::CallNamespace {
-                source: source.clone(),
-                exported: exported.clone(),
-            })
-        }
-        LocalInit::Alias(next) => resolve_local_symbol(visitor, state, *next, visited),
-        LocalInit::NonWorker => None,
-    }
+        },
+        LocalInit::CallNamespace { source, exported } => WorkerRateLimitTarget::CallNamespace {
+            source: source.clone(),
+            exported: exported.clone(),
+        },
+        LocalInit::Alias(_) | LocalInit::NonWorker | LocalInit::WorkerClass => return None,
+    };
+    Some((target, false))
 }
 
 fn resolve_mutated(
@@ -122,27 +158,17 @@ fn resolve_mutated(
     state: &State,
     origins: &[LocalInit],
     visited: &mut HashSet<SymbolId>,
-) -> Option<WorkerRateLimitTarget> {
+) -> Option<(WorkerRateLimitTarget, bool)> {
     let mut deferred = None;
     for init in origins {
-        let Some(target) = resolve_local_init(visitor, state, init, visited) else {
+        let Some((target, _)) = resolve_local_init(visitor, state, init, visited) else {
             continue;
         };
         match target {
             WorkerRateLimitTarget::LocalWorker(_) | WorkerRateLimitTarget::Unresolved => {
-                return Some(WorkerRateLimitTarget::Unresolved);
+                return Some((WorkerRateLimitTarget::Unresolved, true));
             }
-            WorkerRateLimitTarget::Imported { local }
-            | WorkerRateLimitTarget::ConstructedImported { local }
-            | WorkerRateLimitTarget::CallImported { local } => {
-                deferred = Some(WorkerRateLimitTarget::CallImported { local });
-            }
-            WorkerRateLimitTarget::Namespace { source, exported }
-            | WorkerRateLimitTarget::ConstructedNamespace { source, exported }
-            | WorkerRateLimitTarget::CallNamespace { source, exported } => {
-                deferred = Some(WorkerRateLimitTarget::CallNamespace { source, exported });
-            }
-            _ => {}
+            target => deferred = Some((target, true)),
         }
     }
     deferred

@@ -1,22 +1,23 @@
 use crate::fx::FxHashMap;
 use oxc_syntax::symbol::SymbolId;
-use std::collections::HashMap;
 
 #[derive(Default)]
 pub(in crate::queue) struct State {
-    pub(super) worker_call_indices: HashMap<u32, usize>,
+    pub(super) worker_call_indices: FxHashMap<u32, usize>,
     pub(super) local_bindings: FxHashMap<SymbolId, LocalInit>,
     pub(super) mutated_origins: FxHashMap<SymbolId, Vec<LocalInit>>,
     pub(super) local_classes: FxHashMap<SymbolId, LocalClassInit>,
-    pub(super) module_bindings: HashMap<String, ModuleInit>,
-    pub(super) module_classes: HashMap<String, ModuleClassInit>,
+    pub(super) module_bindings: FxHashMap<String, ModuleInit>,
+    pub(super) module_classes: FxHashMap<String, ModuleClassInit>,
     pub(super) pending_calls: Vec<PendingCall>,
 }
 
 #[derive(Clone)]
 pub(in crate::queue::extract_worker_rate_limit) enum LocalInit {
     WorkerSpan(u32),
+    WorkerClass,
     ConstructedLocalClass(SymbolId),
+    ConstructedLocalBinding(SymbolId),
     ConstructedImported(String),
     ConstructedNamespace { source: String, exported: String },
     NonWorker,
@@ -67,6 +68,7 @@ pub(in crate::queue::extract_worker_rate_limit) struct PendingCall {
 pub(in crate::queue::extract_worker_rate_limit) enum PendingReceiver {
     WorkerSpan(u32),
     ConstructedLocalClass(SymbolId),
+    ConstructedLocalBinding(SymbolId),
     ConstructedImported(String),
     ConstructedNamespace { source: String, exported: String },
     Local(SymbolId),

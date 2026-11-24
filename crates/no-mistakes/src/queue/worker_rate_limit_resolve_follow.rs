@@ -1,4 +1,4 @@
-use super::{ResolveCtx, ResolveMode, ResolvedExport};
+use super::{FollowState, ResolveCtx, ResolveMode, ResolvedExport};
 use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::queue::extract::FileFacts;
 use crate::queue::extract_helpers::is_queue_package;
@@ -13,23 +13,29 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         specifier: &str,
         exported: &str,
         mode: ResolveMode,
-        seen_queue: bool,
+        state: FollowState,
         visited: &mut HashSet<(PathBuf, String, ResolveMode)>,
     ) -> ResolvedExport {
         if is_queue_package(specifier) {
-            return ResolvedExport::NonWorker;
+            return if mode == ResolveMode::Constructor
+                && matches!(exported, "Worker" | "TestWorker")
+            {
+                ResolvedExport::Worker(path.to_path_buf(), None)
+            } else {
+                ResolvedExport::NonWorker
+            };
         }
         let Some(target) = self
             .resolver
             .resolve(specifier, path)
             .and_then(|resolved| self.remapper.remap(&resolved))
         else {
-            return ResolvedExport::NonWorker;
+            return unresolved_if_queue(state.seen_queue && state.from_class_base);
         };
         if !visited.insert((target.clone(), exported.to_string(), mode)) {
-            return unresolved_if_queue(seen_queue);
+            return unresolved_if_queue(state.seen_queue);
         }
-        self.follow_file(&target, exported, mode, seen_queue, visited)
+        self.follow_file(&target, exported, mode, state, visited)
     }
 
     fn follow_file(
@@ -37,13 +43,15 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         path: &Path,
         exported: &str,
         mode: ResolveMode,
-        seen_queue: bool,
+        state: FollowState,
         visited: &mut HashSet<(PathBuf, String, ResolveMode)>,
     ) -> ResolvedExport {
         let file = &self.facts[path];
-        let seen_queue = seen_queue || super::super::is_queue_module(file);
-        if let Some(res) = self.follow_mode_aliases(path, file, exported, mode, seen_queue, visited)
-        {
+        let state = FollowState {
+            seen_queue: state.seen_queue || super::super::is_queue_module(file),
+            ..state
+        };
+        if let Some(res) = self.follow_mode_aliases(path, file, exported, mode, state, visited) {
             return res;
         }
         if mode != ResolveMode::CallReturn {
@@ -64,7 +72,7 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
             .get(exported)
             .or_else(|| file.worker_namespace_exports.get(exported))
         {
-            return self.follow_source(path, spec, imp, mode, seen_queue, visited);
+            return self.follow_source(path, spec, imp, mode, state, visited);
         }
         if let Some(local) = file
             .worker_import_aliases
@@ -77,18 +85,17 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
                     .map(|(_, local)| local.as_str())
             })
         {
-            return self.follow_local(path, file, local, mode, seen_queue, visited);
+            return self.follow_local(path, file, local, mode, state, visited);
         }
+        let mut fallback = unresolved_if_queue(state.seen_queue);
         for specifier in &file.star_exports {
-            if is_queue_package(specifier) {
-                continue;
-            }
-            let result = self.follow_source(path, specifier, exported, mode, seen_queue, visited);
-            if !matches!(result, ResolvedExport::NonWorker) {
-                return result;
+            match self.follow_source(path, specifier, exported, mode, state, visited) {
+                worker @ ResolvedExport::Worker(..) => return worker,
+                ResolvedExport::QueueUnresolved => fallback = ResolvedExport::QueueUnresolved,
+                ResolvedExport::NonWorker => {}
             }
         }
-        unresolved_if_queue(seen_queue)
+        fallback
     }
 
     fn follow_mode_aliases(
@@ -97,27 +104,33 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         file: &FileFacts,
         exported: &str,
         mode: ResolveMode,
-        seen_queue: bool,
+        state: FollowState,
         visited: &mut HashSet<(PathBuf, String, ResolveMode)>,
     ) -> Option<ResolvedExport> {
-        let (imports, namespaces, next_mode) = match mode {
+        let (imports, namespaces, next_mode, from_class_base) = match mode {
             ResolveMode::Constructor => (
                 &file.worker_class_imports,
                 &file.worker_class_namespaces,
                 ResolveMode::Constructor,
+                true,
             ),
             ResolveMode::Instance => (
                 &file.worker_constructed_aliases,
                 &file.worker_constructed_namespaces,
                 ResolveMode::Constructor,
+                state.from_class_base,
             ),
             ResolveMode::CallReturn => return None,
         };
+        let next_state = FollowState {
+            from_class_base,
+            ..state
+        };
         if let Some(local) = imports.get(exported) {
-            return Some(self.follow_local(path, file, local, next_mode, seen_queue, visited));
+            return Some(self.follow_local(path, file, local, next_mode, next_state, visited));
         }
         let (spec, imp) = namespaces.get(exported)?;
-        Some(self.follow_source(path, spec, imp, next_mode, seen_queue, visited))
+        Some(self.follow_source(path, spec, imp, next_mode, next_state, visited))
     }
 
     fn follow_local(
@@ -126,13 +139,13 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         file: &FileFacts,
         local: &str,
         mode: ResolveMode,
-        seen_queue: bool,
+        state: FollowState,
         visited: &mut HashSet<(PathBuf, String, ResolveMode)>,
     ) -> ResolvedExport {
         let Some(imp) = file.imports.iter().find(|imp| imp.local == local) else {
-            return unresolved_if_queue(seen_queue);
+            return unresolved_if_queue(state.seen_queue);
         };
-        self.follow_source(path, &imp.source, &imp.imported, mode, seen_queue, visited)
+        self.follow_source(path, &imp.source, &imp.imported, mode, state, visited)
     }
 }
 
