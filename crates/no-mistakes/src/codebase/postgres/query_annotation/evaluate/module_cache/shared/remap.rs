@@ -69,3 +69,7 @@ fn remap_value(value: &Value, remap: &[Environment]) -> Value {
         _ => value.clone(),
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "remap_tests.rs"]
+mod tests;
