@@ -11,6 +11,11 @@ pub(super) fn run(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
+    if let Some(found) = crate::codebase::rules::github_actions_workflow_files::dispatch::run(
+        rule_id, root, config, files, sources,
+    ) {
+        return Some(found);
+    }
     Some(match rule_id {
         NO_MISTAKES_CONFIG => {
             no_mistakes_config::check_with_files_and_sources(root, config, files, sources)
@@ -131,12 +136,6 @@ pub(super) fn run(
             github_actions_docker_host_ports::check_with_files_and_sources(
                 root, config, files, sources,
             )
-        }
-        GITHUB_ACTIONS_NO_POLL_WAIT_JOB => {
-            no_poll_wait_job::check_with_files_and_sources(root, config, files, sources)
-        }
-        GITHUB_ACTIONS_PR_DIFF_RANGE => {
-            pr_diff_range::check_with_files_and_sources(root, config, files, sources)
         }
         GITHUB_ACTIONS_VITEST_PROJECT_SELECTION => {
             github_actions_vitest_project_selection::check_with_files_and_sources(
