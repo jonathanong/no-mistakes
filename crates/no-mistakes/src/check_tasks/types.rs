@@ -8,6 +8,7 @@ pub(crate) struct CheckTask<T> {
     pub(crate) pre_suppressed: Vec<SuppressedFinding>,
     pub(crate) suppression_sources: Vec<Option<String>>,
     pub(crate) advisories: Vec<RuleFinding>,
+    pub(crate) analysis_warnings: Vec<String>,
     pub(crate) warning: Option<String>,
     pub(crate) duration: Duration,
 }

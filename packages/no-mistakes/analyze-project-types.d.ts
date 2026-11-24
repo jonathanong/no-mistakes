@@ -21,6 +21,7 @@ import type {
   ResolveCheckFilesOptions,
   ResolveCheckOptions,
 } from "./query-types";
+import type { QueueCheckOptions } from "./queue-report-types";
 import type {
   InfraOptions,
   PlaywrightOptions,
@@ -51,6 +52,7 @@ export type BatchedFlowOptions = Omit<FlowOptions, "root" | "tsconfig" | "config
 export type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">;
 export type BatchedDependencyTraverseOptions = (TraverseGraphOptions | TraversePathsOptions) &
   Pick<ProjectOptions, "config">;
+export type BatchedQueueCheckOptions = Omit<QueueCheckOptions, "root" | "tsconfig" | "config">;
 export type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
 export type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
@@ -76,7 +78,8 @@ export type AnalyzeProjectReportRequest =
   | ({ type: "flow"; id?: string } & BatchedFlowOptions)
   | ({ type: "effects"; id?: string } & Omit<EffectsOptions, "root" | "tsconfig" | "config">)
   | ({ type: "rscCallers"; id?: string } & Omit<RscCallersOptions, "root" | "tsconfig" | "config">)
-  | ({ type: "queues" | "queueEdges" | "queueCheck"; id?: string } & BatchedProjectOptions)
+  | ({ type: "queues" | "queueEdges"; id?: string } & BatchedProjectOptions)
+  | ({ type: "queueCheck"; id?: string } & BatchedQueueCheckOptions)
   | ({ type: "queueRelated"; id?: string } & BatchedQueueRelatedOptions)
   | ({
       type: "serverRoutes" | "serverRouteList" | "serverRouteEdges";

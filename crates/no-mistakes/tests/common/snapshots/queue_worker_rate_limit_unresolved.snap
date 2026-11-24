@@ -1,0 +1,19 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "worker-param": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "queues-check: worker-param.ts:4 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
+      ]
+    }
+  }
+}

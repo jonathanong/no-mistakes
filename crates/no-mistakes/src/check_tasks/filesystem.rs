@@ -46,6 +46,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: diagnostics.advisories,
+        analysis_warnings: Vec::new(),
         warning: None,
         duration,
     })

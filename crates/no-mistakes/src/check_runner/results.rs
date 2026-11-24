@@ -18,6 +18,7 @@ pub(crate) use render::json_value;
 pub(crate) mod suppression;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod suppression_tests;
+mod warnings;
 
 pub(crate) struct FinalizeInput<'a> {
     pub(crate) root: &'a std::path::Path,
@@ -91,6 +92,10 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         include_sql_verdicts,
     } = input;
     let pre_suppressed = suppression::take_pre_suppressed(&mut completed);
+    let warnings::CollectedWarnings {
+        warnings,
+        analysis_warning_count,
+    } = warnings::collect(root, facts, config, react_warning, &mut completed);
     let mut react = completed.react;
     let react_suppression_targets = react.react_suppression_targets.as_slice();
     let mut queues = completed.queues;
@@ -112,22 +117,6 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     advisories::merge_sql(&mut advisories, root, sources, facts, &sql_verdicts);
     advisories.extend(std::mem::take(&mut rules.advisories));
     advisories.extend(std::mem::take(&mut filesystem_rules.advisories));
-    let mut warnings: Vec<String> = [
-        react_warning,
-        react.warning,
-        queues.warning,
-        rules.warning,
-        integration.warning,
-        codebase.warning,
-        filesystem_rules.warning,
-    ]
-    .into_iter()
-    .flatten()
-    .collect();
-    let executor_warnings = no_mistakes::codebase::postgres::executor_config_warnings(root, facts);
-    let analysis_warning_count = config.analysis_warnings.len() + executor_warnings.len();
-    warnings.extend(executor_warnings);
-    warnings.extend(config.analysis_warnings.iter().cloned());
     let accounting = suppression::apply_if_requested(
         retain_suppression,
         suppression::Inputs {
