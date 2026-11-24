@@ -23,3 +23,9 @@
 {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo item >&-", "cwd": "/attempt/workspace"}}
 {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "rg '>' /attempt/plugin/skills/testing-rules/SKILL.md", "cwd": "/attempt/workspace"}}
 {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "cat /outside/item.txt <> input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "cat <> /attempt/plugin/skills/security-rules/SKILL.md", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -E /outside/filter.awk input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk --exec=filter.awk --assign /outside/input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -i /outside/include.awk 'BEGIN { print 1 }' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -l /outside/filter.so 'BEGIN { print 1 }' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk '/item/ {print}' -v /outside/input.txt", "cwd": "/attempt/workspace"}}

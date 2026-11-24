@@ -55,7 +55,7 @@ class TranscriptTriggerTest(unittest.TestCase):
         expected = json.loads((FIXTURES / "shell-arguments.snap").read_text(encoding="utf-8"))
         self.assertEqual(trigger.external_path_findings(transcript, ATTEMPT), expected)
 
-    def test_quoted_search_pattern_preserves_skill_input(self):
+    def test_search_pattern_and_input_redirection_preserve_skill_inputs(self):
         transcript = (FIXTURES / "shell-arguments.jsonl").read_text(encoding="utf-8")
         self.assertEqual(
             trigger.skills_in_transcript(
@@ -64,5 +64,5 @@ class TranscriptTriggerTest(unittest.TestCase):
                 attempt_root=ATTEMPT,
                 cwd=ATTEMPT / "workspace",
             ),
-            ["testing-rules"],
+            ["testing-rules", "security-rules"],
         )

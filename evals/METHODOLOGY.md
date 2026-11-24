@@ -462,9 +462,10 @@ attempt unavailable for scoring. New flagged attempts withhold LLM judging.
 Review the saved transcript for context. Standard process-stream and discard
 devices (`/dev/null`, `/dev/stdout`, `/dev/stderr`, `/dev/tty`) are exempt from
 the audit. Shell quoting and escapes distinguish literal words from redirection
-operators. The audit reads file operands of `sed` and `awk`, including `-f`
-program files, while inline program text stays out of path checks. It also
-recognizes a command after plain leading shell assignments such as `FLAG=1`.
+operators. The audit checks file operands of `sed` and `awk`, including
+program files supplied via `-f` and GNU awk's `-E`. Inline program text stays
+out of path checks. The audit also recognizes the command after a plain
+leading shell assignment such as `FLAG=1`.
 
 The audit covers recognized paths only. Its limits include symlinks (paths
 are normalized without resolving links), unexpanded variables or command

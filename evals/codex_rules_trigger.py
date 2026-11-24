@@ -114,7 +114,7 @@ def _skills_in_stage(argv, cwd, heredocs, redirects, output, roots, attempt_root
         tokens = _find_exec_tokens(argv)
     elif _reader_kind(name) is not None and not (name == "rg" and "--files" in argv):
         tokens = _reader_tokens(argv)
-        tokens.extend(path for operator, path in redirects if operator == "<")
+        tokens.extend(path for operator, path in redirects if operator in _INPUT_REDIR)
         tokens.extend(_heredoc_reads(argv, heredocs))
     else:
         return []
@@ -294,7 +294,8 @@ def _reader_tokens(argv: list) -> list:
 _TEXT_PROGRAM_OPTIONS = {
     "sed": {"e": "--expression", "f": "--file"},
     "awk": {
-        "e": "--source", "f": "--file", "F": "--field-separator", "v": "--assign",
+        "e": "--source", "E": "--exec", "f": "--file", "F": "--field-separator",
+        "i": "--include", "l": "--load", "v": "--assign",
     },
 }
 
@@ -313,6 +314,9 @@ def _text_program_files(argv: list, name: str) -> list:
             break
         if arg == "-" or not arg.startswith("-"):
             positionals.append(arg)
+            if name == "awk":
+                positionals.extend(argv[index:])
+                break
             continue
         if arg.startswith("--"):
             option, _, attached = arg.partition("=")
@@ -325,17 +329,21 @@ def _text_program_files(argv: list, name: str) -> list:
             separate = not attached
         if not flag:
             continue
-        explicit_program |= flag in ("e", "f")
+        explicit_program |= flag in ("e", "E", "f")
         if separate:
             if index >= len(argv):
                 break
             attached = argv[index]
             index += 1
-        if flag == "f":
+        if flag in ("E", "f", "i", "l"):
             paths.append(attached)
+        if flag == "E":
+            positionals.extend(argv[index:])
+            break
     return paths + (positionals if explicit_program else positionals[1:])
 
 
+_INPUT_REDIR = {"<", "<>"}
 _OUTPUT_REDIR = {">", ">>", ">&", ">|", "&>", "&>>"}
 _DESCRIPTOR = re.compile(r"[0-9]+-?|-")
 
@@ -344,7 +352,7 @@ def _audit_tokens(argv: list, heredocs: list, redirects: list) -> list:
     name = Path(argv[0]).name if argv else ""
     tokens = [
         path for operator, path in redirects
-        if operator in ("<", "<>") or (
+        if operator in _INPUT_REDIR or (
             operator in _OUTPUT_REDIR
             and (operator != ">&" or not _DESCRIPTOR.fullmatch(path))
         )
