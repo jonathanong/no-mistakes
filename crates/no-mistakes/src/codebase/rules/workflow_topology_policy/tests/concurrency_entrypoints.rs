@@ -28,4 +28,19 @@ fn malformed_concurrency_policy_does_not_fall_back_to_the_default() {
     assert!(error.contains("concurrencyPolicy"), "{error}");
 }
 
-// Output cases moved to cli_gha_snapshot_workflow_topology.
+#[test]
+fn malformed_workflow_is_a_structured_error_without_a_session() {
+    let error = super::super::prepare::check_with_files(
+        &super::fixture("reusable-concurrency"),
+        &super::config("forbidReusableWorkflowConcurrency: true"),
+        &[],
+    )
+    .unwrap_err();
+    let failure = error
+        .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
+        .unwrap();
+    assert_eq!(
+        failure.file.as_deref(),
+        Some(std::path::Path::new(".github/workflows/malformed.yml"))
+    );
+}

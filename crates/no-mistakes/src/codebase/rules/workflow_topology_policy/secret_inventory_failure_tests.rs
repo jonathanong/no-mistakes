@@ -13,15 +13,7 @@ fn unknown_config_path_is_explicitly_incomplete() {
     let sources = snapshot.source_store_for(&root);
     let inputs =
         PreparedWorkflowTopologyInputs::for_config(&root, &config, &snapshot, &sources).unwrap();
-    let findings = check_prepared(
-        &root,
-        &config,
-        &snapshot.paths_for(&root),
-        &sources,
-        &inputs,
-        None,
-    )
-    .unwrap();
+    let findings = check_prepared(&root, &config, None, &sources, &inputs, None).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, ".");
     assert_eq!(findings[0].line, 1);
@@ -42,25 +34,9 @@ fn unavailable_config_source_is_cached_as_incomplete_across_repeated_checks() {
         PreparedWorkflowTopologyInputs::for_config(root, &config, &snapshot, &sources).unwrap();
     // Remove only the per-test copy after loading its config, before preparing config locations.
     std::fs::remove_file(&path).unwrap();
-    let first = check_prepared(
-        root,
-        &config,
-        &snapshot.paths_for(root),
-        &sources,
-        &inputs,
-        Some(&path),
-    )
-    .unwrap();
+    let first = check_prepared(root, &config, None, &sources, &inputs, Some(&path)).unwrap();
     let reads = sources.physical_read_count();
-    let second = check_prepared(
-        root,
-        &config,
-        &snapshot.paths_for(root),
-        &sources,
-        &inputs,
-        Some(&path),
-    )
-    .unwrap();
+    let second = check_prepared(root, &config, None, &sources, &inputs, Some(&path)).unwrap();
     assert_eq!(first, second);
     assert_eq!(sources.physical_read_count(), reads);
     assert_eq!(first.len(), 1, "{first:?}");
@@ -97,26 +73,10 @@ fn retained_workflow_and_action_read_failures_prevent_unused_and_do_not_retry_io
         );
         let inputs =
             PreparedWorkflowTopologyInputs::new(root, &config.ci, Arc::new(workflows), actions);
-        let first = check_prepared(
-            root,
-            &config,
-            &snapshot.paths_for(root),
-            &sources,
-            &inputs,
-            Some(&path),
-        )
-        .unwrap();
+        let first = check_prepared(root, &config, None, &sources, &inputs, Some(&path)).unwrap();
         let reads = sources.physical_read_count();
         let parses = sources.yaml_parse_count();
-        let second = check_prepared(
-            root,
-            &config,
-            &snapshot.paths_for(root),
-            &sources,
-            &inputs,
-            Some(&path),
-        )
-        .unwrap();
+        let second = check_prepared(root, &config, None, &sources, &inputs, Some(&path)).unwrap();
         assert_eq!(first, second);
         assert_eq!(sources.physical_read_count(), reads);
         assert_eq!(sources.yaml_parse_count(), parses);

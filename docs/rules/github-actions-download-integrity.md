@@ -165,6 +165,10 @@ annotation applies only to the immediately following physical line. A blank
 line breaks that association. Annotation-looking strings and here-document
 payloads are not comments. An annotation on an inline YAML `run` stays within
 that step; an adjacent literal block header can annotate its first body line.
+A URL on a backslash continuation line can still produce a finding when the
+skip applies to the command's first line. Put the URL on the final physical
+line and append the annotation there. To annotate a URL on the first line,
+put a standalone annotation immediately above the command.
 
 For line scope, use ordinary inline runs or literal `run: |` bodies. Folded
 `run: >` bodies and other ambiguous physical-line projections retain their
@@ -313,6 +317,13 @@ Following [recall over precision](../../README.md#how-analysis-works), inputs th
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy.
+
+### Limits
+
+Shell assignment recovery uses one scope per step or selected script,
+including all function bodies. A unique assignment in one function can resolve
+a later download in another function, even if the assignment function is never
+called.
 
 ## Valid example
 

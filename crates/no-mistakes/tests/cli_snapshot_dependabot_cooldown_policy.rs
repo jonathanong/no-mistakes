@@ -10,8 +10,12 @@ fn dependabot_cooldown_policy_json_matches_snapshot() {
         "malformed",
         "both-paths",
         "anchors",
+        "chained-merges",
+        "sequence-merges",
         "low-explicit",
         "incomplete-merge",
+        "incomplete-sequence-merges",
+        "incomplete-tagged-merges",
     ]
     .map(|name| (name, rules_path(rule, "fixture", name), config.clone()));
     assert_saved_fixture("dependabot_cooldown_policy", &cases);

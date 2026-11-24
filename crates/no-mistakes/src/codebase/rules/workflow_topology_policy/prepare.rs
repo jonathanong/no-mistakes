@@ -76,12 +76,5 @@ pub(super) fn check_with_files_and_sources(
     let inputs = from_files(root, config, all_files, sources);
     let config_path =
         crate::config::v2::effective_v2_config_path_from_visible(root, None, all_files)?;
-    super::check_prepared(
-        root,
-        config,
-        all_files,
-        sources,
-        &inputs,
-        config_path.as_deref(),
-    )
+    super::check_prepared(root, config, None, sources, &inputs, config_path.as_deref())
 }

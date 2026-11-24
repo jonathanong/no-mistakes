@@ -14,7 +14,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/sequence.yml",
           "line": 10,
-          "message": ".github/workflows/sequence.yml: job \"build\" step \"publish sequence\" calls `example/publish-widget` with input `<<`, which is not in `allowedInputs`. Remove `<<` from `with:`, or add it to `allowedInputs` if the action may receive it. The action policy lists every input this action may receive.",
+          "message": ".github/workflows/sequence.yml: job \"build\" step \"publish sequence\" calls `example/publish-widget` with a YAML merge key `<<` under `with:`. The allowlist cannot check merged inputs. Write the inputs inline under `with:` so the policy can check each one.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "<<:",
           "target": "build"
@@ -22,7 +22,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/sequence.yml",
           "line": 8,
-          "message": ".github/workflows/sequence.yml: job \"build\" step \"publish sequence\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to any value. The action policy requires this input on every ref.",
+          "message": ".github/workflows/sequence.yml: job \"build\" step \"publish sequence\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to a non-null value. The action policy requires this input on every ref.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "uses: example/publish-widget@v1",
           "target": "build"
@@ -30,7 +30,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/widgets.yml",
           "line": 13,
-          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish nested inputs\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to any value. The action policy requires this input on every ref.",
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish nested inputs\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to a non-null value. The action policy requires this input on every ref.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "uses: example/publish-widget@v1",
           "target": "build"
@@ -38,7 +38,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/widgets.yml",
           "line": 15,
-          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish nested inputs\" calls `example/publish-widget` with input `<<`, which is not in `allowedInputs`. Remove `<<` from `with:`, or add it to `allowedInputs` if the action may receive it. The action policy lists every input this action may receive.",
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish nested inputs\" calls `example/publish-widget` with a YAML merge key `<<` under `with:`. The allowlist cannot check merged inputs. Write the inputs inline under `with:` so the policy can check each one.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "<<:",
           "target": "build"
@@ -46,7 +46,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/widgets.yml",
           "line": 19,
-          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish sibling lifetime\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to any value. The action policy requires this input on every ref.",
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish sibling lifetime\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to a non-null value. The action policy requires this input on every ref.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "uses: example/publish-widget@v1",
           "target": "build"
@@ -54,7 +54,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/widgets.yml",
           "line": 21,
-          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish sibling lifetime\" calls `example/publish-widget` with input `<<`, which is not in `allowedInputs`. Remove `<<` from `with:`, or add it to `allowedInputs` if the action may receive it. The action policy lists every input this action may receive.",
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish sibling lifetime\" calls `example/publish-widget` with a YAML merge key `<<` under `with:`. The allowlist cannot check merged inputs. Write the inputs inline under `with:` so the policy can check each one.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "<<:",
           "target": "build"
@@ -86,7 +86,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/widgets.yml",
           "line": 31,
-          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish alias\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to any value. The action policy requires this input on every ref.",
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish alias\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to a non-null value. The action policy requires this input on every ref.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "uses: example/publish-widget@v1",
           "target": "build"
@@ -127,7 +127,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/widgets.yml",
           "line": 13,
-          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish widgets\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to any value. The action policy requires this input on every ref.",
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish widgets\" calls `example/publish-widget` without required input `retention-days`. Set `retention-days` to a non-null value. The action policy requires this input on every ref.",
           "rule": "github-actions-action-input-policy",
           "sourceLine": "uses: example/publish-widget@v1",
           "target": "build"

@@ -1,0 +1,4 @@
+---
+source: crates/no-mistakes/tests/cli_gha_snapshot_workflow_policy_bans.rs
+---
+[malformed-workflow] .github/workflows/malformed.yml: did not find expected node content at line 5 column 1, while parsing a flow node

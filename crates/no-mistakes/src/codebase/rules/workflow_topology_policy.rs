@@ -1,9 +1,11 @@
 use super::RuleFinding;
+use crate::codebase::analysis_session::AnalysisSession;
+use crate::codebase::workflow_topology::model::DiagnosticCode;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod concurrency_compile;
 mod concurrency_scope;
@@ -16,6 +18,8 @@ mod evaluate_graph;
 mod evaluate_secrets_inherit;
 mod evaluate_steps;
 mod locations;
+mod malformed;
+use malformed::report_malformed;
 #[cfg(test)]
 mod prepare;
 mod secret_inventory;
@@ -81,15 +85,17 @@ pub(crate) struct StepSelector {
 pub(crate) fn check_prepared(
     root: &Path,
     config: &NoMistakesConfig,
-    _all_files: &[PathBuf],
+    session: Option<&AnalysisSession>,
     sources: &crate::codebase::ts_source::SourceStore,
     inputs: &crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs,
     config_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    let mut check_reusable = false;
     let mut locations = locations::Locations::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
+        check_reusable |= opts.forbid_reusable_workflow_concurrency;
         let first_finding = findings.len();
         let concurrency = concurrency_compile::compile(&opts.concurrency_policy)?;
         let inventory = opts
@@ -122,6 +128,13 @@ pub(crate) fn check_prepared(
         if let Some(message) = &rule.message {
             for finding in &mut findings[first_finding..] {
                 finding.message.clone_from(message);
+            }
+        }
+    }
+    if check_reusable {
+        for diagnostic in &inputs.topology().diagnostics {
+            if diagnostic.code == DiagnosticCode::MalformedWorkflow {
+                report_malformed(diagnostic, session)?;
             }
         }
     }

@@ -1,0 +1,21 @@
+version: 2
+base: &base
+  open-pull-requests-limit: 3
+  cooldown: &cooldown
+    default-days: 7
+first: &first
+  <<: *base
+fallback: &fallback
+  cooldown:
+    default-days: 0
+updates:
+  - <<: [*first, *fallback]
+    package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+  - <<: [*fallback, *first]
+    package-ecosystem: cargo
+    directory: /
+    schedule: { interval: weekly }
+    cooldown: !example
+      <<: *cooldown

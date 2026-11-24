@@ -1,13 +1,11 @@
-//! Parses a single workflow YAML file into a [`ParsedWorkflow`] fragment
-//! (node, jobs, edges, diagnostics, output references), ported from
-//! `parse-workflow.mts`. [`super::mod`]'s loader parses every workflow file
-//! this way, then merges and cross-references the fragments.
+//! Parses one workflow YAML document into a [`ParsedWorkflow`] fragment.
 
 use super::case_insensitive_lookup::{CaseInsensitiveLookup, Resolution};
 use super::expression_references;
 use super::model;
 use super::value_primitives;
 use super::workflow_values;
+use crate::codebase::structured_value::expand_yaml_mapping_if_merged;
 use serde_yaml::Value;
 
 /// A `needs.<callJobKey>.outputs.<output>` reference found anywhere in a
@@ -34,7 +32,9 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
         return malformed_workflow(path, "workflow root must be a mapping");
     }
 
-    let triggers = workflow_values::parse_triggers(value.get("on"));
+    let value = expand_yaml_mapping_if_merged(value);
+    let on = value.get("on").map(expand_yaml_mapping_if_merged);
+    let triggers = workflow_values::parse_triggers(on.as_deref());
     let workflow_permissions =
         crate::codebase::ci_graph::parse::parse_permission_spec(value.get("permissions"));
     let job_entries: Vec<(String, &Value)> = match value.get("jobs") {
@@ -106,8 +106,9 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
         );
     }
 
-    let concurrency = workflow_values::parse_concurrency(value.get("concurrency"));
-    let workflow_call = workflow_values::parse_workflow_call(value.get("on"));
+    let concurrency = value.get("concurrency").map(expand_yaml_mapping_if_merged);
+    let concurrency = workflow_values::parse_concurrency(concurrency.as_deref());
+    let workflow_call = workflow_values::parse_workflow_call(on.as_deref());
     let mut job_ids: Vec<String> = jobs.iter().map(|job| job.id.clone()).collect();
     job_ids.sort();
 
@@ -123,7 +124,7 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
             job_ids,
             concurrency,
             env: value_primitives::string_record(value.get("env")),
-            secret_references: super::secret_references::workflow(value),
+            secret_references: super::secret_references::workflow(&value),
         },
         jobs,
         edges,

@@ -7,6 +7,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/malformed.yml",
+          "message": "Cannot verify reusable workflow concurrency: did not find expected node content at line 5 column 1, while parsing a flow node. Repair the workflow YAML and run the check again."
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -17,6 +24,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
           "rule": "workflow-topology-policy",
           "sourceLine": "concurrency:"
+        },
+        {
+          "file": ".github/workflows/merged-triggers.yml",
+          "line": 9,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency:"
+        },
+        {
+          "file": ".github/workflows/merged-workflow.yml",
+          "line": 5,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: inherited-build"
+        },
+        {
+          "file": ".github/workflows/null-trigger.yml",
+          "line": 3,
+          "message": "forbidden workflow-level concurrency on a reusable workflow. Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: null-trigger-build"
         },
         {
           "file": ".github/workflows/scalar.yml",
@@ -41,6 +69,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/malformed.yml",
+          "message": "Cannot verify reusable workflow concurrency: did not find expected node content at line 5 column 1, while parsing a flow node. Repair the workflow YAML and run the check again."
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -51,6 +86,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Declare concurrency on the caller or on individual jobs.",
           "rule": "workflow-topology-policy",
           "sourceLine": "concurrency:"
+        },
+        {
+          "file": ".github/workflows/merged-triggers.yml",
+          "line": 9,
+          "message": "Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency:"
+        },
+        {
+          "file": ".github/workflows/merged-workflow.yml",
+          "line": 5,
+          "message": "Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: inherited-build"
+        },
+        {
+          "file": ".github/workflows/null-trigger.yml",
+          "line": 3,
+          "message": "Declare concurrency on the caller or on individual jobs.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "concurrency: null-trigger-build"
         },
         {
           "file": ".github/workflows/scalar.yml",

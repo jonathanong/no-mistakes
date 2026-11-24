@@ -120,9 +120,9 @@ no requirement. `secretInventory` is separately opt-in:
   [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
 - `forbidReusableWorkflowConcurrency`: `false` by default. When enabled, ban
   workflow-level locks on workflows triggered by `workflow_call`, including
-  workflows with additional triggers. Job-level locks remain allowed. See the
-  [concurrency reference](../configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency)
-  for counterexamples, rewrites and suppression.
+  inherited triggers and workflows with additional triggers. Job-level locks
+  remain allowed. See the [concurrency reference](../configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency)
+  for counterexamples, rewrites, suppression, and analysis limits.
 - `concurrencyPolicy`: owner id to the intended pending, cancellation, and
   scope behavior of that lock. See [concurrency configuration](../configuration/workflow-topology-policy-concurrency.md#concurrencypolicy).
 - `forbidConcurrencyGroupCollisions`: when `true`, report workflows and jobs

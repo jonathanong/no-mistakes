@@ -133,12 +133,12 @@ fn github_actions_download_integrity_url_assignments_match_snapshot() {
     );
     let workflow = ".github/workflows/downloads.yml";
     for (label, lines) in [
-        ("max", &[9, 19, 28, 29, 42][..]),
+        ("max", &[9, 19, 28, 29, 42, 59][..]),
         (
             "low",
-            &[9, 12, 19, 21, 22, 23, 24, 28, 29, 41, 42, 48, 49][..],
+            &[9, 12, 19, 21, 22, 23, 24, 28, 29, 41, 42, 48, 49, 59][..],
         ),
-        ("strict", &[9, 19, 28, 29, 42, 51][..]),
+        ("strict", &[9, 19, 28, 29, 42, 51, 59][..]),
     ] {
         let expected = lines
             .iter()
@@ -183,6 +183,7 @@ fn github_actions_download_integrity_line_skips_match_snapshot() {
             (workflow, 28),
             (workflow, 33),
             (workflow, 35),
+            (workflow, 39),
             (".github/workflows/flow.yml", 1),
             (".github/workflows/flow.yml", 1),
             (".github/workflows/folded.yml", 8),

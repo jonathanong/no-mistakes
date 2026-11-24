@@ -51,3 +51,11 @@ jobs:
           curl https://downloads.example.invalid/payload -o payload
           curl "https://downloads.example.invalid/${NAME}.sha256" -o payload.sha256
           sha256sum -c payload.sha256
+      - run: |
+          set_url() {
+            FUNCTION_URL="https://example.invalid/releases/${VERSION}"
+          }
+          fetch_tool() {
+            curl "${FUNCTION_URL}/tool"
+          }
+          fetch_tool

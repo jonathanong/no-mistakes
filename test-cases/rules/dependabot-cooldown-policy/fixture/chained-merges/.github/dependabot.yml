@@ -1,0 +1,14 @@
+version: 2
+base: &base
+  open-pull-requests-limit: 0
+  cooldown:
+    default-days: 7
+update: &update
+  <<: *base
+  package-ecosystem: cargo
+scheduled-update: &scheduled
+  <<: *update
+  schedule: { interval: weekly }
+updates:
+  - <<: *scheduled
+    directory: /

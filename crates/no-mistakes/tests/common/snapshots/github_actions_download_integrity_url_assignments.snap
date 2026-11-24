@@ -109,6 +109,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/downloads.yml",
+          "line": 59,
+          "message": ".github/workflows/downloads.yml:59: job `build` step 11 download URL or argument shape `${FUNCTION_URL}/tool` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"${FUNCTION_URL}/tool\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
           "line": 9,
           "message": ".github/workflows/downloads.yml:9: job `build` step 1 download URL or argument shape `${BASE_URL}/tool` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
           "rule": "github-actions-download-integrity",
@@ -158,6 +166,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/downloads.yml:42: job `build` step 8 downloads `https://downloads.example.invalid/other` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl \"$OTHER_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 59,
+          "message": ".github/workflows/downloads.yml:59: job `build` step 11 downloads `https://example.invalid/releases/${VERSION}/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"${FUNCTION_URL}/tool\"",
           "target": "build"
         },
         {
@@ -219,6 +235,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/downloads.yml:51: job `build` step 10 downloads `https://downloads.example.invalid/payload` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl https://downloads.example.invalid/payload -o payload",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/downloads.yml",
+          "line": 59,
+          "message": ".github/workflows/downloads.yml:59: job `build` step 11 downloads `https://example.invalid/releases/${VERSION}/tool` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"${FUNCTION_URL}/tool\"",
           "target": "build"
         },
         {

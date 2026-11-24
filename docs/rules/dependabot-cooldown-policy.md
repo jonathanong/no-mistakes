@@ -11,6 +11,11 @@ Each update entry in `.github/dependabot.yml` or `.github/dependabot.yaml`
 must set a default cooldown at the configured floor. If both files exist, both
 are checked. Explicit SemVer cooldown values use the same floor.
 
+The rule resolves YAML aliases and `<<` merge keys before checking each entry,
+including chains of merges and sequences such as `<<: [*primary, *fallback]`.
+Explicit keys take precedence over merged keys. Earlier mappings in a merge
+sequence take precedence over later mappings.
+
 ## Options and defaults
 
 ```yaml

@@ -1,6 +1,10 @@
 use super::*;
 
-pub(super) fn spawn<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'a>) {
+pub(super) fn spawn<'a>(
+    scope: &rayon::Scope<'a>,
+    inputs: &'a RuleRunInputs<'a>,
+    session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
+) {
     let RuleRunInputs {
         root,
         config,
@@ -71,7 +75,7 @@ pub(super) fn spawn<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'a>)
                 workflow_topology_policy::check_prepared(
                     root,
                     config,
-                    candidates.candidates(WORKFLOW_TOPOLOGY_POLICY),
+                    session,
                     sources,
                     inputs,
                     config_path,

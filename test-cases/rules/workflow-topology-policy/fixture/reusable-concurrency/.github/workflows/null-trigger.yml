@@ -1,0 +1,8 @@
+name: Reusable with a null trigger
+on: { workflow_call: null }
+concurrency: null-trigger-build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
