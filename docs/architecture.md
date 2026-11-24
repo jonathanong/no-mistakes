@@ -402,7 +402,7 @@ workloads must use checked-in fixtures,
 `BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
 and must not generate repositories or launch the CLI as a subprocess.
 
-The `bench` and `benchmark-shards` jobs both run on GitHub-hosted
+The `bench` and `benchmark-shards` jobs (in the Benchmarks workflow) both run on GitHub-hosted
 `ubuntu-24.04-arm` so the uploaded harness matches the machine that executes
 it. That label is one ARM64 CPU generation, so glibc dispatch and CodSpeed's
 simulated cache sizes stay aligned between base and head. `ubuntu-latest`

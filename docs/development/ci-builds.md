@@ -1136,6 +1136,26 @@ main run can finish and upload Rust coverage when another merge lands. GitHub's
 default concurrency queue can still replace an older pending main run before
 its jobs start.
 
+Benchmarks run in the dedicated
+[Benchmarks workflow](../../.github/workflows/benchmarks.yml), which triggers on
+`pull_request` and pushes to `main`. Its `changes` job resolves the diff base
+with [`push-diff-base.cjs`](../../.github/scripts/push-diff-base.cjs) and
+selects shards with
+[`benchmark-change-scope.cjs`](../../.github/scripts/benchmark-change-scope.cjs),
+supporting pull-request opt-in markers. On pushes to `main`, `push-diff-base.cjs`
+diffs from the head SHA of the most recent successful
+`Benchmarks` push run on the same branch (`conclusion: success`, falling back to
+all shards when no prior ancestor run is available) so commits skipped by
+ref-keyed concurrency remain covered. The `bench` producer builds the benchmark binaries on
+`ubuntu-24.04-arm`, followed by the `benchmark-shards` matrix (one job per
+shard), `frontend-lifecycle-smoke`, and the `Benchmarks` gate (`benchmark-gate`),
+with per-job `id-token: write` on the shard and smoke jobs. Concurrency is
+grouped per pull request (cancelling superseded PR runs) and per ref on `main`
+(`cancel-in-progress` false, so a started `main` run completes while GitHub
+keeps only the newest waiting `main` run). `Benchmarks` is not a required check,
+and cache retention tracks each handoff cache's source run by ID so an active
+run keeps its handoff.
+
 Rust coverage floors use one `cargo llvm-cov report --json --summary-only`
 export and [a totals checker](../../.github/scripts/rust-coverage-floors.cjs).
 The checker sums covered and total counts across export records and compares
