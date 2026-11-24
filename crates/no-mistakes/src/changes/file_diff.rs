@@ -27,28 +27,8 @@ pub(super) fn compare<'a>(
         .map(|&index| &rules.rules[index])
         .filter(|rule| !rule.is_excluded(path, &rules.excludes))
         .collect();
-    if matches.is_empty() {
-        let excluded_by_category = !selector_matches.is_empty();
-        return match is_unchanged(path, base, head) {
-            Ok(true) => None,
-            Ok(false) => Some(if excluded_by_category {
-                FileDiff {
-                    unclassified: Some(path.to_owned()),
-                    ..FileDiff::default()
-                }
-            } else {
-                FileDiff {
-                    changed_file: Some(path.to_owned()),
-                    ..FileDiff::default()
-                }
-            }),
-            Err(reason) => Some(FileDiff {
-                reasons: vec![reason],
-                ..FileDiff::default()
-            }),
-        };
-    }
-    match compare_readable(path, base, head, rules, &matches) {
+    let excluded_by_category = matches.is_empty() && !selector_matches.is_empty();
+    match compare_readable(path, base, head, rules, &matches, excluded_by_category) {
         Ok(diff) => diff,
         Err(reason) => Some(FileDiff {
             reasons: vec![reason],
@@ -57,21 +37,13 @@ pub(super) fn compare<'a>(
     }
 }
 
-fn is_unchanged(path: &str, base: &Snapshot, head: &Snapshot) -> Result<bool, String> {
-    if base.is_link(path) || head.is_link(path) {
-        return Ok(base.link_identity(path)? == head.link_identity(path)?);
-    }
-    let base_source = base.read(path)?;
-    let head_source = head.read(path)?;
-    Ok(base.bytes(path, &base_source)? == head.bytes(path, &head_source)?)
-}
-
 fn compare_readable<'a>(
     path: &str,
     base: &Snapshot,
     head: &Snapshot,
     rules: &Rules<'a>,
     matches: &[&Rule<'a>],
+    excluded_by_category: bool,
 ) -> Result<Option<FileDiff<'a>>, String> {
     if base.is_link(path) || head.is_link(path) {
         let old = base.link_identity(path)?;
@@ -81,6 +53,7 @@ fn compare_readable<'a>(
             path,
             rules,
             matches,
+            excluded_by_category,
             old.as_deref(),
             new.as_deref(),
             unchanged,
@@ -92,18 +65,45 @@ fn compare_readable<'a>(
     let old = base.bytes(path, &base_source)?;
     let new = head.bytes(path, &head_source)?;
     let unchanged = old == new;
-    Ok(classify(path, rules, matches, old, new, unchanged, false))
+    Ok(classify(
+        path,
+        rules,
+        matches,
+        excluded_by_category,
+        old,
+        new,
+        unchanged,
+        false,
+    ))
 }
 
+#[expect(clippy::too_many_arguments)]
 fn classify<'a>(
     path: &str,
     rules: &Rules<'a>,
     matches: &[&Rule<'a>],
+    excluded_by_category: bool,
     old: Option<&[u8]>,
     new: Option<&[u8]>,
     unchanged: bool,
     link: bool,
 ) -> Option<FileDiff<'a>> {
+    if matches.is_empty() {
+        if unchanged {
+            return None;
+        }
+        return Some(if excluded_by_category {
+            FileDiff {
+                unclassified: Some(path.to_owned()),
+                ..FileDiff::default()
+            }
+        } else {
+            FileDiff {
+                changed_file: Some(path.to_owned()),
+                ..FileDiff::default()
+            }
+        });
+    }
     let mut result = FileDiff::default();
     let mut parsed = vec![None; rules.keyed.len()];
     for &rule in matches {
