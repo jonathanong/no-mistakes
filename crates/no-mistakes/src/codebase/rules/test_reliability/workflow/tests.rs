@@ -77,7 +77,10 @@ fn shell_counts_literal_iterations_and_reports_dynamic_bounds() {
 #[test]
 fn shell_skips_here_documents_and_resumes_after_the_final_delimiter() {
     let source = std::fs::read_to_string(fixture("shell/here-documents.sh")).unwrap();
-    assert_eq!(rerun_loops(&source, &test_commands()), [Some(1)]);
+    assert_eq!(
+        rerun_loops(&source, &test_commands()),
+        [Some(1), Some(2), Some(3), Some(4)]
+    );
 }
 
 #[test]

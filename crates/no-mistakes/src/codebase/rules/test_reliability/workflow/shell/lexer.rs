@@ -5,6 +5,7 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
     let mut start = 0;
     let mut chars = script.char_indices().peekable();
     let mut quote = None;
+    let mut arithmetic_parens: Option<usize> = None;
     let mut token_start = true;
     let mut heredocs = Vec::new();
     while let Some((offset, character)) = chars.next() {
@@ -24,14 +25,33 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
                 quote = Some(character);
                 token_start = false;
             }
-            '<' if script[offset..].starts_with("<<")
+            '(' => {
+                if let Some(depth) = arithmetic_parens.as_mut() {
+                    *depth += 1;
+                } else if chars.next_if(|(_, next)| *next == '(').is_some() {
+                    arithmetic_parens = Some(0);
+                }
+                token_start = false;
+            }
+            ')' => {
+                if let Some(depth) = arithmetic_parens.as_mut() {
+                    if *depth > 0 {
+                        *depth -= 1;
+                    } else {
+                        chars.next_if(|(_, next)| *next == ')');
+                        arithmetic_parens = None;
+                    }
+                }
+                token_start = false;
+            }
+            '<' if arithmetic_parens.is_none()
+                && script[offset..].starts_with("<<")
                 && !script[offset..].starts_with("<<<")
                 && !script[..offset].ends_with('<') =>
             {
-                let Some(heredoc) = HereDoc::parse(&script[offset + 2..]) else {
-                    return found;
-                };
-                heredocs.push(heredoc);
+                if let Some(heredoc) = HereDoc::parse(&script[offset + 2..]) {
+                    heredocs.push(heredoc);
+                }
                 token_start = false;
             }
             '#' if token_start => {

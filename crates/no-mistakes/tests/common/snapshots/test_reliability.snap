@@ -28,6 +28,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "GitHub Actions test rerun loop"
         },
         {
+          "file": ".github/workflows/test.yml",
+          "line": 35,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 41,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
           "file": "browser/grid.ts",
           "line": 3,
           "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
@@ -214,6 +230,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/test.yml",
           "line": 20,
           "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 35,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 41,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
           "rule": "test-no-retries",
           "sourceLine": "- run: |",
           "target": "GitHub Actions test rerun loop"

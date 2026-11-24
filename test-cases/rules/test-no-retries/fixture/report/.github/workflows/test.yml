@@ -32,3 +32,14 @@ jobs:
             pnpm test:unit && break
           done
           RETRY_EXAMPLE
+      - run: |
+          mask=$((1<<2))
+          (( mask = (mask << 1) ))
+          for attempt in 1 2 3; do
+            pnpm test:unit && break
+          done
+      - run: |
+          cat <<
+          for attempt in 1 2 3; do
+            pnpm test:unit && break
+          done
