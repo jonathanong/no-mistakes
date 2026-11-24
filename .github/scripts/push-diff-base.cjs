@@ -1,15 +1,13 @@
 // Resolves the git diff base for workflow path-scoping steps.
 // Pull requests keep their PR base SHA unchanged. Push runs use the head SHA
-// of the most recent completed (success or failure) run of the same workflow
-// on the same branch so commits skipped by ref-keyed concurrency stay in scope.
+// of the most recent successful run of the same workflow on the same branch so
+// commits skipped by ref-keyed concurrency stay in scope.
 // Any missing, non-ancestor, or unfetchable base falls back to empty (full scope).
 
 const { spawnSync } = require("node:child_process");
-const { readFileSync } = require("node:fs");
 
 const SHA_RE = /^[0-9a-f]{40}$/;
 const ZERO_SHA = "0000000000000000000000000000000000000000";
-const COMPLETED_CONCLUSIONS = new Set(["success", "failure"]);
 const DEFAULT_MAX_DEEPEN_ATTEMPTS = 4;
 const DEFAULT_DEEPEN_STEP = 50;
 
@@ -24,7 +22,7 @@ function selectPreviousRunBase(payload, currentRunId) {
     if (!run || typeof run !== "object") continue;
     if (currentId && String(run.id) === currentId) continue;
     if (run.status !== "completed") continue;
-    if (!COMPLETED_CONCLUSIONS.has(run.conclusion)) continue;
+    if (run.conclusion !== "success") continue;
     if (!isValidSha(run.head_sha)) continue;
     return run.head_sha;
   }
@@ -91,7 +89,8 @@ function ensureAncestor({
 }
 
 function resolveDiffBase(options) {
-  const { event, workflow, repo, branch, head, prBase, currentRunId, runsFile, cwd, env } = options;
+  const { event, workflow, repo, branch, head, prBase, currentRunId, runsPayload, cwd, env } =
+    options;
 
   if (event === "pull_request") {
     return isValidSha(prBase)
@@ -102,14 +101,8 @@ function resolveDiffBase(options) {
     return { baseSha: "", reason: `event ${event} uses full scope` };
   }
 
-  let payload;
-  if (runsFile) {
-    try {
-      payload = JSON.parse(readFileSync(runsFile, "utf8"));
-    } catch (error) {
-      return { baseSha: "", reason: `failed to read runs file: ${error.message}` };
-    }
-  } else {
+  let payload = runsPayload;
+  if (payload === undefined) {
     const fetched = fetchWorkflowRuns({ repo, workflow, branch, env });
     if (!fetched.ok) return { baseSha: "", reason: fetched.reason };
     payload = fetched.payload;
@@ -117,14 +110,14 @@ function resolveDiffBase(options) {
 
   const candidate = selectPreviousRunBase(payload, currentRunId);
   if (!candidate) {
-    return { baseSha: "", reason: "no prior completed push run found" };
+    return { baseSha: "", reason: "no prior successful push run found" };
   }
 
   const ancestry = ensureAncestor({ baseSha: candidate, headSha: head, cwd });
   if (!ancestry.ok) {
     return { baseSha: "", reason: ancestry.reason };
   }
-  return { baseSha: candidate, reason: "previous completed push run" };
+  return { baseSha: candidate, reason: "previous successful push run" };
 }
 
 function parseArgs(argv) {
@@ -161,15 +154,6 @@ function parseArgs(argv) {
       case "--current-run-id":
         options.currentRunId = value;
         break;
-      case "--runs-file":
-        options.runsFile = value;
-        break;
-      case "--select-runs":
-        options.selectRuns = value;
-        break;
-      case "--cwd":
-        options.cwd = value;
-        break;
       default:
         throw new Error(`Unknown flag: ${flag}`);
     }
@@ -179,23 +163,13 @@ function parseArgs(argv) {
 
 if (require.main === module) {
   const options = parseArgs(process.argv.slice(2));
-  if (options.selectRuns) {
-    const payload = JSON.parse(readFileSync(options.selectRuns, "utf8"));
-    const selected = selectPreviousRunBase(payload, options.currentRunId);
-    process.stdout.write(`${selected}\n`);
-    process.exit(0);
-  }
   if (!options.event) {
     throw new Error(
       "usage: push-diff-base.cjs --event <name> --workflow <file> --repo <owner/repo> --branch <name> --head <sha>",
     );
   }
-  if (
-    options.event === "push" &&
-    !options.runsFile &&
-    (!options.repo || !options.workflow || !options.branch)
-  ) {
-    throw new Error("push event requires --repo, --workflow, and --branch (or --runs-file)");
+  if (options.event === "push" && (!options.repo || !options.workflow || !options.branch)) {
+    throw new Error("push event requires --repo, --workflow, and --branch");
   }
   const result = resolveDiffBase(options);
   if (!result.baseSha && options.event === "push") {
