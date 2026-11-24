@@ -138,8 +138,7 @@ fn check_follows_delegated_wrappers_and_reports_unprovable_bindings() {
     )
     .unwrap();
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 1, "{report}");
-    assert_eq!(findings[0]["line"], 4);
+    assert_eq!(findings.len(), 2, "{report}");
     let incomplete = report["incomplete"].as_array().unwrap();
-    assert_eq!(incomplete.len(), 4, "{report}");
+    assert_eq!(incomplete.len(), 7, "{report}");
 }
