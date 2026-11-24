@@ -97,7 +97,7 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
             let report = trace_queue_analysis(|| {
                 analyze_project(&root, args.common.tsconfig.as_deref(), &args.common.filters)
             })?;
-            render::print_diagnostics_stderr(&report.diagnostics);
+            render::print_diagnostics_stderr(&report.diagnostics, *include_diagnostics);
             render::print_check(
                 &report.check,
                 &report.diagnostics,

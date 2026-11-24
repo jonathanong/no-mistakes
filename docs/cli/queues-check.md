@@ -11,9 +11,13 @@ Without `--include-diagnostics`, `--format json` and `--format yml` print the
 bare findings array so existing callers keep the same list shape. Pass
 `--include-diagnostics` to return `{ "findings": [...], "diagnostics": [...] }`
 in JSON/YAML (and append a `## diagnostics` section in `--format md`).
-`queues check` also prints queue diagnostics to `stderr` as
-`warning: <file>:<line> <message>` without changing the exit code when there
-are no findings.
+`queues check` prints only unresolved worker `.rateLimit()` receiver
+diagnostics to `stderr`, as `warning: <file>:<line> <message>`, without changing
+the exit code when there are no findings. Pass `--include-diagnostics` to print
+every queue diagnostic to `stderr` as well. A `.add(...)` call is a producer
+only when its receiver connects to a queue constructor, configured factory, or
+queue import, so `new Set().add(x)` never produces a
+`dynamic or unresolved queue producer` diagnostic.
 
 Use this before finishing queue edits so every configured enqueue/worker path is
 connected. `check` is empty when the graph is consistent. For explicitly configured enqueue wrappers, object-argument selectors,
