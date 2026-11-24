@@ -126,7 +126,7 @@ fn read_updates(sources: &SourceStore, path: &Path) -> Result<Value> {
         .parse_yaml_path(path)
         .map_err(|error| anyhow::anyhow!("could not read or parse YAML: {error}"))?;
     let mut value = value.as_ref().clone();
-    crate::codebase::structured_value::expand_yaml_merge_keys(&mut value)
+    crate::codebase::structured_value::expand_merge_keys(&mut value)
         .map_err(anyhow::Error::msg)
         .context("could not apply YAML merge keys")?;
     anyhow::ensure!(value.is_mapping(), "expected a top-level mapping");

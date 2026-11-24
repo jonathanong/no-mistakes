@@ -1,15 +1,11 @@
 mod merge_keys;
 
-use merge_keys::expand_merge_keys;
+pub(crate) use merge_keys::expand_merge_keys;
+use merge_keys::{expand_merge_keys_indexed, merge_line};
 use serde::Deserialize;
 use serde_yaml::Value;
 use std::borrow::Cow;
 use std::path::Path;
-
-/// Expand merge keys in `value`. A merge that cannot be applied is an error.
-pub(crate) fn expand_yaml_merge_keys(value: &mut Value) -> Result<(), String> {
-    expand_merge_keys(value)
-}
 
 fn expand_with_context(value: &mut Value) -> Result<(), String> {
     expand_merge_keys(value).map_err(|error| merge_error(&error))
@@ -54,11 +50,14 @@ pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String
 pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
     let mut values = Vec::new();
     let mut errors = Vec::new();
-    for document in serde_yaml::Deserializer::from_str(source) {
+    for (doc_index, document) in serde_yaml::Deserializer::from_str(source).enumerate() {
         match Value::deserialize(document) {
-            Ok(mut value) => match expand_with_context(&mut value) {
+            Ok(mut value) => match expand_merge_keys_indexed(&mut value) {
                 Ok(()) => values.push(value),
-                Err(message) => errors.push((merge_line(source), message)),
+                Err((merge_index, error)) => errors.push((
+                    merge_line(source, doc_index, merge_index),
+                    merge_error(&error),
+                )),
             },
             Err(error) => {
                 let reported = error
@@ -80,14 +79,6 @@ pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
         }
     }
     YamlDocuments { values, errors }
-}
-
-/// The first line that writes a merge key, or line 1 when none is visible.
-fn merge_line(source: &str) -> usize {
-    source
-        .lines()
-        .position(|line| line.trim_start().starts_with("<<:"))
-        .map_or(1, |index| index + 1)
 }
 
 fn is_jsonc_path(path: &Path) -> bool {

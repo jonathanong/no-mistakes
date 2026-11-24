@@ -9,14 +9,26 @@ use serde_yaml::{Mapping, Value};
 /// not a mapping, or a sequence of mappings, cannot be applied and is returned
 /// as an error instead of being dropped.
 pub(crate) fn expand_merge_keys(value: &mut Value) -> Result<(), String> {
+    expand_merge_keys_indexed(value).map_err(|(_, error)| error)
+}
+
+/// Expand merge keys in document order and return the 0-based index of the
+/// merge key that failed, alongside the error message.
+pub(super) fn expand_merge_keys_indexed(value: &mut Value) -> Result<(), (usize, String)> {
     let mut pending = vec![value];
+    let mut merge_index = 0usize;
     while let Some(value) = pending.pop() {
         match value {
             Value::Mapping(mapping) => {
-                merge_sources(mapping)?;
+                if let Some(merge) = mapping.shift_remove("<<") {
+                    merge_sources(mapping, merge).map_err(|error| (merge_index, error))?;
+                    merge_index += 1;
+                }
+                let start = pending.len();
                 pending.extend(mapping.values_mut());
+                pending[start..].reverse();
             }
-            Value::Sequence(items) => pending.extend(items),
+            Value::Sequence(items) => pending.extend(items.iter_mut().rev()),
             Value::Tagged(tagged) => pending.push(&mut tagged.value),
             _ => {}
         }
@@ -24,10 +36,7 @@ pub(crate) fn expand_merge_keys(value: &mut Value) -> Result<(), String> {
     Ok(())
 }
 
-fn merge_sources(mapping: &mut Mapping) -> Result<(), String> {
-    let Some(merge) = mapping.shift_remove("<<") else {
-        return Ok(());
-    };
+fn merge_sources(mapping: &mut Mapping, merge: Value) -> Result<(), String> {
     let mut pending = Vec::new();
     push_merge_sources(merge, &mut pending)?;
     // Each source's explicit keys win over its own merge, which is consumed
@@ -67,4 +76,84 @@ fn reject(found: &Value, wanted: &str) -> String {
         Value::Sequence(_) => format!("expected {wanted} for merging, but found sequence"),
         _ => format!("expected {wanted} for merging, but found scalar"),
     }
+}
+
+/// The line of the `merge_index`-th merge key in document `doc_index`.
+pub(super) fn merge_line(source: &str, doc_index: usize, merge_index: usize) -> usize {
+    let mut current_doc = 0usize;
+    let mut doc_started = false;
+    let mut doc_start_line = 1usize;
+    let mut first_in_doc = None;
+    let mut seen_in_doc = 0usize;
+    for (index, line) in source.lines().enumerate() {
+        let line_no = index + 1;
+        if is_doc_start(line) {
+            if doc_started {
+                current_doc += 1;
+                if current_doc == doc_index {
+                    doc_start_line = line_no;
+                }
+            }
+            doc_started = true;
+            continue;
+        }
+        let trimmed = line.trim();
+        if !trimmed.is_empty() && !trimmed.starts_with('#') {
+            doc_started = true;
+        }
+        if current_doc == doc_index && has_merge_key(line) {
+            first_in_doc.get_or_insert(line_no);
+            if seen_in_doc == merge_index {
+                return line_no;
+            }
+            seen_in_doc += 1;
+        }
+    }
+    first_in_doc.unwrap_or(doc_start_line)
+}
+
+fn is_doc_start(line: &str) -> bool {
+    line.strip_prefix("---")
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with([' ', '\t']))
+}
+
+fn has_merge_key(line: &str) -> bool {
+    let bytes = line.as_bytes();
+    let mut quote = 0u8;
+    let mut index = 0;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if quote != 0 {
+            if quote == b'"' && byte == b'\\' {
+                index += 2;
+                continue;
+            }
+            if byte == quote {
+                quote = 0;
+            }
+            index += 1;
+            continue;
+        }
+        if byte == b'#' && (index == 0 || bytes[index - 1].is_ascii_whitespace()) {
+            break;
+        }
+        if matches!(byte, b'\'' | b'"') {
+            quote = byte;
+            index += 1;
+            continue;
+        }
+        if bytes[index..].starts_with(b"<<:") {
+            let before_ok = index == 0
+                || bytes[index - 1].is_ascii_whitespace()
+                || matches!(bytes[index - 1], b'-' | b'{' | b',');
+            let after_ok = bytes
+                .get(index + 3)
+                .is_none_or(|next| next.is_ascii_whitespace());
+            if before_ok && after_ok {
+                return true;
+            }
+        }
+        index += 1;
+    }
+    false
 }

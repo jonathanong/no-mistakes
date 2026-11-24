@@ -191,8 +191,12 @@ fn yaml_documents_report_a_merge_that_cannot_be_applied() {
     assert_eq!(documents.errors.len(), 1);
     assert_eq!(documents.errors[0].0, 4);
     assert!(documents.errors[0].1.contains("merge keys"));
-    let unplaced = parse_yaml_documents("{ runtime: { <<: 7 } }\n");
-    assert_eq!(unplaced.errors[0].0, 1);
+    let flow = "ok: 1\n---\n{ runtime: { <<: 7 } }\n";
+    assert_eq!(parse_yaml_documents(flow).errors[0].0, 3);
+    let second_doc = "---\na: &a\n  x: 1\nb:\n  <<: *a\n---\n# <<: 7\nnote: \"escaped \\\" <<: 7\"\nitems:\n  - <<: 7\n";
+    assert_eq!(parse_yaml_documents(second_doc).errors[0].0, 10);
+    let second_merge = "a: &a\n  x: 1\ngood:\n  <<: *a\nbad:\n  <<: 7\n";
+    assert_eq!(parse_yaml_documents(second_merge).errors[0].0, 6);
 }
 
 #[test]
