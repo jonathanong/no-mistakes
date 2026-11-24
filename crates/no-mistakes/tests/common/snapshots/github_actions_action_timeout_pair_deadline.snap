@@ -1,0 +1,654 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found null.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found \"${{ inputs.minutes }}\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Quoted deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found \"90\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Negative deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found -1.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Above cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 120.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": ".github/workflows/ci.yml: job \"unanalyzable\" step \"Above cap in named job\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": "Set a numeric deadline below the step cap.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": "Set a numeric deadline below the step cap.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": "Set a numeric deadline below the step cap.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": "Set a numeric deadline below the step cap.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": "Set a numeric deadline below the step cap.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": "Set a numeric deadline below the step cap.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": "Set a numeric deadline below the step cap.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Above cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 120.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": ".github/workflows/ci.yml: job \"unanalyzable\" step \"Above cap in named job\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Above cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 120.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found null.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found \"${{ inputs.minutes }}\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Quoted deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found \"90\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Negative deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found -1.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": ".github/workflows/ci.yml: job \"unanalyzable\" step \"Above cap in named job\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "with_exact_checks_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found null.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found \"${{ inputs.minutes }}\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Quoted deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found \"90\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Negative deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found -1.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Above cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Below cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 120",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 120.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 26,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Fractional deadline below cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 119.5",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 119.5",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 30,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" uses a configured action and must set timeout-minutes: 2; got \"${{ inputs.minutes }}\"",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 35,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Quoted deadline\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got \"90\"",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Negative deadline\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got -1",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": ".github/workflows/ci.yml: job \"unanalyzable\" step \"Above cap in named job\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "with_exact_checks_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Above cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Below cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 120",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 120.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 26,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Fractional deadline below cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 119.5",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 119.5",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 30,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" uses a configured action and must set timeout-minutes: 2; got \"${{ inputs.minutes }}\"",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 35,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Quoted deadline\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got \"90\"",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Negative deadline\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got -1",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": ".github/workflows/ci.yml: job \"unanalyzable\" step \"Above cap in named job\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "with_exact_checks_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Above cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Below cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 120",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"At cap\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 120.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 120",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 26,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Fractional deadline below cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 119.5",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 119.5",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found null.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 28,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: example/deadline-action@v1",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 30,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Missing step timeout\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" needs timeout-minutes set to a nonnegative integer literal to compare with timeout-seconds. Found \"${{ inputs.minutes }}\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 33,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" uses a configured action and must set timeout-minutes: 2; got \"${{ inputs.minutes }}\"",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-minutes: ${{ inputs.minutes }}",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 35,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Expression cap\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got 90",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 90",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Quoted deadline\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got \"90\"",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 40,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Quoted deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found \"90\".",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: '90'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Negative deadline\" calls a third-party action directly and must pass timeout-seconds: 150 (a bare number, not a quoted string) in its with: block; got -1",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "example"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"example\" step \"Negative deadline\" needs a nonnegative numeric timeout-seconds in its with: block to compare with timeout-minutes. Found -1.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: -1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": ".github/workflows/ci.yml: job \"unanalyzable\" step \"Above cap in named job\" must set timeout-seconds below 120 seconds (timeout-minutes: 2). Found 150.",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "timeout-seconds: 150",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

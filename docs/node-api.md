@@ -101,6 +101,12 @@ caller name, combined with any `callee` and `line` selectors. File-only entries
 retain their behavior, including unused-entry reporting.
 See the [cursor exemption contract](rules/query-reached-per-item.md#capped-sequential-page-reads).
 
+`GithubActionsActionTimeoutPairOptions` describes the YAML options for
+[`github-actions-action-timeout-pair`](rules/github-actions-action-timeout-pair.md).
+Pass the YAML path in `config` for async `check()` (`checkJson`) or an
+`analyzeProject()` check report. Both use the CLI's `nestedBelowStepTimeout`
+comparison and `unanalyzable` policy.
+
 ```js
 const { analyzeProject } = require("no-mistakes");
 (async () => {

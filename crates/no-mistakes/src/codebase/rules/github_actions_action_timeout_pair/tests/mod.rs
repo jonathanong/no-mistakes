@@ -54,7 +54,7 @@ fn run(root: &Path, yaml: &str, rels: &[&str]) -> Vec<RuleFinding> {
 fn parsed(rel: &str, source: &str, yaml: &str) -> Vec<RuleFinding> {
     let opts = compile_options(serde_yaml::from_str(yaml).unwrap());
     let value = serde_yaml::from_str(source).unwrap();
-    scan::check_parsed(rel, rel, source, &value, &opts)
+    scan::check_parsed(rel, rel, source, &value, &opts).findings
 }
 
 // Output cases moved to cli_gha_snapshot_action_timeout_pair.
@@ -71,7 +71,9 @@ fn invalid_yaml_is_skipped() {
     let path = root.join("ci.yml");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &path, &opts, &sources, false)
+        .findings
+        .is_empty());
 }
 
 #[test]
@@ -177,7 +179,9 @@ fn disable_file_comment_skips() {
     let path = root.join(".github/workflows/ci.yml");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &path, &opts, &sources, false)
+        .findings
+        .is_empty());
 }
 
 #[test]
@@ -186,7 +190,9 @@ fn unreadable_and_include_misses_are_silent() {
     let missing = root.join(".github/workflows/missing.yml");
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(&root, &missing, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &missing, &opts, &sources, false)
+        .findings
+        .is_empty());
     // Output cases moved to cli_gha_snapshot_action_timeout_pair.
 }
 

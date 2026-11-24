@@ -1,0 +1,10 @@
+rules:
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    severity: advisory
+    message: Set a numeric deadline below the step cap.
+    options:
+      uses: [example/deadline-action@]
+      nestedInput: timeout-seconds
+      nestedBelowStepTimeout: true
+      unanalyzable: advise

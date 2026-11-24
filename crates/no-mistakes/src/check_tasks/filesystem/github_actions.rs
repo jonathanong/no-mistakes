@@ -10,6 +10,10 @@ type WorkflowCheck =
 
 const CHECKS: &[(&str, WorkflowCheck)] = &[
     (
+        rules::github_actions_action_timeout_pair::RULE_ID,
+        rules::github_actions_action_timeout_pair::diagnostics_with_files_and_sources,
+    ),
+    (
         rules::github_actions_local_action_checkout::RULE_ID,
         rules::github_actions_local_action_checkout::diagnostics_with_files_and_sources,
     ),

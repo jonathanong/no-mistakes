@@ -7,7 +7,7 @@ pub(super) fn nested_input_finding(
     source: &str,
     job_id: &str,
     label: &str,
-    step: &Mapping,
+    raw: Option<&Value>,
     index: usize,
     opts: &CompiledOptions,
 ) -> Vec<RuleFinding> {
@@ -17,9 +17,6 @@ pub(super) fn nested_input_finding(
     let Some(expected) = opts.nested_timeout_seconds else {
         return Vec::new();
     };
-    let raw = mapping_get(step, "with")
-        .and_then(Value::as_mapping)
-        .and_then(|with| mapping_get(with, &opts.nested_input));
     if raw.and_then(literal_u64) == Some(expected) {
         return Vec::new();
     }
@@ -36,6 +33,12 @@ pub(super) fn nested_input_finding(
         ),
         job_id,
     )]
+}
+
+pub(super) fn nested_input_value<'a>(step: &'a Mapping, nested_input: &str) -> Option<&'a Value> {
+    mapping_get(step, "with")
+        .and_then(Value::as_mapping)
+        .and_then(|with| mapping_get(with, nested_input))
 }
 
 pub(super) fn nested_timeout_line(

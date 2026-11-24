@@ -2,6 +2,27 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "default_config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"deploy\" step \"Configure credentials\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: ./.github/actions/setup-aws",
+          "target": "deploy"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "empty_uses": {
     "exitCode": 0,
     "report": {

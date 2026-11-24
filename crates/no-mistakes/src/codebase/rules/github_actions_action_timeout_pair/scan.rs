@@ -1,9 +1,10 @@
-use super::line::{nested_input_finding, step_key_line};
+use super::line::{nested_input_finding, nested_input_value, step_key_line};
+use super::workflow_step::check_workflow_step;
 use super::yaml::{
-    finding, is_direct_third_party, is_local_wrapper, literal_u64, mapping_get, mapping_string,
-    nested_composite_message, step_label, timeout_message, uses_matches, wrapper_rel, yaml_got,
+    finding, is_direct_third_party, is_local_wrapper, mapping_get, mapping_string,
+    nested_composite_message, step_label, uses_matches, wrapper_rel,
 };
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{AnalysisDiagnostics, CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::{Mapping, Value};
 use std::path::Path;
@@ -14,24 +15,25 @@ pub(super) fn check_file(
     opts: &CompiledOptions,
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
-) -> Vec<RuleFinding> {
+) -> AnalysisDiagnostics {
     let rel = relative_slash_path(root, path);
     let Some(source) = super::super::read_language_source(sources, path) else {
-        return Vec::new();
+        return AnalysisDiagnostics::default();
     };
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
     {
-        return Vec::new();
+        return AnalysisDiagnostics::default();
     }
     let wrapper_rel = wrapper_rel(root, path, &opts.target_roots);
-    let mut findings = match serde_yaml::from_str::<Value>(&source) {
+    let mut diagnostics = match serde_yaml::from_str::<Value>(&source) {
         Ok(value) => check_parsed(&rel, &wrapper_rel, &source, &value, opts),
-        Err(_) => Vec::new(),
+        Err(_) => AnalysisDiagnostics::default(),
     };
     if !defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+        super::super::suppress_rule_findings_with_source(&mut diagnostics.findings, &source);
+        super::super::suppress_rule_findings_with_source(&mut diagnostics.advisories, &source);
     }
-    findings
+    diagnostics
 }
 
 pub(super) fn check_parsed(
@@ -40,11 +42,14 @@ pub(super) fn check_parsed(
     source: &str,
     value: &Value,
     opts: &CompiledOptions,
-) -> Vec<RuleFinding> {
+) -> AnalysisDiagnostics {
     if let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) {
         return check_workflow(rel, source, jobs, opts);
     }
-    check_composite(rel, wrapper_rel, source, value, opts)
+    AnalysisDiagnostics {
+        findings: check_composite(rel, wrapper_rel, source, value, opts),
+        ..Default::default()
+    }
 }
 
 fn check_workflow(
@@ -52,8 +57,8 @@ fn check_workflow(
     source: &str,
     jobs: &Mapping,
     opts: &CompiledOptions,
-) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
+) -> AnalysisDiagnostics {
+    let mut diagnostics = AnalysisDiagnostics::default();
     for (key, job) in jobs {
         let Some(job_id) = key.as_str() else {
             continue;
@@ -68,50 +73,10 @@ fn check_workflow(
             let Some(step) = step.as_mapping() else {
                 continue;
             };
-            findings.extend(check_workflow_step(rel, source, job_id, step, index, opts));
+            check_workflow_step(rel, source, job_id, step, index, opts, &mut diagnostics);
         }
     }
-    findings
-}
-
-fn check_workflow_step(
-    rel: &str,
-    source: &str,
-    job_id: &str,
-    step: &Mapping,
-    index: usize,
-    opts: &CompiledOptions,
-) -> Vec<RuleFinding> {
-    let Some(uses) = mapping_string(step, "uses") else {
-        return Vec::new();
-    };
-    if !uses_matches(&uses, &opts.uses) {
-        return Vec::new();
-    }
-    let label = step_label(step, index);
-    let mut findings = Vec::new();
-    if let Some(expected) = opts.step_timeout_minutes {
-        let raw = mapping_get(step, "timeout-minutes");
-        if raw.and_then(literal_u64) != Some(expected) {
-            let key = if raw.is_some() {
-                "timeout-minutes"
-            } else {
-                "uses"
-            };
-            findings.push(finding(
-                rel,
-                step_key_line(source, job_id, index, key),
-                timeout_message(rel, job_id, &label, expected, &yaml_got(raw)),
-                job_id,
-            ));
-        }
-    }
-    if is_direct_third_party(&uses, &opts.uses) {
-        findings.extend(nested_input_finding(
-            rel, source, job_id, &label, step, index, opts,
-        ));
-    }
-    findings
+    diagnostics
 }
 
 fn check_composite(
@@ -155,7 +120,7 @@ fn check_composite(
                 source,
                 "(composite)",
                 &label,
-                step,
+                nested_input_value(step, &opts.nested_input),
                 index,
                 opts,
             ));

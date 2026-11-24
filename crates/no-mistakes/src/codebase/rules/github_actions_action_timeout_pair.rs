@@ -1,5 +1,5 @@
-use super::RuleFinding;
-use crate::config::v2::NoMistakesConfig;
+use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 mod line;
 mod scan;
+mod workflow_step;
 mod yaml;
 
 pub const RULE_ID: &str = "github-actions-action-timeout-pair";
@@ -30,6 +31,7 @@ pub(crate) struct Options {
     pub(crate) step_timeout_minutes: Option<u64>,
     pub(crate) nested_input: String,
     pub(crate) nested_timeout_seconds: Option<u64>,
+    pub(crate) nested_below_step_timeout: bool,
     #[serde(default = "default_true")]
     pub(crate) forbid_nested_in_composite: bool,
 }
@@ -42,6 +44,7 @@ impl Default for Options {
             step_timeout_minutes: None,
             nested_input: String::new(),
             nested_timeout_seconds: None,
+            nested_below_step_timeout: false,
             forbid_nested_in_composite: true,
         }
     }
@@ -58,6 +61,8 @@ pub(super) struct CompiledOptions {
     step_timeout_minutes: Option<u64>,
     nested_input: String,
     nested_timeout_seconds: Option<u64>,
+    nested_below_step_timeout: bool,
+    unanalyzable: Unanalyzable,
     forbid_nested_in_composite: bool,
     target_roots: Vec<PathBuf>,
 }
@@ -78,11 +83,26 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|output| output.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    let mut diagnostics = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let mut opts = compile_options(rule.try_rule_options()?);
         if opts.uses.is_empty() {
             continue;
+        }
+        if opts.nested_below_step_timeout {
+            opts.unanalyzable = config.effective_rule_analysis(rule)?.unanalyzable;
         }
         opts.target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
@@ -98,10 +118,23 @@ pub(crate) fn check_with_files_and_sources(
             continue;
         }
         let files = super::matching_files(root, &opts.include, &files, &opts.target_roots)?;
-        findings.extend(scan_files(root, &opts, &files, sources, defer_suppression));
+        let mut application = scan_files(root, &opts, &files, sources, defer_suppression);
+        if let Some(message) = rule
+            .message
+            .as_ref()
+            .filter(|_| opts.nested_below_step_timeout)
+        {
+            for finding in application
+                .findings
+                .iter_mut()
+                .chain(&mut application.advisories)
+            {
+                finding.message.clone_from(message);
+            }
+        }
+        diagnostics.append(application);
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    Ok(super::file_diagnostics::sorted(diagnostics))
 }
 
 fn compile_options(opts: Options) -> CompiledOptions {
@@ -132,6 +165,8 @@ fn compile_options(opts: Options) -> CompiledOptions {
         step_timeout_minutes: opts.step_timeout_minutes,
         nested_input: opts.nested_input,
         nested_timeout_seconds: opts.nested_timeout_seconds,
+        nested_below_step_timeout: opts.nested_below_step_timeout,
+        unanalyzable: Unanalyzable::default(),
         forbid_nested_in_composite: opts.forbid_nested_in_composite,
         target_roots: Vec::new(),
     }
@@ -143,11 +178,14 @@ fn scan_files(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
-) -> Vec<RuleFinding> {
+) -> AnalysisDiagnostics {
     files
         .par_iter()
-        .flat_map(|path| scan::check_file(root, path, opts, sources, defer_suppression))
-        .collect()
+        .map(|path| scan::check_file(root, path, opts, sources, defer_suppression))
+        .reduce(AnalysisDiagnostics::default, |mut combined, per_file| {
+            combined.append(per_file);
+            combined
+        })
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

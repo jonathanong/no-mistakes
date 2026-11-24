@@ -126,6 +126,7 @@
   "ForbiddenDependencyException",
   "ForbiddenLintSuppressionDirective",
   "ForbiddenLintSuppressionsOptions",
+  "GithubActionsActionTimeoutPairOptions",
   "GithubActionsDownloadIntegrityOptions",
   "GithubActionsDownloadIntegritySkipAnnotationScope",
   "GithubActionsPinnedHashOptions",
