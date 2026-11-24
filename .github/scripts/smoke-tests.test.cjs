@@ -3,7 +3,7 @@ const { existsSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
-const { cargoCommands, testsRun, vitestArgs } = require("./smoke.cjs");
+const { buildCommand, cargoCommands, testsRun, vitestArgs } = require("./smoke.cjs");
 const { cliFixture, napiFixture, platforms } = require("./smoke-tests.cjs");
 
 const root = path.resolve(__dirname, "../..");
@@ -63,6 +63,22 @@ test("a Cargo filter that runs zero tests fails the smoke run", () => {
   assert.equal(testsRun("running 1 test\n"), 1);
   assert.equal(testsRun(""), 0);
   assert.throws(() => cargoCommands("linux"), /unsupported smoke OS/);
+});
+
+test("the compile step builds exactly the targets the test step runs, same profile", () => {
+  for (const [os, { rust }] of systems) {
+    const build = buildCommand(os);
+    const [first] = cargoCommands(os);
+    const prefix = first.slice(0, first.indexOf("no-mistakes") + 1);
+    assert.deepEqual(build.slice(0, prefix.length), prefix);
+    assert.equal(build[prefix.length], "--no-run");
+    const selectors = build.slice(prefix.length + 1);
+    assert.deepEqual(
+      selectors,
+      [...new Set(rust.map((entry) => entry.selector.join(" ")))].flatMap((s) => s.split(" ")),
+    );
+    for (const args of cargoCommands(os)) assert.deepEqual(args.slice(0, prefix.length), prefix);
+  }
 });
 
 test("the macOS smoke job runs on pull requests and drives the checked-in list", () => {

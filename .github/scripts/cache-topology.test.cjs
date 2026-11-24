@@ -160,7 +160,22 @@ test("macOS smoke restores main test-harness snapshot before the Rust tests and 
   assert.equal(fallbacks(restore), fallbacks(producer));
   assert.equal(paths(restore), paths(producer));
   // The crate-type rewrite invalidates restored test units, so tests run first.
-  assert.ok(index("Restore native test harness") < index("Run macOS-dependent Rust tests"));
+  assert.ok(index("Restore native test harness") < index("Compile macOS-dependent Rust tests"));
+  assert.ok(index("Compile macOS-dependent Rust tests") < index("Run macOS-dependent Rust tests"));
   assert.ok(index("Run macOS-dependent Rust tests") < index("Build native CLI and N-API addon"));
-  assert.match(all[index("Run macOS-dependent Rust tests")], /cargo-cache-inputs\.cjs restore/);
+  assert.match(all[index("Compile macOS-dependent Rust tests")], /cargo-cache-inputs\.cjs restore/);
+  // A second restore would stamp files changed since the capture as fresh again.
+  assert.doesNotMatch(all[index("Run macOS-dependent Rust tests")], /cargo-cache-inputs/);
+});
+
+test("macOS smoke compiles its Rust tests in a bounded step of their own", () => {
+  const all = steps(job("macos-smoke"));
+  const timeout = (name) =>
+    Number(all.find((step) => step.startsWith(name)).match(/timeout-minutes: (\d+)/)[1]);
+  const compile = all.find((step) => step.startsWith("Compile macOS-dependent Rust tests"));
+  assert.match(compile, /smoke\.cjs macos rust-build/);
+  // The compile may not exceed the budget the build step had before it moved.
+  assert.ok(timeout("Compile macOS-dependent Rust tests") <= timeout("Build native CLI"));
+  assert.ok(timeout("Compile macOS-dependent Rust tests") <= 30, "step cap needs no suppression");
+  assert.equal(timeout("Run macOS-dependent Rust tests"), 15);
 });

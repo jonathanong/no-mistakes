@@ -28,6 +28,22 @@ function cargoCommands(os) {
   ]);
 }
 
+// One --no-run invocation over every listed target, in the same profile and
+// package selection as cargoCommands, so the test step compiles nothing.
+function buildCommand(os) {
+  const { label, rust } = platform(os);
+  const selectors = new Map(rust.map(({ selector }) => [selector.join(" "), selector]));
+  return [
+    "test",
+    ...profileArgs(label),
+    "--locked",
+    "-p",
+    "no-mistakes",
+    "--no-run",
+    ...[...selectors.values()].flat(),
+  ];
+}
+
 function vitestArgs(os) {
   const { api } = platform(os);
   const names = api.flatMap((entry) => entry.names);
@@ -103,8 +119,11 @@ function main(os, mode, argument) {
   if (mode === "napi") return napi(argument);
   if (mode === "cli") return cli(argument);
   if (mode === "rust") return cargoCommands(os).forEach(cargo);
+  if (mode === "rust-build") return execute("cargo", buildCommand(os));
   if (mode === "api") return runApi(os, argument);
-  throw new Error("usage: smoke.cjs <macos|windows> <cli <binary>|rust|api <addon>|napi <addon>>");
+  throw new Error(
+    "usage: smoke.cjs <macos|windows> <cli <binary>|rust|rust-build|api <addon>|napi <addon>>",
+  );
 }
 
 if (require.main === module) {
@@ -116,4 +135,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { cargoCommands, escape, testsRun, vitestArgs };
+module.exports = { buildCommand, cargoCommands, escape, testsRun, vitestArgs };

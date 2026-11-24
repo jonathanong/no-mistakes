@@ -71,6 +71,22 @@ The current validation graph is organized as follows:
   `target/`, spent 14m27s compiling on one run and hit the 15 minute step
   timeout; `cache-topology.test.cjs` and `smoke-tests.test.cjs` guard the
   shared key and profile. The timeout was not raised.
+  Restoring `target/debug` does not avoid recompiling the changed
+  `no-mistakes` crate and its test binaries: that single-crate test compile
+  took 9m54s to 11m39s inside the 15 minute test step on passing runs, and the
+  tests themselves about 40 seconds. Step durations of 673 to 831 seconds were
+  the same before and after #3987, and timeouts at about 910 seconds occurred
+  on both sides of it (runs 45313505893 and 45314362424 before, 45326909265
+  and 45332735694 after), so #3987 did not cause them. `Compile macOS-dependent
+  Rust tests` therefore runs one `cargo test --no-run` over every listed target
+  (same `profileArgs`, `--locked` and `-p`) under a 20 minute cap, with live
+  cargo output, and the 15 minute `Run macOS-dependent Rust tests` step only
+  runs them. The cap is below the 35 minutes the build step holds, and the
+  restore of the input sidecar stays in the compile step because running it
+  again would mark files changed since capture fresh and force a rebuild. No
+  existing timeout value changed; the compile phase, which used to share one
+  15 minute step with the tests, now has its own 20 minute allowance within
+  the job's 45 minute cap.
   The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
   `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
   `main` and manual dispatch, where they are unchanged. The trade-off is that
