@@ -172,34 +172,6 @@ fn check_effort_is_optional_and_accepts_only_implemented_levels() {
 }
 
 #[test]
-fn queues_check_include_diagnostics_flag_is_explicit_opt_in() {
-    let default = Cli::try_parse_from(["no-mistakes", "queues", "check"]).unwrap();
-    let requested = Cli::try_parse_from([
-        "no-mistakes",
-        "queues",
-        "check",
-        "--include-diagnostics",
-        "--format",
-        "json",
-    ])
-    .unwrap();
-    assert!(matches!(
-        default.command,
-        Command::Queues(args) if matches!(
-            args.command,
-            crate::queues::QueuesCommand::Check { include_diagnostics: false }
-        )
-    ));
-    assert!(matches!(
-        requested.command,
-        Command::Queues(args) if matches!(
-            args.command,
-            crate::queues::QueuesCommand::Check { include_diagnostics: true }
-        )
-    ));
-}
-
-#[test]
 fn config_declared_view_accepts_diagnostics_at_every_boundary() {
     for insertion in 1..=3 {
         let mut argv = vec![

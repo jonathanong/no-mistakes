@@ -6,6 +6,8 @@ use no_mistakes::queue::{analyze_project, analyze_project_indexed, RelatedDirect
 use std::process::ExitCode;
 
 mod render;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests;
 
 #[derive(Args)]
 pub(crate) struct QueuesArgs {
