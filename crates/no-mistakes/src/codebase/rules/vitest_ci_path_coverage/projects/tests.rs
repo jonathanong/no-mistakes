@@ -167,6 +167,7 @@ fn named_trigger_coverage_uses_targets_or_the_trigger_name() {
             name: "postgres-resources".to_string(),
             paths: vec!["src/**".to_string(), "!./src/generated/**".to_string()],
             targets: vec!["backend".to_string()],
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
     config
@@ -178,6 +179,7 @@ fn named_trigger_coverage_uses_targets_or_the_trigger_name() {
             name: "root-config".to_string(),
             paths: vec!["package.json".to_string()],
             targets: Vec::new(),
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
 

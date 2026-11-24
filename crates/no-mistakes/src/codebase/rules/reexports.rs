@@ -43,8 +43,8 @@ pub use super::suppression::{
     suppress_domain_findings_with_sources, SuppressedFinding, SuppressionTarget,
 };
 pub(crate) use super::suppression::{
-    suppress_rule_findings_with_source, suppress_rule_findings_with_sources,
-    suppress_rule_findings_with_sources_except,
+    suppress_rule_findings_for_path, suppress_rule_findings_with_source,
+    suppress_rule_findings_with_sources, suppress_rule_findings_with_sources_except,
 };
 
 pub(crate) use super::finding::rule_enabled;

@@ -88,7 +88,12 @@ fn package_and_factory_needles_are_required_substrings() {
         &roles,
     ));
     assert!(source_may_have_queue_facts(
-        "worker.rateLimit(1000);",
+        "import { worker } from './workers'; worker.rateLimit(1000);",
+        &["createQueue".to_string()],
+        &roles,
+    ));
+    assert!(!source_may_have_queue_facts(
+        "export const cfg = { rateLimit: 100 };",
         &["createQueue".to_string()],
         &roles,
     ));

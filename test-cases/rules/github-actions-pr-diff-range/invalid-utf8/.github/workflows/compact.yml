@@ -1,0 +1,8 @@
+# stray ÿ
+name: compact
+on: pull_request
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}

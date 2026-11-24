@@ -1,0 +1,7 @@
+{
+  "catalog": {
+    "fixtures": [
+      { "id": "alpha", "path": "alpha.json", "metadata": { "version": "1.0.0" } }
+    ]
+  }
+}

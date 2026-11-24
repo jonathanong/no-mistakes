@@ -23,6 +23,7 @@ fn untraceable_lockfile_dependency_falls_back_even_when_another_dependency_is_re
         from_git_diff: None,
         changed_file: vec![lockfile],
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

@@ -28,7 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "app.ts",
           "line": 8,
-          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "return query(prepared);",
           "target": "helper"

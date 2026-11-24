@@ -13,6 +13,8 @@ mod gitignore_fixture;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 
+#[path = "cli_test_plan_changes.rs"]
+mod cli_test_plan_changes;
 #[path = "cli_test_plan_config.rs"]
 mod cli_test_plan_config;
 #[path = "cli_test_plan_config2.rs"]

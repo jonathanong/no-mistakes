@@ -52,7 +52,7 @@ pub(super) fn check_file_with_prefilter(
         return Vec::new();
     }
     if !defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+        super::super::suppress_rule_findings_for_path(sources, path, &mut findings);
     }
     findings
 }

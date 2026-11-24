@@ -1,8 +1,41 @@
 use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
+use no_mistakes::config::v2::{load_v2_config, Effort};
+#[path = "common/git_tracked_rule.rs"]
+mod git_tracked_rule;
+
+#[test]
+fn postgres_lock_inventory_tracked_default_baseline_check_json_snapshot() {
+    let fixture = git_tracked_rule::materialize_rule("postgres-lock-inventory", "default-baseline");
+    let root = fixture.path();
+    let cases = [
+        ("tracked", root.to_path_buf(), Default::default()),
+        (
+            "null-effort",
+            root.to_path_buf(),
+            root.join("null-effort.yml"),
+        ),
+        (
+            "empty-effort",
+            root.to_path_buf(),
+            root.join("empty-effort.yml"),
+        ),
+    ];
+    let reports =
+        assert_saved_fixture_report("postgres_lock_inventory_default_baseline", &cases, &[], &[]);
+    assert_eq!(reports["tracked"]["exitCode"], 0);
+    assert_eq!(reports["tracked"]["report"]["rules"], serde_json::json!([]));
+    for (label, _, config_path) in &cases[1..] {
+        assert_eq!(reports[*label], reports["tracked"]);
+        let mut config = load_v2_config(root, Some(config_path)).unwrap();
+        config.effort = Some(Effort::Low);
+        let requested = config.requested_rule_analysis(&config.rules[0]).unwrap();
+        assert_eq!(requested.effort, Effort::Low);
+    }
+}
 
 #[test]
 fn postgres_lock_inventory_check_json_snapshot() {
-    let cases = [
+    let mut cases = [
         "added",
         "clean",
         "unknown",
@@ -12,6 +45,7 @@ fn postgres_lock_inventory_check_json_snapshot() {
         "suppressed",
         "helper-only",
         "routine",
+        "invalid-baseline",
         "imported-helper",
         "imported-alternatives",
         "callbacks",
@@ -19,7 +53,10 @@ fn postgres_lock_inventory_check_json_snapshot() {
     .map(|name| {
         let root = rules_path("postgres-lock-inventory", "fixture", name);
         (name, root.clone(), root.join(".no-mistakes.yml"))
-    });
+    })
+    .to_vec();
+    let root = rules_path("postgres-lock-inventory", "fixture", "gap-multiplicity");
+    cases.push(("effort-max", root.clone(), root.join("effort.yml")));
     let reports = assert_saved_fixture_report("postgres_lock_inventory", &cases, &[], &[]);
     assert_eq!(reports["added"]["exitCode"], 1);
     assert_eq!(
@@ -38,7 +75,19 @@ fn postgres_lock_inventory_check_json_snapshot() {
             .len(),
         7
     );
-    assert_eq!(reports["routine"]["exitCode"], 1);
+    assert_eq!(reports["effort-max"], reports["gap-multiplicity"]);
+    let routine = reports["routine"]["report"]["rules"].as_array().unwrap();
+    assert_eq!(routine.len(), 4);
+    let invalid = reports["invalid-baseline"]["report"]["rules"]
+        .as_array()
+        .unwrap();
+    assert_eq!(invalid.len(), 2);
+    assert!(invalid.iter().any(|finding| {
+        finding["file"] == "baseline.json" && finding["target"] == "invalid-baseline"
+    }));
+    assert!(invalid
+        .iter()
+        .any(|finding| finding["rule"] == "postgres-no-offset"));
     assert_eq!(
         reports["imported-helper"]["report"]["rules"]
             .as_array()
@@ -70,7 +119,29 @@ fn postgres_lock_inventory_check_json_snapshot() {
 }
 
 #[test]
-fn inventory_preserves_distinct_gaps_and_rejects_per_rule_uncertainty_policy() {
+fn inventory_invalid_effort_names_rule_and_allowed_values() {
+    let root = rules_path("postgres-lock-inventory", "fixture", "gap-multiplicity");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["--lock-timeout", "0", "check", "--root"])
+        .arg(&root)
+        .args(["--config", "invalid-effort.yml", "--format", "json"])
+        .args(["--effort", "max"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let message = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        message.contains("postgres-lock-inventory: invalid options.effort"),
+        "{message}"
+    );
+    assert!(
+        message.contains("low") && message.contains("max"),
+        "{message}"
+    );
+}
+
+#[test]
+fn inventory_preserves_distinct_gaps_and_rejects_unsupported_analysis_options() {
     let root = rules_path("postgres-lock-inventory", "fixture", "gap-multiplicity");
     let report = no_mistakes::postgres_lock_inventory::run(
         &no_mistakes::postgres_lock_inventory::PostgresLockInventoryOptions {

@@ -1,0 +1,9 @@
+# no-mistakes-disable-file github-actions-no-poll-wait-job
+name: file-disabled
+on: push
+jobs:
+  wait:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: until gh run view 123; do sleep 30; done

@@ -51,6 +51,14 @@ const CHECKS: &[(&str, Check)] = &[
         rules::github_actions_docker_host_ports::check_with_files,
     ),
     (
+        "github-actions-no-poll-wait-job",
+        rules::github_actions_workflow_files::no_poll_wait_job::check_with_files,
+    ),
+    (
+        "github-actions-pr-diff-range",
+        rules::github_actions_workflow_files::pr_diff_range::check_with_files,
+    ),
+    (
         "github-actions-vitest-project-selection",
         rules::github_actions_vitest_project_selection::check_with_files,
     ),

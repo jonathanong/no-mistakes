@@ -1,0 +1,8 @@
+lockfileVersion: '9.0'
+packages:
+  moving@1.0.0:
+    resolution: {integrity: sha512-moving}
+  alpha@2.0.0:
+    resolution: {integrity: sha512-alpha}
+  added@1.0.0:
+    resolution: {integrity: sha512-added}

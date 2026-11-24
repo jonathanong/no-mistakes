@@ -19,6 +19,175 @@
     "rule": "test-no-typed-enqueue-fake"
   },
   {
+    "file": "extended-forms.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 9,
+        "file": "extended-forms.test.ts",
+        "line": 9,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 38,
+        "endLine": 10,
+        "file": "extended-forms.test.ts",
+        "line": 10,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 74,
+        "endLine": 11,
+        "file": "extended-forms.test.ts",
+        "line": 11,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 90,
+        "endLine": 12,
+        "file": "extended-forms.test.ts",
+        "line": 12,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 69,
+        "endLine": 13,
+        "file": "extended-forms.test.ts",
+        "line": 13,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 37,
+        "endLine": 14,
+        "file": "extended-forms.test.ts",
+        "line": 14,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 54,
+        "endLine": 15,
+        "file": "extended-forms.test.ts",
+        "line": 15,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 71,
+        "endLine": 16,
+        "file": "extended-forms.test.ts",
+        "line": 16,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 52,
+        "endLine": 17,
+        "file": "extended-forms.test.ts",
+        "line": 17,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 38,
+        "endLine": 18,
+        "file": "extended-forms.test.ts",
+        "line": 18,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 40,
+        "endLine": 19,
+        "file": "extended-forms.test.ts",
+        "line": 19,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 45,
+        "endLine": 20,
+        "file": "extended-forms.test.ts",
+        "line": 20,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      }
+    ],
+    "name": "reports namespace, wrapper-type, and vi.mocked forms",
+    "options": {
+      "moduleGlobs": [
+        "./que*"
+      ],
+      "singleExportPattern": "^enqueue[A-Z]"
+    },
+    "rule": "test-no-typed-enqueue-fake"
+  },
+  {
+    "file": "module-mocked.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 8,
+        "file": "module-mocked.test.ts",
+        "line": 8,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      }
+    ],
+    "name": "reports vi.mocked after vi.mock of the same module",
+    "options": {
+      "moduleGlobs": [
+        "./que*"
+      ],
+      "singleExportPattern": "^enqueue[A-Z]"
+    },
+    "rule": "test-no-typed-enqueue-fake"
+  },
+  {
     "file": "typed-fakes.test.ts",
     "findings": [
       {
@@ -224,6 +393,151 @@
       "moduleGlobs": [
         "./que*"
       ]
+    },
+    "rule": "test-no-typed-enqueue-fake"
+  },
+  {
+    "file": "extended-forms.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 9,
+        "file": "extended-forms.test.ts",
+        "line": 9,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 38,
+        "endLine": 10,
+        "file": "extended-forms.test.ts",
+        "line": 10,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 74,
+        "endLine": 11,
+        "file": "extended-forms.test.ts",
+        "line": 11,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 90,
+        "endLine": 12,
+        "file": "extended-forms.test.ts",
+        "line": 12,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 69,
+        "endLine": 13,
+        "file": "extended-forms.test.ts",
+        "line": 13,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 37,
+        "endLine": 14,
+        "file": "extended-forms.test.ts",
+        "line": 14,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 54,
+        "endLine": 15,
+        "file": "extended-forms.test.ts",
+        "line": 15,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 71,
+        "endLine": 16,
+        "file": "extended-forms.test.ts",
+        "line": 16,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 52,
+        "endLine": 17,
+        "file": "extended-forms.test.ts",
+        "line": 17,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 38,
+        "endLine": 18,
+        "file": "extended-forms.test.ts",
+        "line": 18,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 40,
+        "endLine": 19,
+        "file": "extended-forms.test.ts",
+        "line": 19,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 45,
+        "endLine": 20,
+        "file": "extended-forms.test.ts",
+        "line": 20,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      }
+    ],
+    "name": "supports pre-v6 parser typeParameters",
+    "options": {
+      "moduleGlobs": [
+        "./que*"
+      ],
+      "singleExportPattern": "^enqueue[A-Z]"
     },
     "rule": "test-no-typed-enqueue-fake"
   },

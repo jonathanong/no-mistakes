@@ -41,6 +41,8 @@ export interface TestsPlanOptionsBase {
   fromGitDiff?: string;
   changedFiles?: string[];
   changedFilesFile?: string;
+  /** Path to a schemaVersion 1 changes diff report. Invalid or incomplete reports select the full suite. */
+  changes?: string;
   /** Inline unified diff content to extract changed files from. */
   diff?: string;
   /** Entrypoints to trace impact from: strings may use file#export, or pass { file, symbol }. */
@@ -64,7 +66,7 @@ export interface TestsPlanOptionsBase {
 export type TestsPlanOptions =
   | (Omit<
       TestsPlanOptionsBase,
-      "framework" | "limitPercent" | "limitFiles" | "globalConfigFallback"
+      "framework" | "limitPercent" | "limitFiles" | "globalConfigFallback" | "changes"
     > & {
       /** Select changed framework-owned tests plus tests one reverse graph edge away. */
       directTestOwner: true;
@@ -74,11 +76,9 @@ export type TestsPlanOptions =
       limitPercent?: never;
       limitFiles?: never;
       globalConfigFallback?: never;
+      changes?: never;
     })
-  | (TestsPlanOptionsBase & {
-      /** Set to true only with an explicit framework and without policy overrides. */
-      directTestOwner?: false;
-    });
+  | (TestsPlanOptionsBase & { directTestOwner?: false });
 
 export interface TestsImpactOptions {
   /** Project root. Defaults to the current working directory. */

@@ -1,0 +1,4 @@
+/* Updated translator notes with no catalog change. */
+"alpha" = "Old";
+"moving" = "Hello, \"world\"!\nNext line \UD83D\UDE80"; // Context
+"removed" = "Remove";

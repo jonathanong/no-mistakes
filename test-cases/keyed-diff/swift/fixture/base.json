@@ -1,0 +1,30 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "ExampleLibrary",
+        "repositoryURL": "https://example.invalid/alpha.git",
+        "state": {
+          "version": "1.0.0",
+          "revision": "alpha-revision"
+        }
+      },
+      {
+        "repositoryURL": "https://example.invalid/moving.git",
+        "state": {
+          "version": "1.0.0",
+          "revision": "moving-revision"
+        }
+      },
+      {
+        "package": "Removed",
+        "repositoryURL": "https://example.invalid/removed.git",
+        "state": {
+          "version": "1.0.0",
+          "revision": "removed-revision"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

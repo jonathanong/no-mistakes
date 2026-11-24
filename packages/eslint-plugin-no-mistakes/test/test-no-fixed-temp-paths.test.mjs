@@ -17,6 +17,8 @@ const files = [
   "imports.test.ts",
   "sinks.test.ts",
   "guards.test.ts",
+  "root-aliases.test.ts",
+  "unsupported-paths.test.ts",
   "unique-prefixes.test.ts",
   "mock-fs.test.ts",
   "mock-node-fs.test.ts",

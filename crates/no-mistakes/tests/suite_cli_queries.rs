@@ -8,6 +8,8 @@ mod saved_fixture;
 
 #[path = "cli.rs"]
 mod cli;
+#[path = "cli_changes_diff.rs"]
+mod cli_changes_diff;
 #[path = "cli_ci.rs"]
 mod cli_ci;
 #[path = "cli_codebase_acceptance.rs"]

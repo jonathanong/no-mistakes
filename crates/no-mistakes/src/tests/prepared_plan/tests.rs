@@ -14,6 +14,7 @@ fn framework_args(root: &Path, framework: TestFramework) -> PlanArgs {
         from_git_diff: None,
         changed_file: vec![root.join("src/unit.ts")],
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,
@@ -70,7 +71,7 @@ fn direct_test_owner_rejects_explicit_entrypoints_before_preparing_analysis() {
     args.direct_test_owner = true;
     args.entrypoints = vec!["source.ts".to_string()];
 
-    let error = super::resolve_args(&args).unwrap_err();
+    let error = super::helpers::resolve_args(&args).unwrap_err();
     assert!(error
         .to_string()
         .contains("--direct-test-owner conflicts with --entrypoint"));

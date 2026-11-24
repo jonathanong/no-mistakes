@@ -20,13 +20,21 @@ const FACTORIES: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/factories.mts"
 ));
+const CJS_FACTORIES: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/cjs-factories.cjs"
+));
+const CJS_DYNAMIC: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/cjs-dynamic.cjs"
+));
 
-fn extracted(source: &str) -> TsFileFacts {
+fn extracted_with_path(source: &str, path: &str) -> TsFileFacts {
     let allocator = Allocator::default();
     let parsed = Parser::new(
         &allocator,
         source,
-        SourceType::from_path("created.mts").expect("mts source type"),
+        SourceType::from_path(path).expect("source type"),
     )
     .parse();
     assert!(
@@ -48,6 +56,10 @@ fn extracted(source: &str) -> TsFileFacts {
         value_flow: facts.value_flow,
         ..TsFileFacts::default()
     }
+}
+
+fn extracted(source: &str) -> TsFileFacts {
+    extracted_with_path(source, "created.mts")
 }
 
 #[test]
@@ -94,4 +106,22 @@ fn recorded_loads_use_the_call_offset_for_named_callees() {
             (callee == "load(").then_some(specifier)
         );
     }
+}
+
+#[test]
+fn cjs_created_require_records_literals_and_flags_computed_loads() {
+    let literal = extracted_with_path(CJS_FACTORIES, "cjs-factories.cjs");
+    assert_eq!(
+        missing_static_load_gap(&literal, CJS_FACTORIES, "cjs-factories.cjs"),
+        None,
+        "{:?}",
+        literal.namespaces.literal_import_spans
+    );
+    let dynamic = extracted_with_path(CJS_DYNAMIC, "cjs-dynamic.cjs");
+    let gap = missing_static_load_gap(&dynamic, CJS_DYNAMIC, "cjs-dynamic.cjs");
+    assert!(
+        gap.as_deref()
+            .is_some_and(|message| message.contains("no recorded specifier")),
+        "{gap:?}"
+    );
 }

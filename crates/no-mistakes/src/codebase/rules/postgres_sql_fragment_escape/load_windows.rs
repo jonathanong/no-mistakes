@@ -1,21 +1,69 @@
 use super::fact_reads::specifier_at_offset;
+use super::load_lex::LexState;
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::fx::{fx_map, FxHashMap};
+
+pub(super) fn matching_parens(source: &str) -> FxHashMap<usize, usize> {
+    let mut pairs = fx_map();
+    let mut stack = Vec::new();
+    let mut lex = LexState::new();
+    let mut chars = source.char_indices().peekable();
+    while let Some((index, ch)) = chars.next() {
+        match lex.step(source, &mut chars, index, ch) {
+            Some(true) => continue,
+            Some(false) => {}
+            None => break,
+        }
+        if ch == '(' {
+            stack.push(index);
+        } else if ch == ')' {
+            if let Some(open) = stack.pop() {
+                pairs.insert(open, index);
+            }
+        }
+    }
+    pairs
+}
 
 pub(super) fn depth_zero_callee<'a>(
     ts: &TsFileFacts,
     window: &'a str,
     window_start: u32,
 ) -> Option<(usize, &'a str)> {
+    depth_zero_callee_with_jumps(ts, window, window_start, None)
+}
+
+pub(super) fn depth_zero_callee_with_jumps<'a>(
+    ts: &TsFileFacts,
+    window: &'a str,
+    window_start: u32,
+    jumps: Option<&FxHashMap<usize, usize>>,
+) -> Option<(usize, &'a str)> {
     let spans = &ts.namespaces.literal_import_spans;
     let first = spans.partition_point(|(offset, _)| *offset < window_start);
     let mut recorded = spans[first..].iter().peekable();
     let mut depth = 0i32;
+    let mut base = 0usize;
+    let mut lex = LexState::new();
     let mut chars = window.char_indices().peekable();
-    while let Some((index, ch)) = chars.next() {
-        if super::load_lex::skip(&mut chars, ch)? {
+    while let Some((rel, ch)) = chars.next() {
+        let index = base + rel;
+        if lex.step(&window[base..], &mut chars, rel, ch)? {
             continue;
         }
         if ch == '(' {
+            if depth == 0 {
+                let abs = window_start as usize + index;
+                if let Some(&close_abs) = jumps.and_then(|map| map.get(&abs)) {
+                    let close_rel = close_abs.saturating_sub(window_start as usize);
+                    if close_abs > abs && close_rel < window.len() {
+                        base = close_rel + 1;
+                        chars = window[base..].char_indices().peekable();
+                        lex.reset_after_jump();
+                        continue;
+                    }
+                }
+            }
             depth += 1;
             continue;
         }
@@ -79,30 +127,13 @@ pub(super) fn direct_module_load(text: &str, recorded: bool) -> bool {
 
 fn close_call(text: &str) -> Option<&str> {
     let mut depth = 1i32;
+    let mut lex = LexState::new();
     let mut chars = text.char_indices().peekable();
     while let Some((index, ch)) = chars.next() {
+        if lex.step(text, &mut chars, index, ch)? {
+            continue;
+        }
         match ch {
-            '/' if chars.next_if(|(_, next)| *next == '/').is_some() => {
-                while chars.next_if(|(_, next)| *next != '\n').is_some() {}
-            }
-            '/' if chars.next_if(|(_, next)| *next == '*').is_some() => loop {
-                match chars.next() {
-                    Some((_, '*')) if chars.next_if(|(_, next)| *next == '/').is_some() => break,
-                    Some(_) => {}
-                    None => return None,
-                }
-            },
-            '"' | '\'' | '`' => {
-                while let Some((_, inner)) = chars.next() {
-                    if inner == '\\' {
-                        chars.next();
-                        continue;
-                    }
-                    if inner == ch {
-                        break;
-                    }
-                }
-            }
             '(' => depth += 1,
             ')' => {
                 depth -= 1;

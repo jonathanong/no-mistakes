@@ -10,11 +10,11 @@ export async function prepareRunnerRoute(directory, plugin, route, config) {
     const project = fixtureTemplate("runner-route-fixture-template-5.txt", [route.implicitNative ? '' : fixtureTemplate("runner-route-fixture-template-6.txt", [route.nativeDefault ? 'null' : JSON.stringify(finalRunner)]), route.mergedOverride ? fixtureTemplate("runner-route-fixture-template-7.txt", [JSON.stringify(alternate)]) : '', config, route.nativeDefault ? '' : fixtureTemplate("runner-route-fixture-template-8.txt", [JSON.stringify(finalRunner)])]);
     const header = fixtureTemplate("runner-route-fixture-template-4.txt", [JSON.stringify(plugin)]);
     if (route.standalone) {
-        await writeFile(join(directory, 'vitest.standalone.config.mts'), header + fixtureTemplate("runner-route-fixture-template-3.txt", [project]));
-        await writeFile(join(directory, 'vitest.config.mts'), fixtureTemplate("runner-route-fixture-template-2.txt"));
+        await writeFile(join(directory, 'vitest.standalone.config.mjs'), header + fixtureTemplate("runner-route-fixture-template-3.txt", [project]));
+        await writeFile(join(directory, 'vitest.config.mjs'), fixtureTemplate("runner-route-fixture-template-2.txt"));
     }
     else {
-        await writeFile(join(directory, 'vitest.config.mts'), header + fixtureTemplate("runner-route-fixture-template-1.txt", [project]));
+        await writeFile(join(directory, 'vitest.config.mjs'), header + fixtureTemplate("runner-route-fixture-template-1.txt", [project]));
     }
     return route.cliOverride ? ['--runner', alternate] : [];
 }

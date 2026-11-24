@@ -14,7 +14,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "app.ts",
           "line": 3,
-          "message": "new PostgreSQL lock site (helper, 0f9a5ed25b78d6f62695ae18dbb9e3b6#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (helper, 0f9a5ed25b78d6f62695ae18dbb9e3b6#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "await lockAccountRow(id);",
           "target": "helper"
@@ -22,7 +22,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "app.ts",
           "line": 4,
-          "message": "new PostgreSQL lock site (for-share, 4d0180a6099bb40b75b29b5efe7e8f6d#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (for-share, 4d0180a6099bb40b75b29b5efe7e8f6d#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "return query(\"SELECT id FROM accounts FOR SHARE\");",
           "target": "for-share"
@@ -30,7 +30,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 1,
-          "message": "new PostgreSQL lock site (for-update, 1adfe6c2cd0799f6311b0c7d3f6acc6a#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (for-update, 1adfe6c2cd0799f6311b0c7d3f6acc6a#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
           "target": "for-update"
@@ -38,7 +38,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 1,
-          "message": "new PostgreSQL lock site (nowait, c8944fb40d2263c02720f659d3c6595e#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (nowait, c8944fb40d2263c02720f659d3c6595e#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
           "target": "nowait"
@@ -46,7 +46,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 2,
-          "message": "new PostgreSQL lock site (for-no-key-update, d9361fa8e542d5bac2a2e2c516809a09#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (for-no-key-update, d9361fa8e542d5bac2a2e2c516809a09#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR NO KEY UPDATE SKIP LOCKED;",
           "target": "for-no-key-update"
@@ -54,7 +54,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 2,
-          "message": "new PostgreSQL lock site (skip-locked, 1d1f94d6c07aacf9f6f0d6685e8d47bb#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (skip-locked, 1d1f94d6c07aacf9f6f0d6685e8d47bb#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR NO KEY UPDATE SKIP LOCKED;",
           "target": "skip-locked"
@@ -62,7 +62,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 3,
-          "message": "new PostgreSQL lock site (for-share, fac855ce0c104da9e8552cf78f6d4dd4#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (for-share, fac855ce0c104da9e8552cf78f6d4dd4#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR SHARE;",
           "target": "for-share"
@@ -70,7 +70,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 4,
-          "message": "new PostgreSQL lock site (for-key-share, 4ce725cc98960652e4647f0f9c170763#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (for-key-share, 4ce725cc98960652e4647f0f9c170763#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR KEY SHARE;",
           "target": "for-key-share"
@@ -78,7 +78,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 5,
-          "message": "new PostgreSQL lock site (advisory-lock, f83a9a191c4ada5596a78b1907e88d18#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (advisory-lock, f83a9a191c4ada5596a78b1907e88d18#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT pg_advisory_lock(42), pg_try_advisory_xact_lock(43);",
           "target": "advisory-lock"
@@ -86,7 +86,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 5,
-          "message": "new PostgreSQL lock site (advisory-lock, f83a9a191c4ada5596a78b1907e88d18#2). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (advisory-lock, f83a9a191c4ada5596a78b1907e88d18#2). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT pg_advisory_lock(42), pg_try_advisory_xact_lock(43);",
           "target": "advisory-lock"
@@ -94,7 +94,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 6,
-          "message": "new PostgreSQL lock site (lock-table, b56adc1ea73e695e0b72f6f08a9d8a91#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (lock-table, b56adc1ea73e695e0b72f6f08a9d8a91#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "LOCK TABLE jobs IN SHARE MODE;",
           "target": "lock-table"
@@ -102,7 +102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 7,
-          "message": "new PostgreSQL lock site (for-update, 1adfe6c2cd0799f6311b0c7d3f6acc6a#2). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (for-update, 1adfe6c2cd0799f6311b0c7d3f6acc6a#2). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
           "target": "for-update"
@@ -110,7 +110,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "locks.sql",
           "line": 7,
-          "message": "new PostgreSQL lock site (nowait, c8944fb40d2263c02720f659d3c6595e#2). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (nowait, c8944fb40d2263c02720f659d3c6595e#2). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "SELECT id FROM jobs FOR UPDATE NOWAIT;",
           "target": "nowait"
@@ -139,7 +139,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries.ts",
           "line": 5,
-          "message": "new PostgreSQL lock site (for-update, 9986df5be0f5d388f7d435478b63142a#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (for-update, 9986df5be0f5d388f7d435478b63142a#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "await tx.query(\"SELECT id FROM jobs WHERE id = 1 FOR UPDATE\");",
           "target": "for-update"
@@ -158,6 +158,75 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "effort-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "export function unresolved(left: string, right: string) { query(left); query(right); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "export function unresolved(left: string, right: string) { query(left); query(right); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "app.ts",
+          "line": 7,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(flag ? `${malformed} SELECT 1;` : `${malformed} SELECT 2;`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "imported.ts",
+          "line": 5,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "query(`${first}`); return query(`${second}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "imported.ts",
+          "line": 5,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "query(`${first}`); return query(`${second}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???; SELECT FROM ???;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???; SELECT FROM ???;",
+          "target": "unanalyzable"
+        }
+      ],
       "warnings": []
     }
   },
@@ -242,7 +311,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "app.ts",
           "line": 1,
-          "message": "new PostgreSQL lock site (helper, b807adfdcb49e575f9a0a9ebcc62256c#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (helper, b807adfdcb49e575f9a0a9ebcc62256c#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "lockAccountRow(1);",
           "target": "helper"
@@ -263,7 +332,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "app.ts",
           "line": 5,
-          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "return query(flag ? `${first}` : `${second}`);",
           "target": "helper"
@@ -271,7 +340,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "app.ts",
           "line": 5,
-          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#2). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#2). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "return query(flag ? `${first}` : `${second}`);",
           "target": "helper"
@@ -292,10 +361,39 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "app.ts",
           "line": 8,
-          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or reuse an existing locking path",
+          "message": "new PostgreSQL lock site (helper, 592441885ef8136fe0cc0329d2731e51#1). Remove the lock or record the reviewed site in the baseline",
           "rule": "postgres-lock-inventory",
           "sourceLine": "return query(prepared);",
           "target": "helper"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid-baseline": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "baseline.json",
+          "line": 1,
+          "message": "read postgres-lock-inventory baseline baseline.json: invalid baseline contents: unsupported version 2. Repair the baseline before comparing PostgreSQL lock sites",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "{\"version\": 2, \"sites\": []}",
+          "target": "invalid-baseline"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "locks.sql:1: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "SELECT id FROM jobs ORDER BY id OFFSET 1 FOR UPDATE;",
+          "target": "offset"
         }
       ],
       "warnings": []
@@ -325,7 +423,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "baseline.json",
           "line": 1,
-          "message": "stale PostgreSQL lock baseline contains 1 removed site(s). Run `no-mistakes postgres lock-inventory --write-baseline` after removing any new sites",
+          "message": "stale PostgreSQL lock baseline contains 1 removed site(s). Run `no-mistakes postgres lock-inventory --write-baseline` after resolving any new sites",
           "rule": "postgres-lock-inventory",
           "sourceLine": "{",
           "target": "stale-baseline"
@@ -352,12 +450,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "app.ts",
+          "line": 7,
+          "message": "new PostgreSQL lock site (for-share, 4d0180a6099bb40b75b29b5efe7e8f6d#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM accounts FOR SHARE;`);",
+          "target": "for-share"
+        },
+        {
           "file": "locks.sql",
           "line": 1,
           "message": "incomplete PostgreSQL lock inventory (stored routine body could not be resolved). Make the configured SQL or helper call statically analyzable",
           "rule": "postgres-lock-inventory",
           "sourceLine": "CREATE FUNCTION reserve_job() RETURNS bigint LANGUAGE sql AS $body$",
           "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-share, fac855ce0c104da9e8552cf78f6d4dd4#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR SHARE;",
+          "target": "for-share"
         }
       ],
       "warnings": []

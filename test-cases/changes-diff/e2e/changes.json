@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "fixtures": {
+    "changed": [
+      "profile.avatar"
+    ],
+    "added": [],
+    "removed": []
+  },
+  "unclassified": [],
+  "complete": true
+}

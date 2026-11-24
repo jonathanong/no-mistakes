@@ -67,6 +67,7 @@ function declarationExportNames() {
     "invocation-types.d.ts",
     "diagnostics-collector.d.ts",
     "executed-postgres-sql-types.d.ts",
+    "changes-types.d.ts",
   ]
     .map((file) => readFileSync(join(packageRoot, file), "utf8"))
     .join("\n");

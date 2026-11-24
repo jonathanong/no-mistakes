@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::postgres::{EmbeddedSqlOptions, SqlStatementFileFacts};
 
+mod later_access;
 mod relations;
 mod share;
 mod unique;
@@ -36,6 +37,7 @@ fn redundant_prelocks(
     catalog: unique::CatalogContext<'_, '_>,
 ) {
     let candidates = complete_calls(calls, grouped);
+    let later_access = std::cell::OnceCell::new();
     let writes: BTreeMap<_, _> = candidates
         .clone()
         .filter(|(_, facts)| !facts.lock_writes.conditional_write_keys.is_empty())
@@ -93,7 +95,14 @@ fn redundant_prelocks(
             unknown_key |= same_relation == Some(true) && same.is_none();
             unknown_relation |= same_relation.is_none() && same != Some(false);
         }
-        if matches && lock_tx.is_some() && write_tx.is_some() {
+        if let (true, Some(_), Some(write_tx)) = (matches, lock_tx, write_tx) {
+            if lock.relation.as_deref().is_some_and(|relation| {
+                later_access
+                    .get_or_init(|| later_access::LaterAccess::collect(calls, grouped))
+                    .may_follow(write_tx, write_call.execution_range.1, relation)
+            }) {
+                continue;
+            }
             if !only {
                 output.unresolved(&site, "cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table");
                 continue;

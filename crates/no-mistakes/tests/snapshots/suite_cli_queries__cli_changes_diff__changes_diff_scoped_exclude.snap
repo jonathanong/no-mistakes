@@ -1,0 +1,29 @@
+---
+source: crates/no-mistakes/tests/cli_changes_diff.rs
+expression: "serde_json::to_string_pretty(report).unwrap()"
+---
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "changed": [
+      "endpoint.profile"
+    ],
+    "added": [
+      "endpoint.new"
+    ],
+    "removed": [
+      "endpoint.legacy"
+    ]
+  },
+  "responses": {
+    "changed": [
+      "profile.avatar"
+    ],
+    "added": [],
+    "removed": []
+  },
+  "unclassified": [
+    "data/ignored/notes.json"
+  ],
+  "complete": true
+}

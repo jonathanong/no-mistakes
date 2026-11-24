@@ -22,6 +22,7 @@ fn plan(root: &Path, base: Option<&str>, changed_file: Vec<PathBuf>) -> crate::t
         from_git_diff: None,
         changed_file,
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

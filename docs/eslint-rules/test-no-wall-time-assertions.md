@@ -68,12 +68,13 @@ expect(performance.now() - start).toBeLessThan(200);
 
 ## Limits
 
-The rule checks the four comparison matchers listed above and follows local
-`const` clock readings or differences within the same function. It does not
-trace arbitrary clock wrappers, mutable captures, imported elapsed values, or
-other assertions. Fake-timer detection exempts the whole file, even if a later
-test switches back to real timers. Benchmark exemptions are relative to the
-ESLint working directory.
+- Assertions with other matchers such as `toBeCloseTo` and assertions using
+  `expect.poll` fall outside the check.
+- Clock readings or differences stored in object properties or `let` bindings,
+  imported from another file, or captured from another function are outside
+  the scope of local `const` tracking.
+- Fake-timer detection exempts the whole file, even if a later test switches
+  back to real timers.
 
 ## Related rules
 

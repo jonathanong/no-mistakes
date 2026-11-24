@@ -27,7 +27,7 @@ Findings use these
 | `self-dedup-enqueue` | A processor enqueues its own job on its own queue with `deduplication.id` or `jobId` taken from the active job. The job binding is a parameter named `job`, or otherwise the processor's first parameter: `task.id` / `task.deduplicationId`, or a destructured `{ name, id }`. A nested callback is not that binding unless one of its parameters is named `job`. A local function or `const` callback passed by name is tied to its configured worker even when declared earlier. A copied `const id = task.id` or `const id = task.deduplicationId` remains a job token within its lexical scope, as does a destructured `const { id } = task` or `const { deduplicationId } = task`. A defaulted binding such as `const { deduplicationId: dedup = "fallback" } = task` is not a token. Unrelated values and shadowed parameters do not. A configured enqueue factory does the same check on its `options` argument. The queue drops that add while the job is active. Publish a new id, or enqueue a different job. The same job name on a different queue is not a finding. If the worker queue or the target queue does not resolve, the check abstains and emits a diagnostic. |
 | `enqueue-and-wait` | Waiting on a job result holds a worker or request slot. Return control instead of blocking on the result. The check covers calls to `addAndWait`, `waitUntilFinished`, and explicitly configured wrappers. |
 | `shared-queue-rate-limit` | A processor throws `RateLimitError` (`new RateLimitError()` or `Worker.RateLimitError()`) or calls `.rateLimit()` on a queue whose producers enqueue more than one job name. That limit stalls every job on the queue. Move that job kind to its own queue, or use per-group rate limits. One known job name is not a finding. A producer on that queue with no resolved job name, or a worker queue that does not resolve, abstains with a diagnostic instead of a finding. The throw or call has to sit in the processor passed to `new Worker` or a configured worker factory. A helper outside that processor is not a finding. |
-| `worker-rate-limit-per-process` | `.rateLimit(...)` (or `["rateLimit"](...)`) is called on a binding that resolves to a `Worker` / `TestWorker` from `bullmq` or `glide-mq` or to a configured `queues.factories.worker` factory. A worker-level rate limit delays jobs inside one worker process only, so N processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait instead. Unresolved receivers abstain with a diagnostic; non-worker receivers are not reported. See [Per-process worker rate limit](#per-process-worker-rate-limit). |
+| `worker-rate-limit-per-process` | `.rateLimit(...)` (or `["rateLimit"](...)`) is called on a binding that resolves to a `Worker` / `TestWorker` from `bullmq` or `glide-mq`, a subclass of one, or a configured `queues.factories.worker` factory. A worker-level rate limit delays jobs inside one worker process only, so N processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait instead. Unresolved receivers whose binding originates from a queue module or worker construction abstain with a diagnostic; unrelated receivers are not reported. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`. See [Per-process worker rate limit](#per-process-worker-rate-limit). |
 | `enqueue-and-wait-declaration` | An explicitly matched wait-wrapper declaration is forbidden by `queues.factories.forbidEnqueueAndWaitDeclarations`. Replace it with enqueue-only behavior; the fix hint is included in `message`. Disabled by default. |
 | `debounce-ttl` | `deduplication: { mode: "debounce", ttl }` sets a `ttl` that debounce mode ignores. Remove `ttl`, or use a mode that reads it. |
 | `invalid-job-id` | A custom `jobId` literal, or a static part of a template literal, contains `:`, `{`, `}`, or a control character. `:` is the BullMQ and glide-mq key separator, so an id containing it can collide with internal keys. `{` and `}` collide with Redis or Valkey cluster hash tags. Interpolations such as `${id}` are not judged, and neither is a fully dynamic id. Use `-` or `_` as the separator. A `const` job ID resolves from its lexical binding. The last explicit `jobId` supplies the ID. The check abstains if a later spread or computed property could override that ID. The check reads `jobId` on proven queue receivers and configured producers, including `add` options, each `addBulk` item's `opts`, flow-node `opts` (including children), `upsertJobScheduler` template `opts`, and a configured enqueue factory's options argument. |
@@ -168,8 +168,9 @@ queue. A call that already sets every required key is not abstained when
 
 `worker-rate-limit-per-process` reports `.rateLimit(...)` calls on a receiver
 that resolves to `new Worker(...)`, `new TestWorker(...)` (from `bullmq` or
-`glide-mq`), or a configured `queues.factories.worker` factory, including
-immutable local aliases and cross-file exports or re-exports. Calling
+`glide-mq`), a local or exported subclass of `Worker` / `TestWorker` (including
+multi-level inheritance), or a configured `queues.factories.worker` factory,
+including immutable local aliases and cross-file exports or re-exports. Calling
 `worker.rateLimit(ms)` delays jobs inside one worker process only, so N
 processes run at N times the intended rate.
 
@@ -192,12 +193,28 @@ export const worker = new Worker("emails", processEmail, {
 });
 ```
 
-Calls on known non-worker receivers (such as a custom `new RateLimiter()`, an
-object literal, or a queue instance) are not reported and emit no diagnostic.
-Calls whose receiver does not resolve (such as a function parameter, a mutated
-binding, a factory call not configured under `queues.factories.worker`, or a
-dynamic member expression) abstain with a warning diagnostic on the queue report
-rather than emitting a finding.
+Calls on known non-worker receivers (such as a custom `new RateLimiter()`, a
+plain class with no `Worker` superclass, a static call on a class constructor,
+an object literal, or a queue instance) are not reported and emit no
+diagnostic.
+
+Abstention warnings are narrowed to receivers whose binding originates from a
+queue module or worker construction: an unresolvable export or a helper call
+from a queue module (not configured under `queues.factories.worker`), a mutated
+local variable initialized with or assigned a worker, or a subclass with an
+unresolvable base inside a queue module. Unrelated receivers — function
+parameters, ambient globals, arbitrary property chains (`x.y.rateLimit()`),
+external non-queue limiters, and imports from modules skipped by the queue
+source filter — emit neither a finding nor a diagnostic.
+
+On a multi-job queue, calling `worker.rateLimit(...)` inside a worker processor
+reports both `shared-queue-rate-limit` and `worker-rate-limit-per-process` on
+that line. Neither suppresses the other because they describe separate defects
+with distinct fixes: `shared-queue-rate-limit` warns that rate-limiting a
+multi-job queue stalls unrelated job kinds (split the queue or use per-group
+limits), while `worker-rate-limit-per-process` warns that `worker.rateLimit()`
+only pauses one worker process (use a queue-level limiter or provider-side
+wait). Fixing only one leaves the other active.
 
 Fix: configure the queue-level limiter option on the worker/queue or use a
 provider-side wait instead of `worker.rateLimit(ms)`.

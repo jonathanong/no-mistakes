@@ -1,0 +1,6 @@
+rules:
+  - rule: unique-exports
+    enabled: false
+    scope: repository
+    options:
+      effort: extreme

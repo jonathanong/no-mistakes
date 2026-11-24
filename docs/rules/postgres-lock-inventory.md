@@ -21,10 +21,15 @@ duplicate identical statements in one file. SQL helper keys use the qualified
 function name and duplicate ordinal.
 
 For SQL lock statements, comment-only, whitespace-only, and line-movement
-changes within a file do not change a key. Changing statement tokens, including
-literals or operators, changes the key. Renaming a file or changing a statement
-creates a new site; the old baseline key is then reported as stale. Duplicate
-ordinals distinguish identical statements without using line numbers.
+changes within a file preserve keys. LF and CRLF line endings inside ordinary
+and dollar-quoted multiline string literals are treated alike. Regenerate and
+review baselines fingerprinted from a CRLF checkout for statements with affected
+multiline literals, since their keys change. The full statement supplies the
+locking context.
+A token edit anywhere in that statement, including an added lock clause, creates
+replacement keys for every lock site in it. A file rename also creates new
+keys. The previous keys are reported as stale. Duplicate ordinals distinguish
+identical statements without using line numbers.
 Configured TypeScript helper calls use the callee, argument count and static
 argument shapes, plus the duplicate ordinal; changing argument values within
 the same shape does not create a new helper site. SQL helper calls use only the
@@ -38,16 +43,16 @@ Counts cover the four row-lock strengths (`FOR UPDATE`, `FOR NO KEY UPDATE`,
 `FOR SHARE`, and `FOR KEY SHARE`), the `NOWAIT` and `SKIP LOCKED` modifiers,
 all recognized advisory-lock function prefixes, table locks, and sites found
 through configured helpers. The report preserves the configured scope and
-lists each unresolved SQL input separately. Stored function and procedure
-bodies are outside the shared executable-SQL projection, so their source is
-listed as unanalyzed and excluded from counts. Scope these files separately
-and configure helper names for their call sites; baseline writing refuses any
-unresolved source.
+lists each unresolved SQL input separately. A stored function or procedure body remains unresolved. Top-level executable
+statements in the same source still contribute their sites. Configure helper
+names for calls into stored routines.
 
 ## Options
 
 `baselineFile` selects the JSON baseline and defaults to
-`.no-mistakes/postgres-locks.json`; `baseline` is its alias. Configure helper
+`.no-mistakes/postgres-locks.json`; `baseline` is its alias. Automatic
+configuration discovery reserves that default path for the baseline. Place a
+custom baseline outside the `.no-mistakes/` fragment directory. Configure helper
 TypeScript/SQL function names with `helpers`. TypeScript matches case exactly.
 PostgreSQL folds unquoted names to lowercase. Quoted SQL names containing
 uppercase letters require an exact configured spelling.
@@ -58,15 +63,17 @@ Executor selection uses the standard PostgreSQL options, including
 Configured `.query()` calls inside transaction callbacks are included.
 Reassigning `.query` leaves an unresolved site instead of a counted lock.
 
-Incomplete SQL always produces findings. Per-rule `unanalyzable` and
-`unanalyzableSql` options are rejected; shared or project uncertainty defaults
-for other PostgreSQL rules do not suppress inventory gaps.
+The inventory uses its sole analysis mode at either [effort
+setting](../configuration/README.md) and always reports incomplete SQL. Omit
+`unanalyzable` and `unanalyzableSql` from its rule options.
 
 The baseline is compared with an empty inventory when it is missing, so every
 current site is reported as added. With a baseline, newly added sites are
 diagnostics. Stale-entry diagnostics are deferred while any SQL is unresolved,
 because incomplete inventory cannot establish which baseline entries were
-removed. Unresolved SQL is listed and prevents baseline creation or pruning.
+removed. Unresolved SQL prevents baseline creation or pruning. Malformed baseline
+contents produce an `invalid-baseline` finding at the baseline path during
+`check`. Repair the file before running the standalone inventory.
 
 ## Valid example
 
@@ -115,20 +122,18 @@ remove it from the inventory or make the baseline comparison pass.
 
 ## Fix
 
-Review whether the changed lock is intended and scoped correctly. If it is not,
-change the SQL or remove the lock. An intentional new site remains an added-site
-diagnostic: the baseline writer cannot accept additions. Resolve or configure
-coverage for every unresolved SQL input before creating or pruning a baseline;
-unresolved input cannot justify removing a baseline entry.
+Review the lock and its scope. For an intentional change, run
+`no-mistakes postgres lock-inventory --root .` and copy the reviewed site's
+`file`, `category`, and `key` from `added` into the baseline's `sites`
+array. Commit the baseline change with the SQL change. Review stale entries,
+then run with `--write-baseline` to prune them. Restore a deleted tracked
+baseline before rewriting it.
 
-An initial baseline is created only with the explicit baseline-writing option.
-Add the new file to Git, then run the check against that tracked baseline. A
-missing baseline is treated as empty, so its current sites appear as additions
-until initialized. An existing baseline can only shrink: writing refuses to
-accept added sites or unresolved SQL. A deleted tracked baseline must be
-restored before rewriting; deleting it cannot reset the ratchet. Review stale
-entries before pruning them.
-Do not use baseline writing to accept new sites.
+Use `--write-baseline` to initialize a missing baseline and add the file to Git.
+For incremental adoption, start with application directories or specific TS and
+SQL files whose executor SQL is statically analyzable. Narrow the rule's
+`include` and `exclude` and keep `sqlInclude` aligned with the selected native
+SQL files. Expand the scope as you resolve the remaining sources.
 
 ## Suppression
 

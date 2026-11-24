@@ -1,0 +1,10 @@
+changes:
+  categories:
+    fixtures:
+      paths: ["data/manifest.json"]
+      id: { keysOf: { format: json, array: fixtures, idField: id } }
+      tests: ["tests/**/*.test.ts"]
+      match: 'load("{id}")'
+tests:
+  vitest:
+    configs: vitest.config.mts

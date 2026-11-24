@@ -15,8 +15,24 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
     let Ok(docs) = documents::load_documents(content) else {
         return Vec::new();
     };
+    parse_documents(&docs)
+}
+
+pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, PnpmValidationError> {
+    let docs = prepare_documents(content)?;
+    if documents::package_maps(&docs).any(|entries| {
+        entries.iter().any(|(key, value)| {
+            key.as_str().is_none_or(str::is_empty) || value.as_mapping().is_none()
+        })
+    }) {
+        return Err(PnpmValidationError::UnsupportedSchema);
+    }
+    Ok(parse_documents(&docs))
+}
+
+fn parse_documents(docs: &PnpmDocuments) -> Vec<ResolvedPackage> {
     let mut packages = Vec::new();
-    for packages_map in documents::package_maps(&docs) {
+    for packages_map in documents::package_maps(docs) {
         for (key, value) in packages_map {
             let key_str = yaml_key_to_string(key);
             let (name, version) = split_name_version(&key_str);

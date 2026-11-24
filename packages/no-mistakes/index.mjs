@@ -9,6 +9,7 @@ export const {
   extractExecutedPostgresSql,
   callSites,
   check,
+  changesDiff,
   collectDiagnostics,
   ciEnv,
   ciImpact,

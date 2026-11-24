@@ -15,24 +15,32 @@ pub(super) fn owned_shift(
     base: Directory,
     wrapped: Option<&str>,
     shell: Option<&str>,
+    multiple_live_dirs: bool,
 ) -> Option<String> {
     if base != Directory::Allowed {
         return None;
     }
     match (wrapped, shell) {
         (Some(dir), _) => Some(format!("in `{dir}`")),
+        (None, Some(_)) if multiple_live_dirs => Some("after a shell directory change".to_owned()),
         (None, Some(dir)) => Some(format!("after `cd {dir}`")),
         (None, None) => None,
     }
 }
 
-pub(super) fn live_message(callee: &str, label: &str, shift: Option<String>) -> String {
+pub(super) fn live_message(
+    callee: &str,
+    label: &str,
+    shift: Option<String>,
+    conditional: bool,
+) -> String {
+    let verb = if conditional { "may run" } else { "runs" };
     match shift {
         Some(dir) => format!(
-            "live repository scan: `{callee}` runs `{label}` {dir}, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root."
+            "live repository scan: `{callee}` {verb} `{label}` {dir}, and a test root reaches it. `analyzers` names that command. Fix: run it in static CI, or remove that directory change so the owned `cwd` stays the scan root."
         ),
         None => format!(
-            "live repository scan: `{callee}` runs `{label}` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns."
+            "live repository scan: `{callee}` {verb} `{label}` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns."
         ),
     }
 }

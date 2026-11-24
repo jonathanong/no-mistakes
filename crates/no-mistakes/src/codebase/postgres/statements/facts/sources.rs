@@ -1,9 +1,11 @@
+use crate::codebase::postgres::lock_inventory::{tokens::Segments, Collector};
 use sqlparser::tokenizer::TokenWithSpan;
 use std::sync::Arc;
 
 #[derive(Clone, Default)]
 pub(crate) struct StatementPolicySources<'a> {
     pub(crate) bind_values: super::super::bounds::BindValues,
+    pub(crate) collect_lock_inventory: bool,
     pub(crate) collect_json_writes: bool,
     pub(crate) collect_grouping: bool,
     pub(crate) grouping_complete: Option<&'a [bool]>,
@@ -37,20 +39,33 @@ pub(super) struct StatementSources<'a> {
     pub(super) recovery: Option<&'a crate::codebase::postgres::conflict::ConflictChunks<'a>>,
 }
 
-impl StatementProjection {
+impl StatementSources<'_> {
     pub(super) fn locks(
-        self,
+        &self,
         statements: &[sqlparser::ast::Statement],
         positions: super::super::value::PlaceholderPositions<'_>,
-        demand: (bool, bool),
+        prepared: &super::PreparedSql<'_>,
+        inventory: Option<&Collector<'_>>,
     ) -> super::super::lock_writes::LockWriteFacts {
         if matches!(
-            self,
+            self.projection,
             StatementProjection::LockScope | StatementProjection::BodyBoundsLockScope
         ) {
-            super::super::lock_writes::collect::<true>(statements, positions, demand)
+            let supplemental = (self.policy.share_lock_writes && inventory.is_none())
+                .then(|| Segments::new(prepared.tokens()));
+            let modes = self
+                .policy
+                .share_lock_writes
+                .then(|| inventory.map(Collector::segments).or(supplemental.as_ref()))
+                .flatten();
+            super::super::lock_writes::collect::<true>(
+                statements,
+                positions,
+                self.policy.redundant_prelocks,
+                modes,
+            )
         } else {
-            super::super::lock_writes::collect::<false>(statements, positions, (false, false))
+            super::super::lock_writes::collect::<false>(statements, positions, false, None)
         }
     }
 }
@@ -93,6 +108,14 @@ pub(super) fn policy_tokens(
 }
 
 impl StatementPolicySources<'_> {
+    pub(super) fn lock_inventory<'sql>(
+        &self,
+        prepared: &'sql super::PreparedSql<'_>,
+    ) -> Option<crate::codebase::postgres::lock_inventory::Collector<'sql>> {
+        self.collect_lock_inventory
+            .then(|| crate::codebase::postgres::lock_inventory::Collector::new(prepared))
+    }
+
     pub(super) fn scope(
         &self,
         index: &super::super::TableTokenIndex,

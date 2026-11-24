@@ -208,6 +208,7 @@ test("check rule options compile from the package root", () => {
     [
       join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/github-actions-no-poll-wait-job/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
@@ -534,6 +535,21 @@ test("workflow topology policy exports the reusable workflow lock option", () =>
   );
 });
 
+test("GitHub Actions no-poll-wait-job exports its option type", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-no-poll-wait-job-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface GithubActionsNoPollWaitJobOptions\b/);
+  for (const field of ["pollCommands?: string[];", "ignoreForLoops?: boolean;"]) {
+    assert.ok(declarations.includes(field), `missing ${field}`);
+  }
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-no-poll-wait-job-types";/,
+  );
+});
+
 test("GitHub Actions run command policy exports named option types", () => {
   const declarations = readFileSync(
     join(packageRoot, "github-actions-run-command-policy-types.d.ts"),
@@ -563,5 +579,21 @@ test("GitHub Actions run command policy exports named option types", () => {
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/github-actions-run-command-policy-types";/,
+  );
+});
+
+test("changes diff and planner changes have exported public contracts", () => {
+  const changes = readFileSync(join(packageRoot, "changes-types.d.ts"), "utf8");
+  assert.match(changes, /export interface KeyChanges/);
+  assert.match(changes, /export interface ChangesDiffOptions/);
+  assert.match(changes, /export type ChangesReport/);
+  assert.match(changes, /export function changesDiff/);
+  assert.match(changes, /baseRoot: string/);
+  assert.match(changes, /headRoot: string/);
+  assert.match(changes, /schemaVersion: 1/);
+  assert.match(readFileSync(join(packageRoot, "test-types.d.ts"), "utf8"), /changes\?: string/);
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \{ changesDiff \} from "\.\/changes-types"/,
   );
 });

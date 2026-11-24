@@ -1,0 +1,11 @@
+{
+  "fixtures": [
+    {
+      "id": "profile.avatar",
+      "bodyFile": "data/avatar.json",
+      "metadata": {
+        "revision": 2
+      }
+    }
+  ]
+}

@@ -125,6 +125,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "overlap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "factories/shared.ts",
+          "line": 6,
+          "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: [\"**/dist/**\"],"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 14,
+          "message": "Add **/node_modules/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: [\"**/.git/**\"],"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 5,
+          "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: [\"**/node_modules/**\"],"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 9,
+          "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: [\"**/dist/**\"],"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "report": {
     "exitCode": 1,
     "report": {

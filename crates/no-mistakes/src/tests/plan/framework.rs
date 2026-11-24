@@ -107,7 +107,7 @@ pub(super) fn generate_framework_plan(
         },
         &prepared.workspace_map,
         forced_fallback,
-        discovered_tests,
+        &discovered_tests,
         prepared,
         timing,
     )?;
@@ -144,6 +144,15 @@ pub(super) fn generate_framework_plan(
         if warning_keys.insert(warning_key(warning)) {
             plan.warnings.push(warning.clone());
         }
+    }
+    if let Some(input) = prepared.changes_input().filter(|input| input.has_work()) {
+        changes::apply(
+            prepared,
+            input,
+            Some(framework),
+            discovered_tests,
+            &mut plan,
+        );
     }
     Ok(plan)
 }

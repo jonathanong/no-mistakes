@@ -110,6 +110,7 @@ fn plan_args(
         from_git_diff: None,
         changed_file,
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

@@ -2,6 +2,7 @@
 
 include!("tests_planning/vitest_config_extends.rs");
 include!("tests_planning/changed_files.rs");
+include!("tests_planning/changes_report.rs");
 include!("tests_planning/direct_test_owner.rs");
 include!("tests_planning/direct_import_limit.rs");
 include!("tests_planning/target_scoped_triggers.rs");

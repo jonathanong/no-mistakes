@@ -31,6 +31,7 @@ pub(crate) struct TestsPlanOptions {
     pub(crate) from_git_diff: Option<String>,
     pub(crate) changed_files: Vec<String>,
     pub(crate) changed_files_file: Option<String>,
+    pub(crate) changes: Option<String>,
     pub(crate) diff: Option<String>,
     pub(crate) entrypoints: Vec<EntrypointOption>,
     pub(crate) include_symbols: bool,

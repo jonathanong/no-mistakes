@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-no-poll-wait-job
+    scope: repository
+    options:
+      pollCommands:
+        - gh run view
+      ignoreForLoops: true

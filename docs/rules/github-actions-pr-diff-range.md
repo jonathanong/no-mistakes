@@ -1,0 +1,136 @@
+# `github-actions-pr-diff-range`
+
+## Why and when
+
+A pull-request change set must come from a merge-base diff: a three-dot diff
+with enough history fetched, or `git diff HEAD^1 HEAD` on the merge commit. A
+two-dot or two-argument `git diff <base.sha> <head.sha>` also lists
+base-branch changes made after the pull request branched, so path filters and
+changed-file checks run on the wrong set.
+
+Pairing the event's base SHA with `github.sha` is a second defect. The two
+values are computed at different times, and on other events (`push`,
+`merge_group`) they mean different things. Merge-queue runs must resolve their
+own range from `github.event.merge_group.base_sha` and `head_sha`.
+
+The rule is opt-in. Listing it is what turns it on. It is not part of a
+recommended or strict preset.
+
+## What it catches
+
+The rule reads `run:` strings on job `steps` of workflow files directly under
+`.github/workflows/*.{yml,yaml}`. Composite actions do not declare triggers,
+so they are not judged. The workflow's `on:` events choose what is judged.
+
+In a workflow triggered by `pull_request` or `pull_request_target`, it reports
+a `git diff` whose range is:
+
+- a two-dot (`base..head`) or two-argument (`base head`) range whose ends are
+  `github.event.pull_request.base.sha` and
+  `github.event.pull_request.head.sha`, in either order, or
+- a range of any form (`..`, `...`, or two arguments) that pairs
+  `github.event.pull_request.base.sha`, or `github.base_ref` (also written
+  `origin/${{ github.base_ref }}`), with `github.sha`. This pairing is judged
+  only when the workflow can also run on `push` or `merge_group`, where
+  `github.sha` means something else. In a workflow triggered only by
+  `pull_request` or `pull_request_target`, `github.sha` is the merge commit, so
+  `git diff origin/${{ github.base_ref }}...${{ github.sha }}` is a correct
+  change set and is not reported.
+
+In a workflow triggered by `merge_group`, it reports a step that reads
+`github.event.pull_request.*`, which is empty there. A read through an `env`
+variable is reported on the `env` entry. A step or job whose `if` mentions
+`github.event_name` is treated as guarded and is not reported.
+
+A range end is recognized when it is the expression itself, optionally behind
+`origin/`, or a `$NAME` / `${NAME}` variable that a workflow, job, or step
+`env` assigns to that expression. Anything not recognized as a diff range is
+silent: another command, a `git diff` flag that takes a separate value
+(`-U 3`, `--output file`), more than two revisions, a revision the rule does
+not know, and invalid YAML. The fetch depth behind a three-dot diff is not
+judged.
+
+## Options
+
+This rule has no options, so there is no configurable default. Listing the rule
+is what turns it on.
+
+```yaml
+rules:
+  - rule: github-actions-pr-diff-range
+    scope: repository
+```
+
+## Valid example
+
+Take a three-dot diff of the base and head SHAs after fetching enough history:
+
+```yaml
+on: pull_request
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+```
+
+## Counterexample
+
+A two-argument diff between the base and head SHAs lists base-branch changes
+made after the branch point:
+
+```yaml
+on: pull_request
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    steps:
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+```
+
+## Fix
+
+Use a three-dot diff with sufficient `fetch-depth`, or diff the merge commit
+with `git diff HEAD^1 HEAD`. For a merge-queue run, use
+`github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`.
+In a workflow that also runs on `push` or `merge_group`, do not pair
+`github.event.pull_request.base.sha` or `github.base_ref` with `github.sha`.
+
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Invalid YAML and commands the parser does not read produce no finding. They
+are not sent through `options.unanalyzable`.
+
+## Suppression
+
+Use a YAML comment. `no-mistakes-disable-next-line github-actions-pr-diff-range`
+suppresses the next line. `no-mistakes-disable-line github-actions-pr-diff-range`
+suppresses the same line. `no-mistakes-disable-file github-actions-pr-diff-range`
+in the leading comment block suppresses the file.
+
+```yaml
+# no-mistakes-disable-next-line github-actions-pr-diff-range
+- run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+- run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} # no-mistakes-disable-line github-actions-pr-diff-range
+```
+
+## Related rules
+
+[`github-actions-script-expressions`](github-actions-script-expressions.md)
+rejects untrusted expressions inside `run` scripts.
+[`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
+judges how a checkout is configured. This rule judges the revision range of a
+`git diff` in pull-request and merge-queue workflows.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

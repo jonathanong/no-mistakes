@@ -1,0 +1,19 @@
+name: suppressed
+on: push
+jobs:
+  next-line:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # no-mistakes-disable-next-line github-actions-no-poll-wait-job
+      - run: until gh run view 123; do sleep 30; done
+  same-line:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: until gh run view 123; do sleep 30; done # no-mistakes-disable-line github-actions-no-poll-wait-job
+  reported:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: until gh run view 123; do sleep 30; done

@@ -1,0 +1,6 @@
+changes:
+  categories:
+    docs:
+      paths: ["docs/**"]
+    skills:
+      paths: [".claude/skills/**"]

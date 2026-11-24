@@ -26,7 +26,9 @@ pub(crate) fn needs_job_id_scoping(source: &str) -> bool {
 }
 
 pub(crate) fn needs_rate_limit_scoping(source: &str) -> bool {
-    source.contains("rateLimit") || source.contains('\\')
+    let bytes = source.as_bytes();
+    super::extract_prefilter::contains_bytes(bytes, b"import")
+        && super::extract_prefilter::contains_bytes(bytes, b"rateLimit")
 }
 
 pub(crate) fn needs_scheduler_scoping(

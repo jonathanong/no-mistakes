@@ -5,18 +5,24 @@ use super::{
 use crate::diagnostics::InvocationObserver;
 use rustc_hash::FxHashMap;
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, OnceLock, RwLock};
 
 pub(crate) struct DisableCommentIndex<S> {
     source: S,
+    observer: Option<Arc<InvocationObserver>>,
     header: OnceLock<HashMap<Box<str>, u32>>,
-    lines: [OnceLock<Mutex<LineDirectives>>; 2],
+    lines: [OnceLock<RwLock<LineDirectives>>; 2],
 }
 
 impl<S: AsRef<str>> DisableCommentIndex<S> {
     pub(crate) fn new(source: S) -> Self {
+        Self::new_observed(source, None)
+    }
+
+    pub(crate) fn new_observed(source: S, observer: Option<Arc<InvocationObserver>>) -> Self {
         Self {
             source,
+            observer,
             header: OnceLock::new(),
             lines: Default::default(),
         }
@@ -27,9 +33,9 @@ impl<S: AsRef<str>> DisableCommentIndex<S> {
         rule: &str,
         line: Option<u32>,
         track_quotes: bool,
-        observer: Option<&InvocationObserver>,
     ) -> Option<DisableDirective> {
         let source = self.source.as_ref();
+        let observer = self.observer.as_deref();
         let header = self.header.get_or_init(|| {
             record(observer, "suppression.header_builds", 1);
             let mut header = HashMap::new();
@@ -54,13 +60,17 @@ impl<S: AsRef<str>> DisableCommentIndex<S> {
             );
         }
         let line = line.filter(|&line| line != 0)?;
-        let mut lines = self.lines[usize::from(track_quotes)]
-            .get_or_init(|| {
-                record(observer, "suppression.line_index_builds", 1);
-                Mutex::new(LineDirectives::new(source, track_quotes))
-            })
-            .lock()
-            .expect("disable comment index lock poisoned");
+        let lock = self.lines[usize::from(track_quotes)].get_or_init(|| {
+            record(observer, "suppression.line_index_builds", 1);
+            RwLock::new(LineDirectives::new(source, track_quotes))
+        });
+        {
+            let lines = lock.read().expect("disable comment index lock poisoned");
+            if lines.covers(source, line) {
+                return lines.matching(rule, line);
+            }
+        }
+        let mut lines = lock.write().expect("disable comment index lock poisoned");
         lines.scan_through(source, line, observer);
         lines.matching(rule, line)
     }
@@ -90,6 +100,12 @@ impl LineDirectives {
             offset: source.len() - source.trim_start_matches('\u{FEFF}').len(),
             ..Default::default()
         }
+    }
+
+    fn covers(&self, source: &str, line: u32) -> bool {
+        line <= self.scanned_line
+            || self.offset == source.len()
+            || !(self.scan_inline || self.scan_next)
     }
 
     fn scan_through(&mut self, source: &str, line: u32, observer: Option<&InvocationObserver>) {

@@ -374,7 +374,7 @@ fn vitest_default_excludes_is_in_the_public_rule_inventory() {
     ] {
         let content = read(&root.join(path));
         assert!(content.contains(rule), "{path}");
-        assert!(content.contains("files"), "{path}");
+        assert!(content.contains("options.files"), "{path}");
     }
 }
 
@@ -511,4 +511,26 @@ fn test_file_hygiene_eslint_rules_have_public_docs_and_options() {
     let types = read(&root.join("packages/eslint-plugin-no-mistakes/src/index.d.ts"));
     assert!(types.contains("export interface TestNoWallTimeAssertionsOptions"));
     assert!(types.contains("allowedPaths?: string[]"));
+}
+
+#[test]
+fn changes_diff_and_semantic_test_routing_have_public_docs() {
+    let root = repo_root();
+    for page in ["docs/cli/changes-diff.md", "docs/configuration/changes.md"] {
+        let body = read(&root.join(page));
+        assert!(body.contains("changes"), "{page}");
+        assert!(
+            body.contains("keysOf") || body.contains("schemaVersion"),
+            "{page}"
+        );
+    }
+    for page in [
+        "docs/cli/tests-plan.md",
+        "docs/node-api.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/tests.md",
+    ] {
+        assert!(read(&root.join(page)).contains("changes"), "{page}");
+    }
+    assert!(read(&root.join("packages/no-mistakes/changes-types.d.ts"))
+        .contains("export interface ChangesDiffOptions"));
 }

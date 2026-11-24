@@ -1,6 +1,6 @@
 [package]
 name = "no-mistakes"
-version = "0.109.118"
+version = "0.109.119"
 edition = "2021"
 rust-version = "1.97"
 # Explicit suites avoid statically linking the analyzer once per test source.
@@ -55,6 +55,7 @@ pulldown-cmark = "0.13"
 rayon = "1.10"
 regex = "1"
 regex-syntax = "0.8"
+roxmltree = "0.21"
 rustc-hash = "2.1.3"
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["raw_value"] }

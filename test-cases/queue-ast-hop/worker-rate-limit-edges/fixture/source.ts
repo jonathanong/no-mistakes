@@ -1,6 +1,29 @@
-import { Worker } from "bullmq";
+import { Queue, Worker } from "bullmq";
 import * as bullmq from "bullmq";
+import { MissingBase } from "./missing-base";
 export { cyclicExport } from "./reexport";
+
+declare const getBase: () => new () => { rateLimit(ms: number): Promise<void> };
+
+export class BaseEdgeWorker extends Worker {}
+export class PlainEdgeBase {}
+export class NullBaseExport extends null {
+  async rateLimit(_ms: number) {}
+}
+export class DerivedMissingBase extends MissingBase {}
+export const externalMissingInst = new MissingBase();
+export class QueueSub extends Queue {}
+export class BullQueueSub extends bullmq.Queue {}
+export class DynamicModSub extends getBase() {}
+export const modQueueInst = new Queue("edge-jobs");
+export const modBullQueueInst = new bullmq.Queue("edge-jobs");
+export const modBullQueueCtor = bullmq.Queue;
+export const modDynNew = new (getBase())();
+
+function HelperCtor() {}
+export const helperCtorInst = new (HelperCtor as unknown as new () => {
+  rateLimit(ms: number): Promise<void>;
+})();
 
 export function createEdgeWorker(name: string, processor: () => Promise<void>) {
   return new Worker(name, processor);

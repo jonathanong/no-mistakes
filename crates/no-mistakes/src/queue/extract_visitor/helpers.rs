@@ -11,48 +11,48 @@ use oxc_span::GetSpan;
 impl QueueVisitor<'_> {
     pub(super) fn register_import(&mut self, import: &ImportDeclaration<'_>) {
         let source = js_literal(&import.source).into_owned();
-        if let Some(specifiers) = &import.specifiers {
-            for specifier in specifiers {
-                match specifier {
-                    ImportDeclarationSpecifier::ImportSpecifier(spec) => {
-                        let imported = export_name(&spec.imported);
-                        if !import.import_kind.is_type() && !spec.import_kind.is_type() {
-                            self.note_wait_import(&spec.local, &imported, import.span.end);
-                        }
-                        let local = spec.local.name.as_str().to_string();
-                        if is_queue_package(&source)
-                            && matches!(imported.as_str(), "Queue" | "TestQueue")
-                        {
-                            self.queue_classes.insert(local.clone());
-                        }
-                        if is_queue_package(&source)
-                            && matches!(imported.as_str(), "Worker" | "TestWorker")
-                        {
-                            self.worker_classes.insert(local.clone());
-                        }
-                        if is_queue_package(&source) && imported == "FlowProducer" {
-                            self.flow_classes.insert(local.clone());
-                        }
-                        super::super::extract_factory::note_named_import(
-                            self, &imported, &local, &source,
-                        );
-                        self.facts.imports.push(ImportBinding {
-                            local,
-                            imported,
-                            source: source.clone(),
-                        });
+        let queue_pkg = is_queue_package(&source);
+        self.facts.has_queue_package_import |= queue_pkg;
+        let Some(specifiers) = &import.specifiers else {
+            return;
+        };
+        for specifier in specifiers {
+            match specifier {
+                ImportDeclarationSpecifier::ImportSpecifier(spec) => {
+                    let imported = export_name(&spec.imported);
+                    if !import.import_kind.is_type() && !spec.import_kind.is_type() {
+                        self.note_wait_import(&spec.local, &imported, import.span.end);
                     }
-                    ImportDeclarationSpecifier::ImportDefaultSpecifier(spec) => {
-                        self.facts.imports.push(ImportBinding {
-                            local: spec.local.name.as_str().to_string(),
-                            imported: "default".to_string(),
-                            source: source.clone(),
-                        });
+                    let local = spec.local.name.as_str().to_string();
+                    if queue_pkg {
+                        if let Some(target) = match imported.as_str() {
+                            "Queue" | "TestQueue" => Some(&mut self.queue_classes),
+                            "Worker" | "TestWorker" => Some(&mut self.worker_classes),
+                            "FlowProducer" => Some(&mut self.flow_classes),
+                            _ => None,
+                        } {
+                            target.insert(local.clone());
+                        }
                     }
-                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
-                        self.namespace_imports
-                            .insert(spec.local.name.as_str().to_string(), source.clone());
-                    }
+                    super::super::extract_factory::note_named_import(
+                        self, &imported, &local, &source,
+                    );
+                    self.facts.imports.push(ImportBinding {
+                        local,
+                        imported,
+                        source: source.clone(),
+                    });
+                }
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(spec) => {
+                    self.facts.imports.push(ImportBinding {
+                        local: spec.local.name.as_str().to_string(),
+                        imported: "default".to_string(),
+                        source: source.clone(),
+                    });
+                }
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
+                    self.namespace_imports
+                        .insert(spec.local.name.as_str().to_string(), source.clone());
                 }
             }
         }

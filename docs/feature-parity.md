@@ -1288,3 +1288,11 @@ The `test-no-live-repository-scan` rule shares owned temporary-root proof across
 CLI and async Node checks: Node disposable directory `.path` values (including
 `await using`) and same-file helpers with owned returns and no fallthrough.
 See the [rule](rules/test-no-live-repository-scan.md) for the supported bounds.
+
+
+Categorized local changes have CLI and async Node parity:
+[`changes diff`](cli/changes-diff.md) maps to `changesDiff()`, and
+[`tests plan --changes`](cli/tests-plan.md#semantic-change-reports) maps to
+`testsPlan({ changes })`. The shared engine supports JavaScript package locks,
+SwiftPM versions 1–3, NuGet framework keys, JSON, Apple strings and .NET resource
+catalogs. Unsafe report input selects the full test suite.

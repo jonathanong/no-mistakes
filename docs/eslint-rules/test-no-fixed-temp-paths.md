@@ -16,9 +16,10 @@ strings and mocked object-store keys are not filesystem paths merely because
 they contain `/tmp/`.
 
 Paths can be string literals, untagged expression-free templates, or static
-Node `path.join` / `path.resolve` results. A single local `const` alias can
-connect a path to its sink. Joins with non-literal segments and the bare
-temporary root, including joins with only empty segments, are left alone.
+Node `path.join` / `path.resolve` results. The rule follows one local `const`
+alias for a sink argument and one for the root of a join or resolve call.
+The segments after the root must be literal strings, with at least one
+non-empty segment.
 
 A file that mocks `fs`, `node:fs`, `fs/promises`, or `node:fs/promises` through
 Vitest's `vi.mock` or Jest's `jest.mock` is exempt, even if the mock call follows
@@ -34,6 +35,9 @@ import { writeFile } from "node:fs/promises";
 
 await writeFile("/tmp/example.json", "{}");
 await writeFile(join(tmpdir(), "example.json"), "{}");
+
+const root = "/var/tmp/example";
+await writeFile(join(root, "result.json"), "{}");
 ```
 
 The rule resolves named, default, and namespace imports from Node's built-in
@@ -62,7 +66,7 @@ try {
 }
 ```
 
-Disposable cleanup also works with a constant prefix:
+Disposable cleanup also works with a constant prefix.
 
 ```ts
 // example.test.ts
@@ -103,12 +107,16 @@ before the first code token to apply a broader suppression.
 
 ## Limits
 
-This is a file-local static check. It follows one `const` path alias and known
-Node APIs, rather than arbitrary wrappers, returned values, reassigned bindings,
-or imported path values. It does not interpret shell commands or expand runtime
-path segments. A dynamic path may still collide; create a unique directory
-instead of relying on the rule to prove it safe. Mock exemptions apply to the
-whole file, including tests that restore real filesystem methods later.
+- Concatenation such as `tmpdir() + "/result.json"`, templates with
+  interpolations, and `new URL("file:///tmp/result.json")` fall outside the check.
+- The rule leaves shell syntax, runtime path segments, alias chains, and paths
+  from helper functions, mutable bindings, or imports unanalyzed.
+- In a checked argument position, any literal beginning with `/tmp/` or
+  `/var/tmp/` can produce a finding, including non-path text passed in a
+  process argument.
+- Only `vi.mock` and `jest.mock` trigger the file-wide mock exemption.
+  `vi.doMock` and `jest.doMock` leave filesystem calls subject to the check.
+  The exemption covers tests that later restore real filesystem methods.
 
 ## Related rules
 

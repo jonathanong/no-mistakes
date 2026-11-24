@@ -41,7 +41,6 @@ pub(crate) fn source_may_have_queue_facts(
         b"new Worker",
         b"FlowProducer",
         b"upsertJobScheduler",
-        b"rateLimit",
         b"getJob",
         b"getFailed",
         b"getCompleted",
@@ -51,6 +50,7 @@ pub(crate) fn source_may_have_queue_facts(
     STATIC_NEEDLES
         .iter()
         .any(|needle| contains_bytes(haystack, needle))
+        || (contains_bytes(haystack, b"rateLimit") && contains_bytes(haystack, b"import"))
         || factory_names
             .iter()
             .any(|name| contains_bytes(haystack, name.as_bytes()))

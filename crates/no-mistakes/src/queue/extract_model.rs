@@ -138,6 +138,7 @@ pub(crate) struct FileFacts {
     pub queue_defaults: Vec<QueueDefaultOptions>,
     pub job_option_findings: Vec<JobOptionFinding>,
     pub required_job_options: Option<RequiredJobOptions>,
+    pub has_queue_package_import: bool,
     pub worker_rate_limits: Vec<WorkerRateLimitCall>,
     pub worker_bindings: HashMap<String, ExportedWorkerBinding>,
     pub worker_exports: HashMap<String, ExportedWorkerBinding>,
@@ -146,4 +147,8 @@ pub(crate) struct FileFacts {
     pub unbounded_job_retention: Option<UnboundedRetentionPolicy>,
     pub job_state_sites: Vec<super::job_state::JobStateSite>,
     pub job_state_as_record: Option<crate::config::v2::schema::JobStateAsRecordConfig>,
+    pub worker_class_imports: HashMap<String, String>,
+    pub worker_class_namespaces: HashMap<String, (String, String)>,
+    pub worker_constructed_aliases: HashMap<String, String>,
+    pub worker_constructed_namespaces: HashMap<String, (String, String)>,
 }

@@ -1,11 +1,11 @@
-use super::{parse::PreparedSql, SqlFunctionCallFact};
+use super::{parse::PreparedSql, SqlFunctionCallFact, SqlStatementFileFacts};
 use crate::fx::FxHashMap;
 use sqlparser::ast::{Query, Spanned, Statement, Visit, Visitor};
 use sqlparser::tokenizer::{Location, Span, TokenWithSpan};
 use std::ops::ControlFlow;
 use std::sync::Arc;
 
-mod tokens;
+pub(super) mod tokens;
 use tokens::Segments;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,6 +56,10 @@ impl<'sql> Collector<'sql> {
         }
     }
 
+    pub(super) fn segments(&self) -> &Segments<'sql> {
+        &self.primary
+    }
+
     pub(super) fn collect(
         &mut self,
         statement: &Statement,
@@ -80,7 +84,18 @@ impl<'sql> Collector<'sql> {
         }
     }
 
-    pub(super) fn finish<'call>(
+    pub(super) fn finish_projection(
+        collector: Option<Self>,
+        facts: &mut SqlStatementFileFacts,
+        statements: &[Statement],
+    ) {
+        if let Some(collector) = collector {
+            facts.lock_inventory = collector.finish(&facts.function_calls);
+            facts.lock_inventory_unanalyzed = unanalyzed_routines(statements);
+        }
+    }
+
+    fn finish<'call>(
         mut self,
         calls: impl IntoIterator<Item = &'call SqlFunctionCallFact>,
     ) -> Vec<InventoryLockFact> {

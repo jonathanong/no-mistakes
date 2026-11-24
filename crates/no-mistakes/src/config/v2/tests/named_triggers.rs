@@ -24,6 +24,7 @@ testPlan:
             name: "postgres-resources".to_string(),
             paths: vec!["db/**/*.sql".to_string()],
             targets: vec!["backend".to_string()],
+            superseded_by_changes: false,
             include_changed_tests: Some(true),
         }
     );

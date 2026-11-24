@@ -1,6 +1,8 @@
 use super::{Invocation, OptionsSlot, Token};
 use crate::codebase::ts_source::module_facts::arguments::ArgumentValue;
 use serde_json::Value;
+use std::collections::BTreeSet;
+use std::mem::take;
 
 #[path = "shell_lex.rs"]
 mod lex;
@@ -31,40 +33,65 @@ pub(super) fn splits(values: &[ArgumentValue]) -> Vec<Invocation> {
 }
 
 fn commands(parts: Vec<lex::Part>, values: &[ArgumentValue]) -> Vec<Invocation> {
-    let mut directory = None;
+    let mut success = BTreeSet::from([None]);
+    let mut failure = BTreeSet::new();
+    let mut previous = lex::Sep::And;
+    let options = options(values);
     let mut out = Vec::new();
     for part in parts {
-        let mut words = part.words;
-        while words.first().is_some_and(|word| word.assignment) {
-            words.remove(0);
-        }
-        if let Some(dir) = cd_dir(&words, part.next) {
-            directory = Some(dir);
+        if part.words.is_empty() {
             continue;
         }
-        let mut tokens = words.into_iter().map(|word| Token::Known(word.text));
-        let Some(executable) = tokens.next() else {
-            continue;
+        let executable_index = part
+            .words
+            .iter()
+            .position(|word| !word.assignment)
+            .unwrap_or(part.words.len());
+        // Skipped commands retain the prior list's status and directory.
+        let directories = match previous {
+            lex::Sep::And => take(&mut success),
+            lex::Sep::Or => take(&mut failure),
+            lex::Sep::Semi => {
+                success.append(&mut failure);
+                take(&mut success)
+            }
         };
-        out.push(Invocation {
-            executable,
-            argv: tokens.collect(),
-            options: options(values),
-            shell_dir: directory.clone(),
-        });
+        let dir = part
+            .next
+            .as_ref()
+            .and_then(|_| cd_dir(&part.words[executable_index..]));
+        previous = part.next.unwrap_or(lex::Sep::And);
+        if let Some(dir) = dir {
+            success.insert(Some(dir.to_owned()));
+            if !matches!(previous, lex::Sep::Semi) {
+                failure.extend(directories);
+            }
+            continue;
+        }
+        let mut tokens = part
+            .words
+            .into_iter()
+            .skip(executable_index)
+            .map(|word| Token::Known(word.text));
+        if let Some(executable) = tokens.next() {
+            out.push(Invocation {
+                executable,
+                argv: tokens.collect(),
+                options,
+                shell_dirs: Some(directories.iter().cloned().collect()),
+            });
+        }
+        success.extend(directories.iter().cloned());
+        failure.extend(directories);
     }
     out
 }
 
-/// `cd <dir>` before `&&` or `;` sets the directory. `||` leaves it unchanged.
-fn cd_dir(words: &[lex::Word], next: Option<lex::Sep>) -> Option<String> {
-    if !matches!(next, Some(lex::Sep::And | lex::Sep::Semi)) {
-        return None;
-    }
+fn cd_dir(words: &[lex::Word]) -> Option<&str> {
     let [cd, dir] = words else {
         return None;
     };
-    (cd.text == "cd" && !dir.text.starts_with('-')).then(|| dir.text.clone())
+    (cd.text == "cd" && !dir.text.starts_with('-')).then_some(dir.text.as_str())
 }
 
 fn unmatched(values: &[ArgumentValue]) -> Invocation {
@@ -72,7 +99,7 @@ fn unmatched(values: &[ArgumentValue]) -> Invocation {
         executable: Token::Unknown,
         argv: Vec::new(),
         options: options(values),
-        shell_dir: None,
+        shell_dirs: None,
     }
 }
 

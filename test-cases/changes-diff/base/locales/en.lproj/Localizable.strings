@@ -1,0 +1,4 @@
+/* before */
+"label.welcome" = "Say \"Hello\"\nagain";
+"label.moved" = "Same";
+"label.old" = "Gone";

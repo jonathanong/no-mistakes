@@ -11,8 +11,8 @@ fn statements(name: &str) -> Vec<sqlparser::ast::Statement> {
 #[test]
 fn lock_write_lifecycle_records_executed_targets_and_invalidates_join_keys() {
     let statements = statements("lock-write-lifecycle.sql");
-    let legacy = collect::<false>(&statements, None, (false, false));
-    let advanced = collect::<true>(&statements, None, (false, false));
+    let legacy = collect::<false>(&statements, None, false, None);
+    let advanced = collect::<true>(&statements, None, false, None);
     let mut shared = advanced.clone();
     assert_eq!(
         std::mem::take(&mut shared.ddl_events),
@@ -42,8 +42,8 @@ fn lock_write_lifecycle_records_executed_targets_and_invalidates_join_keys() {
 fn cte_lock_scopes_do_not_leak_into_following_statements() {
     let statements = statements("lock-cte-scopes.sql");
     for facts in [
-        collect::<false>(&statements, None, (false, false)),
-        collect::<true>(&statements, None, (false, false)),
+        collect::<false>(&statements, None, false, None),
+        collect::<true>(&statements, None, false, None),
     ] {
         assert_eq!(facts.locks.len(), 2);
         assert_eq!(facts.locks[0].relation, None);
@@ -57,10 +57,10 @@ fn cte_lock_scopes_do_not_leak_into_following_statements() {
 #[test]
 fn ambiguous_delete_targets_do_not_supply_trigger_evidence() {
     let statements = statements("trigger-write-boundaries.sql");
-    let deletion = collect::<true>(&statements[..1], None, (false, false));
+    let deletion = collect::<true>(&statements[..1], None, false, None);
     assert!(deletion.trigger_writes.is_empty());
     for statement in &statements[1..] {
-        let facts = collect::<true>(std::slice::from_ref(statement), None, (false, false));
+        let facts = collect::<true>(std::slice::from_ref(statement), None, false, None);
         assert!(facts.dynamic_setting_name);
     }
 }

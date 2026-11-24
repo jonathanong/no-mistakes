@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      roots:
+        - vitest: true
+      analyzers:
+        - command: widget-audit
+          args: [check]

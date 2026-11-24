@@ -981,11 +981,17 @@ reports that unresolved root and the live `/repo` scan. The first live scan
 is the finding, so
 `cd fixtures && widget-audit check && cd /repo && widget-audit check` reports
 the `/repo` scan. Leading `NAME=value` assignments are removed from each
-command and may repeat. A `cd <dir>` command followed by `&&` or `;` is not
-itself a scan; that directory replaces the `cwd` option for later commands, and
-the last such `cd` wins. `||` does not apply the `cd`, because the next command
-runs only when `cd` fails. `cd .` stays in that directory, so the call is a
-live scan when it has no owned `cwd`. `cd /` is the filesystem root and is a
+command and may repeat. The rule tracks directories through `&&` and `||`
+from left to right without predicting command exit statuses. A successful
+`cd <dir>` replaces the working directory.
+A failed or skipped `cd` keeps the previous directory. For a `cd <dir>`
+immediately followed by `;`, the rule assumes the directory change succeeds.
+For example, with an owned `cwd`,
+`cd fixtures && widget-audit check || cd /repo && widget-audit check`
+can reach the final scan in fixtures or in `/repo`. The finding says the
+analyzer may run after `cd /repo`. A live path takes precedence over an
+unresolved path to the same simple command. `cd .` stays in that directory, so
+the call is a live scan when it has no owned `cwd`. `cd /` is the filesystem root and is a
 live scan. `cd ..` leaves the working directory and is a live scan when that
 directory is not owned. A target with a fixture-directory segment is owned. A
 target that contains `..` plus another name is an unresolved root, so

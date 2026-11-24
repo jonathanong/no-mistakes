@@ -353,6 +353,9 @@ mod coverage_shapes;
 #[cfg(test)]
 #[path = "tests/created_require.rs"]
 mod created_require;
+#[cfg(test)]
+#[path = "tests/created_require_cjs.rs"]
+mod created_require_cjs;
 #[path = "tests/dynamic_callee_shapes.rs"]
 mod dynamic_callee_shapes;
 #[path = "tests/eager_requires.rs"]

@@ -71,7 +71,6 @@ import type {
   PlanningImpactArtifacts,
 } from "./types";
 export type { QueueRateLimitFindingKind, QueueWaitFindingKind } from "./queue-report-types";
-export type { QueueCheckSeverity } from "./queue-report-types";
 export type * from "./queue-factory-types";
 export * from "./types";
 export * from "./index-ci-infra";
@@ -203,3 +202,5 @@ export function reactCheck(
 export function reactUsages(
   options: WithInvocationOptions<ProjectOptions & { target: string }>,
 ): Promise<WithInvocationResult<ReactUsagesReport>>;
+
+export { changesDiff } from "./changes-types";

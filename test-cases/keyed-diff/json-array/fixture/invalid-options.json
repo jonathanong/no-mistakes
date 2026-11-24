@@ -1,0 +1,6 @@
+[
+  {"format": "json", "array": "", "idField": "id"},
+  {"format": "json", "array": "fixtures", "idField": ""},
+  {"format": "json", "array": "fixtures"},
+  {"format": "strings", "array": "fixtures", "idField": "id"}
+]

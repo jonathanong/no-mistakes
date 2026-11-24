@@ -10,6 +10,7 @@ pub mod dotnet;
 pub(crate) mod fact_panic;
 pub(crate) mod glob_normalize;
 pub mod import_usages;
+pub mod keyed_diff;
 pub(crate) mod lang_frontends;
 pub mod lockfile;
 pub mod markdown_sections;

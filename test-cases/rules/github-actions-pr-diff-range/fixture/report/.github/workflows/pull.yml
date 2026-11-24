@@ -1,0 +1,15 @@
+name: pull
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  two-argument:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+  two-dot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"

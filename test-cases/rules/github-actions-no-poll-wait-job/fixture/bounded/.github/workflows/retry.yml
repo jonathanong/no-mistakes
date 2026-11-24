@@ -1,0 +1,12 @@
+name: retry
+on: push
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          for attempt in 1 2 3; do
+            gh run view 123 && break
+            sleep 5
+          done
