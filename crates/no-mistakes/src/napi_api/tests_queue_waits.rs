@@ -80,8 +80,8 @@ fn queue_check_json_surfaces_diagnostics_when_opted_in_and_in_aggregate_check() 
     let diagnostics = with_diagnostics["diagnostics"].as_array().unwrap();
     assert_eq!(diagnostics.len(), 1, "{with_diagnostics}");
     assert_eq!(diagnostics[0]["severity"], "warning");
-    assert_eq!(diagnostics[0]["file"], "worker-param.ts");
-    assert_eq!(diagnostics[0]["line"], 4);
+    assert_eq!(diagnostics[0]["file"], "mutated-worker.ts");
+    assert_eq!(diagnostics[0]["line"], 8);
     assert!(diagnostics[0]["message"]
         .as_str()
         .unwrap()
@@ -109,6 +109,6 @@ fn queue_check_json_surfaces_diagnostics_when_opted_in_and_in_aggregate_check() 
     assert_eq!(warnings.len(), 1, "{batched}");
     assert_eq!(
         warnings[0],
-        "queues-check: worker-param.ts:4 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
+        "queues-check: mutated-worker.ts:8 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
     );
 }

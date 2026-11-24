@@ -223,10 +223,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [],
       "warnings": [
-        "queues-check: unresolved.ts:10 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
         "queues-check: unresolved.ts:16 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
         "queues-check: unresolved.ts:22 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
-        "queues-check: unresolved.ts:5 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
+        "queues-check: unresolved.ts:26 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+        "queues-check: unresolved.ts:38 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
       ]
     }
   }

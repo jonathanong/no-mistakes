@@ -4,8 +4,8 @@ source: crates/no-mistakes/tests/cli_check_queue_rate_limit.rs
 {
   "diagnostics": [
     {
-      "file": "worker-param.ts",
-      "line": 4,
+      "file": "mutated-worker.ts",
+      "line": 8,
       "message": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
       "severity": "warning"
     }

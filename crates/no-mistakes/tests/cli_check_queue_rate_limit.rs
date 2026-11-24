@@ -54,19 +54,23 @@ fn queue_worker_rate_limit_unresolved_surfaces_cli_diagnostics() {
 
     let aggregate = crate::check_json_snapshot::assert_saved_fixture_report(
         "queue_worker_rate_limit_unresolved",
-        &[("worker-param", root.clone(), root.join(".no-mistakes.yml"))],
+        &[(
+            "mutated-worker",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
         &[],
         &[],
     );
-    assert_eq!(aggregate["worker-param"]["exitCode"], 0);
+    assert_eq!(aggregate["mutated-worker"]["exitCode"], 0);
     assert_eq!(
-        aggregate["worker-param"]["report"]["queues"],
+        aggregate["mutated-worker"]["report"]["queues"],
         serde_json::json!([])
     );
     assert_eq!(
-        aggregate["worker-param"]["report"]["warnings"],
+        aggregate["mutated-worker"]["report"]["warnings"],
         serde_json::json!([format!(
-            "queues-check: worker-param.ts:4 {expected_message}"
+            "queues-check: mutated-worker.ts:8 {expected_message}"
         )])
     );
 
@@ -90,7 +94,7 @@ fn queue_worker_rate_limit_unresolved_surfaces_cli_diagnostics() {
     );
     let bare_stderr = String::from_utf8_lossy(&bare_json.stderr);
     assert!(
-        bare_stderr.contains(&format!("warning: worker-param.ts:4 {expected_message}")),
+        bare_stderr.contains(&format!("warning: mutated-worker.ts:8 {expected_message}")),
         "{bare_stderr}"
     );
 
@@ -148,7 +152,7 @@ fn queue_worker_rate_limit_unresolved_surfaces_cli_diagnostics() {
     assert!(String::from_utf8_lossy(&human.stdout).trim().is_empty());
     let human_stderr = String::from_utf8_lossy(&human.stderr);
     assert!(
-        human_stderr.contains(&format!("warning: worker-param.ts:4 {expected_message}")),
+        human_stderr.contains(&format!("warning: mutated-worker.ts:8 {expected_message}")),
         "{human_stderr}"
     );
 

@@ -2,7 +2,7 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
-  "worker-param": {
+  "mutated-worker": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -12,7 +12,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [],
       "warnings": [
-        "queues-check: worker-param.ts:4 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
+        "queues-check: mutated-worker.ts:8 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
       ]
     }
   }
