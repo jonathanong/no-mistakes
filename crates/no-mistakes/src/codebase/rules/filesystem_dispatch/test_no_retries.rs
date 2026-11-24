@@ -1,5 +1,6 @@
 mod options;
 mod scan_ci;
+mod scan_ci_lexer;
 mod scan_ci_shell;
 mod scan_ts;
 mod scan_ts_calls;

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 pub(in super::super) fn extract_config_objects<'a>(
     program: &'a Program<'a>,
 ) -> Vec<&'a ObjectExpression<'a>> {
-    let bindings = collect_top_level_bindings(program);
+    let bindings = collect_bindings(&program.body, HashMap::new());
     let mut out = Vec::new();
     for stmt in &program.body {
         match stmt {
@@ -38,11 +38,11 @@ pub(in super::super) fn extract_config_objects<'a>(
     out
 }
 
-fn collect_top_level_bindings<'a>(
-    program: &'a Program<'a>,
+fn collect_bindings<'a>(
+    statements: &'a [Statement<'a>],
+    mut map: HashMap<&'a str, &'a Expression<'a>>,
 ) -> HashMap<&'a str, &'a Expression<'a>> {
-    let mut map = HashMap::new();
-    for stmt in &program.body {
+    for stmt in statements {
         let Statement::VariableDeclaration(decl) = stmt else {
             continue;
         };
@@ -82,6 +82,10 @@ fn collect_config_expr<'a>(
                 collect_config_expr(bound, bindings, depth - 1, out);
             }
         }
+        Expression::ConditionalExpression(cond) => {
+            collect_config_expr(&cond.consequent, bindings, depth - 1, out);
+            collect_config_expr(&cond.alternate, bindings, depth - 1, out);
+        }
         Expression::CallExpression(call) => {
             for arg in call.arguments.iter().filter_map(|a| a.as_expression()) {
                 collect_config_expr(arg, bindings, depth - 1, out);
@@ -110,10 +114,11 @@ fn collect_statements<'a>(
     depth: u8,
     out: &mut Vec<&'a ObjectExpression<'a>>,
 ) {
+    let local_bindings = collect_bindings(statements, bindings.clone());
     for stmt in statements {
         if let Statement::ReturnStatement(ret) = stmt {
             if let Some(arg) = &ret.argument {
-                collect_config_expr(arg, bindings, depth, out);
+                collect_config_expr(arg, &local_bindings, depth, out);
             }
         }
     }

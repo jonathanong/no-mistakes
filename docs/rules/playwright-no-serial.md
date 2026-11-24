@@ -83,10 +83,11 @@ test.describe.serial("ordered checkout", () => {});
 ## Fix
 
 Isolate per-test state (unique users, records, or browser contexts), remove
-`workers: 1` and `fullyParallel: false`, and replace `test.describe.serial` or
-`mode: 'serial'` with parallel `test.describe` blocks. If a suite genuinely
-requires serial execution temporarily, add an `allow` entry with a specific
-`path` or `project` and a `reason`.
+`workers: 1`, set `fullyParallel: true` (or configure `mode: 'parallel'` on
+blocks that should execute tests in parallel), and replace
+`test.describe.serial` or `mode: 'serial'` with parallel-safe `test.describe`
+blocks. If a suite genuinely requires serial execution temporarily, add an
+`allow` entry with a specific `path` or `project` and a `reason`.
 
 ## Suppression
 

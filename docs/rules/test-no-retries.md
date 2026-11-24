@@ -59,7 +59,7 @@ and CI rerun wrappers across the repository.
 | `files` | `[]` | Optional repository-relative globs restricting which files are scanned (empty scans all files in the rule application's scope). |
 | `configs` | `[]` | Additional test config file globs beyond `tests.vitest.configs`, `tests.playwright.configs`, and standard `vitest.config.*`, `vite.config.*`, `playwright.config.*`, and `playwright-ct.config.*` filenames. |
 | `retryActions` | `[]` | Additional GitHub Actions `owner/repo` names treated as retry actions alongside `nick-fields/retry` and `wandalen/wretry.action`. |
-| `ciTestCommands` | `[]` | Additional CI test command prefixes checked for shell rerun loops and `||` fallbacks alongside commands derived from configured `tests.*` runners. |
+| `ciTestCommands` | `[]` | Additional CI test command prefixes checked for shell rerun loops and `\|\|` fallbacks alongside commands derived from configured `tests.*` runners. |
 
 ## Valid example
 

@@ -103,7 +103,7 @@ fn collect_ci_test_commands(
         || !tests.playwright.projects.is_empty()
         || !tests.playwright.test_include.is_empty()
     {
-        push_cmd(&mut commands, &["playwright"]);
+        push_cmd(&mut commands, &["playwright", "test"]);
     }
     if tests.jest.configs.is_some() || !tests.jest.projects.is_empty() {
         push_cmd(&mut commands, &["jest"]);

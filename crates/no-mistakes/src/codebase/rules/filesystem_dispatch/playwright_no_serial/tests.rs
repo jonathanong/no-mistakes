@@ -185,7 +185,6 @@ export default {
     .is_empty());
 
     let edge_spec = r#"
-test.describe.serial?.("opt", () => {});
 test?.describe.serial("opt2", () => {});
 getFn()("call");
 test.describe.configure();
@@ -193,6 +192,70 @@ test.describe.configure(cfg);
 test.describe.configure({ retries: 0 });
 "#;
     assert!(scan::scan_source("e2e/edge.spec.ts", edge_spec, &opts).is_empty());
+    assert_eq!(
+        scan::scan_source(
+            "e2e/opt.spec.ts",
+            r#"import { test } from "@playwright/test"; test.describe.serial?.("opt", () => {});"#,
+            &opts
+        )
+        .len(),
+        1
+    );
+    let aliased_pw = r#"
+import { test as pw } from "@playwright/test";
+const test = { describe: { serial: () => {} } };
+test.describe.serial("unrelated", () => {});
+pw.describe.serial("real", () => {});
+pw.describe.configure({ mode: "serial" });
+"#;
+    assert_eq!(
+        scan::scan_source("e2e/aliased.spec.ts", aliased_pw, &opts).len(),
+        2
+    );
+    assert!(scan::scan_source(
+        "unit/vitest.test.ts",
+        r#"import { test } from "vitest"; test.describe.serial("not pw", () => {});"#,
+        &opts
+    )
+    .is_empty());
+
+    let short_circuit = r#"
+export default defineConfig(ci ? { workers: 1 } : { workers: 4 });
+"#;
+    assert_eq!(
+        scan::scan_source("playwright.config.ts", short_circuit, &opts).len(),
+        1
+    );
+    let local_shadow = r#"
+const cfg = { workers: 1 };
+export default () => { const cfg = { workers: 4 }; return cfg; };
+"#;
+    assert!(scan::scan_source("playwright.config.ts", local_shadow, &opts).is_empty());
+    let logical_sc = r#"
+export default {
+  fullyParallel: true || false,
+  projects: [
+    { name: "and-false", fullyParallel: process.env.CI && false },
+    { name: "and-true", fullyParallel: true && true },
+    { name: "and-lit-false", fullyParallel: false && true },
+    { name: "or-lit-false", fullyParallel: false || true },
+    { name: "nullish-null", workers: null ?? 4 },
+    { name: "nullish-val", workers: 4 ?? 1 },
+  ],
+};
+"#;
+    assert_eq!(
+        scan::scan_source("playwright.config.ts", logical_sc, &opts).len(),
+        2
+    );
+    let win_opts = compile_with(
+        "{}",
+        "version: 2\ntests:\n  playwright:\n    configs: ['.\\configs\\pw.ts']\n",
+    );
+    assert_eq!(
+        scan::scan_source("configs/pw.ts", "export default { workers: 1 };", &win_opts).len(),
+        1
+    );
     let empty_store = crate::codebase::rules::source_store_for_files(&[]);
     assert!(scan::scan_file(
         std::path::Path::new("."),

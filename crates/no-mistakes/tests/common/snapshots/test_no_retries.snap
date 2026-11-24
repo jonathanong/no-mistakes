@@ -31,10 +31,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ci.yml",
           "line": 23,
-          "message": "CI `run` script reruns configured test command `playwright` via an `||` fallback rerun. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
+          "message": "CI `run` script reruns configured test command `playwright test` via an `||` fallback rerun. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
           "rule": "test-no-retries",
           "sourceLine": "- run: pnpm exec playwright test || pnpm exec playwright test",
-          "target": "playwright"
+          "target": "playwright test"
         },
         {
           "file": ".github/workflows/ci.yml",
@@ -112,10 +112,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ci.yml",
           "line": 23,
-          "message": "CI `run` script reruns configured test command `playwright` via an `||` fallback rerun. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
+          "message": "CI `run` script reruns configured test command `playwright test` via an `||` fallback rerun. Remove the shell rerun and fix the flake, or add an allow entry with a reason.",
           "rule": "test-no-retries",
           "sourceLine": "- run: pnpm exec playwright test || pnpm exec playwright test",
-          "target": "playwright"
+          "target": "playwright test"
         },
         {
           "file": ".github/workflows/ci.yml",

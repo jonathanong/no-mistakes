@@ -36,7 +36,7 @@ pub(super) fn configured_paths(configs: &Option<StringOrList>) -> BTreeSet<Strin
             value
                 .values()
                 .into_iter()
-                .map(|item| item.trim_start_matches("./").replace('\\', "/"))
+                .map(|item| item.replace('\\', "/").trim_start_matches("./").to_string())
                 .collect()
         })
         .unwrap_or_default()

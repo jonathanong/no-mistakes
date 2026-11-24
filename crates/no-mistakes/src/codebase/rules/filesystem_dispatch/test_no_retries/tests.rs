@@ -276,7 +276,6 @@ export default {
     )
     .is_empty());
     let call_edges = r#"
-jest.retryTimes?.(2);
 jest.retryTimes();
 test.describe.configure();
 test.describe.configure(cfg);
@@ -287,6 +286,49 @@ other.each([1])("other %i", { retry: 2 }, () => {});
 getFn()("call", { retry: 2 }, () => {});
 "#;
     assert!(scan_ts::scan_source("src/a.test.ts", call_edges, &opts).is_empty());
+    assert_eq!(
+        scan_ts::scan_source("src/opt.test.ts", "jest.retryTimes?.(2);", &opts).len(),
+        1
+    );
+    assert_eq!(
+        scan_ts::scan_source(
+            "vitest.config.ts",
+            "export default { test: { retry: process.env.CI ? { count: 2 } : { count: 0 } } };",
+            &opts
+        )
+        .len(),
+        1
+    );
+    let ci_review_edges = r#"
+name: ReviewEdges
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo vitest || echo vitest
+      - run: npx playwright install || npx playwright install
+      - run: |
+          for attempt in 1; do
+            pnpm exec vitest run
+          done
+      - run: |
+          pnpm exec vitest run ||
+            pnpm exec vitest run
+"#;
+    let pw_and_vitest = compile_with(
+        "{}",
+        "version: 2\ntests:\n  vitest:\n    configs: ['vitest.config.ts']\n  playwright:\n    configs: ['playwright.config.ts']\n",
+    );
+    assert_eq!(
+        scan_ci::scan_source(
+            ".github/workflows/ci.yml",
+            ci_review_edges,
+            false,
+            &pw_and_vitest
+        )
+        .len(),
+        1
+    );
 
     assert!(
         scan_ci::scan_source(".github/workflows/ci.yml", ":::[invalid", false, &opts).is_empty()

@@ -1,5 +1,8 @@
 use super::super::test_flake_helpers::{
-    ast::{collect_branch_exprs, find_property, member_chain, non_negative_int},
+    ast::{
+        collect_branch_exprs, find_property, member_chain, non_negative_int,
+        playwright_test_bindings,
+    },
     make_finding,
 };
 use super::RULE_ID;
@@ -15,10 +18,12 @@ pub(super) fn scan_calls(
     max_retries: u64,
     findings: &mut Vec<RuleFinding>,
 ) {
+    let pw_bindings = playwright_test_bindings(program);
     let mut visitor = TestVisitor {
         file,
         source,
         max_retries,
+        pw_bindings,
         findings,
     };
     visitor.visit_program(program);
@@ -32,21 +37,32 @@ pub(super) fn check_vitest_retry(
     label: &str,
     findings: &mut Vec<RuleFinding>,
 ) {
-    if let Expression::ObjectExpression(obj) = unwrap_ts_wrappers(expr) {
-        if let Some(count) = find_property(obj, "count") {
-            check_retry_expr(
-                file,
-                source,
-                &count.value,
-                max_retries,
-                label,
-                "retry",
-                findings,
-            );
+    let mut branches = Vec::new();
+    collect_branch_exprs(expr, &mut branches);
+    for branch in branches {
+        let target_expr = match unwrap_ts_wrappers(branch) {
+            Expression::ObjectExpression(obj) => {
+                let Some(count) = find_property(obj, "count") else {
+                    continue;
+                };
+                &count.value
+            }
+            other => other,
+        };
+        let before = findings.len();
+        check_retry_expr(
+            file,
+            source,
+            target_expr,
+            max_retries,
+            label,
+            "retry",
+            findings,
+        );
+        if findings.len() > before {
             return;
         }
     }
-    check_retry_expr(file, source, expr, max_retries, label, "retry", findings);
 }
 
 pub(super) fn check_retry_expr(
@@ -82,6 +98,7 @@ struct TestVisitor<'a> {
     file: &'a str,
     source: &'a str,
     max_retries: u64,
+    pw_bindings: Vec<&'a str>,
     findings: &'a mut Vec<RuleFinding>,
 }
 
@@ -94,9 +111,6 @@ impl<'a> Visit<'a> for TestVisitor<'a> {
 
 impl TestVisitor<'_> {
     fn check_call(&mut self, call: &CallExpression<'_>) {
-        if call.optional {
-            return;
-        }
         if let Some(chain) = member_chain(&call.callee) {
             self.check_member_call(call, &chain);
             return;
@@ -125,7 +139,7 @@ impl TestVisitor<'_> {
             }
             return;
         }
-        if chain == ["test", "describe", "configure"] {
+        if matches!(chain, [pw, "describe", "configure"] if self.pw_bindings.contains(pw)) {
             self.check_playwright_configure(call);
             return;
         }

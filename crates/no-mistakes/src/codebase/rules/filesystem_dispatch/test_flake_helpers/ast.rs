@@ -1,7 +1,7 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    Expression, LogicalOperator, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey,
-    PropertyKind,
+    Expression, ImportDeclarationSpecifier, LogicalOperator, ObjectExpression, ObjectProperty,
+    ObjectPropertyKind, Program, PropertyKey, PropertyKind, Statement,
 };
 use oxc_span::Span;
 
@@ -52,6 +52,30 @@ pub(in super::super) fn bool_literal(expr: &Expression<'_>) -> Option<(bool, Spa
     }
 }
 
+fn static_truthiness(expr: &Expression<'_>) -> Option<bool> {
+    match unwrap_ts_wrappers(expr) {
+        Expression::BooleanLiteral(lit) => Some(lit.value),
+        Expression::NumericLiteral(lit) => Some(lit.value != 0.0 && !lit.value.is_nan()),
+        Expression::StringLiteral(lit) => Some(!lit.value.is_empty()),
+        Expression::NullLiteral(_) => Some(false),
+        Expression::Identifier(id) if id.name == "undefined" => Some(false),
+        _ => None,
+    }
+}
+
+fn static_nullish(expr: &Expression<'_>) -> Option<bool> {
+    match unwrap_ts_wrappers(expr) {
+        Expression::NullLiteral(_) => Some(true),
+        Expression::Identifier(id) if id.name == "undefined" => Some(true),
+        Expression::BooleanLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::StringLiteral(_)
+        | Expression::ObjectExpression(_)
+        | Expression::ArrayExpression(_) => Some(false),
+        _ => None,
+    }
+}
+
 pub(in super::super) fn collect_branch_exprs<'a>(
     expr: &'a Expression<'a>,
     out: &mut Vec<&'a Expression<'a>>,
@@ -61,15 +85,32 @@ pub(in super::super) fn collect_branch_exprs<'a>(
             collect_branch_exprs(&cond.consequent, out);
             collect_branch_exprs(&cond.alternate, out);
         }
-        Expression::LogicalExpression(logical)
-            if matches!(
-                logical.operator,
-                LogicalOperator::Or | LogicalOperator::Coalesce
-            ) =>
-        {
-            collect_branch_exprs(&logical.left, out);
-            collect_branch_exprs(&logical.right, out);
-        }
+        Expression::LogicalExpression(logical) => match logical.operator {
+            LogicalOperator::Or => match static_truthiness(&logical.left) {
+                Some(true) => collect_branch_exprs(&logical.left, out),
+                Some(false) => collect_branch_exprs(&logical.right, out),
+                None => {
+                    collect_branch_exprs(&logical.left, out);
+                    collect_branch_exprs(&logical.right, out);
+                }
+            },
+            LogicalOperator::And => match static_truthiness(&logical.left) {
+                Some(false) => collect_branch_exprs(&logical.left, out),
+                Some(true) => collect_branch_exprs(&logical.right, out),
+                None => {
+                    collect_branch_exprs(&logical.left, out);
+                    collect_branch_exprs(&logical.right, out);
+                }
+            },
+            LogicalOperator::Coalesce => match static_nullish(&logical.left) {
+                Some(true) => collect_branch_exprs(&logical.right, out),
+                Some(false) => collect_branch_exprs(&logical.left, out),
+                None => {
+                    collect_branch_exprs(&logical.left, out);
+                    collect_branch_exprs(&logical.right, out);
+                }
+            },
+        },
         other => out.push(other),
     }
 }
@@ -119,4 +160,39 @@ pub(in super::super) fn project_name<'a>(obj: &'a ObjectExpression<'a>) -> Optio
             _ => None,
         })?;
     find_property(test_obj, "name").and_then(|prop| string_literal(&prop.value))
+}
+
+pub(in super::super) fn playwright_test_bindings<'a>(program: &'a Program<'a>) -> Vec<&'a str> {
+    let mut pw_bindings = Vec::new();
+    let mut non_pw_test = false;
+    for stmt in &program.body {
+        let Statement::ImportDeclaration(decl) = stmt else {
+            continue;
+        };
+        let src = decl.source.value.as_str().unwrap_or("");
+        let is_pw = src == "@playwright/test" || src.starts_with("@playwright/experimental-ct-");
+        let is_other_runner = src == "vitest" || src == "@jest/globals";
+        let Some(specs) = &decl.specifiers else {
+            continue;
+        };
+        for spec in specs {
+            if let ImportDeclarationSpecifier::ImportSpecifier(named) = spec {
+                let imported = named.imported.name().as_str();
+                let local = named.local.name.as_str();
+                if is_pw && imported == "test" {
+                    pw_bindings.push(local);
+                } else if is_other_runner && local == "test" {
+                    non_pw_test = true;
+                }
+            }
+        }
+    }
+    if !pw_bindings.is_empty() {
+        return pw_bindings;
+    }
+    if non_pw_test {
+        Vec::new()
+    } else {
+        vec!["test"]
+    }
 }
