@@ -25,9 +25,7 @@ function weightedCases(cases, entries, evidence) {
   });
 }
 
-function outlierPartition(cases, entries, index, countOrEvidence = 2, maybeEvidence = costs) {
-  const count = typeof countOrEvidence === "number" ? countOrEvidence : 2;
-  const evidence = typeof countOrEvidence === "number" ? maybeEvidence : countOrEvidence;
+function outlierPartition(cases, entries, index, count = 2, evidence = costs) {
   if (
     !Number.isInteger(count) ||
     count < 2 ||
