@@ -1,21 +1,39 @@
-const { workflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { existsSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
-const root = path.resolve(__dirname, "../..");
-const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-const job = (name) => workflowJob(workflow, name);
-const entries = (name) => (job(name).match(/^ {10}- name: /gm) ?? []).length;
+const YAML = require("yaml");
+const workflows = path.resolve(__dirname, "../workflows");
+const load = (file) =>
+  existsSync(path.join(workflows, file))
+    ? YAML.parse(readFileSync(path.join(workflows, file), "utf8"))
+    : { jobs: {} };
+const ci = load("ci.yml");
+const jobIn = (name, files = [ci]) => files.map((f) => f.jobs[name]).find(Boolean);
+const matrix = (job) => job?.strategy?.matrix;
+const entries = (job) => matrix(job)?.include?.length ?? 0;
+const shards = (job) => matrix(job)?.shard?.length ?? 0;
 
 test("parallel work is never folded into fewer jobs (docs/development/ci-builds.md)", () => {
-  assert.equal(entries("quality-rust"), 7);
-  assert.equal(entries("quality-js"), 4);
-  assert.equal(entries("benchmark-shards"), 24);
-  assert.match(job("javascript-shards"), /shard: \[1, 2, 3, 4\]/);
-  assert.match(job("linux-api-tests"), /shard: \[1, 2, 3, 4\]/);
-  assert.match(job("rust-coverage-shards"), /shard: \[1, 2, 3, 4, 5, 6\]/);
-  assert.match(job("javascript-tests"), /needs: \[javascript-coverage, linux-api-tests\]/);
+  const minimums = [
+    ["quality-rust", entries, 7],
+    ["quality-js", entries, 4],
+    ["javascript-shards", shards, 4],
+    ["linux-api-tests", shards, 4],
+    ["rust-coverage-shards", shards, 6],
+  ];
+  for (const [name, count, min] of minimums) {
+    const job = jobIn(name);
+    assert.ok(job, `${name} must exist in ci.yml`);
+    assert.ok(count(job) >= min, `${name} needs at least ${min} parallel units`);
+  }
+  assert.deepEqual(ci.jobs["javascript-tests"].needs, ["javascript-coverage", "linux-api-tests"]);
+});
+
+test("benchmark shards stay one matrix entry each, in ci.yml or benchmarks.yml", () => {
+  const job = jobIn("benchmark-shards", [ci, load("benchmarks.yml")]);
+  assert.ok(job, "benchmark-shards must exist in ci.yml or benchmarks.yml");
+  assert.ok(entries(job) >= 24, "benchmark-shards needs at least 24 matrix entries");
 });
 
 test("each cache is retained by its own job right after its producer", () => {
@@ -28,6 +46,6 @@ test("each cache is retained by its own job right after its producer", () => {
     "standalone-build",
     "rust-coverage-build",
   ])
-    assert.match(job(`retain-${name}-cache`), new RegExp(`needs: ${name}\\n`), name);
-  assert.doesNotMatch(workflow, /^ {2}retain-caches:/m);
+    assert.equal(ci.jobs[`retain-${name}-cache`]?.needs, name, name);
+  assert.equal(ci.jobs["retain-caches"], undefined);
 });

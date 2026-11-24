@@ -9,8 +9,10 @@ run several shards or commands in one job, or turn jobs into steps. Never
 lengthen any workflow's critical path, on pull requests or on `main`. A
 job's `timeout-minutes` must not rise as the result of a consolidation. The
 benchmark, Rust coverage, Rust quality, JavaScript and Linux N-API shards
-therefore stay one matrix entry each, and each cache-retention job stays
-attached to its own producer.
+therefore stay one matrix entry each (adding shards is fine; removing or
+folding them is not), and each cache-retention job stays attached to its own
+producer. `.github/scripts/ci-no-serialization.test.cjs` enforces minimum
+counts, not exact ones.
 
 ## Parallel CI layout and measured baseline
 
