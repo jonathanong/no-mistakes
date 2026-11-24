@@ -7,7 +7,7 @@ use crate::queue::graph_model::{
 use crate::queue::source::relative_string;
 use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::{
-    Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, RelationshipEdge, RelationshipNode,
+    Edge, EdgeKind, JobKey, QueueJobNode, RelationshipEdge, RelationshipNode,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -57,17 +57,19 @@ fn build_report_and_relationships(
     let wildcards = checks::wildcard_queues(&workers);
     let mut relationships = Vec::new();
     let mut check = Vec::new();
+    let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
     for (job, producers_for_job) in &producer_index {
         let workers_for_job = worker_index.get(job).cloned().unwrap_or_default();
-        if workers_for_job.is_empty() && !wildcards.contains(&queue_key(job)) {
-            if !checks::has_unresolved_worker_for_job(&workers, &job.job) {
-                check.extend(
-                    producers_for_job
-                        .iter()
-                        .filter(|producer| !test_scope.is_match(root, &producer.site.file))
-                        .map(|producer| producer.unmatched(root)),
-                );
-            }
+        if workers_for_job.is_empty() && !wildcards.contains(&checks::queue_key(job)) {
+            checks::record_unmatched_producers(
+                root,
+                job,
+                producers_for_job,
+                &workers,
+                test_scope,
+                &mut check,
+                &mut report_diagnostics,
+            );
             continue;
         }
         add_matched_job(
@@ -101,7 +103,6 @@ fn build_report_and_relationships(
         root, &producers, facts,
     ));
     check.sort();
-    let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
     report_diagnostics.extend(job_state_diagnostics);
     report_diagnostics.extend(dedup_diagnostics);
     let mut report = ProjectReport {
@@ -189,12 +190,5 @@ pub(crate) fn public_node(root: &Path, node: &RelationshipNode) -> String {
     match node {
         RelationshipNode::File(file) => relative_string(root, file),
         RelationshipNode::Job(job) => node_name(root, job),
-    }
-}
-
-fn queue_key(job: &JobKey) -> QueueKey {
-    QueueKey {
-        queue_file: job.queue_file.clone(),
-        queue_name: job.queue_name.clone(),
     }
 }

@@ -95,6 +95,7 @@ pub(crate) struct RateLimitSite {
 #[derive(Debug, Default, Clone)]
 pub(crate) struct FileFacts {
     pub imports: Vec<ImportBinding>,
+    pub namespace_import_sources: Vec<String>,
     pub enqueue_wrappers: Vec<super::enqueue_wrapper::WrapperSite>,
     pub stable_exported_strings: HashMap<String, String>,
     pub explicit_enqueue_exports: HashSet<String>,

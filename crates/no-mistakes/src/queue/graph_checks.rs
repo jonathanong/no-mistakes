@@ -1,7 +1,7 @@
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
 use crate::queue::test_scope::ConfiguredTestScope;
-use crate::queue::types::{JobKey, QueueKey};
+use crate::queue::types::{Diagnostic, JobKey, QueueKey, Severity};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -27,6 +27,13 @@ pub(super) fn index_workers(workers: &[InternalWorker]) -> HashMap<JobKey, Vec<&
         })
 }
 
+pub(super) fn queue_key(job: &JobKey) -> QueueKey {
+    QueueKey {
+        queue_file: job.queue_file.clone(),
+        queue_name: job.queue_name.clone(),
+    }
+}
+
 pub(super) fn wildcard_queues(workers: &[InternalWorker]) -> HashSet<QueueKey> {
     workers
         .iter()
@@ -35,12 +42,62 @@ pub(super) fn wildcard_queues(workers: &[InternalWorker]) -> HashSet<QueueKey> {
         .collect()
 }
 
-pub(super) fn has_unresolved_worker_for_job(workers: &[InternalWorker], job: &str) -> bool {
-    workers.iter().any(|worker| {
-        worker.queue.is_none()
-            && worker.site.queue_name.is_none()
-            && (worker.site.wildcard || worker.site.jobs.iter().any(|handled| handled == job))
-    })
+pub(super) fn record_unmatched_producers(
+    root: &Path,
+    job: &JobKey,
+    producers_for_job: &[&InternalProducer],
+    workers: &[InternalWorker],
+    test_scope: &ConfiguredTestScope,
+    check: &mut Vec<CheckFinding>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let blocking_workers = unresolved_workers_for_job(root, workers, job);
+    for producer in producers_for_job {
+        if test_scope.is_match(root, &producer.site.file) {
+            continue;
+        }
+        if blocking_workers.is_empty() {
+            check.push(producer.unmatched(root));
+        } else {
+            diagnostics.push(Diagnostic {
+                severity: Severity::Warning,
+                file: relative_string(root, &producer.site.file),
+                line: producer.site.line,
+                message: format!(
+                    "unmatched-producer was not judged because unresolved workers at {} could handle this queue",
+                    blocking_workers.join(", ")
+                ),
+            });
+        }
+    }
+}
+
+fn unresolved_workers_for_job(
+    root: &Path,
+    workers: &[InternalWorker],
+    job: &JobKey,
+) -> Vec<String> {
+    let mut lines = workers
+        .iter()
+        .filter(|worker| {
+            worker.queue.is_none()
+                && worker.site.queue_name.is_none()
+                && (worker.site.wildcard
+                    || worker.site.jobs.iter().any(|handled| handled == &job.job))
+                && (worker.site.queue_name_import.is_some()
+                    || worker.reachable_files.contains(&job.queue_file))
+        })
+        .map(|worker| {
+            format!(
+                "{}:{}",
+                relative_string(root, &worker.site.file),
+                worker.site.line
+            )
+        })
+        .collect::<Vec<_>>();
+    lines.sort();
+    lines.dedup();
+    lines
 }
 
 pub(super) fn unmatched_workers(
@@ -60,10 +117,7 @@ pub(super) fn unmatched_workers(
             if producers_for_job.contains_key(&job) {
                 continue;
             }
-            let queue = QueueKey {
-                queue_file: job.queue_file.clone(),
-                queue_name: job.queue_name.clone(),
-            };
+            let queue = queue_key(&job);
             let mut lines = unresolved.by_queue.get(&queue).cloned().unwrap_or_default();
             if let Some(job_lines) = unresolved.by_job.get(&job.job) {
                 lines.extend(job_lines.iter().cloned());

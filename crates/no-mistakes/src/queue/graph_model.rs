@@ -7,7 +7,7 @@ use crate::queue::types::{
 };
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
@@ -96,6 +96,7 @@ pub(super) struct InternalProducer {
 pub(super) struct InternalWorker {
     pub site: crate::queue::extract::WorkerSite,
     pub queue: Option<QueueKey>,
+    pub reachable_files: HashSet<PathBuf>,
 }
 
 pub(super) fn diagnostics(

@@ -295,7 +295,7 @@ fn test_scope_files_still_participate_in_matching_for_all_three_main_parity_shap
 }
 
 #[test]
-fn unresolved_worker_queue_name_abstains_from_unmatched_producer() {
+fn unresolved_worker_queue_name_abstains_only_when_scoped_and_emits_diagnostic() {
     let abstain_root = |case: &str| {
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/queue-ast-hop/unresolved-worker-abstain")
@@ -303,22 +303,70 @@ fn unresolved_worker_queue_name_abstains_from_unmatched_producer() {
             .join("fixture")
     };
 
-    for (case, worker_file) in [
-        ("dynamic-worker", "apps/workers/dynamic-worker.mts"),
-        ("unresolved-reexport", "apps/workers/reexport-worker.mts"),
-    ] {
-        let report = analyze_project(&abstain_root(case), None, &[]).unwrap();
-        assert!(
-            report.check.is_empty(),
-            "{case}: imported-constant producer must not report unmatched-producer when an unresolved-queue worker could match it: {:#?}",
-            report.check
-        );
-        assert!(
-            report.diagnostics.iter().any(|d| {
-                d.file == worker_file && d.message == "dynamic or unresolved queue worker"
-            }),
-            "{case}: worker must still emit dynamic/unresolved diagnostic: {:#?}",
-            report.diagnostics
-        );
-    }
+    let dynamic = analyze_project(&abstain_root("dynamic-worker"), None, &[]).unwrap();
+    assert_eq!(dynamic.check.len(), 1, "{:#?}", dynamic.check);
+    assert_eq!(dynamic.check[0].kind, "unmatched-producer");
+    assert_eq!(dynamic.check[0].file, "apps/api/orphan.mts");
+    assert_eq!(dynamic.check[0].job.as_deref(), Some("ping"));
+    assert!(
+        dynamic.diagnostics.iter().any(|d| {
+            d.file == "apps/api/publish.mts"
+                && d.line == 4
+                && d.message
+                    == "unmatched-producer was not judged because unresolved workers at apps/workers/dynamic-worker.mts:6 could handle this queue"
+        }),
+        "{:#?}",
+        dynamic.diagnostics
+    );
+    assert!(
+        dynamic.diagnostics.iter().any(|d| {
+            d.file == "apps/workers/dynamic-worker.mts"
+                && d.message == "dynamic or unresolved queue worker"
+        }),
+        "{:#?}",
+        dynamic.diagnostics
+    );
+
+    let reexport = analyze_project(&abstain_root("unresolved-reexport"), None, &[]).unwrap();
+    assert!(reexport.check.is_empty(), "{:#?}", reexport.check);
+    assert!(
+        reexport.diagnostics.iter().any(|d| {
+            d.file == "apps/api/publish.mts"
+                && d.line == 4
+                && d.message
+                    == "unmatched-producer was not judged because unresolved workers at apps/workers/reexport-worker.mts:4 could handle this queue"
+        }),
+        "{:#?}",
+        reexport.diagnostics
+    );
+    assert!(
+        reexport.diagnostics.iter().any(|d| {
+            d.file == "apps/workers/reexport-worker.mts"
+                && d.message == "dynamic or unresolved queue worker"
+        }),
+        "{:#?}",
+        reexport.diagnostics
+    );
+
+    let unrelated = analyze_project(&abstain_root("unrelated-helper"), None, &[]).unwrap();
+    assert_eq!(unrelated.check.len(), 1, "{:#?}", unrelated.check);
+    assert_eq!(unrelated.check[0].kind, "unmatched-producer");
+    assert_eq!(unrelated.check[0].file, "apps/api/orphan.mts");
+    assert_eq!(unrelated.check[0].job.as_deref(), Some("ping"));
+    assert!(
+        unrelated
+            .diagnostics
+            .iter()
+            .all(|d| !d.message.contains("unmatched-producer was not judged")),
+        "{:#?}",
+        unrelated.diagnostics
+    );
+    assert!(
+        unrelated.diagnostics.iter().any(|d| {
+            d.file == "apps/workers/start-worker.mts"
+                && d.message == "dynamic or unresolved queue worker"
+        }),
+        "{:#?}",
+        unrelated.diagnostics
+    );
 }

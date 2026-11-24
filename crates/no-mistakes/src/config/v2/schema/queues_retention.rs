@@ -1,4 +1,5 @@
-use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
+use super::queues_top::{allow_paths_globset, validate_allow_paths};
+use globset::GlobSet;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -39,16 +40,7 @@ impl UnboundedJobRetentionConfig {
     }
 
     pub fn allow_globset(&self) -> Option<GlobSet> {
-        if self.allow_paths.is_empty() {
-            return None;
-        }
-        let mut builder = GlobSetBuilder::new();
-        for pattern in &self.allow_paths {
-            if let Ok(glob) = GlobBuilder::new(pattern).literal_separator(false).build() {
-                builder.add(glob);
-            }
-        }
-        builder.build().ok()
+        allow_paths_globset(&self.allow_paths)
     }
 }
 
@@ -88,16 +80,11 @@ where
         RetentionInput::Enabled(false) => Ok(None),
         RetentionInput::Enabled(true) => Ok(Some(UnboundedJobRetentionConfig::all())),
         RetentionInput::Options(mut options) => {
-            for pattern in &options.allow_paths {
-                GlobBuilder::new(pattern)
-                    .literal_separator(false)
-                    .build()
-                    .map_err(|error| {
-                        serde::de::Error::custom(format!(
-                            "invalid queues.unboundedJobRetention.allowPaths glob `{pattern}`: {error}"
-                        ))
-                    })?;
-            }
+            validate_allow_paths(
+                "queues.unboundedJobRetention.allowPaths",
+                &options.allow_paths,
+            )
+            .map_err(serde::de::Error::custom)?;
             let mut deduped = Vec::new();
             for key in options.require.drain(..) {
                 if !deduped.contains(&key) {

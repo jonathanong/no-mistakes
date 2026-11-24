@@ -53,6 +53,7 @@ impl QueueVisitor<'_> {
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
                     self.namespace_imports
                         .insert(spec.local.name.as_str().to_string(), source.clone());
+                    self.facts.namespace_import_sources.push(source.clone());
                 }
             }
         }

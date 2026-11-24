@@ -2,8 +2,8 @@ use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_model::InternalWorker;
 use crate::queue::types::QueueKey;
-use std::collections::HashMap;
-use std::path::PathBuf;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 mod job_option_sites;
 
@@ -31,6 +31,7 @@ pub(super) fn resolve_workers<R: ImportResolverFacade>(
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalWorker> {
     let mut out = Vec::new();
+    let mut reachable_by_file: HashMap<PathBuf, HashSet<PathBuf>> = HashMap::new();
     for (path, file) in facts {
         for site in &file.workers {
             let queue = site.queue_name.as_ref().and_then(|name| {
@@ -46,10 +47,55 @@ pub(super) fn resolve_workers<R: ImportResolverFacade>(
                 .and_then(|spec| resolver.resolve(spec, path))
                 .and_then(|path| remapper.remap(&path));
             adopt_processor_jobs(&mut site, facts);
-            out.push(InternalWorker { site, queue });
+            let reachable_files =
+                if queue.is_none() && site.queue_name.is_none() && site.queue_name_import.is_none()
+                {
+                    reachable_by_file
+                        .entry(path.clone())
+                        .or_insert_with(|| reachable_worker_files(path, facts, resolver, remapper))
+                        .clone()
+                } else {
+                    HashSet::new()
+                };
+            out.push(InternalWorker {
+                site,
+                queue,
+                reachable_files,
+            });
         }
     }
     out
+}
+
+fn reachable_worker_files<R: ImportResolverFacade>(
+    start: &Path,
+    facts: &HashMap<PathBuf, FileFacts>,
+    resolver: &R,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
+) -> HashSet<PathBuf> {
+    let mut visited = HashSet::from([start.to_path_buf()]);
+    let mut stack = vec![start.to_path_buf()];
+    while let Some(current) = stack.pop() {
+        let file = &facts[&current];
+        let sources = file
+            .imports
+            .iter()
+            .map(|imp| imp.source.as_str())
+            .chain(file.namespace_import_sources.iter().map(String::as_str))
+            .chain(file.export_from.values().map(|(source, _)| source.as_str()))
+            .chain(file.star_exports.iter().map(String::as_str));
+        for specifier in sources {
+            if let Some(target) = resolver
+                .resolve(specifier, &current)
+                .and_then(|resolved| remapper.remap(&resolved))
+            {
+                if visited.insert(target.clone()) {
+                    stack.push(target);
+                }
+            }
+        }
+    }
+    visited
 }
 
 fn adopt_processor_jobs(
