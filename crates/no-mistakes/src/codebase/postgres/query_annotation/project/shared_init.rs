@@ -77,7 +77,7 @@ pub(super) fn build(
                 uncacheable.insert(id);
                 continue;
             };
-            if executor_scan::has_top_level_executor(file) {
+            if executor_scan::has_uncacheable_top_level(file) {
                 uncacheable.insert(id);
                 continue;
             }
