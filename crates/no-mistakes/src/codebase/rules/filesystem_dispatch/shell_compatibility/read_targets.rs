@@ -80,3 +80,6 @@ fn decode_target(raw: &str) -> Option<String> {
     }
     (quote.is_none() && identifier(&out)).then_some(out)
 }
+
+#[cfg(test)]
+mod tests;
