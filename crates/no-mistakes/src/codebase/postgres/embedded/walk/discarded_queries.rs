@@ -19,10 +19,7 @@ fn awaited_call(statement: &Statement<'_>) -> Option<u32> {
         Statement::ExpressionStatement(statement) => &statement.expression,
         Statement::ReturnStatement(statement) => statement.argument.as_ref()?,
         Statement::VariableDeclaration(statement) => {
-            let [declaration] = statement.declarations.as_slice() else {
-                return None;
-            };
-            declaration.init.as_ref()?
+            statement.declarations.first()?.init.as_ref()?
         }
         _ => return None,
     };
