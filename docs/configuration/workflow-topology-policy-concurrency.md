@@ -170,6 +170,8 @@ first code token also apply. Suppression does not require disabling job locks.
 
 The ban uses the declared `workflow_call` trigger, including a mapping entry
 with a null value or a trigger inherited through a YAML merge key. The ban
-applies even when the workflow has no callers. Workflows whose YAML cannot be
-parsed are skipped by the ban. Workflow topology still reports its
-`malformed-workflow` diagnostic for those files.
+applies even when the workflow has no callers. When YAML cannot be parsed,
+`check` records the file in `incomplete` and continues evaluating the other
+workflows. To inspect the graph diagnostic, run `no-mistakes ci topology`.
+It reports `malformed-workflow` on stderr. See the
+[workflow topology command](../cli/ci-topology.md#exit-behavior).

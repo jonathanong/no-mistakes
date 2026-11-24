@@ -7,6 +7,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/malformed.yml",
+          "message": "Cannot verify reusable workflow concurrency: did not find expected node content at line 5 column 1, while parsing a flow node. Repair the workflow YAML and run the check again."
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -62,6 +69,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/malformed.yml",
+          "message": "Cannot verify reusable workflow concurrency: did not find expected node content at line 5 column 1, while parsing a flow node. Repair the workflow YAML and run the check again."
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],

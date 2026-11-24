@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs;
 use crate::codebase::ts_source::VisiblePathSnapshot;
+use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -18,14 +19,7 @@ fn run(name: &str, file: &str) -> Result<Vec<RuleFinding>> {
     let sources = snapshot.source_store_for(&root);
     let inputs =
         PreparedWorkflowTopologyInputs::for_config(&root, &config, &snapshot, &sources).unwrap();
-    check_prepared(
-        &root,
-        &config,
-        &snapshot.paths_for(&root),
-        &sources,
-        &inputs,
-        Some(&path),
-    )
+    check_prepared(&root, &config, None, &sources, &inputs, Some(&path))
 }
 
 // Output cases moved to cli_gha_snapshot_workflow_topology.

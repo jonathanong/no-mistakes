@@ -17,7 +17,7 @@ fn unused_declarations_resolve_a_relative_config_path_against_root() {
     let findings = super::super::check_prepared(
         &root,
         &config,
-        &snapshot.paths_for(&root),
+        None,
         &sources,
         &inputs,
         Some(Path::new(".no-mistakes.yml")),
@@ -46,7 +46,7 @@ fn split_inventory_reports_unused_secrets_on_the_authored_fragment() {
     let findings = super::super::check_prepared(
         &root,
         &config,
-        &snapshot.paths_for(&root),
+        None,
         &sources,
         &inputs,
         config.loaded_config_path.0.as_deref(),

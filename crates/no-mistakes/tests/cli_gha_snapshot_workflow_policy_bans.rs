@@ -66,3 +66,31 @@ fn check_json_snapshot_workflow_policy_bans_reusable_concurrency() {
     .collect();
     assert_saved_fixture("workflow_policy_bans_reusable_concurrency", &cases);
 }
+
+#[test]
+fn check_json_snapshot_ci_topology_malformed_workflow_diagnostic() {
+    let root = rules_path(
+        "workflow-topology-policy",
+        "fixture",
+        "reusable-concurrency",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .current_dir(&root)
+        .args(["--lock-timeout", "0", "ci", "topology", "--root"])
+        .arg(&root)
+        .args(["--workflow", "malformed.yml", "--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert!(output.stdout.is_empty());
+    insta::with_settings!({
+        snapshot_path => "common/snapshots",
+        prepend_module_to_snapshot => false,
+        omit_expression => true,
+    }, {
+        insta::assert_snapshot!(
+            "ci_topology_malformed_workflow_diagnostic",
+            String::from_utf8(output.stderr).unwrap().replace("\r\n", "\n")
+        );
+    });
+}

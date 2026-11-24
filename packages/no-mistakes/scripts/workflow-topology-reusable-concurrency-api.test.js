@@ -20,9 +20,16 @@ test(
     const report = await pending;
     assert.deepEqual(report.warnings, []);
     assert.deepEqual(
+      report.incomplete.map(({ consumer, file }) => [consumer, file]),
+      [["workflow-topology-policy", ".github/workflows/malformed.yml"]],
+    );
+    assert.deepEqual(
       report.rules.map(({ rule, file, line }) => [rule, file, line]),
       [
         ["workflow-topology-policy", ".github/workflows/mapping.yml", 6],
+        ["workflow-topology-policy", ".github/workflows/merged-triggers.yml", 9],
+        ["workflow-topology-policy", ".github/workflows/merged-workflow.yml", 5],
+        ["workflow-topology-policy", ".github/workflows/null-trigger.yml", 3],
         ["workflow-topology-policy", ".github/workflows/scalar.yml", 3],
         ["workflow-topology-policy", ".github/workflows/sequence.yml", 3],
       ],
@@ -30,13 +37,16 @@ test(
     assert.ok(report.rules.every(({ message }) => message.includes("workflow-level concurrency")));
     assert.deepEqual(await esm.check(options), report);
     for (const name of ["-false", "-disabled"]) {
-      assert.deepEqual((await cjs.check({ root, config: config(name) })).rules, []);
+      const disabled = await cjs.check({ root, config: config(name) });
+      assert.deepEqual(disabled.rules, []);
+      assert.equal(disabled.incomplete, undefined);
     }
     const custom = await cjs.check({ root, config: config("-custom") });
     assert.deepEqual(
       custom.rules.map(({ message }) => message),
-      Array(3).fill("Declare concurrency on the caller or on individual jobs."),
+      Array(6).fill("Declare concurrency on the caller or on individual jobs."),
     );
+    assert.deepEqual(custom.incomplete, report.incomplete);
     const request = { ...options, reports: [{ type: "check", id: "reusable-locks" }] };
     const preparedPending = cjs.analyzeProject(request);
     assert.ok(preparedPending instanceof Promise);
