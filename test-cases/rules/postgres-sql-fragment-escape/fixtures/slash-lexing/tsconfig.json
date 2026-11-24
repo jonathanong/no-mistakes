@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@example/sql": ["./sql.ts"]
+    }
+  },
+  "include": ["*.js", "*.ts"]
+}

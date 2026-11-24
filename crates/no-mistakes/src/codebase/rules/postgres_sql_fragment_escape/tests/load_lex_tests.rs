@@ -36,6 +36,32 @@ fn matching_parens_ignores_parens_inside_strings_comments_and_regexes() {
 }
 
 #[test]
+fn saved_slash_forms_pin_visible_call_parens() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/slash-lexing/slash-forms.js"
+    ));
+    let pairs = matching_parens(source);
+    let regex_call = source.find("record(/").expect("regex argument") + "record".len();
+    let regex_call_end = source.find("/g);").expect("regex closing slash") + "/g".len();
+    assert_eq!(pairs.get(&regex_call), Some(&regex_call_end));
+    for (marker, relative_close) in [
+        ("require(", None),
+        ("afterParen(", Some(1)),
+        ("afterBracket(", Some(1)),
+        ("afterBrace(", None),
+        ("afterIncrement(", None),
+    ] {
+        let open = source.find(marker).expect(marker) + marker.len() - 1;
+        assert_eq!(
+            pairs.get(&open).copied(),
+            relative_close.map(|relative| open + relative),
+            "{marker}"
+        );
+    }
+}
+
+#[test]
 fn unclosed_outer_paren_falls_back_to_depth_tracking() {
     let source = "outer(inner(1), require('./columns')";
     let mut ts = TsFileFacts::default();
