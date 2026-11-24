@@ -1,5 +1,10 @@
 pub use super::advisory_rules::ADVISORY_RULE_IDS;
 pub use super::filesystem_dispatch::github_actions_run_command_policy;
+pub mod github_actions_env_policy {
+    pub use super::super::github_actions_workflow_files::env_policy::{
+        diagnostics_with_files_and_sources, RULE_ID,
+    };
+}
 pub use super::filesystem_dispatch::{
     run_filesystem_rules, run_filesystem_rules_with_config,
     run_filesystem_rules_with_config_and_snapshot,

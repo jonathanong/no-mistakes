@@ -16,9 +16,11 @@ of a required name is not reported: the rule judges values that are written, so
 a step that never sets `BASH_ENV` stays silent.
 
 The policy applies to `env:` at workflow scope, job scope, step scope, and in
-steps under `runs.steps` of a composite action. A value written as `${{ }}` is
-compared as that text, so it is a mismatch unless the expression text equals the
-required value. Numbers and booleans compare as their string forms. A mapping
+steps under `runs.steps` of a composite action. A required value written as `${{ }}`
+cannot be judged statically, so it is never a required-value mismatch. The rule
+reports it as unanalyzable instead (see below). A forbidden name is still a
+finding when its value is an expression, because the name alone is the violation.
+Numbers and booleans compare as their string forms. A mapping
 or list value is a mismatch. Names that appear only inside a `run:` string, and
 names that are not configured, are never reported.
 
@@ -90,6 +92,8 @@ steps:
 that is a configuration error, as is a non-scalar required value. With both
 empty the rule reports nothing, so it is opt-in.
 
+`unanalyzable` defaults to `advise`.
+
 `include` defaults to `.github/workflows/**/*.yml`,
 `.github/workflows/**/*.yaml`, `.github/actions/**/action.yml`, and
 `.github/actions/**/action.yaml`. An explicit list replaces that default.
@@ -114,7 +118,17 @@ rules:
 ### Unanalyzable inputs
 
 Invalid YAML is skipped and produces no finding. A file that cannot be read is
-skipped. The checker does not evaluate `${{ }}` expressions.
+skipped. The checker does not evaluate `${{ }}` expressions: a required name whose
+value contains `${{` abstains from the mismatch check and records a diagnostic
+(for example `env: { BASH_ENV: ${{ vars.SHELL_INIT }} }` or
+`${{ matrix.init }}`). `options.unanalyzable` controls it (`advise | report |
+ignore`, default `advise`): `advise` records a non-failing advisory, `report`
+makes it a failing finding, and `ignore` drops it. Write the literal required
+value to have it verified, or suppress the line when the expression always
+resolves to it.
+
+A ` #` inside a quoted key or value is not treated as a comment when locating
+finding lines.
 
 ## Related rules
 

@@ -1,5 +1,6 @@
 use super::RuleFinding;
-use crate::config::v2::NoMistakesConfig;
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::{bail, Result};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -75,10 +76,34 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|output| output.findings)
+}
+
+fn resolve_unanalyzable(
+    config: &NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> Result<Unanalyzable> {
+    let explicit = rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some();
+    if explicit {
+        Ok(config.effective_rule_analysis(rule)?.unanalyzable)
+    } else {
+        Ok(Unanalyzable::Advise)
+    }
+}
+
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    let mut output = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let policy = compile(&opts)?;
+        let unanalyzable = resolve_unanalyzable(config, rule)?;
         if policy.required.is_empty() && policy.forbidden.is_empty() {
             continue;
         }
@@ -96,14 +121,26 @@ pub(crate) fn check_with_files_and_sources(
             opts.include.clone()
         };
         let files = super::super::matching_files(root, &include, &files, &roots)?;
-        let found: Vec<RuleFinding> = files
+        let chunks: Vec<AnalysisDiagnostics> = files
             .par_iter()
-            .flat_map(|path| scan::check_file(root, path, &policy, sources, defer_suppression))
+            .map(|path| {
+                scan::check_file(
+                    root,
+                    path,
+                    &policy,
+                    sources,
+                    defer_suppression,
+                    unanalyzable,
+                )
+            })
             .collect();
-        findings.extend(found);
+        for chunk in chunks {
+            output.append(chunk);
+        }
     }
-    super::super::sort_findings(&mut findings);
-    Ok(findings)
+    super::super::sort_findings(&mut output.findings);
+    super::super::sort_findings(&mut output.advisories);
+    Ok(output)
 }
 
 #[cfg(test)]

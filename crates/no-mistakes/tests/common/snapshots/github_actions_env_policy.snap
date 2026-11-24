@@ -47,10 +47,56 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "violations": {
+  "quoted-hash": {
     "exitCode": 1,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" sets forbidden env `A #1`. Remove `A #1` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "\"A #1\": x",
+          "target": "A #1"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" sets env `BASH_ENV` to `./init #2.sh`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: \"./init #2.sh\"",
+          "target": "BASH_ENV"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "violations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 15,
+          "message": ".github/workflows/ci.yml: job \"build\" step 2 sets env `BASH_ENV` to the expression `${{ vars.SHELL_INIT }}`, which cannot be checked statically. Write the literal `/dev/null` so the env policy can verify it, or suppress this line if the expression always resolves to it.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ${{ vars.SHELL_INIT }}",
+          "target": "BASH_ENV"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 30,
+          "message": ".github/workflows/ci.yml: job \"other\" step 2 sets env `BASH_ENV` to the expression `${{ matrix.init }}`, which cannot be checked statically. Write the literal `/dev/null` so the env policy can verify it, or suppress this line if the expression always resolves to it.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "BASH_ENV: ${{ matrix.init }}",
+          "target": "BASH_ENV"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -74,18 +120,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/ci.yml",
-          "line": 15,
-          "message": ".github/workflows/ci.yml: job \"build\" step 2 sets env `BASH_ENV` to `${{ vars.SHELL_INIT }}`. Set `BASH_ENV` to `/dev/null`. The env policy requires this value wherever it is set.",
-          "rule": "github-actions-env-policy",
-          "sourceLine": "BASH_ENV: ${{ vars.SHELL_INIT }}",
-          "target": "BASH_ENV"
-        },
-        {
-          "file": ".github/workflows/ci.yml",
           "line": 20,
           "message": ".github/workflows/ci.yml: job \"build\" step 3 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
           "rule": "github-actions-env-policy",
           "sourceLine": "NODE_OPTIONS: --trace-warnings",
+          "target": "NODE_OPTIONS"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 23,
+          "message": ".github/workflows/ci.yml: job \"build\" step 4 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: ${{ matrix.init }}",
           "target": "NODE_OPTIONS"
         },
         {

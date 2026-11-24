@@ -138,6 +138,8 @@
   "GithubActionsActionTimeoutPairOptions",
   "GithubActionsDownloadIntegrityOptions",
   "GithubActionsDownloadIntegritySkipAnnotationScope",
+  "GithubActionsEnvPolicyOptions",
+  "GithubActionsEnvPolicyValue",
   "GithubActionsNoPollWaitJobOptions",
   "GithubActionsPinnedHashOptions",
   "GithubActionsRunCommandArg",

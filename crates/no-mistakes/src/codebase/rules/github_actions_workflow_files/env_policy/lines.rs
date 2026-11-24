@@ -14,7 +14,7 @@ struct Line<'a> {
 fn flatten(source: &str) -> Vec<Line<'_>> {
     let mut out = Vec::new();
     for (index, raw) in source.lines().enumerate() {
-        let mut text = raw.split(" #").next().unwrap_or(raw).trim_end();
+        let mut text = strip_comment(raw).trim_end();
         let mut indent = raw.len() - raw.trim_start().len();
         text = text.trim_start();
         if text.is_empty() || text.starts_with('#') {
@@ -42,6 +42,28 @@ fn flatten(source: &str) -> Vec<Line<'_>> {
         }
     }
     out
+}
+
+// A ` #` starts a comment only outside single or double quotes.
+fn strip_comment(raw: &str) -> &str {
+    let mut quote = None;
+    let mut prev = ' ';
+    let mut escaped = false;
+    for (at, ch) in raw.char_indices() {
+        if std::mem::take(&mut escaped) {
+            prev = ch;
+            continue;
+        }
+        match (quote, ch) {
+            (Some('"'), '\\') => escaped = true,
+            (None, '"' | '\'') if prev == ' ' || prev == ':' || prev == '-' => quote = Some(ch),
+            (Some(open), _) if ch == open => quote = None,
+            (None, '#') if prev == ' ' => return &raw[..at - 1],
+            _ => {}
+        }
+        prev = ch;
+    }
+    raw
 }
 
 fn key_of(text: &str) -> Option<&str> {
