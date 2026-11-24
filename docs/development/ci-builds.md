@@ -48,9 +48,11 @@ The current validation graph is organized as follows:
   `check` on one saved fixture, and runs the explicit OS-dependent list in
   `.github/scripts/macos-smoke-tests.cjs`: the macOS invocation and global-lock
   harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
-  check invocation tests, and real-addon API tests for module loading,
-  `analyzeProject` on a saved fixture, TypeScript path resolution, the
-  cross-process lock, rename semantics, and diagnostics. The list is explicit,
+  check invocation tests, one `analyzeProject` call on a saved fixture through
+  the built addon, and real-addon API tests for the cross-process lock, rename
+  semantics, and diagnostics. The dependency-report API tests stay in the full
+  suite because their expected output depends on which test first sizes the
+  process Rayon pool. The list is explicit,
   not heuristic, and `macos-smoke-tests.test.cjs` fails when a listed file,
   test target or test name no longer exists. The job runs for every pull
   request whose Rust scope is not independent (`rust-pr-scope.cjs`); there is

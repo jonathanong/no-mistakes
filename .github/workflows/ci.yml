@@ -2432,6 +2432,10 @@ jobs:
         timeout-minutes: 2
         run: pnpm run build:js
 
+      - name: Run analyzeProject on a saved fixture
+        timeout-minutes: 2
+        run: node .github/scripts/macos-smoke.cjs napi target/debug/no-mistakes.node
+
       - name: Run N-API smoke tests
         timeout-minutes: 10
         run: node .github/scripts/macos-smoke.cjs api target/debug/no-mistakes.node

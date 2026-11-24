@@ -2,6 +2,7 @@
 // The full sharded macOS suite runs on main. See docs/development/ci-builds.md.
 
 const cliFixture = "fixtures/check/aggregate-agents-md-max-size";
+const napiFixture = "fixtures/napi/real-addon-dependencies";
 
 // Cargo integration-test targets or bin filters. `guards` pins test names or
 // modules inside `file` so a rename fails the guard test.
@@ -34,9 +35,6 @@ const api = [
   {
     file: "packages/no-mistakes/scripts/real-napi-api.test.js",
     names: [
-      "compiled async N-API dependencies API matches the CLI fixture contract",
-      "compiled dependencies APIs match TypeScript paths precedence",
-      "compiled dependencies compact projection matches standalone and batched analyzeProject",
       "compiled internal N-API lock serializes separate Node processes",
       "compiled internal N-API lock is released when a worker terminates",
       "compiled internal N-API rename preserves an existing destination and claims a vacant one",
@@ -50,4 +48,4 @@ const api = [
   },
 ];
 
-module.exports = { api, cliFixture, rust };
+module.exports = { api, cliFixture, napiFixture, rust };
