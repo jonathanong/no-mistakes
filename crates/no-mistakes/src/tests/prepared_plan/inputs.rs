@@ -31,13 +31,22 @@ impl PreparedTestPlanInputs {
             &root_visible_paths,
             &sources,
         )?;
-        let collected = collect_changed_files(&args, &root)?;
-        let changes_input = crate::tests::plan::changes::ChangesInput::load(
-            &root,
-            args.changes.as_deref(),
-            &config,
-            &sources,
+        let mut collected = collect_changed_files(&args, &root)?;
+        let mut changes_input = crate::tests::plan::changes::ChangesInput::load_from_parts(
+            &args, &root, &config, &sources,
         );
+        if let Some(input) = &mut changes_input {
+            if let Ok(report) = &input.report {
+                for path in &report.changed_files {
+                    if let Err(error) = collected.push_manual_path(Path::new(path), &root) {
+                        input.report = Err(format!(
+                            "Invalid changedFiles entry `{path}` in changes report: {error}"
+                        ));
+                        break;
+                    }
+                }
+            }
+        }
 
         Ok(Self {
             args,

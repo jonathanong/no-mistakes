@@ -34,6 +34,26 @@ pub(crate) struct ChangedFiles {
     pub diff_files: Vec<DiffFile>,
 }
 
+impl ChangedFiles {
+    pub(crate) fn push_manual_path(&mut self, path: &Path, root: &Path) -> Result<()> {
+        let (inventory_path, analysis_path) = resolve_manual_path(path, root)?;
+        push_unique(&mut self.inventory_files, inventory_path);
+        push_unique(&mut self.files, analysis_path.clone());
+        push_unique(&mut self.authoritative_files, analysis_path.clone());
+        push_unique(&mut self.manual_files, analysis_path.clone());
+        if !file_is_present(&analysis_path) {
+            push_unique(&mut self.deleted, analysis_path);
+        }
+        Ok(())
+    }
+}
+
+fn push_unique(list: &mut Vec<PathBuf>, path: PathBuf) {
+    if !list.contains(&path) {
+        list.push(path);
+    }
+}
+
 pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<ChangedFiles> {
     let mut files = Vec::new();
     let mut inventory_files = Vec::new();

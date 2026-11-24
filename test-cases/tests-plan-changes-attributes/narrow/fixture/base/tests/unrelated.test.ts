@@ -1,3 +1,4 @@
 import { expect, test } from "vitest";
+import { label } from "../src/label";
 
-test("default accent", () => expect("blue").toBe("blue"));
+test("default label", () => expect(label).toBe("synthetic"));

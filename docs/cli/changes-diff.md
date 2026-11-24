@@ -52,13 +52,14 @@ keyed arrays, Apple `.strings` (UTF-8 or BOM-marked UTF-16), and .NET `.resx`.
 The localization format is old-style `.strings`, not `.xcstrings`.
 
 Category `exclude` globs apply only to the category that declares them; another
-category whose `paths` match the same path still classifies and diffs it. Only
-files matched by at least one category's `paths` (and not excluded by that
-category) are reported; files matched by no category (such as ordinary source
-files, which `tests plan` routes via `--changed-file` and the import graph) are
-left out. A changed file that a category's `paths` match but no rule in it can
-classify (such as a changed symbolic link matching a `keysOf` category) appears
-in `unclassified`. Unreadable roots or matched files, malformed
+category whose `paths` match the same path still classifies and diffs it. A
+changed file matched by at least one category's `paths` that every matching
+category excludes, or that no rule in a matching category can classify (such as
+a changed symbolic link matching a `keysOf` category), appears in
+`unclassified`. Changed files matched by no category's `paths` (such as ordinary
+source files) are recorded in `changedFiles` (omitted when empty) so
+`tests plan --changes` can route them through the import graph on its own
+without requiring `--changed-file` or `--base`. Unreadable roots or matched files, malformed
 structured files, and unsupported entries produce `complete: false` with
 `reasons`. An unreadable root still produces valid report JSON and exits 1.
 Symbolic links compare by link target, as git does, and are never followed:

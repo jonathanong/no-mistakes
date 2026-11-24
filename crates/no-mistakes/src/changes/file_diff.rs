@@ -10,6 +10,7 @@ use std::sync::Arc;
 pub(super) struct FileDiff<'a> {
     pub categories: Vec<(&'a str, Observation)>,
     pub unclassified: Option<String>,
+    pub changed_file: Option<String>,
     pub reasons: Vec<String>,
     pub deferred: Vec<(&'a str, String)>,
 }
@@ -23,15 +24,32 @@ pub(super) fn compare<'a>(
     if !base.knows(path) || !head.knows(path) {
         return None;
     }
-    let matches: Vec<_> = rules
-        .selectors
-        .matches(path)
-        .into_iter()
-        .map(|index| &rules.rules[index])
+    let selector_matches = rules.selectors.matches(path);
+    let matches: Vec<_> = selector_matches
+        .iter()
+        .map(|&index| &rules.rules[index])
         .filter(|rule| !rule.is_excluded(path, &rules.excludes))
         .collect();
     if matches.is_empty() {
-        return None;
+        let excluded_by_category = !selector_matches.is_empty();
+        return match base.is_unchanged(path, head) {
+            Ok(true) => None,
+            Ok(false) => Some(if excluded_by_category {
+                FileDiff {
+                    unclassified: Some(path.to_owned()),
+                    ..FileDiff::default()
+                }
+            } else {
+                FileDiff {
+                    changed_file: Some(path.to_owned()),
+                    ..FileDiff::default()
+                }
+            }),
+            Err(reason) => Some(FileDiff {
+                reasons: vec![reason],
+                ..FileDiff::default()
+            }),
+        };
     }
     match compare_readable(path, base, head, rules, &matches) {
         Ok(diff) => diff,

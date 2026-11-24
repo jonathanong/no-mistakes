@@ -27,13 +27,13 @@ pub(crate) struct ChangesInput {
 }
 
 impl ChangesInput {
-    pub(crate) fn load(
+    pub(crate) fn load_from_parts(
+        args: &super::PlanArgs,
         root: &Path,
-        report_path: Option<&Path>,
         config: &NoMistakesConfig,
         sources: &SourceStore,
     ) -> Option<Self> {
-        let path = no_mistakes::config::resolve(root, report_path?);
+        let path = no_mistakes::config::resolve(root, args.changes.as_ref()?);
         let file = relative_path(root, &path);
         let report = sources
             .read_path(&path)
@@ -55,14 +55,15 @@ impl ChangesInput {
     }
 
     pub(crate) fn fixture_reads(&self) -> Option<&Arc<FixtureReadIndex>> {
-        self.fixture_reads.as_ref()
+        self.fixture_reads.as_ref().filter(|_| self.report.is_ok())
     }
 
     pub(super) fn has_work(&self) -> bool {
         self.report.as_ref().map_or(true, |report| {
-            report.categories.values().any(|ids| {
-                !(ids.changed.is_empty() && ids.added.is_empty() && ids.removed.is_empty())
-            })
+            !report.changed_files.is_empty()
+                || report.categories.values().any(|ids| {
+                    !(ids.changed.is_empty() && ids.added.is_empty() && ids.removed.is_empty())
+                })
         })
     }
 }
@@ -98,6 +99,54 @@ fn validate_report(
         return Err(format!("Changes report uses undeclared category `{name}`"));
     }
     Ok(report)
+}
+
+pub(super) fn unplanned_changed_file_reason(
+    prepared: &PreparedTestPlanRequest,
+    framework: Option<TestFramework>,
+    warnings: &[Warning],
+) -> Option<String> {
+    let config_fallback = match framework {
+        Some(fw) => prepared.framework_config_trigger(fw).or_else(|| {
+            super::global_config::excluding_v2_config(
+                &prepared.root,
+                &prepared.collected.files,
+                Some(fw),
+                prepared,
+            )
+        }),
+        None => super::global_config::global_config_trigger(
+            &prepared.root,
+            &prepared.collected.files,
+            None,
+            prepared,
+        ),
+    };
+    if let Some((reason, _)) = config_fallback {
+        return Some(reason);
+    }
+    if let Some(deleted) = prepared.collected.deleted.first() {
+        return Some(format!(
+            "Deleted file in changes report: {}",
+            relative_path(&prepared.root, deleted)
+        ));
+    }
+    warnings.iter().find_map(|warning| {
+        matches!(
+            warning.r#type.as_str(),
+            "fallback-warning"
+                | "deleted-file"
+                | "lockfile-no-baseline"
+                | "lockfile-binary-unsupported"
+                | "lockfile-pnpm-unmodeled-installation-section"
+                | "package-manifest-no-baseline"
+                | "package-dependency-untraceable"
+                | "dotnet-dependency-no-baseline"
+                | "swift-manifest-no-baseline"
+                | "swift-resolved-no-baseline"
+        )
+        .then(|| warning.message.clone())
+    })
 }
 
 pub(super) fn apply_union(

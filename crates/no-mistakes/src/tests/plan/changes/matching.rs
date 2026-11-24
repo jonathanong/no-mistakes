@@ -18,10 +18,10 @@ impl<'a> CategoryMatches<'a> {
         prepared: &PreparedTestPlanRequest,
         discovered: &'a DiscoveredTests,
         name: &str,
-        category: &ChangeCategory,
         ids: &BTreeSet<&'a str>,
         attributes: Option<(&FixtureReadIndex, &BTreeMap<String, Vec<String>>)>,
     ) -> Result<Self, String> {
+        let category = &prepared.config.changes.categories[name];
         let mut builder = GlobSetBuilder::new();
         for pattern in &category.tests {
             builder.add(

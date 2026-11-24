@@ -61,5 +61,9 @@ expression: "serde_json::to_string_pretty(report).unwrap()"
     ]
   },
   "unclassified": [],
+  "changedFiles": [
+    ".notice",
+    "ignored/data.txt"
+  ],
   "complete": true
 }

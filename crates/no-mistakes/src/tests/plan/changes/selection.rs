@@ -34,11 +34,9 @@ impl Selection<'_> {
             .as_ref()
             .map_or(TestFramework::value_variants(), std::slice::from_ref);
         for (name, changes) in &report.categories {
-            let ids = changes
-                .changed
-                .iter()
-                .chain(&changes.added)
-                .chain(&changes.removed)
+            let ids = [&changes.changed, &changes.added, &changes.removed]
+                .into_iter()
+                .flatten()
                 .map(String::as_str)
                 .collect::<BTreeSet<_>>();
             if ids.is_empty() {
@@ -49,14 +47,9 @@ impl Selection<'_> {
                 .input
                 .fixture_reads()
                 .map(|index| (index.as_ref(), &changes.attribute_paths));
-            match CategoryMatches::find(
-                self.prepared,
-                self.discovered,
-                name,
-                category,
-                &ids,
-                attributes,
-            ) {
+            let matches =
+                CategoryMatches::find(self.prepared, self.discovered, name, &ids, attributes);
+            match matches {
                 Ok(matched) => {
                     for (path, ids) in matched.tests {
                         self.select(
@@ -83,6 +76,13 @@ impl Selection<'_> {
                     }
                 }
                 Err(error) => self.fallback(error, None),
+            }
+        }
+        if !report.changed_files.is_empty() && !self.plan.fallback_triggered {
+            if let Some(reason) =
+                unplanned_changed_file_reason(self.prepared, framework, &self.plan.warnings)
+            {
+                self.fallback(reason, None);
             }
         }
     }
