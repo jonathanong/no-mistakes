@@ -353,7 +353,11 @@ writes. The runner does not regenerate them. LLM graders go to
 `claude-opus-5-5`, the judge pinned in `scripts/run-evals.sh`, with each
 grader's markdown body and the attempt's final message. `skill-fired` stays a
 tool check. The primary measure is that trigger rate on each arm. The content
-score is a regression check through `summarize.py`.
+score is a regression check through `summarize.py`. The Codex wrapper sends
+the rubric and answer as separate JSON fields in one prompt and accepts one
+JSON object with a boolean `passed`, directly or in the Claude CLI's
+`result` wrapper. The Claude eval runner uses its own judge prompt wrapper,
+so treat the content scores as runner-specific.
 
 Preview, then a scoped paid run. The preview makes no model call. `--run`
 without `--tag`, `--case`, or `--all` is refused. So is a run with no
@@ -394,7 +398,11 @@ empty for these cases. A fixture copy drops `AGENTS.md`, `CLAUDE.md`, and any
 file whose name or contents mention the rules. The exec flags
 (`--ephemeral`, `--ignore-rules`, sandbox, model, timeout, prompt) are the
 same on both arms. `--ephemeral` still skips Codex's own rollout store. The
-runner copies stdout itself.
+runner copies stdout itself. Read-only restricts writes. Both arms can still
+read files that the host user can read, including the repository and the
+attempt's copied credential file. The transcript audit is a static check
+of visible operands, redirections, and working directories. Run paid evals
+on a host with only the data the agent can be allowed to see.
 
 Before the first paid attempt, the runner builds one throwaway home per arm
 and runs `codex plugin list --json` in each. The with arm must list only
@@ -409,8 +417,12 @@ exec` returns, including a timeout, the runner writes `transcript.jsonl` and
 `transcript.interrupted-<n>.jsonl`) and does not mark the attempt complete.
 `aggregate-result.json` is rewritten after every attempt with `partial: true`
 until the selected attempts have `result.json`. Run the same command again to
-resume. A finished `result.json` is skipped. A saved `exec.json` plus
-transcript is graded and not exec'd again.
+resume. `run-inputs.json` holds a SHA-256 fingerprint of the plugin files, agent
+and judge settings, selected prompts and grader files, timeouts, and effective
+run counts. A different fingerprint or missing fingerprint on an existing run
+requires a fresh output directory for paid execution. Regrading works on
+legacy transcripts. Resume reuses the saved `exec.json`, transcript, final
+message, and any completed verdicts when grading is incomplete.
 
 `skill-fired` counts a `command_execution` only when `item.completed` says
 `status: completed` and `exit_code: 0`, and a reader in that command opens
@@ -422,12 +434,15 @@ pipeline does not stick). A parenthesized subshell such as
 closing parenthesis. The readers are `cat`, `sed`, `head`, `tail`,
 `less`, `more`, `nl`, `awk`, `rg`, `grep`, `bat`, and `python` or `node` when
 the command opens that file, including the `bash -lc` form Codex puts around
-a shell command. `rg` and `grep` count a file argument, not the search
-pattern and not a directory scan. `find <skill-dir> -name SKILL.md -exec cat {} +`
+a shell command. Python heredocs count literal file reads in `open()` or
+`Path().read_text()` and `Path().read_bytes()`. Globbed paths count when the
+literal skill name and the pattern resolve to a path in the saved plugin
+roots. Directory scans with `rg` count a skill when the output identifies
+its file under an explicit search directory. Search patterns and
+`rg --files` results do not count on their own. `find <skill-dir> -name SKILL.md -exec cat {} +`
 counts, and so does `-execdir`, when that command is a reader. `ls`, `stat`,
-`echo`, a `find` that does not run a reader, a path that only appears in
-message text or `aggregated_output`, a non-zero exit, and an `item.started`
-event do not count. The plan stores the attempt root, plugin root, marketplace
+`echo`, a `find` that does not run a reader, a path mentioned in message
+text, a non-zero exit, and an `item.started` event do not count. The plan stores the attempt root, plugin root, marketplace
 root, and cwd in canonical form. Regrade matches a transcript path against the
 saved form or the canonical form, including after the attempt directory is
 deleted. A path outside the attempt does not count.
@@ -437,16 +452,21 @@ transcript has not been graded, so the first pilot should confirm this shape
 against the saved JSONL before a trigger rate is quoted.
 
 `python3 evals/codex_rules.py --regrade --output <dir>` recomputes
-`skill-fired` from the saved transcripts and rewrites `result.json` and
-`aggregate-result.json`. It does not exec and it does not call the judge, so
-a detector fix does not need a new paid run. Other graders and run-level
-errors stay as they were. An attempt that has a transcript but no
-`result.json` is left unfinished, and the aggregate stays partial.
+`skill-fired` and reruns the isolation audit on the saved transcripts. It
+rewrites `result.json` and `aggregate-result.json` without model calls. A
+transcript without `result.json` stays unfinished.
 
-A judge failure sets `error` on that LLM grader and does not set a run-level
-`error`, so the `skill-fired` result remains. `summarize.py` still treats a
-grader without `passed` as a content miss. An exec failure is a run-level
-`error` and is not retried once `result.json` exists.
+The runner records each audit finding as a completed-command index and a
+reason, with details in the original transcript. An audit flag makes the
+attempt unavailable for scoring. New flagged attempts withhold LLM judging.
+Review the saved transcript for context. The audit covers recognized paths
+only and can miss host reads.
+
+A judge failure sets `error` on the LLM grader and increments
+`judgeErrorCount` for the attempt and suite. The report stays partial and
+`summarize.py` leaves affected content scores blank. Trigger observations
+remain available for unflagged attempts. Resume retries only missing
+verdicts using saved exec data. Exec failures remain attempt-level errors.
 
 The report is `aggregate-result.json` with `suite.ablation` set to
 `codex-with-without` and arm keys `with` and `without`. `costUsd` is 0.
