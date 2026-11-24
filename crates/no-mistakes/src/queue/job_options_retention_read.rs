@@ -1,8 +1,9 @@
 use super::super::extract_model::{RetentionEvidence, RetentionValue};
 use super::super::object_bindings::ObjectBindings;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::config::v2::schema::JobRetentionKey;
 use crate::fx::FxHashSet;
-use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, UnaryOperator};
+use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 
 pub(in crate::queue) fn from_expr(
     expr: &Expression<'_>,
@@ -54,10 +55,14 @@ fn read_object_retention(
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
-                match crate::ast::property_key_name(&property.key) {
-                    Some(name) if name == "removeOnComplete" || name == "removeOnFail" => {
+                match crate::ast::property_key_name(&property.key).as_deref() {
+                    Some("removeOnComplete") => {
                         let value = classify_value(&property.value, bindings, active);
-                        out.set_by_name(&name, value);
+                        out.set(JobRetentionKey::RemoveOnComplete, value);
+                    }
+                    Some("removeOnFail") => {
+                        let value = classify_value(&property.value, bindings, active);
+                        out.set(JobRetentionKey::RemoveOnFail, value);
                     }
                     Some(_) => {}
                     None => out.invalidate_unset(),
@@ -85,23 +90,7 @@ fn classify_value(
                 RetentionValue::Unbounded
             }
         }
-        Expression::NumericLiteral(literal) => {
-            if literal.value.is_finite() && literal.value >= 0.0 {
-                RetentionValue::Bounded
-            } else {
-                RetentionValue::Unknown
-            }
-        }
-        Expression::UnaryExpression(unary) if unary.operator == UnaryOperator::UnaryPlus => {
-            match unwrap_ts_wrappers(&unary.argument) {
-                Expression::NumericLiteral(literal)
-                    if literal.value.is_finite() && literal.value >= 0.0 =>
-                {
-                    RetentionValue::Bounded
-                }
-                _ => RetentionValue::Unknown,
-            }
-        }
+        Expression::NumericLiteral(_) => RetentionValue::Bounded,
         Expression::ObjectExpression(object) => classify_keep_object(object, bindings, active),
         Expression::Identifier(id) => with_const_init(id, bindings, active, classify_value),
         _ => RetentionValue::Unknown,

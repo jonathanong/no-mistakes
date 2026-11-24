@@ -25,11 +25,10 @@ impl RetentionEvidence {
         }
     }
 
-    pub(crate) fn set_by_name(&mut self, name: &str, value: RetentionValue) {
-        match name {
-            "removeOnComplete" => self.remove_on_complete = Some(value),
-            "removeOnFail" => self.remove_on_fail = Some(value),
-            _ => {}
+    pub(crate) fn set(&mut self, key: JobRetentionKey, value: RetentionValue) {
+        match key {
+            JobRetentionKey::RemoveOnComplete => self.remove_on_complete = Some(value),
+            JobRetentionKey::RemoveOnFail => self.remove_on_fail = Some(value),
         }
     }
 

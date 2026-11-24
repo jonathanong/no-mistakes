@@ -78,23 +78,48 @@ fn job_state_as_record_config_round_trip_and_validation() {
     let disabled: NoMistakesConfig =
         serde_yaml::from_str("version: 2\nqueues:\n  jobStateAsRecord: false\n").unwrap();
     assert!(disabled.queues.job_state_as_record.is_none());
+    let null_cfg: NoMistakesConfig =
+        serde_yaml::from_str("version: 2\nqueues:\n  jobStateAsRecord: null\n").unwrap();
+    assert!(null_cfg.queues.job_state_as_record.is_none());
     assert!(!serde_yaml::to_string(&NoMistakesConfig::default())
         .unwrap()
         .contains("jobStateAsRecord"));
+    assert!(enabled
+        .queues
+        .job_state_as_record
+        .as_ref()
+        .unwrap()
+        .allow_globset()
+        .is_none());
 
     let custom: NoMistakesConfig = serde_yaml::from_str(
         "version: 2\nqueues:\n  jobStateAsRecord:\n    allowPaths: ['apps/admin/**']\n",
     )
     .unwrap();
-    assert_eq!(
-        custom.queues.job_state_as_record.unwrap().allow_paths,
-        vec!["apps/admin/**".to_string()]
-    );
+    let cfg = custom.queues.job_state_as_record.as_ref().unwrap();
+    assert_eq!(cfg.allow_paths, vec!["apps/admin/**".to_string()]);
+    assert!(cfg.allow_globset().is_some());
+    let serialized = serde_yaml::to_string(&custom).unwrap();
+    assert!(serialized.contains("apps/admin/**"));
 
     assert!(serde_yaml::from_str::<NoMistakesConfig>(
         "version: 2\nqueues:\n  jobStateAsRecord:\n    allowPaths: ['[unclosed']\n",
     )
     .is_err());
+    assert!(JobStateAsRecordConfig {
+        allow_paths: vec!["[unclosed".to_string()],
+    }
+    .allow_globset()
+    .is_some());
+
+    #[derive(serde::Serialize)]
+    struct NoneWrap {
+        #[serde(
+            serialize_with = "crate::config::v2::schema::queues_job_state::serialize_job_state_as_record"
+        )]
+        v: Option<JobStateAsRecordConfig>,
+    }
+    assert!(serde_yaml::to_string(&NoneWrap { v: None }).is_ok());
 }
 
 fn source_line(root: &Path, file: &str, line: usize) -> String {

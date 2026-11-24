@@ -81,17 +81,31 @@ fn unbounded_job_retention_config_round_trip_and_validation() {
     let disabled: NoMistakesConfig =
         serde_yaml::from_str("version: 2\nqueues:\n  unboundedJobRetention: false\n").unwrap();
     assert!(disabled.queues.unbounded_job_retention.is_none());
+    let null_cfg: NoMistakesConfig =
+        serde_yaml::from_str("version: 2\nqueues:\n  unboundedJobRetention: null\n").unwrap();
+    assert!(null_cfg.queues.unbounded_job_retention.is_none());
     assert!(!serde_yaml::to_string(&NoMistakesConfig::default())
         .unwrap()
         .contains("unboundedJobRetention"));
+    assert!(enabled
+        .queues
+        .unbounded_job_retention
+        .as_ref()
+        .unwrap()
+        .allow_globset()
+        .is_none());
 
     let custom: NoMistakesConfig = serde_yaml::from_str(
-        "version: 2\nqueues:\n  unboundedJobRetention:\n    require: [removeOnFail]\n    allowPaths: ['scripts/**']\n",
+        "version: 2\nqueues:\n  unboundedJobRetention:\n    require: [removeOnFail, removeOnFail]\n    allowPaths: ['scripts/**']\n",
     )
     .unwrap();
     let cfg = custom.queues.unbounded_job_retention.as_ref().unwrap();
     assert_eq!(cfg.require, vec![JobRetentionKey::RemoveOnFail]);
     assert_eq!(cfg.allow_paths, vec!["scripts/**".to_string()]);
+    assert!(cfg.allow_globset().is_some());
+    let serialized = serde_yaml::to_string(&custom).unwrap();
+    assert!(serialized.contains("removeOnFail"));
+    assert!(serialized.contains("scripts/**"));
 
     assert!(serde_yaml::from_str::<NoMistakesConfig>(
         "version: 2\nqueues:\n  unboundedJobRetention:\n    require: [bogus]\n",
@@ -101,6 +115,35 @@ fn unbounded_job_retention_config_round_trip_and_validation() {
         "version: 2\nqueues:\n  unboundedJobRetention:\n    allowPaths: ['[unclosed']\n",
     )
     .is_err());
+    assert!(UnboundedJobRetentionConfig {
+        require: Vec::new(),
+        allow_paths: vec!["[unclosed".to_string()],
+    }
+    .allow_globset()
+    .is_some());
+
+    #[derive(serde::Serialize)]
+    struct NoneWrap {
+        #[serde(
+            serialize_with = "crate::config::v2::schema::queues_retention::serialize_unbounded_retention"
+        )]
+        v: Option<UnboundedJobRetentionConfig>,
+    }
+    assert!(serde_yaml::to_string(&NoneWrap { v: None }).is_ok());
+
+    let mut ev = crate::queue::extract_model::RetentionEvidence::default();
+    ev.absorb(
+        &crate::queue::extract_model::RetentionEvidence::default(),
+        true,
+    );
+    assert_eq!(
+        ev.get(JobRetentionKey::RemoveOnComplete),
+        Some(crate::queue::extract_model::RetentionValue::Unknown)
+    );
+    assert_eq!(
+        ev.get(JobRetentionKey::RemoveOnFail),
+        Some(crate::queue::extract_model::RetentionValue::Unknown)
+    );
 }
 
 fn source_line(root: &Path, file: &str, line: usize) -> String {

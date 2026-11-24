@@ -1,9 +1,8 @@
 use super::super::extract_model::{
-    FileFacts, JobOptionFinding, JobOptionSite, LocalQueue, RetentionValue,
-    UnboundedRetentionPolicy,
+    FileFacts, JobOptionFinding, JobOptionSite, RetentionValue, UnboundedRetentionPolicy,
 };
 use super::super::source::relative_string;
-use super::defaults::DefaultsIndex;
+use super::defaults::{resolved_default_queue_name, DefaultsIndex};
 use crate::config::v2::schema::JobRetentionKey;
 use globset::GlobSet;
 use std::path::{Path, PathBuf};
@@ -25,13 +24,7 @@ pub(super) fn judge_file_defaults(
     }
     let mut out = Vec::new();
     for defaults in &file.queue_defaults {
-        let queue_name = defaults.queue_name.clone().or_else(|| {
-            let LocalQueue::Known(name) = file.queue_declarations.get(&defaults.declaration)?
-            else {
-                return None;
-            };
-            Some(name.clone())
-        });
+        let queue_name = resolved_default_queue_name(file, defaults);
         let false_keys = policy
             .require
             .iter()

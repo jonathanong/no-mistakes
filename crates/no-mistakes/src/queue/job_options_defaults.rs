@@ -122,19 +122,24 @@ impl DefaultsIndex {
     }
 }
 
+pub(super) fn resolved_default_queue_name(
+    file: &FileFacts,
+    defaults: &super::super::extract_model::QueueDefaultOptions,
+) -> Option<String> {
+    defaults.queue_name.clone().or_else(|| {
+        let LocalQueue::Known(name) = file.queue_declarations.get(&defaults.declaration)? else {
+            return None;
+        };
+        Some(name.clone())
+    })
+}
+
 pub(super) fn index_defaults(facts: &HashMap<PathBuf, FileFacts>) -> DefaultsIndex {
     let mut by_file_queue: HashMap<(PathBuf, String), IndexedDefaults> = HashMap::new();
     let mut by_declaration: HashMap<(PathBuf, u32), JobOptionEvidence> = HashMap::new();
     for (path, file) in facts {
         for defaults in &file.queue_defaults {
-            let name = defaults.queue_name.clone().or_else(|| {
-                let LocalQueue::Known(name) = file.queue_declarations.get(&defaults.declaration)?
-                else {
-                    return None;
-                };
-                Some(name.clone())
-            });
-            let Some(name) = name else {
+            let Some(name) = resolved_default_queue_name(file, defaults) else {
                 continue;
             };
             by_declaration.insert(

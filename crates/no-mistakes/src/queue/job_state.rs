@@ -88,11 +88,12 @@ pub(in crate::queue) fn resolve_sites<R: ImportResolverFacade>(
         }
     }
     for (path, index, queue) in resolved {
-        if let Some(file) = facts.get_mut(&path) {
-            let site = &mut file.job_state_sites[index];
-            site.queue_file = Some(queue.queue_file);
-            site.queue_name = Some(queue.queue_name);
-        }
+        let site = &mut facts
+            .get_mut(&path)
+            .expect("resolved path came from facts")
+            .job_state_sites[index];
+        site.queue_file = Some(queue.queue_file);
+        site.queue_name = Some(queue.queue_name);
     }
 }
 

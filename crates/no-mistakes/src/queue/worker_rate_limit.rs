@@ -88,6 +88,7 @@ fn finding(root: &Path, path: &Path, line: usize, worker: Option<&InternalWorker
         queue_name,
         job: None,
         message,
+        severity: None,
     }
 }
 

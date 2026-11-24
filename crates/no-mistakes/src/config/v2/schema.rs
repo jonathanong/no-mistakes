@@ -107,9 +107,9 @@ pub struct ReactTraitsConfig {
 }
 
 #[path = "schema/queues_job_state.rs"]
-mod queues_job_state;
+pub(crate) mod queues_job_state;
 #[path = "schema/queues_retention.rs"]
-mod queues_retention;
+pub(crate) mod queues_retention;
 #[path = "schema/queues_top.rs"]
 mod queues_top;
 pub use queues_job_state::JobStateAsRecordConfig;

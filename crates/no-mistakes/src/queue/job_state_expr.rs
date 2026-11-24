@@ -40,12 +40,6 @@ pub(super) fn call_member<'a>(
         Expression::StaticMemberExpression(member) => {
             Some((&member.object, member.property.name.as_str()))
         }
-        Expression::ChainExpression(chain) => match &chain.expression {
-            ChainElement::StaticMemberExpression(member) => {
-                Some((&member.object, member.property.name.as_str()))
-            }
-            _ => None,
-        },
         _ => None,
     }
 }

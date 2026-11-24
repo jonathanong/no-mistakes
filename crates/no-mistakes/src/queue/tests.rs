@@ -492,10 +492,9 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
     );
 }
 
-mod projection;
-
 mod enqueue_wrapper_exports;
 mod job_options_followups;
 mod job_retention;
 mod job_state;
+mod projection;
 mod workspace_exports;

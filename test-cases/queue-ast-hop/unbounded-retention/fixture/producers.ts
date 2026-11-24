@@ -74,3 +74,6 @@ bare.add(
   {},
   { removeOnComplete: { ...keepBounded }, removeOnFail: { ...extraOpts } },
 );
+
+// Abstained: ambiguous defaults across two queue definitions with the same name.
+flow.add({ name: "dup-flow", queueName: "dupQueue", data: {}, opts: { attempts: 3 } });
