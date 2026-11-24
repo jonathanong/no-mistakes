@@ -26,11 +26,10 @@ permissions:
   contents: read
   actions: read
 
-# PRs share a group per PR so superseded runs are cancelled. Every main push gets
-# its own group (per SHA): GitHub replaces an older *pending* run in a shared
-# group even with cancel-in-progress false, which dropped coverage uploads for
-# middle commits when several merges landed together. Linux jobs and coverage
-# stay on that per-commit group.
+# PRs share a group per PR so superseded runs are cancelled. Other events group
+# by ref and never cancel a started run: a main run that has started completes,
+# and GitHub keeps only the newest waiting main run, so commits pushed in
+# between get no Test CI run.
 # macOS jobs add a job-level group. A push to main shares
 # ci-macos-main-<job>-all for each build and ci-macos-main-<job>-<shard> for
 # each test shard, with cancel-in-progress false: a newer main push drops the
@@ -39,7 +38,7 @@ permissions:
 # dispatch, and other branches use a per-run slot, so they never join
 # ci-macos-main.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:

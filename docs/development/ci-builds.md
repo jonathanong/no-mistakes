@@ -120,8 +120,8 @@ The current validation graph is organized as follows:
   `cancel-in-progress` stays false, so the running job finishes and a newer
   main push drops only the older pending job in that slot. Pull requests,
   manual dispatch, and other branches use a per-run group and do not join
-  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` stay
-  on the workflow's per-commit group. The group names use the literal job id.
+  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` use
+  the workflow's per-ref group. The group names use the literal job id.
   `Native tests` accepts a cancelled macOS job only for a push to `main`.
   A superseded build is cancelled before its test job starts, so that test job
   is skipped; `Native tests` accepts that skip only when the producer was
@@ -1124,9 +1124,10 @@ including passing and suppressed controls. All six cases still run in the
 real-addon suite under the same 5,000 ms gate; no exemption or retry is added.
 
 Test CI cancels superseded in-progress runs only for pull requests. An active
-main run can finish and upload Rust coverage when another merge lands. GitHub's
-default concurrency queue can still replace an older pending main run before
-its jobs start.
+main run always finishes and uploads Rust coverage when another merge lands.
+The workflow group is keyed by ref outside pull requests, so a new main run
+waits for the one in progress, and GitHub keeps only the newest waiting run: a
+commit superseded while waiting gets no Test CI run.
 
 Rust coverage floors use one `cargo llvm-cov report --json --summary-only`
 export and [a totals checker](../../.github/scripts/rust-coverage-floors.cjs).
