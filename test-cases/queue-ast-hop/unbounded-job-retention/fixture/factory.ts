@@ -7,3 +7,5 @@ export function makeQueue(name: string, options?: object) {
 export function submitJob(queue: Queue, name: string, data: object, options: object) {
   return queue.add(name, data, options);
 }
+
+export const runtimeQueueName = ["dynamic"].join("");

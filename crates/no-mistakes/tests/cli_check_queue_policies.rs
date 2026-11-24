@@ -59,7 +59,7 @@ fn queue_policies_fixture_corpora_check_json_snapshot() {
             .filter(|finding| finding["kind"] == kind)
             .count()
     };
-    assert_eq!(found("job-state", "queue-job-state-as-record"), 6);
+    assert_eq!(found("job-state", "queue-job-state-as-record"), 8);
     assert!(found("retention", "unbounded-job-retention") > 1);
 }
 

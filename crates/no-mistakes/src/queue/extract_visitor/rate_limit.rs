@@ -133,21 +133,16 @@ impl QueueVisitor<'_> {
         let state = &mut self.shared_rate_limit;
         while state
             .wrappers
-            .last()
-            .is_some_and(|(wrapper, _)| wrapper.end < span.start)
-        {
-            state.wrappers.pop();
-        }
-        if state
+            .pop_if(|(wrapper, _)| wrapper.end < span.start)
+            .is_some()
+        {}
+        if let Some((_, owner)) = state
             .wrappers
-            .last()
-            .is_some_and(|(wrapper, _)| wrapper.start <= span.start && span.end <= wrapper.end)
+            .pop_if(|(wrapper, _)| wrapper.start <= span.start && span.end <= wrapper.end)
         {
-            if let Some((_, owner)) = state.wrappers.pop() {
-                state
-                    .processors
-                    .push((Processor::Inline(span.start), owner));
-            }
+            state
+                .processors
+                .push((Processor::Inline(span.start), owner));
         }
         self.note_worker_parameters(span.start, parameters);
     }

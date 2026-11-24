@@ -59,11 +59,24 @@ fn queue_retention_reports_each_proven_unbounded_key_once() {
             ),
             ("produce.ts", Some("bounded"), Some("suppressed"), FAIL),
             ("produce.ts", Some("bounded"), Some("unbounded-last"), FAIL),
+            (
+                "produce.ts",
+                Some("bounded"),
+                Some("unbounded-retention-spread"),
+                FAIL
+            ),
             ("produce.ts", Some("partial"), Some("missing-fail"), FAIL),
             (
                 "produce.ts",
                 Some("shared"),
                 Some("unbounded-same-name"),
+                FAIL
+            ),
+            ("queues.ts", None, None, FAIL),
+            (
+                "queues.ts",
+                Some("duplicate"),
+                Some("conflicting-defaults"),
                 FAIL
             ),
             ("queues.ts", Some("factory"), None, COMPLETE),

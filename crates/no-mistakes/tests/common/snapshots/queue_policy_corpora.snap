@@ -74,6 +74,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "queueName": null,
           "severity": "advisory",
           "sourceLine": "if ((await job?.getState()) === 'failed') await job.retry()"
+        },
+        {
+          "file": "recovery.ts",
+          "job": null,
+          "kind": "queue-job-state-as-record",
+          "line": 10,
+          "message": "`add()` depends on retained queue job state. Decide what work is pending from a durable record, then enqueue it.",
+          "queueFile": null,
+          "queueName": null,
+          "severity": "advisory",
+          "sourceLine": "await repairs.add('restore', { id })"
+        },
+        {
+          "file": "recovery.ts",
+          "job": null,
+          "kind": "queue-job-state-as-record",
+          "line": 17,
+          "message": "`addBulk()` depends on retained queue job state. Decide what work is pending from a durable record, then enqueue it.",
+          "queueFile": null,
+          "queueName": null,
+          "severity": "advisory",
+          "sourceLine": "await repairs.addBulk([...baseJobs, { name: job.name, data }])"
         }
       ],
       "react": [],
@@ -200,6 +222,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "produce.ts",
+          "job": "unbounded-retention-spread",
+          "kind": "unbounded-job-retention",
+          "line": 56,
+          "message": "job retention is unbounded for removeOnFail. Set a count or age limit.",
+          "queueFile": "queues.ts",
+          "queueName": "bounded",
+          "sourceLine": "bounded.add(\"unbounded-retention-spread\", {}, { removeOnFail: { ...{ limit: 10 } } });"
+        },
+        {
+          "file": "produce.ts",
           "job": "unbounded-same-name",
           "kind": "unbounded-job-retention",
           "line": 17,
@@ -210,6 +242,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "queues.ts",
+          "job": "conflicting-defaults",
+          "kind": "unbounded-job-retention",
+          "line": 32,
+          "message": "job retention is unbounded for removeOnFail. Set a count or age limit.",
+          "queueFile": "queues.ts",
+          "queueName": "duplicate",
+          "sourceLine": "duplicateWithoutDefaults.add(\"conflicting-defaults\", {});"
+        },
+        {
+          "file": "queues.ts",
           "job": null,
           "kind": "unbounded-job-retention",
           "line": 19,
@@ -217,6 +259,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "queueFile": "queues.ts",
           "queueName": "factory",
           "sourceLine": "export const factory = makeQueue(\"factory\", { ...config });"
+        },
+        {
+          "file": "queues.ts",
+          "job": null,
+          "kind": "unbounded-job-retention",
+          "line": 34,
+          "message": "job retention is unbounded for removeOnFail. Set a count or age limit.",
+          "queueFile": "queues.ts",
+          "queueName": null,
+          "sourceLine": "export const runtimeQueue = makeQueue(runtimeQueueName, {"
         },
         {
           "file": "queues.ts",

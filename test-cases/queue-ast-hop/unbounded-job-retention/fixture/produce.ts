@@ -52,3 +52,12 @@ bounded.add("suppressed", {}, { removeOnFail: false });
 
 declare const schedulerArgs: [string, object];
 bounded.upsertJobScheduler(...schedulerArgs, {}, { opts: { removeOnFail: false } });
+
+bounded.add("unbounded-retention-spread", {}, { removeOnFail: { ...{ limit: 10 } } });
+bounded.add("bounded-retention-spread", {}, { removeOnFail: { ...{ count: 10 } } });
+bounded.add("opaque-retention-spread", {}, { removeOnFail: { ...getOptions() } });
+declare const boundName: string;
+bounded.add("computed-retention-bound", {}, { removeOnFail: { [boundName]: 10 } });
+bounded.add("retention-getter", {}, {
+  get removeOnFail() { return getRetention(); },
+});

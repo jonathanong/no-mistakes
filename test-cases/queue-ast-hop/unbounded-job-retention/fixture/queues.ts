@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { makeQueue } from "./factory";
+import { makeQueue, runtimeQueueName } from "./factory";
 
 export const blank = new Queue("blank");
 export const bounded = new Queue("bounded", {
@@ -24,3 +24,13 @@ export const shared = new Queue("shared", {
 
 declare const queueArgs: [string, object];
 const shiftedConstructor = new Queue(...queueArgs, { defaultJobOptions: { removeOnFail: false } });
+
+export const duplicateWithBounds = new Queue("duplicate", {
+  defaultJobOptions: { removeOnComplete: true },
+});
+export const duplicateWithoutDefaults = new Queue("duplicate");
+duplicateWithoutDefaults.add("conflicting-defaults", {});
+
+export const runtimeQueue = makeQueue(runtimeQueueName, {
+  defaultJobOptions: { removeOnFail: false },
+});
