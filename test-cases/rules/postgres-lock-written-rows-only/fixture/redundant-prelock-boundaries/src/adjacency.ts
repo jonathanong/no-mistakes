@@ -47,3 +47,11 @@ export async function adjacentWriteInDifferentTransaction(id: number) {
   await lockQuery(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
   await writeQuery(`UPDATE jobs SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
 }
+
+export async function writeAfterEarlierInitializer(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  const current = await query(`SELECT state FROM jobs WHERE id = $1`, [id]),
+    changed = await query(`UPDATE jobs SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
+  return [current, changed];
+}

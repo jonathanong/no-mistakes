@@ -31,26 +31,25 @@ pub(super) fn check_file(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    let rel = relative_slash_path(root, path);
     let Some(source) = super::super::read_language_source(sources, path) else {
         return Vec::new();
     };
-    let mut findings = check_source(&rel, &source, opts, true);
+    if !defer_suppression
+        && sources
+            .suppressions_for_path(path)
+            .is_some_and(|index| index.matching(RULE_ID, None, true).is_some())
+    {
+        return Vec::new();
+    }
+    let rel = relative_slash_path(root, path);
+    let mut findings = check_source(&rel, &source, opts);
     if !defer_suppression {
         super::super::suppress_rule_findings_for_path(sources, path, &mut findings);
     }
     findings
 }
 
-pub(super) fn check_source(
-    rel: &str,
-    source: &str,
-    opts: &CompiledOptions,
-    defer_suppression: bool,
-) -> Vec<RuleFinding> {
-    if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(source, RULE_ID) {
-        return Vec::new();
-    }
+pub(super) fn check_source(rel: &str, source: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     let mut used_allow = BTreeSet::new();
     let line_starts: Vec<usize> = std::iter::once(0)
@@ -88,9 +87,6 @@ pub(super) fn check_source(
         findings.extend(line_findings(rel, line_no, text, opts, &mut used_allow));
     }
     findings.extend(stale_allow_findings(rel, opts, &used_allow));
-    if !defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, source);
-    }
     findings
 }
 

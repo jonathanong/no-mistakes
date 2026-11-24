@@ -219,7 +219,7 @@ fn postgres_lock_written_rows_redundant_prelock_boundaries_check_json_snapshot()
             "redundant-prelock",
             Some("src/adjacency.ts")
         ),
-        [5]
+        [5, 18]
     );
     assert_eq!(
         lines_in_file(
@@ -232,7 +232,7 @@ fn postgres_lock_written_rows_redundant_prelock_boundaries_check_json_snapshot()
     );
     assert_eq!(
         lines(advise, "advisories", "redundant-prelock"),
-        [5, 19, 27]
+        [5, 18, 19, 27]
     );
     assert_eq!(
         lines_in_file(
@@ -241,7 +241,7 @@ fn postgres_lock_written_rows_redundant_prelock_boundaries_check_json_snapshot()
             "unanalyzable",
             Some("src/unsupported-sql.ts")
         ),
-        [5, 11, 17, 23, 35, 47, 53]
+        [5, 11, 17, 23, 35, 47, 53, 71]
     );
 }
 

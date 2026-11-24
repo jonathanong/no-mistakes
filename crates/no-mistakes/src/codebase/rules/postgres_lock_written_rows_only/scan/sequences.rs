@@ -40,7 +40,10 @@ fn redundant_prelocks(
     let later_access = std::cell::OnceCell::new();
     let writes: BTreeMap<_, _> = candidates
         .clone()
-        .filter(|(_, facts)| !facts.lock_writes.conditional_write_keys.is_empty())
+        .filter(|(_, facts)| {
+            !facts.lock_writes.conditional_write_keys.is_empty()
+                || facts.lock_writes.multi_row_upsert_keys.is_some()
+        })
         .map(|(call, facts)| (call.execution_range.0, (call, &facts.lock_writes)))
         .collect();
     for (call, facts) in candidates {
@@ -61,6 +64,22 @@ fn redundant_prelocks(
         let lock_tx = ordered_transaction(call, unresolved);
         let write_tx = ordered_transaction(write_call, unresolved);
         if matches!((lock_tx, write_tx), (Some(left), Some(right)) if left != right) {
+            continue;
+        }
+        if let Some(keys) = &write_facts.multi_row_upsert_keys {
+            let same_transaction = lock_tx.is_some() && lock_tx == write_tx;
+            if same_transaction && facts.lock_writes.prelock.as_ref().is_some_and(|(lock, _)| {
+                rows::stable_prelock_key(lock, call) && keys.iter().any(|write| {
+                    relations::same(lock.relation.as_deref(), write.relation.as_deref()) == Some(true)
+                        && rows::stable_prelock_key(write, write_call)
+                        && rows::compare_keys(lock, call, write, write_call) == Some(true)
+                })
+            }) {
+                output.unresolved(
+                    &site,
+                    "the following multi-row upsert can affect the locked key; cannot prove the pre-lock is redundant",
+                );
+            }
             continue;
         }
         let Some((lock, only)) = &facts.lock_writes.prelock else {
