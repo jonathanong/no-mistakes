@@ -1,4 +1,4 @@
-<!-- cspell:ignore ccore nohup XGET -->
+<!-- cspell:ignore ccore nohup pwsh XGET -->
 
 # `github-actions-run-command-policy`
 
@@ -57,10 +57,11 @@ unterminated quote, expansion, or here-document—it abstains from reporting a
 policy violation and records a diagnostic instead. By default that diagnostic is
 a non-failing advisory (`options.unanalyzable: advise`). A variable-prefixed
 path whose final path segment is a literal matching no configured policy
-`command[0]` and not a shell wrapper (`bash`, `sh`, `zsh`), such as
-`$GITHUB_ACTION_PATH/build-images.sh --tag "$TAG"`, abstains silently without
-emitting an advisory; any command substitutions inside its arguments are still
-inspected.
+`command[0]` and not a known shell (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`,
+`pwsh`) or wrapper command (`env`, `sudo`, `xargs`, `nohup`, `time`, `exec`,
+`command`), such as `$GITHUB_ACTION_PATH/build-images.sh --tag "$TAG"`, abstains
+silently without emitting an advisory; any command substitutions inside its
+arguments are still inspected.
 
 ## Options and defaults
 
@@ -193,15 +194,18 @@ steps:
 - Invalid YAML is skipped without findings.
 - Dynamic command names (`$CMD ...`, `"$CMD" ...`, `${{ inputs.cmd }} ...`,
   `$DIR/$TOOL ...`, or a variable-prefixed path whose literal final segment
-  matches a configured policy `command[0]` or a shell wrapper),
+  matches a configured policy `command[0]`, a known shell such as `sh`/`bash`/
+  `zsh`/`dash`/`ksh`/`fish`/`pwsh`, or a wrapper command such as `env`/`sudo`/
+  `xargs`/`nohup`/`time`/`exec`/`command`),
   `eval`, dynamic `bash -c` / `sh -c` scripts, dynamic subcommands on a
   configured base command, unquoted word-splitting expansions on a matching
   command whose required arguments are absent, and unterminated quotes,
   expansions, or here-documents abstain from policy failure and emit a
   diagnostic governed by `options.unanalyzable` (default `advise`).
 - Variable-prefixed script paths whose final path segment is a literal matching
-  no configured policy `command[0]` (for example
-  `$GITHUB_ACTION_PATH/build-images.sh`) abstain silently with no advisory.
+  no configured policy `command[0]`, known shell, or wrapper command (for
+  example `$GITHUB_ACTION_PATH/build-images.sh`) abstain silently with no
+  advisory.
 
 ## Related rules
 

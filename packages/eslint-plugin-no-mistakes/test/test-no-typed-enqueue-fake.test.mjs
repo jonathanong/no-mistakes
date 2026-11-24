@@ -14,6 +14,7 @@ import { __dirname, fixture } from "./helpers.mjs";
 const rule = "test-no-typed-enqueue-fake";
 const file = "typed-fakes.test.ts";
 const extendedFile = "extended-forms.test.ts";
+const moduleMockedFile = "module-mocked.test.ts";
 const singleExportPattern = "^enqueue[A-Z]";
 const moduleGlobs = ["./que*"];
 const scoped = { singleExportPattern, moduleGlobs };
@@ -61,6 +62,11 @@ it("snapshots typed enqueue fake diagnostics", async () => {
       options: scoped,
       file: extendedFile,
     },
+    {
+      name: "reports vi.mocked after vi.mock of the same module",
+      options: scoped,
+      file: moduleMockedFile,
+    },
   ].map((item) => ({
     ...item,
     rule,
@@ -84,6 +90,7 @@ it("snapshots typed enqueue fake diagnostics", async () => {
   expect(cases[5].findings.map(({ line }) => line)).toEqual([
     9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
   ]);
+  expect(cases[6].findings.map(({ line }) => line)).toEqual([8]);
   expect(preV6Findings).toEqual(cases[5].findings);
   await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
     "snapshots/test-no-typed-enqueue-fake.snap",
@@ -110,6 +117,7 @@ it("reports the same saved cases through Oxlint", () => {
       "json",
       resolve(root, file),
       resolve(root, extendedFile),
+      resolve(root, moduleMockedFile),
       resolve(root, "suppressed.test.ts"),
     ],
     { cwd: repo, encoding: "utf8", timeout: 4_000 },
@@ -125,4 +133,5 @@ it("reports the same saved cases through Oxlint", () => {
   expect(byFile(extendedFile)).toEqual(
     [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map((line) => [`no-mistakes(${rule})`, line]),
   );
+  expect(byFile(moduleMockedFile)).toEqual([[`no-mistakes(${rule})`, 8]]);
 });

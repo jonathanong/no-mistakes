@@ -16,3 +16,9 @@ jobs:
         run: $GITHUB_ACTION_PATH/build-images.sh --tag "$TAG"
       - name: Variable-prefixed dynamic command segment
         run: $GITHUB_ACTION_PATH/$TOOL --flag
+      - name: Variable-prefixed env wrapper
+        run: $BIN/env gh api -f x=1 repos/my-org/my-repo/labels
+      - name: Variable-prefixed sudo wrapper
+        run: $BIN/sudo gh api -f x=1 repos/my-org/my-repo/labels
+      - name: Variable-prefixed dash -c shell
+        run: $BIN/dash -c "gh api -f x=1 repos/my-org/my-repo/labels"

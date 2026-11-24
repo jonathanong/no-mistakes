@@ -228,7 +228,7 @@ fn standalone_and_diagnostics_entrypoints_match_saved_fixtures() {
     )
     .unwrap();
     assert!(diag.findings.is_empty());
-    assert_eq!(diag.advisories.len(), 5);
+    assert_eq!(diag.advisories.len(), 8);
 }
 
 #[test]
@@ -250,6 +250,16 @@ fn abstains_on_literal_script_paths_not_matching_any_policy_command() {
     for script in [
         r#"$BIN_DIR/gh api -f x=1 repos/my-org/my-repo/labels"#,
         r#"$BIN_DIR/bash -c "$SCRIPT""#,
+        r#"$BIN_DIR/dash -c "gh api -f x=1 repos/my-org/my-repo/labels""#,
+        r#"$BIN_DIR/ksh -c "gh api -f x=1 repos/my-org/my-repo/labels""#,
+        r#"$BIN_DIR/fish -c "gh api -f x=1 repos/my-org/my-repo/labels""#,
+        r#"$BIN_DIR/pwsh -c "gh api -f x=1 repos/my-org/my-repo/labels""#,
+        r#"$BIN_DIR/env gh api -f x=1 repos/my-org/my-repo/labels"#,
+        r#"$BIN_DIR/sudo gh api -f x=1 repos/my-org/my-repo/labels"#,
+        r#"$BIN_DIR/xargs gh api -f x=1 repos/my-org/my-repo/labels"#,
+        r#"$BIN_DIR/nohup gh api -f x=1 repos/my-org/my-repo/labels"#,
+        r#"$BIN_DIR/time gh api -f x=1 repos/my-org/my-repo/labels"#,
+        r#"$BIN_DIR/exec gh api -f x=1 repos/my-org/my-repo/labels"#,
         r#"$GITHUB_ACTION_PATH/$TOOL --flag"#,
         r#"$GITHUB_ACTION_PATH/run-${TOOL}.sh"#,
         r#"${TOOL} --flag"#,

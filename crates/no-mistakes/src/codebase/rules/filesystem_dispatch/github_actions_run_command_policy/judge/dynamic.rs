@@ -1,10 +1,15 @@
 use super::super::options::CompiledOptions;
 
+const WRAPPERS_AND_SHELLS: &[&str] = &[
+    "bash", "sh", "zsh", "dash", "ksh", "fish", "pwsh", "env", "sudo", "xargs", "nohup", "time",
+    "exec", "command",
+];
+
 pub(super) fn abstains_on_literal_script_path(text: &str, compiled: &CompiledOptions) -> bool {
     let Some(segment) = literal_final_path_segment(text) else {
         return false;
     };
-    !matches!(segment, "bash" | "sh" | "zsh")
+    !WRAPPERS_AND_SHELLS.contains(&segment)
         && !compiled
             .commands
             .iter()

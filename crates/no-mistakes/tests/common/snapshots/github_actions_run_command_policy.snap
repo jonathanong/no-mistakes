@@ -133,6 +133,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/dynamic.yml",
+          "line": 20,
+          "message": ".github/workflows/dynamic.yml:20: job `dynamic` step 7 invokes dynamic command `$BIN/env`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $BIN/env gh api -f x=1 repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 22,
+          "message": ".github/workflows/dynamic.yml:22: job `dynamic` step 8 invokes dynamic command `$BIN/sudo`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $BIN/sudo gh api -f x=1 repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 24,
+          "message": ".github/workflows/dynamic.yml:24: job `dynamic` step 9 invokes dynamic command `$BIN/dash`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $BIN/dash -c \"gh api -f x=1 repos/my-org/my-repo/labels\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
           "line": 8,
           "message": ".github/workflows/dynamic.yml:8: job `dynamic` step 1 invokes dynamic command `$CMD`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
           "rule": "github-actions-run-command-policy",
@@ -199,6 +223,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/dynamic.yml:18: job `dynamic` step 6 invokes dynamic command `$GITHUB_ACTION_PATH/$TOOL`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
           "rule": "github-actions-run-command-policy",
           "sourceLine": "run: $GITHUB_ACTION_PATH/$TOOL --flag",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 20,
+          "message": ".github/workflows/dynamic.yml:20: job `dynamic` step 7 invokes dynamic command `$BIN/env`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $BIN/env gh api -f x=1 repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 22,
+          "message": ".github/workflows/dynamic.yml:22: job `dynamic` step 8 invokes dynamic command `$BIN/sudo`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $BIN/sudo gh api -f x=1 repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 24,
+          "message": ".github/workflows/dynamic.yml:24: job `dynamic` step 9 invokes dynamic command `$BIN/dash`, which cannot be statically checked against configured command policies. Call the command directly with a literal name.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: $BIN/dash -c \"gh api -f x=1 repos/my-org/my-repo/labels\"",
           "target": "unanalyzable"
         },
         {

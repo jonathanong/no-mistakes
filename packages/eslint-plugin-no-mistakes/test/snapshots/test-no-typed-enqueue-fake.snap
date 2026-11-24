@@ -164,6 +164,30 @@
     "rule": "test-no-typed-enqueue-fake"
   },
   {
+    "file": "module-mocked.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 8,
+        "file": "module-mocked.test.ts",
+        "line": 8,
+        "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+        "messageId": "typedEnqueueFake",
+        "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+        "severity": 2
+      }
+    ],
+    "name": "reports vi.mocked after vi.mock of the same module",
+    "options": {
+      "moduleGlobs": [
+        "./que*"
+      ],
+      "singleExportPattern": "^enqueue[A-Z]"
+    },
+    "rule": "test-no-typed-enqueue-fake"
+  },
+  {
     "file": "typed-fakes.test.ts",
     "findings": [
       {
