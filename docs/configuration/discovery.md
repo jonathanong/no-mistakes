@@ -34,6 +34,9 @@ ignored, untracked fragments do not contribute to the merged config.
 If multiple files with the same discovered stem exist under `--root`, loading
 fails so agents do not guess which config is authoritative.
 
+The same [rule effort policy](README.md) applies to options in a fragment or
+an explicitly selected configuration file.
+
 ## Git visibility
 
 Automatic file discovery uses Git's visible file set: tracked files plus

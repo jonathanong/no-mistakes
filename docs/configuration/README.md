@@ -59,10 +59,14 @@ The `effects` map declares named effect families for the
 `<kind>` maps category labels to the function/constructor names that belong to
 them.
 
-`effort` sets the repository default for rules that support effort selection;
-it defaults to `max`, which preserves their current analysis. A rule's
-`options.effort` overrides the repository value, and a check invocation's
-`effort` overrides both. `unanalyzable` sets the repository policy for inputs a
+`effort` sets the repository default and defaults to `max`. Every rule accepts
+`options.effort: low` or `options.effort: max`. Other values are configuration
+errors. A rule's option overrides the repository value, and a check
+invocation's `effort` overrides both. Single-mode rules run their sole analysis
+at either setting. The check report warns when `low` was requested and the
+rule runs at `max`.
+
+`unanalyzable` sets the repository policy for inputs a
 rule cannot analyze (`report`, `advise`, or `ignore`); a rule's
 `options.unanalyzable` overrides it. Any explicit `unanalyzable` or
 `unanalyzableSql` value, on the repository or on a rule, replaces the schema
@@ -84,8 +88,7 @@ that historically ignored this per-rule payload continue to ignore it for
 compatibility.
 [`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) always
 reports incomplete SQL and uses a single analysis mode. Omit per-rule
-`effort`, `unanalyzable`, and `unanalyzableSql` for this rule.
-Rules that do not implement low effort continue to use their maximum analysis.
+`unanalyzable` and `unanalyzableSql` for this rule.
 When a low-effort rule requires a partner check that is missing or outside its
 configured scope, `check` warns and runs that rule at `max`.
 For example, [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md#effort)

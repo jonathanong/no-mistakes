@@ -60,9 +60,9 @@ Executor selection uses the standard PostgreSQL options, including
 Configured `.query()` calls inside transaction callbacks are included.
 Reassigning `.query` leaves an unresolved site instead of a counted lock.
 
-The inventory has one analysis mode and always reports incomplete SQL. Omit
-`effort`, `unanalyzable`, and `unanalyzableSql` from its rule options. Shared
-analysis defaults can still configure other PostgreSQL rules.
+The inventory uses its sole analysis mode at either [effort
+setting](../configuration/README.md) and always reports incomplete SQL. Omit
+`unanalyzable` and `unanalyzableSql` from its rule options.
 
 The baseline is compared with an empty inventory when it is missing, so every
 current site is reported as added. With a baseline, newly added sites are
