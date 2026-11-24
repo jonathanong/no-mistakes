@@ -1,12 +1,12 @@
 use super::lex::{assignment, command_words, identifier, Word};
 
-pub(super) struct Targets<'a> {
-    pub names: Vec<&'a str>,
+pub(super) struct Targets {
+    pub names: Vec<String>,
     pub keep: bool,
 }
 
 // `read -a` and `mapfile`/`readarray` fill an array from input that may be empty.
-pub(super) fn targets<'a>(words: &[Word<'a>]) -> Option<Targets<'a>> {
+pub(super) fn targets(words: &[Word<'_>]) -> Option<Targets> {
     let mut command = command_words(words).skip_while(|word| assignment(word.raw).is_some());
     let mapfile = match command.next()?.raw {
         "read" => false,
@@ -41,6 +41,42 @@ pub(super) fn targets<'a>(words: &[Word<'a>]) -> Option<Targets<'a>> {
     if mapfile {
         names = vec![positional.first().copied().unwrap_or("MAPFILE")];
     }
-    names.retain(|name| identifier(name));
+    let names = names.into_iter().filter_map(decode_target).collect();
     Some(Targets { names, keep })
+}
+
+#[derive(Clone, Copy)]
+enum Quote {
+    Single,
+    Double,
+}
+
+fn decode_target(raw: &str) -> Option<String> {
+    let mut out = String::with_capacity(raw.len());
+    let mut chars = raw.chars();
+    let mut quote = None;
+    while let Some(ch) = chars.next() {
+        match (quote, ch) {
+            (Some(Quote::Single), '\'') | (Some(Quote::Double), '"') => quote = None,
+            (Some(Quote::Double), '\\') => {
+                let next = chars.next()?;
+                if matches!(next, '$' | '`' | '"' | '\\') {
+                    out.push(next);
+                } else if next != '\n' {
+                    out.push('\\');
+                    out.push(next);
+                }
+            }
+            (None, '\'') => quote = Some(Quote::Single),
+            (None, '"') => quote = Some(Quote::Double),
+            (None, '\\') => {
+                let next = chars.next()?;
+                if next != '\n' {
+                    out.push(next);
+                }
+            }
+            _ => out.push(ch),
+        }
+    }
+    (quote.is_none() && identifier(&out)).then_some(out)
 }

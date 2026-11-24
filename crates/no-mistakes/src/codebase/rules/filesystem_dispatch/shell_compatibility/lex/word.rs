@@ -108,7 +108,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    // A double-quoted expansion is one word unless it splices `$@` or `${name[@]}`.
+    // A double-quoted expansion is one word unless it splices `$@`, `${name[@]}` or `${!prefix@}`.
     fn expansion(&mut self, word: &mut Word<'a>, double_quoted: bool) {
         word.dynamic |= !double_quoted || self.rest().starts_with("$@");
         if let Some(end) = self.take_expansion_start() {
@@ -116,7 +116,9 @@ impl<'a> Lexer<'a> {
             let line = self.line;
             if self.skip_group(end) && end == b'}' && double_quoted {
                 let body = &self.source[start..self.offset - 1];
-                word.dynamic |= body.starts_with('@') || body.contains("[@]");
+                word.dynamic |= body.starts_with('@')
+                    || body.contains("[@]")
+                    || (body.starts_with('!') && body.ends_with('@'));
                 if let Some(name) = body
                     .strip_suffix("[@]")
                     .or_else(|| body.strip_suffix("[*]"))

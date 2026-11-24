@@ -24,3 +24,16 @@ IFS=',' read -r first _ <<< "$1"
 echo "$first"
 mapfile -t -- dashed < "$1"
 for d in "${dashed[@]}"; do echo "$d"; done
+prefixed=("${!NM_UNUSED_PREFIX_@}")
+for v in "${prefixed[@]}"; do echo "$v"; done
+quoted=(stable)
+read -ra "quoted" <<< ""
+for q in "${quoted[@]}"; do echo "$q"; done
+mapfile -t 'mapped' < "$1"
+for k in "${mapped[@]}"; do echo "$k"; done
+kept=(stable)
+read -ra "$1" <<< ""
+read -ra "ke\pt" <<< ""
+for x in "${kept[@]}"; do echo "$x"; done
+read -ra es\caped <<< ""
+for e in "${escaped[@]}"; do echo "$e"; done

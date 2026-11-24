@@ -34,7 +34,7 @@ initializer, or a direct scalar or indexed write to a known array establishes a
 nonempty array. An element cannot vanish when it is a literal or a
 double-quoted expansion such as `"$selected"`, because a quoted word is always
 one word, even with `nullglob`. An unquoted glob, an unquoted expansion, and
-`"$@"` or `"${name[@]}"` can produce zero words, so a list made only of those
+`"$@"`, `"${name[@]}"`, or `"${!prefix@}"` can produce zero words, so a list made only of those
 may be empty. `read -a` and `read -ra` targets, and `mapfile` and `readarray`
 targets, are tracked as possibly empty arrays because the input can be empty.
 `mapfile -O` keeps the elements the array already had. Replacing it with a list that may be empty or using `unset` on the

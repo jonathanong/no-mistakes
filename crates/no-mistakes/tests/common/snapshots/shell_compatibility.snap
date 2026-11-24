@@ -213,6 +213,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "legacy/reads.sh",
+          "line": 28,
+          "message": "Array `prefixed` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${prefixed[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for v in \"${prefixed[@]}\"; do echo \"$v\"; done",
+          "target": "prefixed"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 31,
+          "message": "Array `quoted` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${quoted[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for q in \"${quoted[@]}\"; do echo \"$q\"; done",
+          "target": "quoted"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 33,
+          "message": "Array `mapped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${mapped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for k in \"${mapped[@]}\"; do echo \"$k\"; done",
+          "target": "mapped"
+        },
+        {
+          "file": "legacy/reads.sh",
+          "line": 39,
+          "message": "Array `escaped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${escaped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "for e in \"${escaped[@]}\"; do echo \"$e\"; done",
+          "target": "escaped"
+        },
+        {
+          "file": "legacy/reads.sh",
           "line": 8,
           "message": "Array `globs` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${globs[@]+...} to guard it and keep the original array selector.",
           "rule": "bash-empty-array-nounset",

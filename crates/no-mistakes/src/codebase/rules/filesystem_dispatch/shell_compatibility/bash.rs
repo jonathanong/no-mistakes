@@ -15,7 +15,7 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
                 words
                     .iter()
                     .flat_map(|word| word.refs.iter().copied())
-                    .filter(|(name, _)| arrays.get(name) == Some(&false)),
+                    .filter(|(name, _)| arrays.get(*name) == Some(&false)),
             );
         }
         if let Some(read) = targets(words) {
@@ -47,7 +47,7 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
                 command.next_if(|word| word.raw == "--");
                 for word in command {
                     if array && identifier(word.raw) {
-                        arrays.entry(word.raw).or_insert(false);
+                        arrays.entry(word.raw.to_string()).or_insert(false);
                     }
                     if let Some(assignment) = array_assignment(word.raw) {
                         remember_array(&mut arrays, word, assignment, array);
@@ -68,16 +68,16 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
 }
 
 fn remember_array<'a>(
-    arrays: &mut FxHashMap<&'a str, bool>,
+    arrays: &mut FxHashMap<String, bool>,
     word: &Word<'a>,
     (name, append): (&'a str, bool),
     declared: bool,
 ) {
     if let Some(literal) = word.array_literal {
-        let nonempty = arrays.entry(name).or_default();
+        let nonempty = arrays.entry(name.to_string()).or_default();
         *nonempty = literal || (append && *nonempty);
     } else if declared {
-        arrays.insert(name, true);
+        arrays.insert(name.to_string(), true);
     } else if let Some(nonempty) = arrays.get_mut(name) {
         *nonempty = true;
     }
@@ -100,7 +100,7 @@ fn indexed_name(word: &str) -> Option<&str> {
 
 fn forget_unset<'w, 'a: 'w>(
     words: impl Iterator<Item = &'w Word<'a>>,
-    arrays: &mut FxHashMap<&str, bool>,
+    arrays: &mut FxHashMap<String, bool>,
 ) {
     let mut operands = words
         .filter_map(|word| {
