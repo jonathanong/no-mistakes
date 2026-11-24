@@ -42,7 +42,37 @@ In a workflow triggered by `merge_group`, it reports a step that reads
 variable matches the full name in `$NAME` or `${NAME}` and is reported on the
 effective `env` entry. Step entries take precedence over job entries, which
 take precedence over workflow entries. A step or job whose `if` mentions
-`github.event_name` is treated as guarded and is not reported.
+`github.event_name` is treated as guarded and is not reported. A single
+expression may join the corresponding pull-request and merge-group base SHAs,
+or the corresponding head SHAs, with `||`. The fallback covers the
+merge-group read. The rule still checks the diff form on pull-request runs.
+
+The rule also recognizes a shell step that starts with a simple `if` comparing
+a quoted event-name variable to `pull_request`, `pull_request_target`, or
+`merge_group`. The variable's effective `env` value must be
+`${{ github.event_name }}`. The rule skips environment reads in the branch
+that `merge_group` cannot reach and checks reads in the rest of the script.
+Compound tests and nested control flow fall outside this recognition.
+
+```yaml
+- env:
+    EVENT_NAME: ${{ github.event_name }}
+    PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+  run: |
+    if [ "$EVENT_NAME" = "pull_request" ]; then
+      base="$PR_BASE_SHA"
+    else
+      base="$MERGE_GROUP_BASE_SHA"
+    fi
+    echo "$base"
+```
+
+The equivalent base-SHA fallback fits in a single environment entry.
+
+```yaml
+BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+```
 
 A range end is recognized when it is the expression itself, optionally behind
 `origin/`, or a `$NAME` / `${NAME}` variable that a workflow, job, or step

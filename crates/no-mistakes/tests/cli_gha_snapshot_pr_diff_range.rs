@@ -4,15 +4,21 @@ const RULE: &str = "github-actions-pr-diff-range";
 
 #[test]
 fn github_actions_pr_diff_range_json_matches_snapshot() {
-    let cases: Vec<_> = ["report", "pass", "suppression", "env-and-heredoc"]
-        .into_iter()
-        .map(|name| {
-            (
-                name,
-                rules_path(RULE, "fixture", name),
-                rules_path(RULE, "configs", "report.yml"),
-            )
-        })
-        .collect();
+    let cases: Vec<_> = [
+        "report",
+        "pass",
+        "suppression",
+        "env-and-heredoc",
+        "event-fallbacks",
+    ]
+    .into_iter()
+    .map(|name| {
+        (
+            name,
+            rules_path(RULE, "fixture", name),
+            rules_path(RULE, "configs", "report.yml"),
+        )
+    })
+    .collect();
     assert_saved_fixture("github_actions_pr_diff_range", &cases);
 }

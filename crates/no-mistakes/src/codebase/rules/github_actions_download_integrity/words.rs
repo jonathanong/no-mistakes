@@ -13,7 +13,7 @@ pub(in crate::codebase::rules) struct Word {
 
 pub(in crate::codebase::rules) struct Command {
     // The preceding separator's character offset plus one, or zero at script start.
-    pub(super) anchor: usize,
+    pub(in crate::codebase::rules) anchor: usize,
     pub(in crate::codebase::rules) dynamic: bool,
     pub(in crate::codebase::rules) words: Vec<Word>,
 }

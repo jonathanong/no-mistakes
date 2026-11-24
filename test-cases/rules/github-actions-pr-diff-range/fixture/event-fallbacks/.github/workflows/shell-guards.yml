@@ -1,0 +1,74 @@
+name: Shell ranges
+on: [pull_request, merge_group]
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    env:
+      EVENT_NAME: ${{ github.event_name }}
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+    steps:
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then base="$PR_BASE_SHA"; else base="$MERGE_GROUP_BASE_SHA"; fi
+          echo "$base"
+      - run: echo "$PR_BASE_SHA" "$MERGE_GROUP_BASE_SHA"
+      - run: |
+          if [ "${EVENT_NAME}" = "merge_group" ]; then
+            base="$MERGE_GROUP_BASE_SHA"
+          else
+            base="$PR_BASE_SHA"
+          fi
+          echo "$base" "$PR_BASE_SHA"
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ] || true; then base="$PR_BASE_SHA"; else base="$MERGE_GROUP_BASE_SHA"; fi
+          echo "$base"
+      - run: |
+          if [ '$EVENT_NAME' = 'pull_request' ]; then base="$MERGE_GROUP_BASE_SHA"; else base="$PR_BASE_SHA"; fi
+          echo "$base"
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then base="$MERGE_GROUP_BASE_SHA"; else base="$PR_BASE_SHA"; fi
+          echo "$base"
+      - run: |
+          if [ "$EVENT_NAME" = "merge_group" ]; then
+            base="$MERGE_GROUP_BASE_SHA"
+          else
+            base="$PR_BASE_SHA"
+          fi
+          echo "$base"
+      - env:
+          EVENT_NAME: pull_request
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then base="$PR_BASE_SHA"; else base="$MERGE_GROUP_BASE_SHA"; fi
+          echo "$base"
+      - run: |
+          if [[ "$EVENT_NAME" != "merge_group" ]]; then echo "$PR_BASE_SHA"; fi; echo done
+      - run: |
+          if [ "$EVENT_NAME" = "merge_group" ] > /path-that-does-not-exist/output; then
+            base="$MERGE_GROUP_BASE_SHA"
+          else
+            base="$PR_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "$MERGE_GROUP_BASE_SHA"
+            if :; then base="$PR_BASE_SHA"; fi
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          if [ "$EVENT_NAME" = "merge_group" ]; then echo "$MERGE_GROUP_BASE_SHA"; fi
+          echo "$PR_BASE_SHA"
+      - run: |
+          if [ "$EVENT_NAME" = "push" ]; then echo "$MERGE_GROUP_BASE_SHA"; else echo "$PR_BASE_SHA"; fi
+      - run: |
+          if [ -n "$EVENT_NAME" ]; then echo "$PR_BASE_SHA"; else echo "$MERGE_GROUP_BASE_SHA"; fi
+      - run: |
+          if [ "$EVENT_NAME" = "merge_group" ]; then
+            ! if false; then
+              echo "$MERGE_GROUP_BASE_SHA"
+            else
+              echo "$PR_BASE_SHA"
+            fi
+          fi

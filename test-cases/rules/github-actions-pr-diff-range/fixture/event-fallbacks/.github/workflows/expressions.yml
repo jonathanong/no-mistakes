@@ -1,0 +1,22 @@
+name: Expression ranges
+on: [pull_request, merge_group]
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+        run: git diff --name-only "$BASE_SHA...$HEAD_SHA"
+      - env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: echo "$BASE_SHA"
+      - env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.head_sha }}
+        run: echo "$BASE_SHA"
+      - env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+        run: git diff --name-only "$BASE_SHA" "$HEAD_SHA"
+      - run: echo '${{ github.event.merge_group.head_sha || github.event.pull_request.head.sha }}'
+      - run: echo '${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}' '${{ github.event.pull_request.head.sha }}'
