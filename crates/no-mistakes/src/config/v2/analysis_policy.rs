@@ -1,5 +1,6 @@
 use super::{schema::RuleDef, NoMistakesConfig};
 use anyhow::{Context, Result};
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 mod legacy;
 use legacy::legacy_policy;
@@ -21,7 +22,7 @@ pub use fallback::AnalysisFallback;
     Hash,
     Deserialize,
     Serialize,
-    clap::ValueEnum,
+    ValueEnum,
 )]
 #[serde(rename_all = "lowercase")]
 pub enum Effort {
@@ -46,12 +47,35 @@ pub struct EffectiveRuleAnalysis {
     pub unanalyzable: Unanalyzable,
 }
 
+impl RuleDef {
+    pub(super) fn configured_effort(&self) -> Result<Option<Effort>> {
+        self.options
+            .get("effort")
+            .filter(|value| !value.is_null() && value.as_str() != Some(""))
+            .map(|value| {
+                Effort::deserialize(value).with_context(|| {
+                    let allowed = Effort::value_variants()
+                        .iter()
+                        .filter_map(Effort::to_possible_value)
+                        .map(|value| value.get_name().to_owned())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    format!(
+                        "{}: invalid options.effort (expected one of: {allowed})",
+                        self.rule
+                    )
+                })
+            })
+            .transpose()
+    }
+}
+
 impl NoMistakesConfig {
     pub fn requested_rule_analysis(&self, rule: &RuleDef) -> Result<EffectiveRuleAnalysis> {
         validate_inventory_policy(rule)?;
         let effort = self
             .effort_override
-            .or(option(rule, "effort")?)
+            .or(rule.configured_effort()?)
             .or(self.effort)
             .unwrap_or_default();
         if rule.options.get("unanalyzable").is_some()
@@ -93,10 +117,11 @@ impl NoMistakesConfig {
     /// without inserting options for implicit defaults.
     pub fn materialize_analysis_defaults(&mut self) -> Result<()> {
         for index in 0..self.rules.len() {
-            if !self.rules[index].enabled {
+            let rule = &self.rules[index];
+            if !rule.enabled {
+                rule.configured_effort()?;
                 continue;
             }
-            let rule = &self.rules[index];
             // Preserve the rule parser's original invalid-type diagnostic.
             if !rule.options.is_null() && !rule.options.is_mapping() {
                 continue;

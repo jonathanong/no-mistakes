@@ -63,7 +63,8 @@ fn native(
         return Ok(row);
     };
     for statement in statements {
-        if !record_parse_failures(statement, &mut row.gaps) {
+        record_parse_failures(statement, &mut row.gaps);
+        if !statement.parse_failed {
             row.sites.extend(sql_sites(options, statement));
         }
     }
@@ -110,7 +111,7 @@ fn typescript(
     Ok(row)
 }
 
-fn record_parse_failures(statement: &SqlStatementFileFacts, gaps: &mut Vec<Gap>) -> bool {
+fn record_parse_failures(statement: &SqlStatementFileFacts, gaps: &mut Vec<Gap>) {
     gaps.extend(
         statement
             .parse_failure_sites()
@@ -122,7 +123,6 @@ fn record_parse_failures(statement: &SqlStatementFileFacts, gaps: &mut Vec<Gap>)
             .iter()
             .map(|&line| (line, ROUTINE_GAP)),
     );
-    statement.parse_failed || !statement.lock_inventory_unanalyzed.is_empty()
 }
 
 pub(super) fn sql_sites<'a>(

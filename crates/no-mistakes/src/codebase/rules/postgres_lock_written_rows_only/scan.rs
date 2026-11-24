@@ -172,8 +172,7 @@ fn scan_file(
                         &unresolved,
                     );
                 } else if let Some(id) = call.transaction_id {
-                    let unresolved = unresolved.contains(&id);
-                    if unresolved && rows::same_statement(call, lock, access, lock_index, None) {
+                    if rows::same_statement(call, lock, access, lock_index, None) {
                         continue;
                     }
                     let written_by_trigger = lock.relation.as_deref().is_some_and(|relation| {
@@ -187,7 +186,7 @@ fn scan_file(
                         lock,
                         &writes,
                         id,
-                        unresolved,
+                        unresolved.contains(&id),
                         written_by_trigger,
                     );
                 } else if self_contained.is_none() {
