@@ -58,6 +58,7 @@ fn visit_export_default_declaration_with_scope<'a>(
         &export.declaration,
         ExportDefaultDeclarationKind::Identifier(_)
     ) {
+        collector.note_export_name_offset(&default_local, export.span.start);
         collector.exported_functions.insert(default_local);
     }
     collector.export_depth += 1;
