@@ -192,4 +192,18 @@ fn explicit_include_missing_files_and_scalar_forms() {
     use lines::{locate, Seg};
     let at = [Seg::Key("steps".into()), Seg::Idx(1)];
     assert_eq!(locate("steps:\n  -\n  - run: x\n", &at), 3);
+    let at = [Seg::Key("env".into()), Seg::Key("A".into())];
+    assert_eq!(locate("# header\nenv:\n  A: x # inline\n", &at), 3);
+}
+
+#[test]
+fn expression_equal_to_required_is_still_unanalyzable() {
+    let opts: Options = serde_yaml::from_str("required: {P: '${{ vars.P }}'}").unwrap();
+    let policy = compile(&opts).unwrap();
+    let source = "env:\n  P: ${{ vars.P }}\n";
+    let value: Value = serde_yaml::from_str(source).unwrap();
+    let (findings, undecidable) = scan::check_parsed("w.yml", source, &value, &policy);
+    assert!(findings.is_empty());
+    assert_eq!(undecidable.len(), 1);
+    assert_eq!(undecidable[0].line, 2);
 }

@@ -58,7 +58,7 @@ fn strip_comment(raw: &str) -> &str {
             (Some('"'), '\\') => escaped = true,
             (None, '"' | '\'') if prev == ' ' || prev == ':' || prev == '-' => quote = Some(ch),
             (Some(open), _) if ch == open => quote = None,
-            (None, '#') if prev == ' ' => return &raw[..at - 1],
+            (None, '#') if prev == ' ' => return &raw[..at],
             _ => {}
         }
         prev = ch;

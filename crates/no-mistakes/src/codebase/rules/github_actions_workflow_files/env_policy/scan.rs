@@ -120,15 +120,14 @@ fn judge(ctx: &Ctx<'_>, owner: &Mapping, path: &[Seg], scope: &str, out: &mut Ou
             )
         } else if let Some(expected) = ctx.policy.required.get(name) {
             let got = scalar_text(value);
-            if got.as_deref() == Some(expected.as_str()) {
-                continue;
-            }
             if got.as_deref().is_some_and(|text| text.contains("${{")) {
                 undecidable = true;
                 format!(
                     "{rel}: {scope} sets env `{name}` to the expression `{}`, which cannot be checked statically. Write the literal `{expected}` so the env policy can verify it, or suppress this line if the expression always resolves to it.",
                     got.unwrap_or_default()
                 )
+            } else if got.as_deref() == Some(expected.as_str()) {
+                continue;
             } else {
                 let got = got.unwrap_or_else(|| "a non-scalar value".into());
                 format!(
