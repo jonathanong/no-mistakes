@@ -75,6 +75,12 @@ paths relative to either the repository root or the selected project root; a
 matching glob does not select files from an unselected project. Repository-scoped
 applications use repository-relative paths.
 
+The cache-key policy, action input policy, and Vitest default exclusion rule
+report invalid option values in `check --format json` under `incomplete` and
+exit with status 1. `consumer` identifies the rule. For rule-specific validation,
+`property` names the option and the message gives the rejected value and the
+accepted values or constraint. Async Node check reports use the same diagnostic.
+
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds
 project-relative components alongside export-kind selections. Use a top-level

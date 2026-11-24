@@ -222,6 +222,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "invalid_required_input": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "github-actions-action-input-policy",
+          "message": "Rule `github-actions-action-input-policy` has invalid value \"format\" for `options.actions[].require`. Expected an input key in allowedInputs [\"name\"] for action `example/publish-widget`.",
+          "property": "options.actions[].require"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "invalid_yaml": {
     "exitCode": 0,
     "report": {

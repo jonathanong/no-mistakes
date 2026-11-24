@@ -91,7 +91,13 @@ pub(super) fn run_all_with_session_options(
         },
     );
     let sources = prepared.visible_paths.source_store_for(&root);
-    fact_demand.include_discovered_files(&root, config, &views.filesystem, &sources, &mut plan)?;
+    fact_demand.include_discovered_files(
+        (&session, &root),
+        config,
+        &views.filesystem,
+        &sources,
+        &mut plan,
+    )?;
     let needs_shared_facts = fact_demand.needs_shared_facts();
     let (discovered, graph_files) = crate::check_discovery::select_graph_files(
         views,

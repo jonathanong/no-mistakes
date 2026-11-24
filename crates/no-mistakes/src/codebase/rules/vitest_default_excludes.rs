@@ -39,8 +39,18 @@ pub fn required_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Arc<BTreeSet<PathBuf>>> {
+    required_files_with_session(root, config, files, None)
+}
+
+#[doc(hidden)]
+pub fn required_files_with_session(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    session: Option<&AnalysisSession>,
+) -> Result<Arc<BTreeSet<PathBuf>>> {
     Ok(Arc::new(
-        applications(root, config, files)?
+        applications(root, config, files, session)?
             .into_iter()
             .map(|app| app.path)
             .collect(),
@@ -81,7 +91,7 @@ pub(crate) fn check_prepared(
     session: Option<&AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
     let normalized_root = normalize_path(root);
-    let batches: Result<Vec<_>> = applications(&normalized_root, config, files)?
+    let batches: Result<Vec<_>> = applications(&normalized_root, config, files, session)?
         .into_par_iter()
         .map(|app| {
             let result = check_application(&normalized_root, app, facts, sources);

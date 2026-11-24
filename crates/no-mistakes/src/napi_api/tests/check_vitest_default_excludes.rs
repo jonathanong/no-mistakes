@@ -166,3 +166,24 @@ fn batch(options: serde_json::Value) -> serde_json::Value {
     )
     .unwrap()
 }
+
+#[test]
+fn vitest_default_excludes_invalid_options_keep_batch_parity() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/options-audit/fixture/issue-3958");
+    let config = root.join("vitest.yml");
+    let options = json!({"root": root, "config": config});
+    let native: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+    )
+    .unwrap();
+    let incomplete = native["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 1);
+    assert_eq!(incomplete[0]["consumer"], "vitest-default-excludes");
+    assert_eq!(incomplete[0]["property"], "options.files");
+    let findings = native["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0]["file"], "factory.ts");
+    let batched = batch(json!({"root": root, "config": config, "reports": [{"type": "check"}]}));
+    assert_eq!(batched["reports"][0]["result"], native);
+}

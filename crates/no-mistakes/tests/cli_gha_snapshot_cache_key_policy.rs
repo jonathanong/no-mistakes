@@ -4,7 +4,7 @@ const RULE: &str = "github-actions-cache-key-policy";
 
 #[test]
 fn github_actions_cache_key_policy_json_matches_snapshot() {
-    let cases: Vec<_> = ["policy", "restore-ok", "hash-off", "unreadable"]
+    let mut cases: Vec<_> = ["policy", "restore-ok", "hash-off", "unreadable"]
         .into_iter()
         .map(|fixture| {
             let config = if fixture == "unreadable" {
@@ -19,6 +19,12 @@ fn github_actions_cache_key_policy_json_matches_snapshot() {
             )
         })
         .collect();
+    let invalid = rules_path("options-audit", "fixture", "issue-3958");
+    cases.push((
+        "invalid_forbidden_path",
+        invalid.clone(),
+        invalid.join("cache.yml"),
+    ));
     assert_saved_fixture("github_actions_cache_key_policy", &cases);
 }
 
@@ -92,16 +98,11 @@ fn empty_cache_list_is_rejected() {
         .arg(rules_path(RULE, "fixture", "policy"))
         .arg("--config")
         .arg(rules_path(RULE, "configs", "invalid.yml"))
+        .args(["--format", "json"])
         .output()
         .unwrap();
-    assert!(!output.status.success());
-    let text = format!(
-        "{}{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
-    );
-    assert!(
-        text.contains("caches must list at least one cache"),
-        "{text}"
-    );
+    assert_eq!(output.status.code(), Some(1));
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["incomplete"][0]["consumer"], RULE);
+    assert_eq!(report["incomplete"][0]["property"], "options.caches");
 }

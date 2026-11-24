@@ -1,5 +1,6 @@
 use super::text::norm_path;
 use super::RULE_ID;
+use crate::codebase::check_outcome::CheckInputFailure;
 use anyhow::Result;
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -41,12 +42,16 @@ impl Default for Options {
 pub(super) fn validate(options: &Options) -> Result<()> {
     anyhow::ensure!(
         !options.caches.is_empty() || !options.forbidden_paths.is_empty(),
-        "{RULE_ID} caches must list at least one cache unless forbiddenPaths is configured"
+        invalid(
+            "caches",
+            &options.caches,
+            "a non-empty list of caches when forbiddenPaths is empty"
+        )
     );
     if let Some(message) = options.forbidden_paths_message.as_deref() {
         anyhow::ensure!(
             !message.trim().is_empty(),
-            "{RULE_ID} forbiddenPathsMessage must not be empty"
+            invalid("forbiddenPathsMessage", message, "a non-empty message")
         );
     }
     let mut seen = BTreeSet::new();
@@ -54,24 +59,32 @@ pub(super) fn validate(options: &Options) -> Result<()> {
         let path = norm_path(&cache.path);
         anyhow::ensure!(
             !path.is_empty(),
-            "{RULE_ID} caches.path must be a non-empty path"
+            invalid("caches[].path", &cache.path, "a non-empty path")
         );
         anyhow::ensure!(
             seen.insert(path.clone()),
-            "{RULE_ID} caches.path `{path}` is listed more than once"
+            invalid("caches[].path", &cache.path, "a unique cache path")
         );
         anyhow::ensure!(
             !norm_path(&cache.lockfile).is_empty(),
-            "{RULE_ID} caches.lockfile must be a non-empty path"
+            invalid("caches[].lockfile", &cache.lockfile, "a non-empty path")
         );
         anyhow::ensure!(
             !cache.key_parts.is_empty(),
-            "{RULE_ID} caches.keyParts must list at least one expression fragment"
+            invalid(
+                "caches[].keyParts",
+                &cache.key_parts,
+                "at least one dotted context fragment"
+            )
         );
         for part in &cache.key_parts {
             anyhow::ensure!(
                 valid_fragment(part.trim()),
-                "{RULE_ID} caches.keyParts entries must be dotted context fragments such as runner.os"
+                invalid(
+                    "caches[].keyParts",
+                    part,
+                    "a dotted context fragment such as runner.os"
+                )
             );
         }
     }
@@ -80,18 +93,26 @@ pub(super) fn validate(options: &Options) -> Result<()> {
         let path = norm_path(raw);
         anyhow::ensure!(
             !path.is_empty(),
-            "{RULE_ID} forbiddenPaths entries must be non-empty paths"
+            invalid("forbiddenPaths", raw, "a non-empty path")
         );
         anyhow::ensure!(
             forbidden.insert(path.clone()),
-            "{RULE_ID} forbiddenPaths `{path}` is listed more than once"
+            invalid("forbiddenPaths", raw, "a unique forbidden path")
         );
         anyhow::ensure!(
             !seen.contains(&path),
-            "{RULE_ID} path `{path}` cannot appear in both caches and forbiddenPaths"
+            invalid(
+                "forbiddenPaths",
+                raw,
+                "a path absent from options.caches[].path"
+            )
         );
     }
     Ok(())
+}
+
+fn invalid(option: &str, value: impl std::fmt::Debug, allowed: &str) -> CheckInputFailure {
+    CheckInputFailure::invalid_rule_option(RULE_ID, option, value, allowed)
 }
 
 fn valid_fragment(part: &str) -> bool {

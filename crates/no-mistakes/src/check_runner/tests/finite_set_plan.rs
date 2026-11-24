@@ -1,3 +1,4 @@
+use no_mistakes::codebase::analysis_session::AnalysisSession;
 use no_mistakes::codebase::check_facts::CheckFactPlan;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
@@ -37,7 +38,14 @@ fn production_only_demand_never_copies_companion_membership() {
         production_import_paths: Arc::clone(&paths),
         ..Default::default()
     };
-    let mut demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    let mut demand = super::prepare(
+        (&AnalysisSession::disabled(), &root),
+        &config,
+        &mut plan,
+        false,
+        false,
+    )
+    .unwrap();
     assert!(demand.needs_shared_facts());
     assert!(demand.companion_import_files.is_empty());
     demand.include_companion_plan(&plan);
@@ -53,7 +61,14 @@ fn companion_demand_does_not_copy_membership_for_a_complete_primary_scope() {
         symbols: true,
         ..Default::default()
     };
-    let mut demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    let mut demand = super::prepare(
+        (&AnalysisSession::disabled(), &root),
+        &config,
+        &mut plan,
+        false,
+        false,
+    )
+    .unwrap();
     no_mistakes::codebase::rules::required_companion_imports::configure_fact_plan(
         &root, &config, &files, &sources, &mut plan,
     )
@@ -64,7 +79,14 @@ fn companion_demand_does_not_copy_membership_for_a_complete_primary_scope() {
     assert!(demand.companion_import_files.is_empty());
     assert_eq!(demand.primary_files(files.clone()), files);
     // Preparing an already-unioned plan has the same complete-scope behavior.
-    let demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    let demand = super::prepare(
+        (&AnalysisSession::disabled(), &root),
+        &config,
+        &mut plan,
+        false,
+        false,
+    )
+    .unwrap();
     assert!(demand.has_companion_plan);
     assert!(demand.companion_import_files.is_empty());
 }
@@ -73,7 +95,14 @@ fn companion_demand_does_not_copy_membership_for_a_complete_primary_scope() {
 fn companion_only_demand_retains_its_selected_primary_scope() {
     let (root, config, files, sources) = companion_fixture();
     let mut plan = CheckFactPlan::default();
-    let mut demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    let mut demand = super::prepare(
+        (&AnalysisSession::disabled(), &root),
+        &config,
+        &mut plan,
+        false,
+        false,
+    )
+    .unwrap();
     assert!(!demand.needs_shared_facts());
     no_mistakes::codebase::rules::required_companion_imports::configure_fact_plan(
         &root, &config, &files, &sources, &mut plan,
@@ -104,7 +133,7 @@ rules:
     let mut plan = CheckFactPlan::default();
 
     let error = crate::check_runner::finite_set_plan::prepare(
-        std::path::Path::new("/repo"),
+        (&AnalysisSession::disabled(), std::path::Path::new("/repo")),
         &config,
         &mut plan,
         false,
@@ -149,9 +178,14 @@ fn explicit_runner_deadline_demand_does_not_admit_unrelated_primary_sources() {
         )),
         ..Default::default()
     };
-    let demand =
-        crate::check_runner::finite_set_plan::prepare(&root, &config, &mut plan, false, false)
-            .unwrap();
+    let demand = crate::check_runner::finite_set_plan::prepare(
+        (&AnalysisSession::disabled(), &root),
+        &config,
+        &mut plan,
+        false,
+        false,
+    )
+    .unwrap();
     assert!(demand.needs_shared_facts());
     assert_eq!(demand.primary_files(paths), vec![configured]);
     assert!(demand.supplemental_call_site_files(&[], &[]).is_empty());
@@ -160,7 +194,6 @@ fn explicit_runner_deadline_demand_does_not_admit_unrelated_primary_sources() {
 
 #[test]
 fn runner_prepare_limits_call_fact_work_to_configured_sources() {
-    use no_mistakes::codebase::analysis_session::AnalysisSession;
     use no_mistakes::codebase::check_facts::collect_check_facts_with_supplemental_call_sites;
     use no_mistakes::codebase::ts_source::facts::TsFactPlan;
 
@@ -194,7 +227,7 @@ fn runner_prepare_limits_call_fact_work_to_configured_sources() {
             },
             ..Default::default()
         };
-        let demand = super::prepare(&root, &config, &mut plan, broad, false).unwrap();
+        let demand = super::prepare((&session, &root), &config, &mut plan, broad, false).unwrap();
         assert_eq!(plan.graph.call_sites, broad);
         assert!(plan.call_site_paths.contains(&selected));
         assert_eq!(plan.call_site_paths.len(), 1);

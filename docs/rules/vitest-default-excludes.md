@@ -165,3 +165,8 @@ compare settings across projects. [`vitest-project-policy`](vitest-project-polic
 
 Use project mapping to check that each Vitest test belongs to exactly one
 configured project. [`vitest-project-mapping`](vitest-project-mapping.md)
+
+## Invalid options
+
+An invalid option such as an empty `files` glob produces an `incomplete`
+configuration diagnostic. Other valid rule applications can still report findings.

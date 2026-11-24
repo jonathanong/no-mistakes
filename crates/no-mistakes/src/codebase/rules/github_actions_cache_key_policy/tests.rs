@@ -208,9 +208,14 @@ fn unreadable_workflow_bytes_are_reported() {
 #[test]
 fn empty_cache_list_is_a_config_error() {
     let error = check(&fixture("policy"), &config("invalid")).unwrap_err();
-    assert!(error
-        .to_string()
-        .contains("caches must list at least one cache"));
+    assert_eq!(
+        error
+            .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
+            .unwrap()
+            .property
+            .as_deref(),
+        Some("options.caches")
+    );
 }
 
 #[test]
@@ -223,13 +228,13 @@ fn duplicate_paths_and_undotted_fragments_are_rejected() {
         ..options::Options::default()
     };
     let error = options::validate(&duplicate).unwrap_err().to_string();
-    assert!(error.contains("listed more than once"), "{error}");
+    assert!(error.contains("a unique cache path"), "{error}");
     let fragment = options::Options {
         caches: vec![spec(".cache/widgets", "widgets.lock", &["os"])],
         ..options::Options::default()
     };
     let error = options::validate(&fragment).unwrap_err().to_string();
-    assert!(error.contains("dotted context fragments"), "{error}");
+    assert!(error.contains("dotted context fragment"), "{error}");
 }
 
 fn spec(path: &str, lockfile: &str, parts: &[&str]) -> options::CacheSpec {

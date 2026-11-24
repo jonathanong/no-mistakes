@@ -22,6 +22,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "invalid_forbidden_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "github-actions-cache-key-policy",
+          "message": "Rule `github-actions-cache-key-policy` has invalid value \".cache/widgets\" for `options.forbiddenPaths`. Expected a path absent from options.caches[].path.",
+          "property": "options.forbiddenPaths"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "policy": {
     "exitCode": 1,
     "report": {

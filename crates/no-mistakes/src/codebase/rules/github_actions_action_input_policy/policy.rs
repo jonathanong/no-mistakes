@@ -1,11 +1,12 @@
-use super::scalar::{display_canonical, input_scalar, scalar_text, InputScalar};
-use super::{ActionSpec, Options, RULE_ID};
-use anyhow::{bail, Result};
+use super::scalar::{display_canonical, input_scalar, InputScalar};
+use super::Options;
+use anyhow::Result;
 use serde_yaml::Mapping;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 mod extra;
+mod validation;
 
 #[derive(Debug)]
 pub(super) struct Compiled {
@@ -47,7 +48,7 @@ pub(super) enum InputFault {
 pub(super) fn compile(opts: Options) -> Result<Compiled> {
     let mut families: BTreeMap<String, Family> = BTreeMap::new();
     for action in opts.actions {
-        let name = concrete_family(&action)?;
+        let name = validation::concrete_family(&action)?;
         let family = families.entry(name.clone()).or_insert_with(|| Family {
             name,
             require: BTreeMap::new(),
@@ -55,7 +56,7 @@ pub(super) fn compile(opts: Options) -> Result<Compiled> {
             allowed: None,
             require_present: Vec::new(),
         });
-        merge_action(family, &action)?;
+        validation::merge_action(family, &action)?;
         extra::merge(family, &action);
     }
     for family in families.values() {
@@ -134,64 +135,4 @@ pub(super) fn judge(with: Option<&Mapping>, family: &Family) -> Vec<InputFault> 
     }
     extra::judge(with, family, &mut faults);
     faults
-}
-
-fn concrete_family(action: &ActionSpec) -> Result<String> {
-    let Some(name) = family_of(&action.uses) else {
-        bail!(
-            "{RULE_ID}: actions[].uses `{}` must name a concrete action family",
-            action.uses.trim()
-        );
-    };
-    Ok(name)
-}
-
-fn merge_action(family: &mut Family, action: &ActionSpec) -> Result<()> {
-    for key in &action.ban {
-        let key = key.trim();
-        if key.is_empty() {
-            continue;
-        }
-        if family.require.contains_key(key) {
-            bail!(
-                "{RULE_ID}: action `{}` both requires and bans `{key}`",
-                family.name
-            );
-        }
-        if !family.ban.iter().any(|existing| existing == key) {
-            family.ban.push(key.to_string());
-        }
-    }
-    for (key, value) in &action.require {
-        let key = key.trim();
-        if key.is_empty() {
-            bail!(
-                "{RULE_ID}: action `{}` has an empty require input name",
-                family.name
-            );
-        }
-        if family.ban.iter().any(|banned| banned == key) {
-            bail!(
-                "{RULE_ID}: action `{}` both requires and bans `{key}`",
-                family.name
-            );
-        }
-        let Some(text) = scalar_text(value) else {
-            bail!(
-                "{RULE_ID}: action `{}` require `{key}` must be a string, number, or boolean",
-                family.name
-            );
-        };
-        if let Some(existing) = family.require.get(key) {
-            if existing != &text {
-                bail!(
-                    "{RULE_ID}: action `{}` require `{key}` is both {existing} and {text}",
-                    family.name
-                );
-            }
-            continue;
-        }
-        family.require.insert(key.to_string(), text);
-    }
-    Ok(())
 }

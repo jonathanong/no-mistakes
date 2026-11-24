@@ -300,3 +300,8 @@ step, the findings share the step line, so one directive on that line covers the
 - [`github-actions-pinned-hash`](github-actions-pinned-hash.md) owns action reference SHAs.
 - [`github-actions-script-expressions`](github-actions-script-expressions.md) owns untrusted expressions inside scripts.
 - [`github-actions-download-integrity`](github-actions-download-integrity.md) owns `curl` and `wget` checksums.
+
+## Invalid options
+
+An invalid cache option produces an `incomplete` configuration diagnostic.
+Keep each `forbiddenPaths` value unique and outside the configured `caches` paths.

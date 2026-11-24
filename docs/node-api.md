@@ -149,6 +149,9 @@ failures. Prerequisites follow each consumer's source and configuration input
 selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
+The cache-key policy, action input policy, and Vitest default exclusion rule
+name the rejected option and value in this report. See
+[rule configuration](configuration/rules.md).
 An unwinding panic during per-file fact extraction uses the same existing
 `CheckFailure` shape with consumer `fact-extraction`, the file, and the panic
 message. `check()` and check reports in `analyzeProject()` resolve with that

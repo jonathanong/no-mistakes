@@ -37,6 +37,22 @@ pub struct CheckInputFailure {
 }
 
 impl CheckInputFailure {
+    pub(crate) fn invalid_rule_option(
+        rule: &str,
+        option: &str,
+        value: impl std::fmt::Debug,
+        allowed: impl std::fmt::Display,
+    ) -> Self {
+        let property = format!("options.{option}");
+        Self {
+            file: None,
+            message: format!(
+                "Rule `{rule}` has invalid value {value:?} for `{property}`. Expected {allowed}."
+            ),
+            property: Some(property),
+        }
+    }
+
     pub(crate) fn from_error(error: anyhow::Error) -> Self {
         let input = error.downcast_ref::<Self>();
         Self {

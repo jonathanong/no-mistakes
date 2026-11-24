@@ -251,3 +251,9 @@ checks the keys of composite steps this rule also reads.
 ## Invalid UTF-8
 
 Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.
+
+## Invalid options
+
+An invalid action option produces an `incomplete` configuration diagnostic.
+When `allowedInputs` is set, its keys are the accepted names for `require` and
+`requiredPresent`.

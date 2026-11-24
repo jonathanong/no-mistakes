@@ -1,4 +1,5 @@
 use anyhow::Result;
+use no_mistakes::codebase::analysis_session::AnalysisSession;
 use no_mistakes::codebase::check_facts::CheckFactPlan;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
@@ -28,7 +29,7 @@ impl PreparedFactDemand {
 
     pub(crate) fn include_discovered_files(
         &mut self,
-        root: &Path,
+        (session, root): (&AnalysisSession, &Path),
         config: &NoMistakesConfig,
         files: &[PathBuf],
         sources: &no_mistakes::codebase::ts_source::SourceStore,
@@ -39,8 +40,11 @@ impl PreparedFactDemand {
         )?;
         self.include_companion_plan(plan);
         plan.vitest_default_exclude_paths =
-            no_mistakes::codebase::rules::vitest_default_excludes::required_files(
-                root, config, files,
+            no_mistakes::codebase::rules::vitest_default_excludes::required_files_with_session(
+                root,
+                config,
+                files,
+                Some(session),
             )?;
         self.vitest_default_exclude_files =
             plan.vitest_default_exclude_paths.iter().cloned().collect();
@@ -92,7 +96,7 @@ impl PreparedFactDemand {
 }
 
 pub(crate) fn prepare(
-    root: &Path,
+    (session, root): (&AnalysisSession, &Path),
     config: &NoMistakesConfig,
     plan: &mut CheckFactPlan,
     graph_configured: bool,
@@ -109,7 +113,12 @@ pub(crate) fn prepare(
     files.dedup();
     plan.require_call_site_paths(&files);
     plan.vitest_default_exclude_paths =
-        no_mistakes::codebase::rules::vitest_default_excludes::required_files(root, config, &[])?;
+        no_mistakes::codebase::rules::vitest_default_excludes::required_files_with_session(
+            root,
+            config,
+            &[],
+            Some(session),
+        )?;
     let mut demand = PreparedFactDemand {
         companion_import_files: Vec::new(),
         has_companion_plan: false,
