@@ -178,11 +178,11 @@ jobs:
             while ! git merge-base "$BASE_SHA" "$HEAD_SHA" >/dev/null 2>&1; do
               attempts=$((attempts + 1))
               if (( attempts > 4 )); then
-                    node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
                 exit 0
               fi
               if ! git fetch --no-tags --deepen=300 origin "$BASE_SHA" "$HEAD_SHA"; then
-                    node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
                 exit 0
               fi
             done
