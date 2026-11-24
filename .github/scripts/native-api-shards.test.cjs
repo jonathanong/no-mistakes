@@ -18,6 +18,29 @@ test("native API shards collect every legacy file including the large real addon
   assert.match(source, /"run",\s*\.\.\.files,\s*`--testNamePattern=/);
 });
 
+test("production export parity registers each saved fixture as a separate case", () => {
+  const { runInNewContext } = require("node:vm");
+  const file = path.resolve(
+    __dirname,
+    "../../packages/no-mistakes/scripts/production-exports-test-only-api.test.js",
+  );
+  const prefix =
+    "compiled production export test-only checks agree across async CJS, ESM, batch and CLI";
+  const names = [];
+  runInNewContext(fs.readFileSync(file, "utf8"), {
+    require,
+    __dirname: path.dirname(file),
+    process: { env: {} },
+    globalThis: { test: (name) => names.push(name) },
+  });
+  assert.deepEqual(
+    names.filter((name) => name.startsWith(prefix)),
+    ["fail", "pass", "suppressed", "uncertain", "unsupported-modules"].map(
+      (scenario) => `${prefix}: ${scenario}`,
+    ),
+  );
+});
+
 test("case shards partition all collected names exactly once with regex escaping", () => {
   for (const count of [1, 2, 3, 6]) {
     const plans = Array.from({ length: count }, (_, index) =>
