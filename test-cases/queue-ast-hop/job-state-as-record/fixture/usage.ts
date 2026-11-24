@@ -91,3 +91,20 @@ export async function suppressedRetry(id: string) {
   // no-mistakes-disable-next-line queues-check
   if ((await job?.getState()) === "failed") await job.retry();
 }
+
+// Accepted: switch/try over read-only state inspection does not trigger findings
+export async function inspectInTrySwitch(id: string) {
+  try {
+    const job = await widgets.getJob(id);
+    switch (await job?.getState()) {
+      case "failed":
+        return "failed";
+      default:
+        return "other";
+    }
+  } catch {
+    return "error";
+  } finally {
+    // no-op
+  }
+}

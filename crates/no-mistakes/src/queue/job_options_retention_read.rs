@@ -103,20 +103,7 @@ fn classify_value(
             }
         }
         Expression::ObjectExpression(object) => classify_keep_object(object, bindings, active),
-        Expression::Identifier(id) => {
-            let Some(binding) = bindings.lookup(id.name.as_str(), id.span.start) else {
-                return RetentionValue::Unknown;
-            };
-            let Some(value) = binding.init else {
-                return RetentionValue::Unknown;
-            };
-            if !active.insert(binding.resolve_at) {
-                return RetentionValue::Unknown;
-            }
-            let result = classify_value(value, bindings, active);
-            active.remove(&binding.resolve_at);
-            result
-        }
+        Expression::Identifier(id) => with_const_init(id, bindings, active, classify_value),
         _ => RetentionValue::Unknown,
     }
 }
@@ -166,22 +153,29 @@ fn classify_spread_keep(
 ) -> RetentionValue {
     match unwrap_ts_wrappers(expr) {
         Expression::ObjectExpression(object) => classify_keep_object(object, bindings, active),
-        Expression::Identifier(id) => {
-            let Some(binding) = bindings.lookup(id.name.as_str(), id.span.start) else {
-                return RetentionValue::Unknown;
-            };
-            let Some(value) = binding.init else {
-                return RetentionValue::Unknown;
-            };
-            if !active.insert(binding.resolve_at) {
-                return RetentionValue::Unknown;
-            }
-            let result = classify_spread_keep(value, bindings, active);
-            active.remove(&binding.resolve_at);
-            result
-        }
+        Expression::Identifier(id) => with_const_init(id, bindings, active, classify_spread_keep),
         _ => RetentionValue::Unknown,
     }
+}
+
+fn with_const_init(
+    id: &oxc_ast::ast::IdentifierReference<'_>,
+    bindings: &ObjectBindings<'_>,
+    active: &mut FxHashSet<u32>,
+    classify: fn(&Expression<'_>, &ObjectBindings<'_>, &mut FxHashSet<u32>) -> RetentionValue,
+) -> RetentionValue {
+    let Some(binding) = bindings.lookup(id.name.as_str(), id.span.start) else {
+        return RetentionValue::Unknown;
+    };
+    let Some(value) = binding.init else {
+        return RetentionValue::Unknown;
+    };
+    if !active.insert(binding.resolve_at) {
+        return RetentionValue::Unknown;
+    }
+    let result = classify(value, bindings, active);
+    active.remove(&binding.resolve_at);
+    result
 }
 
 fn is_explicitly_absent(expr: &Expression<'_>) -> bool {

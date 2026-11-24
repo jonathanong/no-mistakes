@@ -67,3 +67,10 @@ unknownReceiver.add("ghost", {}, { removeOnFail: false });
 // Suppressed via queues-check directive.
 // no-mistakes-disable-next-line queues-check
 bare.add("suppressed-job", {}, { removeOnComplete: true });
+
+// Accepted: spread inside retention object resolves bounded const or abstains on unknown spread.
+bare.add(
+  "ok-keep-spread",
+  {},
+  { removeOnComplete: { ...keepBounded }, removeOnFail: { ...extraOpts } },
+);
