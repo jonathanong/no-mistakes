@@ -16,7 +16,6 @@ Shard counts therefore follow measured work, not a fixed default:
 | JavaScript policy | 4 | 1 job, 4 steps | each check is 20-35 s of work |
 | Rust quality | 7 | 4 | Clippy pair, check builds pair, release warnings with formatting; PostgreSQL source identities stays alone at about 17 minutes |
 | Rust coverage shards | 6 | 3 | about 6 minutes per shard |
-| Benchmarks (main and opted-in PRs) | 24 | 4 | two CPU groups and two memory groups run several shards per CodSpeed invocation, each with its own `NO_MISTAKES_BENCH_SHARD` |
 | Cache retention | 7 | 1 | one `Retain caches` job after all producers |
 
 Left unchanged: gate jobs (`Tests with coverage`, `AST analysis`,
@@ -32,6 +31,11 @@ splitting a compile is not a cheap change; `Package checks`, `Docs tests` and
 artifacts; and the small gate-like jobs (`Detect changed paths`,
 `Documentation links`, `Timeout-policy browser tests`, `Source policy and
 tooling tests`), whose combination would not shorten the critical path.
+
+Benchmark shards stay one matrix entry each (24 jobs). Work that ran in
+parallel must not be folded into sequential steps of one job: on `main` the
+benchmark chain (`Build benchmarks`, then the shards) is on the critical path,
+so grouping shards would add their durations to the run's wall time.
 
 ## Parallel CI layout and measured baseline
 

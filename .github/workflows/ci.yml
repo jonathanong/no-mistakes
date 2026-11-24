@@ -3425,8 +3425,8 @@ jobs:
     # Must match bench so the downloaded harness matches this machine's arch.
     runs-on: ubuntu-24.04-arm
     # Allow the ten-minute harness transfer plus a six-minute cold instrument
-    # install, with room for checkout, extraction and several shards per job.
-    timeout-minutes: 30
+    # install, with room for checkout and extraction.
+    timeout-minutes: 20
     permissions:
       contents: read
       id-token: write
@@ -3434,75 +3434,118 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: CPU group 1
+          - name: CPU check
             mode: simulation
-            lifecycle: false
-            shards: >-
-              query
-              check
-              graph-gates
-              query-indexes
-          - name: CPU group 2
+            filter: ""
+            benchmark-shard: check
+          - name: CPU observer
             mode: simulation
-            lifecycle: false
-            shards: >-
-              native-frontends
-              graph-core
-              observer
-              graph-production:graph_production_finalization::selector_append$
-              graph-production:graph_production_finalization::node_id_finalization$
-              language-frontends
-              tests-plan
-              graph-finalization
-          - name: memory group 1
+            filter: ""
+            benchmark-shard: observer
+          - name: CPU tests-plan
+            mode: simulation
+            filter: ""
+            benchmark-shard: tests-plan
+          - name: CPU graph core
+            mode: simulation
+            filter: ""
+            benchmark-shard: graph-core
+          - name: CPU graph gates
+            mode: simulation
+            filter: ""
+            benchmark-shard: graph-gates
+          - name: CPU language frontends
+            mode: simulation
+            filter: ""
+            benchmark-shard: language-frontends
+          - name: CPU native frontends
+            mode: simulation
+            filter: ""
+            benchmark-shard: native-frontends
+          - name: CPU graph finalization
+            mode: simulation
+            filter: ""
+            benchmark-shard: graph-finalization
+          - name: CPU graph production node
+            mode: simulation
+            filter: "graph_production_finalization::node_id_finalization$"
+            benchmark-shard: graph-production
+          - name: CPU graph production selector
+            mode: simulation
+            filter: "graph_production_finalization::selector_append$"
+            benchmark-shard: graph-production
+          - name: CPU query
+            mode: simulation
+            filter: ""
+            benchmark-shard: query
+          - name: CPU query indexes
+            mode: simulation
+            filter: ""
+            benchmark-shard: query-indexes
+          - name: memory check
             mode: memory
-            lifecycle: true
-            shards: >-
-              language-frontends
-              query
-              check
-              query-indexes
-          - name: memory group 2
+            filter: ""
+            benchmark-shard: check
+          - name: memory observer
             mode: memory
-            lifecycle: false
-            shards: >-
-              native-frontends
-              graph-core
-              graph-gates
-              graph-production:graph_production_finalization::selector_append$
-              graph-production:graph_production_finalization::node_id_finalization$
-              observer
-              tests-plan
-              graph-finalization
+            filter: ""
+            benchmark-shard: observer
+          - name: memory tests-plan
+            mode: memory
+            filter: ""
+            benchmark-shard: tests-plan
+          - name: memory graph core
+            mode: memory
+            filter: ""
+            benchmark-shard: graph-core
+          - name: memory graph gates
+            mode: memory
+            filter: ""
+            benchmark-shard: graph-gates
+          - name: memory language frontends
+            mode: memory
+            filter: ""
+            benchmark-shard: language-frontends
+          - name: memory native frontends
+            mode: memory
+            filter: ""
+            benchmark-shard: native-frontends
+          - name: memory graph finalization
+            mode: memory
+            filter: ""
+            benchmark-shard: graph-finalization
+          - name: memory graph production node
+            mode: memory
+            filter: "graph_production_finalization::node_id_finalization$"
+            benchmark-shard: graph-production
+          - name: memory graph production selector
+            mode: memory
+            filter: "graph_production_finalization::selector_append$"
+            benchmark-shard: graph-production
+          - name: memory query
+            mode: memory
+            filter: ""
+            benchmark-shard: query
+          - name: memory query indexes
+            mode: memory
+            filter: ""
+            benchmark-shard: query-indexes
     env:
-      BENCHMARK_SCOPE: ${{ needs.changes.outputs.benchmark-scope }}
-      BENCHMARK_SHARDS: ${{ matrix.shards }}
+      BENCHMARK_FILTER: ${{ matrix.filter }}
+      BENCHMARK_SELECTED: ${{ needs.changes.outputs.benchmark-scope == 'all' || contains(needs.changes.outputs.benchmark-scope, matrix.benchmark-shard) }}
       CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
+      NO_MISTAKES_BENCH_SHARD: ${{ matrix.benchmark-shard }}
       RAYON_NUM_THREADS: "4"
 
     steps:
-      - name: Select benchmark shards
-        id: select
-        timeout-minutes: 1
-        run: |
-          selected=()
-          for entry in $BENCHMARK_SHARDS; do
-            shard="${entry%%:*}"
-            if [[ "$BENCHMARK_SCOPE" == all || "$BENCHMARK_SCOPE" == *"$shard"* ]]; then
-              selected+=("$entry")
-            fi
-          done
-          echo "entries=${selected[*]}" >> "$GITHUB_OUTPUT"
-          echo "any=$([[ ${#selected[@]} -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-
       - name: Checkout
-        if: ${{ steps.select.outputs.any == 'true' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Restore exact benchmark executables
         id: benchmark-cache
-        if: ${{ needs.bench.outputs.cache-ready == 'true' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' && needs.bench.outputs.cache-ready == 'true' }}
         continue-on-error: true
         timeout-minutes: 2
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -3514,7 +3557,7 @@ jobs:
 
       - name: Verify cached benchmark executables
         id: verify-cache
-        if: ${{ steps.benchmark-cache.outputs.cache-hit == 'true' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' && steps.benchmark-cache.outputs.cache-hit == 'true' }}
         continue-on-error: true
         timeout-minutes: 1
         env:
@@ -3522,21 +3565,21 @@ jobs:
         run: bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
 
       - name: Download fallback benchmark executables
-        if: ${{ steps.verify-cache.outcome != 'success' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' && steps.verify-cache.outcome != 'success' }}
         timeout-minutes: 10
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: codspeed-analysis
 
       - name: Verify benchmark executables before extraction
-        if: ${{ steps.select.outputs.any == 'true' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 1
         env:
           BENCHMARK_SHA256: ${{ needs.bench.outputs.sha256 }}
         run: bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
 
       - name: Extract benchmark executables
-        if: ${{ steps.select.outputs.any == 'true' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 2
         run: |
           mkdir -p target/codspeed
@@ -3547,17 +3590,15 @@ jobs:
       # run reinstalls from apt and the stale entry is never replaced.
       - name: Read libc version for the instrument cache
         id: libc
-        if: ${{ steps.select.outputs.any == 'true' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 2
         run: echo "version=$(dpkg-query --showformat='${Version}' --show libc6)" >> "$GITHUB_OUTPUT"
 
       - name: Run benchmarks
-        if: ${{ steps.select.outputs.any == 'true' }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         # A cache hit finishes quickly. The first run on this runner, and the
         # first run after a libc6 update, installs valgrind and libc6-dbg.
-        timeout-minutes: 12
-        env:
-          BENCHMARK_ENTRIES: ${{ steps.select.outputs.entries }}
+        timeout-minutes: 6
         uses: CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f # v5.6.3
         with:
           mode: ${{ matrix.mode }}
@@ -3569,21 +3610,14 @@ jobs:
               echo "Expected one benchmark executable, found ${#benchmarks[@]}" >&2
               exit 1
             fi
-            for entry in $BENCHMARK_ENTRIES; do
-              shard="${entry%%:*}"
-              filter=""
-              if [[ "$entry" == *:* ]]; then
-                filter="${entry#*:}"
-              fi
-              if [[ -n "$filter" ]]; then
-                NO_MISTAKES_BENCH_SHARD="$shard" "${benchmarks[0]}" "$filter"
-              else
-                NO_MISTAKES_BENCH_SHARD="$shard" "${benchmarks[0]}"
-              fi
-            done
+            if [[ -n "$BENCHMARK_FILTER" ]]; then
+              "${benchmarks[0]}" "$BENCHMARK_FILTER"
+            else
+              "${benchmarks[0]}"
+            fi
 
       - name: Run unique frontend lifecycle memory controls
-        if: ${{ matrix.lifecycle && contains(steps.select.outputs.entries, 'language-frontends') }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' && matrix.mode == 'memory' && matrix.benchmark-shard == 'language-frontends' }}
         timeout-minutes: 6
         uses: CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f # v5.6.3
         with:

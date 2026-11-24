@@ -240,3 +240,11 @@ test("Linux role caches restore content sidecars after shared dependencies and b
   ])
     assert.ok(fallback.includes(part), `Linux cache prefix must retain ${part}`);
 });
+
+test("benchmark shards stay one matrix entry each so they run in parallel", () => {
+  const body = job("benchmark-shards");
+  assert.equal((body.match(/^ {10}- name: /gm) ?? []).length, 24);
+  assert.equal((body.match(/^ {12}benchmark-shard: /gm) ?? []).length, 24);
+  assert.doesNotMatch(body, /BENCHMARK_SHARDS|BENCHMARK_ENTRIES|shards: >-/);
+  assert.match(body, /BENCHMARK_SELECTED: .*contains\(.*matrix\.benchmark-shard\)/);
+});
