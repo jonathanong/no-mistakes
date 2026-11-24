@@ -1,0 +1,2 @@
+#!/usr/bin/env --split-string='zsh -f'
+status=$?

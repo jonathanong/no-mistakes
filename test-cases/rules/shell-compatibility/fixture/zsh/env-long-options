@@ -1,0 +1,2 @@
+#!/usr/bin/env -S --ignore-environment -- /bin/zsh
+status=$?

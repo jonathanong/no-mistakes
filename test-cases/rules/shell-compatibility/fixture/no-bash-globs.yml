@@ -1,0 +1,4 @@
+effort: max
+rules:
+  - rule: bash-empty-array-nounset
+    scope: repository

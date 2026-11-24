@@ -35,6 +35,9 @@ mod cli_check_rule_severity;
 #[path = "cli_rule_recall_audit.rs"]
 mod cli_rule_recall_audit;
 
+#[path = "cli_shell_compatibility.rs"]
+mod cli_shell_compatibility;
+
 #[path = "cli_shellcheck_policy.rs"]
 mod cli_shellcheck_policy;
 

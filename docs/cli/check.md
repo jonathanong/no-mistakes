@@ -347,6 +347,11 @@ when both exist. Configure PR limits, exclusion globs, and ecosystem exemptions
 as needed. Exempt ecosystems skip every check, including the PR limit.
 Unreadable or malformed input appears in the JSON `incomplete` list.
 
+Enable [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) for
+scripts targeting Bash before 4.4 and
+[`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md) for zsh scripts.
+Both report shell source locations in `check` without invoking ShellCheck.
+
 Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch
 literal `test.exclude` arrays that drop Vitest's discovery exclusions in the
 selected config (and its inline projects) or in `test`-shaped object literals

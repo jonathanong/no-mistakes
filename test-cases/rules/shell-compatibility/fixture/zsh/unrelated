@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# zsh is mentioned here without being the interpreter.
+status=$?

@@ -104,6 +104,8 @@ rule-specific option fields:
 | `package-json-workspace-coverage` | `packageRoots`, `allowlist` |
 | `package-json-nested-workspace-coverage` | `roots` |
 | `pnpm-release-age-policy` | `workspaceYaml`, `dependabotPath`, `lockfilePath` |
+| `bash-empty-array-nounset` | `files` |
+| `zsh-readonly-parameter` | `files` |
 | `shellcheck-runner` | `shellFiles`, `shebangDirs`, `skillsLockfile` |
 | `strict-package-layout` | `packages[].root` |
 | `tsconfig-alias-folder-mapping` | `tsconfig`, `baseDir` |

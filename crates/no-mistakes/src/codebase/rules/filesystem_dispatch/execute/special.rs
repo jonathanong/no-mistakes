@@ -30,6 +30,22 @@ pub(super) fn spawn<'a>(
         sources,
         acc,
     );
+    for id in [BASH_EMPTY_ARRAY_NOUNSET, ZSH_READONLY_PARAMETER] {
+        if rule_enabled(config, id) {
+            scope.spawn(move |_| {
+                let result = super::trace_rule(sources, id, || {
+                    shell_compatibility::check_with_sources(
+                        id,
+                        root,
+                        config,
+                        candidates.candidates(id),
+                        sources,
+                    )
+                });
+                acc.lock().expect("mutex poisoned").push((id, result));
+            });
+        }
+    }
     if registry::rust_rules_enabled(config) {
         scope.spawn(move |_| {
             let result = super::trace_rule(sources, "rust-rules-combined", || {

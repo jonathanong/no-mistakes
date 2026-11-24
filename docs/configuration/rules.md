@@ -237,6 +237,12 @@ Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
 
+[`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) runs only on
+paths matched by `options.files`. [`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md)
+selects `.zsh` files and zsh shebangs and accepts additional `options.files`
+globs for scripts sourced by zsh. In both rules, the globs are relative to the
+repository root and the rule and project filters still apply.
+
 `shellcheck-runner` uses the shared policy when the ShellCheck executable is
 missing or a failed invocation yields no recognized diagnostics. If an
 abnormal exit has some recognized diagnostics, those findings are preserved

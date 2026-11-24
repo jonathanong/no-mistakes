@@ -117,7 +117,7 @@ test("Linux runner shards execute the complete expanded inventory once and rejec
       env: { ...process.env, NATIVE_API_FIXTURE_SUITE: "linux" },
     });
   try {
-    assert.equal(linuxFiles.length, 26);
+    assert.equal(linuxFiles.length, 27);
     assert.equal(new Set(linuxFiles).size, linuxFiles.length);
     assert.deepEqual([...new Set(expected.map((row) => row.file))].sort(), [...linuxFiles].sort());
     assert.ok(platformFiles.every((file) => linuxFiles.includes(file)));

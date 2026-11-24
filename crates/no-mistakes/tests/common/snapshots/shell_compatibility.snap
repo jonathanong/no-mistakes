@@ -1,0 +1,588 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "both": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "legacy/arrays.sh",
+          "line": 103,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 106,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 110,
+          "message": "Array `samples` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${samples[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${samples[@]}\"",
+          "target": "samples"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 114,
+          "message": "Array `samples` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${samples[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${samples[@]}\"",
+          "target": "samples"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 23,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "); collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 27,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 34,
+          "message": "Array `declared` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${declared[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "\"${declared[*]}\"",
+          "target": "declared"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 36,
+          "message": "Array `appended` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${appended[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${appended[@]}\"",
+          "target": "appended"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 39,
+          "message": "Array `local_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${local_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${local_items[@]}\"",
+          "target": "local_items"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 5,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 6,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[*]}\"",
+          "target": "items"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 7,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect <<< \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 73,
+          "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${slots[@]}\"",
+          "target": "slots"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 75,
+          "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${slots[@]}\"",
+          "target": "slots"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 77,
+          "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${slots[@]}\"",
+          "target": "slots"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 86,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 95,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 98,
+          "message": "Array `single` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${single[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${single[@]}\"",
+          "target": "single"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 11,
+          "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${slots[@]}\"",
+          "target": "slots"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 14,
+          "message": "Array `slots` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${slots[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${slots[@]}\"",
+          "target": "slots"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 26,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 30,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 34,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 38,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 4,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 42,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 47,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/redirections.sh",
+          "line": 51,
+          "message": "Array `records` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${records[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${records[@]}\"",
+          "target": "records"
+        },
+        {
+          "file": "legacy/unfinished-heredoc.sh",
+          "line": 4,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 11,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 14,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "typeset -- status=value",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "local status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 3,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "typeset -i count status",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 4,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "declare -g status=value",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 41,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "}; status=2",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 42,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "print > ; status=3",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 43,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "print << ; status=4",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 44,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "print > \f; status=5",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 5,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$(collect)",
+          "target": "status"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 6,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "if ready; then status+=value; fi",
+          "target": "status"
+        },
+        {
+          "file": "zsh/direct",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-attached",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-attached-options",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-long-options",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-long-separated",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-options",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/env-short-attached",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 13,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "typeset -gh status=4",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 14,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=5",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 20,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=10",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 26,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "}; status=13",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 29,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=16",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 4,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=1",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 7,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "local -h status=2",
+          "target": "status"
+        },
+        {
+          "file": "zsh/function-scopes.zsh",
+          "line": 8,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=3",
+          "target": "status"
+        },
+        {
+          "file": "zsh/redirections.zsh",
+          "line": 13,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=assignment",
+          "target": "status"
+        },
+        {
+          "file": "zsh/redirections.zsh",
+          "line": 3,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "&>/dev/null status=assignment",
+          "target": "status"
+        },
+        {
+          "file": "zsh/redirections.zsh",
+          "line": 4,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "2>/dev/null status=assignment",
+          "target": "status"
+        },
+        {
+          "file": "zsh/startup",
+          "line": 1,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "typeset status=value",
+          "target": "status"
+        },
+        {
+          "file": "zsh/tool",
+          "line": 2,
+          "message": "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "legacy/excluded.sh",
+          "line": 4,
+          "message": "Expand this optional array with a presence guard.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "zsh/excluded.zsh",
+          "line": 1,
+          "message": "Use exit_status for this assignment.",
+          "rule": "zsh-readonly-parameter",
+          "sourceLine": "status=$?",
+          "target": "status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_bash_globs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "legacy/arrays.sh",
+          "line": 48,
+          "message": "directive for `bash-empty-array-nounset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line bash-empty-array-nounset -- Conditional population is guaranteed by the caller.",
+          "target": "bash-empty-array-nounset"
+        },
+        {
+          "file": "legacy/arrays.sh",
+          "line": 50,
+          "message": "directive for `bash-empty-array-nounset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "collect \"${items[@]}\" # no-mistakes-disable-line bash-empty-array-nounset -- Conditional population is guaranteed.",
+          "target": "bash-empty-array-nounset"
+        },
+        {
+          "file": "legacy/suppressed.sh",
+          "line": 2,
+          "message": "directive for `bash-empty-array-nounset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file bash-empty-array-nounset -- Generated shell example.",
+          "target": "bash-empty-array-nounset"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 30,
+          "message": "directive names disabled or out-of-scope rule `zsh-readonly-parameter`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line zsh-readonly-parameter -- Shell example fixture.",
+          "target": "zsh-readonly-parameter"
+        },
+        {
+          "file": "zsh/check.zsh",
+          "line": 32,
+          "message": "directive names disabled or out-of-scope rule `zsh-readonly-parameter`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "status=value # no-mistakes-disable-line zsh-readonly-parameter -- Shell example fixture.",
+          "target": "zsh-readonly-parameter"
+        },
+        {
+          "file": "zsh/suppressed.zsh",
+          "line": 1,
+          "message": "directive names disabled or out-of-scope rule `zsh-readonly-parameter`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file zsh-readonly-parameter -- Generated shell example.",
+          "target": "zsh-readonly-parameter"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
