@@ -3,7 +3,17 @@ use anyhow::{bail, Result};
 use serde::Deserialize;
 
 use super::RULE_ID;
+use crate::codebase::dependencies::graph::GraphBuildPlan;
 use crate::config::v2::NoMistakesConfig;
+
+pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
+    config.rule_configured(RULE_ID).then(|| {
+        let mut plan = GraphBuildPlan::imports_and_workspace();
+        plan.calls = true;
+        plan.value_import_selectors = true;
+        plan
+    })
+}
 
 /// True when an application selects Vitest roots, so the catalog must be prepared.
 pub fn vitest_roots_configured(config: &NoMistakesConfig) -> bool {

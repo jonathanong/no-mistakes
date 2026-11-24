@@ -86,6 +86,7 @@ fn saved_dependency_benchmark_shares_one_workspace_and_all_field_projection() {
     let work = observer.snapshot().work;
     // Output equality would also pass with six discarded/repeated projections.
     assert_eq!(work["forbidden_workspace_closure.workspace_selections"], 1);
+    assert_eq!(work["workspace.manual_visibility_constructions"], 1);
     assert_eq!(work["forbidden_workspace_closure.manifest_projections"], 1);
     assert_eq!(
         work["forbidden_workspace_closure.lockfile_importer_constructions"],

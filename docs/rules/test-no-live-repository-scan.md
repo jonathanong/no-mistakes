@@ -1222,6 +1222,16 @@ reason. Suppressions are reported by
 
 ## Analysis
 
+### Profiling
+
+Run `no-mistakes check --verbose-timings` to profile this rule. The
+`test-no-live-repository-scan` timing labels cover reachability, registry
+dispatch, and call-site evaluation. Evaluation includes ownership indexing
+when a scan needs caller or environment evidence. Registry dispatch builds
+its scanner index when a reachable computed key cannot identify a member.
+The `test-no-live-repository-scan.registry.scan-index-builds` work counter
+records those builds.
+
 ### Effort
 
 Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.

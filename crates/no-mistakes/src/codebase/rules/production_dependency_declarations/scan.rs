@@ -11,6 +11,7 @@ use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use crate::codebase::workspaces::{load_manual_workspace_from_source_store, ManualWorkspace};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use std::collections::{BTreeSet, HashMap};
@@ -57,7 +58,11 @@ pub(super) fn run(
         }
     };
 
-    let workspace = discovery::load_workspace(workspace_roots, files, sources)?;
+    let ManualWorkspace { workspace, visible } = load_manual_workspace_from_source_store(
+        workspace_roots.iter().map(PathBuf::as_path),
+        files,
+        sources,
+    )?;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
@@ -69,7 +74,6 @@ pub(super) fn run(
         "production-dependency-declarations requires a complete prepared import plan"
     );
 
-    let visible: crate::fx::PathSet = files.iter().map(|path| normalize_path(path)).collect();
     let imports_by_file: HashMap<PathBuf, Vec<FileImport>> = files
         .par_iter()
         .map(|file| {

@@ -1,0 +1,70 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "shared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 4,
+          "message": ".github/workflows/check.yml: job \"check\" has no timeout-minutes (defaults to GitHub's 6-hour ceiling); add a literal number",
+          "rule": "github-actions-job-timeouts",
+          "sourceLine": "check:",
+          "target": "check"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": ".github/workflows/check.yml: job \"check\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: |",
+          "target": ".github/workflows/check.yml#check#1"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "Inline script has 2 non-blank lines, exceeding maxLines 1; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- run: |"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": ".github/workflows/check.yml:8: job `check` step 1 downloads `https://example.invalid/release.tar.gz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/release.tar.gz -o release.tar.gz",
+          "target": "check"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 3,
+          "message": ".github/workflows/malformed.yml: invalid YAML (did not find expected node content at line 3 column 1, while parsing a flow node)",
+          "rule": "github-actions-job-timeouts",
+          "sourceLine": ""
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 3,
+          "message": ".github/workflows/malformed.yml: invalid YAML (did not find expected node content at line 3 column 1, while parsing a flow node)",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": ""
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 3,
+          "message": "Invalid YAML (did not find expected node content at line 3 column 1, while parsing a flow node); fix the YAML so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": ""
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

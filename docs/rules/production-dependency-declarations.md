@@ -163,6 +163,9 @@ package imports it, since that changes the finding kind rather than the fix.
 
 ## Analysis
 
+Manifest entry resolution and production reachability share the path membership
+index selected by `workspaceRoots`.
+
 ### Effort
 
 Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.

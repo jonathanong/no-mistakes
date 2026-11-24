@@ -67,6 +67,10 @@ reaches `@acme/secret`.
 
 ## Analysis
 
+Manifest selection uses one path membership index for the repository and the
+applicable project roots. Applications with the same ordered roots reuse the
+workspace selection.
+
 ### Effort
 
 Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.

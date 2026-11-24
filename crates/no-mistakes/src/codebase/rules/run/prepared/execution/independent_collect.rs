@@ -161,22 +161,34 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
 mod tests;
 
 pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
-    let diagnostics = graph_rule_findings_with_session(
-        graph_rules::GraphRuleRequest {
-            root: req.root,
-            config: req.config,
-            config_path: req.config_path,
-            shared: req.shared,
-            prepared_graph: req.prepared_graph,
-            dependency_graph: req.dependency_graph,
-            inferred_roots: req.inferred_roots,
-            sources: Some(req.sources),
-            tsconfig_catalog: Some(req.prepared_tsconfig_catalog),
-            prepared_vitest_projects: req.prepared_vitest_projects,
-            prepared_playwright_projects: req.prepared_playwright_projects,
-        },
-        Some(req.session),
-    )?;
+    let collect = || {
+        graph_rule_findings_with_session(
+            graph_rules::GraphRuleRequest {
+                root: req.root,
+                config: req.config,
+                config_path: req.config_path,
+                shared: req.shared,
+                prepared_graph: req.prepared_graph,
+                dependency_graph: req.dependency_graph,
+                inferred_roots: req.inferred_roots,
+                sources: Some(req.sources),
+                tsconfig_catalog: Some(req.prepared_tsconfig_catalog),
+                prepared_vitest_projects: req.prepared_vitest_projects,
+                prepared_playwright_projects: req.prepared_playwright_projects,
+            },
+            Some(req.session),
+        )
+    };
+    let diagnostics = if req.dependency_graph.is_some() {
+        crate::diagnostics::measure_if_enabled(
+            "rules.execute.graph_consumers",
+            crate::diagnostics::TimingKind::Parallel,
+            collect,
+        )
+        .0
+    } else {
+        collect()
+    }?;
     let mut chunk = RuleChunk::from_findings(diagnostics.findings);
     chunk.advisories = diagnostics.advisories;
     Ok(chunk)

@@ -86,7 +86,10 @@ pub fn diagnostics_with_files_and_sources(
                 }
                 let content = super::super::read_language_source(sources, path)?;
                 Some(match kind {
-                    Some(action) => runs::check_workflow(&rel, &content, action, &policy),
+                    Some(action) => {
+                        let value = sources.parse_loaded_yaml(path, &content, true).ok()?;
+                        runs::check_workflow(&rel, &content, &value, action, &policy)
+                    }
                     None => runs::check_shell(&rel, &content, &policy),
                 })
             })

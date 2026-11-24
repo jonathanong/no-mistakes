@@ -229,6 +229,9 @@ same-script checksum policy.
 
 ## Analysis
 
+Workflow and composite-action checks reuse parsed YAML for the same source text
+within one check invocation. Shell script analysis reads its selected shell sources.
+
 ### Effort
 
 - Supports `low` and `max` (default `max`). **Max**: resolves independently assigned uppercase bindings and partly literal URL values whose host is already fixed before a dynamic path. **Low**: accepts only literal URL arguments and routes a command with any dynamic candidate URL to `unanalyzable`. No partner rule is required.

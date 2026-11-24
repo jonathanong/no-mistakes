@@ -16,6 +16,8 @@ use crate::codebase::dependencies::graph::{
 };
 use crate::codebase::ts_source::module_facts::arguments::is_name;
 use crate::fx::PathSet;
+use crate::perf_trace::trace;
+use std::cell::OnceCell;
 use std::path::PathBuf;
 
 pub(super) fn apply<'a>(
@@ -27,16 +29,10 @@ pub(super) fn apply<'a>(
     resolution: &super::Resolution<'_>,
     graph_files: &[PathBuf],
 ) -> Vec<(&'a ResolvedCallSite, String)> {
-    let callers = alias::caller_nodes(graph);
-    let reach = alias::Reach::new(graph, enumerators);
-    let files: PathSet = graph_files.iter().cloned().collect();
-    let locate = home::Locate {
-        graph,
-        facts,
-        resolution,
-        visible: &files,
-        resolver: resolve::RegistryResolver::prepare(resolution, &files),
-    };
+    let callers = OnceCell::new();
+    let reach = OnceCell::new();
+    let files = OnceCell::new();
+    let locate = OnceCell::new();
     let mut reached = Vec::new();
     let mut unresolved = Vec::new();
     for site in graph.resolved_call_sites() {
@@ -50,15 +46,37 @@ pub(super) fn apply<'a>(
         let Some((object, key, label)) = dispatch(facts, site) else {
             continue;
         };
+        let callers = callers.get_or_init(|| {
+            trace("test-no-live-repository-scan.registry.caller-index", || {
+                alias::caller_nodes(graph)
+            })
+        });
+        let locate = locate.get_or_init(|| {
+            let files = files.get_or_init(|| graph_files.iter().cloned().collect::<PathSet>());
+            home::Locate {
+                graph,
+                facts,
+                resolution,
+                visible: files,
+                resolver: resolve::RegistryResolver::prepare(resolution, files),
+            }
+        });
         let resolved = key
             .as_deref()
-            .and_then(|key| alias::function_node(&locate, site, &object, key, &callers));
+            .and_then(|key| alias::function_node(locate, site, &object, key, callers));
         if let Some(node) = resolved {
             reached.push(node);
             continue;
         }
-        if key.is_none() && alias::registry_scans(&locate, &reach, site, &object, &callers) {
-            unresolved.push((site, label));
+        if key.is_none() {
+            let reach = reach.get_or_init(|| {
+                trace("test-no-live-repository-scan.registry.scan-index", || {
+                    alias::Reach::new(graph, enumerators)
+                })
+            });
+            if alias::registry_scans(locate, reach, site, &object, callers) {
+                unresolved.push((site, label));
+            }
         }
     }
     if !reached.is_empty() {

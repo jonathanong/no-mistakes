@@ -467,17 +467,21 @@ fn check_rule_timing_snapshot_masks_values_and_order() {
     ];
     let mut labels = Vec::new();
     for root in roots {
-        let output = run(&[
+        let args = [
             "check",
             "--root",
             root.to_str().unwrap(),
             "--format",
             "json",
-            "--timings",
-        ]);
+        ];
+        let plain = run(&args);
+        let output = run(&[args.as_slice(), &["--timings"]].concat());
+        assert_eq!(plain.status, output.status);
+        assert_eq!(plain.stdout, output.stdout);
         for line in stderr(&output).lines() {
             if line.starts_with("[timing] analysis.rules.")
                 || line.starts_with("[timing] analysis.filesystem_rules.")
+                || line.starts_with("[timing] rules.")
             {
                 let (label, elapsed) = line.split_once(": ").unwrap();
                 let (_, suffix) = elapsed.split_once("ms").unwrap();

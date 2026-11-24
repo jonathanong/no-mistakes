@@ -1,6 +1,77 @@
 use super::*;
 
 #[test]
+fn workflow_rules_share_parsed_sources_and_cached_syntax_errors() {
+    use crate::codebase::ts_source::{FileInventory, SourceStore, VisiblePathSnapshot};
+    use std::sync::Arc;
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/performance/shared-workflow-yaml"),
+    );
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let files = [
+        root.join(".github/workflows/check.yml"),
+        root.join(".github/workflows/malformed.yml"),
+    ];
+    let snapshot = VisiblePathSnapshot::from_paths(&root, &files);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let sources = Arc::new(SourceStore::new_observed(
+        Arc::new(FileInventory::from_paths(&files)),
+        Some(Arc::clone(&observer)),
+    ));
+
+    let findings = run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        &root,
+        &config,
+        &files,
+        PreparedFilesystemRuleInputs {
+            session: None,
+            snapshot: &snapshot,
+            next_config_resolver: None,
+            vitest_catalog: None,
+            sources: Arc::clone(&sources),
+            workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
+            config_path: Some(&config_path),
+        },
+    )
+    .unwrap();
+
+    let rules_for = |file: &str| {
+        findings
+            .iter()
+            .filter(|finding| finding.file == file)
+            .map(|finding| finding.rule.as_str())
+            .collect::<std::collections::BTreeSet<_>>()
+    };
+    assert_eq!(
+        rules_for(".github/workflows/check.yml"),
+        [
+            GITHUB_ACTIONS_DOWNLOAD_INTEGRITY,
+            GITHUB_ACTIONS_JOB_TIMEOUTS,
+            GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES,
+            GITHUB_ACTIONS_STEP_TIMEOUTS,
+        ]
+        .into()
+    );
+    assert_eq!(
+        rules_for(".github/workflows/malformed.yml"),
+        [
+            GITHUB_ACTIONS_JOB_TIMEOUTS,
+            GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES,
+            GITHUB_ACTIONS_STEP_TIMEOUTS,
+        ]
+        .into()
+    );
+    let work = observer.snapshot().work;
+    assert_eq!(work["yaml.requests"], 8);
+    assert_eq!(work["yaml.parses"], 2);
+    assert_eq!(work["yaml.cache_hits"], 6);
+}
+
+#[test]
 fn aggregate_reads_rust_sources_once_without_global_suppression_rereads() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");

@@ -52,17 +52,15 @@ impl Policy<'_> {
 pub(super) fn check_workflow(
     rel: &str,
     source: &str,
+    value: &Value,
     action: bool,
     policy: &Policy<'_>,
 ) -> AnalysisDiagnostics {
     let source = source.trim_start_matches('\u{feff}');
-    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
-        return AnalysisDiagnostics::default();
-    };
     let located = step_run_lines(source, action);
     let lines: Vec<&str> = source.lines().collect();
     let mut diagnostics = AnalysisDiagnostics::default();
-    for body in bodies(action, &value) {
+    for body in bodies(action, value) {
         let place = located
             .iter()
             .find(|item| item.job == body.job && item.step == body.step);

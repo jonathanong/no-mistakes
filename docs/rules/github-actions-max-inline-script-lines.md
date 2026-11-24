@@ -105,6 +105,9 @@ require the moved script to come from the trusted ref, never the PR head.
 
 ## Analysis
 
+The check reuses parsed YAML for the same source text and locates literal
+script bodies in the original workflow or action to report their line numbers.
+
 ### Effort
 
 Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.

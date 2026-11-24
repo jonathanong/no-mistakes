@@ -44,7 +44,7 @@ Empty or missing set `name` / `kind` and comparison `left` / `right` fields are
 configuration errors before extraction, including at low effort. Malformed
 configured YAML is a hard error at either effort and cannot be hidden by
 `unanalyzable: ignore`. YAML sets in one invocation share the source session
-parse even when different selectors read the same file.
+parse even when different selectors or workflow rules read the same source text.
 
 ## Valid example
 

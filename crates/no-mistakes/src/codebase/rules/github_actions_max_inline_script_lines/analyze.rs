@@ -2,20 +2,14 @@ use super::{finding, step_script_lines, RuleFinding, ScriptScan, StepScript};
 use crate::fx::FxHashMap;
 use serde_yaml::Value;
 
-pub(super) fn check_source(rel: &str, source: &str, action: bool, max: usize) -> Vec<RuleFinding> {
+pub(super) fn check_parsed(
+    rel: &str,
+    source: &str,
+    value: &Value,
+    action: bool,
+    max: usize,
+) -> Vec<RuleFinding> {
     let source = source.trim_start_matches('\u{feff}');
-    let value: Value = match serde_yaml::from_str(source) {
-        Ok(value) => value,
-        Err(error) => {
-            return vec![finding(
-                rel,
-                error.location().map_or(1, |loc| loc.line()),
-                format!(
-                    "Invalid YAML ({error}); fix the YAML so inline script length can be checked."
-                ),
-            )]
-        }
-    };
     if action && value["runs"]["using"].as_str() != Some("composite") {
         return Vec::new();
     }

@@ -1,5 +1,6 @@
 use super::*;
 use crate::codebase::check_outcome::Prerequisite;
+use crate::diagnostics::{measure_if_enabled, TimingKind};
 
 mod graph_rules;
 mod helpers;
@@ -91,37 +92,38 @@ pub(super) fn run(
     } else if let Some(graph) = dependency_graph {
         Some(graph)
     } else if let Prerequisite::Ready(Some(plan)) = graph_plan {
-        owned_graph =
-            crate::perf_trace::trace(
-                "rules.canonical_dependency_graph",
-                || match prepared_graph {
-                    Some(prepared) => DepGraph::build_with_prepared_check_facts_and_session(
-                        crate::codebase::dependencies::graph::PreparedCheckFactGraphBuildRequest {
-                            root,
-                            tsconfig: prepared_tsconfig,
-                            tsconfig_catalog: prepared_tsconfig_catalog,
-                            plan,
-                            files: shared.graph_file_universe().to_vec(),
-                            config_path,
-                            facts: shared,
-                            prepared,
-                        },
-                        session.clone(),
-                    ),
-                    None => DepGraph::build_with_complete_check_facts_and_session(
-                        crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
-                            root,
-                            tsconfig: prepared_tsconfig,
-                            tsconfig_catalog: prepared_tsconfig_catalog,
-                            plan,
-                            files: shared.graph_file_universe().to_vec(),
-                            config_path,
-                            facts: shared,
-                        },
-                        session.clone(),
-                    ),
-                },
-            );
+        owned_graph = measure_if_enabled(
+            "rules.canonical_dependency_graph",
+            TimingKind::Parallel,
+            || match prepared_graph {
+                Some(prepared) => DepGraph::build_with_prepared_check_facts_and_session(
+                    crate::codebase::dependencies::graph::PreparedCheckFactGraphBuildRequest {
+                        root,
+                        tsconfig: prepared_tsconfig,
+                        tsconfig_catalog: prepared_tsconfig_catalog,
+                        plan,
+                        files: shared.graph_file_universe().to_vec(),
+                        config_path,
+                        facts: shared,
+                        prepared,
+                    },
+                    session.clone(),
+                ),
+                None => DepGraph::build_with_complete_check_facts_and_session(
+                    crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
+                        root,
+                        tsconfig: prepared_tsconfig,
+                        tsconfig_catalog: prepared_tsconfig_catalog,
+                        plan,
+                        files: shared.graph_file_universe().to_vec(),
+                        config_path,
+                        facts: shared,
+                    },
+                    session.clone(),
+                ),
+            },
+        )
+        .0;
         match owned_graph {
             Ok(ref graph) => Some(graph),
             Err(error) if session.partial_checks_enabled() => {
@@ -137,27 +139,35 @@ pub(super) fn run(
         mut findings,
         suppression_sources,
         mut advisories,
-    } = independent::collect(independent::IndependentRuleRequest {
-        session: &session,
-        root,
-        config_path,
-        shared,
-        prepared_playwright,
-        config,
-        prepared_graph,
-        prepared_tsconfig_catalog,
-        prepared_vitest_projects,
-        prepared_playwright_projects,
-        inferred_roots,
-        sources,
-        dependency_graph,
-        defer_suppression,
-    })?;
-    if !defer_suppression {
-        suppress_findings(root, &mut findings, sources);
-        suppress_findings(root, &mut advisories, sources);
-    }
-    Ok(finalize_findings(findings, suppression_sources, advisories))
+    } = measure_if_enabled("rules.execute", TimingKind::Parallel, || {
+        independent::collect(independent::IndependentRuleRequest {
+            session: &session,
+            root,
+            config_path,
+            shared,
+            prepared_playwright,
+            config,
+            prepared_graph,
+            prepared_tsconfig_catalog,
+            prepared_vitest_projects,
+            prepared_playwright_projects,
+            inferred_roots,
+            sources,
+            dependency_graph,
+            defer_suppression,
+        })
+    })
+    .0?;
+    Ok(
+        measure_if_enabled("rules.finalize", TimingKind::Parallel, || {
+            if !defer_suppression {
+                suppress_findings(root, &mut findings, sources);
+                suppress_findings(root, &mut advisories, sources);
+            }
+            finalize_findings(findings, suppression_sources, advisories)
+        })
+        .0,
+    )
 }
 
 #[cfg(test)]

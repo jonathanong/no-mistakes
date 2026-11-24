@@ -113,6 +113,9 @@ the sum requirement.
 
 ## Analysis
 
+Job and step timeout checks share a workflow's parsed YAML during a check,
+including any syntax error.
+
 ### Effort
 
 - Supports `low` and `max` (default `max`). **Max**: compares every step timeout with the job timeout. **Low**: skips the redundant per-step comparison when enabled `github-actions-step-timeouts` partners certify a literal step cap. Without a covering partner it falls back to `max` with a warning.

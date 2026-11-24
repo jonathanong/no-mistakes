@@ -275,12 +275,43 @@ fn yaml_views_share_one_parse() {
 
 #[test]
 fn strict_view_of_no_documents_is_null() {
-    let split = super::SplitYaml {
+    let split = super::parse::SplitYaml {
         documents: Vec::new(),
         failure: None,
     };
-    let strict = super::single_view(&split).unwrap();
+    let strict = super::parse::single_view(&split).unwrap();
     assert!(strict.is_null());
-    let documents = super::document_view(&split).unwrap();
+    let documents = super::parse::document_view(&split).unwrap();
     assert!(documents.is_empty());
+}
+
+#[test]
+fn lossy_yaml_consumers_keep_a_separate_parse_from_strict_read_failures() {
+    let path = fixture("invalid-utf8.ts");
+    let sources = store(&path);
+    let source = sources.read_source_path(&path).unwrap();
+    let first = sources.parse_loaded_yaml(&path, &source, false).unwrap();
+    let trimmed = sources.parse_loaded_yaml(&path, &source, true).unwrap();
+    let strict = sources.parse_yaml_path(&path).unwrap_err();
+
+    assert_eq!(first.as_str(), Some("��x"));
+    assert!(Arc::ptr_eq(&first, &trimmed));
+    assert!(strict.is_io());
+    assert_eq!(sources.yaml_parse_count(), 2);
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn bom_trimming_keeps_the_original_yaml_parse() {
+    let path = fixture("bom.json");
+    let sources = store(&path);
+    let source = sources.read_path(&path).unwrap();
+    let trimmed = sources.parse_loaded_yaml(&path, &source, true).unwrap();
+    let raw = sources.parse_loaded_yaml(&path, &source, false).unwrap();
+    let strict = sources.parse_yaml_path(&path).unwrap();
+
+    assert_eq!(trimmed, raw);
+    assert!(Arc::ptr_eq(&strict, &raw));
+    assert_eq!(sources.yaml_parse_count(), 2);
+    assert_eq!(sources.physical_read_count(), 1);
 }

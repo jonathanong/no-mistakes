@@ -1,0 +1,11 @@
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+  - rule: github-actions-step-timeouts
+    scope: repository
+  - rule: github-actions-max-inline-script-lines
+    scope: repository
+    options:
+      maxLines: 1
+  - rule: github-actions-download-integrity
+    scope: repository
