@@ -1,8 +1,10 @@
 import { Queue } from "bullmq";
 import * as bullmq from "bullmq";
 import DefaultLimiter, {
+  AliasedCrossSub,
   CrossFileSubWorker,
   NsSubWorker,
+  ReexportedQueue,
   crossFileSubInstance,
   cycleA,
   cyclicExport,
@@ -11,6 +13,8 @@ import DefaultLimiter, {
   reexportedNsWorker,
   renamedWorker,
   starOnlyWorker,
+  subViaLocal,
+  subViaNsLocal,
 } from "./reexport";
 import * as reexportNs from "./reexport";
 import defaultHelper, {
@@ -92,23 +96,50 @@ export async function runEdges() {
   class LocalExtNs extends sourceNs.BaseEdgeWorker {}
   class LocalExtPlain extends PlainEdgeBase {}
   class LocalExtQueue extends bullmq.Queue {}
+  class LocalExtQueueId extends Queue {}
+  class LocalExtDynCall extends getCtor() {}
+  class LocalExtDynMember extends getHolder().Ctor {}
+  const anonClass = class {};
+  void anonClass;
   const subFromNs = new sourceNs.BaseEdgeWorker();
+  const nsCallResult = sourceNs.default() as unknown as { rateLimit(ms: number): Promise<void> };
+  const dynNewLocal = new (getCtor())();
+  const queueCtorLocal = bullmq.Queue;
+  void queueCtorLocal;
+  const holderObj = { x: 0 };
+  holderObj.x = 1;
   await new LocalExtImported().rateLimit(1600);
   await new LocalExtNs().rateLimit(1610);
   await subFromNs.rateLimit(1620);
+  await new sourceNs.BaseEdgeWorker().rateLimit(1625);
   await new CrossFileSubWorker().rateLimit(1630);
   await new NsSubWorker().rateLimit(1640);
+  await new AliasedCrossSub().rateLimit(1645);
   await crossFileSubInstance.rateLimit(1650);
   await nsSubInstance.rateLimit(1660);
+  await subViaLocal.rateLimit(1662);
+  await subViaNsLocal.rateLimit(1664);
   await new LocalExtPlain().rateLimit(1670);
   await (new LocalExtQueue("q") as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(
     1680,
   );
+  await (new LocalExtQueueId("q") as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(
+    1682,
+  );
+  await (ReexportedQueue as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(1684);
+  await dynNewLocal.rateLimit(1686);
+  await new LocalExtDynCall().rateLimit(1687);
+  await new LocalExtDynMember().rateLimit(1688);
+  await (defaultHelper() as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(1689);
   await (sourceNs.default() as unknown as { rateLimit(ms: number): Promise<void> }).rateLimit(1690);
+  await nsCallResult.rateLimit(1692);
   let mutatedImported = unknownExport;
   mutatedImported = getDynamic();
   await mutatedImported.rateLimit(1700);
   let mutatedNs = reexportNs.renamedWorker;
   mutatedNs = getDynamic();
   await mutatedNs.rateLimit(1710);
+  let mutatedAlias = fromImport;
+  mutatedAlias = getDynamic();
+  await mutatedAlias.rateLimit(1720);
 }

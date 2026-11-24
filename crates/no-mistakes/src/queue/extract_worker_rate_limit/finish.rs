@@ -142,7 +142,7 @@ fn resolve_mutated(
             | WorkerRateLimitTarget::CallNamespace { source, exported } => {
                 deferred = Some(WorkerRateLimitTarget::CallNamespace { source, exported });
             }
-            WorkerRateLimitTarget::ResolvedWorker { .. } => {}
+            _ => {}
         }
     }
     deferred
