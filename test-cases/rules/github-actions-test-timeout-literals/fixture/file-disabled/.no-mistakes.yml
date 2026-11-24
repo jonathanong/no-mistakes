@@ -1,0 +1,10 @@
+reportUnusedDisableDirectives: ignore
+
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      allow:
+        - file: .github/workflows/ci.test.mts
+          text: "expect(job.timeoutMinutes).toBe(10)"
+          reason: publish fixture verifies the configured budget
