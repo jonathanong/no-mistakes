@@ -1,5 +1,11 @@
 # Debug metadata in CI builds
 
+## Job sizing rule
+
+"Never serialize parallel work."
+
+For job sizing, see the `github-actions-authoring` skill.
+
 ## Parallel CI layout and measured baseline
 
 The pull-request workflow splits compilation-heavy checks into producer and
