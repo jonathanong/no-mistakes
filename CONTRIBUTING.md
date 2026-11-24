@@ -321,3 +321,19 @@ commands, rules, exports, or existing configurations.
   disabled-rule controls. Lock declaration annotations in the API tests.
 
 See [the initial surface migration](docs/migrations/deprecated-surfaces.md).
+
+## Pull request descriptions
+
+A reader must be able to tell from the pull request description what the change
+does on a realistic input; that is how a wrongly built feature gets caught.
+
+For each behavior the pull request changes, include:
+
+- the problem,
+- a real input (a saved fixture, with its path),
+- the exact `no-mistakes` command (or test command for CI and test-only changes), and
+- the full real output before (`main`) and after.
+
+A checklist or table of case names, elided output (`...`), CI links in place of
+output, or a diff summary alone does not count. Rewrite the description whole
+when the pull request changes rather than appending to it.
