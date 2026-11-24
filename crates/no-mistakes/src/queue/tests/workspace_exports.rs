@@ -217,3 +217,34 @@ fn unconfigured_test_filenames_are_not_excluded_by_convention_and_same_file_work
     assert_eq!(report.check[0].file, "smoke.test.mts");
     assert_eq!(report.check[0].job.as_deref(), Some("unhandled-smoke"));
 }
+
+#[test]
+fn configured_test_scope_matches_playwright_globs_and_stays_empty_without_config() {
+    let root = fixture("no-test-scope-convention").canonicalize().unwrap();
+    let session = AnalysisSession::new(None);
+    let visible = VisiblePathSnapshot::new(&root);
+    let paths = visible.paths_for(&root);
+    session.insert_visible_paths(&root, std::sync::Arc::new(visible));
+
+    let empty = crate::queue::test_scope::ConfiguredTestScope::empty();
+    assert!(!empty.is_match(&root, &root.join("smoke.test.mts")));
+
+    let default_cfg = crate::config::v2::NoMistakesConfig::default();
+    let unconfigured = crate::queue::test_scope::ConfiguredTestScope::from_session(
+        &root,
+        &default_cfg,
+        &paths,
+        &session,
+    );
+    assert!(!unconfigured.is_match(&root, &root.join("smoke.test.mts")));
+
+    let mut pw_cfg = crate::config::v2::NoMistakesConfig::default();
+    pw_cfg.tests.playwright.test_include = vec!["e2e/**/*.mts".to_string()];
+    pw_cfg.tests.playwright.test_exclude = vec!["e2e/helpers/**".to_string()];
+    let pw_scope = crate::queue::test_scope::ConfiguredTestScope::from_session(
+        &root, &pw_cfg, &paths, &session,
+    );
+    assert!(pw_scope.is_match(&root, &root.join("e2e/checkout.spec.mts")));
+    assert!(!pw_scope.is_match(&root, &root.join("e2e/helpers/setup.mts")));
+    assert!(!pw_scope.is_match(&root, &root.join("src/checkout.mts")));
+}

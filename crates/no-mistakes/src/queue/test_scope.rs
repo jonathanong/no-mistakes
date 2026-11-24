@@ -86,9 +86,6 @@ fn has_configured_suite_source(
 }
 
 fn compile_globs(patterns: &[String]) -> Option<GlobSet> {
-    if patterns.is_empty() {
-        return None;
-    }
     let mut builder = GlobSetBuilder::new();
     let mut any = false;
     for pattern in patterns {
