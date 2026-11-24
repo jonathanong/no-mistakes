@@ -46,7 +46,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   );
   assert.match(
     workflowJob("linux-api-tests"),
-    /name: Run real N-API API test\n\s+timeout-minutes: 4\n/,
+    /name: Run real N-API API test\n\s+timeout-minutes: 12\n/,
   );
 });
 
@@ -140,7 +140,7 @@ test("coverage report fan-in preserves every floor after sharded test execution"
     assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));
 });
 
-test("coverage compilation and six execution shards have separate failure-aware jobs", () => {
+test("coverage compilation and three execution shards have separate failure-aware jobs", () => {
   const observed = JSON.parse(
     readFileSync(
       path.join(root, "test-cases/rust-validation/fixture/rust-coverage-step-timing.json"),
@@ -156,10 +156,10 @@ test("coverage compilation and six execution shards have separate failure-aware 
   assert.match(build, /rust-coverage-shards\.cjs archive/);
   assert.match(shards, /needs: rust-coverage-build/);
   assert.match(shards, /fail-fast: false/);
-  assert.match(shards, /shard: \[1, 2, 3, 4, 5, 6\]/);
+  assert.match(shards, /shard: \[1, 2, 3\]/);
   assert.match(shards, /rust-coverage-shards\.cjs shard/);
   const step = stepBudgetSeconds(shards, "Run Rust tests for coverage");
-  assert.equal(step, 480);
+  assert.equal(step, 840);
   assert.ok(
     tests > step,
     "the historical serial suite is not evidence that each partition meets its deadline",
@@ -245,14 +245,14 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
     current.standaloneBuildStep,
   );
   const stepBudget = stepBudgetSeconds(shards, stepName);
-  assert.equal(stepBudget, 360);
-  assert.ok(coldRequired > stepBudget);
-  assert.ok(censoredRequired > stepBudget);
+  assert.equal(stepBudget, 900);
+  assert.ok(coldRequired <= stepBudget, "one shard runs the whole suite");
+  assert.ok(censoredRequired <= stepBudget, "one shard runs the whole suite");
   assert.equal(jobBudgetSeconds(build), current.standaloneBuildJob);
-  assert.equal(jobBudgetSeconds(shards), 480);
+  assert.equal(jobBudgetSeconds(shards), 1200);
   assert.equal(jobBudgetSeconds(gate), 180);
   assert.match(gate, /needs: \[changes, standalone-build, standalone-shards\]/);
-  assert.match(shards, /shard: \[1, 2, 3\]/);
+  assert.match(shards, /shard: \[1\]/);
   assert.match(shards, /fail-fast: false/);
   assert.match(shards, /standalone-shards\.cjs run/);
 });
@@ -300,7 +300,7 @@ test("parallel Rust quality retains all-feature, default-feature and no-default 
     "cargo clippy --locked -p no-mistakes --all-targets -- -D warnings",
     "cargo check --locked --tests --no-default-features -p no-mistakes",
   ])
-    assert.ok(job.includes(`command: ${command}\n`), command);
+    assert.ok(job.includes(`              ${command}\n`), command);
   assert.match(job, /run: \$\{\{ matrix\.command \}\}/);
   assert.match(job, /fail-fast: false/);
 });

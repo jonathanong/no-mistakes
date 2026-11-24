@@ -1,5 +1,38 @@
 # Debug metadata in CI builds
 
+## Job right-sizing (5-10 minutes)
+
+Every job that does real work targets 5-10 minutes. A job that spends 20-50
+seconds on checkout, pnpm/Node setup, and cache restore for 45 seconds of work
+costs a concurrency slot and another chance of a transient setup failure, and
+each extra `needs:` hop adds a runner queue wait (measured on PR run
+`45281780428`: 159 job-minutes of queue wait, median 1.3 minutes per job).
+Shard counts therefore follow measured work, not a fixed default:
+
+| Family | Before | After | Reason |
+| --- | --- | --- | --- |
+| JavaScript shards plus coverage merge | 4 shards plus a merge job | 1 job | about 45 s of work per shard; the merge job (56 s) removes one `needs:` hop |
+| Linux N-API tests | 4 | 1 | about 46 s of work per shard |
+| JavaScript policy | 4 | 1 job, 4 steps | each check is 20-35 s of work |
+| Rust quality | 7 | 4 | Clippy pair, check builds pair, release warnings with formatting; PostgreSQL source identities stays alone at about 17 minutes |
+| Standalone library shards | 3 | 1 | about 100-150 s of work per shard |
+| Rust coverage shards | 6 | 3 | about 6 minutes per shard |
+| Benchmarks (main and opted-in PRs) | 24 | 4 | two CPU groups and two memory groups run several shards per CodSpeed invocation, each with its own `NO_MISTAKES_BENCH_SHARD` |
+| Cache retention | 7 | 1 | one `Retain caches` job after all producers |
+
+Left unchanged: gate jobs (`Tests with coverage`, `AST analysis`,
+`Native tests`, `JavaScript tests`, `Lint and source checks`,
+`Standalone library tests`, `Benchmarks`) because they take seconds and branch
+protection depends on their names; Windows and macOS jobs (owned by the
+Windows/macOS smoke-test work); the producer jobs that already exceed ten
+minutes (`Build instrumented Rust tests`, `Build standalone library tests`,
+`Build benchmarks`, `Rust quality (PostgreSQL source identities)`), since
+splitting a compile is not a cheap change; `Package checks`, `Docs tests` and
+`Build Linux runtime`, which run 2-6 minutes with different cache keys and
+artifacts; and the small gate-like jobs (`Detect changed paths`,
+`Documentation links`, `Timeout-policy browser tests`, `Source policy and
+tooling tests`), whose combination would not shorten the critical path.
+
 ## Parallel CI layout and measured baseline
 
 The pull-request workflow splits compilation-heavy checks into producer and
@@ -11,9 +44,11 @@ heads explicitly. The original parallelization timings are recorded in
 The current validation graph is organized as follows:
 
 - Source policy/tooling tests, Rust quality checks, JavaScript policy checks,
-  and documentation link checks run independently. Rust quality uses separate
-  matrix entries for each compiler/feature profile; JavaScript formatting,
-  lint, duplication, and spelling checks also run separately.
+  and documentation link checks run independently. Rust quality groups
+  compiler/feature profiles into three matrix entries (Clippy, check builds,
+  release warnings with formatting) plus the PostgreSQL source-identity entry;
+  JavaScript formatting, lint, duplication, and spelling checks run as steps of
+  one job that continues after a failed step.
 - JavaScript test shards use `ubuntu-latest`: the Oxlint plugin allocator
   aborts on `ubuntu-slim` in this suite, matching the
   [upstream allocator issue](https://github.com/oxc-project/oxc/issues/20331).
@@ -23,17 +58,17 @@ The current validation graph is organized as follows:
   and Rust coverage merges when GitHub cancels the workflow. Active runs
   still evaluate dependency results and reject failures.
 - Independent Linux CLI and N-API producers upload their binaries for the AST check and
-  Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
-  a merge job combines the blob reports and coverage before enforcing the
-  configured floors. Linux real-addon cases run in isolated matrix jobs, using
-  the shared case partitioning script even for tests registered through umbrella imports.
-- Rust coverage builds instrumented test binaries once, then runs six test
+  Linux real-addon tests. Ordinary JavaScript tests run in one job that
+  enforces the configured coverage floors and uploads to Codecov. Linux
+  real-addon cases run in one job that still goes through the shared case
+  partitioning script (one shard) so umbrella imports stay covered.
+- Rust coverage builds instrumented test binaries once, then runs three test
   shards. Documentation tests run independently with their own ordinary Cargo
   cache, so they cannot rebuild an uninstrumented library on the coverage
   producer before shards start. A collector merges profiles and checks
   complete execution before producing LCOV and applying the existing coverage
   and complexity gates.
-- Standalone library tests build without the CLI, then run as four shards from
+- Standalone library tests build without the CLI, then run in one job from
   the archived test binaries. Native platform jobs build runtime and Rust test
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
@@ -125,8 +160,9 @@ The current validation graph is organized as follows:
   `Native tests` accepts a cancelled macOS job only for a push to `main`.
   A superseded build is cancelled before its test job starts, so that test job
   is skipped; `Native tests` accepts that skip only when the producer was
-  cancelled on a push to `main`. The macOS cache-retain jobs still require
-  `success`, so a superseded run does not save a cache.
+  cancelled on a push to `main`. The single cache-retain job runs only when at least
+  one producer succeeded, so a run whose producers were all superseded does not
+  save a cache.
   The completed seed run `43378356388`
   showed macOS API bodies taking 27–38 seconds, jobs taking 70–94 seconds, and
   queue waits of 8–12 minutes with roughly two jobs running concurrently.

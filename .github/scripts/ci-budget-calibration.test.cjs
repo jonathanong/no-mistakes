@@ -135,26 +135,24 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
   const requiredApi = data.reportedTestDurationSeconds + data.startupTeardownReserveSeconds;
   assert.ok(requiredApi > data.apiStepTimeoutSeconds);
   assert.ok(api >= requiredApi);
-  assert.equal(api, 240);
+  assert.equal(api, 720);
   const historicalSerialRequired =
     elapsed(data.startedAt, step(data, apiName).startedAt) + api + data.postJobReserveSeconds;
-  assert.equal(historicalSerialRequired, 908);
+  assert.equal(historicalSerialRequired, 1388);
   assert.ok(jobBudget(consumer) >= api + data.postJobReserveSeconds);
   assert.equal(jobBudget(consumer), 1500);
   assert.match(consumer, /needs: linux-runtime/);
   assert.doesNotMatch(consumer, /build-native\.cjs|cargo build/);
   const gate = job("javascript-tests");
-  assert.match(gate, /needs: \[javascript-coverage, linux-api-tests\]/);
+  assert.match(gate, /needs: \[javascript-shards, linux-api-tests\]/);
   assert.match(gate, /^    if: \$\{\{ !cancelled\(\) \}\}$/m);
   assert.equal(jobBudget(gate), 180);
   assert.ok(
     historicalSerialRequired > jobBudget(gate),
     "historical serial work is not a parallel gate deadline",
   );
-  assert.equal(jobBudget(job("javascript-shards")), 480);
-  assert.equal(jobBudget(job("javascript-coverage")), 480);
-  assert.match(job("javascript-coverage"), /needs: javascript-shards/);
-  assert.match(job("javascript-coverage"), /--merge-reports --coverage/);
+  assert.equal(jobBudget(job("javascript-shards")), 1200);
+  assert.match(job("javascript-shards"), /--merge-reports --coverage/);
 });
 
 test("component job deadlines bound their steps while gates only aggregate results", () => {
@@ -170,7 +168,6 @@ test("component job deadlines bound their steps while gates only aggregate resul
     "linux-runtime",
     "linux-api-tests",
     "javascript-shards",
-    "javascript-coverage",
   ]) {
     const body = job(name);
     for (const platform of ["Windows", "macOS", "Linux"]) {

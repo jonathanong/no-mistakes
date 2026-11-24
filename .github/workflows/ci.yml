@@ -376,26 +376,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: all-feature Clippy
-            command: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+          - name: Clippy
+            command: |
+              cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+              cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
             flags: -D warnings
-          - name: default-feature Clippy
-            command: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
+          - name: check builds
+            command: |
+              RUSTFLAGS="-D warnings --cfg coverage" cargo check --locked --workspace --lib --tests --all-features
+              cargo check --locked --tests --no-default-features -p no-mistakes
             flags: -D warnings
-          - name: release warnings
-            command: cargo check --locked --workspace --release --lib --bins --benches --no-default-features --features test-instrumentation
-            flags: -D warnings
-          - name: no-default test check
-            command: cargo check --locked --tests --no-default-features -p no-mistakes
+          - name: release warnings and formatting
+            command: |
+              cargo check --locked --workspace --release --lib --bins --benches --no-default-features --features test-instrumentation
+              cargo fmt --all -- --check
             flags: -D warnings
           - name: PostgreSQL source identities
             command: bash .github/scripts/with-resource-samples.sh node .github/scripts/postgres-source-identities.cjs
-            flags: -D warnings
-          - name: coverage warnings
-            command: cargo check --locked --workspace --lib --tests --all-features
-            flags: -D warnings --cfg coverage
-          - name: formatting
-            command: cargo fmt --all -- --check
             flags: -D warnings
     env:
       RUSTFLAGS: ${{ matrix.flags }}
@@ -410,11 +407,11 @@ jobs:
           toolchain: stable
           components: clippy, rustfmt
       - name: Cache Rust quality artifacts
-        if: ${{ matrix.name != 'formatting' && env.COLD_BUILD != 'true' }}
+        if: ${{ env.COLD_BUILD != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
-          shared-key: ${{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
+          shared-key: ${{ matrix.name == 'release warnings and formatting' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install nextest
@@ -432,21 +429,9 @@ jobs:
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
   quality-js:
-    name: JavaScript policy (${{ matrix.name }})
+    name: JavaScript policy
     runs-on: ubuntu-slim
-    timeout-minutes: 8
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: formatting
-            command: pnpm run fmt:js:check
-          - name: lint
-            command: pnpm run lint:js
-          - name: duplication
-            command: pnpm run lint:duplicates
-          - name: spelling
-            command: pnpm run lint:spell
+    timeout-minutes: 20
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -482,9 +467,21 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Run isolated JavaScript policy check
+      - name: Run JavaScript policy check (formatting)
         timeout-minutes: 5
-        run: ${{ matrix.command }}
+        run: pnpm run fmt:js:check
+      - name: Run JavaScript policy check (lint)
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        run: pnpm run lint:js
+      - name: Run JavaScript policy check (duplication)
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        run: pnpm run lint:duplicates
+      - name: Run JavaScript policy check (spelling)
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        run: pnpm run lint:spell
   quality-links:
     name: Documentation links
     runs-on: ubuntu-slim
@@ -719,13 +716,12 @@ jobs:
           if-no-files-found: error
           retention-days: 1
   javascript-shards:
-    name: JavaScript shard (${{ matrix.shard }}/4)
+    name: JavaScript unit tests and coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 8
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -765,79 +761,11 @@ jobs:
         timeout-minutes: 2
         run: pnpm run build:js
       - name: Run JavaScript tests
-        timeout-minutes: 4
-        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/4 --reporter=blob
-      - name: Upload JavaScript shard report
-        timeout-minutes: 3
-        if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: javascript-shard-${{ matrix.shard }}
-          path: .vitest/blob
-          include-hidden-files: true
-          compression-level: 1
-          if-no-files-found: error
-          retention-days: 1
-  javascript-coverage:
-    name: Merge JavaScript coverage
-    needs: javascript-shards
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-slim
-    timeout-minutes: 8
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout
-        timeout-minutes: 5
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up pnpm and Node.js (attempt 1 of 2)
-        id: pnpm-setup
-        continue-on-error: true
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
-          install: false
-      - name: Back off before Node.js setup attempt 2 of 2
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          # A timed-out cache restore can leave a partial store; the retry skips the cache.
-          rm -rf "$HOME/setup-pnpm/store"
-          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
-          sleep 5
-      - name: Retry pnpm and Node.js setup
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: false
-          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
-          install: false
-      - name: Install pnpm dependencies
-        timeout-minutes: 5
-        run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Download JavaScript shard reports
-        timeout-minutes: 5
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          pattern: javascript-shard-*
-          path: .vitest/blob
-          merge-multiple: true
+        timeout-minutes: 10
+        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --reporter=blob
       - name: Enforce merged JavaScript coverage
         timeout-minutes: 5
         run: pnpm exec vitest --merge-reports --coverage --reporter=default --reporter=github-actions
-      - name: Require all JavaScript shards
-        timeout-minutes: 3
-        if: ${{ always() }}
-        env:
-          SHARDS: ${{ needs.javascript-shards.result }}
-        run: test "$SHARDS" = success
       - name: Upload JavaScript coverage to Codecov
         timeout-minutes: 2
         continue-on-error: true
@@ -849,14 +777,14 @@ jobs:
           flags: javascript
           fail_ci_if_error: true
   linux-api-tests:
-    name: Linux N-API tests (${{ matrix.shard }}/4)
+    name: Linux N-API tests
     needs: linux-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1]
     env:
       NATIVE_API_SHARD: ${{ matrix.shard }}
     steps:
@@ -907,11 +835,11 @@ jobs:
         timeout-minutes: 3
         run: chmod +x target/debug/no-mistakes
       - name: Run real N-API API test
-        timeout-minutes: 4
+        timeout-minutes: 12
         id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
-          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 4 linux
+          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 1 linux
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
         timeout-minutes: 2
@@ -935,7 +863,7 @@ jobs:
       # Codecov is reporting only; an outage must not block merges.
   javascript-tests:
     name: JavaScript tests
-    needs: [javascript-coverage, linux-api-tests]
+    needs: [javascript-shards, linux-api-tests]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
@@ -2770,17 +2698,17 @@ jobs:
           retention-days: 1
 
   standalone-shards:
-    name: Standalone library shard (${{ matrix.shard }}/3)
+    name: Standalone library shard
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
     needs: standalone-build
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1]
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -2813,8 +2741,8 @@ jobs:
         timeout-minutes: 5
         uses: ./.github/actions/start-test-postgres
       - name: Test standalone Rust library without a CLI build
-        timeout-minutes: 6
-        run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 3
+        timeout-minutes: 15
+        run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 1
   tests-standalone-lib:
     name: Standalone library tests
     needs: [changes, standalone-build, standalone-shards]
@@ -2943,14 +2871,14 @@ jobs:
         run: bash .github/scripts/rust-disk-usage.sh "Rust coverage build failure" target
 
   rust-coverage-shards:
-    name: Rust coverage shard (${{ matrix.shard }}/6)
+    name: Rust coverage shard (${{ matrix.shard }}/3)
     needs: rust-coverage-build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3]
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
       CARGO_LLVM_COV_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
@@ -2995,11 +2923,11 @@ jobs:
         timeout-minutes: 5
         uses: ./.github/actions/start-test-postgres
       - name: Run Rust tests for coverage
-        timeout-minutes: 8
+        timeout-minutes: 14
         env:
           SHARD_INDEX: ${{ matrix.shard }}
           LLVM_PROFILE_FILE_NAME: no-mistakes-%9m.profraw
-        run: node .github/scripts/rust-coverage-shards.cjs shard target/coverage-bundle "$RUNNER_TEMP/rust-coverage-shard" "$SHARD_INDEX" 6
+        run: node .github/scripts/rust-coverage-shards.cjs shard target/coverage-bundle "$RUNNER_TEMP/rust-coverage-shard" "$SHARD_INDEX" 3
       - name: Retain profiles and execution diagnostics
         if: ${{ always() }}
         timeout-minutes: 3
@@ -3071,7 +2999,7 @@ jobs:
         id: rust-shard-collection
         if: ${{ !cancelled() }}
         timeout-minutes: 2
-        run: node .github/scripts/rust-coverage-shards.cjs collect target/coverage-bundle target/coverage-shards 6
+        run: node .github/scripts/rust-coverage-shards.cjs collect target/coverage-bundle target/coverage-shards 3
       - name: Require every Rust snapshot to be referenced
         if: ${{ !cancelled() && steps.rust-shard-collection.outcome == 'success' }}
         timeout-minutes: 2
@@ -3497,8 +3425,8 @@ jobs:
     # Must match bench so the downloaded harness matches this machine's arch.
     runs-on: ubuntu-24.04-arm
     # Allow the ten-minute harness transfer plus a six-minute cold instrument
-    # install, with room for checkout and extraction.
-    timeout-minutes: 20
+    # install, with room for checkout, extraction and several shards per job.
+    timeout-minutes: 30
     permissions:
       contents: read
       id-token: write
@@ -3506,118 +3434,75 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: CPU check
+          - name: CPU group 1
             mode: simulation
-            filter: ""
-            benchmark-shard: check
-          - name: CPU observer
+            lifecycle: false
+            shards: >-
+              query
+              check
+              graph-gates
+              query-indexes
+          - name: CPU group 2
             mode: simulation
-            filter: ""
-            benchmark-shard: observer
-          - name: CPU tests-plan
-            mode: simulation
-            filter: ""
-            benchmark-shard: tests-plan
-          - name: CPU graph core
-            mode: simulation
-            filter: ""
-            benchmark-shard: graph-core
-          - name: CPU graph gates
-            mode: simulation
-            filter: ""
-            benchmark-shard: graph-gates
-          - name: CPU language frontends
-            mode: simulation
-            filter: ""
-            benchmark-shard: language-frontends
-          - name: CPU native frontends
-            mode: simulation
-            filter: ""
-            benchmark-shard: native-frontends
-          - name: CPU graph finalization
-            mode: simulation
-            filter: ""
-            benchmark-shard: graph-finalization
-          - name: CPU graph production node
-            mode: simulation
-            filter: "graph_production_finalization::node_id_finalization$"
-            benchmark-shard: graph-production
-          - name: CPU graph production selector
-            mode: simulation
-            filter: "graph_production_finalization::selector_append$"
-            benchmark-shard: graph-production
-          - name: CPU query
-            mode: simulation
-            filter: ""
-            benchmark-shard: query
-          - name: CPU query indexes
-            mode: simulation
-            filter: ""
-            benchmark-shard: query-indexes
-          - name: memory check
+            lifecycle: false
+            shards: >-
+              native-frontends
+              graph-core
+              observer
+              graph-production:graph_production_finalization::selector_append$
+              graph-production:graph_production_finalization::node_id_finalization$
+              language-frontends
+              tests-plan
+              graph-finalization
+          - name: memory group 1
             mode: memory
-            filter: ""
-            benchmark-shard: check
-          - name: memory observer
+            lifecycle: true
+            shards: >-
+              language-frontends
+              query
+              check
+              query-indexes
+          - name: memory group 2
             mode: memory
-            filter: ""
-            benchmark-shard: observer
-          - name: memory tests-plan
-            mode: memory
-            filter: ""
-            benchmark-shard: tests-plan
-          - name: memory graph core
-            mode: memory
-            filter: ""
-            benchmark-shard: graph-core
-          - name: memory graph gates
-            mode: memory
-            filter: ""
-            benchmark-shard: graph-gates
-          - name: memory language frontends
-            mode: memory
-            filter: ""
-            benchmark-shard: language-frontends
-          - name: memory native frontends
-            mode: memory
-            filter: ""
-            benchmark-shard: native-frontends
-          - name: memory graph finalization
-            mode: memory
-            filter: ""
-            benchmark-shard: graph-finalization
-          - name: memory graph production node
-            mode: memory
-            filter: "graph_production_finalization::node_id_finalization$"
-            benchmark-shard: graph-production
-          - name: memory graph production selector
-            mode: memory
-            filter: "graph_production_finalization::selector_append$"
-            benchmark-shard: graph-production
-          - name: memory query
-            mode: memory
-            filter: ""
-            benchmark-shard: query
-          - name: memory query indexes
-            mode: memory
-            filter: ""
-            benchmark-shard: query-indexes
+            lifecycle: false
+            shards: >-
+              native-frontends
+              graph-core
+              graph-gates
+              graph-production:graph_production_finalization::selector_append$
+              graph-production:graph_production_finalization::node_id_finalization$
+              observer
+              tests-plan
+              graph-finalization
     env:
-      BENCHMARK_FILTER: ${{ matrix.filter }}
-      BENCHMARK_SELECTED: ${{ needs.changes.outputs.benchmark-scope == 'all' || contains(needs.changes.outputs.benchmark-scope, matrix.benchmark-shard) }}
+      BENCHMARK_SCOPE: ${{ needs.changes.outputs.benchmark-scope }}
+      BENCHMARK_SHARDS: ${{ matrix.shards }}
       CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
-      NO_MISTAKES_BENCH_SHARD: ${{ matrix.benchmark-shard }}
       RAYON_NUM_THREADS: "4"
 
     steps:
+      - name: Select benchmark shards
+        id: select
+        timeout-minutes: 1
+        run: |
+          selected=()
+          for entry in $BENCHMARK_SHARDS; do
+            shard="${entry%%:*}"
+            if [[ "$BENCHMARK_SCOPE" == all || "$BENCHMARK_SCOPE" == *"$shard"* ]]; then
+              selected+=("$entry")
+            fi
+          done
+          echo "entries=${selected[*]}" >> "$GITHUB_OUTPUT"
+          echo "any=$([[ ${#selected[@]} -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
-        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+        if: ${{ steps.select.outputs.any == 'true' }}
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Restore exact benchmark executables
         id: benchmark-cache
-        if: ${{ env.BENCHMARK_SELECTED == 'true' && needs.bench.outputs.cache-ready == 'true' }}
+        if: ${{ needs.bench.outputs.cache-ready == 'true' }}
         continue-on-error: true
         timeout-minutes: 2
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -3629,7 +3514,7 @@ jobs:
 
       - name: Verify cached benchmark executables
         id: verify-cache
-        if: ${{ env.BENCHMARK_SELECTED == 'true' && steps.benchmark-cache.outputs.cache-hit == 'true' }}
+        if: ${{ steps.benchmark-cache.outputs.cache-hit == 'true' }}
         continue-on-error: true
         timeout-minutes: 1
         env:
@@ -3637,21 +3522,21 @@ jobs:
         run: bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
 
       - name: Download fallback benchmark executables
-        if: ${{ env.BENCHMARK_SELECTED == 'true' && steps.verify-cache.outcome != 'success' }}
+        if: ${{ steps.verify-cache.outcome != 'success' }}
         timeout-minutes: 10
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: codspeed-analysis
 
       - name: Verify benchmark executables before extraction
-        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+        if: ${{ steps.select.outputs.any == 'true' }}
         timeout-minutes: 1
         env:
           BENCHMARK_SHA256: ${{ needs.bench.outputs.sha256 }}
         run: bash .github/scripts/benchmark-handoff.sh verify codspeed-analysis.tar
 
       - name: Extract benchmark executables
-        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+        if: ${{ steps.select.outputs.any == 'true' }}
         timeout-minutes: 2
         run: |
           mkdir -p target/codspeed
@@ -3662,15 +3547,17 @@ jobs:
       # run reinstalls from apt and the stale entry is never replaced.
       - name: Read libc version for the instrument cache
         id: libc
-        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+        if: ${{ steps.select.outputs.any == 'true' }}
         timeout-minutes: 2
         run: echo "version=$(dpkg-query --showformat='${Version}' --show libc6)" >> "$GITHUB_OUTPUT"
 
       - name: Run benchmarks
-        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+        if: ${{ steps.select.outputs.any == 'true' }}
         # A cache hit finishes quickly. The first run on this runner, and the
         # first run after a libc6 update, installs valgrind and libc6-dbg.
-        timeout-minutes: 6
+        timeout-minutes: 12
+        env:
+          BENCHMARK_ENTRIES: ${{ steps.select.outputs.entries }}
         uses: CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f # v5.6.3
         with:
           mode: ${{ matrix.mode }}
@@ -3682,14 +3569,21 @@ jobs:
               echo "Expected one benchmark executable, found ${#benchmarks[@]}" >&2
               exit 1
             fi
-            if [[ -n "$BENCHMARK_FILTER" ]]; then
-              "${benchmarks[0]}" "$BENCHMARK_FILTER"
-            else
-              "${benchmarks[0]}"
-            fi
+            for entry in $BENCHMARK_ENTRIES; do
+              shard="${entry%%:*}"
+              filter=""
+              if [[ "$entry" == *:* ]]; then
+                filter="${entry#*:}"
+              fi
+              if [[ -n "$filter" ]]; then
+                NO_MISTAKES_BENCH_SHARD="$shard" "${benchmarks[0]}" "$filter"
+              else
+                NO_MISTAKES_BENCH_SHARD="$shard" "${benchmarks[0]}"
+              fi
+            done
 
       - name: Run unique frontend lifecycle memory controls
-        if: ${{ env.BENCHMARK_SELECTED == 'true' && matrix.mode == 'memory' && matrix.benchmark-shard == 'language-frontends' }}
+        if: ${{ matrix.lifecycle && contains(steps.select.outputs.entries, 'language-frontends') }}
         timeout-minutes: 6
         uses: CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f # v5.6.3
         with:
@@ -3830,82 +3724,17 @@ jobs:
             exit 1
           fi
 
-  retain-linux-runtime-cache:
-    name: Retain linux-runtime cache
-    needs: linux-runtime
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.linux-runtime.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-build-cache:
-    name: Retain native-build cache
-    needs: native-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-build.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-build-macos-cache:
-    name: Retain native-build-macos cache
-    needs: native-build-macos
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-build-macos.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-test-build-cache:
-    name: Retain native-test-build cache
-    needs: native-test-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-test-build.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-test-build-macos-cache:
-    name: Retain native-test-build-macos cache
-    needs: native-test-build-macos
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-test-build-macos.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-standalone-build-cache:
-    name: Retain standalone-build cache
-    needs: standalone-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.standalone-build.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-rust-coverage-build-cache:
-    name: Retain rust-coverage-build cache
-    needs: rust-coverage-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.rust-coverage-build.result == 'success' }}
+  retain-caches:
+    name: Retain caches
+    needs:
+      - linux-runtime
+      - native-build
+      - native-build-macos
+      - native-test-build
+      - native-test-build-macos
+      - standalone-build
+      - rust-coverage-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(needs.*.result, 'success') }}
     permissions:
       contents: read
       actions: write

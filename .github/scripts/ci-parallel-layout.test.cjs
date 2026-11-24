@@ -14,25 +14,12 @@ const results = JSON.parse(
 test("CI reports and gates stop on workflow cancellation and still run after failures", () => {
   for (const name of [
     "quality",
-    "javascript-coverage",
     "javascript-tests",
     "native-tests",
     "tests-gate",
     "benchmark-gate",
   ]) {
     assert.match(job(name), /^    if: \$\{\{ !cancelled\(\) \}\}$/m, name);
-  }
-});
-
-test("JavaScript coverage rejects any unsuccessful shard result", () => {
-  const step = job("javascript-coverage").split("      - name: Require all JavaScript shards\n")[1];
-  assert.ok(step);
-  const script = step.match(/^        run: (.+)$/m)[1];
-  for (const fixture of results) {
-    const child = spawnSync("bash", ["-eu", "-c", script], {
-      env: { ...process.env, SHARDS: fixture.result },
-    });
-    assert.equal(child.status, fixture.exit, fixture.result);
   }
 });
 
@@ -139,19 +126,13 @@ test("required names and every full test family remain in the aggregate", () => 
     assert.doesNotMatch(job(name), /docs-only.*!= 'true'/);
 });
 
-test("JavaScript shards merge coverage under the normal unchanged threshold configuration", () => {
-  assert.match(
-    job("javascript-shards"),
-    /--config \.github\/scripts\/vitest-shard.config.cjs --shard=/,
-  );
-  assert.match(job("javascript-shards"), /reporter=blob/);
-  assert.match(job("javascript-shards"), /runs-on: ubuntu-latest/);
-  assert.match(job("javascript-shards"), /include-hidden-files: true/);
-  assert.match(job("javascript-shards"), /path: \.vitest\/blob/);
-  assert.match(job("javascript-coverage"), /path: \.vitest\/blob/);
-  assert.match(job("javascript-coverage"), /vitest --merge-reports --coverage/);
-  assert.doesNotMatch(job("javascript-coverage"), /vitest-shard.config/);
-  assert.match(job("javascript-coverage"), /needs.javascript-shards.result/);
+test("JavaScript tests merge coverage in one job under the normal unchanged threshold configuration", () => {
+  const body = job("javascript-shards");
+  assert.match(body, /--config \.github\/scripts\/vitest-shard.config.cjs --reporter=blob/);
+  assert.doesNotMatch(body, /--shard=|upload-artifact|download-artifact/);
+  assert.match(body, /runs-on: ubuntu-latest/);
+  assert.match(body, /vitest --merge-reports --coverage/);
+  assert.doesNotMatch(body.split("vitest --merge-reports")[1], /vitest-shard.config/);
 });
 
 test("documentation tests cannot delay coverage archive consumers", () => {
