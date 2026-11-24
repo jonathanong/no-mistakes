@@ -111,9 +111,7 @@ fn collect_statements<'a>(
     out: &mut Vec<&'a ObjectExpression<'a>>,
 ) {
     for stmt in statements {
-        if let Statement::ExpressionStatement(es) = stmt {
-            collect_config_expr(&es.expression, bindings, depth, out);
-        } else if let Statement::ReturnStatement(ret) = stmt {
+        if let Statement::ReturnStatement(ret) = stmt {
             if let Some(arg) = &ret.argument {
                 collect_config_expr(arg, bindings, depth, out);
             }

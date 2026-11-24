@@ -217,8 +217,24 @@ rules:
 #[test]
 fn covers_ts_and_ci_edge_cases() {
     let opts = compile_with(
-        "allow:\n  - path: '.github/workflows/allowed.yml'\n    reason: allowed workflow\n",
+        r#"
+configs: ["custom/runner.ts"]
+retryActions: ["nick-fields/retry"]
+ciTestCommands: ["vitest", "vitest"]
+allow:
+  - path: ".github/workflows/allowed.yml"
+    reason: allowed workflow
+"#,
         "version: 2\ntests:\n  vitest:\n    configs: ['vitest.config.ts']\n",
+    );
+    assert_eq!(
+        scan_ts::scan_source(
+            "custom/runner.ts",
+            "export default { retries: 2, test: { retry: 2 } };",
+            &opts
+        )
+        .len(),
+        2
     );
     assert!(
         scan_ts::scan_source("vite.config.ts", "export default { plugins: [] };", &opts).is_empty()
@@ -234,7 +250,7 @@ export default {
   test: {
     retry: { other: 1 },
     projects: [
-      { retry: 2 },
+      { test: dynamicTest, retry: 2 },
       { name: "clean" },
     ],
   },
@@ -249,6 +265,16 @@ export default {
         scan_ts::scan_source("playwright.config.ts", pw_edges, &opts).len(),
         1
     );
+    let allowed_cfg = compile_with(
+        "configs: ['allowed.config.ts']\nallow:\n  - path: 'allowed.config.ts'\n    reason: temp\n",
+        "version: 2\n",
+    );
+    assert!(scan_ts::scan_source(
+        "allowed.config.ts",
+        "export default { retries: 2, test: { retry: 2 } };",
+        &allowed_cfg
+    )
+    .is_empty());
     let call_edges = r#"
 jest.retryTimes?.(2);
 jest.retryTimes();
@@ -257,6 +283,8 @@ test.describe.configure(cfg);
 test.describe.configure({ mode: "parallel" });
 test("plain", () => {});
 test.each([1])("plain %i", () => {});
+other.each([1])("other %i", { retry: 2 }, () => {});
+getFn()("call", { retry: 2 }, () => {});
 "#;
     assert!(scan_ts::scan_source("src/a.test.ts", call_edges, &opts).is_empty());
 
@@ -273,6 +301,8 @@ test.each([1])("plain %i", () => {});
     let ci_edges = r#"
 name: Edge
 jobs:
+  123: {}
+  scalar_job: "bad"
   no_steps:
     runs-on: ubuntu-latest
   odd:

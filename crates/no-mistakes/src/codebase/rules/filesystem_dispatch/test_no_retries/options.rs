@@ -36,20 +36,20 @@ pub(super) struct CompiledOptions {
 impl CompiledOptions {
     pub(super) fn is_playwright_config(&self, rel: &str) -> bool {
         self.playwright_configs.contains(rel)
-            || self
-                .configs
-                .as_ref()
-                .is_some_and(|matcher| matcher.is_match(rel))
+            || self.matches_explicit_config(rel)
             || is_playwright_config_name(rel)
     }
 
     pub(super) fn is_vitest_config(&self, rel: &str) -> bool {
         self.vitest_configs.contains(rel)
-            || self
-                .configs
-                .as_ref()
-                .is_some_and(|matcher| matcher.is_match(rel))
+            || self.matches_explicit_config(rel)
             || is_vitest_config_name(rel)
+    }
+
+    fn matches_explicit_config(&self, rel: &str) -> bool {
+        self.configs
+            .as_ref()
+            .is_some_and(|matcher| matcher.is_match(rel))
     }
 
     pub(super) fn matches_retry_action(&self, uses: &str) -> bool {

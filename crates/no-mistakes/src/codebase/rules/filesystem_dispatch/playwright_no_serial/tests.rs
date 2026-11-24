@@ -148,8 +148,33 @@ export default {
     assert!(scan::scan_source("playwright.config.ts", "export default 42;", &opts).is_empty());
     assert!(scan::scan_source(
         "playwright.config.ts",
+        "export default () => { return; };",
+        &opts
+    )
+    .is_empty());
+    assert!(scan::scan_source(
+        "playwright.config.ts",
         "export default () => { const x = 1; };",
         &opts
+    )
+    .is_empty());
+    assert!(
+        scan::scan_source("playwright.config.ts", "export default class Foo {}", &opts).is_empty()
+    );
+    assert!(scan::scan_source(
+        "playwright.config.ts",
+        "let uninit; export default uninit;",
+        &opts
+    )
+    .is_empty());
+    let allowed_cfg = compile_with(
+        "allow:\n  - path: 'playwright.config.ts'\n    reason: temp\n",
+        "version: 2\n",
+    );
+    assert!(scan::scan_source(
+        "playwright.config.ts",
+        "export default { workers: 1 };",
+        &allowed_cfg
     )
     .is_empty());
     assert!(scan::scan_source(
