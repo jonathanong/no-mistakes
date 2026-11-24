@@ -29,6 +29,13 @@ fn github_actions_env_policy_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "quoted-hash"),
                 rules_path(RULE, "configs", "quoted.yml"),
             ),
+            // 0 findings, 2 advisories: non-mapping `env: ${{ fromJSON(...) }}` at job and step
+            // scope is unanalyzable rather than silently skipped; empty `env:` stays quiet.
+            (
+                "dynamic-env",
+                rules_path(RULE, "fixture", "dynamic-env"),
+                policy.clone(),
+            ),
             // 1 finding: line and next-line directives hide two of three.
             ("disabled", rules_path(RULE, "fixture", "disabled"), policy),
         ],

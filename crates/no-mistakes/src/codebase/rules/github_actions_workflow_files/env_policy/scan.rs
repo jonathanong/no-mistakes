@@ -1,4 +1,5 @@
-use super::lines::{locate, Seg};
+use super::super::job_lines::document::Document;
+use super::lines::{locate, parse, Seg};
 use super::{scalar_text, Policy, RuleFinding, RULE_ID};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::ts_source::relative_slash_path;
@@ -45,7 +46,7 @@ struct Out {
 
 struct Ctx<'a> {
     rel: &'a str,
-    source: &'a str,
+    doc: Option<&'a Document>,
     policy: &'a Policy,
 }
 
@@ -55,9 +56,10 @@ pub(super) fn check_parsed(
     value: &Value,
     policy: &Policy,
 ) -> (Vec<RuleFinding>, Vec<RuleFinding>) {
+    let parsed = parse(source);
     let ctx = Ctx {
         rel,
-        source,
+        doc: parsed.as_ref(),
         policy,
     };
     let mut out = Out::default();
@@ -105,10 +107,30 @@ fn judge_steps(
 }
 
 fn judge(ctx: &Ctx<'_>, owner: &Mapping, path: &[Seg], scope: &str, out: &mut Out) {
-    let Some(env) = owner.get("env").and_then(Value::as_mapping) else {
+    let Some(raw_env) = owner.get("env") else {
         return;
     };
+    if raw_env.is_null() {
+        return;
+    }
     let rel = ctx.rel;
+    let Some(env) = raw_env.as_mapping() else {
+        let mut at = path.to_vec();
+        at.push(Seg::Key("env".into()));
+        let detail = scalar_text(raw_env).unwrap_or_else(|| "a non-mapping value".into());
+        out.undecidable.push(RuleFinding {
+            causes: Vec::new(),
+            rule: RULE_ID.to_string(),
+            file: rel.to_string(),
+            line: locate(ctx.doc, &at),
+            message: format!(
+                "{rel}: {scope} sets `env` to `{detail}`, which cannot be checked statically. Write a literal `env:` mapping so the env policy can verify it, or suppress this line."
+            ),
+            import: None,
+            target: Some("env".to_string()),
+        });
+        return;
+    };
     for (key, value) in env {
         let Some(name) = key.as_str() else {
             continue;
@@ -149,7 +171,7 @@ fn judge(ctx: &Ctx<'_>, owner: &Mapping, path: &[Seg], scope: &str, out: &mut Ou
             causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: rel.to_string(),
-            line: locate(ctx.source, &at),
+            line: locate(ctx.doc, &at),
             message,
             import: None,
             target: Some(name.to_string()),

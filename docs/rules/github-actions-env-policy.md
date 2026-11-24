@@ -121,11 +121,14 @@ Invalid YAML is skipped and produces no finding. A file that cannot be read is
 skipped. The checker does not evaluate `${{ }}` expressions: a required name whose
 value contains `${{` abstains from the mismatch check and records a diagnostic
 (for example `env: { BASH_ENV: ${{ vars.SHELL_INIT }} }` or
-`${{ matrix.init }}`). `options.unanalyzable` controls it (`advise | report |
+`${{ matrix.init }}`). A non-mapping, non-null `env:` value at workflow, job, or
+step scope (such as `env: ${{ fromJSON(vars.EXTRA_ENV) }}`) is also reported as
+unanalyzable so dynamic mappings cannot bypass `forbidden` or `required` rules
+silently. `options.unanalyzable` controls both (`advise | report |
 ignore`, default `advise`): `advise` records a non-failing advisory, `report`
-makes it a failing finding, and `ignore` drops it. Write the literal required
-value to have it verified, or suppress the line when the expression always
-resolves to it.
+makes it a failing finding, and `ignore` drops it. Write a literal `env:`
+mapping and literal required value to have them verified, or suppress the line
+when the expression is safe.
 
 A ` #` inside a quoted key or value is not treated as a comment when locating
 finding lines.

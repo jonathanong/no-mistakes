@@ -15,6 +15,10 @@ fn config(name: &str) -> NoMistakesConfig {
     serde_yaml::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
 }
 
+fn locate(source: &str, path: &[lines::Seg]) -> usize {
+    lines::locate(lines::parse(source).as_ref(), path)
+}
+
 #[test]
 fn violations_report_every_scope() {
     let root = rule_root().join("fixture/violations");
@@ -106,7 +110,7 @@ fn non_scalar_value_is_a_mismatch_and_numbers_compare_as_text() {
 
 #[test]
 fn locate_handles_same_indent_sequences() {
-    use lines::{locate, Seg};
+    use lines::Seg;
     let source = "jobs:\n  a:\n    steps:\n    - run: x\n    - run: y\n      env:\n        K: v\n";
     let at = [
         Seg::Key("jobs".into()),
@@ -121,7 +125,7 @@ fn locate_handles_same_indent_sequences() {
 
 #[test]
 fn locate_matches_quoted_keys() {
-    use lines::{locate, Seg};
+    use lines::Seg;
     let source = "\"env\":\n  'POLICY': wrong\n";
     let at = [Seg::Key("env".into()), Seg::Key("POLICY".into())];
     assert_eq!(locate(source, &at), 2);
@@ -166,7 +170,7 @@ fn composite_shapes_and_unterminated_quotes() {
             .0
             .is_empty());
     }
-    use lines::{locate, Seg};
+    use lines::Seg;
     assert_eq!(locate("\"env: x\n", &[Seg::Key("env".into())]), 1);
     assert_eq!(locate("", &[Seg::Key("env".into())]), 1);
     assert_eq!(locate("a: 1\n", &[Seg::Key("b".into()), Seg::Idx(0)]), 1);
@@ -189,7 +193,7 @@ fn explicit_include_missing_files_and_scalar_forms() {
     assert!(scan::check_parsed("w.yml", source, &value, &policy)
         .0
         .is_empty());
-    use lines::{locate, Seg};
+    use lines::Seg;
     let at = [Seg::Key("steps".into()), Seg::Idx(1)];
     assert_eq!(locate("steps:\n  -\n  - run: x\n", &at), 3);
     let at = [Seg::Key("env".into()), Seg::Key("A".into())];
@@ -206,4 +210,30 @@ fn expression_equal_to_required_is_still_unanalyzable() {
     assert!(findings.is_empty());
     assert_eq!(undecidable.len(), 1);
     assert_eq!(undecidable[0].line, 2);
+}
+
+#[test]
+fn non_mapping_env_is_unanalyzable_not_silently_skipped() {
+    let root = rule_root().join("fixture/dynamic-env");
+    let files = [root.join(".github/workflows/ci.yml")];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let out =
+        diagnostics_with_files_and_sources(&root, &config("policy.yml"), &files, &sources, false)
+            .unwrap();
+    assert!(out.findings.is_empty(), "{:?}", out.findings);
+    let advised: Vec<_> = out.advisories.iter().map(|f| f.line).collect();
+    assert_eq!(advised, [6, 9]);
+    assert!(out.advisories[0].message.contains("fromJSON(vars.JOB_ENV)"));
+    let report =
+        diagnostics_with_files_and_sources(&root, &config("report.yml"), &files, &sources, false)
+            .unwrap();
+    assert!(report.advisories.is_empty());
+    assert_eq!(
+        report.findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [6, 9]
+    );
+    let ignore =
+        diagnostics_with_files_and_sources(&root, &config("ignore.yml"), &files, &sources, false)
+            .unwrap();
+    assert!(ignore.findings.is_empty() && ignore.advisories.is_empty());
 }

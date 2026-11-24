@@ -23,6 +23,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "dynamic-env": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" sets `env` to `${{ fromJSON(vars.JOB_ENV) }}`, which cannot be checked statically. Write a literal `env:` mapping so the env policy can verify it, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "env: ${{ fromJSON(vars.JOB_ENV) }}",
+          "target": "env"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml: job \"build\" step 1 sets `env` to `${{ fromJSON(vars.STEP_ENV) }}`, which cannot be checked statically. Write a literal `env:` mapping so the env policy can verify it, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "env: ${{ fromJSON(vars.STEP_ENV) }}",
+          "target": "env"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "empty": {
     "exitCode": 0,
     "report": {
