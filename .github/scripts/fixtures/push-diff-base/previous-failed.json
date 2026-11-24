@@ -1,0 +1,17 @@
+{
+  "total_count": 2,
+  "workflow_runs": [
+    {
+      "id": 200,
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "id": 100,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "1111111111111111111111111111111111111111"
+    }
+  ]
+}

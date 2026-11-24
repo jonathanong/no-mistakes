@@ -1127,7 +1127,11 @@ Test CI cancels superseded in-progress runs only for pull requests. An active
 main run always finishes and uploads Rust coverage when another merge lands.
 The workflow group is keyed by ref outside pull requests, so a new main run
 waits for the one in progress, and GitHub keeps only the newest waiting run: a
-commit superseded while waiting gets no Test CI run.
+commit superseded while waiting gets no Test CI run. Because middle commits can
+be skipped, push path-scoping steps resolve their diff base through
+[`push-diff-base.cjs`](../../.github/scripts/push-diff-base.cjs) from the most
+recent completed (`success` or `failure`) Test CI push run on the branch,
+falling back to full scope when no prior ancestor run is available.
 
 Rust coverage floors use one `cargo llvm-cov report --json --summary-only`
 export and [a totals checker](../../.github/scripts/rust-coverage-floors.cjs).

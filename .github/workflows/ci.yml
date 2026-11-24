@@ -59,6 +59,9 @@ jobs:
     name: Detect changed paths
     runs-on: ubuntu-slim
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
     outputs:
       benchmarks: ${{ github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/ci/cold-build' && !startsWith(github.ref, 'refs/heads/ci/warm-build-') && steps.benchmark-paths.outputs.changed || 'false' }}
       benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
@@ -81,12 +84,32 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Resolve diff base
+        id: diff-base
+        timeout-minutes: 2
+        shell: bash
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BASE_SHA=$(node .github/scripts/push-diff-base.cjs \
+            --event "$GITHUB_EVENT_NAME" \
+            --workflow ci.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --head "$HEAD_SHA" \
+            --pr-base "$PR_BASE_SHA" \
+            --current-run-id "$GITHUB_RUN_ID")
+          echo "base-sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
       - name: Check benchmark paths
         id: benchmark-paths
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
@@ -113,7 +136,7 @@ jobs:
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -137,7 +160,7 @@ jobs:
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -161,7 +184,7 @@ jobs:
         timeout-minutes: 2
         shell: bash
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ steps.diff-base.outputs.base-sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -354,7 +377,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/push-diff-base.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs
@@ -3332,9 +3355,19 @@ jobs:
       - name: Run ast-grep scan
         timeout-minutes: 2
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          BASE_SHA=$(node .github/scripts/push-diff-base.cjs \
+            --event "$GITHUB_EVENT_NAME" \
+            --workflow ci.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --head "$HEAD_SHA" \
+            --pr-base "$PR_BASE_SHA" \
+            --current-run-id "$GITHUB_RUN_ID")
           if [ -n "${BASE_SHA}" ] && [ "${BASE_SHA}" != "0000000000000000000000000000000000000000" ]; then
             if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
               git fetch --no-tags --depth=1 origin "${BASE_SHA}"
