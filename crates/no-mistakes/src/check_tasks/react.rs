@@ -66,6 +66,7 @@ pub(crate) fn run_react_check_with_session(
         pre_suppressed: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
+        analysis_warnings: Vec::new(),
         warning,
         duration,
     })

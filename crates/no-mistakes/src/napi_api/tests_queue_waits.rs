@@ -61,3 +61,54 @@ fn queue_check_json_exposes_wrapper_patterns_and_declaration_policy() {
         .unwrap()
         .contains("enqueue without waiting")));
 }
+
+#[test]
+fn queue_check_json_surfaces_diagnostics_when_opted_in_and_in_aggregate_check() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/worker-rate-limit-unresolved/fixture");
+    let bare = super::project::queue_check_json_impl(json!({ "root": root })).unwrap();
+    let bare: serde_json::Value = serde_json::from_str(&bare).unwrap();
+    assert_eq!(bare, json!([]));
+
+    let with_diagnostics = super::project::queue_check_json_impl(json!({
+        "root": root,
+        "includeDiagnostics": true,
+    }))
+    .unwrap();
+    let with_diagnostics: serde_json::Value = serde_json::from_str(&with_diagnostics).unwrap();
+    assert_eq!(with_diagnostics["findings"], json!([]));
+    let diagnostics = with_diagnostics["diagnostics"].as_array().unwrap();
+    assert_eq!(diagnostics.len(), 1, "{with_diagnostics}");
+    assert_eq!(diagnostics[0]["severity"], "warning");
+    assert_eq!(diagnostics[0]["file"], "mutated-worker.ts");
+    assert_eq!(diagnostics[0]["line"], 8);
+    assert!(diagnostics[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("worker-rate-limit-per-process was not judged"));
+
+    let batched = super::analyze_project::analyze_project_json_impl(super::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [
+                { "type": "queueCheck" },
+                { "type": "queueCheck", "includeDiagnostics": true },
+                { "type": "check" }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let batched: serde_json::Value = serde_json::from_str(&batched).unwrap();
+    assert_eq!(batched["reports"][0]["result"], bare);
+    assert_eq!(batched["reports"][1]["result"], with_diagnostics);
+    assert_eq!(batched["reports"][2]["result"]["queues"], json!([]));
+    let warnings = batched["reports"][2]["result"]["warnings"]
+        .as_array()
+        .unwrap();
+    assert_eq!(warnings.len(), 1, "{batched}");
+    assert_eq!(
+        warnings[0],
+        "queues-check: mutated-worker.ts:8 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
+    );
+}

@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/cli_check_queue_diagnostics.rs
+---
+{
+  "diagnostics": [
+    {
+      "file": "imported-set.ts",
+      "line": 4,
+      "message": "dynamic or unresolved queue producer",
+      "severity": "warning"
+    },
+    {
+      "file": "param-receiver.ts",
+      "line": 4,
+      "message": "dynamic or unresolved queue producer",
+      "severity": "warning"
+    },
+    {
+      "file": "unknown-wrapper.ts",
+      "line": 4,
+      "message": "dynamic or unresolved queue producer",
+      "severity": "warning"
+    }
+  ],
+  "findings": []
+}

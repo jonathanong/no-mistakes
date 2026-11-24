@@ -360,6 +360,9 @@ mod cli_check_queue_required_options;
 #[path = "cli_check_queue_priority.rs"]
 mod cli_check_queue_priority;
 
+#[path = "cli_check_queue_diagnostics.rs"]
+mod cli_check_queue_diagnostics;
+
 #[path = "cli_check_queue_rate_limit.rs"]
 mod cli_check_queue_rate_limit;
 
