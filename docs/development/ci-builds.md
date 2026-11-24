@@ -15,7 +15,6 @@ Shard counts therefore follow measured work, not a fixed default:
 | Linux N-API tests | 4 | 1 | about 46 s of work per shard |
 | JavaScript policy | 4 | 1 job, 4 steps | each check is 20-35 s of work |
 | Rust quality | 7 | 4 | Clippy pair, check builds pair, release warnings with formatting; PostgreSQL source identities stays alone at about 17 minutes |
-| Rust coverage shards | 6 | 3 | about 6 minutes per shard |
 | Cache retention | 7 | 1 | one `Retain caches` job after all producers |
 
 Left unchanged: gate jobs (`Tests with coverage`, `AST analysis`,
@@ -32,7 +31,8 @@ artifacts; and the small gate-like jobs (`Detect changed paths`,
 `Documentation links`, `Timeout-policy browser tests`, `Source policy and
 tooling tests`), whose combination would not shorten the critical path.
 
-Benchmark shards stay one matrix entry each (24 jobs). Work that ran in
+Benchmark shards (24 jobs) and Rust coverage shards (6 jobs) stay one matrix
+entry each; both sit on the critical path of a required check or of `main`. Work that ran in
 parallel must not be folded into sequential steps of one job: on `main` the
 benchmark chain (`Build benchmarks`, then the shards) is on the critical path,
 so grouping shards would add their durations to the run's wall time.
@@ -66,7 +66,7 @@ The current validation graph is organized as follows:
   enforces the configured coverage floors and uploads to Codecov. Linux
   real-addon cases run in one job that still goes through the shared case
   partitioning script (one shard) so umbrella imports stay covered.
-- Rust coverage builds instrumented test binaries once, then runs three test
+- Rust coverage builds instrumented test binaries once, then runs six test
   shards. Documentation tests run independently with their own ordinary Cargo
   cache, so they cannot rebuild an uninstrumented library on the coverage
   producer before shards start. A collector merges profiles and checks

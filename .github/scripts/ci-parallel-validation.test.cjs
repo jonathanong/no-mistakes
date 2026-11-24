@@ -140,7 +140,7 @@ test("coverage report fan-in preserves every floor after sharded test execution"
     assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));
 });
 
-test("coverage compilation and three execution shards have separate failure-aware jobs", () => {
+test("coverage compilation and six execution shards have separate failure-aware jobs", () => {
   const observed = JSON.parse(
     readFileSync(
       path.join(root, "test-cases/rust-validation/fixture/rust-coverage-step-timing.json"),
@@ -156,10 +156,10 @@ test("coverage compilation and three execution shards have separate failure-awar
   assert.match(build, /rust-coverage-shards\.cjs archive/);
   assert.match(shards, /needs: rust-coverage-build/);
   assert.match(shards, /fail-fast: false/);
-  assert.match(shards, /shard: \[1, 2, 3\]/);
+  assert.match(shards, /shard: \[1, 2, 3, 4, 5, 6\]/);
   assert.match(shards, /rust-coverage-shards\.cjs shard/);
   const step = stepBudgetSeconds(shards, "Run Rust tests for coverage");
-  assert.equal(step, 840);
+  assert.equal(step, 480);
   assert.ok(
     tests > step,
     "the historical serial suite is not evidence that each partition meets its deadline",
