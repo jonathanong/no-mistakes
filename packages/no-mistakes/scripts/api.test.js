@@ -610,6 +610,7 @@ test("changes diff and planner changes have exported public contracts", () => {
   assert.match(changes, /export interface KeyChanges/);
   assert.match(changes, /export interface ChangesDiffOptions/);
   assert.match(changes, /export type ChangesReport/);
+  assert.match(changes, /changedFiles\?: string\[\];/);
   assert.match(changes, /export function changesDiff/);
   assert.match(changes, /baseRoot: string/);
   assert.match(changes, /headRoot: string/);

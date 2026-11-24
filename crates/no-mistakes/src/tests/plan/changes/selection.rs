@@ -75,6 +75,13 @@ impl Selection<'_> {
                 Err(error) => self.fallback(error, None),
             }
         }
+        if !report.changed_files.is_empty() && !self.plan.fallback_triggered {
+            if let Some(reason) =
+                unplanned_changed_file_reason(self.prepared, framework, &self.plan.warnings)
+            {
+                self.fallback(reason, None);
+            }
+        }
     }
 
     fn select(

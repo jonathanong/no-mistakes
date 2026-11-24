@@ -7,6 +7,7 @@ use crate::codebase::keyed_diff;
 pub(super) struct FileDiff<'a> {
     pub categories: Vec<(&'a str, Observation)>,
     pub unclassified: Option<String>,
+    pub changed_file: Option<String>,
     pub reasons: Vec<String>,
     pub deferred: Vec<(&'a str, String)>,
 }
@@ -20,15 +21,32 @@ pub(super) fn compare<'a>(
     if !base.knows(path) || !head.knows(path) {
         return None;
     }
-    let matches: Vec<_> = rules
-        .selectors
-        .matches(path)
-        .into_iter()
-        .map(|index| &rules.rules[index])
+    let selector_matches = rules.selectors.matches(path);
+    let matches: Vec<_> = selector_matches
+        .iter()
+        .map(|&index| &rules.rules[index])
         .filter(|rule| !rule.is_excluded(path, &rules.excludes))
         .collect();
     if matches.is_empty() {
-        return None;
+        let excluded_by_category = !selector_matches.is_empty();
+        return match is_unchanged(path, base, head) {
+            Ok(true) => None,
+            Ok(false) => Some(if excluded_by_category {
+                FileDiff {
+                    unclassified: Some(path.to_owned()),
+                    ..FileDiff::default()
+                }
+            } else {
+                FileDiff {
+                    changed_file: Some(path.to_owned()),
+                    ..FileDiff::default()
+                }
+            }),
+            Err(reason) => Some(FileDiff {
+                reasons: vec![reason],
+                ..FileDiff::default()
+            }),
+        };
     }
     match compare_readable(path, base, head, rules, &matches) {
         Ok(diff) => diff,
@@ -37,6 +55,15 @@ pub(super) fn compare<'a>(
             ..FileDiff::default()
         }),
     }
+}
+
+fn is_unchanged(path: &str, base: &Snapshot, head: &Snapshot) -> Result<bool, String> {
+    if base.is_link(path) || head.is_link(path) {
+        return Ok(base.link_identity(path)? == head.link_identity(path)?);
+    }
+    let base_source = base.read(path)?;
+    let head_source = head.read(path)?;
+    Ok(base.bytes(path, &base_source)? == head.bytes(path, &head_source)?)
 }
 
 fn compare_readable<'a>(

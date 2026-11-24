@@ -11,9 +11,7 @@ impl PreparedTestPlanRequest {
     }
 
     pub(crate) fn changes_input(&self) -> Option<&plan::changes::ChangesInput> {
-        self.changes_input
-            .get_or_init(|| plan::changes::ChangesInput::load(self))
-            .as_ref()
+        self.changes_input.as_ref()
     }
 
     pub(crate) fn planning_changed_files(&self, framework: Option<TestFramework>) -> Vec<PathBuf> {

@@ -2,6 +2,7 @@ changes:
   categories:
     fixtures:
       paths: ["fixtures/*.json"]
+      exclude: ["fixtures/ignored.json"]
       id:
         fromPath: "fixtures/{id}.json"
       tests: ["tests/**/*.test.ts"]

@@ -225,7 +225,7 @@ fn changes_unions_fixture_source_and_lockfile_without_unclassified_fallback() {
     let reports = source.join("reports");
     let mut summaries = serde_json::Map::new();
 
-    // 1. Fixture only
+    // 1. Fixture only (--changes alone)
     let fix_head = crate::saved_fixture::materialize_path(&source.join("base"));
     std::fs::copy(
         patches.join("avatar.json"),
@@ -244,50 +244,41 @@ fn changes_unions_fixture_source_and_lockfile_without_unclassified_fallback() {
         &[
             "--changes",
             reports.join("fixture-changed.json").to_str().unwrap(),
-            "--changed-file",
-            "fixtures/avatar.json",
         ],
     );
     assert_eq!(selected_files(&fix_plan), ["tests/avatar.test.ts"]);
     assert_eq!(fix_plan["fallback_triggered"], false);
     summaries.insert("fixture_only".into(), summary(&fix_plan));
 
-    // 2. Source only
+    // 2. Source only (--changes alone, routed via report changedFiles)
     let src_head = crate::saved_fixture::materialize_path(&source.join("base"));
     std::fs::copy(patches.join("cart.ts"), src_head.path().join("src/cart.ts")).unwrap();
     let src_diff = diff_json(&source.join("base"), src_head.path());
-    let expected_empty: Value =
-        serde_json::from_str(&std::fs::read_to_string(reports.join("empty.json")).unwrap())
+    let expected_src: Value =
+        serde_json::from_str(&std::fs::read_to_string(reports.join("source-only.json")).unwrap())
             .unwrap();
-    assert_eq!(src_diff, expected_empty);
+    assert_eq!(src_diff, expected_src);
     let src_plan = plan(
         src_head.path(),
         "1",
         &[
             "--changes",
-            reports.join("empty.json").to_str().unwrap(),
-            "--changed-file",
-            "src/cart.ts",
+            reports.join("source-only.json").to_str().unwrap(),
         ],
     );
     assert_eq!(selected_files(&src_plan), ["tests/cart.test.ts"]);
     assert_eq!(src_plan["fallback_triggered"], false);
     summaries.insert("source_only".into(), summary(&src_plan));
 
-    // 3. Both fixture and source
+    // 3. Both fixture and source (--changes alone)
     let both_diff = diff_json(&source.join("base"), &source.join("head"));
-    assert_eq!(both_diff, expected_fix);
+    let expected_both: Value =
+        serde_json::from_str(&std::fs::read_to_string(reports.join("both.json")).unwrap()).unwrap();
+    assert_eq!(both_diff, expected_both);
     let both_plan = plan(
         &source.join("head"),
         "1",
-        &[
-            "--changes",
-            "../reports/fixture-changed.json",
-            "--changed-file",
-            "fixtures/avatar.json",
-            "--changed-file",
-            "src/cart.ts",
-        ],
+        &["--changes", "../reports/both.json"],
     );
     assert_eq!(
         selected_files(&both_plan),
@@ -296,7 +287,7 @@ fn changes_unions_fixture_source_and_lockfile_without_unclassified_fallback() {
     assert_eq!(both_plan["fallback_triggered"], false);
     summaries.insert("both".into(), summary(&both_plan));
 
-    // 4. Both fixture, source, and lockfile bump (with --base)
+    // 4. Both fixture, source, and lockfile bump (without --base -> fallback; with --base -> union)
     let repo = crate::saved_fixture::materialize_path(&source.join("base"));
     git_cmd(repo.path(), &["init", "-b", "main"]);
     git_cmd(
@@ -326,7 +317,31 @@ fn changes_unions_fixture_source_and_lockfile_without_unclassified_fallback() {
     git_cmd(repo.path(), &["add", "."]);
     git_cmd(repo.path(), &["commit", "-m", "head"]);
     let lock_diff = diff_json(&source.join("base"), repo.path());
-    assert_eq!(lock_diff, expected_fix);
+    let expected_lock: Value = serde_json::from_str(
+        &std::fs::read_to_string(reports.join("both-with-lockfile.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(lock_diff, expected_lock);
+    let lock_no_base = plan(
+        repo.path(),
+        "1",
+        &[
+            "--changes",
+            reports.join("both-with-lockfile.json").to_str().unwrap(),
+        ],
+    );
+    assert_eq!(lock_no_base["fallback_triggered"], true);
+    assert_eq!(
+        selected_files(&lock_no_base),
+        [
+            "tests/avatar.test.ts",
+            "tests/cart.test.ts",
+            "tests/unrelated.test.ts",
+            "tests/widget.test.ts",
+        ]
+    );
+    summaries.insert("lockfile_without_base".into(), summary(&lock_no_base));
+
     let lock_plan = plan(
         repo.path(),
         "1",
@@ -334,7 +349,7 @@ fn changes_unions_fixture_source_and_lockfile_without_unclassified_fallback() {
             "--base",
             &base_sha,
             "--changes",
-            reports.join("fixture-changed.json").to_str().unwrap(),
+            reports.join("both-with-lockfile.json").to_str().unwrap(),
         ],
     );
     assert_eq!(
@@ -347,6 +362,39 @@ fn changes_unions_fixture_source_and_lockfile_without_unclassified_fallback() {
     );
     assert_eq!(lock_plan["fallback_triggered"], false);
     summaries.insert("both_with_lockfile".into(), summary(&lock_plan));
+
+    // 5. Excluded path under a category's paths stays unclassified and falls back
+    let excl_head = crate::saved_fixture::materialize_path(&source.join("base"));
+    std::fs::copy(
+        patches.join("ignored.json"),
+        excl_head.path().join("fixtures/ignored.json"),
+    )
+    .unwrap();
+    let excl_diff = diff_json(&source.join("base"), excl_head.path());
+    let expected_excl: Value = serde_json::from_str(
+        &std::fs::read_to_string(reports.join("excluded-unclassified.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(excl_diff, expected_excl);
+    let excl_plan = plan(
+        excl_head.path(),
+        "1",
+        &[
+            "--changes",
+            reports.join("excluded-unclassified.json").to_str().unwrap(),
+        ],
+    );
+    assert_eq!(excl_plan["fallback_triggered"], true);
+    assert_eq!(
+        selected_files(&excl_plan),
+        [
+            "tests/avatar.test.ts",
+            "tests/cart.test.ts",
+            "tests/unrelated.test.ts",
+            "tests/widget.test.ts",
+        ]
+    );
+    summaries.insert("excluded_unclassified".into(), summary(&excl_plan));
 
     insta::assert_snapshot!(
         "changes_union_routing",
