@@ -1,0 +1,17 @@
+{
+  "action": "completed",
+  "workflow_run": {
+    "name": "Benchmarks",
+    "path": ".github/workflows/benchmarks.yml",
+    "event": "push",
+    "head_branch": "main",
+    "repository": {
+      "full_name": "example/widgets"
+    },
+    "head_repository": {
+      "full_name": "example/widgets"
+    },
+    "status": "completed",
+    "conclusion": "failure"
+  }
+}

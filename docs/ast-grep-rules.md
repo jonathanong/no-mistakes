@@ -283,7 +283,9 @@ saved tree. A `runtime` entry covers permissions, locks, symlinks, concurrent
 writes, or bytes that cannot be committed. Do not add fixture content writes
 to an allowlisted file. The completed migration leaves
 `.ast-grep/inline-fixture-write-baseline.txt` empty. Every non-allowlisted write
-now fails, and paths cannot be added back to that baseline.
+now fails, and paths cannot be added back to that baseline. AST analysis uses
+a distinct diff base when available. Without one, it requires an empty
+baseline directly.
 
 ## Adding more rules of this shape
 

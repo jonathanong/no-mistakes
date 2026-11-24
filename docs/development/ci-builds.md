@@ -224,7 +224,10 @@ complete store, then the newest creation time and ID, rather than a newer
 partial store. Different lockfiles, platforms, architectures, and unknown key
 formats remain separate.
 
-Cleanup runs after successful main producers, after main CI, and on PR closure.
+Cleanup runs after successful main producers, on PR closure, and when a
+main-push run of Test CI or Benchmarks finishes. A run can save caches before a
+later job fails, so cleanup also runs after unsuccessful completions.
+
 After deduplication it evicts least-recently-accessed main workspace snapshots
 until the inventory fits an 8 GiB budget. These build caches can be recreated;
 open PRs, unknown families, release dependencies, and active benchmark handoffs

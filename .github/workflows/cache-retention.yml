@@ -2,7 +2,7 @@ name: Cache retention
 
 on:
   workflow_run:
-    workflows: [Test CI]
+    workflows: [Test CI, Benchmarks]
     branches: [main]
     types: [completed]
   pull_request_target:
