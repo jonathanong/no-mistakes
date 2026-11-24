@@ -303,5 +303,9 @@ step, the findings share the step line, so one directive on that line covers the
 
 ## Invalid options
 
-An invalid cache option produces an `incomplete` configuration diagnostic.
-Keep each `forbiddenPaths` value unique and outside the configured `caches` paths.
+An invalid cache option is a configuration error: `check` validates options
+before any analysis runs, exits with status 2 and empty stdout, and prints all
+invalid option diagnostics sorted to stderr (naming the rule, option path,
+rejected value, and constraint). No partial report or `incomplete` entry is
+emitted, and the async Node API rejects with the same message. Keep each
+`forbiddenPaths` value unique and outside the configured `caches` paths.

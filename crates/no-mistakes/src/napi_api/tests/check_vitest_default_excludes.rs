@@ -168,22 +168,46 @@ fn batch(options: serde_json::Value) -> serde_json::Value {
 }
 
 #[test]
-fn vitest_default_excludes_invalid_options_keep_batch_parity() {
+fn invalid_rule_options_reject_with_cli_and_batch_parity() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/options-audit/fixture/issue-3958");
-    let config = root.join("vitest.yml");
-    let options = json!({"root": root, "config": config});
-    let native: serde_json::Value = serde_json::from_str(
-        &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
-    )
-    .unwrap();
-    let incomplete = native["incomplete"].as_array().unwrap();
-    assert_eq!(incomplete.len(), 1);
-    assert_eq!(incomplete[0]["consumer"], "vitest-default-excludes");
-    assert_eq!(incomplete[0]["property"], "options.files");
-    let findings = native["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0]["file"], "factory.ts");
-    let batched = batch(json!({"root": root, "config": config, "reports": [{"type": "check"}]}));
-    assert_eq!(batched["reports"][0]["result"], native);
+    for (config_name, expected_lines) in [
+        ("cache.yml", 1usize),
+        ("action-input.yml", 1),
+        ("vitest.yml", 1),
+        ("multiple.yml", 11),
+    ] {
+        let config = root.join(config_name);
+        let cli_err = crate::check_runner::run_all_with_options(
+            root.clone(),
+            Some(config.clone()),
+            None,
+            false,
+            false,
+            crate::check_runner::AnalysisOptions::default(),
+        )
+        .err()
+        .expect("invalid rule options must fail CLI check");
+        let cli_message = format!("{cli_err:#}");
+
+        let options = json!({"root": root, "config": config});
+        let native_err =
+            check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
+                .expect_err("invalid rule options must reject async check");
+        assert_eq!(native_err.reason, cli_message, "{config_name}");
+
+        let batched_err = crate::napi_api::analyze_project::analyze_project_json_impl(
+            crate::napi_api::options::test_json_arg(
+                json!({"root": root, "config": config, "reports": [{"type": "check"}]}).to_string(),
+            ),
+        )
+        .expect_err("invalid rule options must reject analyzeProject check");
+        assert_eq!(batched_err.reason, cli_message, "{config_name}");
+
+        let lines: Vec<_> = cli_message.lines().collect();
+        assert_eq!(lines.len(), expected_lines, "{config_name}: {cli_message}");
+        let mut sorted = lines.clone();
+        sorted.sort();
+        assert_eq!(lines, sorted, "{config_name}: {cli_message}");
+    }
 }

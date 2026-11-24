@@ -1,7 +1,6 @@
 use super::RULE_ID;
-use crate::codebase::analysis_session::AnalysisSession;
-use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::rules::path_filter::{GlobMatcher, RulePathFilter};
+use crate::codebase::rules::validate_options::finish;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::RuleDef;
@@ -11,6 +10,9 @@ use rustc_hash::FxHashSet;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+mod validate;
+use validate::{collect_option_errors, invalid};
 
 const DEFAULT_GLOBS: [&str; 2] = ["**/node_modules/**", "**/.git/**"];
 
@@ -42,34 +44,84 @@ pub(super) struct Application<'a> {
     pub(super) message: Option<&'a str>,
 }
 
+pub(crate) fn collect_config_errors(
+    root: &Path,
+    config: &NoMistakesConfig,
+    errors: &mut BTreeSet<String>,
+) {
+    let rules = config.rule_applications(RULE_ID);
+    if rules.is_empty() {
+        return;
+    }
+    let root = normalize_path(root);
+    for rule in rules {
+        collect_application_errors(&root, config, rule, errors);
+    }
+}
+
 pub(super) fn applications<'a>(
     root: &Path,
     config: &'a NoMistakesConfig,
     files: &[PathBuf],
-    session: Option<&AnalysisSession>,
 ) -> Result<Vec<Application<'a>>> {
     let rules = config.rule_applications(RULE_ID);
     if rules.is_empty() {
         return Ok(Vec::new());
     }
-    let normalized_root = normalize_path(root);
-    let root = normalized_root.as_path();
+    let root = normalize_path(root);
+    let mut errors = BTreeSet::new();
+    for rule in &rules {
+        collect_application_errors(&root, config, rule, &mut errors);
+    }
+    finish(errors)?;
     let normalized_files: Vec<PathBuf> = files
         .iter()
         .map(|path| normalize_path(path))
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect();
-    let mut applications = Vec::new();
+    let mut apps = Vec::new();
     for rule in rules {
-        let result = select_application(root, config, rule, &normalized_files, &mut applications);
-        if let Some(session) = session {
-            session.capture_check_result(RULE_ID, result)?;
-        } else {
-            result?;
+        select_application(&root, config, rule, &normalized_files, &mut apps)?;
+    }
+    Ok(apps)
+}
+
+fn collect_application_errors(
+    root: &Path,
+    config: &NoMistakesConfig,
+    rule: &RuleDef,
+    errors: &mut BTreeSet<String>,
+) {
+    let options: Options = match rule.try_rule_options() {
+        Ok(options) => options,
+        Err(error) => {
+            errors.insert(format!("{error:#}"));
+            return;
+        }
+    };
+    collect_option_errors(&options, errors);
+    let filter = match RulePathFilter::new(root, config, rule) {
+        Ok(filter) => filter,
+        Err(error) => {
+            errors.insert(format!("{error:#}"));
+            return;
+        }
+    };
+    let configured = options
+        .config
+        .as_deref()
+        .filter(|path| !options.required_globs.is_empty() && !path.trim().is_empty());
+    if let Some(configured) = configured {
+        let path = normalize_path(&root.join(configured));
+        if filter.is_match(&path) && !crate::codebase::dependencies::extract::is_indexable(&path) {
+            errors.insert(invalid(
+                "config",
+                configured,
+                "a TypeScript or JavaScript file path",
+            ));
         }
     }
-    Ok(applications)
 }
 
 fn select_application<'a>(
@@ -77,24 +129,18 @@ fn select_application<'a>(
     config: &NoMistakesConfig,
     rule: &'a RuleDef,
     files: &[PathBuf],
-    applications: &mut Vec<Application<'a>>,
+    apps: &mut Vec<Application<'a>>,
 ) -> Result<()> {
     let options: Options = rule.try_rule_options()?;
-    let file_matcher = options.validate()?;
     if options.required_globs.is_empty() {
         return Ok(());
     }
+    let file_matcher = GlobMatcher::new(&options.files, RULE_ID)?;
     let filter = RulePathFilter::new(root, config, rule)?;
     let config_file = options
         .config
-        .map(|config_path| (normalize_path(&root.join(&config_path)), config_path))
-        .filter(|(path, _)| filter.is_match(path));
-    if let Some((path, configured)) = &config_file {
-        anyhow::ensure!(
-            crate::codebase::dependencies::extract::is_indexable(path),
-            invalid("config", configured, "a TypeScript or JavaScript file path")
-        );
-    }
+        .map(|config_path| normalize_path(&root.join(&config_path)))
+        .filter(|path| filter.is_match(path));
     let mut seen = FxHashSet::default();
     let required_globs: Vec<String> = options
         .required_globs
@@ -109,7 +155,7 @@ fn select_application<'a>(
                 && file_matcher.is_match(&relative_slash_path(root, path))
         }) {
             matched_files.insert(path.clone());
-            applications.push(Application {
+            apps.push(Application {
                 path: path.clone(),
                 mode: CheckMode::TestLiterals,
                 required_globs: required_globs.clone(),
@@ -117,62 +163,13 @@ fn select_application<'a>(
             });
         }
     }
-    if let Some((path, _)) = config_file {
-        if !matched_files.contains(&path) {
-            applications.push(Application {
-                path,
-                mode: CheckMode::DefaultExport,
-                required_globs,
-                message: rule.message.as_deref(),
-            });
-        }
+    if let Some(path) = config_file.filter(|path| !matched_files.contains(path)) {
+        apps.push(Application {
+            path,
+            mode: CheckMode::DefaultExport,
+            required_globs,
+            message: rule.message.as_deref(),
+        });
     }
     Ok(())
-}
-
-impl Options {
-    fn validate(&self) -> Result<GlobMatcher> {
-        if let Some(config_path) = &self.config {
-            anyhow::ensure!(
-                !config_path.trim().is_empty(),
-                invalid(
-                    "config",
-                    config_path,
-                    "an explicit non-empty Vitest config file path"
-                )
-            );
-        }
-        anyhow::ensure!(
-            self.config.is_some() || !self.files.is_empty(),
-            invalid(
-                "files",
-                &self.files,
-                "a non-empty list of globs when options.config is absent"
-            )
-        );
-        for glob in &self.files {
-            anyhow::ensure!(
-                !glob.trim().is_empty(),
-                invalid("files", glob, "a valid non-empty glob")
-            );
-        }
-        let matcher = GlobMatcher::new(&self.files, RULE_ID).map_err(|error| {
-            error.context(invalid(
-                "files",
-                &self.files,
-                "a list of valid non-empty globs",
-            ))
-        })?;
-        for glob in &self.required_globs {
-            anyhow::ensure!(
-                !glob.trim().is_empty(),
-                invalid("requiredGlobs", glob, "a non-empty glob string")
-            );
-        }
-        Ok(matcher)
-    }
-}
-
-fn invalid(option: &str, value: impl std::fmt::Debug, allowed: &str) -> CheckInputFailure {
-    CheckInputFailure::invalid_rule_option(RULE_ID, option, value, allowed)
 }

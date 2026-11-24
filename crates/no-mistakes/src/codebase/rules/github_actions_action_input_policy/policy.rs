@@ -1,8 +1,9 @@
 use super::scalar::{display_canonical, input_scalar, InputScalar};
 use super::Options;
+use crate::codebase::rules::validate_options::finish;
 use anyhow::Result;
 use serde_yaml::Mapping;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 mod extra;
@@ -46,9 +47,22 @@ pub(super) enum InputFault {
 }
 
 pub(super) fn compile(opts: Options) -> Result<Compiled> {
+    let mut errors = BTreeSet::new();
+    let compiled = compile_with_errors(opts, &mut errors);
+    finish(errors)?;
+    Ok(compiled)
+}
+
+pub(super) fn collect_errors(opts: Options, errors: &mut BTreeSet<String>) {
+    let _ = compile_with_errors(opts, errors);
+}
+
+fn compile_with_errors(opts: Options, errors: &mut BTreeSet<String>) -> Compiled {
     let mut families: BTreeMap<String, Family> = BTreeMap::new();
     for action in opts.actions {
-        let name = validation::concrete_family(&action)?;
+        let Some(name) = validation::concrete_family(&action, errors) else {
+            continue;
+        };
         let family = families.entry(name.clone()).or_insert_with(|| Family {
             name,
             require: BTreeMap::new(),
@@ -56,17 +70,17 @@ pub(super) fn compile(opts: Options) -> Result<Compiled> {
             allowed: None,
             require_present: Vec::new(),
         });
-        validation::merge_action(family, &action)?;
+        validation::merge_action(family, &action, errors);
         extra::merge(family, &action);
     }
     for family in families.values() {
-        extra::validate(family)?;
+        extra::validate(family, errors);
     }
-    Ok(Compiled {
+    Compiled {
         include: opts.include,
         actions: families.into_values().collect(),
         target_roots: Vec::new(),
-    })
+    }
 }
 
 pub(super) fn family_of(uses: &str) -> Option<String> {

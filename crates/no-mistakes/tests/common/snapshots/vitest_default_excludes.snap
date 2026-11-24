@@ -75,33 +75,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "invalid_files": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-default-excludes",
-          "message": "Rule `vitest-default-excludes` has invalid value \"\" for `options.files`. Expected a valid non-empty glob.",
-          "property": "options.files"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [
-        {
-          "file": "factory.ts",
-          "line": 2,
-          "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
-          "rule": "vitest-default-excludes",
-          "sourceLine": "return { test: { exclude: ['.cache/widgets/**'] } }"
-        }
-      ],
-      "warnings": []
-    }
-  },
   "literal-controls": {
     "exitCode": 1,
     "report": {

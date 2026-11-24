@@ -4,7 +4,7 @@ const RULE: &str = "github-actions-cache-key-policy";
 
 #[test]
 fn github_actions_cache_key_policy_json_matches_snapshot() {
-    let mut cases: Vec<_> = ["policy", "restore-ok", "hash-off", "unreadable"]
+    let cases: Vec<_> = ["policy", "restore-ok", "hash-off", "unreadable"]
         .into_iter()
         .map(|fixture| {
             let config = if fixture == "unreadable" {
@@ -19,12 +19,6 @@ fn github_actions_cache_key_policy_json_matches_snapshot() {
             )
         })
         .collect();
-    let invalid = rules_path("options-audit", "fixture", "issue-3958");
-    cases.push((
-        "invalid_forbidden_path",
-        invalid.clone(),
-        invalid.join("cache.yml"),
-    ));
     assert_saved_fixture("github_actions_cache_key_policy", &cases);
 }
 
@@ -101,8 +95,13 @@ fn empty_cache_list_is_rejected() {
         .args(["--format", "json"])
         .output()
         .unwrap();
-    assert_eq!(output.status.code(), Some(1));
-    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(report["incomplete"][0]["consumer"], RULE);
-    assert_eq!(report["incomplete"][0]["property"], "options.caches");
+    assert_eq!(output.status.code(), Some(2));
+    assert!(
+        output.stdout.is_empty(),
+        "stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains(RULE), "{stderr}");
+    assert!(stderr.contains("options.caches"), "{stderr}");
 }

@@ -207,15 +207,35 @@ fn unreadable_workflow_bytes_are_reported() {
 
 #[test]
 fn empty_cache_list_is_a_config_error() {
-    let error = check(&fixture("policy"), &config("invalid")).unwrap_err();
-    assert_eq!(
-        error
-            .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
-            .unwrap()
-            .property
-            .as_deref(),
-        Some("options.caches")
+    let error = check(&fixture("policy"), &config("invalid"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(RULE_ID), "{error}");
+    assert!(error.contains("options.caches"), "{error}");
+    assert!(
+        error.contains("Expected a non-empty list of caches when forbiddenPaths is empty."),
+        "{error}"
     );
+}
+
+#[test]
+fn multiple_invalid_cache_options_are_reported_sorted() {
+    let invalid = options::Options {
+        forbidden_paths_message: Some("  ".into()),
+        caches: vec![spec(".cache/widgets", "", &["os"])],
+        forbidden_paths: vec![".cache/widgets".into()],
+        ..options::Options::default()
+    };
+    let error = options::validate(&invalid).unwrap_err().to_string();
+    let lines: Vec<_> = error.lines().collect();
+    assert_eq!(lines.len(), 4, "{error}");
+    let mut sorted = lines.clone();
+    sorted.sort();
+    assert_eq!(lines, sorted, "{error}");
+    assert!(error.contains("options.caches[].lockfile"), "{error}");
+    assert!(error.contains("options.caches[].keyParts"), "{error}");
+    assert!(error.contains("options.forbiddenPaths"), "{error}");
+    assert!(error.contains("options.forbiddenPathsMessage"), "{error}");
 }
 
 #[test]

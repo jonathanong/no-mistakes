@@ -191,6 +191,27 @@ actions:
             .to_string();
         assert!(error.contains(RULE_ID), "{error}");
     }
+
+    let multiple = r#"
+actions:
+  - uses: "${{ matrix.widget }}"
+  - uses: example/publish-widget
+    allowedInputs: [name]
+    ban: [name]
+    require:
+      format: json
+"#;
+    let error = policy::compile(serde_yaml::from_str(multiple).unwrap())
+        .unwrap_err()
+        .to_string();
+    let lines: Vec<_> = error.lines().collect();
+    assert_eq!(lines.len(), 3, "{error}");
+    let mut sorted = lines.clone();
+    sorted.sort();
+    assert_eq!(lines, sorted, "{error}");
+    assert!(error.contains("options.actions[].uses"), "{error}");
+    assert!(error.contains("options.actions[].ban"), "{error}");
+    assert!(error.contains("options.actions[].require"), "{error}");
 }
 
 #[test]

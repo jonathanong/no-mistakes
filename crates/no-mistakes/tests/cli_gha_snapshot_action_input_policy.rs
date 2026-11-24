@@ -5,15 +5,9 @@ const RULE: &str = "github-actions-action-input-policy";
 #[test]
 fn github_actions_action_input_policy_json_matches_snapshot() {
     let policy = rules_path(RULE, "configs", "policy.yml");
-    let invalid = rules_path("options-audit", "fixture", "issue-3958");
     assert_saved_fixture(
         "github_actions_action_input_policy",
         &[
-            (
-                "invalid_required_input",
-                invalid.clone(),
-                invalid.join("action-input.yml"),
-            ),
             // 8 findings: wrong widget values, a pinned SHA, runtime bans and
             // requirements, and one banned ship input. Unlisted actions stay out.
             (

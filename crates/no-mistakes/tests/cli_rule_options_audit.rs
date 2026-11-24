@@ -193,3 +193,62 @@ fn options_change_only_the_declared_policy() {
         1
     );
 }
+
+#[test]
+fn invalid_rule_options_fail_early_with_exit_2_and_empty_stdout() {
+    let root = fixture("issue-3958");
+    let mut diagnostics = serde_json::Map::new();
+    for name in [
+        "action-input.yml",
+        "cache.yml",
+        "multiple.yml",
+        "vitest.yml",
+    ] {
+        let cfg = root.join(name);
+        let run = |jobs: &str, json: bool| {
+            let mut cmd = Command::new(env!("CARGO_BIN_EXE_no-mistakes"));
+            cmd.args(["--lock-timeout", "0", "--jobs", jobs, "check", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(&cfg);
+            if json {
+                cmd.args(["--format", "json"]);
+            }
+            cmd.output().unwrap()
+        };
+        let one = run("1", true);
+        let two = run("2", true);
+        let human = run("1", false);
+        assert_eq!(one.status.code(), Some(2), "{name}");
+        assert_eq!(two.status.code(), Some(2), "{name}");
+        assert_eq!(human.status.code(), Some(2), "{name}");
+        assert!(one.stdout.is_empty(), "{name} stdout must be empty");
+        assert!(two.stdout.is_empty(), "{name} stdout must be empty");
+        assert!(human.stdout.is_empty(), "{name} human stdout must be empty");
+        let stderr = String::from_utf8(one.stderr).unwrap();
+        assert_eq!(stderr, String::from_utf8(two.stderr).unwrap(), "{name}");
+        assert_eq!(stderr, String::from_utf8(human.stderr).unwrap(), "{name}");
+        let lines: Vec<_> = stderr
+            .strip_prefix("error: ")
+            .unwrap_or(&stderr)
+            .lines()
+            .collect();
+        let mut sorted = lines.clone();
+        sorted.sort();
+        assert_eq!(lines, sorted, "{name}: {stderr}");
+        diagnostics.insert(
+            name.trim_end_matches(".yml").to_string(),
+            serde_json::json!({
+                "exitCode": one.status.code(),
+                "stdout": "",
+                "stderr": stderr,
+            }),
+        );
+    }
+    insta::with_settings!({snapshot_path => "common/snapshots", prepend_module_to_snapshot => false, omit_expression => true}, {
+        insta::assert_snapshot!(
+            "invalid_rule_options_fail_early",
+            format!("{}\n", serde_json::to_string_pretty(&diagnostics).unwrap())
+        );
+    });
+}

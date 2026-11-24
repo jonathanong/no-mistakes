@@ -17,6 +17,7 @@ use std::{
 mod extract;
 mod options;
 pub(crate) use extract::collect;
+pub(crate) use options::collect_config_errors;
 use options::{applications, Application, CheckMode};
 
 pub const RULE_ID: &str = "vitest-default-excludes";
@@ -39,18 +40,8 @@ pub fn required_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Arc<BTreeSet<PathBuf>>> {
-    required_files_with_session(root, config, files, None)
-}
-
-#[doc(hidden)]
-pub fn required_files_with_session(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    session: Option<&AnalysisSession>,
-) -> Result<Arc<BTreeSet<PathBuf>>> {
     Ok(Arc::new(
-        applications(root, config, files, session)?
+        applications(root, config, files)?
             .into_iter()
             .map(|app| app.path)
             .collect(),
@@ -91,7 +82,7 @@ pub(crate) fn check_prepared(
     session: Option<&AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
     let normalized_root = normalize_path(root);
-    let batches: Result<Vec<_>> = applications(&normalized_root, config, files, session)?
+    let batches: Result<Vec<_>> = applications(&normalized_root, config, files)?
         .into_par_iter()
         .map(|app| {
             let result = check_application(&normalized_root, app, facts, sources);

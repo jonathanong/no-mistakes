@@ -131,7 +131,7 @@ impl SharedCheckContext {
         demand_per_item_calls(config, &mut plan);
         crate::codebase::rules::forbidden_calls::configure_argument_facts(&root, config, &mut plan);
         let mut fact_demand = crate::check_runner::finite_set_plan::prepare(
-            (&session, &root),
+            &root,
             config,
             &mut plan,
             graph_rules_enabled,
@@ -147,7 +147,7 @@ impl SharedCheckContext {
         );
         let sources = prepared.visible_paths.source_store_for(&root);
         fact_demand.include_discovered_files(
-            (&session, &root),
+            &root,
             config,
             &views.filesystem,
             &sources,

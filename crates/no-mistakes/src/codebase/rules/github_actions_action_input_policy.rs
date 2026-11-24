@@ -52,6 +52,36 @@ pub(crate) fn check_with_files(
     check_with_files_and_sources(root, config, all_files, &sources, false)
 }
 
+pub(crate) fn collect_config_errors(
+    root: &Path,
+    config: &NoMistakesConfig,
+    errors: &mut std::collections::BTreeSet<String>,
+) {
+    for rule in config.rule_applications(RULE_ID) {
+        if let Err(error) = super::path_filter::RulePathFilter::new(root, config, rule) {
+            errors.insert(format!("{error:#}"));
+        }
+        match rule.try_rule_options::<Options>() {
+            Ok(opts) => {
+                for pattern in &opts.include {
+                    if let Err(error) = globset::Glob::new(pattern.trim_start_matches("./")) {
+                        errors.insert(super::validate_options::format_invalid_option(
+                            RULE_ID,
+                            "include",
+                            pattern,
+                            format_args!("a valid glob ({error})"),
+                        ));
+                    }
+                }
+                policy::collect_errors(opts, errors);
+            }
+            Err(error) => {
+                errors.insert(format!("{error:#}"));
+            }
+        }
+    }
+}
+
 pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -59,6 +89,9 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
+    let mut errors = std::collections::BTreeSet::new();
+    collect_config_errors(root, config, &mut errors);
+    super::validate_options::finish(errors)?;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let mut opts = policy::compile(rule.try_rule_options()?)?;

@@ -75,11 +75,15 @@ paths relative to either the repository root or the selected project root; a
 matching glob does not select files from an unselected project. Repository-scoped
 applications use repository-relative paths.
 
-The cache-key policy, action input policy, and Vitest default exclusion rule
-report invalid option values in `check --format json` under `incomplete` and
-exit with status 1. `consumer` identifies the rule. For rule-specific validation,
-`property` names the option and the message gives the rejected value and the
-accepted values or constraint. Async Node check reports use the same diagnostic.
+The cache-key policy (`github-actions-cache-key-policy`), action input policy
+(`github-actions-action-input-policy`), and Vitest default exclusion rule
+(`vitest-default-excludes`) treat invalid option values as configuration errors.
+`check` validates their options before any analysis runs, aborts with exit
+status 2 and empty stdout, and writes the diagnostic to stderr naming the rule,
+option path, rejected value, and accepted values or constraint. When several
+options are invalid, all errors are sorted and printed in one run; no partial
+report or `incomplete` entry is emitted. Async Node `check()` and
+`analyzeProject()` check reports reject with the same error message.
 
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds

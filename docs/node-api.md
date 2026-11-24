@@ -150,7 +150,9 @@ selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
 The cache-key policy, action input policy, and Vitest default exclusion rule
-name the rejected option and value in this report. See
+validate their options before analysis; invalid options reject `check()` and
+`analyzeProject()` with the same sorted configuration error message printed by
+the CLI (exit 2, empty stdout, no `incomplete` entry). See
 [rule configuration](configuration/rules.md).
 An unwinding panic during per-file fact extraction uses the same existing
 `CheckFailure` shape with consumer `fact-extraction`, the file, and the panic

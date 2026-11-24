@@ -7,11 +7,9 @@ fn vitest_default_excludes_json_matches_snapshot() {
     let overlap = rules_path("vitest-default-excludes", "fixture", "overlap");
     let literal_controls = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/rules/vitest-default-excludes");
-    let invalid = rules_path("options-audit", "fixture", "issue-3958");
     assert_saved_fixture(
         "vitest_default_excludes",
         &[
-            ("invalid_files", invalid.clone(), invalid.join("vitest.yml")),
             ("report", root.clone(), root.join(".no-mistakes.yml")),
             (
                 "factories",

@@ -1,6 +1,6 @@
 use super::text::norm_path;
 use super::RULE_ID;
-use crate::codebase::check_outcome::CheckInputFailure;
+use crate::codebase::rules::validate_options::{finish, format_invalid_option};
 use anyhow::Result;
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -40,79 +40,87 @@ impl Default for Options {
 }
 
 pub(super) fn validate(options: &Options) -> Result<()> {
-    anyhow::ensure!(
-        !options.caches.is_empty() || !options.forbidden_paths.is_empty(),
-        invalid(
+    let mut errors = BTreeSet::new();
+    collect_errors(options, &mut errors);
+    finish(errors)
+}
+
+pub(super) fn collect_errors(options: &Options, errors: &mut BTreeSet<String>) {
+    if options.caches.is_empty() && options.forbidden_paths.is_empty() {
+        errors.insert(invalid(
             "caches",
             &options.caches,
-            "a non-empty list of caches when forbiddenPaths is empty"
-        )
-    );
+            "a non-empty list of caches when forbiddenPaths is empty",
+        ));
+    }
     if let Some(message) = options.forbidden_paths_message.as_deref() {
-        anyhow::ensure!(
-            !message.trim().is_empty(),
-            invalid("forbiddenPathsMessage", message, "a non-empty message")
-        );
+        if message.trim().is_empty() {
+            errors.insert(invalid(
+                "forbiddenPathsMessage",
+                message,
+                "a non-empty message",
+            ));
+        }
     }
     let mut seen = BTreeSet::new();
     for cache in &options.caches {
         let path = norm_path(&cache.path);
-        anyhow::ensure!(
-            !path.is_empty(),
-            invalid("caches[].path", &cache.path, "a non-empty path")
-        );
-        anyhow::ensure!(
-            seen.insert(path.clone()),
-            invalid("caches[].path", &cache.path, "a unique cache path")
-        );
-        anyhow::ensure!(
-            !norm_path(&cache.lockfile).is_empty(),
-            invalid("caches[].lockfile", &cache.lockfile, "a non-empty path")
-        );
-        anyhow::ensure!(
-            !cache.key_parts.is_empty(),
-            invalid(
+        if path.is_empty() {
+            errors.insert(invalid("caches[].path", &cache.path, "a non-empty path"));
+        } else if !seen.insert(path) {
+            errors.insert(invalid(
+                "caches[].path",
+                &cache.path,
+                "a unique cache path",
+            ));
+        }
+        if norm_path(&cache.lockfile).is_empty() {
+            errors.insert(invalid(
+                "caches[].lockfile",
+                &cache.lockfile,
+                "a non-empty path",
+            ));
+        }
+        if cache.key_parts.is_empty() {
+            errors.insert(invalid(
                 "caches[].keyParts",
                 &cache.key_parts,
-                "at least one dotted context fragment"
-            )
-        );
-        for part in &cache.key_parts {
-            anyhow::ensure!(
-                valid_fragment(part.trim()),
-                invalid(
-                    "caches[].keyParts",
-                    part,
-                    "a dotted context fragment such as runner.os"
-                )
-            );
+                "at least one dotted context fragment",
+            ));
+        } else {
+            for part in &cache.key_parts {
+                if !valid_fragment(part.trim()) {
+                    errors.insert(invalid(
+                        "caches[].keyParts",
+                        part,
+                        "a dotted context fragment such as runner.os",
+                    ));
+                }
+            }
         }
     }
     let mut forbidden = BTreeSet::new();
     for raw in &options.forbidden_paths {
         let path = norm_path(raw);
-        anyhow::ensure!(
-            !path.is_empty(),
-            invalid("forbiddenPaths", raw, "a non-empty path")
-        );
-        anyhow::ensure!(
-            forbidden.insert(path.clone()),
-            invalid("forbiddenPaths", raw, "a unique forbidden path")
-        );
-        anyhow::ensure!(
-            !seen.contains(&path),
-            invalid(
+        if path.is_empty() {
+            errors.insert(invalid("forbiddenPaths", raw, "a non-empty path"));
+            continue;
+        }
+        if !forbidden.insert(path.clone()) {
+            errors.insert(invalid("forbiddenPaths", raw, "a unique forbidden path"));
+        }
+        if seen.contains(&path) {
+            errors.insert(invalid(
                 "forbiddenPaths",
                 raw,
-                "a path absent from options.caches[].path"
-            )
-        );
+                "a path absent from options.caches[].path",
+            ));
+        }
     }
-    Ok(())
 }
 
-fn invalid(option: &str, value: impl std::fmt::Debug, allowed: &str) -> CheckInputFailure {
-    CheckInputFailure::invalid_rule_option(RULE_ID, option, value, allowed)
+fn invalid(option: &str, value: impl std::fmt::Debug, allowed: &str) -> String {
+    format_invalid_option(RULE_ID, option, value, allowed)
 }
 
 fn valid_fragment(part: &str) -> bool {

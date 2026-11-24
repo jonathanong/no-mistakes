@@ -2,8 +2,8 @@ use super::super::scalar::{input_scalar, InputScalar};
 use super::super::ActionSpec;
 use super::validation::invalid;
 use super::{Family, InputFault};
-use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
+use std::collections::BTreeSet;
 
 pub(super) fn merge(family: &mut Family, action: &ActionSpec) {
     if let Some(keys) = &action.allowed_inputs {
@@ -24,11 +24,11 @@ fn push_unique(into: &mut Vec<String>, keys: &[String]) {
     }
 }
 
-pub(super) fn validate(family: &Family) -> Result<()> {
+pub(super) fn validate(family: &Family, errors: &mut BTreeSet<String>) {
     let name = &family.name;
     for key in &family.require_present {
         if family.ban.contains(key) || family.require.contains_key(key) {
-            bail!(invalid(
+            errors.insert(invalid(
                 "actions[].requiredPresent",
                 key,
                 format_args!("an input key absent from ban and require for action `{name}`"),
@@ -36,11 +36,11 @@ pub(super) fn validate(family: &Family) -> Result<()> {
         }
     }
     let Some(allowed) = &family.allowed else {
-        return Ok(());
+        return;
     };
     for key in &family.ban {
         if allowed.contains(key) {
-            bail!(invalid(
+            errors.insert(invalid(
                 "actions[].ban",
                 key,
                 format_args!("an input key outside allowedInputs {allowed:?} for action `{name}`"),
@@ -54,14 +54,13 @@ pub(super) fn validate(family: &Family) -> Result<()> {
         .map(|key| ("actions[].requiredPresent", key));
     for (option, key) in required.chain(present) {
         if !allowed.contains(key) {
-            bail!(invalid(
+            errors.insert(invalid(
                 option,
                 key,
                 format_args!("an input key in allowedInputs {allowed:?} for action `{name}`"),
             ));
         }
     }
-    Ok(())
 }
 
 pub(super) fn judge(with: Option<&Mapping>, family: &Family, faults: &mut Vec<InputFault>) {

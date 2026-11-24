@@ -27,6 +27,24 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     super::check_sourced_standalone(&root, config, check_with_files)
 }
 
+pub(crate) fn collect_config_errors(
+    root: &Path,
+    config: &NoMistakesConfig,
+    errors: &mut std::collections::BTreeSet<String>,
+) {
+    for rule in config.rule_applications(RULE_ID) {
+        if let Err(error) = super::path_filter::RulePathFilter::new(root, config, rule) {
+            errors.insert(format!("{error:#}"));
+        }
+        match rule.try_rule_options::<options::Options>() {
+            Ok(opts) => options::collect_errors(&opts, errors),
+            Err(error) => {
+                errors.insert(format!("{error:#}"));
+            }
+        }
+    }
+}
+
 pub(crate) fn check_with_files_sources_and_deferred_suppression(
     root: &Path,
     config: &NoMistakesConfig,
@@ -34,6 +52,9 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
+    let mut errors = std::collections::BTreeSet::new();
+    collect_config_errors(root, config, &mut errors);
+    super::validate_options::finish(errors)?;
     let mut findings = super::run_rule_applications(config, RULE_ID, |rule| {
         let opts: options::Options = rule.try_rule_options()?;
         options::validate(&opts)?;

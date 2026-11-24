@@ -154,7 +154,7 @@ pub(super) fn build(
     );
     let prepared_graph = prepared_graph_result?;
     let fact_demand_result = finite_set_plan::prepare(
-        (session, root),
+        root,
         config,
         &mut plan,
         canonical_graph_plan.is_some(),
