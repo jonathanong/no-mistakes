@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const test = globalThis.test || require("node:test").test;
 const { resolve } = require("node:path");
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
@@ -172,6 +173,35 @@ test(
   { skip: !compiled },
   async () => {
     assert.deepEqual(paths(await facadeResult("related")), reverse);
+  },
+);
+
+test(
+  "compiled CJS and ESM related calls return reverse imports without logging",
+  { skip: !compiled },
+  () => {
+    const fixture = resolve(__dirname, "../../../fixtures/napi/related-alias/invoke.mjs");
+    const cwd = resolve(__dirname, "../../../test-cases/codebase-analysis/simple/fixture");
+    const child = spawnSync(process.execPath, [fixture], {
+      cwd,
+      // Use the invocation lock's process-isolation mode inside the test child.
+      env: {
+        ...process.env,
+        "CARGO_BIN_EXE_no-mistakes": process.env.NO_MISTAKES_TEST_CLI_PATH ?? "",
+      },
+      encoding: "utf8",
+      timeout: 20_000,
+    });
+    assert.equal(child.error, undefined);
+    assert.equal(child.status, 0, child.stderr);
+    assert.equal(child.stderr, "");
+    assert.equal(
+      child.stdout,
+      JSON.stringify([
+        ["a.mts", "b.mts"],
+        ["a.mts", "b.mts"],
+      ]),
+    );
   },
 );
 

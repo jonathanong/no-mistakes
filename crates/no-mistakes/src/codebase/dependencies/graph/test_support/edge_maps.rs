@@ -83,6 +83,12 @@ pub(in super::super) fn add_queue_edges(
 }
 
 impl DepGraph {
+    pub(crate) fn with_sorted_call_sites(mut self, sites: Vec<ResolvedCallSite>) -> Self {
+        self.call_sites_by_file = index_sorted_call_sites_by_file(&sites);
+        self.resolved_call_sites = sites;
+        self
+    }
+
     pub(crate) fn merge_canonical_edges(&mut self, edges: Vec<Edge>) {
         let current = std::mem::take(&mut self.edges);
         let nodes = current.forward().keys().cloned().collect::<Vec<_>>();

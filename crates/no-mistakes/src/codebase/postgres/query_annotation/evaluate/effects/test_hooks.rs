@@ -1,4 +1,21 @@
 use std::cell::Cell;
+
+#[cfg(any(nm_shard_all, nm_shard_0))]
+thread_local! {
+    pub(in super::super) static REFRESH_VISITS: Cell<usize> = const { Cell::new(0) };
+    pub(in super::super) static CALLBACK_VISITS: Cell<usize> = const { Cell::new(0) };
+}
+
+#[cfg(any(nm_shard_all, nm_shard_0))]
+pub(in super::super) fn record_refresh_visit() {
+    REFRESH_VISITS.set(REFRESH_VISITS.get() + 1);
+}
+
+#[cfg(any(nm_shard_all, nm_shard_0))]
+pub(in super::super) fn record_callback_visits(count: usize) {
+    CALLBACK_VISITS.set(CALLBACK_VISITS.get() + count);
+}
+
 thread_local! { static ROOT_CLONES: Cell<usize> = const { Cell::new(0) }; }
 pub(super) fn record_root_clone() {
     ROOT_CLONES.set(ROOT_CLONES.get() + 1);
