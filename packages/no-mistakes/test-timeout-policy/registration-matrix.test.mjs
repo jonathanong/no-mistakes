@@ -129,4 +129,11 @@ describe.skipIf(process.platform !== "linux")("started SDK child failure finaliz
       expect(finalized).toBe(true);
     },
   );
+  it("reports a watchdog signal kill with signal name, deadline and elapsed time", async () => {
+    await expect(
+      fixture(fixtureSource("registration-matrix.test-30.txt"), undefined, "", undefined, {
+        watchdogMs: 1,
+      }),
+    ).rejects.toThrow(/SDK child terminated by SIGKILL \(watchdog \(1 ms\)\) after \d+ ms/);
+  });
 });
