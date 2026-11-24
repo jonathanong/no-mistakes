@@ -1,0 +1,16 @@
+{"type":"item.started","item":{"type":"command_execution","status":"in_progress","command":"cat /outside/ignored.txt"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"cat /outside/ignored.txt"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat notes.txt && echo /outside/mentioned.txt"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":1,"command":"cat /outside/review.txt"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat ../../review.txt && ls /attempt-sibling/data"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"(cd /outside && cat notes.txt)"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"pwd","cwd":"/outside"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"rg -n 'outside' /attempt/workspace --glob '/outside/pattern'"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"echo example >/outside/notes.txt"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"python3 - <<'PY'\nfrom pathlib import Path\nprint(Path('/outside/sample.txt').read_text())\nPY"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"find /outside -name sample.txt"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat < ../../input.txt"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat /attempt/codex-home/auth.json"}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat \"$CODEX_HOME/auth.json\""}}
+{"type":"item.completed","item":{"type":"command_execution","status":"failed","exit_code":1,"command":"cat \"${CODEX_HOME}/auth.json\""}}
+{"type":"item.completed","item":{"type":"command_execution","status":"completed","exit_code":0,"command":"cat /attempt/codex-home/auth.json.example"}}
