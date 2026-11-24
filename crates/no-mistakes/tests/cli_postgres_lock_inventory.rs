@@ -1,15 +1,36 @@
 use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
+use no_mistakes::config::v2::{load_v2_config, Effort};
 #[path = "common/git_tracked_rule.rs"]
 mod git_tracked_rule;
 
 #[test]
 fn postgres_lock_inventory_tracked_default_baseline_check_json_snapshot() {
-    let root = git_tracked_rule::materialize_rule("postgres-lock-inventory", "default-baseline");
-    let cases = [("tracked", root.path().to_path_buf(), Default::default())];
+    let fixture = git_tracked_rule::materialize_rule("postgres-lock-inventory", "default-baseline");
+    let root = fixture.path();
+    let cases = [
+        ("tracked", root.to_path_buf(), Default::default()),
+        (
+            "null-effort",
+            root.to_path_buf(),
+            root.join("null-effort.yml"),
+        ),
+        (
+            "empty-effort",
+            root.to_path_buf(),
+            root.join("empty-effort.yml"),
+        ),
+    ];
     let reports =
         assert_saved_fixture_report("postgres_lock_inventory_default_baseline", &cases, &[], &[]);
     assert_eq!(reports["tracked"]["exitCode"], 0);
     assert_eq!(reports["tracked"]["report"]["rules"], serde_json::json!([]));
+    for (label, _, config_path) in &cases[1..] {
+        assert_eq!(reports[*label], reports["tracked"]);
+        let mut config = load_v2_config(root, Some(config_path)).unwrap();
+        config.effort = Some(Effort::Low);
+        let requested = config.requested_rule_analysis(&config.rules[0]).unwrap();
+        assert_eq!(requested.effort, Effort::Low);
+    }
 }
 
 #[test]

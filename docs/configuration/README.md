@@ -60,8 +60,9 @@ The `effects` map declares named effect families for the
 them.
 
 `effort` sets the repository default and defaults to `max`. Every rule accepts
-`options.effort: low` or `options.effort: max`. Other values are configuration
-errors. A rule's option overrides the repository value, and a check
+`options.effort: low` or `options.effort: max`. Null and the empty string act
+like an omitted option. Other values are configuration errors, including on
+disabled rules. A rule's option overrides the repository value, and a check
 invocation's `effort` overrides both. Single-mode rules run their sole analysis
 at either setting. The check report warns when `low` was requested and the
 rule runs at `max`.

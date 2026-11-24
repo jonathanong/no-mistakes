@@ -51,6 +51,7 @@ impl RuleDef {
     pub(super) fn configured_effort(&self) -> Result<Option<Effort>> {
         self.options
             .get("effort")
+            .filter(|value| !value.is_null() && value.as_str() != Some(""))
             .map(|value| {
                 Effort::deserialize(value).with_context(|| {
                     let allowed = Effort::value_variants()

@@ -22,7 +22,10 @@ function name and duplicate ordinal.
 
 For SQL lock statements, comment-only, whitespace-only, and line-movement
 changes within a file preserve keys. LF and CRLF line endings inside ordinary
-and dollar-quoted multiline string literals are treated alike. The full statement supplies the locking context.
+and dollar-quoted multiline string literals are treated alike. Regenerate and
+review baselines fingerprinted from a CRLF checkout for statements with affected
+multiline literals, since their keys change. The full statement supplies the
+locking context.
 A token edit anywhere in that statement, including an added lock clause, creates
 replacement keys for every lock site in it. A file rename also creates new
 keys. The previous keys are reported as stale. Duplicate ordinals distinguish
