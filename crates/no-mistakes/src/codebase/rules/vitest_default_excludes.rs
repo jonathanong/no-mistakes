@@ -93,7 +93,6 @@ pub(crate) fn check_prepared(
         .collect();
     let mut findings: Vec<_> = batches?.into_iter().flatten().flatten().collect();
     super::sort_findings(&mut findings);
-    findings.dedup_by(|a, b| a.file == b.file && a.line == b.line && a.message == b.message);
     Ok(findings)
 }
 
