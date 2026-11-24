@@ -32,20 +32,35 @@ fn changes_diff_reports_paths_with_invalid_utf8_without_lossy_classification() {
 }
 
 #[test]
-fn changes_diff_reports_links_without_reading_their_targets() {
-    let (_root, args) = materialized_filesystem_fixture();
-    symlink("edited.txt", args.base_root.join("base-link")).unwrap();
-    symlink("edited.txt", args.head_root.join("head-link")).unwrap();
-    let report = changes::diff(&args).unwrap();
-    assert!(!report.complete);
-    assert_eq!(report.unclassified, ["edited.txt"]);
-    assert_eq!(
-        report.reasons,
-        [
-            r#"cannot read base file "base-link" (not a regular file)"#,
-            r#"cannot read head file "head-link" (not a regular file)"#,
-        ]
-    );
+fn changes_diff_compares_links_by_target_without_reading_through_them() {
+    let root = crate::saved_fixture::materialize_path(&fixture().join("symlinks"));
+    let report = changes::diff(&ChangesDiffArgs {
+        base_root: root.path().join("base"),
+        head_root: root.path().join("head"),
+        config: None,
+    })
+    .unwrap();
+    assert!(report.complete, "{:?}", report.reasons);
+    assert!(report.reasons.is_empty());
+    assert_eq!(report.categories["docs"].changed, ["docs/guide.md"]);
+    assert_eq!(report.categories["skills"].changed, [".claude/skills/y"]);
+    assert_eq!(report.unclassified, ["other/swap", "tests/FooTests.cs"]);
+}
+
+#[test]
+fn changes_diff_treats_a_retargeted_dangling_link_as_a_path_change() {
+    let root = crate::saved_fixture::materialize_path(&fixture().join("symlinks"));
+    let head = root.path().join("head");
+    fs::remove_file(head.join("other/gone")).unwrap();
+    symlink("elsewhere", head.join("other/gone")).unwrap();
+    let report = changes::diff(&ChangesDiffArgs {
+        base_root: root.path().join("base"),
+        head_root: head,
+        config: None,
+    })
+    .unwrap();
+    assert!(report.complete);
+    assert!(report.unclassified.contains(&"other/gone".to_owned()));
 }
 
 #[test]

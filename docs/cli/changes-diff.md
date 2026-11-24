@@ -41,6 +41,12 @@ category whose `paths` match the same path still classifies and diffs it, and
 any changed path matched by no category appears in `unclassified`. Unreadable roots or files, malformed
 structured files, and unsupported entries produce `complete: false` with
 `reasons`. An unreadable root still produces valid report JSON and exits 1.
+Symbolic links compare by link target, as git does, and are never followed:
+an identical link (including a directory link or a dangling one) contributes no
+change, a retargeted link or a link replaced by a regular file is a change to
+the link path, and a link whose target cannot be read is reported in `reasons`
+for that path only. A changed link matching a `keysOf` category is
+`unclassified`, because its target is not a keyed document.
 Complete reports exit 0, even with unclassified paths; the test planner treats
 any unclassified path as requiring full-suite selection.
 

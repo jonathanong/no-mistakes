@@ -2,7 +2,7 @@ use crate::codebase::ts_source::{
     ClassifiedPath, FileClassification, FileId, FileInventory, SourceReadOutcome, SourceStore,
 };
 use ignore::WalkBuilder;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -11,6 +11,7 @@ pub(super) struct Snapshot {
     pub sources: SourceStore,
     pub paths: BTreeMap<String, FileId>,
     pub reasons: Vec<String>,
+    links: BTreeSet<String>,
     scan_failed: bool,
     side: &'static str,
 }
@@ -32,6 +33,7 @@ impl Snapshot {
         }
         let mut entries = Vec::new();
         let mut reasons = Vec::new();
+        let mut link_paths = BTreeSet::new();
         for entry in WalkBuilder::new(&root).standard_filters(false).build() {
             let entry = match entry {
                 Ok(entry) => entry,
@@ -47,6 +49,9 @@ impl Snapshot {
             if file_type.is_some_and(|kind| kind.is_dir()) {
                 continue;
             }
+            if file_type.is_some_and(|kind| kind.is_symlink()) {
+                link_paths.insert(entry.path().to_owned());
+            }
             let classification = if file_type.is_some_and(|kind| kind.is_file()) {
                 FileClassification::TRACKED_REGULAR
             } else {
@@ -60,6 +65,7 @@ impl Snapshot {
         let scan_failed = !reasons.is_empty();
         let inventory = Arc::new(FileInventory::from_classified_paths(entries));
         let mut paths = BTreeMap::new();
+        let mut links = BTreeSet::new();
         for path in inventory.paths().iter() {
             let relative = path.strip_prefix(&root).expect("walk stays within root");
             let Some(name) = relative.to_str() else {
@@ -70,6 +76,9 @@ impl Snapshot {
             let id = inventory
                 .id_for_normalized_path(path)
                 .expect("discovered path has a file ID");
+            if link_paths.contains(path) {
+                links.insert(name.clone());
+            }
             paths.insert(name, id);
         }
         Ok(Self {
@@ -77,6 +86,7 @@ impl Snapshot {
             sources: SourceStore::new(inventory),
             paths,
             reasons,
+            links,
             scan_failed,
             side,
         })
@@ -84,6 +94,27 @@ impl Snapshot {
 
     pub fn knows(&self, path: &str) -> bool {
         !self.scan_failed || self.paths.contains_key(path)
+    }
+
+    pub fn is_link(&self, path: &str) -> bool {
+        self.links.contains(path)
+    }
+
+    pub fn link_identity(&self, path: &str) -> Result<Option<Vec<u8>>, String> {
+        if !self.paths.contains_key(path) {
+            return Ok(None);
+        }
+        if !self.is_link(path) {
+            return Ok(Some(b"\0file".to_vec()));
+        }
+        let target = std::fs::read_link(self.root.join(path)).map_err(|error| {
+            format!(
+                "cannot read {} link {path:?} ({:?})",
+                self.side,
+                error.kind()
+            )
+        })?;
+        Ok(Some(target.as_os_str().as_encoded_bytes().to_vec()))
     }
 
     pub fn read(&self, path: &str) -> Result<Option<SourceReadOutcome>, String> {

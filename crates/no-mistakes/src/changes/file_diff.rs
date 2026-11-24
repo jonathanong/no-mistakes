@@ -35,11 +35,35 @@ fn compare_readable<'a>(
     head: &Snapshot,
     rules: &Rules<'a>,
 ) -> Result<Option<FileDiff<'a>>, String> {
+    if base.is_link(path) || head.is_link(path) {
+        let old = base.link_identity(path)?;
+        let new = head.link_identity(path)?;
+        let unchanged = old == new;
+        return Ok(classify(
+            path,
+            rules,
+            old.as_deref(),
+            new.as_deref(),
+            unchanged,
+            true,
+        ));
+    }
     let base_source = base.read(path)?;
     let head_source = head.read(path)?;
     let old = base.bytes(path, &base_source)?;
     let new = head.bytes(path, &head_source)?;
     let unchanged = old == new;
+    Ok(classify(path, rules, old, new, unchanged, false))
+}
+
+fn classify<'a>(
+    path: &str,
+    rules: &Rules<'a>,
+    old: Option<&[u8]>,
+    new: Option<&[u8]>,
+    unchanged: bool,
+    link: bool,
+) -> Option<FileDiff<'a>> {
     let mut result = FileDiff::default();
     let matches: Vec<_> = rules
         .selectors
@@ -50,10 +74,10 @@ fn compare_readable<'a>(
         .collect();
     if matches.is_empty() {
         if unchanged {
-            return Ok(None);
+            return None;
         }
         result.unclassified = Some(path.to_owned());
-        return Ok(Some(result));
+        return Some(result);
     }
     let mut parsed = vec![None; rules.keyed.len()];
     for rule in matches {
@@ -79,6 +103,12 @@ fn compare_readable<'a>(
                 let id =
                     separator.map_or_else(|| id.to_owned(), |separator| id.replace('/', separator));
                 path_change(id, old, new, unchanged)
+            }
+            Id::Keys(_) if link => {
+                if !unchanged {
+                    result.unclassified = Some(path.to_owned());
+                }
+                continue;
             }
             Id::Keys(index) => {
                 let changes = parsed[index].get_or_insert_with(|| {
@@ -106,7 +136,7 @@ fn compare_readable<'a>(
         };
         result.categories.push((rule.category, changes));
     }
-    Ok(Some(result))
+    Some(result)
 }
 
 impl<'a> FileDiff<'a> {
