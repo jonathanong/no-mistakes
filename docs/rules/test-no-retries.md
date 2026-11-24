@@ -121,7 +121,7 @@ jobs:
 ## Fix
 
 Remove the retry setting or CI rerun wrapper and fix the underlying source of
-nondeterminism (shared state, unawaited async work, wall-clock assumptions, or
+nondeterminism (shared state, unsettled async work, wall-clock assumptions, or
 unstable fixtures). If a temporary exception is unavoidable, add an `allow`
 entry with a specific `path` or `project` and a `reason`.
 

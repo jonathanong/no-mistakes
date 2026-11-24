@@ -213,3 +213,122 @@ rules:
     let bad_cmd: options::Options = serde_yaml::from_str("ciTestCommands: ['   ']\n").unwrap();
     assert!(options::compile(bad_cmd, &config).is_err());
 }
+
+#[test]
+fn covers_ts_and_ci_edge_cases() {
+    let opts = compile_with(
+        "allow:\n  - path: '.github/workflows/allowed.yml'\n    reason: allowed workflow\n",
+        "version: 2\ntests:\n  vitest:\n    configs: ['vitest.config.ts']\n",
+    );
+    assert!(
+        scan_ts::scan_source("vite.config.ts", "export default { plugins: [] };", &opts).is_empty()
+    );
+    assert!(scan_ts::scan_source(
+        "vite.config.ts",
+        "export default { test: getTest() };",
+        &opts
+    )
+    .is_empty());
+    let vitest_edges = r#"
+export default {
+  test: {
+    retry: { other: 1 },
+    projects: [
+      { retry: 2 },
+      { name: "clean" },
+    ],
+  },
+};
+"#;
+    assert_eq!(
+        scan_ts::scan_source("vitest.config.ts", vitest_edges, &opts).len(),
+        1
+    );
+    let pw_edges = "export default { projects: [{ retries: 2 }, { name: 'ok' }] };";
+    assert_eq!(
+        scan_ts::scan_source("playwright.config.ts", pw_edges, &opts).len(),
+        1
+    );
+    let call_edges = r#"
+jest.retryTimes?.(2);
+jest.retryTimes();
+test.describe.configure();
+test.describe.configure(cfg);
+test.describe.configure({ mode: "parallel" });
+test("plain", () => {});
+test.each([1])("plain %i", () => {});
+"#;
+    assert!(scan_ts::scan_source("src/a.test.ts", call_edges, &opts).is_empty());
+
+    assert!(
+        scan_ci::scan_source(".github/workflows/ci.yml", ":::[invalid", false, &opts).is_empty()
+    );
+    assert!(
+        scan_ci::scan_source(".github/workflows/ci.yml", "name: empty\n", false, &opts).is_empty()
+    );
+    assert!(
+        scan_ci::scan_source(".github/actions/a/action.yml", "name: empty\n", true, &opts)
+            .is_empty()
+    );
+    let ci_edges = r#"
+name: Edge
+jobs:
+  no_steps:
+    runs-on: ubuntu-latest
+  odd:
+    runs-on: ubuntu-latest
+    steps:
+      - "not-a-map"
+      - name: no-uses
+      - uses: nick-fields/retry@v3
+        with:
+          max_attempts: "${{ inputs.attempts }}"
+      - run: |
+          if ! true; then
+            echo 'a
+          b'
+          elif false; then
+            echo hi || pnpm exec vitest run
+          else
+            echo "esc\
+          cont"
+          fi
+          echo trailing\
+"#;
+    assert_eq!(
+        scan_ci::scan_source(".github/workflows/ci.yml", ci_edges, false, &opts).len(),
+        1
+    );
+
+    let empty_store = crate::codebase::rules::source_store_for_files(&[]);
+    assert!(scan_ci::scan_file(
+        std::path::Path::new(".github/workflows/allowed.yml"),
+        ".github/workflows/allowed.yml",
+        false,
+        &opts,
+        &empty_store
+    )
+    .is_empty());
+    assert!(scan_ci::scan_file(
+        std::path::Path::new(".github/workflows/missing.yml"),
+        ".github/workflows/missing.yml",
+        false,
+        &opts,
+        &empty_store
+    )
+    .is_empty());
+    assert!(scan_ts::scan_file(
+        std::path::Path::new("README.md"),
+        "README.md",
+        &opts,
+        &empty_store
+    )
+    .is_empty());
+    assert!(scan_ts::scan_file(
+        std::path::Path::new("missing.test.ts"),
+        "missing.test.ts",
+        &opts,
+        &empty_store
+    )
+    .is_empty());
+}

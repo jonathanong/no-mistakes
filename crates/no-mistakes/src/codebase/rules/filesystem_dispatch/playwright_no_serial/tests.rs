@@ -122,3 +122,65 @@ fn rejects_invalid_allow_entries() {
         serde_yaml::from_str("allow:\n  - reason: 'needs selector'\n").unwrap();
     assert!(compile_options(missing_selector, &config).is_err());
 }
+
+#[test]
+fn covers_non_matching_ast_and_config_edge_cases() {
+    let opts = compile_with("{}", "version: 2\n");
+    let edge_cfg = r#"
+const base = {};
+foo.bar = 1;
+export default {
+  ...base,
+  0: 1,
+  get workers() { return 1; },
+  workers: 1.5,
+  fullyParallel: "no",
+  projects: [
+    otherVar,
+    { name: `dyn-${x}`, workers: 1, fullyParallel: false },
+    { name: dynamicName, workers: 2 },
+  ],
+};
+"#;
+    let findings = scan::scan_source("playwright.config.ts", edge_cfg, &opts);
+    assert_eq!(findings.len(), 2);
+
+    assert!(scan::scan_source("playwright.config.ts", "export default 42;", &opts).is_empty());
+    assert!(scan::scan_source(
+        "playwright.config.ts",
+        "export default () => { const x = 1; };",
+        &opts
+    )
+    .is_empty());
+    assert!(scan::scan_source(
+        "playwright.config.ts",
+        "export default { projects: getProjects() };",
+        &opts
+    )
+    .is_empty());
+
+    let edge_spec = r#"
+test.describe.serial?.("opt", () => {});
+test?.describe.serial("opt2", () => {});
+getFn()("call");
+test.describe.configure();
+test.describe.configure(cfg);
+test.describe.configure({ retries: 0 });
+"#;
+    assert!(scan::scan_source("e2e/edge.spec.ts", edge_spec, &opts).is_empty());
+    let empty_store = crate::codebase::rules::source_store_for_files(&[]);
+    assert!(scan::scan_file(
+        std::path::Path::new("."),
+        std::path::Path::new("README.md"),
+        &opts,
+        &empty_store
+    )
+    .is_empty());
+    assert!(scan::scan_file(
+        std::path::Path::new("."),
+        std::path::Path::new("missing.spec.ts"),
+        &opts,
+        &empty_store
+    )
+    .is_empty());
+}
