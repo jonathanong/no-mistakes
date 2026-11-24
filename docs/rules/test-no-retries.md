@@ -49,9 +49,10 @@ and two attempts respectively. [nick-fields/retry inputs](https://github.com/nic
 [Wandalen/wretry.action inputs](https://github.com/Wandalen/wretry.action/blob/master/action.yml).
 
 For a `for` loop over a literal list, the rule subtracts the initial run from
-the number of iterations. An unverified loop bound produces a finding. A loop
-that passes its iteration variable to the test command can run different test
-cases and is outside this check.
+the number of iterations. An unverified loop bound produces a finding. A `for`
+loop or `while`/`until read` loop that passes its loop variable to the test
+command—either as an argument or in a leading `NAME=value` environment
+assignment—can run different test cases and is outside this check.
 
 ## Valid example
 

@@ -43,3 +43,23 @@ jobs:
           for attempt in 1 2 3; do
             pnpm test:unit && break
           done
+      - run: |
+          while read -r project; do
+            pnpm test:unit --project "$project"
+          done
+      - run: |
+          while read -r project; do
+            pnpm test:unit && break
+          done
+      - run: |
+          for suite in unit integration; do
+            SUITE=$suite pnpm test:unit
+          done
+      - run: |
+          for attempt in 1 2 3; do
+            SUITE=unit pnpm test:unit && break
+          done
+      - run: |
+          while ! pnpm test:unit; do
+            echo "Rerunning unit tests"
+          done

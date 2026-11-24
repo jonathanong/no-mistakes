@@ -5,7 +5,7 @@ mod lexer;
 #[derive(Default)]
 struct Loop {
     retries: Option<u64>,
-    variable: Option<String>,
+    variables: Vec<String>,
     in_body: bool,
     matched_test: bool,
 }
@@ -23,21 +23,21 @@ pub(super) fn rerun_loops(script: &str, commands: &[Vec<String>]) -> Vec<Option<
                 let (variable, retries) = for_limit(words);
                 loops.push(Loop {
                     retries,
-                    variable,
+                    variables: variable.into_iter().collect(),
                     ..Loop::default()
                 });
             }
             Some("while" | "until") => {
                 loops.push(Loop {
-                    matched_test: matching_command(&words[1..], commands, None),
+                    variables: read_variables(&words[1..]),
+                    matched_test: matching_command(&words[1..], commands, &[]),
                     ..Loop::default()
                 });
             }
             Some("do") => {
                 if let Some(frame) = loops.last_mut() {
                     frame.in_body = true;
-                    frame.matched_test |=
-                        matching_command(&words[1..], commands, frame.variable.as_deref());
+                    frame.matched_test |= matching_command(&words[1..], commands, &frame.variables);
                 }
             }
             Some("done") => {
@@ -53,8 +53,7 @@ pub(super) fn rerun_loops(script: &str, commands: &[Vec<String>]) -> Vec<Option<
                         Some("if" | "elif" | "then" | "else") => &words[1..],
                         _ => words,
                     };
-                    frame.matched_test |=
-                        matching_command(words, commands, frame.variable.as_deref());
+                    frame.matched_test |= matching_command(words, commands, &frame.variables);
                 }
             }
         }
@@ -90,21 +89,62 @@ fn for_limit(words: &[String]) -> (Option<String>, Option<u64>) {
     (variable, count.map(|count| count.saturating_sub(1)))
 }
 
-fn matching_command(words: &[String], prefixes: &[Vec<String>], variable: Option<&str>) -> bool {
+fn read_variables(words: &[String]) -> Vec<String> {
+    let Some(start) = words.iter().position(|word| !is_assignment(word)) else {
+        return Vec::new();
+    };
+    let words = &words[start..];
+    if words.first().map(String::as_str) != Some("read") {
+        return Vec::new();
+    }
+    let mut vars = Vec::new();
+    let mut end_of_options = false;
+    let mut iter = words[1..].iter();
+    while let Some(word) = iter.next() {
+        if !end_of_options && word == "--" {
+            end_of_options = true;
+            continue;
+        }
+        if !end_of_options && word.starts_with('-') && word.len() > 1 {
+            if word == "-a" {
+                if let Some(name) = iter.next().filter(|name| is_identifier(name)) {
+                    vars.push(name.clone());
+                }
+            } else if matches!(
+                word.as_bytes().last(),
+                Some(b'd' | b'i' | b'n' | b'N' | b'p' | b't' | b'u')
+            ) {
+                iter.next();
+            }
+            continue;
+        }
+        if is_redirection_operator(word) {
+            iter.next();
+            continue;
+        }
+        if word.starts_with(['<', '>']) {
+            continue;
+        }
+        if is_identifier(word) {
+            vars.push(word.clone());
+        }
+    }
+    if vars.is_empty() {
+        vars.push("REPLY".into());
+    }
+    vars
+}
+
+fn matching_command(words: &[String], prefixes: &[Vec<String>], variables: &[String]) -> bool {
     let words = if words.first().is_some_and(|word| word == "!") {
         &words[1..]
     } else {
         words
     };
-    let Some(start) = words.iter().position(|word| {
-        !word
-            .split_once('=')
-            .is_some_and(|(name, _)| is_identifier(name))
-    }) else {
+    let Some(start) = words.iter().position(|word| !is_assignment(word)) else {
         return false;
     };
-    let words = &words[start..];
-    if variable.is_some_and(|var| {
+    if variables.iter().any(|var| {
         words.iter().any(|word| {
             word.split('$').skip(1).any(|tail| {
                 tail.strip_prefix(var).is_some_and(|rest| {
@@ -112,15 +152,28 @@ fn matching_command(words: &[String], prefixes: &[Vec<String>], variable: Option
                         .next()
                         .is_none_or(|c| !c.is_ascii_alphanumeric() && c != '_')
                 }) || tail.strip_prefix('{').is_some_and(|rest| {
-                    rest.strip_prefix(var)
-                        .is_some_and(|rest| rest.starts_with('}'))
+                    rest.strip_prefix(var).is_some_and(|rest| {
+                        rest.chars()
+                            .next()
+                            .is_some_and(|c| !c.is_ascii_alphanumeric() && c != '_')
+                    })
                 })
             })
         })
     }) {
         return false;
     }
-    prefixes.iter().any(|prefix| words.starts_with(prefix))
+    let command = &words[start..];
+    prefixes.iter().any(|prefix| command.starts_with(prefix))
+}
+
+fn is_assignment(word: &str) -> bool {
+    word.split_once('=')
+        .is_some_and(|(name, _)| is_identifier(name))
+}
+
+fn is_redirection_operator(word: &str) -> bool {
+    matches!(word, "<" | ">" | ">>" | "<<" | "<<<" | "<&" | ">&" | "<>")
 }
 
 fn is_identifier(word: &str) -> bool {

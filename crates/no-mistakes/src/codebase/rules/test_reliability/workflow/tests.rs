@@ -70,7 +70,18 @@ fn shell_counts_literal_iterations_and_reports_dynamic_bounds() {
     let source = std::fs::read_to_string(fixture("shell/loop-bounds.sh")).unwrap();
     assert_eq!(
         rerun_loops(&source, &test_commands()),
-        [Some(3), None, None, None, Some(1), None, None]
+        [
+            Some(3),
+            None,
+            None,
+            None,
+            Some(1),
+            None,
+            None,
+            None,
+            Some(1),
+            None
+        ]
     );
 }
 
