@@ -5,7 +5,32 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/provenance-fixture");
 const config = join(root, "mutable-receivers.yml");
-// Each native CJS/ESM pair has its own existing runner deadline on slower CI hosts.
+const effectsRequests = [];
+let prepared;
+
+function effectsEntry(entry) {
+  effectsRequests.push({ type: "effects", id: entry, kind: "valkey", entry });
+  return entry;
+}
+
+async function analyzeEffects(api) {
+  const pending = api.analyzeProject({ root, config, reports: effectsRequests });
+  assert.ok(pending instanceof Promise);
+  const { reports } = await pending;
+  assert.equal(reports.length, effectsRequests.length);
+  return new Map(reports.map(({ id, result }) => [id, result]));
+}
+
+// Retain one request per facade in this shard. Cases only read the results.
+async function preparedEffects(entry) {
+  prepared ??= Promise.all([
+    analyzeEffects(require("../index.js")),
+    import("../index.mjs").then(analyzeEffects),
+  ]);
+  const [cjs, esm] = await prepared;
+  return [cjs.get(entry), esm.get(entry)];
+}
+
 for (const [name, expected] of [
   ["mutable-affected-cross-scope", 2],
   ["mutable-affected-alias-overflow", 2],
@@ -64,23 +89,14 @@ for (const [name, expected] of [
   ["mutable-let-lhs-acquisition", 0],
   ["mutable-let-foreign-root", 0],
 ]) {
+  const extension = name === "mutable-let-wrapped-assertion" ? "ts" : "mts";
+  const entry = effectsEntry(`src/nested-receiver-containers/${name}.${extension}`);
   test(
     `compiled async CJS and ESM preserve mutable receiver root acquisitions: ${name}`,
     { skip: !compiled },
     async () => {
-      const cjs = require("../index.js");
-      const esm = await import("../index.mjs");
-      const sourceExtension = name === "mutable-let-wrapped-assertion" ? "ts" : "mts";
-      const options = {
-        root,
-        config,
-        kind: "valkey",
-        entry: `src/nested-receiver-containers/${name}.${sourceExtension}`,
-      };
-      const pending = cjs.effects(options);
-      assert.ok(pending instanceof Promise);
-      const report = await pending;
-      assert.deepEqual(await esm.effects(options), report, name);
+      const [report, esm] = await preparedEffects(entry);
+      assert.deepEqual(esm, report, name);
       assert.equal(report.callSites.length, expected, name);
       if (name === "mutable-affected-cross-scope" || name === "mutable-affected-alias-overflow") {
         // The copied method and untouched receiver remain; the changed read does not.
@@ -107,22 +123,13 @@ for (const [entry, expected] of [
   ["module-writer-declaration-after-rebind.mts", []],
   ["module-writer-finishing-same-owner-chain.mts", []],
 ]) {
+  const source = effectsEntry(`src/${entry}`);
   test(
     `compiled async CJS and ESM preserve module-owned deferred receiver writes: ${entry}`,
     { skip: !compiled },
     async () => {
-      const cjs = require("../index.js");
-      const esm = await import("../index.mjs");
-      const options = {
-        root,
-        config,
-        kind: "valkey",
-        entry: `src/${entry}`,
-      };
-      const pending = cjs.effects(options);
-      assert.ok(pending instanceof Promise);
-      const report = await pending;
-      assert.deepEqual(await esm.effects(options), report, entry);
+      const [report, esm] = await preparedEffects(source);
+      assert.deepEqual(esm, report, entry);
       assert.deepEqual(
         report.callSites.map(({ callee }) => callee),
         expected,
@@ -141,20 +148,13 @@ for (const name of [
   "mutable-let-pattern-cold-class",
   "mutable-let-pattern-shadowed-class",
 ]) {
+  const entry = effectsEntry(`src/nested-receiver-containers/${name}.mts`);
   test(
     `compiled async CJS and ESM preserve mutable receiver root acquisitions: ${name}`,
     { skip: !compiled },
     async () => {
-      const cjs = require("../index.js");
-      const esm = await import("../index.mjs");
-      const options = {
-        root,
-        config,
-        kind: "valkey",
-        entry: `src/nested-receiver-containers/${name}.mts`,
-      };
-      const report = await cjs.effects(options);
-      assert.deepEqual(await esm.effects(options), report, name);
+      const [report, esm] = await preparedEffects(entry);
+      assert.deepEqual(esm, report, name);
       assert.deepEqual(
         report.callSites.map((site) => site.callee),
         ["replica.get"],
@@ -167,20 +167,13 @@ for (const name of [
   "mutable-let-pattern-replaced-later-lhs",
   "mutable-let-pattern-replaced-carrier",
 ]) {
+  const entry = effectsEntry(`src/nested-receiver-containers/${name}.mts`);
   test(
     `compiled async CJS and ESM preserve mutable receiver root acquisitions: ${name}`,
     { skip: !compiled },
     async () => {
-      const cjs = require("../index.js");
-      const esm = await import("../index.mjs");
-      const detached = {
-        root,
-        config,
-        kind: "valkey",
-        entry: `src/nested-receiver-containers/${name}.mts`,
-      };
-      const detachedReport = await cjs.effects(detached);
-      assert.deepEqual(await esm.effects(detached), detachedReport);
+      const [detachedReport, esm] = await preparedEffects(entry);
+      assert.deepEqual(esm, detachedReport);
       assert.deepEqual(
         detachedReport.callSites.map((site) => site.callee).sort(),
         ["primary.get", "replica.get"],
@@ -217,17 +210,13 @@ for (const [name, expected] of [
   ["eager-class", ["replica.get"]],
   ["argument-rebind", []],
 ]) {
+  const entry = effectsEntry(`src/module-writer-${name}.mts`);
   test(
     `compiled async CJS and ESM preserve module provider guard controls: ${name}`,
     { skip: !compiled },
     async () => {
-      const cjs = require("../index.js");
-      const esm = await import("../index.mjs");
-      const options = { root, config, kind: "valkey", entry: `src/module-writer-${name}.mts` };
-      const pending = cjs.effects(options);
-      assert.ok(pending instanceof Promise);
-      const report = await pending;
-      assert.deepEqual(await esm.effects(options), report, name);
+      const [report, esm] = await preparedEffects(entry);
+      assert.deepEqual(esm, report, name);
       assert.deepEqual(
         report.callSites.map((site) => site.callee),
         expected,
@@ -267,3 +256,20 @@ for (const name of [
     },
   );
 }
+
+test(
+  "compiled mutable receiver standalone effects match prepared reports",
+  { skip: !compiled },
+  async () => {
+    const entry = "src/nested-receiver-containers/mutable-affected-cross-scope.mts";
+    const [cjs, esm] = await preparedEffects(entry);
+    const options = { root, config, kind: "valkey", entry };
+    const cjsPending = require("../index.js").effects(options);
+    const esmApi = await import("../index.mjs");
+    const esmPending = esmApi.effects(options);
+    assert.ok(cjsPending instanceof Promise);
+    assert.ok(esmPending instanceof Promise);
+    assert.deepEqual(await cjsPending, cjs);
+    assert.deepEqual(await esmPending, esm);
+  },
+);
