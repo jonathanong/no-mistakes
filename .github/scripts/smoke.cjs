@@ -1,18 +1,25 @@
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 const { profileArgs } = require("./native-rust-tests.cjs");
-const { api, cliFixture, napiFixture, rust } = require("./macos-smoke-tests.cjs");
+const { cliFixture, napiFixture, platforms } = require("./smoke-tests.cjs");
 
 const root = path.resolve(__dirname, "../..");
+
+function platform(os) {
+  const entry = platforms[os];
+  if (!entry) throw new Error(`unsupported smoke OS: ${os}`);
+  return entry;
+}
 
 function escape(name) {
   return name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function cargoCommands() {
+function cargoCommands(os) {
+  const { label, rust } = platform(os);
   return rust.map(({ selector, args }) => [
     "test",
-    ...profileArgs("macOS"),
+    ...profileArgs(label),
     "--locked",
     "-p",
     "no-mistakes",
@@ -21,7 +28,8 @@ function cargoCommands() {
   ]);
 }
 
-function vitestArgs() {
+function vitestArgs(os) {
+  const { api } = platform(os);
   const names = api.flatMap((entry) => entry.names);
   return [
     "run",
@@ -32,10 +40,28 @@ function vitestArgs() {
   ];
 }
 
+// A cargo filter that matches nothing exits 0 with "running 0 tests".
+function testsRun(output) {
+  return [...output.matchAll(/^running (\d+) tests?\r?$/gm)].reduce(
+    (total, match) => total + Number(match[1]),
+    0,
+  );
+}
+
 function execute(command, args, env = process.env) {
   const result = spawnSync(command, args, { cwd: root, env, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} ${args[0]} failed: ${result.status}`);
+}
+
+function cargo(args) {
+  const result = spawnSync("cargo", args, { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 });
+  if (result.error) throw result.error;
+  process.stdout.write(result.stdout);
+  process.stderr.write(result.stderr);
+  if (result.status !== 0) throw new Error(`cargo ${args[0]} failed: ${result.status}`);
+  if (testsRun(result.stdout) === 0)
+    throw new Error(`cargo ${args.join(" ")} ran zero tests; update the smoke list`);
 }
 
 function cli(binary) {
@@ -65,29 +91,29 @@ async function napi(addonPath) {
     throw new Error("analyzeProject returned no dependency files for the saved fixture");
 }
 
-function runApi(addonPath) {
+function runApi(os, addonPath) {
   const vitest = path.join(path.dirname(require.resolve("vitest/package.json")), "vitest.mjs");
-  execute(process.execPath, [vitest, ...vitestArgs()], {
+  execute(process.execPath, [vitest, ...vitestArgs(os)], {
     ...process.env,
     NO_MISTAKES_TEST_NAPI_ADDON_PATH: path.resolve(addonPath),
   });
 }
 
-function main(mode, argument) {
+function main(os, mode, argument) {
   if (mode === "napi") return napi(argument);
   if (mode === "cli") return cli(argument);
-  if (mode === "rust") return cargoCommands().forEach((args) => execute("cargo", args));
-  if (mode === "api") return runApi(argument);
-  throw new Error("usage: macos-smoke.cjs <cli <binary>|rust|api <addon>|napi <addon>>");
+  if (mode === "rust") return cargoCommands(os).forEach(cargo);
+  if (mode === "api") return runApi(os, argument);
+  throw new Error("usage: smoke.cjs <macos|windows> <cli <binary>|rust|api <addon>|napi <addon>>");
 }
 
 if (require.main === module) {
   Promise.resolve()
-    .then(() => main(process.argv[2], process.argv[3]))
+    .then(() => main(process.argv[2], process.argv[3], process.argv[4]))
     .catch((error) => {
       console.error(error.message);
       process.exitCode = 1;
     });
 }
 
-module.exports = { cargoCommands, escape, vitestArgs };
+module.exports = { cargoCommands, escape, testsRun, vitestArgs };
