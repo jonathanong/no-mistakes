@@ -1,7 +1,10 @@
+use super::attributes;
 use super::report::Observation;
 use super::rules::{Id, Rule, Rules};
 use super::Snapshot;
 use crate::codebase::keyed_diff;
+use std::cell::OnceCell;
+use std::sync::Arc;
 
 #[derive(Default)]
 pub(super) struct FileDiff<'a> {
@@ -79,9 +82,20 @@ fn classify<'a>(
 ) -> Option<FileDiff<'a>> {
     let mut result = FileDiff::default();
     let mut parsed = vec![None; rules.keyed.len()];
+    let attribute_paths = OnceCell::new();
+    let attributes = || {
+        attribute_paths
+            .get_or_init(|| {
+                if unchanged || link || !path.ends_with(".json") {
+                    return None;
+                }
+                attributes::diff(old?, new?).map(Arc::from)
+            })
+            .clone()
+    };
     for &rule in matches {
         let changes = match rule.id {
-            Id::Path => path_change(path.to_owned(), old, new, unchanged),
+            Id::Path => path_change(path.to_owned(), old, new, unchanged, attributes()),
             Id::FromPath {
                 prefix,
                 suffix,
@@ -101,7 +115,7 @@ fn classify<'a>(
                 };
                 let id =
                     separator.map_or_else(|| id.to_owned(), |separator| id.replace('/', separator));
-                path_change(id, old, new, unchanged)
+                path_change(id, old, new, unchanged, attributes())
             }
             Id::Keys(_) if link => {
                 if !unchanged {
@@ -118,6 +132,7 @@ fn classify<'a>(
                         touched: changes.all_ids().collect(),
                         before,
                         after,
+                        attribute_paths: None,
                     })
                 });
                 match changes {
@@ -148,10 +163,17 @@ impl<'a> FileDiff<'a> {
     }
 }
 
-fn path_change(id: String, old: Option<&[u8]>, new: Option<&[u8]>, unchanged: bool) -> Observation {
+fn path_change(
+    id: String,
+    old: Option<&[u8]>,
+    new: Option<&[u8]>,
+    unchanged: bool,
+    attribute_paths: Option<Arc<[String]>>,
+) -> Observation {
     Observation {
         before: old.map(|_| id.clone()).into_iter().collect(),
         after: new.map(|_| id.clone()).into_iter().collect(),
         touched: (!unchanged).then_some(id).into_iter().collect(),
+        attribute_paths,
     }
 }

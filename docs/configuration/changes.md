@@ -67,7 +67,9 @@ substring template containing `{id}` or `<id>`; by default it searches for the
 ID itself. All changed, added, and removed IDs participate. An unmatched ID
 uses `fallback`, either a named framework full-suite trigger or `full-suite`.
 An absent or unusable fallback selects the full suite. Matching borrows the
-prepared session's test universe and source store.
+prepared session's test universe and source store. For fixture attribute
+selection, use the complete literal loader call as the match template, as
+in `loadFixture("{id}")`. See [semantic change reports](../cli/tests-plan.md#semantic-change-reports).
 
 To replace a broad path trigger only when a valid semantic report is supplied:
 

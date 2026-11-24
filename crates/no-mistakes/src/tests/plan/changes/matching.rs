@@ -2,6 +2,7 @@ use super::{framework_plan, relative_path, test_runner, PreparedTestPlanRequest,
 use globset::{Glob, GlobSetBuilder};
 use no_mistakes::changes::config::ChangeCategory;
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
+use no_mistakes::codebase::ts_source::FixtureReadIndex;
 use rayon::prelude::*;
 use regex::RegexSet;
 use std::collections::{BTreeMap, BTreeSet};
@@ -19,6 +20,7 @@ impl<'a> CategoryMatches<'a> {
         name: &str,
         category: &ChangeCategory,
         ids: &BTreeSet<&'a str>,
+        attributes: Option<(&FixtureReadIndex, &BTreeMap<String, Vec<String>>)>,
     ) -> Result<Self, String> {
         let mut builder = GlobSetBuilder::new();
         for pattern in &category.tests {
@@ -42,13 +44,14 @@ impl<'a> CategoryMatches<'a> {
             ));
         }
         let ids = ids.iter().copied().collect::<Vec<_>>();
-        let matcher = RegexSet::new(
-            ids.iter()
-                .map(|id| regex::escape(&template.replace("{id}", id))),
-        )
-        .map_err(|error| {
-            format!("Cannot build ID matcher for changes category `{name}`: {error}")
-        })?;
+        let literals: Vec<_> = ids.iter().map(|id| template.replace("{id}", id)).collect();
+        let matcher = RegexSet::new(literals.iter().map(|literal| regex::escape(literal)))
+            .map_err(|error| {
+                format!("Cannot build ID matcher for changes category `{name}`: {error}")
+            })?;
+        let attributes =
+            attributes.filter(|_| super::attributes::loader_template(category).is_some());
+        let allow_parse = !prepared.graph_is_initialized();
         let found: Vec<_> = discovered
             .tests
             .par_iter()
@@ -62,7 +65,24 @@ impl<'a> CategoryMatches<'a> {
                         ))
                     },
                     |source| {
-                        let indexes = matcher.matches(&source).into_iter().collect::<Vec<_>>();
+                        let indexes = matcher
+                            .matches(&source)
+                            .into_iter()
+                            .map(|found| {
+                                let selected = attributes.is_none_or(|(reads, paths)| {
+                                    paths.get(ids[found]).is_none_or(|changed| {
+                                        reads.affects(
+                                            path,
+                                            &source,
+                                            &literals[found],
+                                            changed,
+                                            allow_parse,
+                                        )
+                                    })
+                                });
+                                (found, selected)
+                            })
+                            .collect::<Vec<_>>();
                         Ok((path.as_path(), indexes))
                     },
                 )
@@ -72,13 +92,16 @@ impl<'a> CategoryMatches<'a> {
         let mut tests = Vec::new();
         for entry in found {
             let (path, indexes) = entry?;
-            if indexes.is_empty() {
-                continue;
-            }
-            for &index in &indexes {
+            let mut selected = Vec::new();
+            for (index, affects_test) in indexes {
                 matched[index] = true;
+                if affects_test {
+                    selected.push(ids[index]);
+                }
             }
-            tests.push((path, indexes.into_iter().map(|index| ids[index]).collect()));
+            if !selected.is_empty() {
+                tests.push((path, selected));
+            }
         }
         let unmatched = ids
             .into_iter()

@@ -16,6 +16,10 @@ fn changes_diff_binding_shares_library_reports_and_requires_roots() {
         result["fixtures"]["changed"],
         json!(["profile.avatar", "profile.description"])
     );
+    assert_eq!(
+        result["dotted"]["attributePaths"]["profile.picture"],
+        json!(["/name"])
+    );
     let result = changes_diff_json_impl(
         json!({"baseRoot": root.join("missing"), "headRoot": root.join("head")}),
     )

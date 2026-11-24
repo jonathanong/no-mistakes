@@ -1,16 +1,6 @@
 use super::helpers::framework_graph_plan;
 use super::*;
 
-pub(super) struct GraphInputs {
-    pub(super) tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
-    pub(super) graph_files: GraphFiles,
-    pub(super) graph_plan: GraphBuildPlan,
-    pub(super) prepared_graph_config: PreparedGraphConfig,
-    pub(super) prepared_test_projects:
-        Arc<no_mistakes::codebase::test_discovery::PreparedTestProjects>,
-    pub(super) test_filter: no_mistakes::codebase::test_filter::TestFileFilter,
-}
-
 impl PreparedTestPlanInputs {
     pub(super) fn prepare_graph(
         &self,
@@ -120,12 +110,17 @@ impl PreparedTestPlanInputs {
                 visible_paths,
                 no_mistakes::codebase::test_filter::TestFileFilter::fallback_only(),
             )?;
-        let (runner_graph_plan, runner_graph_context) =
+        let (runner_graph_plan, mut runner_graph_context) =
             no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
                 root,
                 graph_plan,
                 &preliminary_graph_config,
             );
+        runner_graph_context.set_fixture_reads(
+            self.changes_input
+                .as_ref()
+                .and_then(super::super::plan::changes::ChangesInput::fixture_reads),
+        );
         let mut prepared_test_projects =
             no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
                 root,

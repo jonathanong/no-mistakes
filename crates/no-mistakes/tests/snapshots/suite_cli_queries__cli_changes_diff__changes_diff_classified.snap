@@ -29,14 +29,24 @@ expression: "serde_json::to_string_pretty(report).unwrap()"
     ],
     "removed": [
       "contracts/removed.txt"
-    ]
+    ],
+    "attributePaths": {
+      "generated/resource.json": [
+        "/source"
+      ]
+    }
   },
   "dotted": {
     "changed": [
       "profile.picture"
     ],
     "added": [],
-    "removed": []
+    "removed": [],
+    "attributePaths": {
+      "profile.picture": [
+        "/name"
+      ]
+    }
   },
   "fixtures": {
     "changed": [

@@ -1,23 +1,25 @@
 use super::file_diff::FileDiff;
-use super::{ChangesReport, KeyChanges};
+use super::{CategoryChanges, ChangesReport};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 pub(super) struct ReportBuilder<'a> {
     report: ChangesReport,
-    categories: BTreeMap<&'a str, CategoryChanges>,
+    categories: BTreeMap<&'a str, CategoryBuilder>,
     deferred: Vec<(&'a str, String)>,
 }
 
 #[derive(Default)]
-struct CategoryChanges {
+struct CategoryBuilder {
     keys: BTreeMap<String, Presence>,
 }
 
 #[derive(Default)]
 struct Presence {
     touched: bool,
-    before: bool,
-    after: bool,
+    before: usize,
+    after: usize,
+    attribute_paths: Option<Arc<[String]>>,
 }
 
 #[derive(Clone)]
@@ -25,6 +27,7 @@ pub(super) struct Observation {
     pub touched: Vec<String>,
     pub before: Vec<String>,
     pub after: Vec<String>,
+    pub attribute_paths: Option<Arc<[String]>>,
 }
 
 impl<'a> ReportBuilder<'a> {
@@ -33,7 +36,7 @@ impl<'a> ReportBuilder<'a> {
             report: ChangesReport::new(reasons),
             categories: names
                 .into_iter()
-                .map(|name| (name.as_str(), CategoryChanges::default()))
+                .map(|name| (name.as_str(), CategoryBuilder::default()))
                 .collect(),
             deferred: Vec::new(),
         }
@@ -67,28 +70,37 @@ impl<'a> ReportBuilder<'a> {
     }
 }
 
-impl CategoryChanges {
+impl CategoryBuilder {
     fn record(&mut self, observation: Observation) {
         for id in observation.touched {
-            self.keys.entry(id).or_default().touched = true;
+            let presence = self.keys.entry(id).or_default();
+            presence.touched = true;
+            presence
+                .attribute_paths
+                .clone_from(&observation.attribute_paths);
         }
         for id in observation.before {
-            self.keys.entry(id).or_default().before = true;
+            self.keys.entry(id).or_default().before += 1;
         }
         for id in observation.after {
-            self.keys.entry(id).or_default().after = true;
+            self.keys.entry(id).or_default().after += 1;
         }
     }
 
-    fn finish(self) -> KeyChanges {
-        let mut changes = KeyChanges::default();
+    fn finish(self) -> CategoryChanges {
+        let mut changes = CategoryChanges::default();
         for (id, presence) in self.keys {
             if !presence.touched {
                 continue;
             }
-            if presence.before && presence.after {
+            if presence.before > 0 && presence.after > 0 {
+                if let (1, 1, Some(paths)) =
+                    (presence.before, presence.after, presence.attribute_paths)
+                {
+                    changes.attribute_paths.insert(id.clone(), paths.to_vec());
+                }
                 changes.changed.push(id);
-            } else if presence.after {
+            } else if presence.after > 0 {
                 changes.added.push(id);
             } else {
                 changes.removed.push(id);

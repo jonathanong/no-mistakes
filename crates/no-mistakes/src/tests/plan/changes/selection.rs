@@ -1,5 +1,4 @@
 use super::*;
-
 pub(in crate::tests::plan) fn apply(
     prepared: &PreparedTestPlanRequest,
     input: &ChangesInput,
@@ -46,7 +45,18 @@ impl Selection<'_> {
                 continue;
             }
             let category = &self.prepared.config.changes.categories[name];
-            match CategoryMatches::find(self.prepared, self.discovered, name, category, &ids) {
+            let attributes = self
+                .input
+                .fixture_reads()
+                .map(|index| (index.as_ref(), &changes.attribute_paths));
+            match CategoryMatches::find(
+                self.prepared,
+                self.discovered,
+                name,
+                category,
+                &ids,
+                attributes,
+            ) {
                 Ok(matched) => {
                     for (path, ids) in matched.tests {
                         self.select(

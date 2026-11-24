@@ -393,7 +393,9 @@ to produce a schemaVersion 1 categorized report without Git or network access.
 Pass its JSON file to `tests plan <framework> --changes changes.json` alongside
 normal changed-file inputs. Invalid/incomplete reports or unclassified paths
 select the full suite; inspect `fallback_reason` and warnings. Matchers use
-configured test-source globs and literal ID templates. A trusted report can
+configured test-source globs and literal ID templates. With an explicit loader
+call such as `loadFixture("{id}")`, `attributePaths` narrows selection to reads
+of changed fields and keeps any test with uncertain reads. A trusted report can
 supersede a path trigger marked `supersededByChanges`; without the flag that
 trigger is unchanged. See [the shared changes schema](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/changes.md) for the shared schema.
 The async APIs are `changesDiff(options)` and `testsPlan({ changes, ...options })`.

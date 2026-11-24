@@ -1150,11 +1150,13 @@ roots without Git or network access. It returns the CLI's schemaVersion 1
 report, including `complete: false` and reasons for unreadable roots. Use
 `changesDiff<"fixtures" | "localization">(...)` to name configured category
 fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
-`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `ChangesConfig`,
+`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `FixtureAttributePaths`,
+`ChangesConfig`,
 `ChangeCategory`, `ChangeRule`, `ChangeIdRule`, `KeyedDiffOptions`, and
 `KeyedDiffFormat`.
 
 `testsPlan({ root, changes: "changes.json", framework: "vitest" })` consumes the
 same saved report as CLI `tests plan --changes`. Invalid or incomplete input
-selects the full suite with a structured reason. Configured matchers reuse
-prepared source contents. See [changes configuration](configuration/changes.md).
+selects the full suite with a structured reason. The planner uses
+`attributePaths` to narrow matching fixture tests when it can trace their
+reads. Configured matchers reuse prepared source contents. See [changes configuration](configuration/changes.md).

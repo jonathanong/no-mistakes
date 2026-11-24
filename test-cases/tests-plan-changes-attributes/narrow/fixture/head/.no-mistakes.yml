@@ -1,0 +1,17 @@
+changes:
+  categories:
+    fixtures:
+      paths: ["fixtures/*.json"]
+      id: { fromPath: "fixtures/{id}.json" }
+      tests: ["tests/**/*.test.ts"]
+      match: 'loadFixture("{id}")'
+tests:
+  vitest:
+    configs: vitest.config.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      triggers:
+        - name: fixture-tests
+          paths: ["fixtures/**"]
+          supersededByChanges: true
