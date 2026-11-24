@@ -62,5 +62,21 @@
   [
     "require(/* empty */)",
     false
+  ],
+  [
+    "re = /['\"]/g, require('./columns')",
+    true
+  ],
+  [
+    "return /\"/g, require('./columns')",
+    true
+  ],
+  [
+    "foo(/['\"]/g), require('./columns')",
+    true
+  ],
+  [
+    "re = /require('./columns')/g",
+    false
   ]
 ]

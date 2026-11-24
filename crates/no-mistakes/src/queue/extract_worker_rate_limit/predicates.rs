@@ -2,7 +2,8 @@ use crate::queue::extract_helpers::is_queue_package;
 use crate::queue::extract_job_id::is_imported_callee;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
-    CallExpression, Expression, IdentifierReference, NewExpression, StaticMemberExpression,
+    AssignmentOperator, CallExpression, Expression, IdentifierReference, NewExpression,
+    StaticMemberExpression,
 };
 use oxc_syntax::symbol::SymbolId;
 
@@ -26,8 +27,8 @@ pub(in crate::queue) fn is_worker_constructor_callee(
     }
 }
 
-pub(super) fn is_worker_new(visitor: &QueueVisitor<'_>, new_expr: &NewExpression<'_>) -> bool {
-    let callee = new_expr.callee.get_inner_expression();
+pub(super) fn is_worker_ctor_expr(visitor: &QueueVisitor<'_>, callee: &Expression<'_>) -> bool {
+    let callee = callee.get_inner_expression();
     match callee {
         Expression::Identifier(id) => {
             visitor.worker_classes.contains(id.name.as_str())
@@ -41,31 +42,16 @@ pub(super) fn is_worker_new(visitor: &QueueVisitor<'_>, new_expr: &NewExpression
     }
 }
 
-pub(super) fn is_known_non_worker_new(
-    visitor: &QueueVisitor<'_>,
-    new_expr: &NewExpression<'_>,
-) -> bool {
-    match new_expr.callee.get_inner_expression() {
-        Expression::Identifier(id) => {
-            if visitor.scoping.is_none() {
-                return true;
-            }
-            referenced_symbol(visitor, id).is_some_and(|symbol| {
-                is_class_or_function(visitor, symbol) || is_imported_symbol(visitor, symbol)
-            })
-        }
-        Expression::StaticMemberExpression(member) => {
-            let Expression::Identifier(ns) = member.object.get_inner_expression() else {
-                return false;
-            };
-            visitor
-                .namespace_imports
-                .get(ns.name.as_str())
-                .is_some_and(|source| is_queue_package(source))
-                && (visitor.scoping.is_none() || is_imported_callee(visitor, &member.object))
-        }
-        _ => false,
-    }
+pub(super) fn is_worker_new(visitor: &QueueVisitor<'_>, new_expr: &NewExpression<'_>) -> bool {
+    is_worker_ctor_expr(visitor, &new_expr.callee)
+}
+
+pub(super) fn is_queue_package_import(visitor: &QueueVisitor<'_>, local: &str) -> bool {
+    visitor
+        .facts
+        .imports
+        .iter()
+        .any(|imp| imp.local == local && is_queue_package(&imp.source))
 }
 
 pub(super) fn is_worker_factory_call(
@@ -141,9 +127,22 @@ pub(super) fn is_imported_symbol(visitor: &QueueVisitor<'_>, symbol: SymbolId) -
     })
 }
 
+pub(super) fn is_class(visitor: &QueueVisitor<'_>, symbol: SymbolId) -> bool {
+    visitor
+        .scoping
+        .is_some_and(|scoping| scoping.symbol_flags(symbol).is_class())
+}
+
+pub(super) fn is_function(visitor: &QueueVisitor<'_>, symbol: SymbolId) -> bool {
+    visitor
+        .scoping
+        .is_some_and(|scoping| scoping.symbol_flags(symbol).is_function())
+}
+
 pub(super) fn is_class_or_function(visitor: &QueueVisitor<'_>, symbol: SymbolId) -> bool {
-    visitor.scoping.is_some_and(|scoping| {
-        let flags = scoping.symbol_flags(symbol);
-        flags.is_class() || flags.is_function()
-    })
+    is_class(visitor, symbol) || is_function(visitor, symbol)
+}
+
+pub(super) fn is_value_assignment(operator: AssignmentOperator) -> bool {
+    operator == AssignmentOperator::Assign || operator.is_logical()
 }

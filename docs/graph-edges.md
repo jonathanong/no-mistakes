@@ -901,3 +901,25 @@ from simple `const` `for...of` bindings over closed local or module-private lite
 The projection uses `assertion-owner` edges and leaves ordinary `call` queries
 unchanged. Filters, early exits, mutation, escaping, and unused rows remain outside
 this proof; see the [rule](rules/coverage-producer-assertion-owner.md).
+
+## Import target classification
+
+During the canonical import pass, `DepGraph` records an `ImportTarget` per
+`(importer, specifier)` pair so rules can distinguish resolved project files
+from external packages and unresolved local targets without re-running the
+resolver:
+
+- `File(PathBuf)` — the specifier resolved to a visible project file through the
+  TypeScript/JS resolver or an indexed workspace package entry/export.
+- `External` — the specifier did not resolve to a project file and is not
+  classified as project-local (for example Node builtins and third-party
+  packages).
+- `Unresolved` — the specifier did not resolve to a visible project file, but
+  `specifier_is_project` treats it as project-local: relative or absolute paths
+  (including Windows drive paths), `#`-prefixed specifiers, configured `paths`
+  aliases, or workspace-recognized specifiers. Classifying `#`-prefixed
+  specifiers and Windows drive paths as project-local here favors recall over
+  precision; individual consumers may narrow unmapped `#` specifiers further
+  (see [`postgres-sql-fragment-escape`](rules/postgres-sql-fragment-escape.md)).
+- `Ambiguous` — multiple import statements for the same `(importer, specifier)`
+  produced conflicting `ImportTarget` outcomes within one graph build.
