@@ -33,7 +33,7 @@ mod postgres_bounds;
 #[path = "core_analysis/postgres_scopes.rs"]
 mod postgres_scopes;
 // Moving a bench between QUERY and QUERY_INDEXES requires updating the shard
-// constant and the CodSpeed matrix in .github/workflows/ci.yml.
+// constant and the CodSpeed matrix in .github/workflows/benchmarks.yml.
 #[path = "core_analysis/query_indexes.rs"]
 mod query_indexes;
 #[path = "core_analysis/react_traits.rs"]

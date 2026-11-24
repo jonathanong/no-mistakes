@@ -62,9 +62,10 @@ test("conservatively runs every shard for shared benchmark inputs", () => {
     "crates/no-mistakes/src/lib.rs",
     "fixtures/performance/graph-gates/package.json",
     "fixtures/tsconfig/workspace-resolution/tsconfig.json",
-    ".github/workflows/ci.yml",
+    ".github/workflows/benchmarks.yml",
     ".github/scripts/benchmark-change-scope.cjs",
     ".github/scripts/benchmark-handoff.sh",
+    ".github/scripts/push-diff-base.cjs",
     "tests/js/benchmark-change-scope.test.js",
   ]) {
     assert.deepEqual(benchmarkChangeScope(modified([path])), { changed: true, scope: "all" });
@@ -81,7 +82,7 @@ test("ignores unrelated changes and supports an explicit full fallback", () => {
 
 test("change discovery preserves both sides of fixture renames", () => {
   const workflow = readFileSync(
-    join(__dirname, "..", "..", ".github", "workflows", "ci.yml"),
+    join(__dirname, "..", "..", ".github", "workflows", "benchmarks.yml"),
     "utf8",
   );
   assert.match(workflow, /git diff --no-renames --name-status -z/);
