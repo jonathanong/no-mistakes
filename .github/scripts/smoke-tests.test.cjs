@@ -88,3 +88,15 @@ test("the Windows smoke job runs on pull requests and drives the checked-in list
     assert.match(body, new RegExp(`smoke\\.cjs windows ${mode}`));
   assert.doesNotMatch(body, /pull_request_target|secrets\./);
 });
+
+test("the macOS smoke Rust tests compile with the profile the main test-harness cache holds", () => {
+  const { commands } = require("./native-rust-tests.cjs");
+  const cached = commands("build", "macOS")[0];
+  const [smoke] = cargoCommands("macos");
+  const profile = (args) => args.slice(0, args.indexOf("--locked"));
+  assert.deepEqual(profile(smoke), profile(cached));
+  assert.deepEqual(smoke.slice(smoke.indexOf("-p"), smoke.indexOf("-p") + 2), [
+    "-p",
+    "no-mistakes",
+  ]);
+});

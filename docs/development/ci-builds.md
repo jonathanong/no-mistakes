@@ -60,6 +60,17 @@ The current validation graph is organized as follows:
   listed Cargo target runs zero tests. The job runs for every pull
   request whose Rust scope is not independent (`rust-pr-scope.cjs`); there is
   no separate macOS path filter.
+  The smoke job does not compile its Rust tests from scratch. Before running
+  them it restores the `native-test-harness-workspace-v2-aarch64-apple-darwin`
+  `target/debug` snapshot that `native-test-build-macos` saves on `main`
+  (same key, restore keys and paths; PRs restore and never save), and
+  `smoke.cjs` uses the same `profileArgs` cargo profile, so only the changed
+  crates and the two smoke harnesses rebuild. The tests run before the
+  runtime build because that build rewrites the `no-mistakes` crate-type,
+  which invalidates restored test units. Before this, the job restored no
+  `target/`, spent 14m27s compiling on one run and hit the 15 minute step
+  timeout; `cache-topology.test.cjs` and `smoke-tests.test.cjs` guard the
+  shared key and profile. The timeout was not raised.
   The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
   `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
   `main` and manual dispatch, where they are unchanged. The trade-off is that

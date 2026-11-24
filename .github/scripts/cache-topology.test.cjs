@@ -141,3 +141,26 @@ test("Windows smoke restores the workspace snapshot that main's Windows producer
   assert.equal(key(restore), key(producer));
   assert.equal(paths(restore), paths(producer));
 });
+
+test("macOS smoke restores main test-harness snapshot before the Rust tests and never saves", () => {
+  const smoke = job("macos-smoke");
+  const all = steps(smoke);
+  const index = (name) => all.findIndex((step) => step.startsWith(name));
+  const restore = all.find((step) => step.startsWith("Restore native test harness artifacts"));
+  assert.ok(restore);
+  assert.doesNotMatch(smoke, /actions\/cache\/save@/);
+  const producer = steps(job("native-test-build-macos")).find((step) =>
+    /uses: actions\/cache\/restore@/.test(step),
+  );
+  const target = (text) => text.replaceAll("${{ matrix.target }}", "aarch64-apple-darwin");
+  const key = (step) => target(step.match(/key: (native-test-harness-workspace-v2-.*)\n/)[1]);
+  const fallbacks = (step) =>
+    target(step.split("restore-keys: |\n")[1].split("          path:")[0]);
+  assert.equal(key(restore), key(producer));
+  assert.equal(fallbacks(restore), fallbacks(producer));
+  assert.equal(paths(restore), paths(producer));
+  // The crate-type rewrite invalidates restored test units, so tests run first.
+  assert.ok(index("Restore native test harness") < index("Run macOS-dependent Rust tests"));
+  assert.ok(index("Run macOS-dependent Rust tests") < index("Build native CLI and N-API addon"));
+  assert.match(all[index("Run macOS-dependent Rust tests")], /cargo-cache-inputs\.cjs restore/);
+});
