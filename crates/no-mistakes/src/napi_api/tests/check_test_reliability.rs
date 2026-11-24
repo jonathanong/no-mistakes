@@ -126,3 +126,20 @@ fn batched_check_preserves_test_reliability_and_playwright_selector_findings() {
     assert_eq!(batch["reports"][1]["result"], selectors_check);
     assert_eq!(batch["reports"][2]["result"], playwright);
 }
+
+#[test]
+fn check_follows_delegated_wrappers_and_reports_unprovable_bindings() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-reliability/wrapped-coverage"),
+    );
+    let report: Value = serde_json::from_str(
+        &check_json_impl(test_json_arg(json!({ "root": root }).to_string())).unwrap(),
+    )
+    .unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report}");
+    assert_eq!(findings[0]["line"], 4);
+    let incomplete = report["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 4, "{report}");
+}
