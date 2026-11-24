@@ -1,4 +1,5 @@
-use super::{flush_command, heredoc, Scan};
+use super::{flush_command, Scan};
+use crate::codebase::shell_heredoc::{self, DelimiterStyle, Document, Operator};
 
 impl Scan<'_> {
     pub(super) fn redirection(&mut self) -> bool {
@@ -6,19 +7,25 @@ impl Scan<'_> {
         if !matches!(remaining.first(), Some('<' | '>' | '&')) || self.escaped() {
             return false;
         }
-        if let Some(opener) = heredoc::look(self.chars, self.index) {
+        if let Some(opener) = shell_heredoc::operator(remaining, false) {
             self.flush_before_redirect();
+            let operand = self.index + opener.width();
             match opener {
-                heredoc::Look::Herestring { index } => {
+                Operator::HereString => {
                     self.redirect_operand = true;
-                    self.index = index;
+                    self.index = operand;
                 }
-                heredoc::Look::Document { index, opener } => {
+                Operator::Document { strip_tabs } => {
+                    let (delimiter, width) = shell_heredoc::char_delimiter(
+                        &self.chars[operand..],
+                        DelimiterStyle::LeadingQuote,
+                    );
+                    let end = operand + width;
                     flush_command(&mut self.current, &mut self.commands);
                     self.current.anchor = self.index + 1;
-                    self.heredoc_ranges.push(self.index..index);
-                    self.pending.push(opener);
-                    self.index = index;
+                    self.heredoc_ranges.push(self.index..end);
+                    self.pending.push(Document { delimiter, strip_tabs });
+                    self.index = end;
                 }
             }
             return true;
