@@ -5,10 +5,10 @@ use super::expression_references;
 use super::model;
 use super::value_primitives;
 use super::workflow_values;
+use crate::codebase::structured_value::expand_yaml_mapping_if_merged;
 use serde_yaml::Value;
 
 mod malformed;
-mod merged;
 
 pub(crate) use malformed::malformed_workflow;
 use malformed::workflow_basename;
@@ -37,15 +37,12 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
         return malformed_workflow(path, "workflow root must be a mapping");
     }
 
-    let merged::MergedSections {
-        root: value,
-        on,
-        concurrency,
-    } = match merged::merged_sections(value) {
-        Ok(sections) => sections,
+    let value = match expand_yaml_mapping_if_merged(value) {
+        Ok(value) => value,
         Err(message) => return malformed_workflow(path, &message),
     };
-    let triggers = workflow_values::parse_triggers(on.as_ref());
+    let on = value.get("on");
+    let triggers = workflow_values::parse_triggers(on);
     let workflow_permissions =
         crate::codebase::ci_graph::parse::parse_permission_spec(value.get("permissions"));
     let job_entries: Vec<(String, &Value)> = match value.get("jobs") {
@@ -117,8 +114,8 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
         );
     }
 
-    let concurrency = workflow_values::parse_concurrency(concurrency.as_ref());
-    let workflow_call = workflow_values::parse_workflow_call(on.as_ref());
+    let concurrency = workflow_values::parse_concurrency(value.get("concurrency"));
+    let workflow_call = workflow_values::parse_workflow_call(on);
     let mut job_ids: Vec<String> = jobs.iter().map(|job| job.id.clone()).collect();
     job_ids.sort();
 

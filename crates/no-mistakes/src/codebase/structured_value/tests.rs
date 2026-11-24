@@ -245,7 +245,7 @@ fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
     let quoted_docs = parse_yaml_documents(quoted_fallback);
     assert_eq!(quoted_docs.values.len(), 1);
     assert_eq!(quoted_docs.errors.len(), 1);
-    assert_eq!(quoted_docs.errors[0].0, 2);
+    assert_eq!(quoted_docs.errors[0].0, 5);
 
     let aliased_fallback = include_str!(
         "../../../../../test-cases/structured-value/merge-keys/aliased-merge-fallback.yml"
@@ -253,7 +253,7 @@ fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
     let aliased_docs = parse_yaml_documents(aliased_fallback);
     assert!(aliased_docs.values.is_empty());
     assert_eq!(aliased_docs.errors.len(), 1);
-    assert_eq!(aliased_docs.errors[0].0, 4);
+    assert_eq!(aliased_docs.errors[0].0, 7);
 
     let compact_flow = include_str!(
         "../../../../../test-cases/structured-value/merge-keys/compact-flow-and-false-tokens.yml"
@@ -269,4 +269,41 @@ fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
     let brace_docs = parse_yaml_documents(compact_brace);
     assert_eq!(brace_docs.errors.len(), 1);
     assert_eq!(brace_docs.errors[0].0, 1);
+}
+
+#[test]
+fn reports_the_original_merge_key_with_aliases_and_flow_syntax() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/structured-config-policy/merge-key/aliased-location.yml"
+    );
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.ends_with("at line 4"), "{error}");
+    let documents = parse_yaml_documents(source);
+    assert!(documents.values.is_empty());
+    assert_eq!(documents.errors.len(), 1);
+    assert_eq!(documents.errors[0].0, 4);
+}
+
+#[test]
+fn earlier_sequence_source_wins_after_its_nested_merge() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/sequence-precedence.yml"
+    );
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    let result = &value["result"];
+    assert_eq!(result["color"].as_str(), Some("green"));
+    assert_eq!(result["size"].as_str(), Some("small"));
+    assert_eq!(result["tier"].as_str(), Some("basic"));
+}
+
+#[test]
+fn reports_the_key_that_survives_merge_precedence() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/overridden-location.yml"
+    );
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.ends_with("at line 4"), "{error}");
+    let documents = parse_yaml_documents(source);
+    assert_eq!(documents.errors.len(), 1);
+    assert_eq!(documents.errors[0].0, 4);
 }

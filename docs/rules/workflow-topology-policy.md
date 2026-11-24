@@ -339,10 +339,10 @@ has no source map. A forbidden-event finding in a tagged file is reported
 on line 1. A multi-document file is not one workflow, so its events are
 not reported.
 
-A workflow whose merge key cannot be applied (`concurrency: {<<: 7}`) is a
-malformed workflow. Merges inside a merged mapping, such as `on: {<<: *events}`
-where `*events` itself merges `*call`, are expanded before triggers and
-concurrency are read.
+The workflow parser expands YAML merge keys throughout the document before
+reading triggers, concurrency, jobs, and steps. If a merge cannot be applied,
+the parser reports a malformed workflow even when the only merge is inside a
+job or a step.
 
 When `forbidReusableWorkflowConcurrency` is `true`, every malformed-workflow
 diagnostic is reported as a check failure, even for a file that is not a

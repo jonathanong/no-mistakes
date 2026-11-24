@@ -230,8 +230,9 @@ A merge inside a merged mapping is expanded too: the inner mapping's keys are
 copied into the merged mapping, and then into the parent, with the parent's own
 keys winning. A merge value that is not a mapping, and not a sequence of
 mappings, cannot be applied. A scalar, or a scalar item in a sequence, is not
-dropped. The rule reports an unapplicable merge as a finding with the message
-`failed to apply YAML merge keys`, the same as a YAML syntax error, and
+dropped. The rule reports a merge that cannot be applied at the original
+`<<` key, including keys in flow mappings and anchored mappings that are
+aliased elsewhere. The finding uses `failed to apply YAML merge keys`.
 `options.unanalyzable` does not change that. JSON and JSONC keep a literal `<<`
 key, because merge keys are a YAML 1.1 construct.
 
