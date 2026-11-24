@@ -1,4 +1,4 @@
-const { readChangedFiles } = require("./macos-pr-scope.cjs");
+const { readChangedFiles } = require("./pr-diff-scope.cjs");
 
 const INDEPENDENT_PREFIXES = [
   "packages/eslint-plugin-no-mistakes/",

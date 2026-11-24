@@ -40,22 +40,34 @@ The current validation graph is organized as follows:
   platform. Contract tests keep their build and test commands aligned.
   Windows runs six Rust shards and six real-addon API shards; macOS runs two of
   each, with every selected case still executed once.
-  On a pull request, those macOS jobs run only when
-  `.github/scripts/macos-pr-scope.cjs` reports a path that can differ on macOS:
-  native or N-API bindings, `packages/no-mistakes` platform packages, Cargo
-  manifests, `rust-toolchain.toml`, Cargo build scripts, the path and filesystem
-  modules named in that script, or CI workflows and scripts. A path the script
-  does not list as platform-independent also runs them. Postgres rule sources,
-  their fixtures, and their docs are platform-independent, so a pull request that
-  only changes those paths skips the macOS jobs. The pull request diff starts at
-  the merge base with the base branch, so a workflow edit that exists only on the
-  base does not count. The catalog client in
-  `crates/no-mistakes/src/postgres_catalog` is not in that set: it spawns `psql`,
-  and the filter runs the macOS jobs for it. `Native tests` accepts that
-  skip and still fails when a required macOS job did not succeed, or when any
-  Windows job did not succeed. `Tests with coverage` keeps requiring `Native
-  tests` to succeed. Pushes to `main`, manual dispatch, and the release workflow
-  always run the macOS jobs.
+  macOS has two tiers because GitHub allows only five concurrent macOS jobs
+  account-wide, so macOS runners are the queue bottleneck. Windows is not
+  queue-bound and runs its full set on every pull request.
+  A pull request runs one `macOS smoke` job (`macos-smoke`) instead of the
+  full sharded macOS suite. It builds the CLI and N-API addon, runs
+  `check` on one saved fixture, and runs the explicit OS-dependent list in
+  `.github/scripts/macos-smoke-tests.cjs`: the macOS invocation and global-lock
+  harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
+  check invocation tests, one `analyzeProject` call on a saved fixture through
+  the built addon, and real-addon API tests for the cross-process lock, rename
+  semantics, and diagnostics. The dependency-report API tests stay in the full
+  suite because their expected output depends on which test first sizes the
+  process Rayon pool. The list is explicit,
+  not heuristic, and `macos-smoke-tests.test.cjs` fails when a listed file,
+  test target or test name no longer exists. The job runs for every pull
+  request whose Rust scope is not independent (`rust-pr-scope.cjs`); there is
+  no separate macOS path filter.
+  The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
+  `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
+  `main` and manual dispatch, where they are unchanged. The trade-off is that
+  an OS-only regression outside the smoke list surfaces on `main` after merge
+  instead of on the pull request. The release workflow is a manual dispatch
+  and does not read `main` CI results, so the maintainer must confirm `main` is
+  green, including the full macOS jobs, before dispatching a release. `Native tests` accepts the skipped
+  full macOS jobs on a pull request, requires `macOS smoke` to succeed, and
+  still fails when any Windows job did not succeed. `Tests with coverage` keeps
+  requiring `Native tests` to succeed, and the smoke job is not a separate
+  required check. The release workflow does not use these outputs.
   A push to `main` also places each macOS build in `ci-macos-main-<job>-all` and
   each macOS test shard in `ci-macos-main-<job>-<shard>`.
   `cancel-in-progress` stays false, so the running job finishes and a newer
