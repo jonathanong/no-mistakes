@@ -1,0 +1,26 @@
+name: wait
+on: push
+jobs:
+  wait-until:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: until gh run view 123 --json status; do sleep 30; done
+  wait-while:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          echo start
+          while [ "$(gh run view 123 --json status -q .status)" != completed ]; do
+            sleep 5
+          done
+  wait-for:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          for attempt in 1 2 3; do
+            gh run list --limit 1
+            sleep 10
+          done

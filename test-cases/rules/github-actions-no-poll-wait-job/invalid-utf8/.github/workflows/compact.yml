@@ -1,0 +1,8 @@
+# stray ÿ
+name: compact
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: until gh run view 1; do sleep 1; done

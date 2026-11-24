@@ -1,0 +1,19 @@
+name: paired
+on:
+  pull_request:
+  push:
+jobs:
+  base-with-github-sha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }}
+  env-base-with-github-sha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - run: |
+          CHANGED=$(git diff --name-only "$BASE" "${{ github.sha }}")
+          echo "$CHANGED"

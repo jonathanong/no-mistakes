@@ -1,0 +1,35 @@
+name: pass
+on: push
+jobs:
+  outside-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          gh run view 123
+          sleep 30
+  other-command:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: until curl -fs https://example.invalid/ready; do sleep 2; done
+  no-sleep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: until gh run view 123; do echo waiting; done
+  unparsed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: until gh run view 123; do sleep 1
+      - run: |
+          cat <<EOF
+          until gh run view 123; do sleep 1; done
+          EOF
+  needs-instead:
+    runs-on: ubuntu-latest
+    needs: outside-loop
+    timeout-minutes: 10
+    steps:
+      - run: gh run view 123

@@ -1,9 +1,9 @@
-mod words;
+use crate::codebase::rules::github_actions_workflow_files::shell_words;
 
-pub(crate) use words::Word;
+pub(crate) use shell_words::Word;
 
 pub(super) fn vitest_argv(script: &str) -> Vec<Vec<Word>> {
-    words::commands(script)
+    shell_words::commands(script)
         .into_iter()
         .filter_map(|command| invocation(&command))
         .collect()

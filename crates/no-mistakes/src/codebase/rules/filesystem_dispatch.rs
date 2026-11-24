@@ -1,6 +1,7 @@
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
+use super::github_actions_workflow_files::{no_poll_wait_job, pr_diff_range};
 use super::{
     agents_md_max_size, ast_grep_ignore_freshness, banned_paths, banned_renamed_files,
     config_path_references, csharp_max_lines_per_file, csharp_no_async_void_delegate,
@@ -125,6 +126,8 @@ pub(super) const GITHUB_ACTIONS_SCRIPT_EXPRESSIONS: &str =
 pub(super) const GITHUB_ACTIONS_CHECKOUT_CREDENTIALS: &str =
     github_actions_checkout_credentials::RULE_ID;
 pub(super) const GITHUB_ACTIONS_DOCKER_HOST_PORTS: &str = github_actions_docker_host_ports::RULE_ID;
+pub(super) const GITHUB_ACTIONS_NO_POLL_WAIT_JOB: &str = no_poll_wait_job::RULE_ID;
+pub(super) const GITHUB_ACTIONS_PR_DIFF_RANGE: &str = pr_diff_range::RULE_ID;
 pub(super) const GITHUB_ACTIONS_VITEST_PROJECT_SELECTION: &str =
     github_actions_vitest_project_selection::RULE_ID;
 pub(super) const GITHUB_ACTIONS_DOWNLOAD_INTEGRITY: &str =

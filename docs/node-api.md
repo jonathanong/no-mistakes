@@ -1001,6 +1001,13 @@ outcome as CLI `check`. Exported `GithubActionsRunCommandPolicyOptions`,
 its YAML options. Policy violations appear in `CheckReport.rules` and abstained
 unparsable-command diagnostics appear in `CheckReport.advisories` by default.
 
+The opt-in [`github-actions-no-poll-wait-job`](rules/github-actions-no-poll-wait-job.md)
+runs through async `check()` and `analyzeProject()` check reports with the same
+outcome as CLI `check`. Exported `GithubActionsNoPollWaitJobOptions` describes
+its `pollCommands` and `ignoreForLoops` options. The opt-in
+[`github-actions-pr-diff-range`](rules/github-actions-pr-diff-range.md) has no
+options and uses the same check paths.
+
 The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
 runs through async `check()` and `analyzeProject()` check reports with the
 same outcome as CLI `check`. Configure it in the YAML selected by `config`.

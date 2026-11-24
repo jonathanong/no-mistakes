@@ -1,0 +1,127 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "bounded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bounded-default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/retry.yml",
+          "line": 9,
+          "message": ".github/workflows/retry.yml:9: job `retry` step 1 waits in a `for` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "for attempt in 1 2 3; do",
+          "target": "retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/wait/action.yml",
+          "line": 7,
+          "message": ".github/actions/wait/action.yml:7: composite step 1 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "run: until gh run view 123; do sleep 30; done"
+        },
+        {
+          "file": ".github/workflows/wait.yml",
+          "line": 15,
+          "message": ".github/workflows/wait.yml:15: job `wait-while` step 1 waits in a `while` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "while [ \"$(gh run view 123 --json status -q .status)\" != completed ]; do",
+          "target": "wait-while"
+        },
+        {
+          "file": ".github/workflows/wait.yml",
+          "line": 23,
+          "message": ".github/workflows/wait.yml:23: job `wait-for` step 1 waits in a `for` loop that sleeps and runs `gh run list`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "for attempt in 1 2 3; do",
+          "target": "wait-for"
+        },
+        {
+          "file": ".github/workflows/wait.yml",
+          "line": 8,
+          "message": ".github/workflows/wait.yml:8: job `wait-until` step 1 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "- run: until gh run view 123 --json status; do sleep 30; done",
+          "target": "wait-until"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 19,
+          "message": ".github/workflows/suppressed.yml:19: job `reported` step 1 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "- run: until gh run view 123; do sleep 30; done",
+          "target": "reported"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unconfigured": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

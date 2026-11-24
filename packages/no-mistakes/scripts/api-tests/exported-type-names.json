@@ -129,6 +129,7 @@
   "GithubActionsActionTimeoutPairOptions",
   "GithubActionsDownloadIntegrityOptions",
   "GithubActionsDownloadIntegritySkipAnnotationScope",
+  "GithubActionsNoPollWaitJobOptions",
   "GithubActionsPinnedHashOptions",
   "GithubActionsRunCommandArg",
   "GithubActionsRunCommandArgScope",

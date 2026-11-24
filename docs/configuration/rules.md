@@ -523,6 +523,16 @@ permissions, custom tokens (including `secrets.GITHUB_TOKEN`), and invalid YAML;
 `report` is the default. Definite violations remain failing under every policy.
 The rule stays off until a configuration lists it.
 
+For [`github-actions-no-poll-wait-job`](../rules/github-actions-no-poll-wait-job.md),
+`options.pollCommands` is a list of command prefixes (for example `gh run view`)
+and defaults to none, so the rule reports nothing until a configuration lists
+the commands that poll another run. `options.ignoreForLoops` (default `false`)
+skips `for` loops as bounded retries. The rule stays off until a configuration
+lists it.
+
+[`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md) has no
+options. It stays off until a configuration lists it.
+
 For [`github-actions-vitest-project-selection`](../rules/github-actions-vitest-project-selection.md),
 `options.projects` defaults to none. Each entry names a Vitest `project`, the
 workflow or composite-action paths that may select it, and `nameFilters`

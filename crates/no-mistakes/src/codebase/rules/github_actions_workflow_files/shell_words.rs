@@ -17,7 +17,7 @@ struct Scan {
     double: bool,
 }
 
-pub(super) fn commands(script: &str) -> Vec<Vec<Word>> {
+pub(in crate::codebase::rules) fn commands(script: &str) -> Vec<Vec<Word>> {
     let mut scan = Scan {
         out: Vec::new(),
         command: Vec::new(),

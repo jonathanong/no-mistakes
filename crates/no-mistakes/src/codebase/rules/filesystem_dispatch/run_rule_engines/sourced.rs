@@ -11,6 +11,11 @@ pub(super) fn run(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
+    if let Some(found) = crate::codebase::rules::github_actions_workflow_files::dispatch::run(
+        rule_id, root, config, files, sources,
+    ) {
+        return Some(found);
+    }
     Some(match rule_id {
         NO_MISTAKES_CONFIG => {
             no_mistakes_config::check_with_files_and_sources(root, config, files, sources)
