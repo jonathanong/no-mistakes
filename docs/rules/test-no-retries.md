@@ -39,6 +39,7 @@ Enable the rule to keep the first failing result visible in local runs and CI.
 | `maxRetries` | `0` | Nonnegative integer cap on additional attempts. |
 | `testCommands` | `[]` | Literal argument prefixes that identify test commands in workflow scripts. For `[pnpm, test:unit]`, `pnpm test:unit -- --changed` matches. An empty list disables shell loop matching. |
 | `files` | `[]` | Repository-relative globs for Playwright config factory modules in the rule's scope. The rule checks object literals returned directly by functions declared in an export, including inline projects. |
+| `fixtures` | `[]` | Repository-relative `{ module, export }` entries treated as Playwright's `test` when a local fixture module wraps `test` in a helper the static analysis cannot follow. |
 | `allowlist` | `[]` | Exceptions with exactly one of `path` (repository-relative glob) and `project` (literal runner project name). Each entry requires a nonempty `reason`. Use a path for a test file, workflow, or whole config. |
 
 The rule checks recognized actions even when `testCommands` is empty. Both
@@ -100,12 +101,18 @@ external scripts need review. For custom config names, set
 in `.test` and `.spec` files and under `__tests__`. Use `include` for a
 different layout. When set, `tests.playwright.testInclude` selects the files
 for Playwright calls. `tests.playwright.testExclude` excludes Playwright calls
-while Vitest and Jest calls keep their own scope. Playwright calls can use
-local imports, re-exports, and static `test.extend()` chains. Ambiguous or
-cyclic fixture exports need separate review. Bind the rule application to a
-Vitest project with `rules[].tests.vitest` to check global Vitest calls.
-Workflow discovery uses `ci.workflowDirs`. An unreadable or malformed input
-appears in the JSON `incomplete` list.
+while Vitest and Jest calls keep their own scope. Playwright calls can use local imports, re-exports, static `test.extend()`
+chains, and repository-local wrapper functions that return their argument or
+its `.extend(...)` result. When a spec calls `<binding>.describe.configure(...)`
+on an imported binding that cannot be resolved to Playwright's `test` (such as
+an opaque wrapper, an ambiguous or cyclic export, or an unrelated imported
+object with a `.describe.configure` method), the rule never drops it silently:
+it records an `incomplete` entry naming the file, line, and binding. Add the
+export to `options.fixtures` if it is a Playwright fixture, or exclude/suppress
+the file if it is not. Bind the rule application to a Vitest project with
+`rules[].tests.vitest` to check global Vitest calls. Workflow discovery uses
+`ci.workflowDirs`. An unreadable or malformed input also appears in the JSON
+`incomplete` list.
 
 ## Related rules
 

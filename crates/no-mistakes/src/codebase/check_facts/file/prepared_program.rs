@@ -4,7 +4,7 @@ use crate::codebase::rules::test_reliability::{
     self, playwright_provenance::FixtureInitializers, Location,
 };
 use crate::codebase::ts_source::facts::{self, TsFactPlan, TsFileFacts};
-use oxc_ast::ast::{ModuleDeclaration, Program, Statement};
+use oxc_ast::ast::{ModuleDeclaration, Program};
 use oxc_semantic::{SemanticBuilder, SemanticBuilderReturn};
 use std::{path::Path, sync::Arc};
 
@@ -38,11 +38,7 @@ pub(super) fn collect<'a>(
                 .as_module_declaration()
                 .is_some_and(ModuleDeclaration::is_export)
         });
-    let fixture_has_initializers = fixture_support
-        && program
-            .body
-            .iter()
-            .any(|statement| matches!(statement, Statement::ImportDeclaration(_)));
+    let fixture_has_initializers = fixture_support;
     let semantic = (reliability_demand.is_some()
         || fixture_has_initializers
         || playwright.and_then(|plan| plan.file(path)).is_some())
@@ -79,7 +75,7 @@ pub(super) fn collect<'a>(
                 &ts.exported_bindings,
             )
         })
-        .filter(|fixtures| !fixtures.0.is_empty());
+        .filter(|fixtures| !fixtures.values.is_empty() || !fixtures.wrappers.is_empty());
     PreparedProgramFacts {
         ts,
         semantic,

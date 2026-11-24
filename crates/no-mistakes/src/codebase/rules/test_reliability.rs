@@ -7,6 +7,7 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(crate) mod ast;
 mod findings;
@@ -17,7 +18,7 @@ mod scope;
 mod tests;
 mod workflow;
 
-use findings::{findings_for, source_findings, unreadable};
+use findings::{findings_for, source_findings, unreadable, RuleContext};
 use options::{Allowlist, RetryOptions, SerialOptions};
 use scope::Origin;
 pub use scope::{required_files, SourceDemand};
@@ -37,6 +38,9 @@ pub(crate) struct Location {
     project: Option<String>,
     origin: Origin,
     pub(crate) playwright_import: Option<playwright_provenance::ImportRef>,
+    pub(crate) playwright_binding: Option<Arc<str>>,
+    pub(crate) playwright_wrappers: Vec<playwright_provenance::WrapperCall>,
+    pub(crate) resolved_playwright_exports: Vec<(String, Arc<str>)>,
 }
 
 enum Shape {
@@ -59,26 +63,36 @@ pub(crate) fn check_prepared(
 ) -> Result<Vec<RuleFinding>> {
     let paths = scope::ConfigPaths::new(inputs.root, config)?;
     super::run_rule_applications(config, rule_id, |rule| {
-        let (max_retries, allowlist, test_commands, factory_files) = if rule_id == TEST_NO_RETRIES {
-            let options: RetryOptions = rule.try_rule_options()?;
-            options::validate_test_commands(&options.test_commands)?;
-            let factory_files = options.factory_files()?;
-            (
-                options.max_retries,
-                options.allowlist,
-                options.test_commands,
-                factory_files,
-            )
-        } else {
-            let options: SerialOptions = rule.try_rule_options()?;
-            (
-                0,
-                options.allowlist,
-                Vec::new(),
-                GlobMatcher::new(&[], rule_id)?,
-            )
-        };
+        let (max_retries, allowlist, test_commands, factory_files, fixtures) =
+            if rule_id == TEST_NO_RETRIES {
+                let options: RetryOptions = rule.try_rule_options()?;
+                options::validate_test_commands(&options.test_commands)?;
+                let factory_files = options.factory_files()?;
+                (
+                    options.max_retries,
+                    options.allowlist,
+                    options.test_commands,
+                    factory_files,
+                    options.fixtures,
+                )
+            } else {
+                let options: SerialOptions = rule.try_rule_options()?;
+                (
+                    0,
+                    options.allowlist,
+                    Vec::new(),
+                    GlobMatcher::new(&[], rule_id)?,
+                    options.fixtures,
+                )
+            };
         let allowlist = Allowlist::compile(rule_id, allowlist)?;
+        let fixtures = options::compile_fixtures(rule_id, fixtures)?;
+        let ctx = RuleContext {
+            id: rule_id,
+            max_retries,
+            allowlist: &allowlist,
+            fixtures: &fixtures,
+        };
         let files = super::selected_rule_files_with_sources(
             inputs.root,
             config,
@@ -99,15 +113,7 @@ pub(crate) fn check_prepared(
                     return Ok(None);
                 }
                 let result = if let Some(source) = source {
-                    source_findings(
-                        path,
-                        &relative,
-                        &inputs,
-                        rule_id,
-                        max_retries,
-                        &allowlist,
-                        source,
-                    )
+                    source_findings(path, &relative, &inputs, &ctx, source)
                 } else {
                     workflow::collect(path, inputs.sources, &test_commands)
                         .map(|locations| {

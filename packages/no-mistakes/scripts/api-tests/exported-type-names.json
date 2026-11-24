@@ -206,6 +206,7 @@
   "PlanningImpactArtifacts",
   "PlatformConsumedExports",
   "PlaywrightCoverageReport",
+  "PlaywrightFixtureExport",
   "PlaywrightNoSerialOptions",
   "PlaywrightOptions",
   "PlaywrightRelatedOptions",

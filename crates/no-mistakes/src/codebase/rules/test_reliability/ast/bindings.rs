@@ -16,7 +16,7 @@ pub(super) enum Runner {
 }
 
 pub(super) struct Bindings<'scope, 'ast> {
-    semantic: &'scope Semantic<'ast>,
+    pub(super) semantic: &'scope Semantic<'ast>,
     imports: FxHashMap<SymbolId, (Runner, Option<Cow<'ast, str>>)>,
     other_imports: FxHashMap<SymbolId, ImportRef>,
     vitest_globals: bool,

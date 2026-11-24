@@ -20,10 +20,28 @@ impl ImportRef {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) struct WrapperCall {
+    pub(crate) callee: ImportRef,
+    pub(crate) arg_index: usize,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct WrapperSummary {
+    pub(crate) param_index: usize,
+    pub(crate) wrappers: Vec<WrapperCall>,
+    pub(crate) derived_at: Option<u32>,
+}
+
+#[derive(Clone, Debug)]
 pub(crate) struct FixtureInitializer {
     pub(crate) import: ImportRef,
+    pub(crate) wrappers: Vec<WrapperCall>,
     pub(crate) derived_at: Option<u32>,
 }
 
 #[derive(Default)]
-pub(crate) struct FixtureInitializers(pub(crate) FxHashMap<String, FixtureInitializer>);
+pub(crate) struct FixtureInitializers {
+    pub(crate) values: FxHashMap<String, FixtureInitializer>,
+    pub(crate) wrappers: FxHashMap<String, WrapperSummary>,
+}

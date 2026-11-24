@@ -9,6 +9,7 @@ use oxc_span::{GetSpan, Span};
 mod bindings;
 mod calls;
 mod playwright_bindings;
+mod playwright_wrappers;
 pub(crate) use playwright_bindings::fixture_initializers;
 mod configs;
 mod factories;
@@ -68,6 +69,9 @@ impl Collector<'_, '_> {
             project: project.map(str::to_owned),
             origin: Origin::Settings,
             playwright_import: None,
+            playwright_binding: None,
+            playwright_wrappers: Vec::new(),
+            resolved_playwright_exports: Vec::new(),
         }
     }
 

@@ -33,6 +33,9 @@ pub(super) fn collect(
                     project: None,
                     origin: Origin::Settings,
                     playwright_import: None,
+                    playwright_binding: None,
+                    playwright_wrappers: Vec::new(),
+                    resolved_playwright_exports: Vec::new(),
                 });
             }
             let Some(script) = step.get("run").and_then(Value::as_str) else {
@@ -46,6 +49,9 @@ pub(super) fn collect(
                         project: None,
                         origin: Origin::Settings,
                         playwright_import: None,
+                        playwright_binding: None,
+                        playwright_wrappers: Vec::new(),
+                        resolved_playwright_exports: Vec::new(),
                     });
                 }
             }

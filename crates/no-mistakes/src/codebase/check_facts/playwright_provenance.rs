@@ -4,7 +4,7 @@ use crate::codebase::rules::test_reliability::playwright_provenance::ImportRef;
 use crate::codebase::ts_resolver::{
     ScopedImportResolver, TsConfigCatalog, WorkspaceFallbackResolver,
 };
-use crate::codebase::ts_source::{FileIdMap, SourceStore};
+use crate::codebase::ts_source::{relative_slash_path, FileIdMap, SourceStore};
 use crate::fx::{FxHashMap, FxHashSet, PathSet};
 use std::path::{Path, PathBuf};
 
@@ -30,7 +30,11 @@ pub(super) fn project(
         .filter_map(|path| Some((path, facts.get(path)?)))
         .flat_map(|(path, file)| {
             file.test_reliability.iter().filter_map(|location| {
-                Some((path.clone(), location.playwright_import.as_ref()?.clone()))
+                Some((
+                    path.clone(),
+                    location.playwright_import.as_ref()?.clone(),
+                    location.playwright_wrappers.clone(),
+                ))
             })
         })
         .collect::<FxHashSet<_>>();
@@ -65,10 +69,19 @@ pub(super) fn project(
         ..CheckFactPlan::default()
     };
     let mut lookup = ExportLookup::new(&resolver, &visible);
-    let mut wave = pending
-        .iter()
-        .filter_map(|(path, import)| lookup.local(path, import))
-        .collect::<Vec<_>>();
+    let mut wave = Vec::new();
+    for (path, import, wrappers) in &pending {
+        if !import.is_playwright_test() {
+            if let Some(key) = lookup.local(path, import) {
+                wave.push(key);
+            }
+        }
+        for wrapper in wrappers {
+            if let Some(key) = lookup.local(path, &wrapper.callee) {
+                wave.push(key);
+            }
+        }
+    }
     let mut support = FxHashMap::default();
     let mut attempted = PathSet::default();
     while !wave.is_empty() && crate::invocation::check_timeout().is_ok() {
@@ -105,28 +118,51 @@ pub(super) fn project(
     }
     let relationships = lookup.finalize();
     let mut proofs = FxHashMap::default();
-    let verified = pending
-        .into_iter()
-        .filter(|(path, import)| {
-            let Some(key) = lookup.local(path, import) else {
-                return false;
-            };
+    let mut verified = FxHashSet::default();
+    let mut resolved_map = FxHashMap::default();
+    for item in pending {
+        let (path, import, wrappers) = &item;
+        let base_ok = if import.is_playwright_test() {
+            true
+        } else if let Some(key) = lookup.local(path, import) {
             *proofs
                 .entry(key.clone())
                 .or_insert_with(|| lookup.proves_playwright(&relationships, &key))
-        })
-        .collect::<FxHashSet<_>>();
+        } else {
+            false
+        };
+        let wrappers_ok = wrappers.iter().all(|wrapper| {
+            lookup
+                .local(path, &wrapper.callee)
+                .is_some_and(|key| lookup.proves_wrapper(&key, wrapper.arg_index))
+        });
+        if base_ok && wrappers_ok {
+            verified.insert(item);
+        } else if !import.is_playwright_test() {
+            if let Some(key) = lookup.local(path, import) {
+                let exports: Vec<_> = lookup
+                    .reachable_exports(&relationships, &key)
+                    .into_iter()
+                    .map(|target| (relative_slash_path(root, &target.file), target.name))
+                    .collect();
+                resolved_map.insert(item, exports);
+            }
+        }
+    }
     for path in spec_files() {
         let Some(file) = facts.get_mut(path) else {
             continue;
         };
         for location in &mut file.test_reliability {
-            if location
-                .playwright_import
-                .as_ref()
-                .is_some_and(|import| verified.contains(&(path.clone(), import.clone())))
-            {
+            let Some(import) = location.playwright_import.clone() else {
+                continue;
+            };
+            let key = (path.clone(), import, location.playwright_wrappers.clone());
+            if verified.contains(&key) {
                 location.playwright_import = None;
+                location.playwright_wrappers.clear();
+            } else if let Some(exports) = resolved_map.get(&key) {
+                location.resolved_playwright_exports = exports.clone();
             }
         }
     }

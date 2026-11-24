@@ -1064,9 +1064,12 @@ and source suppressions apply to declaration diagnostics.
 [`playwright-no-serial`](rules/playwright-no-serial.md) run through asynchronous
 `check()` and batched `analyzeProject()` check queries using the existing
 `checkJson` binding. Import `TestNoRetriesOptions`, `PlaywrightNoSerialOptions`,
-and `TestReliabilityAllowlistEntry` from `no-mistakes` to type rule options.
-`TestNoRetriesOptions.files` selects Playwright config factory modules by
-repository-relative glob.
+`PlaywrightFixtureExport`, and `TestReliabilityAllowlistEntry` from
+`no-mistakes` to type rule options. `TestNoRetriesOptions.files` selects
+Playwright config factory modules by repository-relative glob, and `fixtures`
+on both option interfaces names repository `{ module, export }` entries treated
+as Playwright's `test`. Unresolved imported fixture bindings are returned in
+`CheckReport.incomplete`.
 Both rules return standard `RuleFinding` entries.
 
 PostgreSQL executor options accept `extraExecutorNames` in the asynchronous

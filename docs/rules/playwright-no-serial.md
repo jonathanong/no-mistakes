@@ -27,10 +27,10 @@ order.
 
 ## Options
 
-`allowlist` defaults to `[]`. Each entry requires a nonempty `reason` and exactly
-one selector. `path` is a repository-relative glob. `project` is the literal
-name of an inline project in the config. Use a path to make an exception for a
-test file or a whole config.
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `fixtures` | `[]` | Repository-relative `{ module, export }` entries treated as Playwright's `test` when a local fixture module wraps `test` in a helper the static analysis cannot follow. |
+| `allowlist` | `[]` | Exceptions with a nonempty `reason` and exactly one of `path` (repository-relative glob) or `project` (literal inline project name in the config). Use `path` for a test file or whole config. |
 
 ## Valid example
 
@@ -68,14 +68,22 @@ line. To suppress a file, add `// no-mistakes-disable-file playwright-no-serial`
 
 The rule reads configuration objects exported directly or via a local
 constant, and statically identifiable calls to Playwright's `test`. Local
-imports, re-exports, and static `test.extend()` chains can identify that binding.
-Set `tests.playwright.configs` for custom config names.
+imports, re-exports, static `test.extend()` chains, and repository-local
+wrapper functions that return their argument or its `.extend(...)` result can
+identify that binding. Set `tests.playwright.configs` for custom config names.
 Use `include` for calls outside `.test` and `.spec` files and `__tests__`
 directories. When set, `tests.playwright.testInclude` selects the files for
 Playwright calls. `tests.playwright.testExclude` excludes Playwright calls.
-Ambiguous or cyclic fixture exports, computed configuration, omitted options,
-and CLI worker flags need separate review. An unreadable or malformed selected
-test or config appears in the JSON `incomplete` list.
+When a spec calls `<binding>.describe.configure(...)` or
+`<binding>.describe.serial(...)` on an imported binding that cannot be resolved
+to Playwright's `test` (such as an opaque wrapper, an ambiguous or cyclic
+export, or an unrelated imported object with a `.describe.configure` method),
+the rule never drops it silently: it records an `incomplete` entry naming the
+file, line, and binding rather than a finding. Add the export to
+`options.fixtures` if it is a Playwright fixture, or exclude/suppress the file
+if it is not. Computed configuration, omitted options, and CLI worker flags
+need separate review. An unreadable or malformed selected test or config also
+appears in the JSON `incomplete` list.
 
 ## Related rules
 

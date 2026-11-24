@@ -67,24 +67,25 @@ fn filesystem_library_finds_local_playwright_bindings() {
         .join("../../test-cases/rules/test-no-retries")
         .canonicalize()
         .unwrap();
-    let root = fixture.join("fixture/local-playwright");
-    let config = fixture.join("configs/local-playwright.yml");
-    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
-    assert_eq!(findings.len(), 7, "{findings:?}");
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|finding| finding.file == "tests/local.spec.ts")
-            .count(),
-        5
-    );
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|finding| finding.file == "config/browser-options.ts")
-            .count(),
-        2
-    );
+    let wrapped_root = fixture.join("fixture/wrapped-fixtures");
+    let wrapped_config = fixture.join("configs/wrapped-fixtures.yml");
+    let findings = run_filesystem_rules_with_files(
+        &wrapped_root,
+        Some(&wrapped_config),
+        &[
+            wrapped_root.join("helpers/wrappers.mts"),
+            wrapped_root.join("helpers/test.mts"),
+            wrapped_root.join("tests/admin.spec.mts"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+
+    let local_root = fixture.join("fixture/local-playwright");
+    let local_config = fixture.join("configs/local-playwright.yml");
+    let error = run_filesystem_rules(&local_root, Some(&local_config)).unwrap_err();
+    let input = error.downcast_ref::<CheckInputFailure>().unwrap();
+    assert_eq!(input.file, Some(PathBuf::from("tests/local.spec.ts")));
 }
 
 #[test]

@@ -240,9 +240,21 @@ test("check rule options compile from the package root", () => {
   );
 });
 
-test("test-no-retries exposes optional config factory path globs", () => {
+test("test-no-retries exposes optional config factory path globs and fixture exports", () => {
   const declaration = readFileSync(join(packageRoot, "test-reliability-types.d.ts"), "utf8");
+  assert.match(
+    declaration,
+    /export interface PlaywrightFixtureExport \{[^}]*module: string;[^}]*export: string;/s,
+  );
   assert.match(declaration, /export interface TestNoRetriesOptions \{[^}]*files\?: string\[\];/);
+  assert.match(
+    declaration,
+    /export interface TestNoRetriesOptions \{[^}]*fixtures\?: PlaywrightFixtureExport\[\];/,
+  );
+  assert.match(
+    declaration,
+    /export interface PlaywrightNoSerialOptions \{[^}]*fixtures\?: PlaywrightFixtureExport\[\];/,
+  );
 });
 
 test("production export test-only options require explicit production and test scope", () => {

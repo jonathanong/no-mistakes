@@ -1,4 +1,6 @@
-use super::{EdgeIndex, EdgeKind, ExportKey, ExportLookup, ExportProof, FxHashMap};
+use super::{
+    EdgeIndex, EdgeKind, ExportKey, ExportLookup, ExportProof, FxHashMap, FxHashSet, WrapperProof,
+};
 use std::collections::hash_map::Entry;
 use std::path::Path;
 
@@ -40,19 +42,21 @@ impl ExportLookup<'_> {
                     .map(|target| bindings.get(target).copied().unwrap_or(Binding::Unproven))
                     .fold(Binding::Missing, Binding::join);
                 let proven = match self.proof.get(key) {
-                    Some(ExportProof::Playwright(offset)) => {
+                    Some(ExportProof::Playwright(offset, deps)) if self.all_wrappers_ok(deps) => {
                         Binding::Playwright(offset.map(|offset| (key.file.as_path(), offset)))
                     }
-                    Some(ExportProof::Alias(offset)) => match upstream {
-                        Binding::Playwright(identity) => Binding::Playwright(
-                            offset
-                                .map(|offset| (key.file.as_path(), offset))
-                                .or(identity),
-                        ),
-                        _ => Binding::Unproven,
-                    },
+                    Some(ExportProof::Alias(offset, deps)) if self.all_wrappers_ok(deps) => {
+                        match upstream {
+                            Binding::Playwright(identity) => Binding::Playwright(
+                                offset
+                                    .map(|offset| (key.file.as_path(), offset))
+                                    .or(identity),
+                            ),
+                            _ => Binding::Unproven,
+                        }
+                    }
                     Some(ExportProof::Stars) => upstream,
-                    Some(ExportProof::Unknown) | None => Binding::Unproven,
+                    _ => Binding::Unproven,
                 };
                 bindings.insert(key, proven);
             } else if let Entry::Vacant(binding) = bindings.entry(key) {
@@ -62,5 +66,75 @@ impl ExportLookup<'_> {
             }
         }
         matches!(bindings.get(root), Some(Binding::Playwright(_)))
+    }
+
+    pub(in crate::codebase::check_facts::playwright_provenance) fn proves_wrapper(
+        &self,
+        key: &ExportKey,
+        expected_param: usize,
+    ) -> bool {
+        let mut visiting = FxHashSet::default();
+        self.proves_wrapper_inner(key, expected_param, &mut visiting)
+    }
+
+    fn all_wrappers_ok(&self, deps: &[(ExportKey, usize)]) -> bool {
+        deps.iter()
+            .all(|(target, arg_index)| self.proves_wrapper(target, *arg_index))
+    }
+
+    fn proves_wrapper_inner(
+        &self,
+        key: &ExportKey,
+        expected_param: usize,
+        visiting: &mut FxHashSet<(ExportKey, usize)>,
+    ) -> bool {
+        if !visiting.insert((key.clone(), expected_param)) {
+            return false;
+        }
+        let ok = match self.wrappers.get(key) {
+            Some(WrapperProof::Direct { param_index, deps }) => {
+                *param_index == expected_param
+                    && deps.iter().all(|(target, arg_index)| {
+                        self.proves_wrapper_inner(target, *arg_index, visiting)
+                    })
+            }
+            Some(WrapperProof::Alias(target)) => {
+                self.proves_wrapper_inner(target, expected_param, visiting)
+            }
+            Some(WrapperProof::Stars(targets)) => {
+                let mut matched = 0;
+                for target in targets {
+                    if self.proves_wrapper_inner(target, expected_param, visiting) {
+                        matched += 1;
+                    }
+                }
+                matched == 1
+            }
+            Some(WrapperProof::Unknown) | None => false,
+        };
+        visiting.remove(&(key.clone(), expected_param));
+        ok
+    }
+
+    pub(in crate::codebase::check_facts::playwright_provenance) fn reachable_exports(
+        &self,
+        relationships: &EdgeIndex<ExportKey, EdgeKind>,
+        root: &ExportKey,
+    ) -> Vec<ExportKey> {
+        let mut seen = FxHashSet::default();
+        let mut result = Vec::new();
+        let mut stack = vec![root.clone()];
+        while let Some(key) = stack.pop() {
+            if !seen.insert(key.clone()) {
+                continue;
+            }
+            result.push(key.clone());
+            if let Some(neighbors) = relationships.forward().get(&key) {
+                for (target, _) in neighbors {
+                    stack.push(target.clone());
+                }
+            }
+        }
+        result
     }
 }

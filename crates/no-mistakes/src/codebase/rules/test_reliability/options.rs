@@ -1,4 +1,5 @@
 use crate::codebase::rules::path_filter::GlobMatcher;
+use crate::fx::FxHashSet;
 use anyhow::{ensure, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use serde::Deserialize;
@@ -11,6 +12,7 @@ pub(super) struct RetryOptions {
     pub(super) allowlist: Vec<AllowEntry>,
     pub(super) test_commands: Vec<Vec<String>>,
     pub(super) files: Vec<String>,
+    pub(super) fixtures: Vec<FixtureExportEntry>,
 }
 
 impl RetryOptions {
@@ -27,6 +29,37 @@ impl RetryOptions {
 #[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub(super) struct SerialOptions {
     pub(super) allowlist: Vec<AllowEntry>,
+    pub(super) fixtures: Vec<FixtureExportEntry>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct FixtureExportEntry {
+    module: String,
+    export: String,
+}
+
+pub(super) fn compile_fixtures(
+    id: &str,
+    entries: Vec<FixtureExportEntry>,
+) -> Result<FxHashSet<(String, String)>> {
+    let mut fixtures = FxHashSet::default();
+    for (index, entry) in entries.into_iter().enumerate() {
+        let field = format!("{id}: fixtures[{index}]");
+        let module = entry.module.trim().trim_start_matches("./");
+        ensure!(
+            !module.is_empty()
+                && !Path::new(module).is_absolute()
+                && !module.contains('\\')
+                && !module.contains(':')
+                && !module.split('/').any(|component| component == ".."),
+            "{field}: module must be a non-empty repository-relative path"
+        );
+        let export = entry.export.trim();
+        ensure!(!export.is_empty(), "{field}: export must not be blank");
+        fixtures.insert((module.to_string(), export.to_string()));
+    }
+    Ok(fixtures)
 }
 
 #[derive(Deserialize)]

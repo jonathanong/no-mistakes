@@ -1,10 +1,11 @@
-use super::super::playwright_provenance::ImportRef;
+use super::super::playwright_provenance::{ImportRef, WrapperCall};
 use super::bindings::Runner::{Jest, Playwright, Vitest};
 use super::{literal_object, literal_string_is, property, retry_count, Collector, Origin, Shape};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::CallExpression;
+use oxc_ast::ast::{CallExpression, Expression};
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
+use std::sync::Arc;
 
 enum TestCall {
     VitestOptions,
@@ -13,17 +14,31 @@ enum TestCall {
     JestRetry,
 }
 
+struct PendingPlaywright {
+    import: ImportRef,
+    binding: Option<Arc<str>>,
+    wrappers: Vec<WrapperCall>,
+}
+
 impl<'a> Visit<'a> for Collector<'_, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Some((kind, origin, playwright_import)) = self
+        if let Some((kind, origin, pending)) = self
             .test_call(call)
             .filter(|(_, origin, _)| self.demand.includes(*origin))
         {
             let start = self.locations.len();
             self.record_call(call, kind);
-            for location in &mut self.locations[start..] {
-                location.origin = origin;
-                location.playwright_import.clone_from(&playwright_import);
+            if let Some(pending) = pending {
+                for location in &mut self.locations[start..] {
+                    location.origin = origin;
+                    location.playwright_import = Some(pending.import.clone());
+                    location.playwright_binding.clone_from(&pending.binding);
+                    location.playwright_wrappers.clone_from(&pending.wrappers);
+                }
+            } else {
+                for location in &mut self.locations[start..] {
+                    location.origin = origin;
+                }
             }
         }
         walk::walk_call_expression(self, call);
@@ -34,7 +49,7 @@ impl Collector<'_, '_> {
     fn test_call(
         &self,
         call: &CallExpression<'_>,
-    ) -> Option<(TestCall, Origin, Option<ImportRef>)> {
+    ) -> Option<(TestCall, Origin, Option<PendingPlaywright>)> {
         let Some((runner, members, vitest_global)) = self.bindings.call(&call.callee) else {
             return self.playwright_fixture_call(call);
         };
@@ -62,7 +77,7 @@ impl Collector<'_, '_> {
     fn playwright_fixture_call(
         &self,
         call: &CallExpression<'_>,
-    ) -> Option<(TestCall, Origin, Option<ImportRef>)> {
+    ) -> Option<(TestCall, Origin, Option<PendingPlaywright>)> {
         if !self.demand.playwright_tests {
             return None;
         }
@@ -83,11 +98,15 @@ impl Collector<'_, '_> {
         if describe.static_property_name()?.as_str()? != "describe" {
             return None;
         }
-        let import = self
-            .bindings
-            .playwright_value_origin(describe.object())?
-            .import;
-        let pending = (!import.is_playwright_test()).then_some(import);
+        let receiver = describe.object();
+        let init = self.bindings.playwright_value_origin(receiver)?;
+        let pending = (!init.import.is_playwright_test() || !init.wrappers.is_empty()).then(|| {
+            PendingPlaywright {
+                import: init.import,
+                binding: receiver_label(receiver),
+                wrappers: init.wrappers,
+            }
+        });
         Some((kind, Origin::Playwright, pending))
     }
 
@@ -142,6 +161,20 @@ impl Collector<'_, '_> {
                     None,
                 );
             }
+        }
+    }
+}
+
+fn receiver_label(expr: &Expression<'_>) -> Option<Arc<str>> {
+    match unwrap_ts_wrappers(expr) {
+        Expression::Identifier(id) => Some(Arc::from(id.name.as_str())),
+        other => {
+            let member = other.as_member_expression()?;
+            let prop = member.static_property_name()?.as_str()?;
+            let Expression::Identifier(obj) = unwrap_ts_wrappers(member.object()) else {
+                return None;
+            };
+            Some(Arc::from(format!("{}.{prop}", obj.name.as_str())))
         }
     }
 }

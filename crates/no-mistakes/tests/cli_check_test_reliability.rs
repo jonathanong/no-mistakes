@@ -14,6 +14,8 @@ fn test_reliability_check_json_snapshot() {
         "local-playwright",
         "local-playwright-default",
         "playwright-export-shapes",
+        "wrapped-fixtures",
+        "wrapped-fixtures-configured",
     ]
     .map(|name| {
         let root = match name {
@@ -25,6 +27,9 @@ fn test_reliability_check_json_snapshot() {
             }
             "local-playwright" | "local-playwright-default" => {
                 rules_path("test-no-retries", "fixture", "local-playwright")
+            }
+            "wrapped-fixtures" | "wrapped-fixtures-configured" => {
+                rules_path("test-no-retries", "fixture", "wrapped-fixtures")
             }
             _ => root.clone(),
         };
@@ -48,6 +53,7 @@ fn test_reliability_invalid_options_check_json_snapshot() {
         "invalid-command",
         "negative-retry-cap",
         "unknown-serial-option",
+        "invalid-fixture-export",
     ]
     .map(|name| {
         (

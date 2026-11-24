@@ -1,11 +1,14 @@
 use super::bindings::Bindings;
 use crate::codebase::dependencies::extract::ExportedBinding;
 use crate::codebase::rules::test_reliability::playwright_provenance::{
-    FixtureInitializer, FixtureInitializers,
+    FixtureInitializer, FixtureInitializers, ImportRef, WrapperCall, WrapperSummary,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::fx::FxHashSet;
 use oxc_ast::ast::{Expression, Program};
-use oxc_semantic::Semantic;
+use oxc_semantic::{Semantic, SymbolId};
+
+const MAX_VALUE_DEPTH: usize = 8;
 
 pub(crate) fn fixture_initializers<'a>(
     program: &'a Program<'a>,
@@ -23,20 +26,23 @@ pub(crate) fn fixture_initializers<'a>(
         else {
             continue;
         };
-        if !scope.symbol_flags(symbol).is_const_variable() {
-            continue;
+        if scope.symbol_flags(symbol).is_const_variable() {
+            if let Some(initializer) = semantic
+                .nodes()
+                .kind(scope.symbol_declaration(symbol))
+                .as_variable_declarator()
+                .filter(|declaration| declaration.id.is_binding_identifier())
+                .and_then(|declaration| declaration.init.as_ref())
+            {
+                if let Some(import) = bindings.playwright_value_origin(initializer) {
+                    result.values.insert(export.local.clone(), import);
+                    continue;
+                }
+            }
         }
-        let Some(initializer) = semantic
-            .nodes()
-            .kind(scope.symbol_declaration(symbol))
-            .as_variable_declarator()
-            .filter(|declaration| declaration.id.is_binding_identifier())
-            .and_then(|declaration| declaration.init.as_ref())
-        else {
-            continue;
-        };
-        if let Some(import) = bindings.playwright_value_origin(initializer) {
-            result.0.insert(export.local.clone(), import);
+        let mut visited = FxHashSet::default();
+        if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
+            result.wrappers.insert(export.local.clone(), summary);
         }
     }
     result
@@ -47,7 +53,19 @@ impl Bindings<'_, '_> {
         &self,
         value: &Expression<'_>,
     ) -> Option<FixtureInitializer> {
+        self.playwright_value_origin_depth(value, 0)
+    }
+
+    fn playwright_value_origin_depth(
+        &self,
+        value: &Expression<'_>,
+        depth: usize,
+    ) -> Option<FixtureInitializer> {
+        if depth >= MAX_VALUE_DEPTH {
+            return None;
+        }
         let mut derived_at = None;
+        let mut wrappers = Vec::new();
         let mut value = unwrap_ts_wrappers(value);
         loop {
             if let Some(member) = value.as_member_expression() {
@@ -57,25 +75,98 @@ impl Bindings<'_, '_> {
                 };
                 return Some(FixtureInitializer {
                     import: self.import_origin(self.symbol(object)?, Some(property))?,
+                    wrappers,
                     derived_at,
                 });
             }
             match value {
                 Expression::Identifier(identifier) => {
                     if let Some(import) = self.import_origin(self.symbol(identifier)?, None) {
-                        return Some(FixtureInitializer { import, derived_at });
+                        return Some(FixtureInitializer {
+                            import,
+                            wrappers,
+                            derived_at,
+                        });
                     }
                     value = unwrap_ts_wrappers(self.constant_initializer(identifier)?);
                 }
                 Expression::CallExpression(call) if !call.optional => {
-                    let member = unwrap_ts_wrappers(&call.callee).as_member_expression()?;
-                    if member.static_property_name()?.as_str()? != "extend" {
-                        return None;
+                    let callee = unwrap_ts_wrappers(&call.callee);
+                    if let Some(member) = callee.as_member_expression() {
+                        if member.static_property_name().and_then(|n| n.as_str()) == Some("extend")
+                        {
+                            derived_at.get_or_insert(call.span.start);
+                            value = unwrap_ts_wrappers(member.object());
+                            continue;
+                        }
                     }
-                    derived_at.get_or_insert(call.span.start);
-                    value = unwrap_ts_wrappers(member.object());
+                    let mut visited = FxHashSet::default();
+                    if let Some(summary) = self.local_callee_summary(callee, depth, &mut visited) {
+                        for wrapper in summary.wrappers {
+                            if !wrappers.contains(&wrapper) {
+                                wrappers.push(wrapper);
+                            }
+                        }
+                        derived_at = derived_at.or(summary.derived_at);
+                        value = unwrap_ts_wrappers(
+                            call.arguments.get(summary.param_index)?.as_expression()?,
+                        );
+                        continue;
+                    }
+                    let import = self.callee_import_origin(callee)?;
+                    for (arg_index, arg) in call.arguments.iter().enumerate() {
+                        let Some(arg_expr) = arg.as_expression() else {
+                            continue;
+                        };
+                        if let Some(mut inner) =
+                            self.playwright_value_origin_depth(arg_expr, depth + 1)
+                        {
+                            inner.wrappers.push(WrapperCall {
+                                callee: import,
+                                arg_index,
+                            });
+                            for wrapper in wrappers {
+                                if !inner.wrappers.contains(&wrapper) {
+                                    inner.wrappers.push(wrapper);
+                                }
+                            }
+                            inner.derived_at = derived_at.or(inner.derived_at);
+                            return Some(inner);
+                        }
+                    }
+                    return None;
                 }
                 _ => return None,
+            }
+        }
+    }
+
+    pub(super) fn local_callee_summary(
+        &self,
+        callee: &Expression<'_>,
+        depth: usize,
+        visited: &mut FxHashSet<SymbolId>,
+    ) -> Option<WrapperSummary> {
+        let Expression::Identifier(identifier) = callee else {
+            return None;
+        };
+        let symbol = self.symbol(identifier)?;
+        if self.import_origin(symbol, None).is_some() {
+            return None;
+        }
+        self.wrapper_summary(symbol, depth, visited)
+    }
+
+    pub(super) fn callee_import_origin(&self, callee: &Expression<'_>) -> Option<ImportRef> {
+        match callee {
+            Expression::Identifier(id) => self.import_origin(self.symbol(id)?, None),
+            expr => {
+                let member = expr.as_member_expression()?;
+                let prop = member.static_property_name()?.as_str()?;
+                let Expression::Identifier(obj) = unwrap_ts_wrappers(member.object()) else {
+                    return None;
+                };
+                self.import_origin(self.symbol(obj)?, Some(prop))
             }
         }
     }

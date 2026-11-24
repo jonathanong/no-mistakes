@@ -531,6 +531,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -600,6 +642,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -699,6 +783,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:13: cannot verify whether imported binding `defaultFromStar` (from `fixtures/runner.ts` export `default`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"fixtures/runner.ts\", export: \"default\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:14: cannot verify whether imported binding `mixed` (from `fixtures/mixed.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"fixtures/mixed.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:15: cannot verify whether imported binding `opaque` (from `fixtures/opaque.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"fixtures/opaque.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:16: cannot verify whether imported binding `unavailable` (from `../fixtures/unavailable` export `test`) is Playwright's `test`; if it is a Playwright fixture, add its repository-relative module and export to `test-no-retries` `options.fixtures`"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -896,6 +1002,114 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "test-no-retries",
           "sourceLine": "- uses: nick-fields/retry@v3",
           "target": "GitHub Actions retry action"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "wrapped-fixtures": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/opaque.spec.mts",
+          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/opaque.spec.mts",
+          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "wrapped-fixtures-configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/opaque.spec.mts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "opaqueTest.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/opaque.spec.mts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "opaqueTest.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
         }
       ],
       "warnings": []
