@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-lock-inventory
+    name: invalid
+    scope: repository
+    options:
+      executorNames: []
+      baselineFile: wrong-schema.json
+  - rule: postgres-lock-inventory
+    name: valid
+    scope: repository
+    options:
+      executorNames: []
+      baselineFile: empty.json

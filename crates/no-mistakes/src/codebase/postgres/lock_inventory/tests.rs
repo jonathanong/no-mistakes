@@ -1,7 +1,7 @@
 use super::super::statement_facts::{SqlLocationDemand, SqlStatementFileFacts};
 use super::super::statements::{
-    extract_sql_conflict_policy_facts, extract_sql_statement_facts_with_policy,
-    StatementPolicySources,
+    extract_sql_conflict_policy_facts, extract_sql_lock_scope_facts,
+    extract_sql_statement_facts_with_policy, lock_writes::SequenceMode, StatementPolicySources,
 };
 
 fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
@@ -213,4 +213,39 @@ fn regular_statement_projection_skips_inventory_candidates_and_routines() {
     assert!(!facts.parse_failed);
     assert!(facts.lock_inventory.is_empty());
     assert!(facts.lock_inventory_unanalyzed.is_empty());
+}
+
+#[test]
+fn combined_projection_counts_physical_clauses_and_preserves_each_target_mode() {
+    let sql = fixture("shared-projection.sql");
+    let facts = extract_sql_lock_scope_facts(
+        &sql,
+        false,
+        &[],
+        SqlLocationDemand::None,
+        StatementPolicySources {
+            collect_lock_inventory: true,
+            share_lock_writes: true,
+            ..Default::default()
+        },
+    );
+    assert!(!facts.parse_failed);
+    let categories: Vec<_> = facts
+        .lock_inventory
+        .iter()
+        .map(|lock| lock.category.as_str())
+        .collect();
+    assert_eq!(categories, ["for-key-share", "for-share"]);
+    let [statement] = facts.lock_writes.share_statements.as_slice() else {
+        panic!("expected one lock statement");
+    };
+    let modes: Vec<_> = statement.locks.iter().map(|lock| lock.mode).collect();
+    assert_eq!(
+        modes,
+        [
+            SequenceMode::KeyShare,
+            SequenceMode::KeyShare,
+            SequenceMode::Share
+        ]
+    );
 }

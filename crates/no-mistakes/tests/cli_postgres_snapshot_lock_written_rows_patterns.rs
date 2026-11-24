@@ -154,6 +154,32 @@ fn postgres_lock_written_rows_share_uncertainty_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_lock_written_rows_share_batch_edges_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_share_batch_edges",
+        &[("advise", "share-lock-batch-edges", "share-uncertainty.yml")],
+    );
+    let advise = &reports["advise"]["report"];
+    assert_eq!(lines(advise, "advisories", "share-lock-then-write"), [30]);
+    assert_eq!(lines(advise, "advisories", "unanalyzable"), [6, 37]);
+}
+
+#[test]
+fn postgres_lock_written_rows_redundant_prelock_quoted_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_redundant_prelock_quoted",
+        &[(
+            "advise",
+            "redundant-prelock-quoted",
+            "redundant-no-catalog.yml",
+        )],
+    );
+    let advise = &reports["advise"]["report"];
+    assert_eq!(lines(advise, "advisories", "redundant-prelock"), [12]);
+    assert!(lines(advise, "advisories", "unanalyzable").is_empty());
+}
+
+#[test]
 fn postgres_lock_written_rows_redundant_prelock_boundaries_check_json_snapshot() {
     let reports = snapshot(
         "postgres_lock_written_rows_redundant_prelock_boundaries",

@@ -261,3 +261,45 @@ fn inventories_complete_alternatives_and_reports_sampled_and_opaque_sql() {
         ]
     );
 }
+
+#[test]
+fn invalid_baseline_records_a_finding_and_other_inventory_applications_continue() {
+    let root = fixture("invalid-baselines");
+    let config = AnalysisSession::new(None)
+        .config(&root, Some(Path::new("invalid-schema.yml")))
+        .unwrap();
+    let findings = check_with_files(&root, &config, &[root.join("locks.sql")]).unwrap();
+    let targets: Vec<_> = findings
+        .iter()
+        .map(|finding| {
+            (
+                finding.file.as_str(),
+                finding.line,
+                finding.target.as_deref(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            ("locks.sql", 1, Some("for-update")),
+            ("wrong-schema.json", 1, Some("invalid-baseline")),
+        ]
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn baseline_path_with_a_regular_file_parent_propagates_the_filesystem_error() {
+    let root = fixture("invalid-baselines");
+    let config = AnalysisSession::new(None)
+        .config(&root, Some(Path::new("unreachable-path.yml")))
+        .unwrap();
+    let error = check_with_files(&root, &config, &[root.join("locks.sql")]).unwrap_err();
+    assert_eq!(
+        error
+            .downcast_ref::<std::io::Error>()
+            .map(std::io::Error::kind),
+        Some(std::io::ErrorKind::NotADirectory)
+    );
+}
