@@ -2,6 +2,8 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
+const { readWorkflow } = require("./workflow-contract.cjs");
+const benchmark = require("../../test-cases/cache-retention/benchmark-completed.json");
 const {
   plan,
   collect,
@@ -153,7 +155,7 @@ test("apply deletes only planned IDs after resolving all referenced pull request
 });
 
 test("trusted events reject PR workflow runs, foreign repositories and non-main dispatches", () => {
-  const repository = "jonathanong/no-mistakes";
+  const repository = "example/widgets";
   assert.ok(trustedEvent("workflow_run", fixture.events.workflow, repository, "refs/heads/main"));
   assert.ok(
     trustedEvent("pull_request_target", fixture.events.closed, repository, "refs/heads/main"),
@@ -183,6 +185,55 @@ test("trusted events reject PR workflow runs, foreign repositories and non-main 
     ),
     false,
   );
+});
+
+test("benchmark completion accepts only the trusted workflow name and path from a main push", () => {
+  const repository = "example/widgets";
+  const ref = "refs/heads/main";
+  const run = benchmark.workflow_run;
+  assert.equal(trustedEvent("workflow_run", benchmark, repository, ref), true);
+  assert.equal(
+    trustedEvent(
+      "workflow_run",
+      { ...benchmark, workflow_run: { ...run, conclusion: "cancelled" } },
+      repository,
+      ref,
+    ),
+    true,
+  );
+  assert.equal(
+    trustedEvent("workflow_run", { ...benchmark, action: "requested" }, repository, ref),
+    false,
+  );
+  const rejectedRuns = [
+    { name: "Test CI" },
+    { path: ".github/workflows/ci.yml" },
+    { event: "pull_request" },
+    { head_branch: "feature" },
+    { repository: { full_name: "foreign/widgets" } },
+    { head_repository: { full_name: "foreign/widgets" } },
+    { status: "in_progress", conclusion: null },
+  ];
+  for (const rejected of rejectedRuns)
+    assert.equal(
+      trustedEvent(
+        "workflow_run",
+        { ...benchmark, workflow_run: { ...run, ...rejected } },
+        repository,
+        ref,
+      ),
+      false,
+      JSON.stringify(rejected),
+    );
+});
+
+test("cache retention subscribes to both producer workflows on completion of main runs", () => {
+  const workflow = readWorkflow(path.join(root, ".github/workflows/cache-retention.yml"));
+  assert.deepEqual(workflow.on.workflow_run, {
+    workflows: ["Test CI", "Benchmarks"],
+    branches: ["main"],
+    types: ["completed"],
+  });
 });
 
 test("retention workflow executes only trusted sparse policy with isolated write permissions", () => {
@@ -222,7 +273,7 @@ test("malformed metadata and unresolved PR state never reach deletion", async ()
 });
 
 test("reusable main-push callers must match both repository and payload branch", () => {
-  const repository = "jonathanong/no-mistakes";
+  const repository = "example/widgets";
   assert.ok(trustedEvent("push", fixture.events.push, repository, "refs/heads/main"));
   assert.equal(
     trustedEvent("push", fixture.events.push, "foreign/repository", "refs/heads/main"),

@@ -163,11 +163,14 @@ function trustedEvent(name, event, repository, ref) {
   const run = event.workflow_run;
   return (
     name === "workflow_run" &&
-    run?.name === "Test CI" &&
+    event.action === "completed" &&
+    run?.status === "completed" &&
     run.event === "push" &&
     run.head_branch === "main" &&
     run.repository?.full_name === repository &&
-    run.path === ".github/workflows/ci.yml"
+    run.head_repository?.full_name === repository &&
+    ((run.name === "Test CI" && run.path === ".github/workflows/ci.yml") ||
+      (run.name === "Benchmarks" && run.path === ".github/workflows/benchmarks.yml"))
   );
 }
 async function collect(request) {

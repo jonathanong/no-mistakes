@@ -117,12 +117,17 @@ direct, awaited `SELECT 1 FROM ONLY ... FOR UPDATE` whose result is discarded wh
 next direct awaited SQL call is a conditional `UPDATE` or supported upsert with
 the same statically proven unique row key. An `UPDATE` requires a matching
 unique key in the complete catalog supplied through `schemaCatalogPath`.
-For a supported upsert, a single-column `ON CONFLICT` target establishes the
-unique key. Use `FROM ONLY` when the lock should exclude inherited rows, since
+For a supported upsert with one `VALUES` row, a single-column `ON CONFLICT`
+target establishes the unique key. A fully decoded multi-row upsert that
+targets the locked relation and the same stable key in the transaction
+can produce an `unanalyzable` diagnostic under `unanalyzableSql`. The
+redundancy advisory requires a single-row upsert. Use `FROM ONLY` when the lock should exclude inherited rows, since
 a parent table's unique key does not constrain its inheritance children.
 The rule abstains when it cannot prove that the selected values are
 unused, the key predicates match, the key binds stay unchanged, and both calls
-belong to the same known transaction. Intervening
+belong to the same known transaction. An awaited write can be the first
+initializer in a declaration with multiple bindings. An earlier initializer
+may observe data or affect execution, so the proof stops there. Intervening
 reads, consumed results, computed projections, unconditional writes, and
 unresolved transaction membership do not produce this finding. `fail` is an
 invalid severity for this check. An unresolved proof may still produce an

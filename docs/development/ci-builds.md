@@ -54,7 +54,8 @@ The current validation graph is organized as follows:
   two tiers.
   A pull request runs one `macOS smoke` job (`macos-smoke`) instead of the
   full sharded macOS suite. It builds the CLI and N-API addon, runs
-  `check` on one saved fixture, and runs the explicit OS-dependent list in
+  `check` on a saved fixture and requires the `agents-md-max-size` finding on
+  `AGENTS.md:1`. It runs the explicit OS-dependent list in
   `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
   harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
   check invocation tests, one `analyzeProject` call on a saved fixture through
@@ -225,7 +226,10 @@ complete store, then the newest creation time and ID, rather than a newer
 partial store. Different lockfiles, platforms, architectures, and unknown key
 formats remain separate.
 
-Cleanup runs after successful main producers, after main CI, and on PR closure.
+Cleanup runs after successful main producers, on PR closure, and when a
+main-push run of Test CI or Benchmarks finishes. A run can save caches before a
+later job fails, so cleanup also runs after unsuccessful completions.
+
 After deduplication it evicts least-recently-accessed main workspace snapshots
 until the inventory fits an 8 GiB budget. These build caches can be recreated;
 open PRs, unknown families, release dependencies, and active benchmark handoffs

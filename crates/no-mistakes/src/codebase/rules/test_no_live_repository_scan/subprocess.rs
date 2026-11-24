@@ -60,8 +60,7 @@ impl<'a> Gate<'a> {
             };
             let wrapped = command::wrapper_dir(&invocation);
             let base = place::directory(facts, site.offset, invocation.options, &self.fixture_dirs);
-            let mut live = None;
-            let mut multiple_live_dirs = false;
+            let mut live_dirs = Vec::new();
             let mut allowed = false;
             let mut unresolved = false;
             for shell_dir in invocation.shell_dirs.as_deref().unwrap_or(&[None]) {
@@ -70,19 +69,17 @@ impl<'a> Gate<'a> {
                     place::shell_place(dir, &self.fixture_dirs, base)
                 });
                 match located {
-                    place::Directory::Live => {
-                        multiple_live_dirs |= *live.get_or_insert(dir) != dir;
-                    }
+                    place::Directory::Live => live_dirs.push(dir),
                     place::Directory::Allowed => allowed = true,
                     place::Directory::Unresolved => unresolved = true,
                 }
             }
-            if let Some(dir) = live {
+            if !live_dirs.is_empty() {
                 diagnostics.findings.push(finding(
                     place::live_message(
                         &site.source_callee,
                         &label,
-                        place::owned_shift(base, wrapped.as_deref(), dir, multiple_live_dirs),
+                        place::owned_shift(base, wrapped.as_deref(), &live_dirs),
                         allowed || unresolved,
                     ),
                     "analyzer subprocess",

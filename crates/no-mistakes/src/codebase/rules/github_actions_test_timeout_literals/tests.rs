@@ -14,7 +14,6 @@ fn scan_source(source: &str, yaml: &str) -> Vec<RuleFinding> {
         ".github/workflows/ci.test.mts",
         source,
         &compile_options(serde_yaml::from_str(yaml).unwrap()).unwrap(),
-        false,
     )
 }
 
@@ -57,17 +56,6 @@ fn property_to_strict_equal_is_a_finding() {
         scan_source("expect(job.timeoutMinutes).toStrictEqual(10)\n", "{}").len(),
         1
     );
-}
-
-#[test]
-fn deferred_suppression_still_emits_disabled_file() {
-    let findings = scan::check_source(
-        ".github/workflows/ci.test.mts",
-        "// no-mistakes-disable-file github-actions-test-timeout-literals\nexpect(job.timeoutMinutes).toBe(10)\n",
-        &compile_options(Options::default()).unwrap(),
-        true,
-    );
-    assert_eq!(findings.len(), 1, "{findings:?}");
 }
 
 #[test]
@@ -117,12 +105,36 @@ allow:
 // Output cases moved to cli_gha_snapshot_test_timeout_literals.
 
 #[test]
-fn disable_file_comment_skips_the_test() {
-    assert!(scan_source(
-        "// no-mistakes-disable-file github-actions-test-timeout-literals\nexpect(step?.['timeout-minutes']).toBe(10)\n",
-        "{}"
-    )
-    .is_empty());
+fn file_disable_checks_the_shared_header_even_when_an_allow_would_match() {
+    use crate::codebase::ts_source::{FileInventory, SourceStore};
+    use crate::diagnostics::InvocationObserver;
+    use std::sync::Arc;
+
+    let root = fixture("file-disabled");
+    let path = root.join(".github/workflows/ci.test.mts");
+    let files = std::slice::from_ref(&path);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let observer = InvocationObserver::new(true);
+    let inventory = Arc::new(FileInventory::from_paths(files));
+    let sources = SourceStore::new_observed(inventory, Some(Arc::clone(&observer)));
+
+    let findings = check_with_files_and_sources(&root, &config, files, &sources, false).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+    let work = observer.snapshot().work;
+    assert_eq!(work.get("suppression.header_builds"), Some(&1));
+    assert_eq!(work.get("suppression.line_index_builds"), None);
+    assert_eq!(work.get("suppression.standalone_fallbacks"), None);
+}
+
+#[test]
+fn deferred_suppression_still_emits_disabled_file() {
+    let root = fixture("file-disabled");
+    let path = root.join(".github/workflows/ci.test.mts");
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    let opts = compile_options(Options::default()).unwrap();
+    let findings = scan::check_file(&root, &path, &opts, &sources, true);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 2);
 }
 
 #[test]
