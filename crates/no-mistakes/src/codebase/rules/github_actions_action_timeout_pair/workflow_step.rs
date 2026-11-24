@@ -39,7 +39,7 @@ pub(super) fn check_workflow_step(
     let seconds = raw_seconds.filter(|_| compare).and_then(whole_seconds);
     if let Some(expected) = opts
         .step_timeout_minutes
-        .filter(|expected| minutes != Some(*expected) && (!compare || minutes.is_some()))
+        .filter(|expected| minutes != Some(*expected))
     {
         diagnostics.findings.push(finding(
             rel,
@@ -48,7 +48,7 @@ pub(super) fn check_workflow_step(
             job_id,
         ));
     }
-    if direct && (!compare || seconds.is_some()) {
+    if direct {
         diagnostics.findings.extend(nested_input_finding(
             rel,
             source,

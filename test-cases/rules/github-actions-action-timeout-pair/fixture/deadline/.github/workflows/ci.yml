@@ -24,6 +24,10 @@ jobs:
         timeout-minutes: 2
         with:
           timeout-seconds: 119.5
+      - name: Missing step timeout
+        uses: example/deadline-action@v1
+        with:
+          timeout-seconds: 90
       - name: Expression cap
         uses: example/deadline-action@v1
         timeout-minutes: ${{ inputs.minutes }}

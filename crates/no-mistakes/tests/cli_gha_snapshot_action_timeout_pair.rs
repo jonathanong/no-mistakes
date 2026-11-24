@@ -10,6 +10,11 @@ fn github_actions_action_timeout_pair_json_matches_snapshot() {
         &[
             ("pass", rules_path(RULE, "fixture", "pass"), paired.clone()),
             (
+                "default_config",
+                rules_path(RULE, "fixture", "fail-step"),
+                std::path::PathBuf::new(),
+            ),
+            (
                 "missing_step_timeout",
                 rules_path(RULE, "fixture", "fail-step"),
                 paired.clone(),
@@ -57,7 +62,9 @@ fn nested_deadline_json_matches_snapshot() {
         ("ignore", "deadline-ignore.yml"),
         ("disabled", "deadline-off.yml"),
         ("custom_advisory", "deadline-custom-advisory.yml"),
-        ("with_exact_checks", "deadline-with-exact.yml"),
+        ("with_exact_checks_ignore", "deadline-with-exact.yml"),
+        ("with_exact_checks_advise", "deadline-with-exact-advise.yml"),
+        ("with_exact_checks_report", "deadline-with-exact-report.yml"),
     ]
     .map(|(label, config)| (label, root.clone(), rules_path(RULE, "configs", config)));
     assert_saved_fixture("github_actions_action_timeout_pair_deadline", &cases);
