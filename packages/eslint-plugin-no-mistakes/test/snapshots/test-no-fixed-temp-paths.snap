@@ -248,6 +248,47 @@
       "rule": "test-no-fixed-temp-paths"
     },
     {
+      "file": "root-aliases.test.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 48,
+          "endLine": 8,
+          "file": "root-aliases.test.ts",
+          "line": 8,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 39,
+          "endLine": 9,
+          "file": "root-aliases.test.ts",
+          "line": 9,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 41,
+          "endLine": 11,
+          "file": "root-aliases.test.ts",
+          "line": 11,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "name": "root-aliases.test.ts",
+      "options": null,
+      "rule": "test-no-fixed-temp-paths"
+    },
+    {
       "file": "sinks.test.ts",
       "findings": [
         {
@@ -477,6 +518,36 @@
       "rule": "test-no-fixed-temp-paths"
     },
     {
+      "file": "unsupported-paths.test.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 32,
+          "endLine": 11,
+          "file": "unsupported-paths.test.ts",
+          "line": 11,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 45,
+          "endLine": 12,
+          "file": "unsupported-paths.test.ts",
+          "line": 12,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "name": "unsupported-paths.test.ts",
+      "options": null,
+      "rule": "test-no-fixed-temp-paths"
+    },
+    {
       "file": "utility.ts",
       "findings": [],
       "name": "utility.ts",
@@ -606,6 +677,27 @@
     },
     {
       "code": "no-mistakes(test-no-fixed-temp-paths)",
+      "column": 14,
+      "file": "test-cases/eslint-snippets/fixture/test-no-fixed-temp-paths/root-aliases.test.ts",
+      "line": 8,
+      "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it."
+    },
+    {
+      "code": "no-mistakes(test-no-fixed-temp-paths)",
+      "column": 14,
+      "file": "test-cases/eslint-snippets/fixture/test-no-fixed-temp-paths/root-aliases.test.ts",
+      "line": 9,
+      "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it."
+    },
+    {
+      "code": "no-mistakes(test-no-fixed-temp-paths)",
+      "column": 14,
+      "file": "test-cases/eslint-snippets/fixture/test-no-fixed-temp-paths/root-aliases.test.ts",
+      "line": 11,
+      "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it."
+    },
+    {
+      "code": "no-mistakes(test-no-fixed-temp-paths)",
       "column": 15,
       "file": "test-cases/eslint-snippets/fixture/test-no-fixed-temp-paths/sinks.test.ts",
       "line": 8,
@@ -728,6 +820,20 @@
       "column": 20,
       "file": "test-cases/eslint-snippets/fixture/test-no-fixed-temp-paths/unique-prefixes.test.ts",
       "line": 23,
+      "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it."
+    },
+    {
+      "code": "no-mistakes(test-no-fixed-temp-paths)",
+      "column": 14,
+      "file": "test-cases/eslint-snippets/fixture/test-no-fixed-temp-paths/unsupported-paths.test.ts",
+      "line": 11,
+      "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it."
+    },
+    {
+      "code": "no-mistakes(test-no-fixed-temp-paths)",
+      "column": 19,
+      "file": "test-cases/eslint-snippets/fixture/test-no-fixed-temp-paths/unsupported-paths.test.ts",
+      "line": 12,
       "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it."
     }
   ]

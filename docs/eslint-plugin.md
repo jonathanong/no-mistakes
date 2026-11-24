@@ -339,11 +339,28 @@ for supported patterns and fixes.
 
 ### `test-no-fixed-temp-paths`
 
-Opt-in; no rule-local options. Report fixed temporary paths only when they
-reach known Node filesystem or process sinks, directly or through one `const`
-alias. Unique-directory prefixes, including disposable variants, are accepted;
-files that mock the filesystem are exempt. See
+Opt-in with no rule-local options. Reports fixed temporary paths at known Node
+filesystem or process sinks. A local `const` alias can supply a path argument
+or the root of a `path.join` or `path.resolve` call. Unique-directory prefixes,
+including disposable variants, are allowed. Files that mock the filesystem
+with `vi.mock` or `jest.mock` are exempt. See
 [the rule reference](eslint-rules/test-no-fixed-temp-paths.md).
+
+### `test-no-shared-state`
+
+`allowBeforeAllAssignments?: boolean`; default `false`.
+
+### `test-no-skips`
+
+Enable this single-file rule in a flat-config block with explicit test `files`
+globs. It reports Vitest/Playwright skip, conditional, focus, pending, and fixme
+modifiers, bound Vitest context `skip()` calls, and Playwright `skip` / `fixme`
+declaration annotations. `allow` defaults to `[]` and accepts `skip`,
+`skipIf`, `runIf`, `only`, `todo`, and `fixme`. Same-file `.extend()` fixture
+wrappers stay bound; `testModules` names import specifiers whose exported
+`test` is Playwright's, matching the specifier as written.
+See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
+table callbacks, configuration, and `no-mistakes` suppression directives.
 
 ### `test-no-typed-enqueue-fake`
 
@@ -360,10 +377,6 @@ using globs relative to the ESLint working directory. Numeric bounds on elapsed
 `Date.now()` or `performance.now()` values are reported in test filenames;
 files that call Vitest or Jest fake timers are exempt. See
 [the rule reference](eslint-rules/test-no-wall-time-assertions.md).
-
-### `test-no-shared-state`
-
-`allowBeforeAllAssignments?: boolean`; default `false`.
 
 ### `ts-no-export-renaming`
 
@@ -409,18 +422,6 @@ to your database module to enable default `query`, `read`, and `write` names.
 Without a module, only explicit `executorNames` select named imports; explicit
 `query` also enables `.query` members. Configured modules retain member matching
 with custom executor names. See the [migration notes](migrations/explicit-postgres-executors.md).
-
-### `test-no-skips`
-
-Enable this single-file rule in a flat-config block with explicit test `files`
-globs. It reports Vitest/Playwright skip, conditional, focus, pending, and fixme
-modifiers, bound Vitest context `skip()` calls, and Playwright `skip` / `fixme`
-declaration annotations. `allow` defaults to `[]` and accepts `skip`,
-`skipIf`, `runIf`, `only`, `todo`, and `fixme`. Same-file `.extend()` fixture
-wrappers stay bound; `testModules` names import specifiers whose exported
-`test` is Playwright's, matching the specifier as written.
-See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
-table callbacks, configuration, and `no-mistakes` suppression directives.
 
 ### `playwright-test-timeout-cap`
 

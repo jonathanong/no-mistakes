@@ -36,8 +36,8 @@ pub(super) struct Invocation {
     pub(super) executable: Token,
     pub(super) argv: Vec<Token>,
     pub(super) options: OptionsSlot,
-    /// Directory from `cd <dir>` before `&&` or `;`. It replaces the `cwd` option.
-    pub(super) shell_dir: Option<String>,
+    /// Directory alternatives for a shell command. An unchanged directory uses `cwd`.
+    pub(super) shell_dirs: Option<Vec<Option<String>>>,
 }
 
 pub(super) fn launcher_name(site: &ResolvedCallSite) -> Option<&str> {
@@ -84,7 +84,7 @@ pub(super) fn launches(values: &[ArgumentValue], shell: bool) -> Vec<Invocation>
         executable: token(first),
         argv,
         options,
-        shell_dir: None,
+        shell_dirs: None,
     }]
 }
 
