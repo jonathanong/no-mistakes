@@ -14,6 +14,13 @@ pub(super) fn module_file(
     module_lookup(graph, catalog, importer, specifier, true)
 }
 
+enum NonFileTarget {
+    External,
+    Ambiguous,
+    Unresolved,
+    Unrecorded,
+}
+
 pub(super) fn module_lookup(
     graph: Option<&DepGraph>,
     catalog: &Catalog<'_>,
@@ -25,21 +32,22 @@ pub(super) fn module_lookup(
     if specifier.starts_with("node:") || is_bare_node_builtin(specifier) {
         return None;
     }
+    let target = match graph.and_then(|graph| graph.import_target(importer, specifier)) {
+        Some(ImportTarget::File(path)) => return is_indexable(path).then(|| path.clone()),
+        Some(ImportTarget::External) => NonFileTarget::External,
+        Some(ImportTarget::Ambiguous) => NonFileTarget::Ambiguous,
+        Some(ImportTarget::Unresolved) => NonFileTarget::Unresolved,
+        None => NonFileTarget::Unrecorded,
+    };
     let specifier_path = Path::new(specifier);
     let relative = specifier.starts_with('.') || specifier_path.is_absolute();
     let non_source = has_explicit_non_source_extension(specifier_path);
-    match graph.and_then(|graph| graph.import_target(importer, specifier)) {
-        Some(ImportTarget::File(path)) => is_indexable(path).then(|| path.clone()),
-        Some(ImportTarget::External) => {
-            if relative && non_source {
-                return None;
-            }
-            resolve_ambient(catalog, importer, specifier, record_gap)
-        }
-        Some(ImportTarget::Ambiguous) => {
-            if relative && non_source {
-                return None;
-            }
+    if relative && non_source {
+        return None;
+    }
+    match target {
+        NonFileTarget::External => resolve_ambient(catalog, importer, specifier, record_gap),
+        NonFileTarget::Ambiguous => {
             if matches!(
                 resolve_with_catalog(catalog, importer, specifier, relative, record_gap),
                 Some(Some(path)) if !is_indexable(&path)
@@ -51,7 +59,7 @@ pub(super) fn module_lookup(
             }
             None
         }
-        Some(ImportTarget::Unresolved) => resolve_local_or_unrecorded(
+        NonFileTarget::Unresolved => resolve_local_or_unrecorded(
             catalog,
             importer,
             specifier,
@@ -60,7 +68,7 @@ pub(super) fn module_lookup(
             record_gap,
             !specifier.starts_with('#'),
         ),
-        None => resolve_local_or_unrecorded(
+        NonFileTarget::Unrecorded => resolve_local_or_unrecorded(
             catalog, importer, specifier, relative, non_source, record_gap, false,
         ),
     }
@@ -108,9 +116,6 @@ fn resolve_local_or_unrecorded(
     record_gap: bool,
     graph_unresolved: bool,
 ) -> Option<PathBuf> {
-    if relative && non_source {
-        return None;
-    }
     let resolution = resolve_with_catalog(catalog, importer, specifier, relative, record_gap);
     if let Some(Some(path)) = &resolution {
         return is_indexable(path).then(|| path.clone());

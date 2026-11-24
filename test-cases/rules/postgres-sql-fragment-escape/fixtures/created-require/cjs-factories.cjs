@@ -1,5 +1,8 @@
 const { createRequire } = require("module");
 const { createRequire: makeReq } = require("node:module");
+const { [dynamicKey]: skippedComputed, createRequire: { nested } = {} } = require("module");
+const [skippedArray] = require("module");
+const { skippedMember } = require("module").createRequire;
 const mod = require("node:module");
 const propFactory = require("node:module").createRequire;
 const other = require("./other");

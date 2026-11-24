@@ -28,6 +28,26 @@ fn matching_parens_ignores_parens_inside_strings_comments_and_regexes() {
     let inner = source.rfind('(').unwrap();
     assert_eq!(pairs.get(&outer), Some(&(source.len() - 1)));
     assert_eq!(pairs.get(&inner), Some(&(source.len() - 2)));
+
+    assert!(matching_parens("f(/* unterminated").is_empty());
+    assert!(matching_parens("x = /unclosed\n(a)").contains_key(&14));
+    assert!(matching_parens("x = /trailing\\").is_empty());
+    assert!(matching_parens("x = /esc\\\n(a)").contains_key(&10));
+}
+
+#[test]
+fn unclosed_outer_paren_falls_back_to_depth_tracking() {
+    let source = "outer(inner(1), require('./columns')";
+    let mut ts = TsFileFacts::default();
+    ts.value_flow
+        .calls
+        .push(call(0, source.len() as u32, named("outer"), Vec::new()));
+    let inner_start = source.find("inner(").unwrap() as u32;
+    let inner_end = inner_start + "inner(1)".len() as u32;
+    ts.value_flow
+        .calls
+        .push(call(inner_start, inner_end, named("inner"), Vec::new()));
+    assert_eq!(missing_static_load_gap(&ts, source, "unclosed.ts"), None);
 }
 
 #[test]
