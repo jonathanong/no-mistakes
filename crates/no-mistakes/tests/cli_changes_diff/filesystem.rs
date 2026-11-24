@@ -48,7 +48,7 @@ fn changes_diff_compares_links_by_target_without_reading_through_them() {
 }
 
 #[test]
-fn changes_diff_treats_a_retargeted_dangling_link_as_a_path_change() {
+fn changes_diff_treats_a_dangling_link_with_a_new_target_as_a_path_change() {
     let root = crate::saved_fixture::materialize_path(&fixture().join("symlinks"));
     let head = root.path().join("head");
     fs::remove_file(head.join("other/gone")).unwrap();

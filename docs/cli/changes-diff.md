@@ -43,7 +43,7 @@ structured files, and unsupported entries produce `complete: false` with
 `reasons`. An unreadable root still produces valid report JSON and exits 1.
 Symbolic links compare by link target, as git does, and are never followed:
 an identical link (including a directory link or a dangling one) contributes no
-change, a retargeted link or a link replaced by a regular file is a change to
+change, a link with a new target or a link replaced by a regular file is a change to
 the link path, and a link whose target cannot be read is reported in `reasons`
 for that path only. A changed link matching a `keysOf` category is
 `unclassified`, because its target is not a keyed document.
