@@ -10,12 +10,10 @@ permissions:
   contents: read
   actions: read
 
-# One group per PR, and one per ref for main. Superseded runs are cancelled:
-# CodSpeed compares against the nearest benchmarked ancestor, so a cancelled
-# main run only moves the baseline to the previous benchmarked commit.
+# A new push cancels a superseded pull-request run. Main runs always complete.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always

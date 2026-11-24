@@ -35,7 +35,11 @@ test("cold and same-commit artifact measurements are explicit dispatch inputs", 
   assert.match(source, /COLD_BUILD: \$\{\{ \(inputs.cold_cache/);
   assert.match(source, /REUSE_BUILD_RUN_ID: \$\{\{ inputs.reuse_build_run/);
   const benchmarks = readFileSync(path.join(__dirname, "../workflows/benchmarks.yml"), "utf8");
-  assert.doesNotMatch(benchmarks.split("\njobs:")[0], /workflow_dispatch|ci\/cold-build|warm-build/);
+  assert.match(benchmarks, /cancel-in-progress: \$\{\{ github.event_name == 'pull_request' \}\}/);
+  assert.doesNotMatch(
+    benchmarks.split("\njobs:")[0],
+    /workflow_dispatch|ci\/cold-build|warm-build/,
+  );
 });
 
 test("every build producer validates the source and publishes the artifact run ID", () => {

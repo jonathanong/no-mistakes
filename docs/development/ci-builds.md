@@ -1140,9 +1140,9 @@ so the `benchmarks` and `benchmark-scope` outputs and the pull-request opt-in
 markers are unchanged. It triggers on `pull_request` and pushes to `main`; Test
 CI's measurement refs and `workflow_dispatch` never ran benchmarks. Test CI's
 end-to-end time on `main` no longer includes the benchmark build or shards.
-Its concurrency group is one per pull request and one per ref on `main`, and
-both cancel superseded runs: CodSpeed compares against the nearest benchmarked
-ancestor, so a cancelled `main` run only moves the baseline back one commit.
+Its concurrency matches Test CI: one group per pull request, cancelled when a
+newer push supersedes it, and one group per commit on `main`, where runs always
+complete.
 `Benchmarks` is not a required check. Cache retention still looks up each
 handoff cache's source run by ID, so a running Benchmarks run keeps its handoff.
 
