@@ -99,7 +99,11 @@ pub(super) fn build(
             let prefix_scopes = eval.scopes.clone();
             eval.module_environment(target);
             eval.prune_snapshot_state();
-            if eval.is_pure_shared_module(&prefix_scopes, dep_module_count) {
+            if eval.is_pure_shared_module(
+                &prefix_scopes,
+                dep_module_count,
+                untrusted_array_intrinsics,
+            ) {
                 let own_scopes = eval.scopes.split_off(prefix);
                 drop(eval);
                 Arc::make_mut(&mut shared).modules.insert(
@@ -107,6 +111,7 @@ pub(super) fn build(
                     Arc::new(CachedModule {
                         deps,
                         dep_refs,
+                        dep_scopes: prefix_scopes,
                         own_scopes,
                     }),
                 );

@@ -1,14 +1,17 @@
-use super::super::value::Values;
-use super::super::{Environment, Evaluator, Scope, Value};
+use super::super::{Environment, Evaluator, Scope};
 use crate::codebase::postgres::query_annotation::module_ids::ModuleId;
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod remap;
+use remap::remap_scope;
+
 #[derive(Clone)]
 pub(in crate::codebase::postgres::query_annotation) struct CachedModule {
     pub(in crate::codebase::postgres::query_annotation) deps: Vec<ModuleId>,
     pub(in crate::codebase::postgres::query_annotation) dep_refs: Vec<(ModuleId, usize)>,
+    pub(in crate::codebase::postgres::query_annotation) dep_scopes: Vec<Scope>,
     pub(in crate::codebase::postgres::query_annotation) own_scopes: Vec<Scope>,
 }
 
@@ -31,7 +34,37 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .modules
             .get(&module_id)?
             .clone();
+        if !self.deps_match_cached(&cached) {
+            return None;
+        }
         Some(self.install_cached_module(path, module_id, &cached, None))
+    }
+
+    fn deps_match_cached(&self, cached: &CachedModule) -> bool {
+        let mut remap = Vec::with_capacity(cached.dep_refs.len());
+        for &(dep_mod, slot) in &cached.dep_refs {
+            let Some(&dep_base) = self.modules.get(&dep_mod) else {
+                remap.push(usize::MAX);
+                continue;
+            };
+            remap.push(dep_base + slot);
+        }
+        for (index, &(dep_mod, slot)) in cached.dep_refs.iter().enumerate() {
+            let Some(&dep_base) = self.modules.get(&dep_mod) else {
+                continue;
+            };
+            let Some(current) = self.scopes.get(dep_base + slot) else {
+                return false;
+            };
+            let expected = &cached.dep_scopes[index];
+            if current.same_bindings(expected) {
+                continue;
+            }
+            if remap.contains(&usize::MAX) || *current != remap_scope(expected, &remap) {
+                return false;
+            }
+        }
+        true
     }
 
     pub(in crate::codebase::postgres::query_annotation) fn install_cached_module(
@@ -86,9 +119,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &self,
         prefix_scopes: &[Scope],
         dep_module_count: usize,
+        initial_untrusted_array_intrinsics: bool,
     ) -> bool {
         let prefix = prefix_scopes.len();
         self.event_log.is_empty()
+            && self.untrusted_array_intrinsics == initial_untrusted_array_intrinsics
             && self.modules.len() == dep_module_count + 1
             && self.scopes.len() > prefix
             && self.scopes[prefix..]
@@ -112,72 +147,5 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             && self.captured_binding_readers.is_empty()
             && self.mapped_argument_owners.is_empty()
             && self.mapped_parameter_indices.is_empty()
-    }
-}
-
-fn remap_scope(scope: &Scope, remap: &[Environment]) -> Scope {
-    if !scope.values().any(|value| needs_remap(value, remap)) {
-        return scope.clone();
-    }
-    let values = scope
-        .iter()
-        .map(|(name, value)| (name.clone(), remap_value(value, remap)))
-        .collect::<FxHashMap<_, _>>();
-    Scope::from(values)
-}
-
-fn needs_remap(value: &Value, remap: &[Environment]) -> bool {
-    match value {
-        Value::Function(_, _, env) => remap
-            .get(*env)
-            .copied()
-            .is_some_and(|mapped| mapped != *env),
-        Value::Promise(inner) | Value::Evaluated(inner, _) => needs_remap(inner, remap),
-        Value::Aggregate(items)
-        | Value::References(items)
-        | Value::Object(items)
-        | Value::Record(items, _)
-        | Value::Joined(items)
-        | Value::Possible(items) => items.iter().any(|item| needs_remap(item, remap)),
-        Value::Prefix(..)
-        | Value::Arguments(_)
-        | Value::Array(_)
-        | Value::Number(_)
-        | Value::Boolean(_)
-        | Value::Failure(_)
-        | Value::Unknown
-        | Value::Primitive
-        | Value::Unsupported
-        | Value::SlotDeletion => false,
-    }
-}
-
-fn remap_values(items: &Values, remap: &[Environment]) -> Values {
-    Values::from(
-        items
-            .iter()
-            .map(|item| remap_value(item, remap))
-            .collect::<Vec<_>>(),
-    )
-}
-
-fn remap_value(value: &Value, remap: &[Environment]) -> Value {
-    match value {
-        Value::Function(function, path, env) => Value::Function(
-            Arc::clone(function),
-            Arc::clone(path),
-            remap.get(*env).copied().unwrap_or(*env),
-        ),
-        Value::Promise(inner) => Value::Promise(Box::new(remap_value(inner, remap))),
-        Value::Evaluated(inner, exact) => {
-            Value::Evaluated(Box::new(remap_value(inner, remap)), *exact)
-        }
-        Value::Aggregate(items) => Value::Aggregate(remap_values(items, remap)),
-        Value::References(items) => Value::References(remap_values(items, remap)),
-        Value::Object(items) => Value::Object(remap_values(items, remap)),
-        Value::Record(items, keys) => Value::Record(remap_values(items, remap), keys.clone()),
-        Value::Joined(items) => Value::Joined(remap_values(items, remap)),
-        Value::Possible(items) => Value::Possible(remap_values(items, remap)),
-        _ => value.clone(),
     }
 }
