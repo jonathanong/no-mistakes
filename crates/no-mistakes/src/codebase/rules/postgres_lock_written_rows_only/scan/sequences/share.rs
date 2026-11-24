@@ -14,53 +14,12 @@ pub(super) fn scan(
     grouped: &BTreeMap<usize, Vec<&SqlStatementFileFacts>>,
     unresolved: &BTreeSet<u32>,
 ) {
-    let mut ordered = Vec::new();
-    let mut uncertain_writes = BTreeMap::<_, relations::Writes<'_>>::new();
-    let mut uncertain_deletes = BTreeMap::<_, relations::Writes<'_>>::new();
-    let candidates = variants::groups(calls, grouped);
-    let potential = potential::PotentialWrites::collect(candidates.clone());
-    for (call, versions) in candidates {
-        let proven = match versions {
-            [facts] if !facts.parse_failed => {
-                ordered_transaction(call, unresolved).map(|tx| (tx, *facts))
-            }
-            _ => None,
-        };
-        if let Some((transaction, facts)) = proven {
-            if !facts.lock_writes.share_statements.is_empty() {
-                ordered.push((transaction, call, facts));
-            }
-            continue;
-        }
-        if let Some(transaction) = transaction_scope(call) {
-            for facts in versions.iter().filter(|facts| !facts.parse_failed) {
-                let access = &facts.lock_writes;
-                uncertain_writes.entry(transaction).or_default().extend(
-                    access
-                        .writes
-                        .iter()
-                        .filter_map(|row| row.relation.as_deref()),
-                );
-                uncertain_deletes.entry(transaction).or_default().extend(
-                    access
-                        .share_statements
-                        .iter()
-                        .flat_map(|statement| &statement.deletes)
-                        .filter_map(|&index| access.writes[index].relation.as_deref()),
-                );
-            }
-        }
-        if !known_autocommit(call)
-            && versions
-                .iter()
-                .any(|facts| !facts.parse_failed && potential.may_follow_lock(call, facts))
-        {
-            output.unresolved(
-                &Site { file, source, call },
-                "share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
-            );
-        }
-    }
+    let CallOrder {
+        mut ordered,
+        uncertain_writes,
+        uncertain_deletes,
+        potential,
+    } = classify_calls(output, (file, source), calls, grouped, unresolved);
     ordered.sort_unstable_by_key(|(transaction, call, _)| (*transaction, call.execution_range.1));
     let mut current = None;
     let mut written = LaterWrites::default();
@@ -148,5 +107,74 @@ pub(super) fn scan(
                 }
             }
         }
+    }
+}
+
+struct CallOrder<'a> {
+    ordered: Vec<(Transaction, &'a EmbeddedSqlCall, &'a SqlStatementFileFacts)>,
+    uncertain_writes: BTreeMap<Transaction, relations::Writes<'a>>,
+    uncertain_deletes: BTreeMap<Transaction, relations::Writes<'a>>,
+    potential: potential::PotentialWrites<'a>,
+}
+
+fn classify_calls<'a>(
+    output: &mut Output<'_>,
+    (file, source): (&str, &str),
+    calls: &'a [EmbeddedSqlCall],
+    grouped: &'a BTreeMap<usize, Vec<&'a SqlStatementFileFacts>>,
+    unresolved: &BTreeSet<u32>,
+) -> CallOrder<'a> {
+    let mut ordered = Vec::new();
+    let mut uncertain_writes = BTreeMap::<_, relations::Writes<'_>>::new();
+    let mut uncertain_deletes = BTreeMap::<_, relations::Writes<'_>>::new();
+    let candidates = variants::groups(calls, grouped);
+    let potential = potential::PotentialWrites::collect(candidates.clone());
+    for (call, versions) in candidates {
+        let proven = match versions {
+            [facts] if !facts.parse_failed => {
+                ordered_transaction(call, unresolved).map(|tx| (tx, *facts))
+            }
+            _ => None,
+        };
+        if let Some((transaction, facts)) = proven {
+            if !facts.lock_writes.share_statements.is_empty() {
+                ordered.push((transaction, call, facts));
+            }
+            continue;
+        }
+        if let Some(transaction) = transaction_scope(call) {
+            for facts in versions.iter().filter(|facts| !facts.parse_failed) {
+                let access = &facts.lock_writes;
+                uncertain_writes.entry(transaction).or_default().extend(
+                    access
+                        .writes
+                        .iter()
+                        .filter_map(|row| row.relation.as_deref()),
+                );
+                uncertain_deletes.entry(transaction).or_default().extend(
+                    access
+                        .share_statements
+                        .iter()
+                        .flat_map(|statement| &statement.deletes)
+                        .filter_map(|&index| access.writes[index].relation.as_deref()),
+                );
+            }
+        }
+        if !known_autocommit(call)
+            && versions
+                .iter()
+                .any(|facts| !facts.parse_failed && potential.may_follow_lock(call, facts))
+        {
+            output.unresolved(
+                &Site { file, source, call },
+                "share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
+            );
+        }
+    }
+    CallOrder {
+        ordered,
+        uncertain_writes,
+        uncertain_deletes,
+        potential,
     }
 }
