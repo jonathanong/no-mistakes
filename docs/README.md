@@ -43,8 +43,9 @@ the job you have; the rest of this index is reference.
 lychee --no-progress --exclude-path '^fixtures/' --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$' README.md 'docs/**/*.md' 'plugins/*/skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md
 ```
 
-CI keeps documentation links in the required quality gate so broken links still
-block changes. The gateway wrapper retries the configured document scope using
+Pull requests check links in changed documentation files. Pushes and manual runs
+check the full documentation set, including unchanged pages with links to moved
+or deleted targets. The gateway wrapper retries the selected documents using
 the `LYCHEE_GATEWAY_WAIT` schedule and the initial check’s GitHub API credentials
 in [the workflow](../.github/workflows/ci.yml). After those attempts, a fresh report
 containing only HTTP 5xx responses for links to `github.com` is inconclusive:
