@@ -3,7 +3,13 @@ const { existsSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
-const { buildCommand, cargoCommands, testsRun, vitestArgs } = require("./smoke.cjs");
+const {
+  assertCargoTestsRan,
+  assertCliResult,
+  buildCommand,
+  cargoCommands,
+  vitestArgs,
+} = require("./smoke.cjs");
 const { cliFixture, napiFixture, platforms } = require("./smoke-tests.cjs");
 
 const root = path.resolve(__dirname, "../..");
@@ -12,6 +18,7 @@ const systems = Object.entries(platforms);
 
 test("every OS lists Rust and API tests", () => {
   assert.deepEqual(Object.keys(platforms).sort(), ["macos", "windows"]);
+  assert.throws(() => cargoCommands("linux"), /unsupported smoke OS/);
   for (const [, { label, rust, api }] of systems) {
     assert.ok(label);
     assert.ok(rust.length > 0);
@@ -58,11 +65,33 @@ test("the listed CLI and N-API fixtures are saved in the repository", () => {
 });
 
 test("a Cargo filter that runs zero tests fails the smoke run", () => {
-  assert.equal(testsRun("running 0 tests\n\ntest result: ok. 0 passed\n"), 0);
-  assert.equal(testsRun("running 0 tests\r\nrunning 3 tests\r\n"), 3);
-  assert.equal(testsRun("running 1 test\n"), 1);
-  assert.equal(testsRun(""), 0);
-  assert.throws(() => cargoCommands("linux"), /unsupported smoke OS/);
+  const [, blockedCheck] = cargoCommands("macos");
+  for (const output of ["running 0 tests\n\ntest result: ok. 0 passed\n", ""]) {
+    assert.throws(() => assertCargoTestsRan(blockedCheck, output), /ran zero tests/);
+  }
+  assert.doesNotThrow(() =>
+    assertCargoTestsRan(blockedCheck, "running 0 tests\r\nrunning 3 tests\r\n"),
+  );
+  assert.doesNotThrow(() => assertCargoTestsRan(blockedCheck, "running 1 test\n"));
+});
+
+test("CLI smoke requires the expected finding and the findings exit status", () => {
+  const { finding, clean } = JSON.parse(read(".github/scripts/fixtures/smoke-cli-check.json"));
+  const stdout = JSON.stringify(finding);
+  assert.doesNotThrow(() => assertCliResult({ status: 1, stdout, stderr: "" }));
+  assert.throws(
+    () => assertCliResult({ status: 0, stdout: JSON.stringify(clean), stderr: "" }),
+    /check exited 0/,
+  );
+  assert.throws(
+    () => assertCliResult({ status: 1, stdout: JSON.stringify(clean), stderr: "" }),
+    /did not report agents-md-max-size/,
+  );
+  finding.rules[0].line = 2;
+  assert.throws(
+    () => assertCliResult({ status: 1, stdout: JSON.stringify(finding), stderr: "" }),
+    /did not report agents-md-max-size/,
+  );
 });
 
 test("the compile step builds exactly the targets the test step runs, same profile", () => {

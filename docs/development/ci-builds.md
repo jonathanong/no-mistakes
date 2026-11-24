@@ -53,7 +53,8 @@ The current validation graph is organized as follows:
   two tiers.
   A pull request runs one `macOS smoke` job (`macos-smoke`) instead of the
   full sharded macOS suite. It builds the CLI and N-API addon, runs
-  `check` on one saved fixture, and runs the explicit OS-dependent list in
+  `check` on a saved fixture and requires the `agents-md-max-size` finding on
+  `AGENTS.md:1`. It runs the explicit OS-dependent list in
   `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
   harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
   check invocation tests, one `analyzeProject` call on a saved fixture through

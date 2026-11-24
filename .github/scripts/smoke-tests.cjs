@@ -16,6 +16,14 @@ const macos = {
       args: [],
       guards: [
         {
+          file: "crates/no-mistakes/Cargo.toml",
+          text: 'name = "macos_invocation"\npath = "tests/macos_invocation.rs"',
+        },
+        {
+          file: "crates/no-mistakes/tests/macos_invocation.rs",
+          text: '#[path = "cli_invocation.rs"]\nmod cli_invocation;',
+        },
+        {
           file: "crates/no-mistakes/tests/cli_invocation.rs",
           text: "fn hung_fsmonitor_times_out_and_releases_the_invocation_lock",
         },
