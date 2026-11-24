@@ -39,6 +39,23 @@ fn job_state_as_record_findings_snapshot() {
     let snapshot = serde_json::to_string_pretty(&rows).unwrap();
     insta::assert_snapshot!(snapshot);
 
+    let unresolved_diags: Vec<_> = report
+        .diagnostics
+        .iter()
+        .filter(|d| d.message.contains("job-state-as-record was not judged"))
+        .collect();
+    assert_eq!(
+        unresolved_diags.len(),
+        2,
+        "unresolved non-queue receivers in nonQueueReceiver must emit a diagnostic, while Set.add must not: {:#?}",
+        unresolved_diags
+    );
+    assert!(
+        unresolved_diags.iter().all(|d| d.file == "usage.ts"),
+        "{:#?}",
+        unresolved_diags
+    );
+
     // Suppression directive removes the suppressed finding.
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let sources = crate::codebase::rules::source_store_for_files(&files);

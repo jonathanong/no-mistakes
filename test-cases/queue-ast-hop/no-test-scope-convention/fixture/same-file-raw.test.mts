@@ -21,7 +21,11 @@ export async function sameFileWorkersMatchWithoutTestScope(unknownObj: { other: 
   const nsWorker = queues.createWorker(queues.ALERTS_QUEUE, async () => {});
   await nsQueue.add("matched-by-ns-factory", {});
 
-  const unknownWorker = new Worker(unknownObj.other, async () => {});
+  const unknownWorker = new Worker(unknownObj.other, async (job) => {
+    if (job.name === "unrelated") {
+      return;
+    }
+  });
 
   return {
     rawWorker,

@@ -1,27 +1,25 @@
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
+use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::{JobKey, QueueKey};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-pub(super) fn index_producers<'a>(
-    producers: &[&'a InternalProducer],
-) -> HashMap<JobKey, Vec<&'a InternalProducer>> {
-    producers.iter().copied().filter_map(|p| p.job_key()).fold(
-        HashMap::new(),
-        |mut map, producer| {
+pub(super) fn index_producers(
+    producers: &[InternalProducer],
+) -> HashMap<JobKey, Vec<&InternalProducer>> {
+    producers
+        .iter()
+        .filter_map(|p| p.job_key())
+        .fold(HashMap::new(), |mut map, producer| {
             map.entry(producer.0).or_default().push(producer.1);
             map
-        },
-    )
+        })
 }
 
-pub(super) fn index_workers<'a>(
-    workers: &[&'a InternalWorker],
-) -> HashMap<JobKey, Vec<&'a InternalWorker>> {
+pub(super) fn index_workers(workers: &[InternalWorker]) -> HashMap<JobKey, Vec<&InternalWorker>> {
     workers
         .iter()
-        .copied()
         .flat_map(InternalWorker::job_keys)
         .fold(HashMap::new(), |mut map, worker| {
             map.entry(worker.0).or_default().push(worker.1);
@@ -29,24 +27,35 @@ pub(super) fn index_workers<'a>(
         })
 }
 
-pub(super) fn wildcard_queues(workers: &[&InternalWorker]) -> HashSet<QueueKey> {
+pub(super) fn wildcard_queues(workers: &[InternalWorker]) -> HashSet<QueueKey> {
     workers
         .iter()
-        .copied()
         .filter(|w| w.site.wildcard)
         .filter_map(|w| w.queue.clone())
         .collect()
 }
 
+pub(super) fn has_unresolved_worker_for_job(workers: &[InternalWorker], job: &str) -> bool {
+    workers.iter().any(|worker| {
+        worker.queue.is_none()
+            && worker.site.queue_name.is_none()
+            && (worker.site.wildcard || worker.site.jobs.iter().any(|handled| handled == job))
+    })
+}
+
 pub(super) fn unmatched_workers(
     root: &Path,
-    workers: &[&InternalWorker],
+    workers: &[InternalWorker],
     producers_for_job: &HashMap<JobKey, Vec<&InternalProducer>>,
-    producers: &[&InternalProducer],
+    producers: &[InternalProducer],
+    test_scope: &ConfiguredTestScope,
 ) -> Vec<CheckFinding> {
     let unresolved = unresolved_locations(root, producers);
     let mut out = Vec::new();
     for worker in workers {
+        if test_scope.is_match(root, &worker.site.file) {
+            continue;
+        }
         for (job, _) in worker.job_keys() {
             if producers_for_job.contains_key(&job) {
                 continue;
@@ -78,7 +87,7 @@ struct UnresolvedLocations {
     any_queue: Vec<String>,
 }
 
-fn unresolved_locations(root: &Path, producers: &[&InternalProducer]) -> UnresolvedLocations {
+fn unresolved_locations(root: &Path, producers: &[InternalProducer]) -> UnresolvedLocations {
     let mut out = UnresolvedLocations {
         by_queue: HashMap::new(),
         by_job: HashMap::new(),

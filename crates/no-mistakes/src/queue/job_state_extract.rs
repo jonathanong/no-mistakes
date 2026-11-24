@@ -84,6 +84,7 @@ pub(super) fn record(
             action_binding,
             queue_file: None,
             queue_name: None,
+            unresolved_receiver: false,
             pattern,
         });
     }

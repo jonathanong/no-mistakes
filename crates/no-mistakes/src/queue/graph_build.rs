@@ -52,37 +52,43 @@ fn build_report_and_relationships(
     facts: &HashMap<PathBuf, FileFacts>,
     test_scope: &ConfiguredTestScope,
 ) -> (ProjectReport, Vec<RelationshipEdge>) {
-    let prod_producers: Vec<&InternalProducer> = producers
-        .iter()
-        .filter(|producer| !test_scope.is_match(root, &producer.site.file))
-        .collect();
-    let prod_workers: Vec<&InternalWorker> = workers
-        .iter()
-        .filter(|worker| !test_scope.is_match(root, &worker.site.file))
-        .collect();
-    let producer_index = checks::index_producers(&prod_producers);
-    let worker_index = checks::index_workers(&prod_workers);
-    let wildcards = checks::wildcard_queues(&prod_workers);
+    let producer_index = checks::index_producers(&producers);
+    let worker_index = checks::index_workers(&workers);
+    let wildcards = checks::wildcard_queues(&workers);
     let mut relationships = Vec::new();
     let mut check = Vec::new();
     for (job, producers_for_job) in &producer_index {
         let workers_for_job = worker_index.get(job).cloned().unwrap_or_default();
         if workers_for_job.is_empty() && !wildcards.contains(&queue_key(job)) {
-            check.extend(
-                producers_for_job
-                    .iter()
-                    .map(|producer| producer.unmatched(root)),
-            );
+            if !checks::has_unresolved_worker_for_job(&workers, &job.job) {
+                check.extend(
+                    producers_for_job
+                        .iter()
+                        .filter(|producer| !test_scope.is_match(root, &producer.site.file))
+                        .map(|producer| producer.unmatched(root)),
+                );
+            }
             continue;
         }
-        add_matched_job(job, producers_for_job, &workers_for_job, &mut relationships);
+        add_matched_job(
+            root,
+            job,
+            producers_for_job,
+            &workers_for_job,
+            test_scope,
+            &mut relationships,
+        );
     }
     check.extend(checks::unmatched_workers(
         root,
-        &prod_workers,
+        &workers,
         &producer_index,
-        &prod_producers,
+        &producers,
+        test_scope,
     ));
+    let (job_state_checks, job_state_diagnostics) =
+        crate::queue::job_state::findings_and_diagnostics(root, facts);
+    check.extend(job_state_checks);
     check.extend(crate::queue::job_options::local_checks(root, facts));
     check.extend(crate::queue::cycles::queue_cycles(
         root, &producers, &workers,
@@ -96,6 +102,7 @@ fn build_report_and_relationships(
     ));
     check.sort();
     let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
+    report_diagnostics.extend(job_state_diagnostics);
     report_diagnostics.extend(dedup_diagnostics);
     let mut report = ProjectReport {
         producers: producers.iter().map(|p| p.public(root)).collect(),
@@ -111,31 +118,41 @@ fn build_report_and_relationships(
 }
 
 fn add_matched_job(
+    root: &Path,
     job: &JobKey,
     producers: &[&InternalProducer],
     workers: &[&InternalWorker],
+    test_scope: &ConfiguredTestScope,
     relationships: &mut Vec<RelationshipEdge>,
 ) {
     let node = RelationshipNode::Job(job.clone());
-    relationships.extend(producers.iter().map(|producer| RelationshipEdge {
-        from: RelationshipNode::File(producer.site.file.clone()),
-        to: node.clone(),
-        kind: EdgeKind::QueueEnqueue,
-    }));
-    relationships.extend(workers.iter().map(|worker| {
-        RelationshipEdge {
-            from: node.clone(),
-            to: RelationshipNode::File(
-                worker
-                    .site
-                    .processor_file
-                    .as_ref()
-                    .unwrap_or(&worker.site.file)
-                    .clone(),
-            ),
-            kind: EdgeKind::QueueWorker,
-        }
-    }));
+    relationships.extend(
+        producers
+            .iter()
+            .filter(|producer| !test_scope.is_match(root, &producer.site.file))
+            .map(|producer| RelationshipEdge {
+                from: RelationshipNode::File(producer.site.file.clone()),
+                to: node.clone(),
+                kind: EdgeKind::QueueEnqueue,
+            }),
+    );
+    relationships.extend(
+        workers
+            .iter()
+            .filter(|worker| !test_scope.is_match(root, &worker.site.file))
+            .map(|worker| RelationshipEdge {
+                from: node.clone(),
+                to: RelationshipNode::File(
+                    worker
+                        .site
+                        .processor_file
+                        .as_ref()
+                        .unwrap_or(&worker.site.file)
+                        .clone(),
+                ),
+                kind: EdgeKind::QueueWorker,
+            }),
+    );
 }
 
 fn public_jobs(root: &Path, relationships: &[RelationshipEdge]) -> Vec<QueueJobNode> {

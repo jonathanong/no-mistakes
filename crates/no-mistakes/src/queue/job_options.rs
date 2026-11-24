@@ -48,7 +48,7 @@ pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopL
 }
 
 pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
-    let mut out = super::job_state::findings(root, facts);
+    let mut out = Vec::new();
     for (path, file) in facts {
         for check in &file.checks {
             out.push(CheckFinding {

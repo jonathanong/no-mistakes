@@ -99,28 +99,33 @@ callbacks. It groups those declarations by name on the first binding lookup.
 ## Producer and worker matching
 
 `unmatched-producer`, `unmatched-worker`, `unmatched-worker-unresolved-producers`,
-and production `queues edges` pair production producers with production workers:
+and `queues edges` match producers and workers across the project:
 
-- **Configured test scopes are excluded by default:** Files matched by declared
-  `tests.*` scopes in `.no-mistakes.yml` (or a declared Vitest/Playwright
-  config) are excluded from `unmatched-producer`, `unmatched-worker`,
-  `unmatched-worker-unresolved-producers`, and production `queues edges`. No
-  hardcoded filename conventions (`*.test.*`, `__tests__`) are applied when no
-  test scope is declared.
+- **Configured test scopes suppress findings on test files by default:** Files
+  matched by declared `tests.*` scopes in `.no-mistakes.yml` (or a declared
+  Vitest/Playwright config) still participate in producer/worker matching, but
+  no `unmatched-producer`, `unmatched-worker`, or
+  `unmatched-worker-unresolved-producers` finding is reported on a test-scope
+  file, and test-scope files are omitted from `queues edges`. No hardcoded
+  filename conventions (`*.test.*`, `__tests__`) are applied when no test scope
+  is declared.
 - **Test-file producers without workers:** A producer inside a configured test
   scope is not reported as `unmatched-producer` even when no worker exists
   anywhere, because integration and harness tests commonly enqueue synthetic
-  jobs against partial fixtures. Symmetrically, a worker inside a configured
-  test scope never satisfies a production producer, and a test-file producer
-  never satisfies a production worker.
+  jobs against partial fixtures.
 - **Same-file raw `new Worker` and configured worker factories:** A raw
   `new Worker(<queueName>, ...)` (or `new TestWorker(...)`) or a configured
   `queues.factories.worker` call (including namespace calls and options such as
   `{ prefix }`) counts as a matching worker for producers on the same queue name,
   including when the file creates its own `new Queue(<queueName>, ...)` or
   `createQueue(<queueName>, ...)` handle, aliases an imported queue-name
-  constant, or passes `queue.name`. Non-test files win canonical queue
-  ownership over test files that construct the same queue name.
+  constant, or passes `queue.name`. Module-level non-test queue bindings win
+  canonical queue ownership over function-local handles and test files.
+- **Workers with unresolved queue names abstain:** When a worker's queue name
+  does not resolve (such as a dynamic expression or unresolved re-export) and
+  that worker could handle the job (wildcard or matching job name),
+  `unmatched-producer` abstains and stays silent while the worker emits its
+  `dynamic or unresolved queue worker` diagnostic.
 
 ## Mixed priority
 
@@ -327,10 +332,11 @@ for two patterns on resolved queue bindings:
   `getJobs([...])` including `"failed"` or `"completed"`) whose results feed
   `add`, `addBulk`, or `retry`.
 
-Unresolved receivers and non-queue objects (such as `Set.add`) abstain. Because
-the finding is advisory, `queues check` still exits `0` when only advisory
-findings are present, and aggregate `no-mistakes check` reports it under
-`advisories`.
+Unresolved queue receivers abstain with a diagnostic (`job-state-as-record was
+not judged because the queue receiver did not resolve`) and non-queue action
+objects (such as `Set.add`) are ignored. Because the finding is advisory,
+`queues check` still exits `0` when only advisory findings are present, and
+aggregate `no-mistakes check` reports it under `advisories`.
 
 ```ts
 // reported (advisory): the queue is the record of whether the work is done

@@ -248,3 +248,77 @@ fn configured_test_scope_matches_playwright_globs_and_stays_empty_without_config
     assert!(!pw_scope.is_match(&root, &root.join("e2e/helpers/setup.mts")));
     assert!(!pw_scope.is_match(&root, &root.join("src/checkout.mts")));
 }
+
+#[test]
+fn test_scope_files_still_participate_in_matching_for_all_three_main_parity_shapes() {
+    let parity_root = |case: &str| {
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/queue-ast-hop/test-scope-matching-parity")
+            .join(case)
+            .join("fixture")
+    };
+
+    let prod_producer =
+        analyze_project(&parity_root("prod-producer-test-worker"), None, &[]).unwrap();
+    assert!(
+        prod_producer.check.is_empty(),
+        "production producer matched by test-scope worker must stay silent: {:#?}",
+        prod_producer.check
+    );
+
+    let prod_worker =
+        analyze_project(&parity_root("prod-worker-test-producer"), None, &[]).unwrap();
+    assert!(
+        prod_worker.check.is_empty(),
+        "production worker matched by test-scope producer must stay silent: {:#?}",
+        prod_worker.check
+    );
+
+    let unresolved = analyze_project(
+        &parity_root("prod-worker-test-unresolved-producer"),
+        None,
+        &[],
+    )
+    .unwrap();
+    assert_eq!(unresolved.check.len(), 1, "{:#?}", unresolved.check);
+    assert_eq!(
+        unresolved.check[0].kind,
+        "unmatched-worker-unresolved-producers"
+    );
+    assert!(
+        unresolved.check[0]
+            .message
+            .contains("tests/gamma.test.mts:4"),
+        "{:#?}",
+        unresolved.check[0]
+    );
+}
+
+#[test]
+fn unresolved_worker_queue_name_abstains_from_unmatched_producer() {
+    let abstain_root = |case: &str| {
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/queue-ast-hop/unresolved-worker-abstain")
+            .join(case)
+            .join("fixture")
+    };
+
+    for (case, worker_file) in [
+        ("dynamic-worker", "apps/workers/dynamic-worker.mts"),
+        ("unresolved-reexport", "apps/workers/reexport-worker.mts"),
+    ] {
+        let report = analyze_project(&abstain_root(case), None, &[]).unwrap();
+        assert!(
+            report.check.is_empty(),
+            "{case}: imported-constant producer must not report unmatched-producer when an unresolved-queue worker could match it: {:#?}",
+            report.check
+        );
+        assert!(
+            report.diagnostics.iter().any(|d| {
+                d.file == worker_file && d.message == "dynamic or unresolved queue worker"
+            }),
+            "{case}: worker must still emit dynamic/unresolved diagnostic: {:#?}",
+            report.diagnostics
+        );
+    }
+}

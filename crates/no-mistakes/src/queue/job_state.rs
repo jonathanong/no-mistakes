@@ -5,6 +5,7 @@ use crate::queue::extract_model::{FileFacts, ProducerBinding};
 use crate::queue::graph_model::{CheckFinding, CheckSeverity};
 use crate::queue::graph_resolution::{local_queues, resolved_binding};
 use crate::queue::source::relative_string;
+use crate::queue::types::{Diagnostic, Severity};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -36,8 +37,12 @@ pub(crate) struct JobStateSite {
     pub action_binding: Option<ProducerBinding>,
     pub queue_file: Option<PathBuf>,
     pub queue_name: Option<String>,
+    pub unresolved_receiver: bool,
     pub pattern: JobStatePattern,
 }
+
+const UNRESOLVED_RECEIVER_MESSAGE: &str =
+    "job-state-as-record was not judged because the queue receiver did not resolve";
 
 pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopLevelConfig) {
     for file in facts.values_mut() {
@@ -60,6 +65,7 @@ pub(in crate::queue) fn resolve_sites<R: ImportResolverFacade>(
         return;
     }
     let mut resolved = Vec::new();
+    let mut unresolved = Vec::new();
     for (path, file) in facts.iter() {
         if file.job_state_as_record.is_none() || file.job_state_sites.is_empty() {
             continue;
@@ -75,6 +81,7 @@ pub(in crate::queue) fn resolve_sites<R: ImportResolverFacade>(
                 &site.binding,
                 definitions,
             ) else {
+                unresolved.push((path.clone(), index));
                 continue;
             };
             if let Some(action) = &site.action_binding {
@@ -95,10 +102,21 @@ pub(in crate::queue) fn resolve_sites<R: ImportResolverFacade>(
         site.queue_file = Some(queue.queue_file);
         site.queue_name = Some(queue.queue_name);
     }
+    for (path, index) in unresolved {
+        let site = &mut facts
+            .get_mut(&path)
+            .expect("unresolved path came from facts")
+            .job_state_sites[index];
+        site.unresolved_receiver = true;
+    }
 }
 
-pub(super) fn findings(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
+pub(super) fn findings_and_diagnostics(
+    root: &Path,
+    facts: &HashMap<PathBuf, FileFacts>,
+) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
     let mut out = Vec::new();
+    let mut diags = Vec::new();
     for (path, file) in facts {
         let Some(policy) = &file.job_state_as_record else {
             continue;
@@ -108,6 +126,14 @@ pub(super) fn findings(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<
         }
         for site in &file.job_state_sites {
             let Some(queue_name) = &site.queue_name else {
+                if site.unresolved_receiver {
+                    diags.push(Diagnostic {
+                        severity: Severity::Warning,
+                        file: relative_string(root, path),
+                        line: site.line,
+                        message: UNRESOLVED_RECEIVER_MESSAGE.to_string(),
+                    });
+                }
                 continue;
             };
             out.push(CheckFinding {
@@ -125,7 +151,7 @@ pub(super) fn findings(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<
             });
         }
     }
-    out
+    (out, diags)
 }
 
 fn is_allowed(root: &Path, path: &Path, policy: &JobStateAsRecordConfig) -> bool {
