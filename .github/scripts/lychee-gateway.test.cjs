@@ -23,9 +23,14 @@ test("only an all-gateway lychee report is retried", () => {
 test("documentation links retry the saved checker only for gateway failures", () => {
   const workflow = parse(readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8"));
   const job = workflow.jobs["quality-links"];
+  const checkout = job.steps.find((step) => step.uses?.startsWith("actions/checkout@"));
+  const depth = checkout.with?.["fetch-depth"];
+  assert.ok(depth === 0 || depth >= 2, "PR link scope needs the merge checkout's first parent");
   const initial = job.steps.find((step) => step.id === "links");
   const retry = job.steps.find((step) => step.run?.includes("lychee-gateway.cjs"));
   assert.equal(initial["continue-on-error"], true);
+  assert.equal(initial.if, "${{ steps.link-inputs.outputs.has-inputs == 'true' }}");
+  assert.equal(initial.with.failIfEmpty, "${{ github.event_name != 'pull_request' }}");
   assert.equal(initial.with.args, "${{ env.LYCHEE_ARGS }}");
   assert.equal(retry.if, "${{ steps.links.outcome == 'failure' }}");
   assert.equal(initial.with.token, "${{ github.token }}");
@@ -38,8 +43,7 @@ test("documentation links retry the saved checker only for gateway failures", ()
   );
   assert.equal(preserve.if, "${{ !cancelled() && steps.links.outcome == 'failure' }}");
   assert.match(preserve.run, /GITHUB_STEP_SUMMARY/);
-  assert.match(job.env.LYCHEE_ARGS, /'docs\/\*\*\/\*\.md'/);
-  assert.match(job.env.LYCHEE_ARGS, /'plugins\/\*\/skills\/\*\*\/\*\.md'/);
+  assert.match(job.env.LYCHEE_ARGS, /--files-from "\$RUNNER_TEMP\/lychee-inputs\.txt"/);
   assert.match(
     job.env.LYCHEE_ARGS,
     /--exclude-path 'docs\/performance\/2238\/39488578982\/\(README\|tables\)\\.md\$'/,
@@ -84,6 +88,12 @@ test("narrative performance notes name expired actions runs without linking them
     "utf8",
   );
   assert.match(receiver, /38654992458/);
+});
+
+test("a timeout in a selected document still fails the link check", () => {
+  const result = run("timeout-only.md", { LYCHEE_ARGS: "--no-progress docs/unchanged.md" });
+  assert.equal(result.status, 2);
+  assert.equal(result.count, "");
 });
 
 test("a rejected page is not checked again", () => {

@@ -353,9 +353,9 @@ jobs:
       - name: Test parallel CI contracts
         timeout-minutes: 2
         run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/push-diff-base.test.cjs .github/scripts/fixture-baseline-workflow.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs .github/scripts/ci-no-serialization.test.cjs
-      - name: Test documentation link gateway retry
+      - name: Test documentation link scope and gateway handling
         timeout-minutes: 2
-        run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs
+        run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs .github/scripts/lychee-inputs.test.cjs
       - name: Test bounded native runtime download
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/scripts -p test_download_native_runtime.py
@@ -495,24 +495,35 @@ jobs:
         --remap '^https://github\.com/jonathanong/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
         --exclude-path ^fixtures/
         --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$'
-        README.md
-        'docs/**/*.md'
-        'plugins/*/skills/**/*.md'
-        'packages/*/README.md'
-        'crates/*/README.md'
-        AGENTS.md
+        --files-from "$RUNNER_TEMP/lychee-inputs.txt"
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Select link sources
+        id: link-inputs
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          node .github/scripts/lychee-inputs.cjs > "$RUNNER_TEMP/lychee-inputs.txt"
+          if [[ -s "$RUNNER_TEMP/lychee-inputs.txt" ]]; then
+            echo "has-inputs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No changed documentation link sources."
+          fi
       - name: Run Lychee
         id: links
+        if: ${{ steps.link-inputs.outputs.has-inputs == 'true' }}
         continue-on-error: true
         timeout-minutes: 5
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
           args: ${{ env.LYCHEE_ARGS }}
           fail: true
+          failIfEmpty: ${{ github.event_name != 'pull_request' }}
           token: ${{ github.token }}
           output: lychee/out.md
       - name: Retry transient gateway errors
