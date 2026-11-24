@@ -13,17 +13,23 @@ architectural class. The class decides who may merge it.
 
 ## Breaking
 
-A change that can make an existing caller fail or produce different output
-without changing its own configuration:
+A change that can break an existing caller or change documented output without
+the caller changing its own configuration:
 
 - Removing or renaming a CLI command, flag, or JSON report field.
 - Removing or renaming an N-API export or an exported `.d.ts` type.
 - Changing an exit code.
 - New findings from a rule that is on by default.
+- Broadening an opt-in rule's default behavior to reject previously documented
+  valid patterns without a new option.
 
-Additive options, opt-in rules, and new report fields are not breaking, as long
-as existing fields keep their meaning (see
-[Prepared analysis ownership](../../AGENTS.md#prepared-analysis-ownership)).
+Additive options, new opt-in rules, and new report fields are not breaking, as
+long as existing fields keep their meaning (see
+[Prepared analysis ownership](../../AGENTS.md#prepared-analysis-ownership)). A
+correctness fix that adds true-positive findings to an opt-in rule — even for
+repositories that already configure that rule — is an ordinary fix (`None`), not
+breaking, provided it stays within the rule's documented scope and keeps options
+and report fields unchanged. Consumer validation still applies before merge.
 
 ## Architectural
 

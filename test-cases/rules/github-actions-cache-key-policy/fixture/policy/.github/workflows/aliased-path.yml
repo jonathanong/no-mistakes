@@ -1,0 +1,12 @@
+name: Aliased Cache Path
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    env:
+      CACHE_PATH: &cache_path .cache/widgets
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: *cache_path
+          key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}

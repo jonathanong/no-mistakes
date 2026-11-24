@@ -8,7 +8,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": ".github/workflows/cache.yml",
-          "line": 33,
+          "line": 40,
           "message": "directive for `github-actions-cache-key-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ hashFiles('suppressed/**') }} # no-mistakes-disable-line github-actions-cache-key-policy",
@@ -87,6 +87,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Cache `restore-keys` calls hashFiles with broad pattern `*/**/widgets.lock`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
           "rule": "github-actions-cache-key-policy",
           "sourceLine": "restore-keys: 'fallback-${{ hashFiles(''*/**/widgets.lock'') }}'"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 36,
+          "message": "Cache `key` calls hashFiles with broad pattern `escaped\"dir/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: \"prefix \\\"v1\\\"-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', 'escaped\\\"dir\\/**') }}\""
         }
       ],
       "warnings": []
@@ -98,7 +105,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": ".github/workflows/cache.yml",
-          "line": 33,
+          "line": 40,
           "message": "directive for `github-actions-cache-key-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ hashFiles('suppressed/**') }} # no-mistakes-disable-line github-actions-cache-key-policy",

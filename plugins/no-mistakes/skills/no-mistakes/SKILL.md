@@ -364,16 +364,17 @@ For `github-actions-cache-key-policy`, list each portable cache path with its lo
 required key fragments such as `runner.os`, or list paths to ban entirely in `forbiddenPaths`
 (with optional `forbiddenPathsMessage`). `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. Set `forbidBroadHashFiles: true` to report broad literal
-patterns in `key` and `restore-keys`, and list intentional arguments exactly in
-`allowedHashFilesPatterns`. A glob such as `**/widgets.lock` is allowed for a configured
-lockfile basename. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
+patterns in `key` and `restore-keys` on configured `actions/cache` steps (`setup-*`
+`cache-dependency-path` and other actions are out of scope), and list intentional arguments
+exactly in `allowedHashFilesPatterns`. A glob such as `**/widgets.lock` is allowed for the
+basename of any configured cache's lockfile. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
 must name that lockfile in the same simple command. A redirect after the closing `}` or `)` of
 a brace group or parenthesized command applies to every command in the group that does not already redirect
 standard output. `{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"` and
 `{ echo "digest=$digest"; } &> "$GITHUB_OUTPUT"` count. Bash `{fd}>` and `{fd}>>` redirect an
 allocated descriptor. A command with one of those redirects can still inherit the group's
-standard output. A group with no redirect, or a redirect to another file, does not count.
+standard output. `>&$fd` and numeric-fd duplications such as `>&3` are judged as before. A group with no redirect, or a redirect to another file, does not count.
 The redirect is fixed before the body runs. Assignments inside a parenthesized command do not
 affect later commands. A command after `;` on the same line is separate. A `;` inside a
 nested group stays in that group. The closing `)` may share a line with the last command,

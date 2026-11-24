@@ -60,6 +60,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "name: Widgets"
         },
         {
+          "file": ".github/workflows/aliased-path.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Aliased Cache Path"
+        },
+        {
           "file": ".github/workflows/ampersand-hash.yml",
           "line": 14,
           "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that writes a hash of `widgets.lock` to the GITHUB_OUTPUT name referenced by the key.",

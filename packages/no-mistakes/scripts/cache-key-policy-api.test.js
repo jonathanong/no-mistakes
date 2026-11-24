@@ -41,7 +41,7 @@ test(
   "broad cache key hash policy agrees across async Node APIs and CLI",
   { skip: !addon?.endsWith(".node") },
   async () => {
-    await assertCheckParity("broad-hash", "broad-hash.yml", 8);
+    await assertCheckParity("broad-hash", "broad-hash.yml", 9);
   },
 );
 

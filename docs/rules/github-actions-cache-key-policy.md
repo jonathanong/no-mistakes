@@ -26,7 +26,9 @@ any entry equals a configured path. A comma is not a path separator.
 
 When a normalized `with.path` entry equals a `forbiddenPaths` entry, the rule reports that step on
 its `path` line (or the first item line for a `path` sequence) regardless of its `key` or
-`restore-keys`. Use `forbiddenPathsMessage` (or a rule-level `message`) to customize the reported
+`restore-keys`. When one step lists multiple `forbiddenPaths` entries, each matched path produces
+its own finding on that same line, differing only in the path unless a custom message is configured.
+Use `forbiddenPathsMessage` (or a rule-level `message`) to customize the reported
 message.
 
 For each `caches` match, the `key` must contain every configured `keyParts` fragment as its own
@@ -63,7 +65,9 @@ The key must also prove a digest of the configured lockfile, in either of these 
   only when it is its own word, so `1>> "$GITHUB_OUTPUT"` explicitly redirects standard
   output and `ignored2>/tmp/orders` redirects standard output implicitly. Bash `{fd}>` and
   `{fd}>>` redirect an allocated descriptor. A command with one of those redirects can still
-  inherit the group's standard output. `>=` sends standard output to a file named `=`. An
+  inherit the group's standard output. Duplications such as `>&$fd` and numeric-fd duplications
+  such as `>&3` are judged as before: they do not prove a write to `GITHUB_OUTPUT`, and inside a
+  group they redirect standard output away from the group's redirect. `>=` sends standard output to a file named `=`. An
   unquoted heredoc counts only when the command's last standard-output redirect, or the group's,
   is the output file.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
@@ -111,11 +115,14 @@ sequence, is a finding. An empty or missing value is allowed. Set `rejectRestore
 allow prefix fallbacks.
 
 With `forbidBroadHashFiles: true`, the rule also checks each single-quoted string literal
-passed directly to `hashFiles` in a configured step's `key` or `restore-keys`. It reports a
+passed directly to `hashFiles` in a configured `actions/cache`, `actions/cache/restore`, or
+`actions/cache/save` step's `key` or `restore-keys`. `setup-*` `cache-dependency-path` inputs and
+steps other than `actions/cache` are out of scope. It reports a
 pattern containing `**` or ending in a standalone `*` path component, with or without a
 trailing slash. Examples include `**`, `src/**`, and `output/*`. Exact paths and suffix-specific
-patterns such as `src/*.json` pass. A single `**/` before the exact basename of a configured
-lockfile also passes, including `**/widgets.lock` and `packages/**/widgets.lock`. Every other
+patterns such as `src/*.json` pass. A single `**/` before the exact basename of any configured
+cache's lockfile (not only the matched cache's) also passes, including `**/widgets.lock` and
+`packages/**/widgets.lock`. Every other
 component in that exception must be literal. A basename glob still does not prove the
 required digest. Dynamic arguments such as `env.cachePattern` and `format(...)` are ignored.
 If the scan detects malformed quoting or delimiters, it discards partial findings from that
@@ -130,8 +137,11 @@ at the parser location.
 Workflow or action bytes that are not UTF-8 are reported on the line of the first invalid byte.
 Anchors, aliases, and other shapes whose cache steps cannot be aligned to ordinary block locations
 produce one finding on line 1 when a configured `caches` or `forbiddenPaths` path is involved, and
-are not partially judged.
-A cache step that does not use a configured path stays silent, including when the file uses anchors.
+are not partially judged. In particular, a cache step whose `with.path` uses a YAML alias (`*alias`)
+that resolves to a configured `caches` or `forbiddenPaths` entry cannot be aligned to block-style
+source text and yields that line-1 alignment finding rather than being judged on the raw `*alias`
+text. An aliased `path` (or anchored step) that resolves only to paths outside `caches` and
+`forbiddenPaths` stays silent.
 
 ## Options
 
