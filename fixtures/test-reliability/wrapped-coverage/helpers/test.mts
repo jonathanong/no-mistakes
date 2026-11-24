@@ -10,7 +10,16 @@ import {
   reexportedArrow,
 } from "./chain.mts";
 
-export const good = reexportedArrow(delegated(base));
+function localDelegated(t: typeof base) {
+  return reexportedArrow(t);
+}
+
+const extra: unknown[] = [];
+
+export const good = localDelegated(delegated(base));
+export const spreadCall = delegated(...extra, base);
+export const noArgOrigin = delegated(123);
+export const deepMember = (() => ({ wrap: delegated }))().wrap(base);
 export const badCycle = cycleA(base);
 export const badBare = bareReturn(base);
 export const badMismatch = mismatchParams(base, base, true);
