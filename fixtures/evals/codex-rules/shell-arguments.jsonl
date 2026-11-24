@@ -1,0 +1,25 @@
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -n '/first/,/last/p' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed '/item/d' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk '/item/ {print}' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -e '/item/p' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -f /outside/filter.awk input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -ne '/item/p' /outside/input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo item >& /outside/output.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo item 2>&1", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "rg '>' /outside/src", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo '>' /outside/example.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "FLAG=1 cat /outside/item.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "LABEL='sample text' FLAG=1 cat input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo \\> /outside/example.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -v label=/pattern '/item/ {print}' input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed --file=/outside/filter.sed input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "awk -e '/item/ {print}' /outside/input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo item >| /outside/overwrite.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo item &>>/outside/log.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "LABEL='sample text' bash -c 'cat /outside/item.txt'", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed '/item/p' </outside/input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -e '/item/p' 2>/dev/null /outside/input.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "failed", "exit_code": 127, "command": "'FLAG=1' cat /outside/item.txt", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "echo item >&-", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "rg '>' /attempt/plugin/skills/testing-rules/SKILL.md", "cwd": "/attempt/workspace"}}
+{"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "cat /outside/item.txt <> input.txt", "cwd": "/attempt/workspace"}}

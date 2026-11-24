@@ -19,6 +19,15 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-24 — Codex rules isolation handles shell arguments
+
+The offline audit distinguishes inline text-processing programs and quoted
+operators from file operands, recognizes file redirections with `>&`, and
+recognizes plain command-prefix assignments. It can change which Codex
+attempts are eligible for scoring. Regrade earlier saved reports with the
+same audit version before comparing eligibility. Validation used synthetic
+transcripts and made zero model calls.
+
 ## 2026-11-21 — re-baseline under the Sonnet agent and Opus judge
 
 Resets the control arm after the 2026-11-14 move from an Opus agent / Sonnet

@@ -1,4 +1,5 @@
 """Offline checks for transcript-based skill and external-path evidence."""
+import json
 import unittest
 from pathlib import Path
 
@@ -47,4 +48,21 @@ class TranscriptTriggerTest(unittest.TestCase):
         self.assertEqual(
             trigger.external_path_findings(transcript, ATTEMPT, cwd=ATTEMPT / "workspace"),
             [{"commandIndex": 10, "reason": "outside-attempt-root"}],
+        )
+
+    def test_shell_arguments_keep_only_real_outside_paths(self):
+        transcript = (FIXTURES / "shell-arguments.jsonl").read_text(encoding="utf-8")
+        expected = json.loads((FIXTURES / "shell-arguments.snap").read_text(encoding="utf-8"))
+        self.assertEqual(trigger.external_path_findings(transcript, ATTEMPT), expected)
+
+    def test_quoted_search_pattern_preserves_skill_input(self):
+        transcript = (FIXTURES / "shell-arguments.jsonl").read_text(encoding="utf-8")
+        self.assertEqual(
+            trigger.skills_in_transcript(
+                transcript,
+                ATTEMPT / "plugin",
+                attempt_root=ATTEMPT,
+                cwd=ATTEMPT / "workspace",
+            ),
+            ["testing-rules"],
         )

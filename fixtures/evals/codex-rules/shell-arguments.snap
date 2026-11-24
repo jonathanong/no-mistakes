@@ -1,0 +1,54 @@
+[
+  {
+    "commandIndex": 5,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 6,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 7,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 9,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 11,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 15,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 16,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 17,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 18,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 19,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 20,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 21,
+    "reason": "outside-attempt-root"
+  },
+  {
+    "commandIndex": 25,
+    "reason": "outside-attempt-root"
+  }
+]
