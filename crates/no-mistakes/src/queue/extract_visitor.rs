@@ -52,6 +52,7 @@ pub(super) struct QueueVisitor<'a> {
     pub dispatch_scopes: HashSet<u32>,
     pub function_stack: Vec<u32>,
     pub top_level_callables: u32,
+    pub worker_rate_limit: super::extract_worker_rate_limit::State,
 }
 
 impl<'a> Visit<'a> for QueueVisitor<'a> {
@@ -74,6 +75,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         super::job_options::note_call(self, call);
         self.note_wait_call(call);
+        super::extract_worker_rate_limit::note_call(self, call);
         super::extract_job_id::note_call(self, call);
         self.note_enqueue_call(call);
         super::extract_factory::note_factory_call(self, call);
@@ -105,6 +107,14 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_export_declaration(&mut self, decl: &oxc_ast::ast::ExportDeclaration<'a>) {
         super::extract_factory::note_exported_declaration(self, decl);
         walk::walk_export_declaration(self, decl);
+    }
+
+    fn visit_export_default_declaration(
+        &mut self,
+        decl: &oxc_ast::ast::ExportDefaultDeclaration<'a>,
+    ) {
+        super::extract_worker_rate_limit::note_export_default(self, decl);
+        walk::walk_export_default_declaration(self, decl);
     }
 
     fn visit_function(

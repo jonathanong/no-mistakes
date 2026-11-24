@@ -466,6 +466,8 @@ remain failures. See
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
 `queueCheck()` reports `shared-queue-rate-limit` when a processor throws `RateLimitError` or calls `.rateLimit()` on a queue that carries more than one known job name, and abstains when that set is unknown.
+`queueCheck()` also reports `worker-rate-limit-per-process` when `.rateLimit()` is called on a binding that resolves to a `Worker` or configured worker factory, and abstains with a diagnostic on `QueueReport.diagnostics` when the receiver does not resolve.
+Import the exported `QueueRateLimitFindingKind` type for the rate-limit-specific values `"shared-queue-rate-limit" | "worker-rate-limit-per-process"`.
 `queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
 Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
 name patterns with `queues.factories.enqueueAndWaitPatterns` (default `[]`),

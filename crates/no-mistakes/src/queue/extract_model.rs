@@ -2,9 +2,13 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 mod job_options;
+mod worker_rate_limit;
 pub(crate) use job_options::{
     JobOptionEvidence, JobOptionFinding, JobOptionSite, JobOptionSpread, QueueDefaultOptions,
     RequiredJobOptions,
+};
+pub(crate) use worker_rate_limit::{
+    ExportedWorkerBinding, WorkerRateLimitCall, WorkerRateLimitTarget,
 };
 
 #[derive(Debug, Clone)]
@@ -134,4 +138,9 @@ pub(crate) struct FileFacts {
     pub queue_defaults: Vec<QueueDefaultOptions>,
     pub job_option_findings: Vec<JobOptionFinding>,
     pub required_job_options: Option<RequiredJobOptions>,
+    pub worker_rate_limits: Vec<WorkerRateLimitCall>,
+    pub worker_bindings: HashMap<String, ExportedWorkerBinding>,
+    pub worker_exports: HashMap<String, ExportedWorkerBinding>,
+    pub worker_import_aliases: HashMap<String, String>,
+    pub worker_namespace_exports: HashMap<String, (String, String)>,
 }

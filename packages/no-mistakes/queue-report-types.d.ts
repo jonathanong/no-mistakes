@@ -53,6 +53,8 @@ export interface QueueDiagnostic {
 
 export type QueueWaitFindingKind = "enqueue-and-wait" | "enqueue-and-wait-declaration";
 
+export type QueueRateLimitFindingKind = "shared-queue-rate-limit" | "worker-rate-limit-per-process";
+
 export interface QueueCheckFinding {
   kind: string;
   file: string;

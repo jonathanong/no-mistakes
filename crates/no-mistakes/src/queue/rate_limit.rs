@@ -16,6 +16,10 @@ pub(super) fn findings(
     let (rate_checks, rate_diagnostics) = shared_rate_limits(root, producers, workers, facts);
     checks.extend(rate_checks);
     diagnostics.extend(rate_diagnostics);
+    let (worker_checks, worker_diagnostics) =
+        crate::queue::worker_rate_limit::findings(root, workers, facts);
+    checks.extend(worker_checks);
+    diagnostics.extend(worker_diagnostics);
     (checks, diagnostics)
 }
 

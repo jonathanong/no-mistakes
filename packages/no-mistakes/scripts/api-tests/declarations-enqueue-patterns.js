@@ -26,34 +26,51 @@ test("single-enqueue option types compile from the public package root", () => {
   );
 });
 
-test("queue wait kinds compile when imported from the package root", { timeout: 20_000 }, () => {
-  const { createRequire } = require("node:module");
+function assertPublicNodeNextFixtureCompiles(...fixtureParts) {
   const dependencyRequire = createRequire(require.resolve("@storybook/react"));
   const ts = dependencyRequire("typescript");
-  const { repositoryRoot } = require("./context");
-  const program = ts.createProgram(
-    [join(repositoryRoot, "fixtures", "node-api", "queue-wait-kinds", "public.mts")],
-    {
-      noEmit: true,
-      strict: true,
-      skipLibCheck: true,
-      types: [],
-      target: ts.ScriptTarget.ESNext,
-      module: ts.ModuleKind.NodeNext,
-      moduleResolution: ts.ModuleResolutionKind.NodeNext,
-      baseUrl: repositoryRoot,
-      paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
-      ignoreDeprecations: "6.0",
-    },
-  );
+  const program = ts.createProgram([join(repositoryRoot, ...fixtureParts)], {
+    noEmit: true,
+    strict: true,
+    skipLibCheck: true,
+    types: [],
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.NodeNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeNext,
+    baseUrl: repositoryRoot,
+    paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
+    ignoreDeprecations: "6.0",
+  });
   assert.deepEqual(
     ts
       .getPreEmitDiagnostics(program)
       .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
     [],
   );
+}
+
+test("queue wait kinds compile when imported from the package root", { timeout: 20_000 }, () => {
+  assertPublicNodeNextFixtureCompiles("fixtures", "node-api", "queue-wait-kinds", "public.mts");
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
-    /export type \{ QueueWaitFindingKind \} from "\.\/queue-report-types";/,
+    /export type \{ QueueRateLimitFindingKind, QueueWaitFindingKind \} from "\.\/queue-report-types";/,
   );
 });
+
+test(
+  "queue rate-limit finding kinds are public and compile from the package root",
+  { timeout: 20_000 },
+  () => {
+    const declarations = readFileSync(join(packageRoot, "queue-report-types.d.ts"), "utf8");
+    assert.match(
+      declarations,
+      /export type QueueRateLimitFindingKind = "shared-queue-rate-limit" \| "worker-rate-limit-per-process";/,
+    );
+    assertPublicNodeNextFixtureCompiles(
+      "fixtures",
+      "node-api",
+      "queue-rate-limit-kinds",
+      "public.mts",
+    );
+  },
+);
