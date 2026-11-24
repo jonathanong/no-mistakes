@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      unanalyzableSql: ignore
+      importSpecifier: "@bench/db"
+      include: ["src/**/*.mts"]

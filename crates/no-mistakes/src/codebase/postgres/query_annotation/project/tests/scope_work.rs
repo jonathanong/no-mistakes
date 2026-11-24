@@ -52,9 +52,27 @@ fn excluded_callers_of_large_helpers_remain_roots_without_shared_cache_work() {
         work["postgres.annotation.module_initializations"],
         work["postgres.annotation.module"]
     );
+    assert!(
+        work["postgres.annotation.module_initializations"] <= 300,
+        "multi-entrypoint roots must reuse pure imported module initializations instead of repeating them per entrypoint: {work:?}"
+    );
     assert!(diagnostics.timings.iter().any(|timing| {
         timing.label == "postgres.annotation.shared_init.build" && timing.duration.is_zero()
     }));
+}
+
+#[test]
+fn multi_entrypoint_root_reuses_pure_imports_and_keeps_impure_isolated() {
+    let (report, diagnostics) = observed_check(&fixture("helper-tracing-entrypoint-reuse"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    let rules = report["rules"].as_array().unwrap();
+    assert_eq!(rules.len(), 2, "{report}");
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.roots_after_scoping"], 2);
+    assert!(
+        work["postgres.annotation.module_initializations"] <= 8,
+        "pure direct and lazy transitive imports must not re-initialize on every entrypoint: {work:?}"
+    );
 }
 
 #[test]
