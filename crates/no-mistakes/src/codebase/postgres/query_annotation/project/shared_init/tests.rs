@@ -166,3 +166,68 @@ fn try_install_shared_module_rejects_flag_mismatch_and_mutated_dep() {
         .try_install_shared_module(&target, ids.id(&target))
         .is_none());
 }
+
+#[test]
+fn build_handles_missing_module_ids_cyclic_candidates_and_non_verbose_notes() {
+    let r1 = PathBuf::from("r1.mts");
+    let r2 = PathBuf::from("r2.mts");
+    let a = PathBuf::from("a.mts");
+    let b = PathBuf::from("b.mts");
+    let facts = QueryAnnotationFileFacts {
+        precise_records: true,
+        ..Default::default()
+    };
+    let mut no_ids = FxHashMap::default();
+    no_ids.insert(
+        r1.clone(),
+        File {
+            facts: &facts,
+            module: Arc::new(Module::new(Arc::new(TsFileFacts::default()))),
+            executors: FxHashSet::default(),
+        },
+    );
+    let empty_failures = Default::default();
+    let status = super::build(
+        &no_ids,
+        &[r1.clone(), r2.clone()],
+        &|_, _| None,
+        false,
+        &empty_failures,
+        None,
+    );
+    assert!(matches!(
+        status,
+        super::SharedInitStatus::Disabled {
+            reason: "no_shared_imports"
+        }
+    ));
+
+    let ids = Arc::new(ModuleIds::new([
+        r1.clone(),
+        r2.clone(),
+        a.clone(),
+        b.clone(),
+    ]));
+    let mut files = FxHashMap::default();
+    files.insert(r1.clone(), make_file(&facts, vec!["./a.mts"], &ids));
+    files.insert(r2.clone(), make_file(&facts, vec!["./a.mts"], &ids));
+    files.insert(a.clone(), make_file(&facts, vec!["./b.mts"], &ids));
+    files.insert(b.clone(), make_file(&facts, vec!["./a.mts"], &ids));
+    let resolve = |specifier: &str, _: &std::path::Path| match specifier {
+        "./a.mts" => Some(a.clone()),
+        "./b.mts" => Some(b.clone()),
+        _ => None,
+    };
+    let status = super::build(&files, &[r1, r2], &resolve, false, &empty_failures, None);
+    assert!(matches!(
+        status,
+        super::SharedInitStatus::Enabled {
+            cached: 0,
+            misses: 2,
+            ..
+        }
+    ));
+    let quiet = crate::diagnostics::InvocationObserver::new(false);
+    quiet.record_note("ignored".into());
+    super::record(&quiet, 0, 2, &status);
+}

@@ -278,3 +278,64 @@ fn missing_prepared_eager_and_runtime_modules_remain_observed_on_cache_hits() {
         super::super::Value::Unknown
     ));
 }
+
+#[test]
+fn try_promote_module_rolls_back_events_and_skips_unpromotable() {
+    use crate::codebase::postgres::query_annotation::{Expr, QueryAnnotationFileFacts, Step};
+    use std::sync::Arc;
+    let impure = PathBuf::from("impure.mts");
+    let mut facts = QueryAnnotationFileFacts::default();
+    facts.roots.push(Step::Effect(Expr::Call {
+        callee: Box::new(Expr::Name("query".into())),
+        args: vec![Expr::Text("SELECT 1".into())],
+        start: 10,
+        end: 25,
+    }));
+    let mut files = FxHashMap::default();
+    files.insert(
+        impure.clone(),
+        File {
+            facts: &facts,
+            module: Arc::new(Module::new(Arc::new(TsFileFacts::default()))),
+            executors: [(10, 25)].into_iter().collect(),
+        },
+    );
+    let mut evaluator = super::super::Evaluator {
+        files: &files,
+        resolve: |_: &str, _: &std::path::Path| None,
+        events: Default::default(),
+        event_log: Default::default(),
+        scopes: Vec::new(),
+        modules: Default::default(),
+        active_module_initials: Default::default(),
+        transient_roots: Default::default(),
+        active_callback_functions: Default::default(),
+        active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
+        next_builder: 0,
+        builder_tags: Default::default(),
+        invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
+        captured_binding_readers: Default::default(),
+        mapped_argument_owners: Default::default(),
+        mapped_parameter_indices: Default::default(),
+        deleted_argument_slots: Default::default(),
+        argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
+        definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
+        fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
+        mapped_arguments: Default::default(),
+    };
+    let mut snapshot = super::RunSnapshot::capture(&evaluator);
+    let mut unpromotable = crate::fx::FxHashSet::default();
+    snapshot.try_promote_module(&mut evaluator, &impure, &mut unpromotable);
+    assert!(evaluator.events.is_empty());
+    assert!(evaluator.event_log.is_empty());
+    assert!(unpromotable.contains(&evaluator.module_ids().id(&impure)));
+    snapshot.try_promote_module(&mut evaluator, &impure, &mut unpromotable);
+    assert!(evaluator.events.is_empty());
+}
