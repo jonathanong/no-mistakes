@@ -128,8 +128,8 @@ The current validation graph is organized as follows:
   `cancel-in-progress` stays false, so the running job finishes and a newer
   main push drops only the older pending job in that slot. Pull requests,
   manual dispatch, and other branches use a per-run group and do not join
-  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` stay
-  on the workflow's per-commit group. The group names use the literal job id.
+  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` use
+  the workflow's per-ref group. The group names use the literal job id.
   `Native tests` accepts a cancelled macOS job only for a push to `main`.
   A superseded build is cancelled before its test job starts, so that test job
   is skipped; `Native tests` accepts that skip only when the producer was
@@ -1132,9 +1132,16 @@ including passing and suppressed controls. All six cases still run in the
 real-addon suite under the same 5,000 ms gate; no exemption or retry is added.
 
 Test CI cancels superseded in-progress runs only for pull requests. An active
-main run can finish and upload Rust coverage when another merge lands. GitHub's
-default concurrency queue can still replace an older pending main run before
-its jobs start.
+main run always finishes and uploads Rust coverage when another merge lands.
+Push runs group by ref, so a new main run waits for the one in progress and
+GitHub keeps only the newest waiting run: a commit superseded while waiting
+gets no Test CI run or Codecov upload. Manual `workflow_dispatch` runs use a
+per-run group (`dispatch-<run_id>`) so pushes never replace a pending dispatch.
+Because middle push commits can be skipped, push path-scoping steps resolve
+their diff base through
+[`push-diff-base.cjs`](../../.github/scripts/push-diff-base.cjs) from the most
+recent successful Test CI push run on the branch, falling back to full scope
+when no prior ancestor run is available.
 
 Benchmarks run in the dedicated
 [Benchmarks workflow](../../.github/workflows/benchmarks.yml), which triggers on
