@@ -1140,9 +1140,10 @@ so the `benchmarks` and `benchmark-scope` outputs and the pull-request opt-in
 markers are unchanged. It triggers on `pull_request` and pushes to `main`; Test
 CI's measurement refs and `workflow_dispatch` never ran benchmarks. Test CI's
 end-to-end time on `main` no longer includes the benchmark build or shards.
-Its concurrency matches Test CI: one group per pull request, cancelled when a
-newer push supersedes it, and one group per commit on `main`, where runs always
-complete.
+Its concurrency group is one per pull request and one per ref on `main`. A newer
+push cancels a superseded pull-request run. A `main` run that has started always
+completes, and GitHub keeps only the newest waiting `main` run, skipping the
+commits in between.
 `Benchmarks` is not a required check. Cache retention still looks up each
 handoff cache's source run by ID, so a running Benchmarks run keeps its handoff.
 

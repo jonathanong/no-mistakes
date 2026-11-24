@@ -10,9 +10,9 @@ permissions:
   contents: read
   actions: read
 
-# A new push cancels a superseded pull-request run. Main runs always complete.
+# A new push cancels a superseded PR run. A started main run completes, and only the newest waiting main run is kept.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:

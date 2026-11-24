@@ -35,6 +35,7 @@ test("cold and same-commit artifact measurements are explicit dispatch inputs", 
   assert.match(source, /COLD_BUILD: \$\{\{ \(inputs.cold_cache/);
   assert.match(source, /REUSE_BUILD_RUN_ID: \$\{\{ inputs.reuse_build_run/);
   const benchmarks = readFileSync(path.join(__dirname, "../workflows/benchmarks.yml"), "utf8");
+  assert.match(benchmarks, /\|\| github.ref \}\}\n  cancel-in-progress:/);
   assert.match(benchmarks, /cancel-in-progress: \$\{\{ github.event_name == 'pull_request' \}\}/);
   assert.doesNotMatch(
     benchmarks.split("\njobs:")[0],
