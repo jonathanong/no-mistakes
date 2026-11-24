@@ -16,6 +16,7 @@ function readFields(key: string) {
   consume((loadFixture)("wrapped-callee").size);
 
   const local = loadFixture("alias");
+  type FixtureType = typeof local;
   const nested = local.details;
   consume(nested.size);
 
@@ -57,6 +58,7 @@ function readFields(key: string) {
   for (const field in loadFixture("enumerate")) consume(field);
 
   consume(loadFixture("whole"));
+  consume(loadFixture("whole").label);
   consume(loadFixture("alternate").label);
   consume(loadFixture( 'alternate' ).size);
   consume(loadFixture("repeated").label, loadFixture("repeated").size);

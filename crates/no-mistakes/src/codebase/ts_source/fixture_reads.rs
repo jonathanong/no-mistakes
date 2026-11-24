@@ -67,16 +67,13 @@ impl FixtureReads {
                 continue;
             };
             *arguments.entry(argument).or_default() += 1;
-            if call.arguments.len() != 1 || !is_loader_candidate(call) {
-                continue;
-            }
-            let Some(callee) = callee else {
+            let Some(callee) =
+                callee.filter(|_| call.arguments.len() == 1 && is_loader_candidate(call))
+            else {
                 continue;
             };
             let start = call.span.start as usize;
-            let Some(literal) = source.get(start..call.span.end as usize) else {
-                continue;
-            };
+            let literal = crate::ast::span_text(source, call.span);
             if !literals.contains(literal) {
                 continue;
             }
@@ -141,9 +138,7 @@ fn contains_pointer(parent: &str, child: &str) -> bool {
 }
 
 fn covers_every_occurrence(source: &str, literal: &str, starts: &BTreeSet<usize>) -> bool {
-    let Some(first) = literal.chars().next() else {
-        return false;
-    };
+    let first = literal.chars().next().expect("registered call is nonempty");
     let mut offset = 0;
     while let Some(next) = source[offset..].find(literal) {
         let start = offset + next;
