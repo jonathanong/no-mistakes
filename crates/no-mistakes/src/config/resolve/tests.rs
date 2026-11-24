@@ -199,6 +199,7 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
             name: "resources".to_string(),
             paths: vec!["./db/**".to_string(), " !./db/tmp/**".to_string()],
             targets: vec!["backend".to_string()],
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
 
@@ -248,6 +249,7 @@ fn resolve_config_reports_non_vitest_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
     config
@@ -283,6 +285,7 @@ fn resolve_config_reports_kotlin_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
     let frameworks = resolved_framework_triggers(&config);
@@ -309,6 +312,7 @@ fn resolve_config_reports_elixir_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
     let frameworks = resolved_framework_triggers(&config);
@@ -335,6 +339,7 @@ fn resolve_config_reports_dart_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            superseded_by_changes: false,
             include_changed_tests: None,
         });
     let frameworks = resolved_framework_triggers(&config);

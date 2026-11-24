@@ -1,0 +1,12 @@
+changes:
+  categories:
+    responses:
+      paths: ["data/**/*.json"]
+      exclude: ["data/manifest.json", "data/ignored/**"]
+      id:
+        fromPath: "data/{id}.json"
+        separator: "."
+    manifest:
+      paths: ["data/manifest.json"]
+      id:
+        keysOf: json

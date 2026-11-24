@@ -1,3 +1,5 @@
+#[path = "main/changes.rs"]
+mod changes_cmd;
 mod check;
 mod check_discovery;
 mod check_parallel;
@@ -104,6 +106,8 @@ enum Command {
     Tests(TestsArgs),
     /// Inspect the machine-wide invocation lock.
     Lock(lock_cmd::LockArgs),
+    /// Compare categorized changes in local directories.
+    Changes(changes_cmd::ChangesArgs),
     /// Analyze lockfile changes (diff packages).
     Lockfile(lockfile::LockfileArgs),
     /// Map changed files to triggered GitHub Actions workflows and env usage.

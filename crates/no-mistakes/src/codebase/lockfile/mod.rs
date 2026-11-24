@@ -80,47 +80,10 @@ pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPac
 }
 
 pub fn diff(old: &[ResolvedPackage], new: &[ResolvedPackage]) -> LockfileDiff {
-    use std::collections::{HashMap, HashSet};
-
-    let mut old_map: HashMap<&str, HashSet<(&str, &str, &ResolutionKind)>> = HashMap::new();
-    for p in old {
-        old_map
-            .entry(&p.name)
-            .or_default()
-            .insert((&p.version, &p.fingerprint, &p.kind));
-    }
-    let mut new_map: HashMap<&str, HashSet<(&str, &str, &ResolutionKind)>> = HashMap::new();
-    for p in new {
-        new_map
-            .entry(&p.name)
-            .or_default()
-            .insert((&p.version, &p.fingerprint, &p.kind));
-    }
-
-    let mut added = Vec::new();
-    let mut removed = Vec::new();
-    let mut changed = Vec::new();
-
-    for (name, old_set) in &old_map {
-        match new_map.get(name) {
-            None => removed.push((*name).to_string()),
-            Some(new_set) if old_set != new_set => changed.push((*name).to_string()),
-            _ => {}
-        }
-    }
-    for name in new_map.keys() {
-        if !old_map.contains_key(name) {
-            added.push((*name).to_string());
-        }
-    }
-
-    added.sort();
-    removed.sort();
-    changed.sort();
-
+    let changes = super::keyed_diff::diff_packages(old, new);
     LockfileDiff {
-        added,
-        removed,
-        changed,
+        added: changes.added,
+        removed: changes.removed,
+        changed: changes.changed,
     }
 }

@@ -1,0 +1,35 @@
+changes:
+  categories:
+    fixtures:
+      paths: ["data/**"]
+      tests: ["tests/**"]
+      match: 'readFixture("{id}")'
+      fallback: browser
+    text:
+      paths: ["messages/**"]
+      tests: ["tests/**"]
+      fallback: full-suite
+    empty:
+      paths: ["empty/**"]
+      tests: ["tests/**"]
+      fallback: empty
+    legacy:
+      paths: ["legacy/**"]
+      tests: ["tests/**"]
+      fallback: missing-trigger
+tests:
+  vitest:
+    configs: vitest.config.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      triggers:
+        - name: fixture-path
+          paths: ["data/**"]
+          supersededByChanges: true
+        - name: browser
+          paths: ["browser/**"]
+          targets: ["browser"]
+        - name: empty
+          paths: ["empty/**"]
+          targets: ["empty"]

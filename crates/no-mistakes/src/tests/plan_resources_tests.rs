@@ -16,6 +16,7 @@ fn resource_plan_args(root: &Path, changed: PathBuf) -> PlanArgs {
         from_git_diff: None,
         changed_file: vec![changed],
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

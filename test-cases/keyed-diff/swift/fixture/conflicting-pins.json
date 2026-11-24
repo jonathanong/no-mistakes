@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "pins": [
+    {"identity": "alpha", "state": {"version": "1.0.0"}},
+    {"identity": "alpha", "state": {"version": "2.0.0"}}
+  ]
+}

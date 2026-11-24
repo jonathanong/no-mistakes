@@ -15,6 +15,9 @@ pub(super) fn resolve_args(args: &PlanArgs) -> Result<PlanArgs> {
     {
         anyhow::bail!("--direct-test-owner conflicts with --limit-percent, --limit-files, and --global-config-fallback; remove those policy overrides because direct ownership bypasses configured plan policy");
     }
+    if args.direct_test_owner && args.changes.is_some() {
+        anyhow::bail!("--direct-test-owner conflicts with --changes");
+    }
     if args.from_git_diff.is_some() && (args.base.is_some() || args.head.is_some()) {
         anyhow::bail!("--from-git-diff conflicts with --base/--head; provide only one");
     }

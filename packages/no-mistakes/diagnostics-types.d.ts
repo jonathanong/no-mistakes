@@ -76,6 +76,7 @@ export interface DiagnosticOperations {
   infraTestFor: typeof Api.infraTestFor;
   lockStatus: typeof Api.lockStatus;
   lockfileDiff: typeof Api.lockfileDiff;
+  changesDiff: typeof Api.changesDiff;
   parsePostgresSql: typeof Api.parsePostgresSql;
   postgresLockInventory: typeof Api.postgresLockInventory;
   playwrightCheck: typeof Api.playwrightCheck;

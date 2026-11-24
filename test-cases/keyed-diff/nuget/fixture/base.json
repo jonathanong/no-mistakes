@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net8.0": {
+      "Alpha": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0"
+      },
+      "Moving": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0"
+      },
+      "Removed": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0"
+      },
+      "Local": {
+        "type": "Project"
+      }
+    },
+    "net9.0": {
+      "Alpha": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0"
+      }
+    }
+  }
+}

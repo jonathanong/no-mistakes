@@ -365,3 +365,27 @@ retain that declaring package and selector. When several selected packages
 declare the same entry, all enabled targets are returned deterministically.
 Configured package scopes still apply to the declaring packages; external
 entries do not make neighboring helpers or other packages eligible.
+
+
+## Semantic change reports
+
+Use `--changes <file.json>` to consume a schemaVersion 1 report from
+[`changes diff`](changes-diff.md). Category names, test-source globs, literal ID
+match templates, fallback triggers and exclusions are declared in
+[changes configuration](../configuration/changes.md).
+
+```sh
+no-mistakes tests plan vitest --root after --changes changes.json --format json
+```
+
+Changed, added and removed IDs select matching test files in addition to the
+ordinary plan. Missing files, invalid JSON or schema, `complete: false`, unknown
+categories, and any `unclassified` path select the full suite with a structured
+`fallback_reason` and warning. This safety fallback does not require opting into
+`--global-config-fallback`.
+
+A path trigger marked `supersededByChanges` is suppressed only for a trusted
+report. Without the flag, existing path-trigger behavior is unchanged. Unmatched
+IDs use the category's named trigger, or full-suite fallback. Matching reuses the
+session's prepared sources. Node uses `testsPlan({ root, changes: "changes.json" })`;
+the direct-test-owner mode cannot be combined with `changes`.

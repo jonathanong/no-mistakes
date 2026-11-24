@@ -1,0 +1,138 @@
+---
+source: crates/no-mistakes/tests/cli_test_plan_changes.rs
+expression: "serde_json::to_string_pretty(&summaries).unwrap()"
+---
+{
+  "bad-category.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Invalid changes report `reports/bad-category.json`: unknown field `chnaged`, expected one of `changed`, `added`, `removed` at line 1 column 92",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "bad-id.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Invalid changes report `reports/bad-id.json`: invalid type: integer `23`, expected a string at line 1 column 81",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "incomplete.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Changes report is incomplete: Base data unreadable",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "invalid.txt": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Invalid changes report `reports/invalid.txt`: expected value at line 1 column 1",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "missing.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Cannot read changes report `reports/missing.json`",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "no-version.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Invalid changes report `reports/no-version.json`: missing field `schemaVersion` at line 1 column 74",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "no-complete.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Invalid changes report `reports/no-complete.json`: missing field `complete` at line 1 column 76",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "no-unclassified.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Invalid changes report `reports/no-unclassified.json`: missing field `unclassified` at line 1 column 74",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "unclassified.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Changes report has unclassified paths: data/unknown.json",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "unknown.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Changes report uses undeclared category `unexpected`",
+    "warnings": [
+      "changes-fallback"
+    ]
+  },
+  "unsupported.json": {
+    "selected": [
+      "tests/browser.test.ts",
+      "tests/example.test.ts",
+      "tests/reader.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Unsupported changes report schema version 2",
+    "warnings": [
+      "changes-fallback"
+    ]
+  }
+}

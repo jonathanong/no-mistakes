@@ -22,6 +22,7 @@ fn plan(root: &Path) -> crate::tests::TestPlan {
         from_git_diff: None,
         changed_file: vec![root.join("Package.swift"), root.join("Package.resolved")],
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

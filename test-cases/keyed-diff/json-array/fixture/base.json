@@ -1,0 +1,25 @@
+{
+  "fixtures": [
+    {
+      "id": "alpha",
+      "path": "alpha.json",
+      "metadata": {
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "moving",
+      "path": "moving.json",
+      "metadata": {
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "removed",
+      "path": "removed.json",
+      "metadata": {
+        "version": "1.0.0"
+      }
+    }
+  ]
+}

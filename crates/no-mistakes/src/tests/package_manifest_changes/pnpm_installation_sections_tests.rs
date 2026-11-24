@@ -46,6 +46,7 @@ fn plan_args(root: &Path, changed_file: PathBuf, fallback: bool) -> PlanArgs {
         from_git_diff: None,
         changed_file: vec![changed_file],
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

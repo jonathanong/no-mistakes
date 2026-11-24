@@ -1,0 +1,5 @@
+{
+  "endpoint.profile": "v2",
+  "endpoint.new": "v1",
+  "endpoint.unchanged": "v1"
+}

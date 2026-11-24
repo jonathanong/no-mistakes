@@ -20,6 +20,8 @@ pub struct NamedFullSuiteTrigger {
     /// Applies only when `targets` makes this a structured trigger.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_changed_tests: Option<bool>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub superseded_by_changes: bool,
 }
 
 #[derive(Debug, Deserialize, Default)]

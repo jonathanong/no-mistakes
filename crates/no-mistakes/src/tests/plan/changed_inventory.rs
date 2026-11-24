@@ -8,6 +8,12 @@ pub(crate) fn generate_plan_with_prepared(
 ) -> Result<TestPlan> {
     let mut plan = generate_plan_with_prepared_inner(args, prepared, timing)?;
     plan.changed_files = prepared.changed_file_inventory();
+    if let (None, Some(input)) = (
+        args.framework,
+        prepared.changes_input().filter(|input| input.has_work()),
+    ) {
+        super::changes::apply_union(prepared, input, &mut plan)?;
+    }
     // Configured framework plans apply this filter while discovering tests so
     // their groups, limits, fallback, and targets use the requested slice.
     // Keep the established post-selection behavior for generic and direct-owner

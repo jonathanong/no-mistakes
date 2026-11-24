@@ -87,6 +87,7 @@ fn plan_args(root: &Path, diff_content: Option<&str>) -> crate::tests::PlanArgs 
         from_git_diff: None,
         changed_file: Vec::new(),
         changed_files: None,
+        changes: None,
         diff: None,
         diff_stdin: false,
         diff_command: None,

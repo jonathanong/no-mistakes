@@ -1,0 +1,17 @@
+{
+  "lockfileVersion": 3,
+  "packages": {
+    "node_modules/alpha": {
+      "version": "1.0.0",
+      "integrity": "sha512-alpha"
+    },
+    "node_modules/moving": {
+      "version": "1.0.0",
+      "integrity": "sha512-moving"
+    },
+    "node_modules/removed": {
+      "version": "1.0.0",
+      "integrity": "sha512-removed"
+    }
+  }
+}

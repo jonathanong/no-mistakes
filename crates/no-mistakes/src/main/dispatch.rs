@@ -65,6 +65,7 @@ fn run_domain_command(command: Command) -> Result<CommandDispatch> {
         Command::Config(args) => config_cmd::run(args),
         Command::Tests(args) => tests_run(args),
         Command::Lock(args) => lock_cmd::run(args),
+        Command::Changes(args) => changes_cmd::run(args),
         Command::Lockfile(args) => lockfile::run(args),
         Command::Ci(args) => ci_run(args),
         Command::ImpactedChecks(args) => impacted_checks_run(args),

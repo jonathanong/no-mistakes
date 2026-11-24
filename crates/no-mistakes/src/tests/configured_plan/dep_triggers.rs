@@ -54,7 +54,12 @@ pub(super) fn dependency_triggers(
     let mut legacy_match = None;
     if let Some(named) = dep_triggers_named::apply_named_triggers(
         root,
-        &plan.full_suite_triggers.triggers,
+        plan.full_suite_triggers.triggers.iter().filter(|trigger| {
+            !trigger.superseded_by_changes
+                || !prepared
+                    .changes_input()
+                    .is_some_and(|input| input.report.is_ok())
+        }),
         &dependency_only_changed_files,
         discovered_test_files,
         &ignored_sets,
@@ -126,7 +131,7 @@ pub(super) fn ignored_changed_test(changed: &Path, ignored_sets: &[HashSet<PathB
     ignored_sets.iter().any(|set| set.contains(changed))
 }
 
-pub(super) fn framework_plan(
+pub(in crate::tests) fn framework_plan(
     config: &NoMistakesConfig,
     framework: TestFramework,
 ) -> &no_mistakes::config::v2::schema::TestPlanFrameworkConfig {
@@ -188,62 +193,4 @@ fn ignored_changed_test_sets(
     Ok(sets)
 }
 
-pub(super) struct OrderedPattern {
-    negated: bool,
-    matcher: GlobMatcher,
-}
-
-pub(super) fn compile_ordered_patterns(patterns: &[String]) -> Result<Vec<OrderedPattern>> {
-    patterns
-        .iter()
-        .map(|pattern| {
-            let trimmed = pattern.trim();
-            let (negated, pattern) = trimmed
-                .strip_prefix('!')
-                .map_or((false, trimmed), |pattern| (true, pattern.trim()));
-            let matcher = GlobBuilder::new(&normalize_trigger_glob(pattern))
-                .literal_separator(false)
-                .build()?
-                .compile_matcher();
-            Ok(OrderedPattern { negated, matcher })
-        })
-        .collect()
-}
-
-/// Apply every matching entry in order; the final matching entry decides.
-pub(super) fn matches_ordered(patterns: &[OrderedPattern], path: &str) -> bool {
-    let mut matched = false;
-    for pattern in patterns {
-        if pattern.matcher.is_match(path) {
-            matched = !pattern.negated;
-        }
-    }
-    matched
-}
-
-fn normalize_trigger_glob(pattern: &str) -> String {
-    let mut part = pattern.trim().to_string();
-    while let Some(rest) = part.strip_prefix("./") {
-        part = rest.trim().to_string();
-    }
-    part
-}
-
-pub(super) fn test_runner(framework: TestFramework) -> TestRunner {
-    match framework {
-        TestFramework::Dotnet => TestRunner::Dotnet,
-        TestFramework::Playwright => TestRunner::Playwright,
-        TestFramework::Vitest => TestRunner::Vitest,
-        TestFramework::Swift => TestRunner::Swift,
-        TestFramework::Python => TestRunner::Python,
-        TestFramework::Go => TestRunner::Go,
-        TestFramework::Cargo => TestRunner::Cargo,
-        TestFramework::Rails => TestRunner::Rails,
-        TestFramework::Php => TestRunner::Php,
-        TestFramework::Java => TestRunner::Java,
-        TestFramework::Kotlin => TestRunner::Kotlin,
-        TestFramework::Elixir => TestRunner::Elixir,
-        TestFramework::Dart => TestRunner::Dart,
-        TestFramework::Jest => TestRunner::Jest,
-    }
-}
+include!("dep_trigger_patterns.rs");

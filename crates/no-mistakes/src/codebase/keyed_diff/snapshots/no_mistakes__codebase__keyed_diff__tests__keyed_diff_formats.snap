@@ -1,0 +1,306 @@
+---
+source: crates/no-mistakes/src/codebase/keyed_diff/tests.rs
+expression: rendered
+---
+{
+  "json-array": {
+    "edited": {
+      "changed": [
+        "alpha"
+      ],
+      "added": [
+        "added"
+      ],
+      "removed": [
+        "removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "added",
+        "alpha",
+        "moving"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "alpha",
+        "moving",
+        "removed"
+      ]
+    },
+    "malformed": "could not parse head content: duplicate key \"duplicate\""
+  },
+  "json-object": {
+    "edited": {
+      "changed": [
+        "alpha"
+      ],
+      "added": [
+        "added"
+      ],
+      "removed": [
+        "removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "added",
+        "alpha",
+        "moving"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "alpha",
+        "moving",
+        "removed"
+      ]
+    },
+    "malformed": "could not parse head content: expected a JSON object"
+  },
+  "npm": {
+    "edited": {
+      "changed": [
+        "alpha"
+      ],
+      "added": [
+        "added"
+      ],
+      "removed": [
+        "removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "added",
+        "alpha",
+        "moving"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "alpha",
+        "moving",
+        "removed"
+      ]
+    },
+    "malformed": "could not parse head content: invalid npm packages"
+  },
+  "nuget": {
+    "edited": {
+      "changed": [
+        "net8.0:Alpha"
+      ],
+      "added": [
+        "net8.0:Added"
+      ],
+      "removed": [
+        "net8.0:Removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "net8.0:Added",
+        "net8.0:Alpha",
+        "net8.0:Local",
+        "net8.0:Moving",
+        "net9.0:Alpha"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "net8.0:Alpha",
+        "net8.0:Local",
+        "net8.0:Moving",
+        "net8.0:Removed",
+        "net9.0:Alpha"
+      ]
+    },
+    "malformed": "could not parse head content: unsupported NuGet lockfile schema"
+  },
+  "pnpm": {
+    "edited": {
+      "changed": [
+        "alpha"
+      ],
+      "added": [
+        "added"
+      ],
+      "removed": [
+        "removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "added",
+        "alpha",
+        "moving"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "alpha",
+        "moving",
+        "removed"
+      ]
+    },
+    "malformed": "could not parse head content: invalid pnpm lockfile: Malformed"
+  },
+  "resx": {
+    "edited": {
+      "changed": [
+        "alpha"
+      ],
+      "added": [
+        "added"
+      ],
+      "removed": [
+        "removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "added",
+        "alpha",
+        "moving"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "alpha",
+        "moving",
+        "removed"
+      ]
+    },
+    "malformed": "could not parse head content: invalid resx XML: expected 'value' tag, not 'data' at 1:34"
+  },
+  "strings": {
+    "edited": {
+      "changed": [
+        "alpha"
+      ],
+      "added": [
+        "added"
+      ],
+      "removed": [
+        "removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "added",
+        "alpha",
+        "moving"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "alpha",
+        "moving",
+        "removed"
+      ]
+    },
+    "malformed": "could not parse head content: unclosed quoted strings entry"
+  },
+  "swift": {
+    "edited": {
+      "changed": [
+        "alpha"
+      ],
+      "added": [
+        "added"
+      ],
+      "removed": [
+        "removed"
+      ]
+    },
+    "moved_only": {
+      "changed": [],
+      "added": [],
+      "removed": []
+    },
+    "added_file": {
+      "changed": [],
+      "added": [
+        "added",
+        "alpha",
+        "moving"
+      ],
+      "removed": []
+    },
+    "removed_file": {
+      "changed": [],
+      "added": [],
+      "removed": [
+        "alpha",
+        "moving",
+        "removed"
+      ]
+    },
+    "malformed": "could not parse head content: invalid Swift lockfile: Malformed"
+  }
+}

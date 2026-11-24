@@ -1,0 +1,32 @@
+{
+  "pins": [
+    {
+      "identity": "removed",
+      "kind": "remoteSourceControl",
+      "location": "https://example.invalid/removed.git",
+      "state": {
+        "version": "1.0.0",
+        "revision": "removed-revision"
+      }
+    },
+    {
+      "identity": "moving",
+      "kind": "remoteSourceControl",
+      "location": "https://example.invalid/moving.git",
+      "state": {
+        "version": "1.0.0",
+        "revision": "moving-revision"
+      }
+    },
+    {
+      "identity": "alpha",
+      "kind": "remoteSourceControl",
+      "location": "https://example.invalid/alpha.git",
+      "state": {
+        "version": "1.0.0",
+        "revision": "alpha-revision"
+      }
+    }
+  ],
+  "version": 2
+}

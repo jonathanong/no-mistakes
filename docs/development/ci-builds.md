@@ -1091,6 +1091,10 @@ unchanged; no test retries are configured. The
 runs a saved delayed body through Vitest and verifies that the enforced reporter
 rejects its real measured duration while retaining the report artifacts.
 
+The real-addon parity suite loads its CommonJS and ESM facades in a file setup
+hook. The hook timeout covers addon initialization, and the per-test timing
+gate measures the fixture cases after setup.
+
 The [forbidden-lint-suppression parity matrix](../../packages/no-mistakes/scripts/api-tests/forbidden-lint-suppressions-native.js)
 runs each case outside the checkout so discovery can use the saved fixture
 without reading the checkout's Git index. Each case checks that CommonJS and

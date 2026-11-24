@@ -32,7 +32,7 @@ fn leaf_paths(command: &clap::Command) -> Vec<Vec<String>> {
 #[test]
 fn every_cli_leaf_accepts_root_diagnostics_flags_at_every_command_boundary() {
     let leaves = leaf_paths(&Cli::command());
-    assert_eq!(leaves.len(), 53, "update the documented CLI leaf matrix");
+    assert_eq!(leaves.len(), 54, "update the documented CLI leaf matrix");
 
     for leaf in leaves {
         for flag in ["--timings", "--verbose-timings", "--progress"] {
@@ -190,4 +190,23 @@ fn config_declared_view_accepts_diagnostics_at_every_boundary() {
         .err()
         .unwrap();
     assert_eq!(error.kind(), ErrorKind::InvalidValue);
+}
+
+#[test]
+fn changes_diff_requires_both_local_roots_and_accepts_diagnostics() {
+    assert!(Cli::try_parse_from(["no-mistakes", "changes", "diff"]).is_err());
+    let cli = Cli::try_parse_from([
+        "no-mistakes",
+        "changes",
+        "--timings",
+        "diff",
+        "--base-root",
+        "before",
+        "--head-root",
+        "after",
+        "--format",
+        "json",
+    ])
+    .unwrap();
+    assert!(matches!(cli.command, Command::Changes(_)));
 }

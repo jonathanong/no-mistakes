@@ -29,10 +29,12 @@ fn copy_tree(source: &Path, destination: &Path) {
     {
         let relative = entry.path().strip_prefix(source).unwrap();
         let target = destination.join(relative);
-        if entry
-            .file_type()
-            .is_some_and(|file_type| file_type.is_dir())
-        {
+        let file_type = entry.file_type();
+        if file_type.is_some_and(|file_type| file_type.is_symlink()) {
+            std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+            #[cfg(unix)]
+            std::os::unix::fs::symlink(std::fs::read_link(entry.path()).unwrap(), target).unwrap();
+        } else if file_type.is_some_and(|file_type| file_type.is_dir()) {
             std::fs::create_dir_all(&target).unwrap();
         } else {
             std::fs::create_dir_all(target.parent().unwrap()).unwrap();

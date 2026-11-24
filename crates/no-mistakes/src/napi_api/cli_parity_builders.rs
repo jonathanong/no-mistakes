@@ -24,6 +24,9 @@ pub(crate) fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::
         );
     }
 
+    if options.direct_test_owner && options.changes.is_some() {
+        bail!("directTestOwner conflicts with changes");
+    }
     let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
 
     Ok(crate::tests::PlanArgs {
@@ -39,6 +42,7 @@ pub(crate) fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::
         from_git_diff: options.from_git_diff,
         changed_file: strings_to_paths(options.changed_files),
         changed_files: options.changed_files_file.map(PathBuf::from),
+        changes: options.changes.map(PathBuf::from),
         diff: None,
         diff_stdin: false,
         diff_command: None,
