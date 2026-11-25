@@ -159,3 +159,7 @@ fn collect_expr_with_shadowed<'a>(
         | Expr::ModuleLoad(_) => {}
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "preload_tests.rs"]
+mod tests;

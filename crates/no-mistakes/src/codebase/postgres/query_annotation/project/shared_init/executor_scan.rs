@@ -151,3 +151,7 @@ fn is_pure_scalar_expr(expr: &Expr, locals: Option<&FxHashSet<&str>>) -> bool {
         _ => false,
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "executor_scan_tests.rs"]
+mod tests;
