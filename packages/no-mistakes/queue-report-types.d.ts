@@ -71,6 +71,8 @@ export interface QueueCheckFinding {
 }
 
 export interface QueueCheckOptions extends ProjectOptions {
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
+  config?: string;
   /** Return `{ findings, diagnostics }` instead of a bare findings array. */
   includeDiagnostics?: boolean;
 }

@@ -31,7 +31,7 @@ pub(super) fn note_enqueue(
         .unwrap_or((None, None));
     let raw_job = job_arg.map(|arg| crate::ast::span_text(visitor.source, arg.span()).to_string());
     if crate::queue::extract_job_id::is_imported_callee(visitor, &call.callee) {
-        note_job_id_options(visitor, call, queue_index, job.clone(), options);
+        note_job_id_options(visitor, call, queue_index, job_arg, options);
     }
     let recorded = visitor.facts.producers.len();
     let priority = match options {
@@ -66,7 +66,7 @@ fn note_job_id_options(
     visitor: &mut QueueVisitor<'_>,
     call: &CallExpression<'_>,
     queue_index: usize,
-    job: Option<String>,
+    job: Option<&Argument<'_>>,
     options: Option<usize>,
 ) {
     if let Some(expr) = options
@@ -78,7 +78,12 @@ fn note_job_id_options(
             .get(queue_index)
             .and_then(Argument::as_expression)
         {
-            crate::queue::extract_job_id::note_factory_options(visitor, receiver, job, expr);
+            crate::queue::extract_job_id::note_factory_options(
+                visitor,
+                receiver,
+                job.and_then(Argument::as_expression),
+                expr,
+            );
         }
     }
 }

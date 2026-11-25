@@ -1,0 +1,14 @@
+tests:
+  playwright:
+    testInclude: [browser/*.ts, tests/*.spec.ts, tests/mixed.test.ts]
+    testExclude: [tests/mixed.test.ts]
+  vitest:
+    configs: config/unit.config.ts
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      testCommands:
+        - [pnpm, test:unit]
+  - rule: playwright-no-serial
+    scope: repository

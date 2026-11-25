@@ -32,6 +32,8 @@ use cli_docs_helpers::{
 mod docs_coverage_commands;
 #[path = "support/docs_coverage_rules.rs"]
 mod docs_coverage_rules;
+#[path = "support/docs_coverage_test_reliability.rs"]
+mod docs_coverage_test_reliability;
 #[path = "support/docs_rule_inventory_checks.rs"]
 mod docs_rule_inventory_checks;
 

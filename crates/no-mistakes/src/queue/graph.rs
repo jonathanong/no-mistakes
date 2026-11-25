@@ -28,9 +28,19 @@ pub fn analyze_project(
     tsconfig_path: Option<&Path>,
     filters: &[String],
 ) -> anyhow::Result<ProjectReport> {
+    analyze_project_with_config(root, tsconfig_path, None, filters)
+}
+
+/// Analyze queues using the supplied configuration path or automatic discovery.
+pub fn analyze_project_with_config(
+    root: &Path,
+    tsconfig_path: Option<&Path>,
+    config_path: Option<&Path>,
+    filters: &[String],
+) -> anyhow::Result<ProjectReport> {
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    standalone::analyze_project(&root, tsconfig_path, filters, snapshot)
+    standalone::analyze_project(&root, tsconfig_path, config_path, filters, snapshot)
 }
 
 #[doc(hidden)]

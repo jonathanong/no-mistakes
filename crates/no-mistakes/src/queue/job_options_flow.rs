@@ -15,10 +15,17 @@ mod members;
 pub(super) fn note_scheduler(
     visitor: &mut QueueVisitor<'_>,
     call: &CallExpression<'_>,
-    binding: Option<String>,
+    binding: String,
 ) {
     let (job, evidence) = scheduler_template(call, &visitor.object_bindings);
-    push_site(visitor, call.span().start, binding, None, job, evidence);
+    push_site(
+        visitor,
+        call.span().start,
+        Some(binding),
+        None,
+        job,
+        evidence,
+    );
 }
 
 fn scheduler_template(

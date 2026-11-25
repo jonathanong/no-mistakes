@@ -1,0 +1,6 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      testCommands:
+        - [pnpm, " "]

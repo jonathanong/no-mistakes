@@ -1,6 +1,7 @@
 use super::{message, KIND};
 use crate::ast::{js_literal, property_key_name, template_quasi_text};
-use crate::queue::extract_helpers::literal_expr;
+use crate::fx::FxHashMap;
+use crate::queue::extract_helpers::static_string;
 use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
@@ -9,29 +10,52 @@ use oxc_ast::ast::{
 };
 use oxc_syntax::symbol::SymbolId;
 
-pub(super) enum Evidence {
-    Finding(LocalCheck),
-    Const {
-        symbol: SymbolId,
-        job: Option<String>,
-        line: usize,
-    },
+#[derive(Clone)]
+pub(super) enum JobLabel {
+    Literal(String),
+    Const(SymbolId),
+}
+
+impl JobLabel {
+    pub(super) fn read(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> Option<Self> {
+        let expr = expr.get_inner_expression();
+        if let Expression::Identifier(id) = expr {
+            return super::referenced_symbol(visitor, id).map(Self::Const);
+        }
+        static_string(expr).map(Self::Literal)
+    }
+
+    fn resolve(self, consts: &FxHashMap<SymbolId, String>) -> Option<String> {
+        match self {
+            Self::Literal(value) => Some(value),
+            Self::Const(symbol) => consts.get(&symbol).cloned(),
+        }
+    }
+}
+
+enum InvalidId {
+    Message(String),
+    Const(SymbolId),
+}
+
+pub(super) struct Evidence {
+    id: InvalidId,
+    job: Option<JobLabel>,
+    line: usize,
 }
 
 impl Evidence {
-    pub(super) fn finding(
-        self,
-        consts: &crate::fx::FxHashMap<SymbolId, String>,
-    ) -> Option<LocalCheck> {
-        match self {
-            Self::Finding(finding) => Some(finding),
-            Self::Const { symbol, job, line } => Some(LocalCheck {
-                line,
-                kind: KIND.to_string(),
-                job,
-                message: message::invalid_message(consts.get(&symbol)?)?,
-            }),
-        }
+    pub(super) fn finding(self, consts: &FxHashMap<SymbolId, String>) -> Option<LocalCheck> {
+        let message = match self.id {
+            InvalidId::Message(message) => message,
+            InvalidId::Const(symbol) => message::invalid_message(consts.get(&symbol)?)?,
+        };
+        Some(LocalCheck {
+            line: self.line,
+            kind: KIND.to_string(),
+            job: self.job.and_then(|label| label.resolve(consts)),
+            message,
+        })
     }
 }
 
@@ -48,7 +72,7 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
         }
     }
 
-    pub(super) fn options(&mut self, job: Option<String>, options: &Expression<'_>) {
+    pub(super) fn options(&mut self, job: Option<JobLabel>, options: &Expression<'_>) {
         if let Expression::ObjectExpression(object) = options.get_inner_expression() {
             self.direct(job, object);
         }
@@ -74,8 +98,7 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
     }
 
     fn node(&mut self, object: &ObjectExpression<'_>, walk_children: bool) {
-        let job = property_expr(object, "name")
-            .and_then(|expr| literal_expr(expr, &self.visitor.const_strings));
+        let job = property_expr(object, "name").and_then(|expr| JobLabel::read(self.visitor, expr));
         self.direct(job.clone(), object);
         if let Some(options) = property_expr(object, "opts") {
             self.options(job, options);
@@ -93,13 +116,13 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
         }
     }
 
-    fn direct(&mut self, job: Option<String>, object: &ObjectExpression<'_>) {
+    fn direct(&mut self, job: Option<JobLabel>, object: &ObjectExpression<'_>) {
         if let Some(value) = property_expr(object, "jobId") {
             self.job_id(job, value);
         }
     }
 
-    pub(super) fn job_id(&mut self, job: Option<String>, expr: &Expression<'_>) {
+    pub(super) fn job_id(&mut self, job: Option<JobLabel>, expr: &Expression<'_>) {
         match expr.get_inner_expression() {
             Expression::StringLiteral(literal) => {
                 self.push(job, literal.span.start, js_literal(literal).as_ref());
@@ -115,8 +138,8 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
             }
             Expression::Identifier(id) => {
                 if let Some(symbol) = super::referenced_symbol(self.visitor, id) {
-                    self.evidence.push(Evidence::Const {
-                        symbol,
+                    self.evidence.push(Evidence {
+                        id: InvalidId::Const(symbol),
                         job,
                         line: line_number(self.visitor.source, id.span.start),
                     });
@@ -126,14 +149,13 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
         }
     }
 
-    fn push(&mut self, job: Option<String>, start: u32, text: &str) {
+    fn push(&mut self, job: Option<JobLabel>, start: u32, text: &str) {
         if let Some(message) = message::invalid_message(text) {
-            self.evidence.push(Evidence::Finding(LocalCheck {
+            self.evidence.push(Evidence {
                 line: line_number(self.visitor.source, start),
-                kind: KIND.to_string(),
                 job,
-                message,
-            }));
+                id: InvalidId::Message(message),
+            });
         }
     }
 }

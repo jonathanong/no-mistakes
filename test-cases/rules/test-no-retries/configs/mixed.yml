@@ -1,0 +1,21 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-testid]
+  vitest:
+    configs: config/unit.config.ts
+rules:
+  - rule: playwright-unique-test-ids
+    projects: [web]
+  - rule: test-no-retries
+    scope: repository
+    options:
+      testCommands:
+        - [pnpm, test:unit]
+  - rule: playwright-no-serial
+    scope: repository

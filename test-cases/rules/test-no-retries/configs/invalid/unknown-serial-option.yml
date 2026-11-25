@@ -1,0 +1,5 @@
+rules:
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      maxRetries: 2

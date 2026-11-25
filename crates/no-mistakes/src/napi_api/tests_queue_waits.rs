@@ -112,3 +112,37 @@ fn queue_check_json_surfaces_diagnostics_when_opted_in_and_in_aggregate_check() 
         "queues-check: mutated-worker.ts:8 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
     );
 }
+
+#[test]
+fn queue_warning_suppression_matches_direct_and_batched_aggregate_checks() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/worker-rate-limit-suppression/fixture")
+        .canonicalize()
+        .unwrap();
+    let direct = super::check_json_impl(super::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
+    let direct: serde_json::Value = serde_json::from_str(&direct).unwrap();
+    let warnings = direct["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 1, "{direct}");
+    assert_eq!(
+        warnings[0],
+        format!(
+            "queues-check: worker.ts:8 {}",
+            crate::queue::WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE
+        )
+    );
+    assert_eq!(direct["suppressed"].as_array().unwrap().len(), 3);
+
+    let batched = super::analyze_project::analyze_project_json_impl(super::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [{ "type": "check", "includeSuppressed": true }]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let batched: serde_json::Value = serde_json::from_str(&batched).unwrap();
+    assert_eq!(batched["reports"][0]["result"], direct);
+}
