@@ -86,3 +86,12 @@ for shard in 1 2; do
     echo ok
   fi
 done
+while read -r -- suite; do
+  pnpm test:unit "$suite"
+done
+while read -a 1bad; do
+  pnpm test:unit "$REPLY"
+done
+while read -r 1bad suite; do
+  pnpm test:unit "$suite"
+done

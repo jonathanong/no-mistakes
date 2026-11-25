@@ -139,10 +139,10 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
     fn visit_member(&mut self, object: &Expression<'_>, property: Option<&str>) {
         let object = unwrap_ts_wrappers(object);
         if let Some((class, instance)) = self.bindings.receiver_class(object) {
-            if let Some(instance) = instance {
-                if self.visited_fields.insert(instance.span()) {
-                    self.visit_arguments(&instance.arguments);
-                }
+            if let Some(instance) =
+                instance.filter(|instance| self.visited_fields.insert(instance.span()))
+            {
+                self.visit_arguments(&instance.arguments);
             }
             for value in receivers::class_field_values(class, property) {
                 if self.visited_fields.insert(value.span()) {
