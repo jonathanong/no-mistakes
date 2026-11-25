@@ -1,0 +1,3 @@
+rules:
+  - rule: playwright-no-serial
+    scope: repository

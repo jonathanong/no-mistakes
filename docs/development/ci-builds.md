@@ -1139,6 +1139,12 @@ CJS/ESM `check`, CJS/ESM `analyzeProject`, CLI output and exit-status assertions
 including passing and suppressed controls. All six cases still run in the
 real-addon suite under the same 5,000 ms gate; no exemption or retry is added.
 
+The production-export test-only parity test runs all five saved fixtures under
+one 5,000 ms budget. It copies each saved root to a temporary project, so
+discovery can inspect the fixture without reading the checkout's Git index.
+For each fixture it compares standalone CommonJS and ESM checks, batched
+reports from both facades, and the CLI report and exit status.
+
 Test CI cancels superseded in-progress runs only for pull requests. An active
 main run always finishes and uploads Rust coverage when another merge lands.
 Push runs group by ref, so a new main run waits for the one in progress and

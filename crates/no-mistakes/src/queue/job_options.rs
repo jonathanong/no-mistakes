@@ -15,6 +15,8 @@ mod judge;
 mod note;
 #[path = "job_options_site.rs"]
 mod site;
+#[path = "job_options_traversal.rs"]
+mod traversal;
 #[path = "job_options_walk.rs"]
 mod walk;
 

@@ -54,9 +54,9 @@ fn index_defaults(
             let Some(name) = name else {
                 continue;
             };
-            let entry = out.entry((path.clone(), name)).or_default();
-            entry.open |= defaults.evidence.open;
-            entry.keys.extend(defaults.evidence.keys.iter().cloned());
+            out.entry((path.clone(), name))
+                .and_modify(|evidence| evidence.open = true)
+                .or_insert_with(|| defaults.evidence.clone());
         }
     }
     out
@@ -95,12 +95,12 @@ fn judge_site(
     if missing(required, &site.evidence.keys).is_empty() {
         return None;
     }
-    let defaults = site.queue_file.as_ref().and_then(|file| {
-        site.queue_name
-            .as_ref()
-            .map(|name| defaults.get(&(file.clone(), name.clone())))
-    });
-    let Some(Some(defaults)) = defaults else {
+    let defaults = match (&site.queue_name, &site.queue_file) {
+        (Some(name), Some(file)) => defaults.get(&(file.clone(), name.clone())),
+        (Some(_), None) => return Some(diagnostic(path, site.line, DEFAULTS_OPEN)),
+        (None, _) => None,
+    };
+    let Some(defaults) = defaults else {
         return Some(finding(path, site, required, &site.evidence.keys));
     };
     if defaults.open {

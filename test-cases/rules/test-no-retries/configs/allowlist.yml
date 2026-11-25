@@ -1,0 +1,33 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+    testInclude: [browser/*.ts, tests/*.spec.ts, tests/mixed.test.ts]
+    testExclude: [tests/mixed.test.ts]
+  vitest:
+    configs: config/unit.config.ts
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      maxRetries: 1
+      testCommands:
+        - [pnpm, test:unit]
+      allowlist:
+        - path: tests/external.test.ts
+          reason: The remote grid may need another browser session
+        - project: approved
+          reason: The remote grid may need another browser session
+  - rule: test-no-retries
+    scope: repository
+    include: [tests/globals.test.ts]
+    tests:
+      vitest: [unit]
+    options:
+      maxRetries: 2
+  - rule: playwright-no-serial
+    scope: repository
+    exclude: [tests/excluded.spec.ts]
+    options:
+      allowlist:
+        - project: approved
+          reason: Exercises an ordered migration
