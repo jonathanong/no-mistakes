@@ -59,15 +59,17 @@ pub fn check_with_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let paths = required_files(root, config, files)?;
     let sources = super::source_store_for_files(files);
+    let target_paths: Vec<PathBuf> = paths.iter().cloned().collect();
     let plan = CheckFactPlan {
-        csp_allowed_origins_paths: required_files(root, config, files)?,
+        csp_allowed_origins_paths: paths,
         ..Default::default()
     };
     let facts =
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,
-            plan.csp_allowed_origins_paths.iter().cloned().collect(),
+            target_paths,
             Vec::new(),
             plan,
             None,
@@ -87,17 +89,25 @@ pub(crate) fn check_prepared(
     session: Option<&AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
     let normalized_root = normalize_path(root);
-    let batches: Result<Vec<_>> = applications(&normalized_root, config, files)?
+    let apps = applications(&normalized_root, config, files)?;
+    if apps.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut findings = Vec::new();
+    let per_app: Result<Vec<Option<Vec<RuleFinding>>>> = apps
         .into_par_iter()
         .map(|app| {
-            let result = check_application(&normalized_root, app, facts, sources);
-            match session {
-                Some(session) => session.capture_check_result(RULE_ID, result),
-                None => result.map(Some),
+            let outcome = check_application(&normalized_root, app, facts, sources);
+            if let Some(session) = session {
+                session.capture_check_result(RULE_ID, outcome)
+            } else {
+                outcome.map(Some)
             }
         })
         .collect();
-    let mut findings: Vec<_> = batches?.into_iter().flatten().flatten().collect();
+    for batch in per_app?.into_iter().flatten() {
+        findings.extend(batch);
+    }
     super::sort_findings(&mut findings);
     Ok(findings)
 }
