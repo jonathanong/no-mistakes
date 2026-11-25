@@ -95,7 +95,14 @@ pub(super) fn collect_with_scope(
             precollected,
         )
     };
-    collect_missing(session, root, &sources, &supplemental_plan, &mut map);
+    collect_missing(
+        session,
+        root,
+        &sources,
+        supplemental_call_sites,
+        &supplemental_plan,
+        &mut map,
+    );
     vitest_spreads::prepare(session, root, &sources, &supplemental_plan, &mut map);
     map
 }
@@ -104,11 +111,12 @@ fn collect_missing(
     session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     sources: &SourceStore,
+    supplemental_call_sites: &[PathBuf],
     plan: &CheckFactPlan,
     facts: &mut CheckFactMap,
 ) {
-    let missing: std::collections::BTreeSet<_> = plan
-        .call_site_paths
+    // Keep the requested spelling as the address of a supplemental read failure.
+    let missing: std::collections::BTreeSet<_> = supplemental_call_sites
         .iter()
         .chain(plan.vitest_default_exclude_paths.iter())
         .chain(plan.test_reliability_paths.keys())
