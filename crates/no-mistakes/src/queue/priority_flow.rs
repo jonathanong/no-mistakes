@@ -1,9 +1,10 @@
 use crate::queue::extract::FileFacts;
 use crate::queue::extract_model::ProducerBinding;
 use crate::queue::graph_model::InternalProducer;
+use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::QueueKey;
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub(super) fn flow_queue_definitions<'a>(
     facts: &'a HashMap<PathBuf, FileFacts>,
@@ -51,12 +52,15 @@ pub(super) fn resolved_flow_queue(
 }
 
 pub(super) fn opaque_queues(
+    root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
     flow_queues: &HashMap<&str, Option<&PathBuf>>,
+    test_scope: &ConfiguredTestScope,
 ) -> HashSet<QueueKey> {
     facts
-        .values()
-        .flat_map(|file| &file.opaque_priority_queues)
+        .iter()
+        .filter(|(path, _)| !test_scope.is_match(root, path))
+        .flat_map(|(_, file)| &file.opaque_priority_queues)
         .filter_map(|(queue_file, queue_name)| {
             let queue = QueueKey {
                 queue_file: queue_file.clone(),

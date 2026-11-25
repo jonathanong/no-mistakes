@@ -382,6 +382,7 @@
   "QueueFactoriesOptions",
   "QueueFactoryArgument",
   "QueueFactoryPropertyArgument",
+  "QueueIncludeTestsConfig",
   "QueueJobNode",
   "QueueJobRetentionKey",
   "QueueJobSchedulerFactoryOptions",

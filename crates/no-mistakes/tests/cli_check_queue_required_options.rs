@@ -253,3 +253,69 @@ fn queue_required_options_standalone_rejects_a_missing_explicit_config() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("unavailable.yml"), "{stderr}");
 }
+
+#[test]
+fn queue_shared_test_scope_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-shared-test-scope");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "queue_shared_test_scope",
+        &[
+            ("default", root.clone(), PathBuf::new()),
+            (
+                "include-test-file",
+                root.clone(),
+                root.join("include-test-file.yml"),
+            ),
+            (
+                "include-all-tests",
+                root.clone(),
+                root.join("include-all-tests.yml"),
+            ),
+        ],
+        &[],
+        &[],
+    );
+
+    assert_eq!(reports["default"]["exitCode"], 1);
+    let default_queues = reports["default"]["report"]["queues"].as_array().unwrap();
+    assert_eq!(default_queues.len(), 1, "{default_queues:?}");
+    assert_eq!(default_queues[0]["kind"], "unbounded-job-retention");
+    assert_eq!(default_queues[0]["file"], "src/producer.ts");
+    let default_advisories = reports["default"]["report"]["advisories"]
+        .as_array()
+        .unwrap();
+    assert_eq!(default_advisories.len(), 1, "{default_advisories:?}");
+    assert_eq!(default_advisories[0]["file"], "src/producer.ts");
+
+    for name in ["include-test-file", "include-all-tests"] {
+        assert_eq!(reports[name]["exitCode"], 1);
+        let queues = reports[name]["report"]["queues"].as_array().unwrap();
+        assert_eq!(queues.len(), 2, "{name}: {queues:?}");
+        assert!(queues
+            .iter()
+            .all(|f| f["kind"] == "unbounded-job-retention"));
+        assert!(queues.iter().any(|f| f["file"] == "src/producer.ts"));
+        assert!(queues.iter().any(|f| f["file"] == "tests/orders.test.ts"));
+        let advisories = reports[name]["report"]["advisories"].as_array().unwrap();
+        assert_eq!(advisories.len(), 2, "{name}: {advisories:?}");
+        assert!(advisories.iter().any(|f| f["file"] == "src/producer.ts"));
+        assert!(advisories
+            .iter()
+            .any(|f| f["file"] == "tests/orders.test.ts"));
+    }
+
+    for (args, expected_count) in [
+        (&[][..], 2usize),
+        (&["--config", "include-test-file.yml"][..], 4usize),
+    ] {
+        let output = run_queues_check(&root, "1", args);
+        assert_eq!(output.status.code(), Some(1));
+        let findings: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(
+            findings.as_array().unwrap().len(),
+            expected_count,
+            "{args:?}: {findings}"
+        );
+    }
+}

@@ -1,4 +1,5 @@
 use super::super::extract_model::{FileFacts, JobOptionFinding, JobOptionSite, RequiredJobOptions};
+use super::super::test_scope::ConfiguredTestScope;
 use super::defaults::{index_defaults, DefaultsIndex};
 use super::retention;
 use std::collections::{BTreeSet, HashMap};
@@ -12,7 +13,11 @@ const DEFAULTS_AMBIGUOUS: &str =
     "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions";
 const NAME_OPEN: &str = "job options were not judged because the queue name did not resolve";
 
-pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFacts>) {
+pub(crate) fn judge_into_facts(
+    root: &Path,
+    facts: &mut HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
+) {
     let any_required = facts
         .values()
         .any(|file| file.required_job_options.is_some());
@@ -25,6 +30,9 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
     let defaults = index_defaults(facts);
     let mut notes = Vec::new();
     for (path, file) in facts.iter() {
+        if test_scope.is_match(root, path) {
+            continue;
+        }
         let retention_policy = file.unbounded_job_retention.as_ref();
         let allow = retention_policy.and_then(|policy| policy.allow_globset());
         if let Some(retention_policy) = retention_policy {

@@ -5,6 +5,7 @@ use crate::queue::extract_model::{FileFacts, ProducerBinding};
 use crate::queue::graph_model::{CheckFinding, CheckSeverity};
 use crate::queue::graph_resolution::{local_queues, resolved_binding};
 use crate::queue::source::relative_string;
+use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -114,10 +115,14 @@ pub(in crate::queue) fn resolve_sites<R: ImportResolverFacade>(
 pub(super) fn findings_and_diagnostics(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
     let mut out = Vec::new();
     let mut diags = Vec::new();
     for (path, file) in facts {
+        if test_scope.is_match(root, path) {
+            continue;
+        }
         let Some(policy) = &file.job_state_as_record else {
             continue;
         };
