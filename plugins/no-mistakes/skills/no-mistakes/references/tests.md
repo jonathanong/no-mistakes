@@ -394,7 +394,8 @@ Pass its JSON file to `tests plan <framework> --changes changes.json` alongside
 normal changed-file inputs. Invalid/incomplete reports or unclassified paths
 select the full suite; inspect `fallback_reason` and warnings. Matchers use
 configured test-source globs and literal ID templates. With
-`loaderReturnsParsedJson: true` and an explicit loader call such as
+`assertPureJsonLoader: true` (user assertion that the loader is pure and
+returns parsed JSON unchanged) and an explicit loader call such as
 `loadFixture("{id}")`, `attributePaths` narrows selection to reads of changed
 fields and keeps any test with uncertain reads or loader uses. A trusted report can
 supersede a path trigger marked `supersededByChanges`; without the flag that

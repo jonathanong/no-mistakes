@@ -30,7 +30,7 @@ pub struct ChangeCategory {
     #[serde(rename = "match", skip_serializing_if = "Option::is_none")]
     pub match_pattern: Option<String>,
     #[serde(default, skip_serializing_if = "is_false")]
-    pub loader_returns_parsed_json: bool,
+    pub assert_pure_json_loader: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fallback: Option<String>,
 }

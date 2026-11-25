@@ -83,13 +83,17 @@ fn fixture_attributes_preserve_whole_fixture_routing_when_diff_or_read_is_opaque
         selected_files(&report),
         [
             "tests/alias-loader.test.ts",
+            "tests/dynamic-import.test.ts",
             "tests/export-loader.test.ts",
             "tests/invalid.test.ts",
             "tests/iteration.test.ts",
+            "tests/local-rebinding.test.ts",
             "tests/map-loader.test.ts",
+            "tests/namespace-import.test.ts",
             "tests/non-literal-call.test.ts",
             "tests/raw.test.ts",
             "tests/replaced.test.ts",
+            "tests/require-loader.test.ts",
             "tests/spread.test.ts",
             "tests/unknown-call.test.ts",
         ]
@@ -111,7 +115,10 @@ fn fixture_attributes_require_opt_in_and_reject_duplicate_attribute_path_keys() 
     for report_name in ["../reports/diff.json", "../reports/with-paths.json"] {
         let report = plan(&head, "1", &["--changes", report_name]);
         assert_eq!(report["fallback_triggered"], false);
-        assert_eq!(selected_files(&report), ["tests/label.test.ts"]);
+        assert_eq!(
+            selected_files(&report),
+            ["tests/label.test.ts", "tests/size.test.ts"]
+        );
     }
 
     let narrow_head = fixture("narrow").join("head");

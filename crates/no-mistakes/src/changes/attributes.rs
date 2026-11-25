@@ -1,7 +1,7 @@
 use jsonc_parser::ast::{Object, Value};
 use jsonc_parser::common::Ranged;
 use serde_json::value::RawValue;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn diff(old: &[u8], new: &[u8]) -> Option<Vec<String>> {
     let old_text = std::str::from_utf8(old).ok()?;
@@ -38,21 +38,33 @@ fn parse_object(source: &str) -> Option<Object<'_>> {
         .ok()?
         .value?;
     match value {
-        Value::Object(object) => Some(object),
+        Value::Object(object) if !has_duplicate_keys_in_object(&object) => Some(object),
         _ => None,
     }
 }
 
-fn index<'a, 'source>(
-    object: &'a Object<'source>,
-) -> Option<BTreeMap<&'a str, &'a Value<'source>>> {
-    let mut entries = BTreeMap::new();
-    for prop in &object.properties {
-        if entries.insert(prop.name.as_str(), &prop.value).is_some() {
-            return None;
-        }
+fn has_duplicate_keys_in_object(object: &Object<'_>) -> bool {
+    let mut seen = BTreeSet::new();
+    object
+        .properties
+        .iter()
+        .any(|prop| !seen.insert(prop.name.as_str()) || has_duplicate_keys(&prop.value))
+}
+
+fn has_duplicate_keys(value: &Value<'_>) -> bool {
+    match value {
+        Value::Object(object) => has_duplicate_keys_in_object(object),
+        Value::Array(array) => array.elements.iter().any(has_duplicate_keys),
+        _ => false,
     }
-    Some(entries)
+}
+
+fn index<'a, 'source>(object: &'a Object<'source>) -> BTreeMap<&'a str, &'a Value<'source>> {
+    object
+        .properties
+        .iter()
+        .map(|prop| (prop.name.as_str(), &prop.value))
+        .collect()
 }
 
 struct AttributeDiff<'a> {
@@ -68,10 +80,17 @@ impl AttributeDiff<'_> {
         new: &Object<'_>,
         path: &mut String,
     ) -> Option<()> {
-        let old_entries = index(old)?;
-        let new_entries = index(new)?;
-        if path.is_empty() && !old_entries.keys().any(|key| new_entries.contains_key(key)) {
-            return None;
+        let old_entries = index(old);
+        let new_entries = index(new);
+        if old_entries.is_empty() && new_entries.is_empty() {
+            return Some(());
+        }
+        if !old_entries.keys().any(|key| new_entries.contains_key(key)) {
+            if path.is_empty() {
+                return None;
+            }
+            self.paths.push(path.clone());
+            return Some(());
         }
         let old_order = old
             .properties

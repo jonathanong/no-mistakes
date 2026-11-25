@@ -40,13 +40,16 @@ without changing their values does not produce a change.
 ```
 
 For changed path-derived IDs with comparable JSON objects on both sides in a
-category that sets `loaderReturnsParsedJson: true`, `attributePaths` maps each
-ID to sorted RFC 6901 JSON Pointers. The path names the changed property or
+category that sets `assertPureJsonLoader: true` (a user assertion that the
+loader returns the parsed JSON unchanged with no fixture-dependent side effects
+or extra exposure), `attributePaths` maps each ID to sorted RFC 6901 JSON
+Pointers. The path names the changed property, replaced nested object, or
 array. In a path segment, `~0` represents `~` and `~1` represents `/`. If
-`loaderReturnsParsedJson` is unset (`false`), or if a file is added, removed,
-replaced, non-JSON, or cannot be compared reliably, the ID has no attribute
-paths. The planner then uses whole-fixture selection for that ID. Duplicate
-keys in `attributePaths` are rejected when parsing a report.
+`assertPureJsonLoader` is unset (`false`), or if a file is added, removed,
+replaced at the root, non-JSON, has duplicate keys anywhere in the document
+(including inside arrays), or cannot be compared reliably, the ID has no
+attribute paths. The planner then uses whole-fixture selection for that ID.
+Duplicate keys in `attributePaths` are rejected when parsing a report.
 
 Supported keyed formats are pnpm/npm lockfiles, SwiftPM `Package.resolved`
 versions 1–3, NuGet `packages.lock.json` per target framework, JSON objects or

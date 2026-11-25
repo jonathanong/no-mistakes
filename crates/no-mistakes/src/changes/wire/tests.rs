@@ -38,4 +38,14 @@ fn rejects_duplicate_and_malformed_attribute_paths_maps() {
         error.contains("a map of unique fixture IDs to JSON pointer lists"),
         "{error}"
     );
+
+    let default_yaml =
+        serde_json::to_value(crate::changes::config::ChangeCategory::default()).unwrap();
+    assert!(default_yaml.get("assertPureJsonLoader").is_none());
+    let enabled = serde_json::to_value(crate::changes::config::ChangeCategory {
+        assert_pure_json_loader: true,
+        ..Default::default()
+    })
+    .unwrap();
+    assert_eq!(enabled["assertPureJsonLoader"], true);
 }

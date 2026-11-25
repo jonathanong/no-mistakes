@@ -71,16 +71,27 @@ uses `fallback`, either a named framework full-suite trigger or `full-suite`.
 An absent or unusable fallback selects the full suite. Matching borrows the
 prepared session's test universe and source store.
 
-Set `loaderReturnsParsedJson: true` only when the configured `match` loader
-(a complete literal call such as `loadFixture("{id}")`) returns the parsed
-fixture JSON object unchanged. When enabled, `changes diff` records changed
-JSON Pointers in `attributePaths` and `tests plan --changes` narrows selection
-to tests whose static reads overlap a changed path. If a loader reshapes or
-transforms the JSON (for example, returning `{ label: String(raw.size) }`),
-leave `loaderReturnsParsedJson` unset (`false`) so `changes diff` omits
+By default (`assertPureJsonLoader: false`, or omitted), `changes diff` omits
 `attributePaths` and `tests plan --changes` selects every test matching the
-fixture. Any non-literal loader call or non-call reference to the loader
-identifier (alias, passing it as a value, export, or reassignment) also keeps
+changed fixture (even if given a report carrying `attributePaths`).
+
+Setting `assertPureJsonLoader: true` is an explicit user assertion — not
+verified by static analysis of the loader implementation — that the configured
+`match` loader (a complete literal call such as `loadFixture("{id}")`) returns
+the parsed fixture JSON object unchanged, does not branch on or trigger side
+effects based on any fixture content or raw file text beyond that returned
+object, and does not expose any other view of the fixture (such as raw text,
+byte length, or derived state). Only when you assert that contract should you
+enable `assertPureJsonLoader: true`, allowing `changes diff` to record changed
+JSON Pointers in `attributePaths` and `tests plan --changes` to narrow
+selection to tests whose static reads overlap a changed path. If a loader
+reshapes fields (for example, returning `{ label: String(raw.size) }`),
+validates or hashes raw text, or has fixture-dependent side effects, leave
+`assertPureJsonLoader` unset (`false`) so all matching fixture tests remain
+selected. Even with `assertPureJsonLoader: true`, any non-literal loader call
+or non-call reference to the loader or its module export in a file (namespace
+import, renamed import, local re-binding, alias, passing as a value, re-export,
+dynamic `import()`, or `require()`) invalidates the file's proof and keeps
 every fixture test in that file selected. See
 [semantic change reports](../cli/tests-plan.md#semantic-change-reports).
 

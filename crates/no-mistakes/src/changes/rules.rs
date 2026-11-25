@@ -83,7 +83,7 @@ impl<'a> Rules<'a> {
                         category: name,
                         exclude,
                         id,
-                        emit_attribute_paths: category.loader_returns_parsed_json,
+                        emit_attribute_paths: category.assert_pure_json_loader,
                     });
                 }
             }

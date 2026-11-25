@@ -24,12 +24,33 @@ fn reports_sorted_escaped_paths_without_rounding_numbers() {
 }
 
 #[test]
+fn emits_parent_pointer_for_replaced_nested_subtrees() {
+    let base = fixture("base.json");
+    assert_eq!(
+        diff(&base, &fixture("nested-replacement.json")),
+        Some(vec!["/portrait".into()])
+    );
+    assert_eq!(
+        diff(&base, &fixture("nested-empty-replacement.json")),
+        Some(vec!["/portrait".into()])
+    );
+    assert_eq!(
+        diff(
+            &fixture("empty-nested-base.json"),
+            &fixture("empty-nested-edit.json")
+        ),
+        Some(vec!["/keep".into()])
+    );
+}
+
+#[test]
 fn omits_attribute_paths_for_unreliable_diffs() {
     let base = fixture("base.json");
     for name in [
         "invalid.json",
         "replacement.json",
         "duplicate.json",
+        "duplicate-in-array.json",
         "type-change.json",
         "reordered.json",
         "format-only.json",

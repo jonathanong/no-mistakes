@@ -89,6 +89,16 @@ fn keeps_matches_with_broken_syntax_eval_or_unsafe_loader_uses() {
         "exported-default-loader",
         "reassigned-loader",
         "aliased-import",
+        "namespace-member",
+        "renamed-default-import",
+        "renamed-default-named",
+        "local-rebinding",
+        "destructured-rebinding",
+        "reexport-named",
+        "reexport-all",
+        "dynamic-import",
+        "require-loader",
+        "computed-loader-member",
         "optional-call",
         "two-args",
         "wrapped-callee",
@@ -104,6 +114,7 @@ fn keeps_matches_with_broken_syntax_eval_or_unsafe_loader_uses() {
         "member-alias",
         "member-root-alias",
         "member-other-call",
+        "member-leaf-import",
         "optional-callee",
     ] {
         let path = root.join(format!("{id}.ts"));
@@ -111,5 +122,17 @@ fn keeps_matches_with_broken_syntax_eval_or_unsafe_loader_uses() {
         let literal = format!("loader.fetch(\"{id}\")");
         let reads = FixtureReads::collect(&path, &source, &BTreeSet::from([literal.clone()]));
         assert!(reads.affects(&source, &literal, &["/size".into()]), "{id}");
+    }
+    let path = root.join("direct-import.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let direct_literals = BTreeSet::from([
+        literal("direct-import"),
+        "memberLoader.fetch(\"direct-member\")".into(),
+        "ambientLoader(\"direct-ambient\")".into(),
+    ]);
+    let reads = FixtureReads::collect(&path, &source, &direct_literals);
+    for lit in &direct_literals {
+        assert!(reads.affects(&source, lit, &["/size".into()]), "{lit}");
+        assert!(!reads.affects(&source, lit, &["/label".into()]), "{lit}");
     }
 }

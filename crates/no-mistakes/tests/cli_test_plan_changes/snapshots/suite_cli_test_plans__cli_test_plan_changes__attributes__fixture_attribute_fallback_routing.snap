@@ -32,13 +32,17 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"diff\": diff, \"plan\"
   "plan": {
     "selected": [
       "tests/alias-loader.test.ts",
+      "tests/dynamic-import.test.ts",
       "tests/export-loader.test.ts",
       "tests/invalid.test.ts",
       "tests/iteration.test.ts",
+      "tests/local-rebinding.test.ts",
       "tests/map-loader.test.ts",
+      "tests/namespace-import.test.ts",
       "tests/non-literal-call.test.ts",
       "tests/raw.test.ts",
       "tests/replaced.test.ts",
+      "tests/require-loader.test.ts",
       "tests/spread.test.ts",
       "tests/unknown-call.test.ts"
     ],

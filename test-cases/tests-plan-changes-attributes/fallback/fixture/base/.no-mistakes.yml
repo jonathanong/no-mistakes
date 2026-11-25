@@ -5,12 +5,12 @@ changes:
       id: { fromPath: "fixtures/{id}.json" }
       tests: ["tests/**/*.test.ts"]
       match: 'loadFixture("{id}")'
-      loaderReturnsParsedJson: true
+      assertPureJsonLoader: true
     raw:
       paths: ["fixtures/*.txt"]
       tests: ["tests/**/*.test.ts"]
       match: 'loadFixture("{id}")'
-      loaderReturnsParsedJson: true
+      assertPureJsonLoader: true
 tests:
   vitest:
     configs: vitest.config.mts

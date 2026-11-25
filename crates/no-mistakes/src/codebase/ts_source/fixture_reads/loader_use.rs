@@ -1,8 +1,14 @@
 use super::FixtureReads;
-use oxc_ast::{ast::Argument, AstKind};
+use imports::{property_key_name, LoaderNames};
+use oxc_ast::{
+    ast::{Argument, Expression},
+    AstKind,
+};
 use oxc_semantic::{NodeId, Semantic};
 use oxc_span::GetSpan;
 use std::collections::BTreeSet;
+
+mod imports;
 
 pub(super) fn has_unsafe_loader_use(semantic: &Semantic<'_>, reads: &FixtureReads) -> bool {
     let callees: BTreeSet<&[String]> = reads
@@ -14,16 +20,58 @@ pub(super) fn has_unsafe_loader_use(semantic: &Semantic<'_>, reads: &FixtureRead
     if callees.is_empty() {
         return false;
     }
-    let roots: BTreeSet<&str> = callees.iter().map(|callee| callee[0].as_str()).collect();
+    let names = LoaderNames::from_callees(semantic, &callees);
     for node in semantic.nodes().iter() {
         match node.kind() {
-            AstKind::ImportSpecifier(spec)
-                if roots.contains(spec.imported.name().as_str())
-                    && spec.local.name.as_str() != spec.imported.name().as_str() =>
+            AstKind::ImportExpression(_) => return true,
+            AstKind::ExportAllDeclaration(decl) if !decl.export_kind.is_type() => return true,
+            AstKind::ExportFromDeclaration(decl) if !decl.export_kind.is_type() => {
+                if decl
+                    .source
+                    .value
+                    .as_str()
+                    .is_some_and(|source| names.modules.contains(source))
+                    || decl.specifiers.iter().any(|spec| {
+                        !spec.export_kind.is_type() && names.contains(spec.local.name().as_str())
+                    })
+                {
+                    return true;
+                }
+            }
+            AstKind::ImportDeclaration(decl)
+                if !decl.import_kind.is_type() && names.has_unsafe_import(decl) =>
             {
                 return true;
             }
-            AstKind::IdentifierReference(ident) if roots.contains(ident.name.as_str()) => {
+            AstKind::BindingIdentifier(ident)
+                if names.roots.contains(ident.name.as_str())
+                    && !names.is_allowed_binding(semantic, node.id(), ident.name.as_str()) =>
+            {
+                return true;
+            }
+            AstKind::BindingProperty(prop)
+                if property_key_name(&prop.key).is_some_and(|name| names.contains(name)) =>
+            {
+                return true;
+            }
+            AstKind::StaticMemberExpression(member) => {
+                let name = member.property.name.as_str();
+                if name == "require" || names.roots.contains(name) {
+                    return true;
+                }
+            }
+            AstKind::ComputedMemberExpression(member)
+                if matches!(
+                    member.expression.get_inner_expression(),
+                    Expression::StringLiteral(lit)
+                        if lit.value.as_str().is_some_and(|name| {
+                            name == "require" || names.contains(name)
+                        })
+                ) =>
+            {
+                return true;
+            }
+            AstKind::IdentifierReference(ident) => {
                 let flags = semantic
                     .scoping()
                     .get_reference(ident.reference_id())
@@ -31,13 +79,18 @@ pub(super) fn has_unsafe_loader_use(semantic: &Semantic<'_>, reads: &FixtureRead
                 if !flags.is_value() || flags.is_value_as_type() {
                     continue;
                 }
-                let Some(callee) =
-                    direct_literal_loader_callee(semantic, node.id(), ident.name.as_str())
-                else {
+                let name = ident.name.as_str();
+                if matches!(name, "require" | "createRequire") {
                     return true;
-                };
-                if !callees.contains(callee.as_slice()) {
-                    return true;
+                }
+                if names.roots.contains(name) {
+                    let Some(callee) = direct_literal_loader_callee(semantic, node.id(), name)
+                    else {
+                        return true;
+                    };
+                    if !callees.contains(callee.as_slice()) {
+                        return true;
+                    }
                 }
             }
             _ => {}
