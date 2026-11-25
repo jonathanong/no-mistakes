@@ -1,6 +1,7 @@
 use super::extract_model::{FileFacts, RequiredJobOptions};
 use super::graph_model::CheckFinding;
 use super::source::relative_string;
+use super::test_scope::ConfiguredTestScope;
 use crate::config::v2::schema::QueuesTopLevelConfig;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -49,9 +50,16 @@ pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopL
     super::job_state::stamp(facts, queues);
 }
 
-pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
+pub(super) fn local_checks(
+    root: &Path,
+    facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
+) -> Vec<CheckFinding> {
     let mut out = Vec::new();
     for (path, file) in facts {
+        if test_scope.is_match(root, path) {
+            continue;
+        }
         for check in &file.checks {
             out.push(CheckFinding {
                 kind: check.kind.clone(),

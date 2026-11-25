@@ -107,14 +107,21 @@ callbacks. It groups those declarations by name on the first binding lookup.
 `unmatched-producer`, `unmatched-worker`, `unmatched-worker-unresolved-producers`,
 and `queues edges` match producers and workers across the project:
 
-- **Configured test scopes suppress findings on test files by default:** Files
+- **Configured test scopes exclude test files across every queue rule by default:** Files
   matched by declared `tests.*` scopes in `.no-mistakes.yml` (or a declared
   Vitest/Playwright config) still participate in producer/worker matching, but
-  no `unmatched-producer`, `unmatched-worker`, or
-  `unmatched-worker-unresolved-producers` finding is reported on a test-scope
-  file, and test-scope files are omitted from `queues edges`. No hardcoded
-  filename conventions (`*.test.*`, `__tests__`) are applied when no test scope
-  is declared.
+  every queue rule (`unmatched-producer`, `unmatched-worker`,
+  `unmatched-worker-unresolved-producers`, `unbounded-job-retention`,
+  `job-state-as-record`, `missing-job-option`, `invalid-job-id`,
+  `debounce-ttl`, `scheduler-template-option`, `enqueue-and-wait`,
+  `queue-cycle`, `self-dedup-enqueue`, `shared-queue-rate-limit`,
+  `worker-rate-limit-per-process`, and `mixed-priority`) skips findings and
+  rule-specific diagnostics on test-scope files, and test-scope files are
+  omitted from `queues edges`. No hardcoded filename conventions (`*.test.*`,
+  `__tests__`) are applied when no test scope is declared. Set
+  [`queues.includeTests`](../configuration/queues.md#test-file-scope) to `true`
+  or a list of relative globs to explicitly include test files back in the
+  shared queue scope.
 - **Test-file producers without workers:** A producer inside a configured test
   scope is not reported as `unmatched-producer` even when no worker exists
   anywhere, because integration and harness tests commonly enqueue synthetic
@@ -338,7 +345,8 @@ Fix: set `removeOnComplete` and `removeOnFail` to `true`, a count, or an
 `{ age, count }` object in `defaultJobOptions` or at the producer call site,
 and store durable work records in the database. Exempt operator tooling or
 one-off scripts with `queues.unboundedJobRetention.allowPaths`, or suppress a
-single call with `// no-mistakes-disable-next-line queues-check`.
+single call with `// no-mistakes-disable-next-line queues-check`. See also
+[Unbounded job retention](../rules/unbounded-job-retention.md).
 
 ## Queue job state as record of work
 
@@ -385,7 +393,8 @@ for (const row of await pendingWidgets(db, 100)) {
 Fix: query durable application state from the database to decide what to
 enqueue or retry. Exempt operator tooling and dashboards with
 `queues.jobStateAsRecord.allowPaths`, or suppress a single location with
-`// no-mistakes-disable-next-line queues-check`.
+`// no-mistakes-disable-next-line queues-check`. See also
+[Job state as record](../rules/job-state-as-record.md).
 
 ## Suppression
 

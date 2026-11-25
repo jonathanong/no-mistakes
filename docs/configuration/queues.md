@@ -172,10 +172,11 @@ instead of anchoring on an arbitrary caller file. The bulk wrapper's build
 callback does not supply a job name; only the configured selector does.
 Resolution stays within the configured file universe and uses the same
 producer/worker graph as `queues edges`. Files matched by configured `tests.*`
-scopes are excluded from `unmatched-producer`, `unmatched-worker`, and
-production `queues edges` by default (with no hardcoded filename conventions);
-same-file raw `new Worker(<queueName>, ...)` and configured worker factories
-match producers on that queue name. See
+scopes are excluded from every queue check and production `queues edges` by
+default (with no hardcoded filename conventions) unless opted back in with
+`queues.includeTests`; same-file raw `new Worker(<queueName>, ...)` and
+configured worker factories match producers on that queue name. See
+[Test-file scope](#test-file-scope) and
 [`queues check`](../cli/queues-check.md#producer-and-worker-matching).
 
 Property selection requires a direct, static object property. Unresolved
@@ -230,6 +231,30 @@ queues:
     orders: []
 ```
 
+## Test-file scope
+
+Every queue check (`unmatched-producer`, `unmatched-worker`,
+`unbounded-job-retention`, `job-state-as-record`, `missing-job-option`,
+`invalid-job-id`, `debounce-ttl`, `scheduler-template-option`,
+`enqueue-and-wait`, `queue-cycle`, `self-dedup-enqueue`,
+`shared-queue-rate-limit`, `worker-rate-limit-per-process`, and
+`mixed-priority`) and production `queues edges` share one declared test-file
+exclusion derived from configured `tests.*` scopes (and discovered
+Vitest/Playwright configs). No hardcoded filename conventions (`*.test.*`,
+`__tests__`) are applied when no test scope is declared.
+
+Use `queues.includeTests` (default `false`) to explicitly bring configured test
+files back into the shared queue scope without removing them from `tests.*`:
+
+```yaml
+queues:
+  includeTests: ["tests/orders.test.ts"]
+```
+
+Set `queues.includeTests: true` to include all configured test files, or pass a
+list of relative glob patterns. JavaScript callers can name this configuration
+shape with the exported `QueueIncludeTestsConfig` type.
+
 ## Unbounded job retention
 
 `queues.unboundedJobRetention` is opt-in and disabled by default. Set it to
@@ -252,7 +277,8 @@ queues:
 JavaScript callers can name this configuration shape with the exported
 `QueueJobRetentionKey`, `QueueUnboundedJobRetentionOptions`, and
 `QueueUnboundedJobRetentionConfig` types.
-See [`queues check`](../cli/queues-check.md#unbounded-job-retention).
+See [Unbounded job retention](../rules/unbounded-job-retention.md) and
+[`queues check`](../cli/queues-check.md#unbounded-job-retention).
 
 ## Queue job state as record of work
 
@@ -270,7 +296,8 @@ queues:
 JavaScript callers can name this configuration shape with the exported
 `QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
 `QueueCheckSeverity` types.
-See [`queues check`](../cli/queues-check.md#queue-job-state-as-record-of-work).
+See [Job state as record](../rules/job-state-as-record.md) and
+[`queues check`](../cli/queues-check.md#queue-job-state-as-record-of-work).
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.

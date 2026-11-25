@@ -127,7 +127,12 @@ fn cycle_walk_visits_a_queue_that_does_not_enqueue() {
         }),
         reachable_files: Default::default(),
     }];
-    let findings = super::super::cycles::queue_cycles(&root, &producers, &workers);
+    let findings = super::super::cycles::queue_cycles(
+        &root,
+        &producers,
+        &workers,
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
     assert!(
         findings.is_empty(),
         "a one-way enqueue is not a cycle: {findings:?}"
