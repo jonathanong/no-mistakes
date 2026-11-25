@@ -52,12 +52,12 @@ and two attempts respectively. [nick-fields/retry inputs](https://github.com/nic
 For a `for` loop over a literal list, the rule subtracts the initial run from
 the number of iterations. An unverified loop bound produces a finding. A `for`
 loop or `while`/`until read` loop that expands its iteration variable in
-the test command—or in a directory change (`cd`/`pushd`) or `export` before
-it—can run different test inputs, unless the test command is followed by retry
-control flow (`&& break`, `|| continue`, `if <test>; then break`, or their
-negated forms). A loop that only logs its iteration variable, updates `cd` or
-`export` only after the test command, or leaves its iteration variable unused
-still counts as a retry.
+the test command—or in a command piped into it, or a directory change
+(`cd`/`pushd`) or `export` before it—can run different test inputs, unless the
+test command is followed by retry control flow (`&& break`, `|| continue`,
+`if <test>; then break`, or their negated forms). A loop that only logs its
+iteration variable, updates `cd` or `export` only after the test command, or
+leaves its iteration variable unused still counts as a retry.
 
 ## Valid example
 

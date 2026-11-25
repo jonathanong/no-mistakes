@@ -1,4 +1,10 @@
-use super::{CheckFileFacts, EdgeIndex, EdgeKind, ExportKey, ExportLookup, FxHashSet, ImportRef};
+use super::{CheckFileFacts, EdgeIndex, EdgeKind, ExportKey, ExportLookup, FxHashSet};
+use std::path::Path;
+
+pub(super) fn is_declaration(path: &Path) -> bool {
+    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    name.ends_with(".d.ts") || name.ends_with(".d.mts") || name.ends_with(".d.cts")
+}
 
 impl ExportLookup<'_> {
     pub(super) fn record_uncertain(
@@ -24,7 +30,10 @@ impl ExportLookup<'_> {
         }) else {
             return;
         };
-        if refs.iter().any(ImportRef::is_playwright_test) {
+        if refs
+            .iter()
+            .any(|import| import.is_playwright_test() || self.local(&key.file, import).is_none())
+        {
             self.uncertain.insert(key.clone());
             return;
         }

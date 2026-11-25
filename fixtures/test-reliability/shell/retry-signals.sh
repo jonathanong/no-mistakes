@@ -95,3 +95,20 @@ done
 while read -r 1bad suite; do
   pnpm test:unit "$suite"
 done
+for suite in unit integration; do
+  printf '%s\n' "$suite" | pnpm test:unit
+done
+for suite in unit integration; do
+  printf '%s\n' "$suite" |&
+    pnpm test:unit
+done
+for attempt in 1 2 3; do
+  printf '%s\n' "$attempt" | pnpm test:unit && break
+done
+for attempt in 1 2; do
+  printf '%s\n' "$attempt" | cat
+  pnpm test:unit
+done
+for suite in unit integration; do
+  pnpm test:unit | grep "$suite"
+done

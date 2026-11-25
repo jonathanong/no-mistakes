@@ -589,6 +589,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:11: cannot verify whether `barreledSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:14: cannot verify whether `conditionalSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:17: cannot verify whether `typedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/let-later.spec.ts",
           "message": "tests/let-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
@@ -684,6 +704,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "consumer": "test-no-retries",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
           "file": "tests/let-later.spec.ts",
           "message": "tests/let-later.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
@@ -770,6 +795,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/noclobber-and-pid.yml",
           "line": 25,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 19,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 24,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 30,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 35,
           "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
           "rule": "test-no-retries",
           "sourceLine": "run: |",

@@ -128,6 +128,9 @@ fn shell_detects_retry_signals_and_enforces_setup_order() {
             Some(1),
             None,
             Some(1),
+            Some(2),
+            Some(1),
+            Some(1),
         ]
     );
 }

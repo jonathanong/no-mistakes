@@ -5,6 +5,7 @@ pub(super) enum Connector {
     None,
     And,
     Or,
+    Pipe,
 }
 
 pub(super) struct Segment<'a> {
@@ -116,11 +117,11 @@ pub(super) fn segments(script: &str) -> Vec<Segment<'_>> {
                         start = base + next + 1;
                     }
                     Some((next, _)) => {
-                        preceded_by = Connector::None;
+                        preceded_by = Connector::Pipe;
                         start = base + next + 1;
                     }
                     None => {
-                        preceded_by = Connector::None;
+                        preceded_by = Connector::Pipe;
                         start = offset + 1;
                     }
                 }

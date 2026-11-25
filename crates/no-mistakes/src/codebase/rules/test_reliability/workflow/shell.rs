@@ -24,6 +24,7 @@ struct Loop {
     in_body: bool,
     matched_test: bool,
     prepared_input: bool,
+    pipe_input: bool,
     uses_input: bool,
     retry_signal: bool,
     test_signal: TestSignal,
@@ -70,6 +71,7 @@ pub(super) fn rerun_loops(script: &str, commands: &[Vec<String>]) -> Vec<Option<
                         found.push(frame.retries);
                     }
                 }
+                reset_signal(&mut loops);
                 continue;
             }
             "do" => {
@@ -102,6 +104,9 @@ fn process_body_segment(
     mut words: &[String],
     commands: &[Vec<String>],
 ) {
+    if preceded_by != Connector::Pipe {
+        loops.iter_mut().for_each(|frame| frame.pipe_input = false);
+    }
     let Some(last) = loops.last_mut().filter(|frame| frame.in_body) else {
         return;
     };
@@ -143,11 +148,16 @@ fn process_body_segment(
             (false, true) => TestSignal::Negated,
         };
         for frame in loops.iter_mut().filter(|frame| frame.in_body) {
-            frame.uses_input |= frame.prepared_input || lexer::expands_any(text, &frame.variables);
+            let expands = lexer::expands_any(text, &frame.variables);
+            frame.uses_input |= frame.prepared_input || frame.pipe_input || expands;
+            frame.pipe_input |= expands;
         }
-    } else if matches!(first, "cd" | "pushd" | "export") {
+    } else {
+        let is_setup = matches!(first, "cd" | "pushd" | "export");
         for frame in loops.iter_mut().filter(|frame| frame.in_body) {
-            frame.prepared_input |= lexer::expands_any(text, &frame.variables);
+            let expands = lexer::expands_any(text, &frame.variables);
+            frame.prepared_input |= is_setup && expands;
+            frame.pipe_input |= expands;
         }
     }
 }
@@ -182,6 +192,7 @@ fn update_retry_signal(frame: &mut Loop, preceded_by: Connector, first: &str) {
 }
 
 fn reset_signal(loops: &mut [Loop]) {
+    loops.iter_mut().for_each(|frame| frame.pipe_input = false);
     if let Some(frame) = loops.last_mut() {
         frame.test_signal = TestSignal::None;
     }
