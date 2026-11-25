@@ -78,7 +78,12 @@ checks or review. It checks the declaration at each scope, including one
 overridden by a job or step. Malformed workflows are handled by workflow
 validation.
 
-Use [GitHub Actions environment policy](github-actions-env-policy.md) to
-require one exact value wherever the variable is defined. See
-[Insta's snapshot update modes](https://insta.rs/docs/advanced/#controlling-snapshot-updating)
+See [Insta's snapshot update modes](https://insta.rs/docs/advanced/#controlling-snapshot-updating)
 for the runner's behavior.
+
+## Related rules
+
+Use [GitHub Actions environment policy](github-actions-env-policy.md) to
+require one exact value wherever the variable is defined. Use
+[GitHub Actions run command policy](github-actions-run-command-policy.md)
+to forbid known snapshot-update flags for configured test commands.
