@@ -58,7 +58,7 @@ impl<'ast> Bindings<'_, 'ast> {
 struct ProvenanceFinder<'a, 'scope, 'ast> {
     bindings: &'a Bindings<'scope, 'ast>,
     candidates: Vec<ImportRef>,
-    visited: FxHashSet<SymbolId>,
+    visited: FxHashSet<(SymbolId, Option<String>)>,
     visited_fields: FxHashSet<Span>,
 }
 
@@ -95,7 +95,7 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
             }
             return;
         }
-        if member.is_none() && !self.visited.insert(symbol) {
+        if !self.visited.insert((symbol, member.map(str::to_owned))) {
             return;
         }
         if let Some(import) = self.bindings.import_origin(symbol, None) {
@@ -128,9 +128,7 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
         if member.is_some() {
             if let Expression::Identifier(identifier) = unwrap_ts_wrappers(expr) {
                 if let Some(symbol) = self.bindings.symbol(identifier) {
-                    if self.visited.insert(symbol) || self.bindings.is_namespace_import(symbol) {
-                        self.visit_symbol_member(symbol, member);
-                    }
+                    self.visit_symbol_member(symbol, member);
                     return;
                 }
             }

@@ -6,6 +6,7 @@ use crate::edge_index::{CanonicalEdge, EdgeIndex};
 use std::sync::Arc;
 
 mod proof;
+mod uncertain;
 mod wrappers;
 use wrappers::WrapperProof;
 
@@ -35,6 +36,7 @@ pub(super) struct ExportLookup<'a> {
     visible: &'a PathSet,
     proof: FxHashMap<ExportKey, ExportProof>,
     uncertain: FxHashSet<ExportKey>,
+    uncertain_deps: FxHashMap<ExportKey, Vec<ExportKey>>,
     wrappers: FxHashMap<ExportKey, WrapperProof>,
     edges: Vec<CanonicalEdge<ExportKey, EdgeKind>>,
 }
@@ -46,6 +48,7 @@ impl<'a> ExportLookup<'a> {
             visible,
             proof: FxHashMap::default(),
             uncertain: FxHashSet::default(),
+            uncertain_deps: FxHashMap::default(),
             wrappers: FxHashMap::default(),
             edges: Vec::new(),
         }
@@ -88,22 +91,7 @@ impl<'a> ExportLookup<'a> {
                 .into_iter()
                 .map(|target| CanonicalEdge::new(key.clone(), target, EdgeKind::SymbolReexport)),
         );
-        let local_name = facts
-            .and_then(|file| {
-                file.ts
-                    .exported_bindings
-                    .iter()
-                    .find(|binding| binding.exported == key.name.as_ref())
-                    .map(|binding| binding.local.as_str())
-            })
-            .unwrap_or(key.name.as_ref());
-        if facts
-            .and_then(|file| file.fixture_initializers.as_ref())
-            .and_then(|fixtures| fixtures.uncertain.get(local_name))
-            .is_some_and(|refs| refs.iter().any(ImportRef::is_playwright_test))
-        {
-            self.uncertain.insert(key.clone());
-        }
+        self.record_uncertain(next, &key, facts);
         self.proof.insert(key.clone(), proof);
         self.wrappers.insert(key, wrapper_proof);
     }
