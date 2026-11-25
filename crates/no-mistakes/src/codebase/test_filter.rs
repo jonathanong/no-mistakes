@@ -119,6 +119,11 @@ impl TestFileFilter {
         self.is_match_rel(&rel)
     }
 
+    pub fn is_configured_suite_match(&self, root: &Path, path: &Path) -> bool {
+        let rel = crate::codebase::ts_source::relative_slash_path(root, path);
+        self.configured_suite_match(&rel) == Some(true)
+    }
+
     pub fn is_match_rel(&self, rel_path: &str) -> bool {
         // Opt-in stub/mock tests are always surfaced, bypassing suite excludes.
         if self

@@ -13,6 +13,9 @@ tests:
     configs: vitest.config.mts
 testPlan:
   vitest:
+    environments:
+      review:
+        all: true
     fullSuiteTriggers:
       triggers:
         - name: fixture-tests

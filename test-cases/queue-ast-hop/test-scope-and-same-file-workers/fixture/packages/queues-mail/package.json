@@ -1,0 +1,7 @@
+{
+  "name": "@acme/queues-mail",
+  "private": true,
+  "exports": {
+    "./*": "./*.mts"
+  }
+}

@@ -82,7 +82,7 @@ impl Selection<'_> {
         }
         if !report.changed_files.is_empty() && !self.full_suite_fallback {
             if let Some(reason) =
-                unplanned_changed_file_reason(self.prepared, framework, &self.plan.warnings)
+                unplanned_changed_file_reason(self.prepared, framework, self.discovered, self.plan)
             {
                 self.fallback(reason, None);
             }

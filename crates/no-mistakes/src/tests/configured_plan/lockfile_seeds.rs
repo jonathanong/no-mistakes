@@ -164,6 +164,34 @@ pub(super) struct UntraceableLockfileDependency {
     pub(super) lockfile: String,
 }
 
+pub(crate) fn first_untraceable_lockfile_dependency(
+    prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
+    discovered_tests: &[PathBuf],
+) -> Option<String> {
+    if prepared.lockfile_changed_packages.is_empty() {
+        return None;
+    }
+    let graph = match prepared.graph() {
+        Ok(graph) => graph,
+        Err(error) => return Some(error.to_string()),
+    };
+    let all_test_set: HashSet<PathBuf> = discovered_tests.iter().cloned().collect();
+    let result = lockfile_seed_candidates(
+        &prepared.root,
+        &prepared.lockfile_changed_packages,
+        &prepared.workspace_map,
+        graph,
+        &all_test_set,
+        &HashSet::new(),
+    );
+    result.untraceable_dependencies.into_iter().next().map(|dep| {
+        format!(
+            "`{}` changed a dependency without a causal path to a configured test; full-suite selection requires global fallback opt-in",
+            dep.lockfile
+        )
+    })
+}
+
 pub(super) fn lockfile_seed_candidates(
     root: &Path,
     lockfile_changed_packages: &[(String, String, Vec<PathBuf>)],

@@ -99,68 +99,18 @@ pub(crate) fn analyze_lockfile_changes(
         } else {
             revisions.read_after_or_empty(file)
         };
-        if manager == lockfile::PackageManager::Pnpm {
-            if let Err(error) = lockfile::pnpm::validate_for_planning(&new_content) {
-                let rel = crate::tests::plan::relative_path(root, file);
-                let (kind, description) = match error {
-                    lockfile::pnpm::PnpmValidationError::Malformed => {
-                        ("lockfile-pnpm-malformed", "malformed pnpm YAML")
-                    }
-                    lockfile::pnpm::PnpmValidationError::UnsupportedSchema => (
-                        "lockfile-pnpm-unsupported-schema",
-                        "unsupported pnpm lockfile schema",
-                    ),
-                    lockfile::pnpm::PnpmValidationError::NotEnvPrefix => (
-                        "lockfile-pnpm-non-env-document",
-                        "a non-env document before the project lockfile",
-                    ),
-                };
-                warnings.push(Warning {
-                    r#type: kind.to_string(),
-                    message: format!(
-                        "`{rel}` has {description} at a compared revision; full-suite selection requires global fallback opt-in"
-                    ),
-                    file: rel,
-                    line: None,
-                });
-                fallback_triggered = true;
-                continue;
-            }
+        if let Err(error) = lockfile::validate::validate_for_planning(manager, &new_content) {
+            push_validation_warning(root, file, error, &mut warnings);
+            fallback_triggered = true;
+            continue;
         }
         let new_packages = lockfile::parse_lockfile(manager, &new_content);
 
         match revisions.base_name() {
             Some(base) => match revisions.read_base(file) {
                 Some(old) => {
-                    if let Some(error) = (manager == lockfile::PackageManager::Pnpm)
-                        .then(|| {
-                            lockfile::pnpm::validate_for_planning(&old)
-                                .and_then(|()| lockfile::pnpm::validate_for_planning(&new_content))
-                        })
-                        .and_then(Result::err)
-                    {
-                        let rel = crate::tests::plan::relative_path(root, file);
-                        let (kind, description) = match error {
-                            lockfile::pnpm::PnpmValidationError::Malformed => {
-                                ("lockfile-pnpm-malformed", "malformed pnpm YAML")
-                            }
-                            lockfile::pnpm::PnpmValidationError::UnsupportedSchema => (
-                                "lockfile-pnpm-unsupported-schema",
-                                "unsupported pnpm lockfile schema",
-                            ),
-                            lockfile::pnpm::PnpmValidationError::NotEnvPrefix => (
-                                "lockfile-pnpm-non-env-document",
-                                "a non-env document before the project lockfile",
-                            ),
-                        };
-                        warnings.push(Warning {
-                            r#type: kind.to_string(),
-                            message: format!(
-                                "`{rel}` has {description} at a compared revision; full-suite selection requires global fallback opt-in"
-                            ),
-                            file: rel,
-                            line: None,
-                        });
+                    if let Err(error) = lockfile::validate::validate_for_planning(manager, &old) {
+                        push_validation_warning(root, file, error, &mut warnings);
                         fallback_triggered = true;
                         continue;
                     }
@@ -265,6 +215,24 @@ pub(crate) fn analyze_lockfile_changes(
         warnings,
         fallback_triggered,
     }
+}
+
+fn push_validation_warning(
+    root: &Path,
+    file: &Path,
+    error: lockfile::validate::LockfileValidationError,
+    warnings: &mut Vec<Warning>,
+) {
+    let rel = crate::tests::plan::relative_path(root, file);
+    warnings.push(Warning {
+        r#type: error.kind.to_string(),
+        message: format!(
+            "`{rel}` has {} at a compared revision; full-suite selection requires global fallback opt-in",
+            error.description
+        ),
+        file: rel,
+        line: None,
+    });
 }
 
 /// `Ok(None)` reports that `dir` is not inside a Git repository (or the

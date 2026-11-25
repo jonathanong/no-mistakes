@@ -6,16 +6,17 @@ The caller fetches or prepares the directories first. This command does not
 invoke version control, contact a server, or infer repository history.
 
 ```sh
-no-mistakes changes diff --base-root before --head-root after --config changes.yml > after/changes.json
-no-mistakes tests plan vitest --root after --changes changes.json --format json
+no-mistakes changes diff --base-root before --head-root after --config changes.yml > changes.json
+no-mistakes tests plan vitest --root after --changes ../changes.json --format json
 ```
 
-Redirect the first command's JSON to a report file before running the second.
-Relative `--config` paths are relative to `--head-root`, and relative
-`--changes` paths in `tests plan` are relative to `--root` (matching `--config`;
-pass a parent-relative path such as `../changes.json` or an absolute path if the
-report sits outside `--root`). Without `--config`, the ordinary configuration
-loader uses the head tree. See [changes configuration](../configuration/changes.md).
+Redirect the first command's JSON to a report file outside the compared trees
+before running the second. Relative `--config` paths are relative to
+`--head-root`, and relative `--changes` paths in `tests plan` are relative to
+`--root` (matching `--config`; pass a parent-relative path such as
+`../changes.json` or an absolute path when the report sits beside `--root`).
+Without `--config`, the ordinary configuration loader uses the head tree. See
+[changes configuration](../configuration/changes.md).
 
 Each declared category produces sorted `changed`, `added`, and `removed` IDs.
 A path-only category reports relative paths. `id.fromPath` extracts IDs from a

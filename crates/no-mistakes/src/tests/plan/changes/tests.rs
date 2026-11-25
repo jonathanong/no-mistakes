@@ -66,13 +66,21 @@ fn unplanned_changed_file_reason_catches_native_untraceable_warnings() {
         "swift-dependency-untraceable",
         "dotnet-dependency-untraceable",
     ] {
-        let warnings = vec![Warning {
-            r#type: kind.to_string(),
-            message: format!("untraceable {kind}"),
-            file: "Package.resolved".to_string(),
-            line: None,
-        }];
-        let reason = unplanned_changed_file_reason(&prepared, None, &warnings);
+        let plan = TestPlan {
+            warnings: vec![Warning {
+                r#type: kind.to_string(),
+                message: format!("untraceable {kind}"),
+                file: "Package.resolved".to_string(),
+                line: None,
+            }],
+            ..TestPlan::default()
+        };
+        let discovered = DiscoveredTests {
+            tests: Vec::new(),
+            targets_by_path: BTreeMap::new(),
+            used_fallback: false,
+        };
+        let reason = unplanned_changed_file_reason(&prepared, None, &discovered, &plan);
         assert_eq!(
             reason.as_deref(),
             Some(format!("untraceable {kind}").as_str())

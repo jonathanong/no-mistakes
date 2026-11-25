@@ -1,0 +1,17 @@
+name: Example quoted key
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - &example-step
+        uses: example/build@v1
+        id: build
+        timeout-minutes: 2
+      - <<: *example-step
+        id: verify
+        with:
+          "<<": 7
