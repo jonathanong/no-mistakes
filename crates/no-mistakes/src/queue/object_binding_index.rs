@@ -8,8 +8,6 @@ type BindingsByName<'a> = FxHashMap<&'a str, Vec<ObjectBinding<'a>>>;
 pub(in crate::queue) struct ObjectBindings<'a> {
     by_name: OnceCell<BindingsByName<'a>>,
     declarations: RefCell<Vec<ObjectBinding<'a>>>,
-    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-    pub(in crate::queue) program_visits: usize,
 }
 
 impl<'a> ObjectBindings<'a> {

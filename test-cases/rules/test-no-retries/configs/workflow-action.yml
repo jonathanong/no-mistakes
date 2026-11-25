@@ -1,0 +1,4 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    include: [.github/workflows/*.yml]

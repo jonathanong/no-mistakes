@@ -1,0 +1,6 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    message: Preserve the first test failure.
+  - rule: playwright-no-serial
+    scope: repository

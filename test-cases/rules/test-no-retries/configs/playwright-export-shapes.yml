@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      files: [config/options.ts]
+  - rule: playwright-no-serial
+    scope: repository

@@ -15,6 +15,7 @@ mod map;
 mod plan;
 mod playwright_facts;
 mod playwright_plan;
+mod playwright_provenance;
 mod relative_scope;
 mod runner;
 mod sql_scope;

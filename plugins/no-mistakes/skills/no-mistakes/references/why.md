@@ -34,3 +34,8 @@ keep a database. Static literals produce edges; dynamic values are skipped.
 Configured Python, Go, Rust, and other language graphs use
 `dependents --relationship <lang>` first. Use `rg` for dynamic forms those
 frontends skip.
+
+Run `no-mistakes queues check --format json --include-diagnostics` to inspect
+queue analysis notes alongside findings. Unresolved worker rate-limit
+receivers warn by default. Aggregate `no-mistakes check` honors
+`queues-check` source directives for these warnings.

@@ -29,3 +29,93 @@ fn queue_required_options_selected_config_check_json_snapshot() {
         assert_eq!(reports[name]["report"]["queues"], serde_json::json!([]));
     }
 }
+
+fn run_queues_check(root: &std::path::Path, jobs: &str, args: &[&str]) -> std::process::Output {
+    std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .env_remove("RAYON_NUM_THREADS")
+        .args([
+            "--lock-timeout",
+            "0",
+            "--jobs",
+            jobs,
+            "queues",
+            "check",
+            "--root",
+        ])
+        .arg(root)
+        .args(["--format", "json"])
+        .args(args)
+        .output()
+        .unwrap()
+}
+
+#[test]
+fn queue_required_options_standalone_config_check_json_snapshot() {
+    let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap();
+    let fixtures = repo.join("fixtures/check/queue-required-config");
+    let mut cases = serde_json::Map::new();
+    for (name, directory, args, expected) in [
+        ("default-off", "default-off", &[][..], 0),
+        ("default-on", "default-on", &[][..], 1),
+        (
+            "explicit-off",
+            "default-on",
+            &["--config", "explicit.yml"][..],
+            0,
+        ),
+        (
+            "explicit-on",
+            "default-off",
+            &["--config", "explicit.yml"][..],
+            1,
+        ),
+    ] {
+        let root = fixtures.join(directory);
+        let run = |jobs| {
+            let output = run_queues_check(&root, jobs, args);
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{name}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let findings: Vec<serde_json::Value> = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(findings.len(), expected as usize, "{name}");
+            let mut value = serde_json::json!({
+                "exitCode": expected,
+                "report": findings,
+            });
+            crate::check_json_snapshot::source_lines::add_source_lines(&mut value, &root, repo);
+            value.sort_all_objects();
+            value
+        };
+        let single = run("1");
+        assert_eq!(single, run("2"), "{name}");
+        cases.insert(name.to_string(), single);
+    }
+    insta::with_settings!({
+        snapshot_path => "common/snapshots",
+        prepend_module_to_snapshot => false,
+        omit_expression => true,
+    }, {
+        insta::assert_snapshot!(
+            "queue_required_options_standalone_config",
+            format!("{}\n", serde_json::to_string_pretty(&cases).unwrap())
+        );
+    });
+}
+
+#[test]
+fn queue_required_options_standalone_rejects_a_missing_explicit_config() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-required-config/default-off");
+    let output = run_queues_check(&root, "1", &["--config", "unavailable.yml"]);
+    assert!(!output.status.success());
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("unavailable.yml"), "{stderr}");
+}

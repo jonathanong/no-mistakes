@@ -1,0 +1,29 @@
+name: Shell precedence
+defaults:
+  run:
+    shell: sh
+jobs:
+  workflow-default:
+    runs-on: windows-latest
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+  job-default:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+  step-overrides-job:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+        shell: bash --noprofile --norc {0}
+  step-overrides-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+        shell: python
