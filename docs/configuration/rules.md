@@ -907,7 +907,9 @@ SQL inputs, catalog and `columnBounds` declarations as the parent rule. See the
 [`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
 requires a nonempty `options.sqlInclude` list. Select standalone SQL scripts
 run with autocommit enabled, where each transaction can be understood from
-the script itself.
+the script itself. `options.unanalyzable` (`report`, `advise`, or `ignore`;
+default `advise`) controls unparseable scripts, unknown savepoint targets, and
+dynamic read-only settings.
 
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 is opt-in and always advisory, even when severity is omitted. Explicit severity

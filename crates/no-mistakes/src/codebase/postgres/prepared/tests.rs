@@ -258,14 +258,15 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
         &CheckFactMap::default(),
     );
     let plans = facts.explain_write_rollback(&shared).unwrap();
-    assert_eq!(plans.len(), 1);
-    assert_eq!(plans[0].kind, "UPDATE");
-    assert_eq!(plans[0].location.line, 1);
+    assert_eq!(plans.writes.len(), 1);
+    assert_eq!(plans.writes[0].kind, "UPDATE");
+    assert_eq!(plans.writes[0].location.line, 1);
+    assert!(plans.unanalyzable.is_empty());
     assert_eq!(facts.statements(&shared, None).unwrap().len(), 1);
     assert_eq!(facts.schema(&shared).unwrap().path, shared);
 
     assert_eq!(
-        facts.explain_write_rollback(&explain_only).unwrap().len(),
+        facts.explain_write_rollback(&explain_only).unwrap().writes.len(),
         3
     );
     assert!(facts.statements(&explain_only, None).is_err());
@@ -274,7 +275,9 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
     assert!(facts.explain_write_rollback(&writes_only).is_err());
 
     assert!(facts.statements(&unparsed, None).unwrap()[0].parse_failed);
-    assert!(facts.explain_write_rollback(&unparsed).unwrap().is_empty());
+    let unparsed_plans = facts.explain_write_rollback(&unparsed).unwrap();
+    assert!(unparsed_plans.writes.is_empty());
+    assert_eq!(unparsed_plans.unanalyzable.len(), 1);
     assert_eq!(
         facts.explain_write_rollback[&missing]
             .as_ref()

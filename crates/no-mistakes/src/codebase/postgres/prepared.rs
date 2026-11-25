@@ -19,11 +19,11 @@ pub(crate) struct PreparationError {
 }
 type Entry<T> = Result<Arc<T>, Arc<PreparationError>>;
 mod fragments;
-pub(crate) use explain_write_rollback::WritePlan;
+pub(crate) use explain_write_rollback::ExplainWriteRollbackFile;
 pub(crate) use fragments::PreparedSqlFragment;
 #[derive(Clone, Default)]
 pub(crate) struct PreparedPostgresFacts {
-    pub(crate) explain_write_rollback: BTreeMap<PathBuf, Entry<Vec<WritePlan>>>,
+    pub(crate) explain_write_rollback: BTreeMap<PathBuf, Entry<ExplainWriteRollbackFile>>,
     pub schema: BTreeMap<PathBuf, Entry<SqlSchemaFileFacts>>,
     pub statements: BTreeMap<PathBuf, Entry<Vec<SqlStatementFileFacts>>>,
     pub embedded: BTreeMap<(PathBuf, EmbeddedSqlOptions), Entry<Vec<SqlStatementFileFacts>>>,
@@ -59,8 +59,11 @@ pub(crate) fn prepare(
 }
 
 impl PreparedPostgresFacts {
-    pub(crate) fn explain_write_rollback(&self, path: &Path) -> anyhow::Result<&[WritePlan]> {
-        entry(self.explain_write_rollback.get(path), path).map(|value| value.as_slice())
+    pub(crate) fn explain_write_rollback(
+        &self,
+        path: &Path,
+    ) -> anyhow::Result<&ExplainWriteRollbackFile> {
+        entry(self.explain_write_rollback.get(path), path).map(Arc::as_ref)
     }
     pub(crate) fn sql_source_not_found(&self, path: &Path) -> bool {
         matches!(self.statements.get(path), Some(Err(error))

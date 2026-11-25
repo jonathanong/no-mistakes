@@ -31,6 +31,35 @@ EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
 ROLLBACK TO SAVEPOINT before_plan;
 COMMIT;
 
+BEGIN;
+SAVEPOINT released_plan;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+RELEASE SAVEPOINT released_plan;
+COMMIT;
+
+BEGIN;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+SAVEPOINT after_first;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+ROLLBACK TO SAVEPOINT after_first;
+COMMIT;
+
+BEGIN;
+SAVEPOINT outer_sp;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+SAVEPOINT inner_sp;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+ROLLBACK TO SAVEPOINT outer_sp;
+COMMIT;
+
+BEGIN;
+SAVEPOINT repeat_sp;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+ROLLBACK TO SAVEPOINT repeat_sp;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+ROLLBACK TO SAVEPOINT repeat_sp;
+COMMIT;
+
 BEGIN READ ONLY;
 EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
 COMMIT;

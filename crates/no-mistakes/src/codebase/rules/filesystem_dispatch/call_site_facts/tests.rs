@@ -142,8 +142,9 @@ fn standalone_explain_write_rule_prepares_only_selected_sql() {
             .postgres
             .explain_write_rollback(&selected)
             .unwrap()
+            .writes
             .len(),
-        8
+        11
     );
     assert!(facts.postgres.explain_write_rollback(&outside).is_err());
     assert_eq!(sources.physical_read_count(), 1);
@@ -151,7 +152,7 @@ fn standalone_explain_write_rule_prepares_only_selected_sql() {
         &root, &config, &files, &snapshot,
     )
     .unwrap();
-    assert_eq!(findings.len(), 8);
+    assert_eq!(findings.len(), 11);
     assert!(findings
         .iter()
         .all(|finding| finding.rule == crate::codebase::rules::POSTGRES_EXPLAIN_WRITE_ROLLBACK));

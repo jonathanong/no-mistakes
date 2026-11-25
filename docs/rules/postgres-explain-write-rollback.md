@@ -14,12 +14,18 @@ SQL globs for standalone scripts that run in order on one connection with
 autocommit enabled and no caller-owned transaction. The rule's `include`,
 `exclude`, and target scope can narrow that selection.
 
+`options.unanalyzable` (`report`, `advise`, or `ignore`; default `advise`)
+controls scripts that cannot be parsed completely, `RELEASE SAVEPOINT` or
+`ROLLBACK TO SAVEPOINT` targeting an unknown savepoint, and dynamic read-only
+`SET` or `set_config(...)` arguments.
+
 ```yaml
 rules:
   - rule: postgres-explain-write-rollback
     scope: repository
     options:
       sqlInclude: [benchmarks/*.sql]
+      unanalyzable: advise
 ```
 
 ## What it catches/requires
@@ -60,10 +66,17 @@ above it for one plan.
 
 ## Analysis
 
-The rule reuses the check request's parsed SQL. It skips files with ambiguous
-parsing and transaction blocks whose ending or savepoint rollback makes
-persistence uncertain. Embedded SQL, prepared statements, and indirect writes
-such as function bodies or modifying CTEs are outside its scope.
+The rule reuses the check request's parsed SQL and tracks transaction state,
+nested savepoints (`SAVEPOINT`, `RELEASE SAVEPOINT`, and
+`ROLLBACK TO SAVEPOINT`), `SET` / `SET TRANSACTION` /
+`SET SESSION CHARACTERISTICS` read-only settings, and `set_config(...)` calls
+for `default_transaction_read_only` and `transaction_read_only` respecting
+`is_local` scoping. `RELEASE SAVEPOINT` keeps writes pending for the enclosing
+transaction; only `ROLLBACK` or `ROLLBACK TO` an enclosing savepoint discards
+them. Files that cannot be parsed completely, unknown savepoint targets, and
+dynamic read-only settings are routed through `options.unanalyzable` instead of
+passing silently. Embedded SQL, prepared statements, and indirect writes such
+as function bodies or modifying CTEs are outside its scope.
 
 See the [PostgreSQL EXPLAIN documentation](https://www.postgresql.org/docs/current/sql-explain.html).
 

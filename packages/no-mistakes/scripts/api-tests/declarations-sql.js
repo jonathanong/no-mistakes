@@ -169,7 +169,7 @@ test("EXPLAIN write rollback exports the required standalone SQL scope", () => {
   );
   assert.match(
     declaration,
-    /export interface PostgresExplainWriteRollbackOptions \{\s*(?:\/\*\*.*?\*\/\s*)?sqlInclude: string\[\];/,
+    /export interface PostgresExplainWriteRollbackOptions \{\s*(?:\/\*\*.*?\*\/\s*)?sqlInclude: string\[\];\s*(?:\/\*\*.*?\*\/\s*)?unanalyzable\?: Unanalyzable;/,
   );
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),

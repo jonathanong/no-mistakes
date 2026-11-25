@@ -27,9 +27,9 @@ fn cte_wrapped_direct_writes_retain_outer_locations_and_transaction_outcomes() {
     let files = std::slice::from_ref(&path);
     let sources = crate::codebase::rules::source_store_for_files(files);
     let facts = prepare_scripts(&root, files, &sources);
-    let plans: Vec<_> = facts
-        .explain_write_rollback(&path)
-        .unwrap()
+    let file = facts.explain_write_rollback(&path).unwrap();
+    let plans: Vec<_> = file
+        .writes
         .iter()
         .map(|plan| (plan.kind, plan.location.line, plan.autocommit))
         .collect();
@@ -42,10 +42,11 @@ fn cte_wrapped_direct_writes_retain_outer_locations_and_transaction_outcomes() {
             ("MERGE", 17, false),
         ],
     );
+    assert!(file.unanalyzable.is_empty());
 }
 
 #[test]
-fn incomplete_programs_do_not_certify_an_explain_location() {
+fn incomplete_programs_report_unanalyzable_instead_of_passing() {
     let root = fixture_root();
     let partial = root.join("partial-program.sql");
     let invalid = root.join("missing-delimiter.sql");
@@ -61,6 +62,27 @@ fn incomplete_programs_do_not_certify_an_explain_location() {
         statements.as_slice(),
         [sqlparser::ast::Statement::Explain { .. }]
     ));
-    assert!(facts.explain_write_rollback(&partial).unwrap().is_empty());
-    assert!(facts.explain_write_rollback(&invalid).unwrap().is_empty());
+    let partial_facts = facts.explain_write_rollback(&partial).unwrap();
+    assert!(partial_facts.writes.is_empty());
+    assert_eq!(partial_facts.unanalyzable.len(), 1);
+    let invalid_facts = facts.explain_write_rollback(&invalid).unwrap();
+    assert!(invalid_facts.writes.is_empty());
+    assert_eq!(invalid_facts.unanalyzable.len(), 1);
+}
+
+#[test]
+fn unknown_savepoints_and_dynamic_read_only_settings_report_unanalyzable() {
+    let root = fixture_root();
+    let controls = root.join("unanalyzable-controls.sql");
+    let files = std::slice::from_ref(&controls);
+    let sources = crate::codebase::rules::source_store_for_files(files);
+    let facts = prepare_scripts(&root, files, &sources);
+    let file = facts.explain_write_rollback(&controls).unwrap();
+    assert!(file.writes.is_empty());
+    let lines: Vec<_> = file
+        .unanalyzable
+        .iter()
+        .map(|item| item.location.line)
+        .collect();
+    assert_eq!(lines, [2, 3, 6, 7, 8, 9, 10]);
 }

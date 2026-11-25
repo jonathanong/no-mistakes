@@ -10,6 +10,16 @@ fn postgres_explain_write_rollback_check_json_snapshot() {
         &[
             ("autocommit", example.clone(), example.join(".no-mistakes.yml")),
             ("transactions", cases.clone(), cases.join(".no-mistakes.yml")),
+            (
+                "unanalyzable_report",
+                cases.clone(),
+                rules_path(rule, "configs", "unanalyzable-report.yml"),
+            ),
+            (
+                "unanalyzable_ignore",
+                cases.clone(),
+                rules_path(rule, "configs", "unanalyzable-ignore.yml"),
+            ),
             ("disabled", cases.clone(), rules_path(rule, "configs", "disabled.yml")),
             ("no_rule", cases, rules_path(rule, "configs", "no-rules.yml")),
         ],
@@ -25,8 +35,34 @@ fn postgres_explain_write_rollback_check_json_snapshot() {
         .map(|finding| finding["line"].as_u64().unwrap())
         .collect();
     transaction_lines.sort_unstable();
-    assert_eq!(transaction_lines, [1, 2, 7, 11, 23, 57, 59, 59]);
-    assert_eq!(findings.len(), 10);
+    assert_eq!(
+        transaction_lines,
+        [1, 2, 7, 11, 23, 36, 41, 74, 86, 88, 88]
+    );
+    let mut set_config_lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["file"] == "benchmarks/set-config.sql")
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect();
+    set_config_lines.sort_unstable();
+    assert_eq!(set_config_lines, [2, 6, 13, 18, 28, 32]);
+    let advisories = reports["transactions"]["report"]["advisories"]
+        .as_array()
+        .unwrap();
+    assert_eq!(advisories.len(), 1);
+    assert_eq!(advisories[0]["file"], "benchmarks/unparsed.sql");
+    assert_eq!(advisories[0]["target"], "unanalyzable");
+    assert_eq!(findings.len(), 20);
+    assert!(reports["unanalyzable_report"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|finding| finding["file"] == "benchmarks/unparsed.sql"
+            && finding["target"] == "unanalyzable"));
+    assert!(reports["unanalyzable_ignore"]["report"]["advisories"]
+        .as_array()
+        .unwrap()
+        .is_empty());
     assert_eq!(reports["disabled"]["exitCode"], 0);
     assert_eq!(reports["no_rule"]["exitCode"], 0);
 }

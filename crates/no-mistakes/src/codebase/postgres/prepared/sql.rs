@@ -75,7 +75,9 @@ pub(super) fn collect(
                     .as_ref()
                     .map(|(statements, _, _, failed, _, _, _)| {
                         let plans = if *failed {
-                            Vec::new()
+                            explain_write_rollback::unparseable()
+                        } else if locations.len() != statements.len() {
+                            explain_write_rollback::partial_program()
                         } else {
                             explain_write_rollback::collect(statements, &locations)
                         };

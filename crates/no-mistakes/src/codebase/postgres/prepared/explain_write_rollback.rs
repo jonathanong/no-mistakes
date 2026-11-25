@@ -1,10 +1,15 @@
 //! Project writes from complete standalone programs using the prepared AST.
+mod literals;
+mod settings;
+
 use crate::codebase::postgres::{source, PostgresSqlExecution};
+use literals::{direct_write_kind, normalize_ident};
+use settings::{
+    query_set_config_effects, set_statement_effect, start_transaction_can_commit, ReadOnlySetting,
+    SettingEffect,
+};
 use sqlparser::{
-    ast::{
-        DescribeAlias, ObjectNamePart, Set, SetExpr, Statement, TransactionAccessMode,
-        TransactionMode,
-    },
+    ast::{DescribeAlias, Ident, Statement},
     tokenizer::Location,
 };
 
@@ -15,65 +20,119 @@ pub(crate) struct WritePlan {
     pub(crate) autocommit: bool,
 }
 
+#[derive(Debug)]
+pub(crate) struct UnanalyzablePlan {
+    pub(crate) location: Location,
+    pub(crate) reason: &'static str,
+}
+
+#[derive(Debug, Default)]
+pub(crate) struct ExplainWriteRollbackFile {
+    pub(crate) writes: Vec<WritePlan>,
+    pub(crate) unanalyzable: Vec<UnanalyzablePlan>,
+}
+
 struct Transaction {
     can_commit_writes: bool,
-    pending: Option<Vec<WritePlan>>,
+    saved_session_read_only: bool,
+    pending: Vec<WritePlan>,
+    savepoints: Vec<(String, usize)>,
 }
 
 impl Transaction {
-    fn new(can_commit_writes: bool) -> Self {
-        Self {
-            can_commit_writes,
-            pending: can_commit_writes.then(Vec::new),
+    fn new(can_commit_writes: bool, saved_session_read_only: bool) -> Self {
+        Self { can_commit_writes, saved_session_read_only, pending: Vec::new(), savepoints: Vec::new() }
+    }
+
+    fn release(&mut self, name: &Ident, location: Location, out: &mut ExplainWriteRollbackFile) {
+        let key = normalize_ident(name);
+        if let Some(pos) = self.savepoints.iter().rposition(|(sp, _)| sp == &key) {
+            self.savepoints.truncate(pos);
+        } else {
+            out.unanalyzable.push(UnanalyzablePlan { location, reason: "RELEASE SAVEPOINT targets an unknown savepoint" });
+        }
+    }
+
+    fn rollback_to(&mut self, name: &Ident, location: Location, out: &mut ExplainWriteRollbackFile) {
+        let key = normalize_ident(name);
+        if let Some(pos) = self.savepoints.iter().rposition(|(sp, _)| sp == &key) {
+            self.pending.truncate(self.savepoints[pos].1);
+            self.savepoints.truncate(pos + 1);
+        } else {
+            out.unanalyzable.push(UnanalyzablePlan { location, reason: "ROLLBACK TO SAVEPOINT targets an unknown savepoint" });
         }
     }
 }
 
-pub(super) fn collect(statements: &[Statement], locations: &[Location]) -> Vec<WritePlan> {
-    let mut findings = Vec::new();
+pub(super) fn unparseable() -> ExplainWriteRollbackFile {
+    unanalyzable_file("SQL script could not be parsed completely")
+}
+
+pub(super) fn partial_program() -> ExplainWriteRollbackFile {
+    unanalyzable_file("SQL script ended at an incomplete statement boundary")
+}
+
+fn unanalyzable_file(reason: &'static str) -> ExplainWriteRollbackFile {
+    ExplainWriteRollbackFile {
+        writes: Vec::new(),
+        unanalyzable: vec![UnanalyzablePlan { location: Location::new(1, 1), reason }],
+    }
+}
+
+pub(super) fn collect(
+    statements: &[Statement],
+    locations: &[Location],
+) -> ExplainWriteRollbackFile {
+    let mut out = ExplainWriteRollbackFile::default();
+    let mut session_read_only = false;
     let mut transaction: Option<Transaction> = None;
     for (statement, &location) in statements.iter().zip(locations) {
         match statement {
             Statement::StartTransaction { modes, .. } => {
                 transaction.get_or_insert_with(|| {
-                    Transaction::new(!modes.contains(&TransactionMode::AccessMode(
-                        TransactionAccessMode::ReadOnly,
-                    )))
+                    Transaction::new(
+                        start_transaction_can_commit(modes, session_read_only),
+                        session_read_only,
+                    )
                 });
             }
-            Statement::Commit { chain, .. }
-            | Statement::Rollback {
-                chain,
-                savepoint: None,
-            } => {
+            Statement::Commit { chain, .. } | Statement::Rollback { chain, savepoint: None } => {
                 if let Some(active) = transaction.take() {
                     if matches!(statement, Statement::Commit { .. }) {
-                        findings.extend(active.pending.into_iter().flatten());
+                        out.writes.extend(active.pending);
+                    } else {
+                        session_read_only = active.saved_session_read_only;
                     }
                     if *chain {
-                        transaction = Some(Transaction::new(active.can_commit_writes));
+                        transaction = Some(Transaction::new(active.can_commit_writes, session_read_only));
                     }
                 }
             }
-            Statement::Savepoint { .. }
-            | Statement::ReleaseSavepoint { .. }
-            | Statement::Rollback {
-                savepoint: Some(_), ..
-            } => {
+            Statement::Savepoint { name } => {
                 if let Some(active) = &mut transaction {
-                    active.pending = None;
+                    active.savepoints.push((normalize_ident(name), active.pending.len()));
                 }
             }
-            Statement::Set(set) => match access_change(set) {
-                Some(AccessChange::Session) => break,
-                Some(AccessChange::Transaction) => {
-                    if let Some(active) = &mut transaction {
-                        active.can_commit_writes = false;
-                        active.pending = None;
-                    }
+            Statement::ReleaseSavepoint { name } => {
+                if let Some(active) = &mut transaction {
+                    active.release(name, location, &mut out);
                 }
-                None => {}
-            },
+            }
+            Statement::Rollback { savepoint: Some(name), .. } => {
+                if let Some(active) = &mut transaction {
+                    active.rollback_to(name, location, &mut out);
+                }
+            }
+            Statement::Set(set) => {
+                if let Some(effect) = set_statement_effect(set) {
+                    apply_effect(effect, location, &mut session_read_only, &mut transaction, &mut out);
+                }
+            }
+            Statement::Query(query) => {
+                for effect in query_set_config_effects(query) {
+                    apply_effect(effect, location, &mut session_read_only, &mut transaction, &mut out);
+                }
+            }
             Statement::Explain {
                 describe_alias: DescribeAlias::Explain,
                 analyze,
@@ -83,87 +142,50 @@ pub(super) fn collect(statements: &[Statement], locations: &[Location]) -> Vec<W
                 options,
                 statement,
                 ..
-            } if source::explain_execution(
-                *analyze,
-                *query_plan,
-                *estimate,
-                *format,
-                options.as_deref(),
-            ) == PostgresSqlExecution::ExecutesForAnalysis =>
+            } if source::explain_execution(*analyze, *query_plan, *estimate, *format, options.as_deref())
+                == PostgresSqlExecution::ExecutesForAnalysis =>
             {
-                let Some(kind) = direct_write_kind(statement) else {
-                    continue;
-                };
-                let plan = WritePlan {
-                    location,
-                    kind,
-                    autocommit: transaction.is_none(),
-                };
-                match &mut transaction {
-                    Some(active) => {
-                        if let Some(pending) = &mut active.pending {
-                            pending.push(plan);
+                if let Some(kind) = direct_write_kind(statement) {
+                    match &mut transaction {
+                        Some(active) if active.can_commit_writes => {
+                            active.pending.push(WritePlan { location, kind, autocommit: false });
                         }
+                        Some(_) => {}
+                        None if !session_read_only => {
+                            out.writes.push(WritePlan { location, kind, autocommit: true });
+                        }
+                        None => {}
                     }
-                    None => findings.push(plan),
                 }
             }
             _ => {}
         }
     }
-    findings
+    out
 }
 
-fn direct_write_kind(statement: &Statement) -> Option<&'static str> {
-    match statement {
-        Statement::Insert(_) => Some("INSERT"),
-        Statement::Update(_) => Some("UPDATE"),
-        Statement::Delete(_) => Some("DELETE"),
-        Statement::Merge(_) => Some("MERGE"),
-        Statement::Query(query) => match query.body.as_ref() {
-            SetExpr::Insert(_) => Some("INSERT"),
-            SetExpr::Update(_) => Some("UPDATE"),
-            SetExpr::Delete(_) => Some("DELETE"),
-            SetExpr::Merge(_) => Some("MERGE"),
-            _ => None,
-        },
-        _ => None,
-    }
-}
-
-enum AccessChange {
-    Session,
-    Transaction,
-}
-
-fn access_change(set: &Set) -> Option<AccessChange> {
-    match set {
-        Set::SetTransaction { modes, session, .. }
-            if modes
-                .iter()
-                .any(|mode| matches!(mode, TransactionMode::AccessMode(_))) =>
-        {
-            Some(if *session {
-                AccessChange::Session
-            } else {
-                AccessChange::Transaction
-            })
+fn apply_effect(
+    effect: SettingEffect,
+    location: Location,
+    session_read_only: &mut bool,
+    transaction: &mut Option<Transaction>,
+    out: &mut ExplainWriteRollbackFile,
+) {
+    match effect {
+        SettingEffect::Change { setting: ReadOnlySetting::DefaultTransaction, read_only, is_local: false } => {
+            *session_read_only = read_only;
         }
-        Set::SingleAssignment { variable, .. } => match variable.0.as_slice() {
-            [ObjectNamePart::Identifier(name)]
-                if name
-                    .value
-                    .eq_ignore_ascii_case("default_transaction_read_only") =>
-            {
-                Some(AccessChange::Session)
+        SettingEffect::Change { setting: ReadOnlySetting::DefaultTransaction, is_local: true, .. } => {}
+        SettingEffect::Change { setting: ReadOnlySetting::CurrentTransaction, read_only, .. } => {
+            if let Some(active) = transaction {
+                active.can_commit_writes = !read_only;
+                if read_only {
+                    active.pending.clear();
+                }
             }
-            [ObjectNamePart::Identifier(name)]
-                if name.value.eq_ignore_ascii_case("transaction_read_only") =>
-            {
-                Some(AccessChange::Transaction)
-            }
-            _ => None,
-        },
-        _ => None,
+        }
+        SettingEffect::Unanalyzable(reason) => {
+            out.unanalyzable.push(UnanalyzablePlan { location, reason });
+        }
     }
 }
