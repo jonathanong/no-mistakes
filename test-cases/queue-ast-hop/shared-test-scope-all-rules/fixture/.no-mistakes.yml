@@ -1,0 +1,17 @@
+version: 2
+projects:
+  app:
+    type: server
+    root: .
+    queues:
+      enqueues: ["src/**/*.ts"]
+      workers: ["src/**/*.ts"]
+tests:
+  vitest:
+    projects:
+      unit:
+        include: ["tests/**/*.test.ts"]
+queues:
+  requiredJobOptions: [attempts]
+  unboundedJobRetention: true
+  jobStateAsRecord: true

@@ -75,6 +75,18 @@ paths relative to either the repository root or the selected project root; a
 matching glob does not select files from an unselected project. Repository-scoped
 applications use repository-relative paths.
 
+The cache-key policy (`github-actions-cache-key-policy`), action input policy
+(`github-actions-action-input-policy`), and Vitest default exclusion rule
+(`vitest-default-excludes`) treat invalid option values as configuration errors.
+`check` validates their options before any analysis runs, aborts with exit
+status 2 and empty stdout, and writes the diagnostic to stderr naming the config
+file, rule, option path, rejected value, and accepted values or constraint.
+Semantic option errors across enabled applications are sorted and printed in one
+run (a YAML schema or type error stops deserialization of that application's
+`options` object while other applications are still checked); no partial report
+or `incomplete` entry is emitted. Async Node `check()` and `analyzeProject()`
+check reports reject with the same error message.
+
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds
 project-relative components alongside export-kind selections. Use a top-level
@@ -290,6 +302,10 @@ require a companion rule.
 also supports `low`: it checks literal HTML IDs and routes other ID expressions
 through the selected unanalyzable policy. This remains independent of
 `tests.playwright.selectors.htmlIds`, which controls coverage analysis.
+Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
+rule on portable Swift test sources. Select those files with common
+`include` and `exclude` filters.
+
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported
 configuration objects without resolving constants or configuration wrappers.

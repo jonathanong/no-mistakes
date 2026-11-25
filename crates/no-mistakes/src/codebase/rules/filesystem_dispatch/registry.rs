@@ -39,6 +39,7 @@ macro_rules! filesystem_rules {
             VITEST_DEFAULT_EXCLUDES => vitest_default_excludes::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/vitest-default-excludes-options.yml")),
             VITE_OPTIMIZE_DEPS_NESTED_IMPORTS => vite_optimize_deps_nested_imports::check_with_files => "      configFiles: []\n      packages: []\n",
             STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files => "",
+            SWIFT_NO_UNGUARDED_DARWIN_IMPORT => swift_no_unguarded_darwin_import::check_with_files => "",
             SWIFT_NO_RAW_PRINT => swift_no_raw_print::check_with_files => "",
             SWIFT_VIEWMODEL_MAIN_ACTOR => swift_viewmodel_main_actor::check_with_files => "",
             TSCONFIG_ALIAS_FOLDER_MAPPING => tsconfig_alias_folder_mapping::check_with_files => "",
