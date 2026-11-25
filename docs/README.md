@@ -43,14 +43,19 @@ the job you have; the rest of this index is reference.
 lychee --no-progress --exclude-path '^fixtures/' --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$' README.md 'docs/**/*.md' 'plugins/*/skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md
 ```
 
-Pull requests check links in changed documentation files. Pushes and manual runs
-check the full documentation set, including unchanged pages with links to moved
-or deleted targets. The gateway wrapper retries the selected documents using
+Pull requests normally check links in changed documentation files. When the
+online scan is scoped to changed files, a deletion or rename adds an offline
+check across all documentation to find broken links in unchanged pages.
+Changes to the link-check configuration, including Lychee arguments such as
+exclusions and remaps, trigger a full scan. Pushes and manual runs also check
+the full documentation set. The gateway wrapper retries the selected documents using
 the `LYCHEE_GATEWAY_WAIT` schedule and the initial check’s GitHub API credentials
 in [the workflow](../.github/workflows/ci.yml). After those attempts, a fresh report
 containing only HTTP 5xx responses for links to `github.com` is inconclusive:
 CI emits warnings with the affected URLs rather than treating a server error as
 proof of a broken link. The final report remains in the job summary for diagnosis.
+
+The selector tests require the same `yq` v4 executable used on the CI runner.
 
 HTTP 404 and other client errors, failures from other hosts, timeouts, incomplete
 reports (including an unterminated final entry), and checker execution errors
