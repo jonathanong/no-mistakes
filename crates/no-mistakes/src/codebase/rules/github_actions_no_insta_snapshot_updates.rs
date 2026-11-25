@@ -1,7 +1,8 @@
 use super::analysis_policy::AnalysisDiagnostics;
+use super::file_diagnostics::{self, InputUncertainty};
 use super::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
-use crate::config::v2::{NoMistakesConfig, Unanalyzable};
+use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -36,18 +37,6 @@ pub(crate) fn check_with_files_and_sources(
         .map(|output| output.findings)
 }
 
-fn resolve_unanalyzable(
-    config: &NoMistakesConfig,
-    rule: &crate::config::v2::schema::RuleDef,
-) -> Result<Unanalyzable> {
-    let explicit = rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some();
-    if explicit {
-        Ok(config.effective_rule_analysis(rule)?.unanalyzable)
-    } else {
-        Ok(Unanalyzable::Advise)
-    }
-}
-
 pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -58,28 +47,22 @@ pub fn diagnostics_with_files_and_sources(
     let mut output = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let _opts: Options = rule.try_rule_options()?;
-        let unanalyzable = resolve_unanalyzable(config, rule)?;
-        let roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &roots))
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        let chunks: Vec<AnalysisDiagnostics> = files
+        let files = super::selected_rule_files(root, config, rule, all_files)?;
+        let findings: Vec<RuleFinding> = files
             .par_iter()
-            .filter_map(|path| {
-                scan::check_workflow(root, path, sources, defer_suppression, unanalyzable)
-            })
+            .flat_map(|path| scan::check_workflow(root, path, sources))
             .collect();
-        for chunk in chunks {
-            output.append(chunk);
-        }
+        output.append(file_diagnostics::application(
+            root,
+            sources,
+            config,
+            rule,
+            findings,
+            defer_suppression,
+            InputUncertainty::ReadOrParse,
+        )?);
     }
-    super::sort_findings(&mut output.findings);
-    super::sort_findings(&mut output.advisories);
-    Ok(output)
+    Ok(file_diagnostics::sorted(output))
 }
 
 #[cfg(test)]

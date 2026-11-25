@@ -15,17 +15,20 @@ mappings directly under `.github/workflows/`.
   findings pointing to the declaration that enables snapshot acceptance.
   `unseen` accepts missing snapshots while leaving changed snapshots pending
   review.
-- Inputs the rule cannot decide statically — unparsable workflow YAML, a
-  non-mapping `env:` value (such as `env: ${{ fromJSON(vars.ENV) }}` or
-  `env: []`), a non-scalar `INSTA_UPDATE` value, or a GitHub expression such
-  as `${{ vars.SNAPSHOT_MODE }}` — are routed through the rule's
-  `unanalyzable` policy (`advise` by default).
+- Inputs the rule cannot decide statically — unreadable or non-UTF-8 workflow
+  files, unparsable workflow YAML (reported at the parser's line), non-mapping
+  workflow documents, `jobs`, jobs, steps, or `env:` values (such as
+  `jobs: ${{ fromJSON(vars.JOBS) }}`, `env: ${{ fromJSON(vars.ENV) }}`, or
+  `env: []`), non-sequence `steps:` values, YAML merge keys (`<<:`), non-scalar
+  `INSTA_UPDATE` values, or GitHub expressions such as
+  `${{ vars.SNAPSHOT_MODE }}` — are routed through the rule's shared
+  `unanalyzable` policy (`report` by default, or `advise` / `ignore`).
 
 ## Options and defaults
 
 This rule is off by default. Add it to `rules` to enable it. It honors the
-rule's standard `include` and `exclude` scopes and the `unanalyzable` policy
-(`advise` by default, or `report` / `ignore`).
+rule's standard `include`, `exclude`, and `message` fields and the shared
+`options.unanalyzable` policy (`report` by default, or `advise` / `ignore`).
 
 ```yaml
 rules:

@@ -10,7 +10,8 @@ use std::path::{Path, PathBuf};
 
 pub(in crate::codebase::rules) mod lines;
 mod scan;
-pub(in crate::codebase::rules) use scan::visit_workflow_scopes;
+mod scopes;
+pub(in crate::codebase::rules) use scopes::{shape_detail, visit_workflow_scopes, ScopeEvent};
 
 pub const RULE_ID: &str = "github-actions-env-policy";
 

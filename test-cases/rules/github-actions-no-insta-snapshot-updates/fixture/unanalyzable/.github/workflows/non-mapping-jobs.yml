@@ -1,0 +1,3 @@
+name: DynamicJobs
+on: [pull_request]
+jobs: ${{ fromJSON(vars.JOBS) }}
