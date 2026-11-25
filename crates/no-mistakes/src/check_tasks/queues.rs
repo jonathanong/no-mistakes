@@ -4,9 +4,7 @@ use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::codebase::rules::{suppress_domain_findings_with_sources, SuppressionTarget};
 use no_mistakes::codebase::ts_source::SourceStore;
 use no_mistakes::config::v2::NoMistakesConfig;
-use no_mistakes::queue::{
-    format_aggregate_warning, is_worker_rate_limit_unresolved_diagnostic, CheckFinding,
-};
+use no_mistakes::queue::{format_aggregate_warning, is_check_warning, CheckFinding};
 
 pub(crate) fn run_queue_check(
     root: &std::path::Path,
@@ -34,7 +32,7 @@ pub(crate) fn run_queue_check(
                 let mut warnings = report
                     .diagnostics
                     .into_iter()
-                    .filter(is_worker_rate_limit_unresolved_diagnostic)
+                    .filter(is_check_warning)
                     .collect();
                 let suppressed = suppress_domain_findings_with_sources(
                     root,

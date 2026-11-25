@@ -127,7 +127,7 @@ impl IndexedWorkspaceMap {    fn new(
         }
     }
 
-    fn nearest_package(&self, importing_file: &Path) -> Option<&WorkspacePackage> {
+    pub(crate) fn nearest_package(&self, importing_file: &Path) -> Option<&WorkspacePackage> {
         normalize_path(importing_file)
             .ancestors()
             .find_map(|candidate| self.package_by_dir(candidate))

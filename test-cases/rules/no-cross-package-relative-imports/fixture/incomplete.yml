@@ -1,0 +1,5 @@
+rules:
+  - rule: no-cross-package-relative-imports
+    scope: repository
+    include: ["packages/app/src/gaps/**"]
+    message: "Keep package entry points stable"

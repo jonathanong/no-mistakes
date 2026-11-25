@@ -59,43 +59,41 @@ pub(super) fn judge_site(
     policy: &UnboundedRetentionPolicy,
     allow: Option<&GlobSet>,
     defaults: &DefaultsIndex,
-) -> Option<RetentionNote> {
+) -> (Option<RetentionNote>, bool) {
     if is_allowed(root, path, allow) {
-        return None;
+        return (None, false);
     }
     if site.binding.is_some() && site.queue_name.is_none() {
-        return None;
+        return (None, false);
     }
     let mut explicit_unbounded = Vec::new();
     let mut unset = Vec::new();
+    let mut unknown_defaults = false;
     for &key in &policy.require {
         match site.evidence.retention.get(key) {
             Some(RetentionValue::Unbounded) => explicit_unbounded.push(key),
             Some(RetentionValue::Bounded | RetentionValue::Unknown) => {}
             None => {
-                if site.evidence.open || site.ambiguous_defaults {
+                if site.evidence.open {
                     continue;
                 }
-                match defaults.lookup_evidence(site) {
-                    Some(Err(())) => {}
-                    Some(Ok(def)) => match def.retention.get(key) {
-                        Some(
-                            RetentionValue::Bounded
-                            | RetentionValue::Unknown
-                            | RetentionValue::Unbounded,
-                        ) => {}
-                        None if def.open => {}
-                        None => unset.push(key),
-                    },
-                    None => unset.push(key),
+                let evidence = if site.ambiguous_defaults {
+                    None
+                } else {
+                    defaults.lookup_evidence(site).and_then(Result::ok)
+                };
+                match evidence.map(|def| (def.retention.get(key), def.open)) {
+                    Some((Some(RetentionValue::Bounded | RetentionValue::Unbounded), _)) => {}
+                    Some((None, false)) => unset.push(key),
+                    _ => unknown_defaults = true,
                 }
             }
         }
     }
     if explicit_unbounded.is_empty() && unset.is_empty() {
-        return None;
+        return (None, unknown_defaults);
     }
-    Some(RetentionNote {
+    let note = RetentionNote {
         path: path.to_path_buf(),
         finding: JobOptionFinding {
             kind: "unbounded-job-retention".to_string(),
@@ -105,7 +103,8 @@ pub(super) fn judge_site(
             job: site.job.clone(),
             message: format_producer_message(&explicit_unbounded, &unset),
         },
-    })
+    };
+    (Some(note), unknown_defaults)
 }
 
 pub(super) fn covered_keys(
