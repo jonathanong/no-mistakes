@@ -34,6 +34,9 @@ from reaching tests transitively. Per-root `exceptions` allow specified file
 targets without pruning other reachable dependencies. The CLI uses the shared
 canonical graph and resolver for these checks.
 
+Configure [`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
+to flag write plans that can persist in explicitly selected standalone SQL scripts.
+
 The `postgres-sql-statement-policy` rule can ban extension version pins and
 cascading drops through `options.bannedClauses`. The setting applies to matching
 SQL files and configured executor calls. See the

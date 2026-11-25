@@ -10,6 +10,7 @@ pub mod github_actions_job_timeouts;
 pub mod github_actions_local_action_checkout;
 pub mod github_actions_no_required_pr_path_filters;
 pub mod github_actions_max_inline_script_lines;
+pub mod github_actions_no_insta_snapshot_updates;
 pub mod github_actions_pinned_hash;
 pub mod github_actions_script_expressions;
 pub mod github_actions_step_timeouts;

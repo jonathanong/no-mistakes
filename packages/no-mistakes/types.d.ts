@@ -47,6 +47,7 @@ export type * from "./pnpm-release-age-policy-types";
 export type * from "./shell-compatibility-types";
 export type * from "./vitest-project-policy-types";
 export type * from "./postgres-lock-written-rows-types";
+export type * from "./postgres-explain-write-rollback-types";
 export type * from "./postgres-sql-statement-policy-types";
 export type * from "./postgres-lock-inventory-types";
 export type * from "./postgres-column-check-constraints-types";

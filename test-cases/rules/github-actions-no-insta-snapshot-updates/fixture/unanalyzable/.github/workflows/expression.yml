@@ -1,0 +1,9 @@
+name: Expression
+on: [pull_request]
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo test -p example
+        env:
+          INSTA_UPDATE: ${{ vars.SNAPSHOT_MODE }}

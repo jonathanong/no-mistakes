@@ -1,0 +1,6 @@
+name: DynamicSteps
+on: [pull_request]
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps: ${{ fromJSON(vars.STEPS) }}

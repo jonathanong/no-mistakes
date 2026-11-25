@@ -236,6 +236,7 @@
   "PostgresCompleteCatalog",
   "PostgresCompleteCatalogColumn",
   "PostgresCompleteCatalogTable",
+  "PostgresExplainWriteRollbackOptions",
   "PostgresGroupingNotAggregationCode",
   "PostgresGroupingNotAggregationOptions",
   "PostgresGroupingNotAggregationUnanalyzableSql",

@@ -1,5 +1,8 @@
 use super::{env_policy, no_poll_wait_job, pr_diff_range};
-use crate::codebase::rules::{github_actions_no_required_pr_path_filters, RuleFinding};
+use crate::codebase::rules::{
+    github_actions_no_insta_snapshot_updates, github_actions_no_required_pr_path_filters,
+    RuleFinding,
+};
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -22,6 +25,15 @@ pub(in crate::codebase::rules) fn run(
             sources,
             defer_suppression,
         )),
+        github_actions_no_insta_snapshot_updates::RULE_ID => Some(
+            github_actions_no_insta_snapshot_updates::check_with_files_and_sources(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            ),
+        ),
         no_poll_wait_job::RULE_ID => Some(no_poll_wait_job::check_with_files_and_sources(
             root, config, files, sources,
         )),

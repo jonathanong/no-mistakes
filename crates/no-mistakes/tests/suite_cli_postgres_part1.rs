@@ -83,6 +83,8 @@ mod cli_postgres_snapshot_conflict_ordering;
 mod cli_postgres_snapshot_constraint_validate;
 #[path = "cli_postgres_snapshot_duplicate_function_body.rs"]
 mod cli_postgres_snapshot_duplicate_function_body;
+#[path = "cli_postgres_snapshot_explain_write_rollback.rs"]
+mod cli_postgres_snapshot_explain_write_rollback;
 #[path = "cli_postgres_snapshot_explicit_columns.rs"]
 mod cli_postgres_snapshot_explicit_columns;
 #[path = "cli_postgres_snapshot_finite_text_columns.rs"]
