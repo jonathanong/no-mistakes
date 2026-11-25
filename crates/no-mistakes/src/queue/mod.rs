@@ -20,6 +20,7 @@ mod graph_model;
 mod graph_related;
 mod graph_resolution;
 mod job_options;
+mod job_state;
 mod lang;
 mod number_scope;
 mod object_bindings;
@@ -28,6 +29,7 @@ mod priority_mix;
 mod rate_limit;
 mod resolver;
 mod source;
+mod test_scope;
 mod types;
 mod worker_rate_limit;
 
@@ -39,8 +41,8 @@ pub use graph::{
     analyze_project_with_prepared_facts_indexed_and_catalog_and_session, RelatedDirection,
 };
 pub use graph_model::{
-    format_aggregate_warning, format_diagnostic, CheckFinding, CheckReport, PreparedProjectReport,
-    ProjectReport,
+    format_aggregate_warning, format_diagnostic, CheckFinding, CheckReport, CheckSeverity,
+    PreparedProjectReport, ProjectReport,
 };
 pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};

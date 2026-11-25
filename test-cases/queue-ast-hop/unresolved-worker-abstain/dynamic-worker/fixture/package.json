@@ -1,0 +1,8 @@
+{
+  "name": "acme-unresolved-worker-dynamic",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}
