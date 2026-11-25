@@ -1,0 +1,7 @@
+{
+  "name": "@example/queues-mail",
+  "version": "1.0.0",
+  "exports": {
+    "./*": "./*.mts"
+  }
+}

@@ -125,6 +125,7 @@ fn cycle_walk_visits_a_queue_that_does_not_enqueue() {
             queue_file: queues,
             queue_name: "side".to_string(),
         }),
+        reachable_files: Default::default(),
     }];
     let findings = super::super::cycles::queue_cycles(&root, &producers, &workers);
     assert!(

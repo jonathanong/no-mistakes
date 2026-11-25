@@ -1,0 +1,96 @@
+---
+source: crates/no-mistakes/src/queue/tests/job_retention.rs
+expression: snapshot
+---
+[
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 19,
+    "queueFile": "queues.ts",
+    "queueName": "bounded",
+    "job": "override-false",
+    "message": "unbounded job retention: removeOnFail kept without a bound",
+    "sourceLine": "bounded.add(\"override-false\", {}, { removeOnFail: false });"
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 22,
+    "queueFile": "queues.ts",
+    "queueName": "bounded",
+    "job": "const-false",
+    "message": "unbounded job retention: removeOnComplete kept without a bound",
+    "sourceLine": "bounded.add(\"const-false\", {}, { removeOnComplete: keepForever });"
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 26,
+    "queueFile": "queues.ts",
+    "queueName": "bare",
+    "job": "missing-fail",
+    "message": "unbounded job retention: removeOnFail unset",
+    "sourceLine": "bare.add(\"missing-fail\", {}, { removeOnComplete: { count: 100 } });"
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 29,
+    "queueFile": "queues.ts",
+    "queueName": "bare",
+    "job": "missing-both",
+    "message": "unbounded job retention: removeOnComplete, removeOnFail unset",
+    "sourceLine": "bare.add(\"missing-both\", {});"
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 46,
+    "queueFile": "queues.ts",
+    "queueName": "bare",
+    "job": "bulk-false",
+    "message": "unbounded job retention: removeOnFail kept without a bound",
+    "sourceLine": "{ name: \"bulk-false\", data: {}, opts: { removeOnComplete: true, removeOnFail: false } },"
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 49,
+    "queueFile": "queues.ts",
+    "queueName": "bare",
+    "job": "sweep",
+    "message": "unbounded job retention: removeOnFail kept without a bound",
+    "sourceLine": "bare.upsertJobScheduler("
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 61,
+    "queueFile": "queues.ts",
+    "queueName": "bare",
+    "job": "flow-child",
+    "message": "unbounded job retention: removeOnFail unset",
+    "sourceLine": "children: [{ name: \"flow-child\", queueName: \"bare\", data: {}, opts: { removeOnComplete: true } }],"
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "producers.ts",
+    "line": 69,
+    "queueFile": "queues.ts",
+    "queueName": "bare",
+    "job": "suppressed-job",
+    "message": "unbounded job retention: removeOnFail unset",
+    "sourceLine": "bare.add(\"suppressed-job\", {}, { removeOnComplete: true });"
+  },
+  {
+    "kind": "unbounded-job-retention",
+    "file": "queues.ts",
+    "line": 6,
+    "queueFile": "queues.ts",
+    "queueName": "unboundedDefault",
+    "job": null,
+    "message": "defaultJobOptions keeps removeOnFail without a bound",
+    "sourceLine": "export const unboundedDefault = new Queue(\"unboundedDefault\", {"
+  }
+]

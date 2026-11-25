@@ -53,6 +53,7 @@ impl QueueVisitor<'_> {
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
                     self.namespace_imports
                         .insert(spec.local.name.as_str().to_string(), source.clone());
+                    self.facts.namespace_import_sources.push(source.clone());
                 }
             }
         }
@@ -74,22 +75,23 @@ impl QueueVisitor<'_> {
         if !self.is_worker_constructor(&new_expr.callee) {
             return;
         }
-        let queue_name = new_expr
+        let (queue_name, queue_name_import) = new_expr
             .arguments
             .first()
-            .and_then(|arg| self.literal_arg(arg));
+            .map(|arg| self.resolve_queue_name_arg(arg))
+            .unwrap_or((None, None));
         let processor_specifier = new_expr
             .arguments
             .get(1)
             .and_then(Argument::as_expression)
+            .map(Expression::get_inner_expression)
             .and_then(|expr| {
-                let expr = expr.get_inner_expression();
                 if let Expression::Identifier(id) = expr {
                     if let Some(import) = self
                         .facts
                         .imports
                         .iter()
-                        .find(|import| import.local == id.name.as_str())
+                        .find(|i| i.local == id.name.as_str())
                     {
                         return Some(import.source.clone());
                     }
@@ -100,7 +102,7 @@ impl QueueVisitor<'_> {
             file: self.path.to_path_buf(),
             line: line_number(self.source, new_expr.span.start),
             queue_name,
-            queue_name_import: None,
+            queue_name_import,
             wildcard: true,
             jobs: Vec::new(),
             processor_specifier,
@@ -154,14 +156,7 @@ impl QueueVisitor<'_> {
                     .any(|name| name == id.name.as_str())
             }),
             Expression::StaticMemberExpression(member) => {
-                let Expression::Identifier(object) = &member.object else {
-                    return false;
-                };
-                member.property.name == "name"
-                    && self
-                        .job_frames
-                        .iter()
-                        .any(|frame| frame.object.as_deref() == Some(object.name.as_str()))
+                member.property.name == "name" && self.tracks_job_object(&member.object)
             }
             _ => false,
         }
@@ -183,14 +178,8 @@ impl QueueVisitor<'_> {
                 .iter()
                 .any(|frame| frame.id_idents.iter().any(|name| name == id.name.as_str())),
             Expression::StaticMemberExpression(member) => {
-                let Expression::Identifier(object) = &member.object else {
-                    return false;
-                };
                 matches!(member.property.name.as_str(), "id" | "deduplicationId")
-                    && self
-                        .job_frames
-                        .iter()
-                        .any(|frame| frame.object.as_deref() == Some(object.name.as_str()))
+                    && self.tracks_job_object(&member.object)
             }
             _ => false,
         }

@@ -1,0 +1,7 @@
+version: 2
+queues:
+  factories:
+    queue:
+      - { callee: createQueue, name: 0 }
+    worker:
+      - { callee: createWorker, name: 0, processor: 1 }

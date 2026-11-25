@@ -5,26 +5,12 @@ pub(super) type Hook = Arc<dyn Fn(Event, &ParameterKey) + Send + Sync>;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Event {
-    Computing,
     Waiting,
     Resuming,
-    Cycle,
 }
 
-#[path = "parameter_cache_fixture_schedule_tests.rs"]
+#[path = "parameter_cache_fixture_tests.rs"]
 mod fixture;
-
-pub(super) fn configure(cache: &ParameterCache, key: &ParameterKey) {
-    if cache.scheduling.get().is_none() {
-        if let Some(hook) = fixture::configured(key) {
-            let _ = cache.scheduling.set(hook);
-        }
-    }
-}
-
-pub(in super::super) fn max_task_len(root: &std::path::Path) -> usize {
-    fixture::max_task_len(root)
-}
 
 #[derive(Debug, PartialEq, Eq)]
 enum Scheduled {
@@ -61,9 +47,6 @@ fn resumed_waiter_does_not_create_a_false_acquire_cycle() {
         cache
             .scheduling
             .set(Arc::new(move |event, key| {
-                if !matches!(event, Event::Waiting | Event::Resuming) {
-                    return;
-                }
                 if key == &watched {
                     observed
                         .send(if event == Event::Waiting {

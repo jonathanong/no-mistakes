@@ -9,9 +9,10 @@ import ast
 import json
 import os
 import re
-import shlex
 from fnmatch import fnmatchcase
 from pathlib import Path
+
+from codex_rules_shell import command_arguments
 
 _READERS = {"cat", "sed", "head", "tail", "less", "more", "nl", "awk", "rg", "grep", "bat"}
 _SHELLS = {"bash", "sh", "zsh", "dash"}
@@ -54,8 +55,8 @@ def skills_in_transcript(
     for command, item_cwd, output, success in _commands(transcript):
         if not success:
             continue
-        for argv, directory, heredocs in _script_stages(command, item_cwd or cwd, attempt_root):
-            found.extend(_skills_in_stage(argv, directory, heredocs, output, roots, attempt_root))
+        for argv, directory, heredocs, redirects in _script_stages(command, item_cwd or cwd, attempt_root):
+            found.extend(_skills_in_stage(argv, directory, heredocs, redirects, output, roots, attempt_root))
     return found
 
 
@@ -73,8 +74,8 @@ def external_path_findings(
             findings.append({"commandIndex": index, "reason": "outside-working-directory"})
         reasons = {
             reason
-            for argv, stage_cwd, heredocs in _script_stages(command, directory, roots[0])
-            for token in _audit_tokens(argv, heredocs)
+            for argv, stage_cwd, heredocs, redirects in _script_stages(command, directory, roots[0])
+            for token in _audit_tokens(argv, heredocs, redirects)
             if (reason := _audit_reason(token, stage_cwd, roots))
         }
         findings.extend({"commandIndex": index, "reason": reason} for reason in sorted(reasons))
@@ -105,12 +106,15 @@ def _commands(transcript: str):
         yield command, item_cwd, output if isinstance(output, str) else "", success
 
 
-def _skills_in_stage(argv, cwd, heredocs, output, roots, attempt_root):
+def _skills_in_stage(argv, cwd, heredocs, redirects, output, roots, attempt_root):
+    if not argv:
+        return []
     name = Path(argv[0]).name
     if name == "find":
         tokens = _find_exec_tokens(argv)
     elif _reader_kind(name) is not None and not (name == "rg" and "--files" in argv):
         tokens = _reader_tokens(argv)
+        tokens.extend(path for operator, path in redirects if operator in _INPUT_REDIR)
         tokens.extend(_heredoc_reads(argv, heredocs))
     else:
         return []
@@ -141,20 +145,17 @@ def _script_stages(script: str, cwd: Path | None, attempt_root: Path, depth: int
         stage_cwd = current
         for text, _sep, heredocs in stages:
             try:
-                lexer = shlex.shlex(text, posix=True, punctuation_chars="<>&")
-                lexer.whitespace_split = True
-                lexer.commenters = ""
-                argv = list(lexer)
+                argv, redirects = command_arguments(text)
             except ValueError:
                 continue
-            if not argv:
+            if not argv and not redirects:
                 continue
             inner = _subshell(text)
             if inner is not None:
                 yield from _script_stages(inner, stage_cwd, attempt_root, depth + 1)
                 continue
-            name = Path(argv[0]).name
-            yield argv, stage_cwd, heredocs
+            name = Path(argv[0]).name if argv else ""
+            yield argv, stage_cwd, heredocs, redirects
             if name in _SHELLS and len(argv) >= 3 and argv[1] in _SHELL_FLAGS:
                 yield from _script_stages(argv[2], stage_cwd, attempt_root, depth + 1)
             elif name == "cd" and len(stages) == 1:
@@ -239,6 +240,10 @@ def _split_ops(script: str) -> list:
             push("seq")
             index += 2
             continue
+        if script.startswith(">|", index):
+            buf.extend(">|")
+            index += 2
+            continue
         if char == "|":
             push("|")
             index += 1
@@ -275,7 +280,10 @@ def _is_python(name: str) -> bool:
 
 
 def _reader_tokens(argv: list) -> list:
-    kind = _reader_kind(Path(argv[0]).name)
+    name = Path(argv[0]).name
+    kind = _reader_kind(name)
+    if name in _TEXT_PROGRAM_OPTIONS:
+        return _text_program_files(argv, name)
     if kind == "script":
         return _script_tokens(argv)
     if kind == "search":
@@ -283,31 +291,82 @@ def _reader_tokens(argv: list) -> list:
     return _file_tokens(argv)
 
 
-_OUTPUT_REDIR = {">", ">>", ">&", ">|", "&>", "&>>"}
+# Each long option has a shortest unambiguous spelling within its GNU tool.
+_TEXT_PROGRAM_OPTIONS = {
+    "sed": {
+        "e": ("--expression", "--e"), "f": ("--file", "--fi"),
+        "i": ("--in-place", "--i"),
+    },
+    "awk": {
+        "e": ("--source", "--so"), "E": ("--exec", "--e"),
+        "f": ("--file", "--fil"), "F": ("--field-separator", "--fie"),
+        "i": ("--include", "--i"), "l": ("--load", "--lo"),
+        "v": ("--assign", "--a"),
+    },
+}
 
 
-def _take_redirect(argv: list, index: int, tokens: list) -> int | None:
-    arg = argv[index]
-    if arg == "<" and index + 1 < len(argv):
-        tokens.append(argv[index + 1])
-        return index + 2
-    if arg in _OUTPUT_REDIR and index + 1 < len(argv):
-        return index + 2
-    if arg in ("<<", "<<<", "<&") and index + 1 < len(argv):
-        return index + 2
-    return None
-
-
-def _audit_tokens(argv: list, heredocs: list) -> list:
-    name = Path(argv[0]).name
-    tokens = []
+def _text_program_files(argv: list, name: str) -> list:
+    options = _TEXT_PROGRAM_OPTIONS[name]
+    explicit_program = False
+    paths = []
+    positionals = []
     index = 1
-    while index < len(argv) - 1:
+    while index < len(argv):
         arg = argv[index]
-        if arg in _OUTPUT_REDIR and arg != ">&":
-            tokens.append(argv[index + 1])
-        taken = _take_redirect(argv, index, tokens)
-        index = taken if taken is not None else index + 1
+        index += 1
+        if arg == "--":
+            positionals.extend(argv[index:])
+            break
+        if arg == "-" or not arg.startswith("-"):
+            positionals.append(arg)
+            if name == "awk":
+                positionals.extend(argv[index:])
+                break
+            continue
+        if arg.startswith("--"):
+            option, _, attached = arg.partition("=")
+            flag = next(
+                (short for short, (long, prefix) in options.items()
+                 if option.startswith(prefix) and long.startswith(option)),
+                "",
+            )
+            separate = "=" not in arg
+        else:
+            option_index = next((i for i, char in enumerate(arg[1:], 1) if char in options), 0)
+            flag = arg[option_index] if option_index else ""
+            attached = arg[option_index + 1:]
+            separate = not attached
+        if not flag or (name == "sed" and flag == "i"):
+            continue
+        explicit_program |= flag in ("e", "E", "f")
+        if separate:
+            if index >= len(argv):
+                break
+            attached = argv[index]
+            index += 1
+        if flag in ("E", "f", "i", "l"):
+            paths.append(attached)
+        if flag == "E":
+            positionals.extend(argv[index:])
+            break
+    return paths + (positionals if explicit_program else positionals[1:])
+
+
+_INPUT_REDIR = {"<", "<>"}
+_OUTPUT_REDIR = {">", ">>", ">&", ">|", "&>", "&>>"}
+_DESCRIPTOR = re.compile(r"[0-9]+-?|-")
+
+
+def _audit_tokens(argv: list, heredocs: list, redirects: list) -> list:
+    name = Path(argv[0]).name if argv else ""
+    tokens = [
+        path for operator, path in redirects
+        if operator in _INPUT_REDIR or (
+            operator in _OUTPUT_REDIR
+            and (operator != ">&" or not _DESCRIPTOR.fullmatch(path))
+        )
+    ]
     if name == "find":
         paths, _filter, _reader = _find_operands(argv)
         tokens.extend(paths)
@@ -358,19 +417,7 @@ def _audit_reason(token: str, cwd: Path | None, roots: tuple[Path, ...]) -> str 
 
 
 def _file_tokens(argv: list) -> list:
-    tokens = []
-    index = 1
-    while index < len(argv):
-        taken = _take_redirect(argv, index, tokens)
-        if taken is not None:
-            index = taken
-            continue
-        if argv[index].startswith("-"):
-            index += 1
-            continue
-        tokens.append(argv[index])
-        index += 1
-    return tokens
+    return [arg for arg in argv[1:] if not arg.startswith("-")]
 
 
 def _search_tokens(argv: list, *, has_pattern: bool = True) -> list:
@@ -381,10 +428,6 @@ def _search_tokens(argv: list, *, has_pattern: bool = True) -> list:
     index = 1
     while index < len(argv):
         arg = argv[index]
-        taken = _take_redirect(argv, index, tokens)
-        if taken is not None:
-            index = taken
-            continue
         flag, sep, attached = arg.partition("=")
         if sep and flag in _FLAG_ARG[name]:
             if name == "grep" and flag in ("-f", "--file"):
@@ -419,10 +462,6 @@ def _script_tokens(argv: list) -> list:
     index = 1
     while index < len(argv):
         arg = argv[index]
-        taken = _take_redirect(argv, index, tokens)
-        if taken is not None:
-            index = taken
-            continue
         if arg in _SCRIPT_FLAGS and index + 1 < len(argv):
             tokens.extend(_script_reads(argv[index + 1]))
             index += 2
@@ -451,7 +490,7 @@ def _heredoc_reads(argv: list, heredocs: list, *, include_writes: bool = False) 
     if not heredocs or not _is_python(Path(argv[0]).name):
         return []
     for token in argv[1:]:
-        if token == "-" or token == "<<":
+        if token == "-":
             break
         if token not in {"-B", "-E", "-I", "-O", "-OO", "-P", "-q", "-s", "-S", "-u"}:
             return []
