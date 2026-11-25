@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn sourced_dispatch_reports_structured_config_pins_and_empty_files() {
+fn sourced_dispatch_reports_config_workflow_and_empty_file_findings() {
     for (rule, scenario, configuration, name, lines) in [
         (
             STRUCTURED_CONFIG_POLICY,
@@ -16,6 +16,13 @@ fn sourced_dispatch_reports_structured_config_pins_and_empty_files() {
             ".no-mistakes.yml",
             ".github/workflows/ci.yml",
             vec![7, 9, 11, 13],
+        ),
+        (
+            GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS,
+            "",
+            "../configs/default.yml",
+            ".github/workflows/required.yml",
+            vec![4],
         ),
         (
             NO_EMPTY_OR_COMMENTS_ONLY_FILES,
