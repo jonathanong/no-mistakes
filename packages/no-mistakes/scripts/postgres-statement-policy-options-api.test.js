@@ -73,18 +73,21 @@ test(
         dirname(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH),
         process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
       );
-    for (const [name, exitCode, findingCount] of [
-      ["omitted", 0, 0],
-      ["clauses", 1, 12],
-      ["unknown", 1, 0],
-    ]) {
-      const config = join(suite, `configs/issue-3856-${name}.yml`);
+    function checkCli(config) {
       const child = spawnSync(
         cli,
         ["--lock-timeout", "0", "check", "--root", root, "--config", config, "--format", "json"],
-        { cwd: root, encoding: "utf8" },
+        { encoding: "utf8" },
       );
       assert.equal(child.error, undefined);
+      return child;
+    }
+    for (const [name, exitCode, findingCount] of [
+      ["omitted", 0, 0],
+      ["clauses", 1, 12],
+    ]) {
+      const config = join(suite, `configs/issue-3856-${name}.yml`);
+      const child = checkCli(config);
       assert.equal(child.status, exitCode, child.stderr);
       const expected = JSON.parse(child.stdout);
       assert.equal(expected.rules.length, findingCount, name);
@@ -97,6 +100,23 @@ test(
         assert.ok(prepared instanceof Promise);
         assert.deepEqual((await prepared).reports[0].result, expected, name);
       }
+    }
+
+    const config = join(suite, "configs/issue-3856-unknown.yml");
+    const child = checkCli(config);
+    assert.equal(child.status, 2, child.stderr);
+    assert.equal(child.stdout, "");
+    const message = child.stderr.trim().replace(/^error: /, "");
+    assert.match(
+      message,
+      /issue-3856-unknown\.yml:4: postgres-sql-statement-policy: unknown bannedClauses entry/,
+    );
+    const options = { root, config };
+    for (const api of [cjs, esm]) {
+      await assert.rejects(api.check(options), { message });
+      await assert.rejects(api.analyzeProject({ ...options, reports: [{ type: "check" }] }), {
+        message,
+      });
     }
   },
 );
