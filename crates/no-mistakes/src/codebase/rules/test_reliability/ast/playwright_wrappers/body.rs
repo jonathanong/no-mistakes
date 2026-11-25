@@ -66,31 +66,42 @@ impl<'ast> Bindings<'_, 'ast> {
                 }
             }
         }
-        let mut import = None;
+        let mut candidates = Vec::new();
+        let mut reason = None;
         let mut wrappers = Vec::new();
         let mut derived_at = None;
         for expr in returns {
             let branch = match self.playwright_value_origin_depth(expr, depth + 1) {
                 ValueTrace::Resolved(init) => init,
-                ValueTrace::Unresolved(reason) => return ValueTrace::Unresolved(reason),
-                ValueTrace::None => return ValueTrace::None,
+                ValueTrace::Unresolved(branch_reason, imports) => {
+                    reason.get_or_insert(branch_reason);
+                    candidates.extend(imports);
+                    continue;
+                }
+                ValueTrace::None => {
+                    reason.get_or_insert("local factory return could not be traced statically");
+                    continue;
+                }
             };
-            if import.as_ref().is_some_and(|prev| prev != &branch.import) {
-                return ValueTrace::Unresolved(
-                    "local factory returns multiple distinct fixture origins",
-                );
+            if !candidates.contains(&branch.import) {
+                candidates.push(branch.import);
             }
-            import = Some(branch.import);
             extend_unique(&mut wrappers, branch.wrappers);
             derived_at = derived_at.or(branch.derived_at);
         }
-        import.map_or(ValueTrace::None, |import| {
-            ValueTrace::Resolved(FixtureInitializer {
-                import,
-                wrappers,
-                derived_at,
-            })
-        })
+        match candidates.pop() {
+            Some(import) if reason.is_none() && candidates.is_empty() => {
+                ValueTrace::Resolved(FixtureInitializer { import, wrappers, derived_at })
+            }
+            Some(import) => {
+                candidates.push(import);
+                ValueTrace::unresolved(
+                    reason.unwrap_or("local factory returns multiple distinct fixture origins"),
+                    candidates,
+                )
+            }
+            None => ValueTrace::None,
+        }
     }
 
     pub(in crate::codebase::rules::test_reliability::ast) fn call_value_origin(
@@ -110,7 +121,7 @@ impl<'ast> Bindings<'_, 'ast> {
                             inner.derived_at = derived_at.or(inner.derived_at);
                             return ValueTrace::Resolved(inner);
                         }
-                        ValueTrace::Unresolved(reason) => return ValueTrace::Unresolved(reason),
+                        trace @ ValueTrace::Unresolved(..) => return trace,
                         ValueTrace::None => {}
                     }
                 }
@@ -134,7 +145,7 @@ impl<'ast> Bindings<'_, 'ast> {
                     inner.derived_at = derived_at.or(inner.derived_at);
                     return ValueTrace::Resolved(inner);
                 }
-                ValueTrace::Unresolved(reason) => return ValueTrace::Unresolved(reason),
+                trace @ ValueTrace::Unresolved(..) => return trace,
                 ValueTrace::None => {}
             }
         }

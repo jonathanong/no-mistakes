@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { childNodes } = require("./test-no-shared-state-helpers");
 const { invokedCall, memberName, methodFromCallee } = require("./playwright-static-call");
+const { isSentinelScrollCall } = require("./playwright-sentinel-scroll");
 const { isRawScrollCall } = require("./playwright-scroll-call");
 
 const PLAYWRIGHT_PATH_PATTERN =
@@ -146,24 +147,6 @@ function mentionsCursorParam(node, cursorParams) {
   return accessorArgs.some((value) => cursorParams.includes(value));
 }
 
-function isSentinelScrollCall(node, locatorNames, testIds) {
-  const callee = node.callee;
-  if (memberName(callee) !== "scrollIntoViewIfNeeded") return false;
-
-  let receiver = callee.object;
-  while (receiver.type === "ChainExpression") receiver = receiver.expression;
-  if (receiver.type === "Identifier") return locatorNames.has(receiver.name);
-  if (receiver.type !== "CallExpression" || memberName(receiver.callee) !== "getByTestId") {
-    return false;
-  }
-
-  const id = receiver.arguments[0];
-  if (id?.type === "TemplateLiteral" && id.expressions.length === 0) {
-    return testIds.has(id.quasis[0].value.cooked);
-  }
-  return id?.type === "Literal" && testIds.has(id.value);
-}
-
 module.exports = rule(
   {
     type: "problem",
@@ -215,7 +198,10 @@ module.exports = rule(
           hasCursorWait = true;
         }
         if (isRawScrollCall(node, context)) scrollCandidates.push(node);
-        if (checkSentinels && isSentinelScrollCall(node, sentinelLocatorNames, sentinelTestIds)) {
+        if (
+          checkSentinels &&
+          isSentinelScrollCall(node, context, sentinelLocatorNames, sentinelTestIds)
+        ) {
           sentinelCandidates.push(node);
         }
       },
