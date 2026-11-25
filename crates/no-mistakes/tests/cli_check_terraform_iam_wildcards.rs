@@ -42,6 +42,8 @@ fn terraform_iam_wildcard_reports_match_snapshot() {
             (Some("policies/receipt.tf"), Some(4), None),
             (Some("policies/receipt.tf"), Some(10), None),
             (Some("policies/receipt.tf"), Some(19), None),
+            (Some("policies/receipt.tf"), Some(24), None),
+            (Some("policies/receipt.tf"), Some(29), None),
         ]
     );
     assert_eq!(configured["report"]["advisories"], serde_json::json!([]));
@@ -60,6 +62,8 @@ fn terraform_iam_wildcard_reports_match_snapshot() {
             (Some("policies/receipt.tf"), Some(4), None),
             (Some("policies/receipt.tf"), Some(10), None),
             (Some("policies/receipt.tf"), Some(19), None),
+            (Some("policies/receipt.tf"), Some(24), None),
+            (Some("policies/receipt.tf"), Some(29), None),
         ]
     );
     assert_eq!(advise["report"]["advisories"].as_array().unwrap().len(), 8);

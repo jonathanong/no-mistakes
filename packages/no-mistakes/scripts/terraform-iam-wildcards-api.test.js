@@ -31,6 +31,8 @@ test(
         [rule, "policies/receipt.tf", 4, null],
         [rule, "policies/receipt.tf", 10, null],
         [rule, "policies/receipt.tf", 19, null],
+        [rule, "policies/receipt.tf", 24, null],
+        [rule, "policies/receipt.tf", 29, null],
       ],
     );
     assert.equal(report.suppressed.length, 3);

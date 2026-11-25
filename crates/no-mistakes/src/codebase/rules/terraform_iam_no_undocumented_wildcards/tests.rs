@@ -15,7 +15,7 @@ fn standalone_rule_checks_the_saved_policies_and_respects_suppression() {
     )
     .unwrap();
     let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
-    assert_eq!(lines, [4, 10, 19]);
+    assert_eq!(lines, [4, 10, 19, 24, 29]);
 }
 
 #[test]
@@ -28,8 +28,8 @@ fn standalone_rule_routes_unanalyzable_inputs_through_policy() {
     ];
     let sources = super::super::source_store_for_files(&files);
 
-    let reported = diagnostics_prepared(&root, &configured(None), &files, &sources, None, false)
-        .unwrap();
+    let reported =
+        diagnostics_prepared(&root, &configured(None), &files, &sources, None, false).unwrap();
     assert!(reported.advisories.is_empty());
     let reported_locations: Vec<_> = reported
         .findings
@@ -50,6 +50,8 @@ fn standalone_rule_routes_unanalyzable_inputs_through_policy() {
             ("policies/receipt.tf", 4, None),
             ("policies/receipt.tf", 10, None),
             ("policies/receipt.tf", 19, None),
+            ("policies/receipt.tf", 24, None),
+            ("policies/receipt.tf", 29, None),
         ]
     );
 
@@ -62,7 +64,7 @@ fn standalone_rule_routes_unanalyzable_inputs_through_policy() {
         false,
     )
     .unwrap();
-    assert_eq!(advised.findings.len(), 3);
+    assert_eq!(advised.findings.len(), 5);
     assert_eq!(advised.advisories.len(), 8);
 
     let ignored = diagnostics_prepared(
@@ -74,7 +76,7 @@ fn standalone_rule_routes_unanalyzable_inputs_through_policy() {
         false,
     )
     .unwrap();
-    assert_eq!(ignored.findings.len(), 3);
+    assert_eq!(ignored.findings.len(), 5);
     assert!(ignored.advisories.is_empty());
 }
 

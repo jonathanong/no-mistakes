@@ -18,4 +18,14 @@ data "aws_iam_policy_document" "receipt_reader" {
     actions   = ["s3:GetObject"]
     resources = ["arn:aws:s3:::${var.bucket}/*"]
   }
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["arn:aws:s3:::example.invalid/$${unclosed/*"]
+  }
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["arn:aws:s3:::example.invalid/&{unclosed/*"]
+  }
 }

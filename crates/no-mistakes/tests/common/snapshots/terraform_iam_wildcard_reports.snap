@@ -92,6 +92,20 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "policies/receipt.tf",
+          "line": 24,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = [\"arn:aws:s3:::example.invalid/$${unclosed/*\"]"
+        },
+        {
+          "file": "policies/receipt.tf",
+          "line": 29,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = [\"arn:aws:s3:::example.invalid/&{unclosed/*\"]"
+        },
+        {
+          "file": "policies/receipt.tf",
           "line": 4,
           "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
           "rule": "terraform-iam-no-undocumented-wildcards",
@@ -231,6 +245,20 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "policies/receipt.tf",
+          "line": 24,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = [\"arn:aws:s3:::example.invalid/$${unclosed/*\"]"
+        },
+        {
+          "file": "policies/receipt.tf",
+          "line": 29,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = [\"arn:aws:s3:::example.invalid/&{unclosed/*\"]"
+        },
+        {
+          "file": "policies/receipt.tf",
           "line": 4,
           "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
           "rule": "terraform-iam-no-undocumented-wildcards",
@@ -316,6 +344,20 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
           "rule": "terraform-iam-no-undocumented-wildcards",
           "sourceLine": "resources = [\"arn:aws:s3:::${var.bucket}/*\"]"
+        },
+        {
+          "file": "policies/receipt.tf",
+          "line": 24,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = [\"arn:aws:s3:::example.invalid/$${unclosed/*\"]"
+        },
+        {
+          "file": "policies/receipt.tf",
+          "line": 29,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = [\"arn:aws:s3:::example.invalid/&{unclosed/*\"]"
         },
         {
           "file": "policies/receipt.tf",
