@@ -84,10 +84,7 @@ pub(super) fn is_local_policy_doc_ref(expr: &Expression, local_docs: &FxHashSet<
     let Expression::Traversal(traversal) = unparenthesize(expr) else {
         return false;
     };
-    let Expression::Variable(root) = &traversal.expr else {
-        return false;
-    };
-    if root.as_str() != "data" {
+    if !matches!(&traversal.expr, Expression::Variable(root) if root.as_str() == "data") {
         return false;
     }
     let [a, b, c] = traversal.operators.as_slice() else {

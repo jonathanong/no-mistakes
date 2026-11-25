@@ -6,7 +6,9 @@ data "aws_iam_policy_document" "edge_cases" {
 
   statement {
     actions = ["s3:GetObject"]
-    resources = [<<-EOT
+    resources = [
+      "arn:aws:s3:::example.invalid/&{unclosed",
+      <<-EOT
       arn:aws:s3:::example.invalid/receipts/clean.json
     EOT
     ]
