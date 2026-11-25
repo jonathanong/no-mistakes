@@ -1,3 +1,4 @@
+use super::merge_availability::MergeAvailability;
 use super::concurrency_compile::CompiledIntent;
 use super::concurrency_scope::actual_scope;
 use super::{finding, workflow_finding, FindingOwner, LocatedFinding};
@@ -35,6 +36,7 @@ pub(super) fn lint_reusable_workflows(topology: &WorkflowTopology) -> Vec<Locate
 pub(super) fn lint(
     topology: &WorkflowTopology,
     policy: &BTreeMap<String, CompiledIntent>,
+    availability: &MergeAvailability<'_>,
 ) -> Vec<LocatedFinding> {
     if policy.is_empty() {
         return Vec::new();
@@ -47,6 +49,9 @@ pub(super) fn lint(
         }
     }
     for id in policy.keys() {
+        if !availability.concurrency_known(id, owners.contains_key(id.as_str())) {
+            continue;
+        }
         if owners
             .get(id.as_str())
             .is_none_or(|(concurrency, _)| concurrency.is_none())
@@ -65,7 +70,9 @@ pub(super) fn lint(
         let Some((Some(concurrency), owner)) = owners.get(id.as_str()) else {
             continue;
         };
-        findings.extend(compare(id, *owner, concurrency, intent));
+        if availability.concurrency_known(id, true) {
+            findings.extend(compare(id, *owner, concurrency, intent));
+        }
     }
     findings
 }

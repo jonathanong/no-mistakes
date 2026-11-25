@@ -174,19 +174,30 @@ fn nested_merges_supply_job_and_step_metadata_without_consuming_quoted_keys() {
 }
 
 #[test]
-fn unlocated_merge_reports_malformed_while_quoted_literal_keeps_graph() {
+fn unlocated_merge_reports_uncertainty_and_preserves_explicit_graph_facts() {
     let quoted_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
         .join("merge-location-unavailable-quoted");
     let quoted = load_workflow_topology(&quoted_root, &CiConfig::default(), &[]);
-    assert!(quoted.diagnostics.is_empty(), "{:?}", quoted.diagnostics);
+    assert_eq!(quoted.diagnostics.len(), 1);
+    assert_eq!(
+        quoted.diagnostics[0].code,
+        super::super::model::DiagnosticCode::UnlocatedYamlMerge
+    );
     assert_eq!(quoted.jobs.len(), 1);
     let quoted_job = serde_json::to_value(&quoted.jobs[0]).unwrap();
-    assert_eq!(quoted_job["env"]["<<"], "keep");
+    assert!(quoted_job["env"].get("<<").is_none());
+    assert_eq!(quoted_job["runsOn"], "ubuntu-latest");
 
     let plain_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
         .join("merge-location-unavailable");
     let plain = load_workflow_topology(&plain_root, &CiConfig::default(), &[]);
     assert_eq!(plain.diagnostics.len(), 1);
+    assert_eq!(
+        plain.diagnostics[0].code,
+        super::super::model::DiagnosticCode::UnlocatedYamlMerge
+    );
+    assert_eq!(plain.jobs[0].key, "verify");
+    assert_eq!(plain.workflows[0].triggers[0].event, "pull_request_target");
     assert!(
         plain.diagnostics[0]
             .message
