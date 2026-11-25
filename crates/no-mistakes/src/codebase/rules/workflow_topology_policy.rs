@@ -1,16 +1,18 @@
+use super::analysis_policy::AnalysisDiagnostics;
 use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::workflow_topology::model::DiagnosticCode;
-use crate::config::v2::NoMistakesConfig;
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
-use serde::Deserialize;
-use std::collections::BTreeMap;
 use std::path::Path;
 
+mod call_bindings_map;
+mod call_bindings_yaml;
 mod concurrency_compile;
 mod concurrency_scope;
 mod evaluate;
 mod evaluate_activity_types;
+mod evaluate_call_bindings;
 mod evaluate_collisions;
 mod evaluate_concurrency;
 mod evaluate_forbidden_events;
@@ -19,67 +21,26 @@ mod evaluate_secrets_inherit;
 mod evaluate_steps;
 mod locations;
 mod malformed;
-use malformed::report_malformed;
+mod options;
 #[cfg(test)]
 mod prepare;
 mod secret_inventory;
 
+use malformed::report_malformed;
+pub(crate) use options::{collect_config_errors, Options, StepSelector};
+
 pub const RULE_ID: &str = "workflow-topology-policy";
 
-#[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct Options {
-    pub(crate) job_inventory: BTreeMap<String, Vec<String>>,
-    pub(crate) unlocked_workflow_reasons: BTreeMap<String, String>,
-    pub(crate) required_jobs: Vec<String>,
-    pub(crate) forbidden_jobs: Vec<String>,
-    pub(crate) forbidden_activity_types: Vec<ForbiddenActivityTypes>,
-    pub(crate) forbidden_events: Vec<String>,
-    pub(crate) forbid_secrets_inherit: bool,
-    pub(crate) required_direct_edges: Vec<[String; 2]>,
-    pub(crate) forbidden_direct_edges: Vec<[String; 2]>,
-    pub(crate) required_transitive_edges: Vec<[String; 2]>,
-    pub(crate) forbidden_transitive_edges: Vec<[String; 2]>,
-    pub(crate) required_artifact_edges: Vec<ArtifactEdgeRule>,
-    pub(crate) exact_fan_ins: BTreeMap<String, Vec<String>>,
-    pub(crate) exact_caller_jobs: BTreeMap<String, Vec<String>>,
-    pub(crate) step_orders: Vec<StepOrderRule>,
-    pub(crate) concurrency_policy: BTreeMap<String, concurrency_compile::ConcurrencyIntent>,
-    pub(crate) forbid_concurrency_group_collisions: bool,
-    pub(crate) forbid_reusable_workflow_concurrency: bool,
-    pub(crate) secret_inventory: Option<secret_inventory::SecretInventory>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct ForbiddenActivityTypes {
-    pub(crate) types: Vec<String>,
-    pub(crate) events: Option<Vec<String>>,
-}
-
-#[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct ArtifactEdgeRule {
-    pub(crate) from: String,
-    pub(crate) to: String,
-    pub(crate) name: String,
-    #[serde(rename = "match")]
-    pub(crate) match_kind: Option<String>,
-}
-
-#[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct StepOrderRule {
-    pub(crate) job_id: String,
-    pub(crate) steps: Vec<StepSelector>,
-}
-
-#[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct StepSelector {
-    pub(crate) id: Option<String>,
-    pub(crate) uses: Option<String>,
-    pub(crate) name: Option<String>,
+fn resolve_unanalyzable(
+    config: &NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> Result<Unanalyzable> {
+    let explicit = rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some();
+    if explicit {
+        Ok(config.effective_rule_analysis(rule)?.unanalyzable)
+    } else {
+        Ok(Unanalyzable::Advise)
+    }
 }
 
 pub(crate) fn check_prepared(
@@ -90,13 +51,28 @@ pub(crate) fn check_prepared(
     inputs: &crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs,
     config_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    diagnostics_prepared(root, config, session, sources, inputs, config_path, true)
+        .map(|output| output.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_prepared(
+    root: &Path,
+    config: &NoMistakesConfig,
+    session: Option<&AnalysisSession>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    inputs: &crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs,
+    config_path: Option<&Path>,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    let mut output = AnalysisDiagnostics::default();
     let mut check_reusable = false;
     let mut locations = locations::Locations::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
+        let unanalyzable = resolve_unanalyzable(config, rule)?;
         check_reusable |= opts.forbid_reusable_workflow_concurrency;
-        let first_finding = findings.len();
+        let first_finding = output.findings.len();
         let concurrency = concurrency_compile::compile(&opts.concurrency_policy)?;
         let inventory = opts
             .secret_inventory
@@ -104,7 +80,16 @@ pub(crate) fn check_prepared(
             .map(|options| options.compile())
             .transpose()?;
         let topology_findings = evaluate::lint(inputs.topology(), &opts, &concurrency);
-        findings.extend(locations.locate(root, sources, topology_findings));
+        output
+            .findings
+            .extend(locations.locate(root, sources, topology_findings));
+        let call_bindings = evaluate_call_bindings::lint(inputs, &opts);
+        output
+            .findings
+            .extend(locations.locate(root, sources, call_bindings.findings));
+        for finding in locations.locate(root, sources, call_bindings.unanalyzable) {
+            output.unanalyzable(unanalyzable, finding);
+        }
         if let Some(inventory) = inventory {
             let authored = config
                 .rules
@@ -117,7 +102,7 @@ pub(crate) fn check_prepared(
                             .index(index),
                     )
                 });
-            findings.extend(secret_inventory::lint(
+            output.findings.extend(secret_inventory::lint(
                 root,
                 inputs,
                 sources,
@@ -126,7 +111,7 @@ pub(crate) fn check_prepared(
             ));
         }
         if let Some(message) = &rule.message {
-            for finding in &mut findings[first_finding..] {
+            for finding in &mut output.findings[first_finding..] {
                 finding.message.clone_from(message);
             }
         }
@@ -138,8 +123,18 @@ pub(crate) fn check_prepared(
             }
         }
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    if !defer_suppression {
+        super::suppress_rule_findings_with_sources_except(root, &mut output.findings, sources, &[]);
+        super::suppress_rule_findings_with_sources_except(
+            root,
+            &mut output.advisories,
+            sources,
+            &[],
+        );
+    }
+    super::sort_findings(&mut output.findings);
+    super::sort_findings(&mut output.advisories);
+    Ok(output)
 }
 
 #[derive(Clone, Copy)]
@@ -151,6 +146,7 @@ pub(super) enum FindingOwner<'a> {
 pub(super) struct LocatedFinding {
     finding: RuleFinding,
     path: crate::config::source_locations::ConfigPath,
+    fallback_path: Option<crate::config::source_locations::ConfigPath>,
 }
 
 pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFinding {
@@ -178,6 +174,7 @@ pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFindin
                     .key(job)
             },
         ),
+        fallback_path: None,
     }
 }
 

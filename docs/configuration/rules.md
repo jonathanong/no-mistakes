@@ -555,8 +555,16 @@ the commands that poll another run. `options.ignoreForLoops` (default `false`)
 skips `for` loops as bounded retries. The rule stays off until a configuration
 lists it.
 
-[`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md) has no
-options. It stays off until a configuration lists it.
+For [`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md),
+listing the rule turns on the default pull-request diff-range and `merge_group`
+checks. Set `options.requireConsistentRevisionPairs: true` to enforce
+consistent base/merge and base/head revision pairs across `git diff` ranges
+(tracking `actions/checkout` `with.ref`), and configure `options.revisionPairs`
+with `{ baseEnv, headEnv }`, `{ baseInput, headInput }`, or
+`{ baseFlag, headFlag }` entries to check env vars, `with:` inputs, or CLI
+flags. `options.unanalyzable: report | advise | ignore` defaults to `advise`
+when either option is enabled. The rule stays off until a configuration lists
+it.
 
 For [`github-actions-vitest-project-selection`](../rules/github-actions-vitest-project-selection.md),
 `options.projects` defaults to none. Each entry names a Vitest `project`, the

@@ -1043,8 +1043,11 @@ The opt-in [`github-actions-no-poll-wait-job`](rules/github-actions-no-poll-wait
 runs through async `check()` and `analyzeProject()` check reports with the same
 outcome as CLI `check`. Exported `GithubActionsNoPollWaitJobOptions` describes
 its `pollCommands` and `ignoreForLoops` options. The opt-in
-[`github-actions-pr-diff-range`](rules/github-actions-pr-diff-range.md) has no
-options and uses the same check paths.
+[`github-actions-pr-diff-range`](rules/github-actions-pr-diff-range.md) uses the
+same check paths; exported `GithubActionsPrDiffRangeOptions` and
+`GithubActionsRevisionPair` describe its `requireConsistentRevisionPairs`,
+`revisionPairs`, and `unanalyzable` options (abstained diagnostics appear in
+`CheckReport.advisories` by default).
 
 The opt-in [`github-actions-env-policy`](rules/github-actions-env-policy.md)
 runs through async `check()` and `analyzeProject()` check reports with the same

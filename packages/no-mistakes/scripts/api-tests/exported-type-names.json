@@ -143,6 +143,8 @@
   "GithubActionsEnvPolicyValue",
   "GithubActionsNoPollWaitJobOptions",
   "GithubActionsPinnedHashOptions",
+  "GithubActionsPrDiffRangeOptions",
+  "GithubActionsRevisionPair",
   "GithubActionsRunCommandArg",
   "GithubActionsRunCommandArgScope",
   "GithubActionsRunCommandForbiddenPattern",

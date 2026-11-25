@@ -1,4 +1,9 @@
-use super::runs::check_source;
+use super::options::CompiledOptions;
+use super::runs::check_source_with_options;
+
+fn check_source(rel: &str, source: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+    check_source_with_options(rel, source, &CompiledOptions::default()).0
+}
 
 const BASE: &str = "${{ github.event.pull_request.base.sha }}";
 const HEAD: &str = "${{ github.event.pull_request.head.sha }}";

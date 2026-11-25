@@ -78,3 +78,25 @@ pub(super) fn check_with_files_and_sources(
         crate::config::v2::effective_v2_config_path_from_visible(root, None, all_files)?;
     super::check_prepared(root, config, None, sources, &inputs, config_path.as_deref())
 }
+
+pub(super) fn diagnostics_with_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    defer_suppression: bool,
+) -> anyhow::Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let sources = snapshot.source_store_for(root);
+    let files = snapshot.paths_for(root);
+    let inputs = from_files(root, config, &files, &sources);
+    let config_path =
+        crate::config::v2::effective_v2_config_path_from_visible(root, None, &files)?;
+    super::diagnostics_prepared(
+        root,
+        config,
+        None,
+        &sources,
+        &inputs,
+        config_path.as_deref(),
+        defer_suppression,
+    )
+}

@@ -119,3 +119,44 @@ fn check_json_snapshot_workflow_policy_valid_nested_merges() {
     )];
     assert_saved_fixture("workflow_policy_valid_nested_merges", &cases);
 }
+
+#[test]
+fn check_json_snapshot_workflow_policy_call_bindings() {
+    const RULE: &str = "workflow-topology-policy";
+    let cases: Vec<_> = [
+        ("enabled", "call-bindings.yml"),
+        ("both", "call-bindings-both.yml"),
+        ("report-unanalyzable", "call-bindings-report.yml"),
+        ("ignore-unanalyzable", "call-bindings-ignore.yml"),
+        ("disabled-false", "call-bindings-false.yml"),
+    ]
+    .into_iter()
+    .map(|(label, config)| {
+        (
+            label,
+            rules_path(RULE, "fixture", "call-bindings"),
+            rules_path(RULE, "configs", config),
+        )
+    })
+    .collect();
+    assert_saved_fixture("workflow_policy_call_bindings", &cases);
+
+    let root = rules_path(RULE, "fixture", "call-bindings");
+    let invalid = rules_path(RULE, "configs", "call-bindings-invalid.yml");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .current_dir(&root)
+        .args(["--lock-timeout", "0", "check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(&invalid)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("requireExplicitWorkflowCallBindings"),
+        "{stderr}"
+    );
+}

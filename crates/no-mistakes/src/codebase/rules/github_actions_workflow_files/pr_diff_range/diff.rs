@@ -13,6 +13,8 @@ pub(super) struct Range {
     pub(super) line: usize,
     pub(super) left: End,
     pub(super) right: End,
+    pub(super) left_raw: String,
+    pub(super) right_raw: String,
     pub(super) form: Form,
 }
 
@@ -98,6 +100,8 @@ fn range(command: &[Word], exprs: &[String], env: &BTreeMap<String, String>) -> 
         line: command[0].line,
         left: classify(left, exprs, env),
         right: classify(right, exprs, env),
+        left_raw: left.to_string(),
+        right_raw: right.to_string(),
         form,
     })
 }

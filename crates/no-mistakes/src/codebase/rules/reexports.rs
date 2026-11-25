@@ -5,6 +5,11 @@ pub mod github_actions_env_policy {
         diagnostics_with_files_and_sources, RULE_ID,
     };
 }
+pub mod github_actions_pr_diff_range {
+    pub use super::super::github_actions_workflow_files::pr_diff_range::{
+        diagnostics_with_files_and_sources, RULE_ID,
+    };
+}
 pub use super::filesystem_dispatch::{
     run_filesystem_rules, run_filesystem_rules_with_config,
     run_filesystem_rules_with_config_and_snapshot,

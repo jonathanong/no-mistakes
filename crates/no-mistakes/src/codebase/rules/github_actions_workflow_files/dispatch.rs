@@ -35,7 +35,11 @@ pub(in crate::codebase::rules) fn run(
             root, config, files, sources,
         )),
         pr_diff_range::RULE_ID => Some(pr_diff_range::check_with_files_and_sources(
-            root, config, files, sources,
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
         )),
         _ => None,
     }
