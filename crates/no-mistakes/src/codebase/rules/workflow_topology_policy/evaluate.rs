@@ -102,6 +102,7 @@ pub(super) fn lint(
     topology: &WorkflowTopology,
     opts: &Options,
     concurrency: &BTreeMap<String, CompiledIntent>,
+    unavailable: &BTreeSet<&str>,
 ) -> Vec<LocatedFinding> {
     let index = Index::new(topology);
     let mut findings = Vec::new();
@@ -109,8 +110,6 @@ pub(super) fn lint(
         findings.extend(inventory(topology, opts));
     }
     findings.extend(job_presence(&index, opts));
-    findings.extend(super::evaluate_activity_types::lint(topology, opts));
-    findings.extend(super::evaluate_forbidden_events::lint(topology, opts));
     findings.extend(super::evaluate_secrets_inherit::lint(topology, opts));
     findings.extend(super::evaluate_graph::lint(topology, &index, opts));
     findings.extend(super::evaluate_steps::lint(topology, &index, opts));
@@ -123,6 +122,9 @@ pub(super) fn lint(
     if opts.forbid_concurrency_group_collisions {
         findings.extend(super::evaluate_collisions::lint(topology));
     }
+    findings.retain(|row| !unavailable.contains(row.finding.file.as_str()));
+    findings.extend(super::evaluate_activity_types::lint(topology, opts));
+    findings.extend(super::evaluate_forbidden_events::lint(topology, opts));
     findings
 }
 

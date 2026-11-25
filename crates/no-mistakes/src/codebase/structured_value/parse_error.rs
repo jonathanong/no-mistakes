@@ -5,6 +5,7 @@ pub(crate) struct StructuredValueError {
     pub(crate) line: Option<usize>,
     pub(crate) message: String,
     pub(crate) missing_merge_location: bool,
+    pub(crate) partial: Option<Box<serde_yaml::Value>>,
 }
 
 impl StructuredValueError {
@@ -13,16 +14,21 @@ impl StructuredValueError {
             line: None,
             message,
             missing_merge_location: false,
+            partial: None,
         }
     }
 
     pub(super) fn merge(error: MergeError) -> Self {
-        let missing_merge_location = matches!(error, MergeError::MissingLocation(_));
+        let missing_merge_location = matches!(
+            error,
+            MergeError::MissingLocation(_) | MergeError::LocationChanged(_)
+        );
         let (line, detail) = error.detail();
         Self {
             line: Some(line),
             message: merge_error(&detail),
             missing_merge_location,
+            partial: None,
         }
     }
 }

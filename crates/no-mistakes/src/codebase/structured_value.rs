@@ -34,7 +34,7 @@ pub(crate) fn expand_yaml_mapping_if_merged<'a>(
     Ok(Cow::Owned(expanded))
 }
 
-fn contains_merge(value: &Value) -> bool {
+pub(crate) fn contains_merge(value: &Value) -> bool {
     let mut pending = vec![value];
     while let Some(value) = pending.pop() {
         match value {
@@ -80,9 +80,14 @@ pub(crate) fn parse_structured_value_located(
     let mut value: Value = serde_yaml::from_str(source)
         .map_err(|error| StructuredValueError::parse(format!("failed to parse YAML ({error})")))?;
     if contains_merge(&value) {
-        MergeLocations::parse(source)
-            .expand(0, &mut value)
-            .map_err(StructuredValueError::merge)?;
+        if let Err(error) = MergeLocations::parse(source).expand(0, &mut value) {
+            let keep_partial = matches!(error, MergeError::MissingLocation(_));
+            let mut error = StructuredValueError::merge(error);
+            if keep_partial {
+                error.partial = Some(Box::new(value));
+            }
+            return Err(error);
+        }
     }
     Ok(value)
 }

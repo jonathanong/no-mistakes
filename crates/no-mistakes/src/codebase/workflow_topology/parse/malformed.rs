@@ -5,11 +5,7 @@ pub(crate) fn malformed_workflow(path: &str, message: &str) -> ParsedWorkflow {
     unavailable_workflow(path, model::DiagnosticCode::MalformedWorkflow, message)
 }
 
-pub(super) fn unavailable_workflow(
-    path: &str,
-    code: model::DiagnosticCode,
-    message: &str,
-) -> ParsedWorkflow {
+fn unavailable_workflow(path: &str, code: model::DiagnosticCode, message: &str) -> ParsedWorkflow {
     ParsedWorkflow {
         node: model::WorkflowNode {
             id: path.to_string(),
@@ -32,4 +28,19 @@ pub(super) fn unavailable_workflow(
 
 pub(super) fn workflow_basename(path: &str) -> String {
     path.rsplit('/').next().unwrap_or(path).to_string()
+}
+
+pub(super) fn unlocated_workflow(
+    path: &str,
+    message: &str,
+    value: &serde_yaml::Value,
+) -> ParsedWorkflow {
+    let mut workflow =
+        unavailable_workflow(path, model::DiagnosticCode::UnlocatedYamlMerge, message);
+    workflow.node.triggers = super::workflow_values::parse_triggers(value.get("on"));
+    workflow
+        .node
+        .triggers
+        .retain(|trigger| trigger.event != "<<");
+    workflow
 }

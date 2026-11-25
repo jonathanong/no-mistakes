@@ -33,8 +33,7 @@ pub fn diagnostics_prepared(
             .as_ref()
             .map(|options| options.compile())
             .transpose()?;
-        let mut topology_findings = evaluate::lint(inputs.topology(), &opts, &concurrency);
-        topology_findings.retain(|row| !unavailable.contains(row.finding.file.as_str()));
+        let topology_findings = evaluate::lint(inputs.topology(), &opts, &concurrency, &unavailable);
         findings.extend(locations.locate(root, sources, topology_findings));
         if let Some(inventory) = inventory {
             let authored = config

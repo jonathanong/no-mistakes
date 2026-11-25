@@ -8,6 +8,7 @@ pub(super) enum KeyLocation {
 
 pub(super) enum MergeError {
     MissingLocation(usize),
+    LocationChanged(usize),
     Invalid { line: usize, message: String },
 }
 
@@ -118,7 +119,7 @@ fn reject(found: &Value, wanted: &str) -> String {
 impl MergeError {
     pub(super) fn detail(self) -> (usize, String) {
         match self {
-            Self::MissingLocation(line) => (
+            Self::MissingLocation(line) | Self::LocationChanged(line) => (
                 line,
                 "could not match a YAML `<<` key to its source location".to_string(),
             ),

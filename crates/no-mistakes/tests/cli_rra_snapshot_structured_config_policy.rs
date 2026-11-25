@@ -158,7 +158,16 @@ fn structured_config_policy_json_matches_snapshot() {
 
 #[test]
 fn check_json_snapshot_structured_config_merge_location_unavailable() {
-    let cases = ["unavailable", "advise", "ignore", "equals", "ancestor"].map(|mode| {
+    let cases = [
+        "unavailable",
+        "advise",
+        "ignore",
+        "equals",
+        "ancestor",
+        "definite-advise",
+        "definite-ignore",
+    ]
+    .map(|mode| {
         (
             mode,
             root("merge-location-unavailable"),

@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 mod ancestor_override_subset;
 mod equals_file;
 mod paths;
+mod partial;
 mod scan;
 mod value_assertions;
 mod when;

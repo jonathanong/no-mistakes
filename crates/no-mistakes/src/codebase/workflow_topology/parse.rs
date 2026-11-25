@@ -11,7 +11,7 @@ use serde_yaml::Value;
 mod malformed;
 
 pub(crate) use malformed::malformed_workflow;
-use malformed::{unavailable_workflow, workflow_basename};
+use malformed::workflow_basename;
 
 /// A `needs.<callJobKey>.outputs.<output>` reference found anywhere in a
 /// job (its own scalars, its `if:`, or a step's `if:`), keyed by the
@@ -40,11 +40,7 @@ pub fn parse_workflow_value(value: &Value, path: &str, source: Option<&str>) -> 
     let value = match expand_yaml_mapping_if_merged(value, source) {
         Ok(value) => value,
         Err(error) if error.missing_merge_location => {
-            return unavailable_workflow(
-                path,
-                model::DiagnosticCode::UnlocatedYamlMerge,
-                &error.message,
-            );
+            return malformed::unlocated_workflow(path, &error.message, value);
         }
         Err(error) => return malformed_workflow(path, &error.message),
     };

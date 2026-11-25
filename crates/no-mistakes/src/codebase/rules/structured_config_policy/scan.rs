@@ -1,8 +1,9 @@
 use super::ancestor_override_subset::{check_ancestor_override_subset, ParsedAncestorCache};
 use super::equals_file::check_equals_file;
+use super::partial;
 use super::paths::CanonicalInventory;
 use super::when::policy_applies;
-use super::{assert_value, value_at_key, AssertionKind, Options, RULE_ID};
+use super::{assert_value, AssertionKind, Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
@@ -55,12 +56,14 @@ pub(super) fn scan_with_state(
                         continue;
                     }
                 };
-            let value =
+            let (value, partial) =
                 match crate::codebase::structured_value::parse_structured_value_located(&path, &source) {
-                    Ok(value) => value,
-                    Err(error) if error.missing_merge_location => {
+                    Ok(value) => (value, false),
+                    Err(mut error) if error.missing_merge_location => {
+                        let partial = error.partial.take();
                         findings.push(super::merge_location_finding(root, &path, error));
-                        continue;
+                        let Some(value) = partial else { continue };
+                        (*value, true)
                     }
                     Err(error) => {
                         findings.push(RuleFinding {
@@ -75,11 +78,13 @@ pub(super) fn scan_with_state(
                         continue;
                     }
                 };
-            if !policy_applies(&value, &policy.when) {
+            if !policy_applies(&value, &policy.when)
+                || (partial && !partial::conditions_known(&value, &policy.when))
+            {
                 continue;
             }
             for key in &policy.required_keys {
-                if value_at_key(&value, key).is_none() {
+                if partial::key(&value, key, partial) == Some(None) {
                     findings.push(RuleFinding {
                         causes: Vec::new(),
                         rule: RULE_ID.to_string(),
@@ -92,7 +97,7 @@ pub(super) fn scan_with_state(
                 }
             }
             for key in &policy.banned_keys {
-                if value_at_key(&value, key).is_some() {
+                if partial::key(&value, key, partial).flatten().is_some() {
                     findings.push(RuleFinding {
                         causes: Vec::new(),
                         rule: RULE_ID.to_string(),
@@ -105,6 +110,9 @@ pub(super) fn scan_with_state(
                 }
             }
             for assertion in &policy.value_assertions {
+                if partial && !partial::assertion_known(&value, assertion) {
+                    continue;
+                }
                 match assertion.kind {
                     Some(AssertionKind::EqualsFile) => {
                         findings.extend(check_equals_file(root, &rel, sources, &value, assertion));

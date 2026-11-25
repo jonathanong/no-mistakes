@@ -201,7 +201,8 @@ diagnostics.
 Structured-data parse errors remain definite findings under every policy.
 Source read failures and YAML merge keys whose source locations could not
 be determined follow `options.unanalyzable`. An unavailable document
-cannot establish that an optional key is absent.
+cannot establish that an optional key is absent. The rule still checks
+explicit values and absences that a merge cannot affect.
 
 ## Suppression
 
