@@ -9,6 +9,20 @@ use crate::codebase::check_facts::{
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 
+pub(super) fn needs_prepared_facts(config: &NoMistakesConfig) -> bool {
+    [
+        super::FORBIDDEN_LINT_SUPPRESSIONS,
+        super::VITEST_DEFAULT_EXCLUDES,
+        super::CSP_ALLOWED_ORIGINS,
+        super::PRODUCTION_DEPENDENCY_DECLARATIONS,
+        super::REQUIRED_COMPANION_IMPORTS,
+    ]
+    .iter()
+    .chain(crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS)
+    .any(|rule_id| super::rule_enabled(config, rule_id))
+        || super::test_reliability::configured(config)
+}
+
 pub(super) fn prepare_call_site_facts(
     root: &Path,
     config: &NoMistakesConfig,
