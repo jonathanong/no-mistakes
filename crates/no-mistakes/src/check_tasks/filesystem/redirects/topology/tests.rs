@@ -15,7 +15,8 @@ fn missing_prepared_topology_keeps_its_consumer_in_partial_mode() {
     let sources = snapshot.source_store_for(&root);
     let session = AnalysisSession::disabled();
     session.enable_partial_checks();
-    for analysis in [None, Some(session.as_ref())] {
+    let strict = AnalysisSession::disabled();
+    for analysis in [None, Some(strict.as_ref()), Some(session.as_ref())] {
         let prepared = rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
             session: analysis,
             next_config_resolver: None,
@@ -28,7 +29,7 @@ fn missing_prepared_topology_keeps_its_consumer_in_partial_mode() {
         };
         let mut diagnostics = AnalysisDiagnostics::default();
         let result = run(&root, &config, &prepared, true, &mut diagnostics);
-        if analysis.is_none() {
+        if analysis.is_none_or(|analysis| !analysis.partial_checks_enabled()) {
             assert!(result
                 .expect_err("missing topology must fail")
                 .to_string()

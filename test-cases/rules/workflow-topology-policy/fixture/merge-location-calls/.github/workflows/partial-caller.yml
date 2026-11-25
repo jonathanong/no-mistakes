@@ -7,3 +7,8 @@ jobs:
   call:
     <<: *defaults
     uses: ./.github/workflows/callee.yml
+  post:
+    needs: call
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok

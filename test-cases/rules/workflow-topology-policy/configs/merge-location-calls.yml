@@ -4,6 +4,8 @@ rules:
   - rule: workflow-topology-policy
     scope: repository
     options:
+      requiredDirectEdges:
+        - [".github/workflows/partial-caller.yml#call", ".github/workflows/partial-caller.yml#post"]
       exactCallerJobs:
         .github/workflows/callee.yml:
           - .github/workflows/caller.yml#known
