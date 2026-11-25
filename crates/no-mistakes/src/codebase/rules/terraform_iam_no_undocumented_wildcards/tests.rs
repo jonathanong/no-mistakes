@@ -94,10 +94,11 @@ fn standalone_rule_reports_iam_role_inline_policies_as_unanalyzable() {
         locations,
         [
             ("outside/inline_role.tf", 2, Some("unanalyzable")),
-            ("outside/inline_role.tf", 23, Some("unanalyzable")),
-            ("outside/inline_role.tf", 33, Some("unanalyzable")),
-            ("outside/inline_role.tf", 45, Some("unanalyzable")),
-            ("outside/inline_role.tf", 51, Some("unanalyzable")),
+            ("outside/inline_role.tf", 19, Some("unanalyzable")),
+            ("outside/inline_role.tf", 28, Some("unanalyzable")),
+            ("outside/inline_role.tf", 38, Some("unanalyzable")),
+            ("outside/inline_role.tf", 50, Some("unanalyzable")),
+            ("outside/inline_role.tf", 56, Some("unanalyzable")),
         ]
     );
 }

@@ -14,13 +14,11 @@ const MERGED_POLICY_ATTRS: &[&str] = &[
     "override_json",
 ];
 
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ScanHitKind {
     Wildcard,
     Unanalyzable(UnanalyzableReason),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ScanHit {
     pub(super) offset: usize,
     pub(super) kind: ScanHitKind,

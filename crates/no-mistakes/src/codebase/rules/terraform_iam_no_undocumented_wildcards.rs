@@ -145,7 +145,7 @@ fn scan_file(
             .count();
         previous = hit.offset;
         for app in applications {
-            match hit.kind {
+            match &hit.kind {
                 scan::ScanHitKind::Wildcard => {
                     diagnostics.findings.push(build_finding(file, line, app.message, FIX, false));
                 }

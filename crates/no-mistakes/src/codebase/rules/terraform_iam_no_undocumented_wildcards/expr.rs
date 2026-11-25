@@ -2,7 +2,6 @@ use crate::fx::FxHashSet;
 use hcl::edit::expr::{Expression, TraversalOperator};
 use hcl::edit::template::{Element, Template};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum UnanalyzableReason {
     ComputedEffect,
     ComputedResources,
@@ -14,7 +13,7 @@ pub(super) enum UnanalyzableReason {
 }
 
 impl UnanalyzableReason {
-    pub(super) fn message(self) -> &'static str {
+    pub(super) fn message(&self) -> &'static str {
         match self {
             Self::ComputedEffect => {
                 "Cannot statically verify IAM statement effect because it is not a string literal. Use literal \"Allow\" or \"Deny\", or add a suppression with the reason."

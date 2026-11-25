@@ -13,6 +13,11 @@ data "aws_iam_policy_document" "edge_cases" {
     EOT
     ]
   }
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = [var.single_arn]
+  }
 }
 
 resource "aws_iam_role" "worker" {
