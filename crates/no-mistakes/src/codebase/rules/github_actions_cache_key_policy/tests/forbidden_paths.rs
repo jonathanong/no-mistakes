@@ -7,10 +7,7 @@ fn forbidden_paths_options_validate_emptiness_duplicates_overlap_and_messages() 
         ..options::Options::default()
     };
     let error = options::validate(&empty_entry).unwrap_err().to_string();
-    assert!(
-        error.contains("forbiddenPaths entries must be non-empty paths"),
-        "{error}"
-    );
+    assert!(error.contains("Expected a non-empty path"), "{error}");
 
     let duplicate = options::Options {
         forbidden_paths: vec![
@@ -21,7 +18,7 @@ fn forbidden_paths_options_validate_emptiness_duplicates_overlap_and_messages() 
     };
     let error = options::validate(&duplicate).unwrap_err().to_string();
     assert!(
-        error.contains("forbiddenPaths `~/.local/share/example-store` is listed more than once"),
+        error.contains("Expected a unique forbidden path"),
         "{error}"
     );
 
@@ -36,7 +33,7 @@ fn forbidden_paths_options_validate_emptiness_duplicates_overlap_and_messages() 
     };
     let error = options::validate(&overlap).unwrap_err().to_string();
     assert!(
-        error.contains("cannot appear in both caches and forbiddenPaths"),
+        error.contains("Expected a path absent from options.caches[].path"),
         "{error}"
     );
 
@@ -46,10 +43,7 @@ fn forbidden_paths_options_validate_emptiness_duplicates_overlap_and_messages() 
         ..options::Options::default()
     };
     let error = options::validate(&blank_message).unwrap_err().to_string();
-    assert!(
-        error.contains("forbiddenPathsMessage must not be empty"),
-        "{error}"
-    );
+    assert!(error.contains("Expected a non-empty message"), "{error}");
 
     let forbidden_only = options::Options {
         forbidden_paths: vec!["~/.local/share/example-store".into()],

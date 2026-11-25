@@ -1,0 +1,12 @@
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    include:
+      - "nonexistent-dir/**/*.yml"
+    options:
+      include:
+        - "[unclosed"
+      actions:
+        - uses: example/publish-widget
+          allowedInputs:
+            - name

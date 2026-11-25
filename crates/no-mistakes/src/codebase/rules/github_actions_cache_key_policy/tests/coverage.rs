@@ -20,22 +20,16 @@ fn option_paths_lockfiles_and_fragments_must_be_usable() {
     let path = options::validate(&policy_with("/", "widgets.lock", &["runner.os"]))
         .unwrap_err()
         .to_string();
-    assert!(
-        path.contains("caches.path must be a non-empty path"),
-        "{path}"
-    );
+    assert!(path.contains("options.caches[].path"), "{path}");
 
     let lockfile = options::validate(&policy_with(".cache/widgets", "./", &["runner.os"]))
         .unwrap_err()
         .to_string();
-    assert!(
-        lockfile.contains("caches.lockfile must be a non-empty path"),
-        "{lockfile}"
-    );
+    assert!(lockfile.contains("options.caches[].lockfile"), "{lockfile}");
 
     let parts = options::validate(&policy(&[])).unwrap_err().to_string();
     assert!(
-        parts.contains("keyParts must list at least one expression fragment"),
+        parts.contains("at least one dotted context fragment"),
         "{parts}"
     );
 
@@ -44,7 +38,7 @@ fn option_paths_lockfiles_and_fragments_must_be_usable() {
             .unwrap_err()
             .to_string();
         assert!(
-            error.contains("dotted context fragments"),
+            error.contains("a dotted context fragment such as runner.os"),
             "{fragment}: {error}"
         );
     }
