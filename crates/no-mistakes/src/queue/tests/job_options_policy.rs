@@ -90,7 +90,11 @@ fn unresolved_queue_uses_the_global_list_when_no_queue_overrides_exist() {
     };
     facts.insert(PathBuf::from("/tmp/widgets.ts"), file);
     facts.insert(PathBuf::from("/tmp/other.ts"), FileFacts::default());
-    crate::queue::job_options::judge_into_facts(Path::new("/tmp"), &mut facts);
+    crate::queue::job_options::judge_into_facts(
+        Path::new("/tmp"),
+        &mut facts,
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
     let finding = &facts
         .get(Path::new("/tmp/widgets.ts"))
         .unwrap()
@@ -126,7 +130,11 @@ fn unresolved_receiver_abstains_without_queue_overrides() {
         ..FileFacts::default()
     };
     facts.insert(PathBuf::from("/tmp/enqueue.ts"), file);
-    crate::queue::job_options::judge_into_facts(Path::new("/tmp"), &mut facts);
+    crate::queue::job_options::judge_into_facts(
+        Path::new("/tmp"),
+        &mut facts,
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
     let judged = facts.get(Path::new("/tmp/enqueue.ts")).unwrap();
     assert!(judged.job_option_findings.is_empty());
     assert!(judged.diagnostics.is_empty());

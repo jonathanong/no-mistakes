@@ -342,3 +342,89 @@ fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
         0
     );
 }
+
+#[test]
+fn shell_guard_allowlist_and_unmodelled_controls_fail_safe() {
+    let with_env = |run: &str| {
+        format!(
+            "on: [pull_request, merge_group]\njobs:\n  a:\n    env:\n      EVENT_NAME: ${{{{ github.event_name }}}}\n      PR_BASE_SHA: {BASE}\n      MERGE_GROUP_BASE_SHA: ${{{{ github.event.merge_group.base_sha }}}}\n    steps:\n      - run: |\n{run}"
+        )
+    };
+    for mutating in [
+        "          $(echo unset) EVENT_NAME\n",
+        "          `echo unset` EVENT_NAME\n",
+        "          ${CMD:-unset} EVENT_NAME\n",
+        "          echo \"${EVENT_NAME:=pull_request}\"\n",
+        "          echo ok > \"${EVENT_NAME:=pull_request}\"\n",
+        "          : <<< \"$(echo hi)\"\n",
+        "          echo $((EVENT_NAME=1))\n",
+        "          echo $[EVENT_NAME=1]\n",
+        "          (( EVENT_NAME = 1 ))\n",
+        "          echo ok\n          (( EVENT_NAME = 1 ))\n",
+        "          if [[ EVENT_NAME=1 -eq 1 ]]; then :; fi\n",
+        "          [ -v \"a[EVENT_NAME=1]\" ]\n",
+        "          test -v \"a[EVENT_NAME=1]\"\n",
+        "          [ \"$OP\" \"a[EVENT_NAME=1]\" ]\n",
+        "          b=([EVENT_NAME=1]=v)\n",
+        "          declare -a b=([EVENT_NAME=1]=v)\n",
+        "          echo $'a\\'b' $'c\\'d' \"$(echo hi)\"\n",
+        "          echo $'a\\'b' $'c\\'d'\n          (( EVENT_NAME = 1 ))\n",
+        "          cat <<EOF\n          it's ok\n          EOF\n          (( EVENT_NAME = 1 ))\n",
+        "          (( EVENT_NAME = 1 )) <<EOF\n          hi\n          EOF\n",
+        "          command \"-$FLAG\" echo hi\n",
+        "          export \"-$FLAG\" OTHER=1\n",
+        "          printf -x foo\n",
+        "          declare -i n\n          n=\"EVENT_NAME=1\"\n",
+        "          V=EVENT_NAME\n          export \"$V=pull_request\"\n",
+        "          V=EVENT_NAME\n          unset \"$V\"\n",
+        "          declare -n ref=EVENT_NAME\n",
+        "          export OTHER=$VAL\n",
+        "          printf \"$FLAG\" EVENT_NAME pull_request\n",
+        "          printf -v \"$V\" pull_request\n",
+        "          ! EVENT_NAME=pull_request\n",
+        "          if EVENT_NAME=pull_request; then :; fi\n",
+        "          if ! EVENT_NAME=pull_request; then :; fi\n",
+        "          if [ \"$EVENT_NAME\" = push ]; then :; elif EVENT_NAME=pull_request; then :; fi\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then :; fi > \"${EVENT_NAME:=pull_request}\"\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then :; fi\n          (( EVENT_NAME = 1 ))\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            if :; then :; fi > \"${EVENT_NAME:=pull_request}\"\n          fi\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            if :; then :; fi trailing\n          fi\n",
+        "          prepare_env\n",
+        "          env EVENT_NAME=pull_request true\n",
+    ] {
+        let script = format!(
+            "{mutating}          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
+        );
+        assert_eq!(count(&with_env(&script)), 1, "{mutating}");
+    }
+    for unmodelled in [
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            time if false; then :; else base=\"$PR_BASE_SHA\"; fi\n          fi\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            if time if false; then :; else base=\"$PR_BASE_SHA\"; fi; then :; fi\n          fi\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            echo ok\n            (( EVENT_NAME = 1 ))\n            base=\"$PR_BASE_SHA\"\n          fi\n",
+        "          if [ \"$EVENT_NAME\" = push ]; then :; elif time false; then base=\"$PR_BASE_SHA\"; fi\n",
+        "          time if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            coproc if false; then :; else base=\"$PR_BASE_SHA\"; fi\n          fi\n",
+    ] {
+        assert_eq!(count(&with_env(unmodelled)), 1, "{unmodelled}");
+    }
+    for safe_preamble in [
+        "          printf\n",
+        "          printf -- ok\n",
+        "          printf '%s\\n' \"$EVENT_NAME\"\n",
+        "          export -- OTHER=\"1\"\n",
+        "          printf -v OTHER pull_request\n",
+        "          echo '${EVENT_NAME:=pull_request}'\n",
+        "          echo \"\\$EVENT_NAME\" a\\ b ${EVENT_NAME} # comment\n",
+        "          if [[ \"$MERGE_GROUP_BASE_SHA\" =~ ^[0-9a-f]+$ ]]; then :; fi\n",
+        "          [ -z foo ]\n",
+        "          [ -z \"a[x=5]\" ]\n",
+        "          [ -v OTHER ]\n",
+        "          echo before\n          cat <<'EOF'\n          (( not arithmetic ))\n          EOF\n          echo after\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            if [ -n \"$MERGE_GROUP_BASE_SHA\" ]; then echo ok; fi\n          fi\n",
+    ] {
+        let script = format!(
+            "{safe_preamble}          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
+        );
+        assert_eq!(count(&with_env(&script)), 0, "{safe_preamble}");
+    }
+}

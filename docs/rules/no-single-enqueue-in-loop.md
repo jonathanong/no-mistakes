@@ -176,6 +176,9 @@ the single call is bounded.
 
 [`query-reached-per-item`](query-reached-per-item.md) follows configured effect
 sinks through helpers. This rule does not. It only matches the configured
-single and bulk imports at the per-item call itself.
+single and bulk imports at the per-item call itself. For queue-level retention
+and ephemeral job-state checks, see
+[Unbounded job retention](unbounded-job-retention.md) and
+[Job state as record](job-state-as-record.md).
 
 CLI: `no-mistakes check --root . --format json`.

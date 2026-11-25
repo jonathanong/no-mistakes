@@ -1,0 +1,26 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: "   "
+      files: ["", "[unclosed"]
+      requiredGlobs: [""]
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    options:
+      forbiddenPathsMessage: "   "
+      caches:
+        - path: .cache/widgets
+          lockfile: ""
+          keyParts: [os]
+      forbiddenPaths: [.cache/widgets]
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      actions:
+        - uses: "${{ matrix.widget }}"
+        - uses: example/publish-widget
+          allowedInputs: [name]
+          ban: [name]
+          require:
+            format: json

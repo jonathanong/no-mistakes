@@ -1,3 +1,4 @@
+use no_mistakes::codebase::analysis_session::AnalysisSession;
 use no_mistakes::codebase::check_facts::CheckFactPlan;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
@@ -160,7 +161,6 @@ fn explicit_runner_deadline_demand_does_not_admit_unrelated_primary_sources() {
 
 #[test]
 fn runner_prepare_limits_call_fact_work_to_configured_sources() {
-    use no_mistakes::codebase::analysis_session::AnalysisSession;
     use no_mistakes::codebase::check_facts::collect_check_facts_with_supplemental_call_sites;
     use no_mistakes::codebase::ts_source::facts::TsFactPlan;
 

@@ -33,6 +33,7 @@ mod source_access;
 mod sql_glob_rules;
 mod suppression;
 mod target_roots;
+mod validate_options;
 mod variant_findings;
 mod vitest_project_catalog;
 
