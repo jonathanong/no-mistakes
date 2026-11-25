@@ -305,10 +305,14 @@ Valkey unless told otherwise. Opt into `queues.unboundedJobRetention` to report:
   required retention key unset.
 
 `true`, a non-negative number, or an object with a `count` or `age` property
-counts as bounded. Non-literal expressions and open spreads abstain. When both
-`queues.requiredJobOptions` and `queues.unboundedJobRetention` cover the same
-key on a producer, `unbounded-job-retention` reports it once so the site is not
-reported twice.
+counts as bounded. Non-literal expressions and open spreads abstain. An unset
+key requires statically known queue defaults. When a wrapper or factory hides
+those defaults, the check still reports an explicit unbounded override.
+
+With both `queues.requiredJobOptions` and `queues.unboundedJobRetention`
+enabled, shared retention keys use the `unbounded-job-retention` finding
+kind. `missing-job-option` covers other required keys and takes back the
+shared keys on files exempted by retention `allowPaths`.
 
 ```ts
 // reported: failed jobs are kept forever
@@ -346,7 +350,9 @@ for two patterns on resolved queue bindings:
   the same function.
 - A failed or completed job listing (`getFailed`, `getCompleted`, or
   `getJobs([...])` including `"failed"` or `"completed"`) whose results feed
-  `add`, `addBulk`, or `retry`.
+  `add`, `addBulk`, or `retry`. An enqueue inside a loop or listing callback
+  qualifies when an argument uses the listed item, directly or through a local
+  `const` alias of the item or one of its properties.
 
 Unresolved queue receivers abstain with a diagnostic (`job-state-as-record was
 not judged because the queue receiver did not resolve`) and non-queue action

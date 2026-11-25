@@ -1,0 +1,60 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "queue-followups": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "listing.ts",
+          "line": 23,
+          "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "for (const job of await tracked.getFailed(0, 10)) {"
+        },
+        {
+          "file": "listing.ts",
+          "line": 29,
+          "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "(await tracked.getCompleted(0, 10)).forEach(({ data }) =>"
+        },
+        {
+          "file": "listing.ts",
+          "line": 35,
+          "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "for (const job of await tracked.getFailed(0, 10)) {"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueue.ts",
+          "job": "known-missing",
+          "kind": "unbounded-job-retention",
+          "line": 5,
+          "message": "unbounded job retention: removeOnFail unset",
+          "queueFile": "enqueue.ts",
+          "queueName": "bare",
+          "sourceLine": "bare.add(\"known-missing\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "welcome",
+          "kind": "unbounded-job-retention",
+          "line": 9,
+          "message": "unbounded job retention: removeOnFail kept without a bound",
+          "queueFile": "queue:opaque",
+          "queueName": "opaque",
+          "sourceLine": "enqueue({}, { removeOnFail: false });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

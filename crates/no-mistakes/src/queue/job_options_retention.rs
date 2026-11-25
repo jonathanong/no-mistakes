@@ -77,7 +77,7 @@ pub(super) fn judge_site(
                     continue;
                 }
                 match defaults.lookup_evidence(site) {
-                    Some(Err(())) => {}
+                    Some(Err(())) | None => {}
                     Some(Ok(def)) => match def.retention.get(key) {
                         Some(
                             RetentionValue::Bounded
@@ -87,7 +87,6 @@ pub(super) fn judge_site(
                         None if def.open => {}
                         None => unset.push(key),
                     },
-                    None => unset.push(key),
                 }
             }
         }

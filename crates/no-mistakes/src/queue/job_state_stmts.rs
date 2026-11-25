@@ -1,4 +1,4 @@
-use super::actions::{find_guarded_action, find_listing_action};
+use super::actions::{find_action_in_stmt, find_guarded_action, for_of_names, ActionScope};
 use super::expr::{
     check_state_expr, is_early_exit, match_get_job, match_listing, match_state_call, pattern_names,
 };
@@ -7,9 +7,10 @@ use super::listing::{check_expr_for_actions, listing_binding};
 use super::{JobStatePattern, JobStateSite};
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
-    Declaration, ForOfStatement, ForStatementLeft, IfStatement, Statement, SwitchStatement,
-    TryStatement, VariableDeclaration,
+    Declaration, ForOfStatement, IfStatement, Statement, SwitchStatement, TryStatement,
+    VariableDeclaration,
 };
+use oxc_span::GetSpan;
 use std::collections::HashSet;
 
 struct StmtCtx<'a, 'b> {
@@ -129,7 +130,11 @@ impl StmtCtx<'_, '_> {
     fn handle_for_of(&mut self, for_of: &ForOfStatement<'_>) {
         if let Some(binding) = listing_binding(self.visitor, &for_of.right, self.env) {
             let loop_vars = for_of_names(&for_of.left);
-            if let Some(action) = find_listing_action(self.visitor, &for_of.body, &loop_vars) {
+            let scope = ActionScope::Listing {
+                names: &loop_vars,
+                start: for_of.body.span().start,
+            };
+            if let Some(action) = find_action_in_stmt(self.visitor, &for_of.body, scope) {
                 record(
                     self.visitor,
                     for_of.span.start,
@@ -185,16 +190,5 @@ impl StmtCtx<'_, '_> {
                 self.env.listing_vars.insert(name.clone(), binding);
             }
         }
-    }
-}
-
-fn for_of_names(left: &ForStatementLeft<'_>) -> Vec<String> {
-    match left {
-        ForStatementLeft::VariableDeclaration(decl) => decl
-            .declarations
-            .iter()
-            .flat_map(|d| pattern_names(&d.id))
-            .collect(),
-        _ => Vec::new(),
     }
 }

@@ -8,6 +8,7 @@ use std::cell::Cell;
 #[path = "object_binding_index.rs"]
 mod index;
 pub(in crate::queue) use index::ObjectBindings;
+pub(in crate::queue) use visit::collect_names;
 
 pub struct ObjectBinding<'a> {
     pub name: &'a str,

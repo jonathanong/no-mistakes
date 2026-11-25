@@ -43,7 +43,7 @@ pub(super) fn bind_pattern<'a>(
     }
 }
 
-pub(super) fn collect_names<'a>(pattern: &BindingPattern<'a>, names: &mut Vec<&'a str>) {
+pub(in crate::queue) fn collect_names<'a>(pattern: &BindingPattern<'a>, names: &mut Vec<&'a str>) {
     match pattern {
         BindingPattern::BindingIdentifier(id) => names.push(id.name.as_str()),
         BindingPattern::ObjectPattern(object) => {
