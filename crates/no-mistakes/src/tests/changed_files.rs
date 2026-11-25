@@ -1,10 +1,23 @@
-use super::diff_parser::{DiffFile, DiffFileStatus};
+use super::diff_parser::DiffFile;
 use super::PlanArgs;
 use anyhow::{Context, Result};
 use std::collections::HashSet;
 use std::fs;
-use std::io::Read;
 use std::path::{Path, PathBuf};
+
+mod diff_inputs;
+mod git;
+mod paths;
+
+pub(super) use diff_inputs::has_explicit_diff_source;
+pub(crate) use git::parse_git_diff_refspec;
+pub(crate) use paths::existing_changed_files;
+
+use diff_inputs::{apply_diff_files, collect_diff_files};
+use git::get_git_changed_files;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+use git::parse_git_name_status_z;
+use paths::{normalize_unique, resolve_manual_path};
 
 pub(crate) struct ChangedFiles {
     pub files: Vec<PathBuf>,
@@ -32,26 +45,6 @@ pub(crate) struct ChangedFiles {
     /// for `--base`/`--head`/`--from-git-diff` (see `git_diff::stream_git_diff`).
     /// Empty only when neither input was supplied.
     pub diff_files: Vec<DiffFile>,
-}
-
-impl ChangedFiles {
-    pub(crate) fn push_manual_path(&mut self, path: &Path, root: &Path) -> Result<()> {
-        let (inventory_path, analysis_path) = resolve_manual_path(path, root)?;
-        push_unique(&mut self.inventory_files, inventory_path);
-        push_unique(&mut self.files, analysis_path.clone());
-        push_unique(&mut self.authoritative_files, analysis_path.clone());
-        push_unique(&mut self.manual_files, analysis_path.clone());
-        if !file_is_present(&analysis_path) {
-            push_unique(&mut self.deleted, analysis_path);
-        }
-        Ok(())
-    }
-}
-
-fn push_unique(list: &mut Vec<PathBuf>, path: PathBuf) {
-    if !list.contains(&path) {
-        list.push(path);
-    }
 }
 
 pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<ChangedFiles> {
@@ -88,26 +81,10 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         }
     }
 
-    // Track whether the caller supplied explicit file args so that a git-diff
-    // failure is non-fatal: the explicit list is still valid input for lockfile
-    // analysis, which will emit its own warning about the missing baseline.
     let has_explicit_files = !args.changed_file.is_empty() || args.changed_files.is_some();
 
-    // `--from-git-diff <refspec>` is resolved into base/head once, up front, by
-    // `generate_plan` (before this function is ever called) — not here — so
-    // that every consumer of args.base/args.head (this git-diff lookup AND
-    // `analyze_lockfile_changes`, which reads the same fields directly) sees
-    // an identical, already-desugared pair. By the time `args` reaches this
-    // function, `args.from_git_diff` is always `None`.
     if let Some(ref base) = args.base {
         let head = args.head.as_deref().unwrap_or("HEAD");
-        // An explicit `--diff*` input already supplies hunks; streaming
-        // base/head as well would feed the same files through
-        // `DiffStreamParser` twice — `dedup_diff_files` *extends* (not
-        // replaces) hunk_lines for a repeated path, so every hunk would be
-        // double-counted. In that combined case, base/head contributes only
-        // file/deleted discovery (its pre-streaming behavior), matching
-        // today's `--diff-stdin --base X --head Y` combination.
         if has_explicit_diff_source(args) {
             match get_git_changed_files(root, base, args.head.as_deref()) {
                 Ok(git_files) => {
@@ -197,281 +174,6 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         authoritative_files,
         diff_files,
     })
-}
-
-/// Whether the caller supplied an explicit unified-diff source
-/// (`--diff`/`--diff-stdin`/`--diff-command`/the programmatic inline
-/// `diff_content`). Shared with `lockfile_changes::is_diff_only_mode` and
-/// with the base/head streaming-vs-name-status branch above, so both
-/// consumers agree on exactly which inputs count as "an explicit diff was
-/// given."
-pub(super) fn has_explicit_diff_source(args: &PlanArgs) -> bool {
-    args.diff.is_some()
-        || args.diff_stdin
-        || args.diff_command.is_some()
-        || args.diff_content.is_some()
-}
-
-fn normalize_unique(files: Vec<PathBuf>) -> Vec<PathBuf> {
-    let mut unique = HashSet::new();
-    files
-        .into_iter()
-        .map(|path| no_mistakes::codebase::ts_resolver::normalize_path(&path))
-        .filter(|path| unique.insert(path.clone()))
-        .collect()
-}
-
-fn collect_diff_files(
-    args: &PlanArgs,
-    root: &Path,
-    files: &mut Vec<PathBuf>,
-    deleted: &mut Vec<PathBuf>,
-    diff_files_out: &mut Vec<DiffFile>,
-) -> Result<()> {
-    let diff_content = read_diff_content(args, root)?;
-    let Some(content) = diff_content else {
-        return Ok(());
-    };
-
-    let diff_files = super::diff_parser::parse_unified_diff_checked(&content)
-        .context("provided unified diff contains a malformed path")?;
-    apply_diff_files(&diff_files, root, files, deleted);
-    diff_files_out.extend(diff_files);
-    Ok(())
-}
-
-fn read_diff_content(args: &PlanArgs, root: &Path) -> Result<Option<String>> {
-    if let Some(ref diff_path) = args.diff {
-        let content = fs::read_to_string(diff_path)
-            .with_context(|| format!("Failed to read diff file from {}", diff_path.display()))?;
-        return Ok(Some(content));
-    }
-
-    if args.diff_stdin {
-        let mut content = String::new();
-        std::io::stdin()
-            .read_to_string(&mut content)
-            .context("Failed to read diff from stdin")?;
-        return Ok(Some(content));
-    }
-
-    if let Some(ref cmd) = args.diff_command {
-        let content = super::diff_parser::run_diff_command(cmd, root)?;
-        return Ok(Some(content));
-    }
-
-    if let Some(ref content) = args.diff_content {
-        return Ok(Some(content.clone()));
-    }
-
-    Ok(None)
-}
-
-fn apply_diff_files(
-    diff_files: &[DiffFile],
-    root: &Path,
-    files: &mut Vec<PathBuf>,
-    deleted: &mut Vec<PathBuf>,
-) {
-    for df in diff_files {
-        let path = if df.path.is_absolute() {
-            df.path.clone()
-        } else {
-            root.join(&df.path)
-        };
-        files.push(path.clone());
-
-        if df.status == DiffFileStatus::Deleted {
-            deleted.push(path);
-        }
-
-        if matches!(df.status, DiffFileStatus::Renamed | DiffFileStatus::Copied) {
-            if let Some(ref old) = df.old_path {
-                let old_abs = if old.is_absolute() {
-                    old.clone()
-                } else {
-                    root.join(old)
-                };
-                files.push(old_abs.clone());
-                if df.status == DiffFileStatus::Renamed {
-                    deleted.push(old_abs);
-                }
-            }
-        }
-    }
-}
-
-fn resolve_manual_path(path: &Path, root: &Path) -> Result<(PathBuf, PathBuf)> {
-    let lexical = if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        root.join(path)
-    };
-    let lexical = no_mistakes::codebase::ts_resolver::normalize_path(&lexical);
-    if !lexical.starts_with(root) {
-        anyhow::bail!(
-            "changed file `{}` is outside the project root `{}`",
-            path.display(),
-            root.display()
-        )
-    }
-    let analysis = lexical.canonicalize().unwrap_or_else(|_| lexical.clone());
-    if !analysis.starts_with(root) {
-        anyhow::bail!(
-            "changed file `{}` resolves outside the project root `{}`",
-            path.display(),
-            root.display()
-        )
-    }
-    Ok((lexical, analysis))
-}
-
-pub(crate) fn existing_changed_files(changed: &ChangedFiles) -> Vec<PathBuf> {
-    changed
-        .files
-        .iter()
-        .filter(|f| file_is_present(f))
-        .cloned()
-        .collect()
-}
-
-fn file_is_present(path: &Path) -> bool {
-    match fs::symlink_metadata(path) {
-        Ok(_) => true,
-        Err(error)
-            if matches!(
-                error.kind(),
-                std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
-            ) =>
-        {
-            false
-        }
-        Err(_) => true,
-    }
-}
-
-#[derive(Debug)]
-struct GitChangedFiles {
-    files: Vec<PathBuf>,
-    deleted: Vec<PathBuf>,
-}
-
-/// Parse a `git diff` refspec into `(base, optional head)`.
-///
-/// Accepts three-dot `A...B`, three-dot with an implicit head `A...` (head
-/// defaults to `HEAD` downstream in [`get_git_changed_files`]), and a bare
-/// base `A` (also defaults head to `HEAD`). This mirrors the merge-base
-/// three-dot semantics `git diff` already uses for `--base`/`--head`, so
-/// `--from-git-diff` is sugar over that existing path rather than a new
-/// comparison mode.
-///
-/// Two-dot refspecs (`A..B`) are rejected: `git diff A..B` and
-/// `git diff A...B` compare different bases (direct vs. merge-base), and
-/// silently accepting `..` here would make `--from-git-diff` desugar to a
-/// different comparison than the equivalent `--base`/`--head` flags. Callers
-/// that want two-dot semantics should keep using `--base`/`--head` directly
-/// (which also only supports the three-dot form today).
-pub(crate) fn parse_git_diff_refspec(spec: &str) -> Result<(String, Option<String>)> {
-    let trimmed = spec.trim();
-    if trimmed.is_empty() {
-        anyhow::bail!("--from-git-diff requires a non-empty refspec, e.g. origin/main...HEAD");
-    }
-
-    if let Some((base, head)) = trimmed.split_once("...") {
-        let base = base.trim();
-        let head = head.trim();
-        if base.is_empty() {
-            anyhow::bail!("--from-git-diff refspec is missing a base before '...': {trimmed}");
-        }
-        if head.is_empty() {
-            return Ok((base.to_string(), None));
-        }
-        return Ok((base.to_string(), Some(head.to_string())));
-    }
-
-    if trimmed.contains("..") {
-        anyhow::bail!(
-            "--from-git-diff does not support two-dot refspecs ('{trimmed}'); tests plan only \
-             compares base...head (merge-base) diffs — use three-dot base...head \
-             (e.g. origin/main...HEAD). --base/--head use the same three-dot comparison, \
-             so switching to them will not change the diff you get."
-        );
-    }
-
-    Ok((trimmed.to_string(), None))
-}
-
-/// Name-status-only changed-file discovery for base/head. Used only when the
-/// caller *also* supplied an explicit `--diff*` input (hunks already come
-/// from that source in `collect_changed_files`); the streaming hunk producer
-/// in `git_diff::stream_git_diff` is the primary base/head path otherwise.
-///
-/// On a nonzero exit this classifies the failure the same way
-/// `stream_git_diff` does (see `git_diff::classify_git_diff_failure`) so
-/// combined mode (`--diff-stdin --base --head`) surfaces the same stable
-/// diagnostic codes as the primary streaming path, instead of a generic
-/// `git command failed` message.
-fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<GitChangedFiles> {
-    let head_commit = head.unwrap_or("HEAD");
-    let mut command = std::process::Command::new("git");
-    command
-        .args([
-            "diff",
-            "--relative",
-            "--name-status",
-            "-z",
-            &format!("{base}...{head_commit}"),
-        ])
-        .current_dir(root);
-    let output = crate::invocation::command_output(&mut command)?;
-    if !output.status.success() {
-        let classification =
-            super::git_diff::classify_git_diff_failure(root, base, head_commit, &output.stderr)?;
-        return Err(classification.into());
-    }
-    parse_git_name_status_z(&output.stdout)
-}
-
-fn parse_git_name_status_z(output: &[u8]) -> Result<GitChangedFiles> {
-    let mut files = HashSet::new();
-    let mut deleted = HashSet::new();
-    let mut fields = output.split(|byte| *byte == b'\0');
-    while let Some(status) = fields.next() {
-        if status.is_empty() {
-            continue;
-        }
-        let status = std::str::from_utf8(status).context("git diff returned a non-UTF-8 status")?;
-        let first_path = fields
-            .next()
-            .filter(|path| !path.is_empty())
-            .context("git diff --name-status returned a status without a path")?;
-        let first_path = std::str::from_utf8(first_path)
-            .context("git diff returned a non-UTF-8 changed path")?;
-        if status.starts_with('R') || status.starts_with('C') {
-            files.insert(PathBuf::from(first_path));
-            if status.starts_with('R') {
-                deleted.insert(PathBuf::from(first_path));
-            }
-            let second_path = fields
-                .next()
-                .filter(|path| !path.is_empty())
-                .context("git diff --name-status returned a rename/copy without a destination")?;
-            let second_path = std::str::from_utf8(second_path)
-                .context("git diff returned a non-UTF-8 changed path")?;
-            files.insert(PathBuf::from(second_path));
-            continue;
-        }
-        let path = PathBuf::from(first_path);
-        files.insert(path.clone());
-        if status == "D" {
-            deleted.insert(path);
-        }
-    }
-    let mut files: Vec<_> = files.into_iter().collect();
-    files.sort();
-    let mut deleted: Vec<_> = deleted.into_iter().collect();
-    deleted.sort();
-    Ok(GitChangedFiles { files, deleted })
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

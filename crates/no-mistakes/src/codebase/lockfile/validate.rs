@@ -22,10 +22,6 @@ pub fn validate_for_planning(
 
 fn validate_pnpm(content: &str) -> Result<(), LockfileValidationError> {
     match pnpm::parse_checked(content) {
-        Ok(packages) if packages.is_empty() => Err(LockfileValidationError {
-            kind: "lockfile-pnpm-malformed",
-            description: "unparsed or empty pnpm lockfile content",
-        }),
         Ok(_) => Ok(()),
         Err(pnpm::PnpmValidationError::Malformed) => Err(LockfileValidationError {
             kind: "lockfile-pnpm-malformed",
@@ -44,10 +40,6 @@ fn validate_pnpm(content: &str) -> Result<(), LockfileValidationError> {
 
 fn validate_npm(content: &str) -> Result<(), LockfileValidationError> {
     match npm::parse_checked(content) {
-        Ok(packages) if packages.is_empty() => Err(LockfileValidationError {
-            kind: "lockfile-npm-malformed",
-            description: "unparsed or empty npm lockfile content",
-        }),
         Ok(_) => Ok(()),
         Err(npm::NpmValidationError::UnsupportedVersion) => Err(LockfileValidationError {
             kind: "lockfile-npm-unsupported-version",
@@ -62,10 +54,6 @@ fn validate_npm(content: &str) -> Result<(), LockfileValidationError> {
 
 fn validate_yarn(content: &str) -> Result<(), LockfileValidationError> {
     match yarn::parse_checked(content) {
-        Ok(packages) if packages.is_empty() => Err(LockfileValidationError {
-            kind: "lockfile-yarn-malformed",
-            description: "unparsed or empty yarn lockfile content",
-        }),
         Ok(_) => Ok(()),
         Err(yarn::YarnValidationError::Malformed) => Err(LockfileValidationError {
             kind: "lockfile-yarn-malformed",
@@ -76,10 +64,6 @@ fn validate_yarn(content: &str) -> Result<(), LockfileValidationError> {
 
 fn validate_bun(content: &str) -> Result<(), LockfileValidationError> {
     match bun::parse_checked(content) {
-        Ok(packages) if packages.is_empty() => Err(LockfileValidationError {
-            kind: "lockfile-bun-malformed",
-            description: "unparsed or empty bun lockfile content",
-        }),
         Ok(_) => Ok(()),
         Err(bun::BunValidationError::Malformed) => Err(LockfileValidationError {
             kind: "lockfile-bun-malformed",

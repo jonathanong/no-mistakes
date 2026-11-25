@@ -4,6 +4,10 @@ use no_mistakes::codebase::lockfile::{self, LockfileDiff};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+mod helpers;
+pub(super) use helpers::find_git_root;
+use helpers::{push_validation_warning, record_lockfile_diff};
+
 #[derive(Clone)]
 pub(crate) struct LockfileAnalysis {
     pub diff_by_lockfile: Vec<(PathBuf, LockfileDiff)>,
@@ -81,9 +85,6 @@ pub(crate) fn analyze_lockfile_changes(
                 }
             }
         } else if revisions.is_diff_only() {
-            // In diff-only mode (--diff/--diff-stdin/etc.) without --head, the working tree
-            // may still be at the base. Reading from disk would compare base-vs-base and miss
-            // the lockfile change; fall back instead of producing a bogus empty diff.
             let rel = crate::tests::plan::relative_path(root, file);
             warnings.push(Warning {
                 r#type: "lockfile-no-baseline".to_string(),
@@ -134,29 +135,18 @@ pub(crate) fn analyze_lockfile_changes(
                             continue;
                         }
                     }
-                    let old_packages = lockfile::parse_lockfile(manager, &old);
-                    let mut lf_diff = lockfile::diff(&old_packages, &new_packages);
-                    if manager == lockfile::PackageManager::Pnpm {
-                        let changed_names: Vec<String> =
-                            lf_diff.all_changed_names().map(str::to_string).collect();
-                        pnpm_importer_paths.insert(
-                            file.clone(),
-                            lockfile::pnpm::impact_importer_paths(
-                                &old,
-                                &new_content,
-                                &changed_names,
-                            ),
-                        );
-                        lf_diff.changed =
-                            lockfile::pnpm::impact_names(&old, &new_content, changed_names);
-                    }
-                    if !lf_diff.is_empty() {
-                        diff_by_lockfile.push((file.clone(), lf_diff));
-                    }
+                    record_lockfile_diff(
+                        file,
+                        manager,
+                        &old,
+                        &new_content,
+                        &new_packages,
+                        &mut diff_by_lockfile,
+                        &mut pnpm_importer_paths,
+                    );
                 }
                 None => {
                     if !revisions.base_ref_exists() {
-                        // Invalid base ref — cannot determine what changed
                         let rel = crate::tests::plan::relative_path(root, file);
                         warnings.push(Warning {
                             r#type: "lockfile-no-baseline".to_string(),
@@ -169,35 +159,23 @@ pub(crate) fn analyze_lockfile_changes(
                         });
                         fallback_triggered = true;
                     } else {
-                        // Valid base ref but file not at base — newly added lockfile;
-                        // treat baseline as empty so all packages are seen as added.
-                        let old_packages = lockfile::parse_lockfile(manager, "");
-                        let mut lf_diff = lockfile::diff(&old_packages, &new_packages);
-                        if manager == lockfile::PackageManager::Pnpm {
-                            let changed_names: Vec<String> =
-                                lf_diff.all_changed_names().map(str::to_string).collect();
-                            pnpm_importer_paths.insert(
-                                file.clone(),
-                                lockfile::pnpm::impact_importer_paths(
-                                    "",
-                                    &new_content,
-                                    &changed_names,
-                                ),
-                            );
-                            lf_diff.changed =
-                                lockfile::pnpm::impact_names("", &new_content, changed_names);
-                        }
-                        if !lf_diff.is_empty() {
-                            diff_by_lockfile.push((file.clone(), lf_diff));
-                        }
+                        record_lockfile_diff(
+                            file,
+                            manager,
+                            "",
+                            &new_content,
+                            &new_packages,
+                            &mut diff_by_lockfile,
+                            &mut pnpm_importer_paths,
+                        );
                     }
                 }
             },
             None => {
                 let rel = crate::tests::plan::relative_path(root, file);
                 warnings.push(Warning {
-                r#type: "lockfile-no-baseline".to_string(),
-                message: format!(
+                    r#type: "lockfile-no-baseline".to_string(),
+                    message: format!(
                         "Could not determine old content of `{}`. Provide `--base` to enable targeted lockfile analysis; full-suite selection requires global fallback opt-in.",
                         rel
                     ),
@@ -215,46 +193,4 @@ pub(crate) fn analyze_lockfile_changes(
         warnings,
         fallback_triggered,
     }
-}
-
-fn push_validation_warning(
-    root: &Path,
-    file: &Path,
-    error: lockfile::validate::LockfileValidationError,
-    warnings: &mut Vec<Warning>,
-) {
-    let rel = crate::tests::plan::relative_path(root, file);
-    warnings.push(Warning {
-        r#type: error.kind.to_string(),
-        message: format!(
-            "`{rel}` has {} at a compared revision; full-suite selection requires global fallback opt-in",
-            error.description
-        ),
-        file: rel,
-        line: None,
-    });
-}
-
-/// `Ok(None)` reports that `dir` is not inside a Git repository (or the
-/// probe otherwise failed for a non-timeout reason); a deadline timeout
-/// propagates as `Err` instead, so a strict caller like
-/// `git_diff::classify_git_diff_failure` can tell the two apart. Callers
-/// that are infallible by design (`analyze_lockfile_changes`) collapse
-/// both back into their own fallback via `.ok().flatten()`.
-pub(super) fn find_git_root(dir: &Path) -> std::io::Result<Option<PathBuf>> {
-    let mut command = std::process::Command::new("git");
-    command
-        .args(["rev-parse", "--show-toplevel"])
-        .current_dir(dir);
-    let output = match crate::invocation::command_output(&mut command) {
-        Ok(output) => output,
-        Err(error) if error.kind() == std::io::ErrorKind::TimedOut => return Err(error),
-        Err(_) => return Ok(None),
-    };
-    if !output.status.success() {
-        return Ok(None);
-    }
-    Ok(String::from_utf8(output.stdout)
-        .ok()
-        .map(|s| PathBuf::from(s.trim())))
 }
