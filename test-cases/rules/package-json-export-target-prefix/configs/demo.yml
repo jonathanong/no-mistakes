@@ -1,0 +1,5 @@
+version: 2
+rules:
+  - rule: package-json-export-target-prefix
+    scope: repository
+    include: [packages/prepare/package.json]

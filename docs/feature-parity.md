@@ -1,5 +1,8 @@
 # Feature Parity
 
+The opt-in [`package-json-export-target-prefix`](rules/package-json-export-target-prefix.md)
+rule checks Node package export target syntax in both CLI and async Node reports.
+
 The shell compatibility checks
 [`bash-empty-array-nounset`](rules/bash-empty-array-nounset.md) and
 [`zsh-readonly-parameter`](rules/zsh-readonly-parameter.md) share file selection,

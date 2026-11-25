@@ -391,6 +391,10 @@ unsupported expression shapes retain definite findings under every policy.
 Both findings and advice honor suppression. Invalid UTF-8 points to its first
 invalid byte's line; other read failures use line 1.
 
+For `package-json-export-target-prefix`, CLI `check`, async `check(options)`,
+and `analyzeProject()` check reports use the same configuration, findings,
+and advisory routing. See the [rule contract](rules/package-json-export-target-prefix.md).
+
 For `package-json-required-fields`, CLI `check`, `check(options)`, and check
 reports in `analyzeProject()` apply the same `unanalyzable` policy to selected
 manifests that cannot be read or parsed when a field check is enabled.

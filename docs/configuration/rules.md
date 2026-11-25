@@ -365,6 +365,10 @@ emits non-failing advice, and `ignore` omits that uncertainty. Invalid YAML,
 unmatched source locations, and unsupported expression shapes remain definite
 findings under every policy.
 
+[`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
+checks selected Node package manifests. The rule is opt-in and uses
+`options.unanalyzable` for manifests that cannot be read or parsed.
+
 [`package-json-required-fields`](../rules/package-json-required-fields.md) uses
 `options.unanalyzable` for selected manifests that cannot be read or parsed
 when a field check is enabled. Definite field violations remain failures under

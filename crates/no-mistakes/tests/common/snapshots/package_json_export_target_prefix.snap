@@ -1,0 +1,110 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advisory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/malformed/package.json",
+          "line": 1,
+          "message": "packages/malformed/package.json: cannot verify package export targets (expected value at line 3 column 1). Repair the JSON or restore read access.",
+          "rule": "package-json-export-target-prefix",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/names/package.json",
+          "line": 3,
+          "message": "packages/names/package.json:3: Node.js requires the target at /exports to start with \"./\". Use a path relative to the package root.",
+          "rule": "package-json-export-target-prefix",
+          "sourceLine": "\"exports\": \"@example/shared\"",
+          "target": "/exports"
+        },
+        {
+          "file": "packages/prepare/package.json",
+          "line": 5,
+          "message": "packages/prepare/package.json:5: Node.js requires the target at /exports/./import to start with \"./\". Use a path relative to the package root.",
+          "rule": "package-json-export-target-prefix",
+          "sourceLine": "\"import\": \"dist/index.mjs\",",
+          "target": "/exports/./import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/malformed/package.json",
+          "line": 1,
+          "message": "packages/malformed/package.json: cannot verify package export targets (expected value at line 3 column 1). Repair the JSON or restore read access.",
+          "rule": "package-json-export-target-prefix",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/names/package.json",
+          "line": 3,
+          "message": "packages/names/package.json:3: Node.js requires the target at /exports to start with \"./\". Use a path relative to the package root.",
+          "rule": "package-json-export-target-prefix",
+          "sourceLine": "\"exports\": \"@example/shared\"",
+          "target": "/exports"
+        },
+        {
+          "file": "packages/prepare/package.json",
+          "line": 5,
+          "message": "packages/prepare/package.json:5: Node.js requires the target at /exports/./import to start with \"./\". Use a path relative to the package root.",
+          "rule": "package-json-export-target-prefix",
+          "sourceLine": "\"import\": \"dist/index.mjs\",",
+          "target": "/exports/./import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid-options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "filesystem",
+          "message": "invalid options for rule `package-json-export-target-prefix` at options.unexpected: unknown field `unexpected`, there are no fields"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
