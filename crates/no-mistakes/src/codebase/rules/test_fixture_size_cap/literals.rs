@@ -109,9 +109,7 @@ pub(super) fn count_oversized_table_cells(
                 Expression::NumericLiteral(literal) => {
                     is_oversized(literal.value).then_some(count + 1)
                 }
-                Expression::StringLiteral(_)
-                | Expression::BooleanLiteral(_)
-                | Expression::NullLiteral(_) => Some(count),
+                Expression::BooleanLiteral(_) | Expression::NullLiteral(_) => Some(count),
                 _ => None,
             }
         })

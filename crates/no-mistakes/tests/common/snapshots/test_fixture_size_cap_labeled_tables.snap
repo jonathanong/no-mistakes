@@ -1,0 +1,25 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_elements": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "intervals.test.ts",
+          "line": 9,
+          "message": "it.each table has 2 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, 100_000])(\"scale %i\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
