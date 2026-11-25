@@ -12,6 +12,7 @@ pub(in crate::queue) struct ConfiguredTestScope {
     filter: Option<Arc<TestFileFilter>>,
     playwright_include: Option<GlobSet>,
     playwright_exclude: Option<GlobSet>,
+    include_tests: Option<GlobSet>,
 }
 
 impl ConfiguredTestScope {
@@ -25,18 +26,37 @@ impl ConfiguredTestScope {
         visible_paths: &[PathBuf],
         session: &AnalysisSession,
     ) -> Self {
+        if config
+            .queues
+            .include_tests
+            .as_ref()
+            .is_some_and(|include| include.is_all())
+        {
+            return Self::empty();
+        }
         let filter = has_configured_suite_source(root, config, visible_paths)
             .then(|| session.test_file_filter_with_visible(root, config, Some(visible_paths)));
         let playwright_include = compile_globs(&config.tests.playwright.test_include);
         let playwright_exclude = compile_globs(&config.tests.playwright.test_exclude);
+        let include_tests = config
+            .queues
+            .include_tests
+            .as_ref()
+            .and_then(|include| include.globset());
         Self {
             filter,
             playwright_include,
             playwright_exclude,
+            include_tests,
         }
     }
 
     pub(in crate::queue) fn is_match(&self, root: &Path, path: &Path) -> bool {
+        if self.include_tests.as_ref().is_some_and(|include| {
+            include.is_match(crate::codebase::ts_source::relative_slash_path(root, path))
+        }) {
+            return false;
+        }
         if self
             .filter
             .as_ref()
