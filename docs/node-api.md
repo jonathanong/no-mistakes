@@ -3,6 +3,11 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+The opt-in [`postgres-explain-write-rollback`](rules/postgres-explain-write-rollback.md)
+rule uses the same YAML configuration and report fields in CLI `check`,
+Node `check()`, and `analyzeProject()` check reports.
+`PostgresExplainWriteRollbackOptions` names its YAML options.
+
 Configured [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
 accepts optional `schemaCatalogPath` through `PostgresLockWrittenRowsOnlyOptions`.
 Async `check()` and `analyzeProject()` check reports use the same prepared catalog

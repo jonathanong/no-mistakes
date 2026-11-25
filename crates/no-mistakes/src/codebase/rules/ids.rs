@@ -62,6 +62,7 @@ pub use super::postgres_column_requires_trigger::RULE_ID as POSTGRES_COLUMN_REQU
 pub use super::postgres_conflict_ordering::RULE_ID as POSTGRES_CONFLICT_ORDERING;
 pub use super::postgres_constraint_validate::RULE_ID as POSTGRES_CONSTRAINT_VALIDATE;
 pub use super::postgres_duplicate_function_body::RULE_ID as POSTGRES_DUPLICATE_FUNCTION_BODY;
+pub use super::postgres_explain_write_rollback::RULE_ID as POSTGRES_EXPLAIN_WRITE_ROLLBACK;
 pub use super::postgres_explicit_columns::RULE_ID as POSTGRES_EXPLICIT_COLUMNS;
 pub use super::postgres_finite_text_columns::RULE_ID as POSTGRES_FINITE_TEXT_COLUMNS;
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;

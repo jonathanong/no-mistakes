@@ -83,6 +83,7 @@ macro_rules! filesystem_rules {
             POSTGRES_MATERIALIZED_VIEW_SHAPE => postgres_materialized_view_shape::check_with_files => "",
             POSTGRES_DUPLICATE_FUNCTION_BODY => postgres_duplicate_function_body::check_with_files => "",
             POSTGRES_BOUNDED_STATEMENTS => postgres_bounded_statements::check_with_files => "",
+            POSTGRES_EXPLAIN_WRITE_ROLLBACK => postgres_explain_write_rollback::check_with_files => "      sqlInclude: [plans/*.sql]\n",
             POSTGRES_EXPLICIT_COLUMNS => postgres_explicit_columns::check_with_files => "",
             POSTGRES_GENERATED_COLUMN_PREDICATES => postgres_generated_column_predicates::check => "",
             POSTGRES_CONFLICT_ORDERING => postgres_conflict_ordering::check_with_files => "",
