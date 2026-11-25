@@ -114,7 +114,7 @@ pub(super) fn covered_keys(
     policy: Option<&UnboundedRetentionPolicy>,
     allow: Option<&GlobSet>,
 ) -> Vec<&'static str> {
-    let Some(policy) = policy.filter(|policy| policy.is_enabled()) else {
+    let Some(policy) = policy else {
         return Vec::new();
     };
     if is_allowed(root, path, allow) {

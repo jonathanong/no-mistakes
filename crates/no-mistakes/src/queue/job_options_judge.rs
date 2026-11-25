@@ -25,12 +25,10 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
     let defaults = index_defaults(facts);
     let mut notes = Vec::new();
     for (path, file) in facts.iter() {
-        let retention_policy = file.unbounded_job_retention.as_ref();
-        let allow = retention_policy.and_then(|policy| policy.allow_globset());
+        let retention_policy = file.unbounded_job_retention.as_deref();
+        let allow = retention_policy.and_then(|policy| policy.allow.as_ref());
         if let Some(retention_policy) = retention_policy {
-            for note in
-                retention::judge_file_defaults(root, path, file, retention_policy, allow.as_ref())
-            {
+            for note in retention::judge_file_defaults(root, path, file, retention_policy, allow) {
                 notes.push(Note {
                     path: note.path,
                     line: note.finding.line,
@@ -38,17 +36,12 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
                 });
             }
         }
-        let covered = retention::covered_keys(root, path, retention_policy, allow.as_ref());
+        let covered = retention::covered_keys(root, path, retention_policy, allow);
         for site in &file.job_option_sites {
             if let Some(retention_policy) = retention_policy {
-                if let Some(note) = retention::judge_site(
-                    root,
-                    path,
-                    site,
-                    retention_policy,
-                    allow.as_ref(),
-                    &defaults,
-                ) {
+                if let Some(note) =
+                    retention::judge_site(root, path, site, retention_policy, allow, &defaults)
+                {
                     notes.push(Note {
                         path: note.path,
                         line: note.finding.line,

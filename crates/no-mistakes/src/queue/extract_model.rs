@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 mod job_options;
 mod worker_rate_limit;
@@ -145,9 +146,9 @@ pub(crate) struct FileFacts {
     pub worker_exports: HashMap<String, ExportedWorkerBinding>,
     pub worker_import_aliases: HashMap<String, String>,
     pub worker_namespace_exports: HashMap<String, (String, String)>,
-    pub unbounded_job_retention: Option<UnboundedRetentionPolicy>,
+    pub unbounded_job_retention: Option<Arc<UnboundedRetentionPolicy>>,
     pub job_state_sites: Vec<super::job_state::JobStateSite>,
-    pub job_state_as_record: Option<crate::config::v2::schema::JobStateAsRecordConfig>,
+    pub job_state_as_record: Option<Arc<globset::GlobSet>>,
     pub worker_class_imports: HashMap<String, String>,
     pub worker_class_namespaces: HashMap<String, (String, String)>,
     pub worker_constructed_aliases: HashMap<String, String>,
