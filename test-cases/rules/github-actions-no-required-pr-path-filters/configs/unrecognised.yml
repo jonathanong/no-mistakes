@@ -6,3 +6,9 @@ rules:
       workflows:
         - .github/workflows/unrecognised-shape.yml
         - .github/workflows/tagged-trigger.yml
+        - .github/workflows/non-mapping-root.yml
+        - .github/workflows/string-on.yml
+        - .github/workflows/seq-on.yml
+        - .github/workflows/bad-seq-on.yml
+        - .github/workflows/merge-keys.yml
+        - .github/workflows/aliased-on.yml

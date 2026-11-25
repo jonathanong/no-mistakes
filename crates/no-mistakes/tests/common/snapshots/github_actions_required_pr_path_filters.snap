@@ -345,6 +345,54 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/workflows/aliased-on.yml",
+          "line": 5,
+          "message": ".github/workflows/aliased-on.yml:5: remove the workflow-level path filter `on.pull_request.paths` from the required PR trigger. Select work inside the workflow and keep the required gate reporting on every PR.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on: *shared_on",
+          "target": "on.pull_request.paths"
+        },
+        {
+          "file": ".github/workflows/aliased-on.yml",
+          "line": 5,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/aliased-on.yml (unrecognised `on.pull_request_target` trigger shape). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on: *shared_on",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/bad-seq-on.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/bad-seq-on.yml (unrecognised `on` sequence entry). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on: [pull_request, 42]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/merge-keys.yml",
+          "line": 3,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/merge-keys.yml (unrecognised or merged key in `on` mapping). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/merge-keys.yml",
+          "line": 5,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/merge-keys.yml (unrecognised or merged key in `on.pull_request`). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "pull_request:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-root.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/non-mapping-root.yml (workflow root is not a YAML mapping). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "- pull_request",
+          "target": "unanalyzable"
+        },
+        {
           "file": ".github/workflows/tagged-trigger.yml",
           "line": 1,
           "message": "Cannot inspect PR trigger filters for .github/workflows/tagged-trigger.yml (unrecognised `on` trigger shape). Repair the workflow YAML and run the check again.",
@@ -375,6 +423,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-disable-directive",
           "sourceLine": "# no-mistakes-disable-next-line github-actions-no-required-pr-path-filters",
           "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/bad-seq-on.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/bad-seq-on.yml (unrecognised `on` sequence entry). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on: [pull_request, 42]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/merge-keys.yml",
+          "line": 3,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/merge-keys.yml (unrecognised or merged key in `on` mapping). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/merge-keys.yml",
+          "line": 5,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/merge-keys.yml (unrecognised or merged key in `on.pull_request`). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "pull_request:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-root.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/non-mapping-root.yml (workflow root is not a YAML mapping). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "- pull_request",
+          "target": "unanalyzable"
         },
         {
           "file": ".github/workflows/suppressed-file.yml",
