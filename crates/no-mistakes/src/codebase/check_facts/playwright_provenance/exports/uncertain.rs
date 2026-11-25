@@ -10,12 +10,15 @@ impl ExportLookup<'_> {
         let Some(file) = facts else {
             return;
         };
-        let local_name = file
+        let binding = file
             .ts
             .exported_bindings
             .iter()
-            .find(|binding| binding.exported == key.name.as_ref())
-            .map_or(key.name.as_ref(), |binding| binding.local.as_str());
+            .find(|binding| binding.exported == key.name.as_ref());
+        if binding.is_some_and(|binding| binding.specifier.is_some()) {
+            return;
+        }
+        let local_name = binding.map_or(key.name.as_ref(), |binding| binding.local.as_str());
         let Some(refs) = file
             .fixture_initializers
             .as_ref()
