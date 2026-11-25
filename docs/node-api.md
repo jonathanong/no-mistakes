@@ -391,6 +391,10 @@ unsupported expression shapes retain definite findings under every policy.
 Both findings and advice honor suppression. Invalid UTF-8 points to its first
 invalid byte's line; other read failures use line 1.
 
+For `package-json-export-target-prefix`, CLI `check`, async `check(options)`,
+and `analyzeProject()` check reports use the same configuration, findings,
+and advisory routing. See the [rule contract](rules/package-json-export-target-prefix.md).
+
 For `package-json-required-fields`, CLI `check`, `check(options)`, and check
 reports in `analyzeProject()` apply the same `unanalyzable` policy to selected
 manifests that cannot be read or parsed when a field check is enabled.
@@ -1043,6 +1047,11 @@ same outcome as CLI `check`. Configure it in the YAML selected by `config`.
 `DependabotCooldownPolicyOptions` is exported for typed configuration.
 Policy violations use `RuleFinding`, and unreadable or malformed input uses
 `CheckReport.incomplete` (`CheckFailure[]`).
+
+The opt-in [`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) runs in
+async `check()` and `analyzeProject()` check reports. Select the rule through
+the YAML passed to `config`. Reports use the existing `RuleFinding` fields
+for the importing file, line, specifier, and resolved target.
 
 The configured [`pnpm-release-age-policy`](rules/pnpm-release-age-policy.md)
 rule runs through async `check()` and `analyzeProject()` check reports.

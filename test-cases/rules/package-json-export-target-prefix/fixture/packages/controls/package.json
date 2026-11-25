@@ -1,0 +1,9 @@
+{
+  "name": "@example/controls",
+  "imports": { "#other": "example-shared" },
+  "exports": {
+    ".": ["example-shared", { "default": "./dist/index.mjs" }],
+    "./fallback/*": ["dist/*.mjs", "./dist/*.mjs"],
+    "./types": { "types": "./dist/types.d.ts", "default": null }
+  }
+}

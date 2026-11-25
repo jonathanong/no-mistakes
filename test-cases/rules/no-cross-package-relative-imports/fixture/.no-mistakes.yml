@@ -1,0 +1,5 @@
+rules:
+  - rule: no-cross-package-relative-imports
+    scope: repository
+    include: ["packages/app/src/**", "tools/**"]
+    exclude: ["packages/app/src/excluded.mts", "packages/app/src/gaps/**"]
