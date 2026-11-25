@@ -12,7 +12,7 @@ jobs:
       - name: Rerun with shell pid before loop variable name
         run: |
           for i in 1 2; do
-            echo "$$i"
+            export RUN_ID="$$i"
             pnpm test
           done
       - name: Rerun while logging the loop counter

@@ -1,5 +1,6 @@
-import { chainedTest, localTest, test } from "./conditional-base";
+import { localTest, test } from "./conditional-base";
 import { test as barreled } from "./conditional-barrel";
+import { chainedTest } from "./conditional-chained";
 
 let suite = test;
 suite.describe.serial("ordered", () => {});

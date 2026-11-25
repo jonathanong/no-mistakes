@@ -560,22 +560,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "playwright-no-serial",
           "file": "tests/conditional-fixture.spec.ts",
-          "message": "tests/conditional-fixture.spec.ts:11: cannot verify whether `localSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+          "message": "tests/conditional-fixture.spec.ts:12: cannot verify whether `localSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
           "file": "tests/conditional-fixture.spec.ts",
-          "message": "tests/conditional-fixture.spec.ts:14: cannot verify whether `chainedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+          "message": "tests/conditional-fixture.spec.ts:15: cannot verify whether `chainedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
           "file": "tests/conditional-fixture.spec.ts",
-          "message": "tests/conditional-fixture.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+          "message": "tests/conditional-fixture.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
           "file": "tests/conditional-fixture.spec.ts",
-          "message": "tests/conditional-fixture.spec.ts:8: cannot verify whether `reexported` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+          "message": "tests/conditional-fixture.spec.ts:9: cannot verify whether `reexported` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -601,6 +601,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "playwright-no-serial",
           "file": "tests/logical-assign.spec.ts",
           "message": "tests/logical-assign.spec.ts:14: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:17: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:20: cannot verify whether `s` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
