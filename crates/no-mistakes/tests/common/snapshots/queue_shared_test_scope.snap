@@ -1,0 +1,132 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/producer.ts",
+          "line": 9,
+          "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "if ((await job?.getState()) === \"failed\") {"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "src/producer.ts",
+          "job": "create",
+          "kind": "unbounded-job-retention",
+          "line": 4,
+          "message": "unbounded job retention: removeOnComplete, removeOnFail unset",
+          "queueFile": "src/queue.ts",
+          "queueName": "orders",
+          "sourceLine": "await ordersQueue.add(\"create\", { id });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include-all-tests": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/producer.ts",
+          "line": 9,
+          "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "if ((await job?.getState()) === \"failed\") {"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "line": 16,
+          "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "if ((await job?.getState()) === \"failed\") {"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "src/producer.ts",
+          "job": "create",
+          "kind": "unbounded-job-retention",
+          "line": 4,
+          "message": "unbounded job retention: removeOnComplete, removeOnFail unset",
+          "queueFile": "src/queue.ts",
+          "queueName": "orders",
+          "sourceLine": "await ordersQueue.add(\"create\", { id });"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "job": "create",
+          "kind": "unbounded-job-retention",
+          "line": 13,
+          "message": "unbounded job retention: removeOnComplete, removeOnFail unset",
+          "queueFile": "tests/orders.test.ts",
+          "queueName": "orders-test-isolated",
+          "sourceLine": "await localQueue.add(\"create\", { id: \"t1\" });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include-test-file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/producer.ts",
+          "line": 9,
+          "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "if ((await job?.getState()) === \"failed\") {"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "line": 16,
+          "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "if ((await job?.getState()) === \"failed\") {"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "src/producer.ts",
+          "job": "create",
+          "kind": "unbounded-job-retention",
+          "line": 4,
+          "message": "unbounded job retention: removeOnComplete, removeOnFail unset",
+          "queueFile": "src/queue.ts",
+          "queueName": "orders",
+          "sourceLine": "await ordersQueue.add(\"create\", { id });"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "job": "create",
+          "kind": "unbounded-job-retention",
+          "line": 13,
+          "message": "unbounded job retention: removeOnComplete, removeOnFail unset",
+          "queueFile": "tests/orders.test.ts",
+          "queueName": "orders-test-isolated",
+          "sourceLine": "await localQueue.add(\"create\", { id: \"t1\" });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
