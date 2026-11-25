@@ -1,3 +1,4 @@
+use super::analysis_policy::AnalysisDiagnostics;
 use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
@@ -11,29 +12,19 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod extract;
+mod findings;
 mod load;
 mod options;
 mod policy;
 
 pub(crate) use extract::collect;
+use findings::{origin_finding, unanalyzable_finding};
+pub(crate) use findings::{CollectedOrigins, OriginRef, UnanalyzableReason, UnanalyzableRef};
 use load::load_policy;
 use options::{applications, Application};
-pub(crate) use policy::{CspDirective, CspPolicy, ParsedOrigin};
+pub(crate) use policy::{CspDirective, CspPolicySet, ParsedOrigin};
 
 pub const RULE_ID: &str = "csp-allowed-origins";
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct OriginRef {
-    pub(crate) line: usize,
-    pub(crate) directive: CspDirective,
-    pub(crate) url: String,
-}
-
-#[derive(Default)]
-pub(crate) struct CollectedOrigins {
-    pub(crate) refs: Vec<OriginRef>,
-    pub(crate) csp_strings: Vec<String>,
-}
 
 #[doc(hidden)]
 pub fn required_files(
@@ -59,6 +50,15 @@ pub fn check_with_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    diagnostics_with_files(root, config, files).map(|diagnostics| diagnostics.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_with_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+) -> Result<AnalysisDiagnostics> {
     let paths = required_files(root, config, files)?;
     let sources = super::source_store_for_files(files);
     let target_paths: Vec<PathBuf> = paths.iter().cloned().collect();
@@ -75,9 +75,7 @@ pub fn check_with_files(
             None,
             Arc::clone(&sources),
         );
-    let mut findings = check_prepared(root, config, files, Some(&facts), &sources, None)?;
-    super::suppress_rule_findings_with_sources(root, &mut findings, &sources);
-    Ok(findings)
+    diagnostics_prepared(root, config, files, Some(&facts), &sources, None, false)
 }
 
 pub(crate) fn check_prepared(
@@ -88,28 +86,52 @@ pub(crate) fn check_prepared(
     sources: &SourceStore,
     session: Option<&AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
+    diagnostics_prepared(root, config, files, facts, sources, session, true)
+        .map(|diagnostics| diagnostics.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_prepared(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    facts: Option<&CheckFactMap>,
+    sources: &SourceStore,
+    session: Option<&AnalysisSession>,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
     let normalized_root = normalize_path(root);
     let apps = applications(&normalized_root, config, files)?;
     if apps.is_empty() {
-        return Ok(Vec::new());
+        return Ok(AnalysisDiagnostics::default());
     }
-    let mut findings = Vec::new();
-    let per_app: Result<Vec<Option<Vec<RuleFinding>>>> = apps
+    let per_app: Result<Vec<Option<AnalysisDiagnostics>>> = apps
         .into_par_iter()
         .map(|app| {
             let outcome = check_application(&normalized_root, app, facts, sources);
-            if let Some(session) = session {
-                session.capture_check_result(RULE_ID, outcome)
-            } else {
-                outcome.map(Some)
+            match session {
+                Some(session) => session.capture_check_result(RULE_ID, outcome),
+                None => outcome.map(Some),
             }
         })
         .collect();
+    let mut diagnostics = AnalysisDiagnostics::default();
     for batch in per_app?.into_iter().flatten() {
-        findings.extend(batch);
+        diagnostics.append(batch);
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    if !defer_suppression {
+        super::suppress_rule_findings_with_sources(
+            &normalized_root,
+            &mut diagnostics.findings,
+            sources,
+        );
+        super::suppress_rule_findings_with_sources(
+            &normalized_root,
+            &mut diagnostics.advisories,
+            sources,
+        );
+    }
+    Ok(super::file_diagnostics::sorted(diagnostics))
 }
 
 fn check_application(
@@ -117,7 +139,7 @@ fn check_application(
     app: Application<'_>,
     facts: Option<&CheckFactMap>,
     sources: &SourceStore,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<AnalysisDiagnostics> {
     let policy = load_policy(root, &app.csp_files, facts, sources)?;
     let csp_label = app
         .csp_files
@@ -125,7 +147,7 @@ fn check_application(
         .map(|path| relative_slash_path(root, path))
         .collect::<Vec<_>>()
         .join(", ");
-    let mut findings = Vec::new();
+    let mut diagnostics = AnalysisDiagnostics::default();
     for path in &app.target_files {
         let file = relative_slash_path(root, path);
         let Some(file_facts) = facts.and_then(|facts| facts.ts.get(path)) else {
@@ -138,27 +160,25 @@ fn check_application(
             let Some(origin) = ParsedOrigin::parse(&origin_ref.url) else {
                 continue;
             };
-            if policy.allows(origin_ref.directive, &origin, &app.self_origins) {
-                continue;
+            if !policy.allows(origin_ref.directive, &origin, &app.self_origins) {
+                diagnostics.findings.push(origin_finding(
+                    &file,
+                    origin_ref.line,
+                    origin_ref.directive,
+                    &origin,
+                    &csp_label,
+                    app.message,
+                ));
             }
-            let origin_str = origin.display();
-            let directive = origin_ref.directive.as_str();
-            findings.push(RuleFinding {
-                causes: Vec::new(),
-                rule: RULE_ID.into(),
-                file: file.clone(),
-                line: origin_ref.line,
-                message: app.message.map(str::to_owned).unwrap_or_else(|| {
-                    format!(
-                        "Origin '{origin_str}' used for {directive} is not allowed by CSP in {csp_label}. Add '{origin_str}' to {directive} in {csp_label} or remove the third-party origin."
-                    )
-                }),
-                import: None,
-                target: None,
-            });
+        }
+        for item in &file_facts.csp_allowed_origins.unanalyzable {
+            diagnostics.unanalyzable(
+                app.unanalyzable,
+                unanalyzable_finding(&file, item, &csp_label, app.message),
+            );
         }
     }
-    Ok(findings)
+    Ok(diagnostics)
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

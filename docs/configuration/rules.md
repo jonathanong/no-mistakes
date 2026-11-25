@@ -757,10 +757,14 @@ rules:
 ### Content-Security-Policy allowed origins
 
 [`csp-allowed-origins`](../rules/csp-allowed-origins.md) is opt-in and verifies
-static third-party browser origins in JS/TS/JSX/TSX files against static CSP
-directives declared in the root-relative files listed in required
-`options.cspFiles`. Optional `options.selfOrigins` lists first-party origins
-treated as `'self'` (default `[]`).
+third-party browser origins (including protocol-relative `//host` and IPv6
+literals) in JS/TS/JSX/TSX files against static CSP directives declared in the
+root-relative files listed in required `options.cspFiles` (first duplicate
+directive wins per policy; multiple policies intersect). Optional
+`options.selfOrigins` lists first-party origins treated as `'self'` (default
+`[]`). Dynamic URLs, malformed network URLs, and dynamic `<link>` `rel`/`as`
+attributes use the shared `options.unanalyzable` policy (`report` by default,
+with `advise` and `ignore` available).
 
 ### Vitest discovery exclusions
 

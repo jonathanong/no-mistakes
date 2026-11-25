@@ -1,0 +1,89 @@
+use super::{CspDirective, ParsedOrigin, RULE_ID};
+use crate::codebase::rules::RuleFinding;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct OriginRef {
+    pub(crate) line: usize,
+    pub(crate) directive: CspDirective,
+    pub(crate) url: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum UnanalyzableReason {
+    DynamicUrl,
+    UnparsedUrl,
+    DynamicLinkRel,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct UnanalyzableRef {
+    pub(crate) line: usize,
+    pub(crate) directive: Option<CspDirective>,
+    pub(crate) reason: UnanalyzableReason,
+}
+
+#[derive(Default)]
+pub(crate) struct CollectedOrigins {
+    pub(crate) refs: Vec<OriginRef>,
+    pub(crate) unanalyzable: Vec<UnanalyzableRef>,
+    pub(crate) csp_strings: Vec<String>,
+}
+
+pub(super) fn origin_finding(
+    file: &str,
+    line: usize,
+    directive: CspDirective,
+    origin: &ParsedOrigin,
+    csp_label: &str,
+    custom_message: Option<&str>,
+) -> RuleFinding {
+    let origin_str = origin.display();
+    let directive = directive.as_str();
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.into(),
+        file: file.to_owned(),
+        line,
+        message: custom_message.map(str::to_owned).unwrap_or_else(|| {
+            format!(
+                "Origin '{origin_str}' used for {directive} is not allowed by CSP in {csp_label}. Add '{origin_str}' to {directive} in {csp_label} or remove the third-party origin."
+            )
+        }),
+        import: None,
+        target: None,
+    }
+}
+
+pub(super) fn unanalyzable_finding(
+    file: &str,
+    item: &UnanalyzableRef,
+    csp_label: &str,
+    custom_message: Option<&str>,
+) -> RuleFinding {
+    let message = custom_message.map(str::to_owned).unwrap_or_else(|| match item.reason {
+        UnanalyzableReason::DynamicUrl => {
+            let dir = item.directive.map(CspDirective::as_str).unwrap_or("default-src");
+            format!(
+                "Dynamic URL used for {dir} cannot be statically verified against CSP in {csp_label}. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'."
+            )
+        }
+        UnanalyzableReason::UnparsedUrl => {
+            let dir = item.directive.map(CspDirective::as_str).unwrap_or("default-src");
+            format!(
+                "Malformed network URL used for {dir} cannot be statically verified against CSP in {csp_label}. Use a valid origin URL (for example 'https://example.com/path') or set options.unanalyzable to 'advise' or 'ignore'."
+            )
+        }
+        UnanalyzableReason::DynamicLinkRel => format!(
+            "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for {csp_label}. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'."
+        ),
+    });
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.into(),
+        file: file.to_owned(),
+        line: item.line,
+        message,
+        import: None,
+        target: Some("unanalyzable".into()),
+    }
+}

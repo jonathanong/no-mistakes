@@ -1,4 +1,4 @@
-export function Valid(dynamicUrl: string, other: { fetch: (u: string) => void }, props: Record<string, string>) {
+export function Valid(dynamicId: string, other: { fetch: (u: string) => void }, props: Record<string, string>) {
   void fetch("https://api.example.com/v1/items");
   void window.fetch("https://api.example.com/v1/window");
   void self.fetch("https://api.example.com/v1/self");
@@ -6,9 +6,10 @@ export function Valid(dynamicUrl: string, other: { fetch: (u: string) => void },
   void window?.fetch("https://unlisted-opt.example.net/optional");
   void new WebSocket("wss://rt.example.com:8443/stream");
   void new globalThis.EventSource("https://api.example.com/events");
-  void fetch(dynamicUrl);
+  void fetch(`/api/local/${dynamicId}`);
+  void fetch(`https://api.example.com/v1/${dynamicId}`);
   void fetch("/api/local");
-  const note = `not a policy ${dynamicUrl}`;
+  const note = `not a policy ${dynamicId}`;
   void note;
   return (
     <div>
@@ -27,10 +28,11 @@ export function Valid(dynamicUrl: string, other: { fetch: (u: string) => void },
       <link rel="help" href="https://app.example.com/help" />
       <link rel="preconnect" href="https://unlisted-hint.example.net" />
       <img {...props} data-kind="logo" src="https://cdn.example.com/logo.png" alt="" />
-      <img src={dynamicUrl ? "https://cdn.example.com/a.png" : "https://cdn.example.com/b.png"} alt="" />
+      <img src={dynamicId ? "https://cdn.example.com/a.png" : "https://cdn.example.com/b.png"} alt="" />
       <img src={"https://cdn.example.com/expr.png"} alt="" />
       <img src={`https://cdn.example.com/tpl.png`} alt="" />
-      <img src={`https://unlisted.example.net/${dynamicUrl}`} alt="" />
+      <img src={`https://cdn.example.com/u/${dynamicId}.png`} alt="" />
+      <img src="//cdn.example.com/proto-rel.png" alt="" />
       <img src="https://eu.assets.example.org/banner.webp" alt="" />
       <img src="https://app.example.com/brand.svg" alt="" />
       <img src="/local/avatar.png" alt="" />

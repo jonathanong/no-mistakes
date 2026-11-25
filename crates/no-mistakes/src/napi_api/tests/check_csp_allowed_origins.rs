@@ -37,4 +37,30 @@ fn csp_allowed_origins_async_check_matches_cli() {
     )
     .unwrap();
     assert_eq!(batched["reports"][0]["result"], native);
+
+    let advise_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/csp-allowed-origins/fixture/unanalyzable-and-urls")
+        .canonicalize()
+        .unwrap();
+    let advise_config = advise_root.join("advise.yml");
+    let advise_opts = json!({"root": advise_root, "config": advise_config});
+    let advise_native: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            advise_opts.to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let advise_cli = crate::check_runner::run_all_with_options(
+        advise_root,
+        Some(advise_config),
+        None,
+        false,
+        false,
+        crate::check_runner::AnalysisOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(advise_cli.rules.len(), 2);
+    assert_eq!(advise_cli.advisories.len(), 5);
+    assert_eq!(advise_native, crate::check_runner::json_value(&advise_cli));
 }

@@ -1067,8 +1067,10 @@ exact version selectors. Configure the rule in the YAML selected by `config`.
 The configured [`csp-allowed-origins`](rules/csp-allowed-origins.md) rule runs
 through async `check()` using the existing `checkJson` binding and through
 batched `analyzeProject()` check reports. `CspAllowedOriginsOptions` exports
-`cspFiles` (`options.cspFiles`) and optional `selfOrigins`
-(`options.selfOrigins`). Findings use the standard `RuleFinding` shape.
+`cspFiles` (`options.cspFiles`), optional `selfOrigins`
+(`options.selfOrigins`), and optional `unanalyzable` (`options.unanalyzable`,
+default `"report"`). Findings and advisories use the standard `RuleFinding`
+shape.
 
 The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
 rule runs through async `check()` using the existing `checkJson` binding and

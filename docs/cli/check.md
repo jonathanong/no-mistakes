@@ -363,10 +363,12 @@ scripts targeting Bash before 4.4 and
 [`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md) for zsh scripts.
 Both report shell source locations in `check` without invoking ShellCheck.
 
-Enable [`csp-allowed-origins`](../rules/csp-allowed-origins.md) to report static
+Enable [`csp-allowed-origins`](../rules/csp-allowed-origins.md) to report
 third-party browser origins (`<script>`, `<img>`, `<link>`, `<iframe>`, media,
-`fetch`, `WebSocket`, `EventSource`) that are not allowed by the CSP directives
-in `options.cspFiles` (with optional `options.selfOrigins` for `'self'`).
+`fetch`, `WebSocket`, `EventSource`, including protocol-relative `//host` and
+IPv6 literals) not allowed by the intersected CSP directives in
+`options.cspFiles` (with optional `options.selfOrigins` for `'self'` and
+`options.unanalyzable` for dynamic URLs).
 
 Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch
 literal `test.exclude` arrays that drop Vitest's discovery exclusions in the

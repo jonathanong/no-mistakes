@@ -1,8 +1,12 @@
+use std::net::Ipv6Addr;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) enum CspDirective {
     Default,
     Script,
+    ScriptElem,
     Style,
+    StyleElem,
     Img,
     Connect,
     Frame,
@@ -16,7 +20,9 @@ impl CspDirective {
         match self {
             Self::Default => "default-src",
             Self::Script => "script-src",
+            Self::ScriptElem => "script-src-elem",
             Self::Style => "style-src",
+            Self::StyleElem => "style-src-elem",
             Self::Img => "img-src",
             Self::Connect => "connect-src",
             Self::Frame => "frame-src",
@@ -29,8 +35,10 @@ impl CspDirective {
     pub(crate) fn parse(token: &str) -> Option<Self> {
         match token.to_ascii_lowercase().as_str() {
             "default-src" => Some(Self::Default),
-            "script-src" | "script-src-elem" => Some(Self::Script),
-            "style-src" | "style-src-elem" => Some(Self::Style),
+            "script-src" => Some(Self::Script),
+            "script-src-elem" => Some(Self::ScriptElem),
+            "style-src" => Some(Self::Style),
+            "style-src-elem" => Some(Self::StyleElem),
             "img-src" => Some(Self::Img),
             "connect-src" => Some(Self::Connect),
             "frame-src" => Some(Self::Frame),
@@ -52,11 +60,16 @@ pub(crate) struct ParsedOrigin {
 impl ParsedOrigin {
     pub(crate) fn parse(raw: &str) -> Option<Self> {
         let trimmed = raw.trim();
-        let (scheme, rest) = trimmed.split_once("://")?;
-        let scheme = scheme.to_ascii_lowercase();
-        if !matches!(scheme.as_str(), "http" | "https" | "ws" | "wss") {
-            return None;
-        }
+        let (scheme, rest) = if let Some(rest) = trimmed.strip_prefix("//") {
+            ("https".to_owned(), rest)
+        } else {
+            let (scheme, rest) = trimmed.split_once("://")?;
+            let scheme = scheme.to_ascii_lowercase();
+            if !matches!(scheme.as_str(), "http" | "https" | "ws" | "wss") {
+                return None;
+            }
+            (scheme, rest)
+        };
         let authority = rest.split(['/', '?', '#']).next()?;
         if authority.is_empty() || authority.contains('@') {
             return None;
@@ -66,11 +79,18 @@ impl ParsedOrigin {
             return None;
         }
         let port = normalize_default_port(&scheme, port);
-        Some(Self {
-            scheme,
-            host: host.to_ascii_lowercase(),
-            port,
-        })
+        Some(Self { scheme, host, port })
+    }
+
+    pub(crate) fn is_network_like_url(raw: &str) -> bool {
+        let trimmed = raw.trim();
+        trimmed.starts_with("//")
+            || trimmed.split_once("://").is_some_and(|(scheme, _)| {
+                matches!(
+                    scheme.to_ascii_lowercase().as_str(),
+                    "http" | "https" | "ws" | "wss"
+                )
+            })
     }
 
     pub(crate) fn display(&self) -> String {
@@ -103,25 +123,49 @@ pub(super) fn host_matches(pattern: &str, actual: &str) -> bool {
     }
 }
 
-pub(super) fn split_host_port(authority: &str) -> Option<(&str, Option<u16>)> {
-    if let Some((host, port)) = authority.rsplit_once(':') {
-        let parsed = port.parse::<u16>().ok()?;
-        Some((host, Some(parsed)))
-    } else {
-        Some((authority, None))
+pub(super) fn is_valid_csp_host(host: &str) -> bool {
+    !host.is_empty()
+        && (host.contains('.')
+            || host == "localhost"
+            || (host.starts_with('[') && host.ends_with(']')))
+}
+
+fn split_authority(authority: &str) -> Option<(String, Option<&str>)> {
+    if authority.starts_with('[') {
+        let end = authority.find(']')?;
+        let ip: Ipv6Addr = authority[1..end].parse().ok()?;
+        let rest = &authority[end + 1..];
+        let port = if rest.is_empty() {
+            None
+        } else {
+            Some(rest.strip_prefix(':')?)
+        };
+        return Some((format!("[{ip}]"), port));
+    }
+    if authority.contains(['[', ']']) {
+        return None;
+    }
+    match authority.rsplit_once(':') {
+        Some((host, port)) if !host.contains(':') => Some((host.to_ascii_lowercase(), Some(port))),
+        Some(_) => None,
+        None => Some((authority.to_ascii_lowercase(), None)),
     }
 }
 
-pub(super) fn split_host_port_pattern(authority: &str) -> Option<(&str, PortPattern)> {
-    if let Some((host, port)) = authority.rsplit_once(':') {
-        if port == "*" {
-            return Some((host, PortPattern::Any));
-        }
-        let parsed = port.parse::<u16>().ok()?;
-        Some((host, PortPattern::Exact(Some(parsed))))
-    } else {
-        Some((authority, PortPattern::Exact(None)))
-    }
+pub(super) fn split_host_port(authority: &str) -> Option<(String, Option<u16>)> {
+    let (host, port) = split_authority(authority)?;
+    let port = port.map(str::parse::<u16>).transpose().ok()?;
+    Some((host, port))
+}
+
+pub(super) fn split_host_port_pattern(authority: &str) -> Option<(String, PortPattern)> {
+    let (host, port) = split_authority(authority)?;
+    let port = match port {
+        None => PortPattern::Exact(None),
+        Some("*") => PortPattern::Any,
+        Some(raw) => PortPattern::Exact(Some(raw.parse::<u16>().ok()?)),
+    };
+    Some((host, port))
 }
 
 pub(super) fn normalize_default_port(scheme: &str, port: Option<u16>) -> Option<u16> {

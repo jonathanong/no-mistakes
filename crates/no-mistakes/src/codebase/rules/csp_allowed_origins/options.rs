@@ -1,7 +1,7 @@
 use super::{ParsedOrigin, RULE_ID};
 use crate::codebase::rules::path_filter::RulePathFilter;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::config::v2::NoMistakesConfig;
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -21,6 +21,7 @@ pub(super) struct Application<'a> {
     pub(super) self_origins: Vec<ParsedOrigin>,
     pub(super) target_files: Vec<PathBuf>,
     pub(super) message: Option<&'a str>,
+    pub(super) unanalyzable: Unanalyzable,
 }
 
 pub(super) fn applications<'a>(
@@ -43,6 +44,7 @@ pub(super) fn applications<'a>(
     let mut applications = Vec::new();
     for rule in rules {
         let options: Options = rule.try_rule_options()?;
+        let unanalyzable = config.effective_rule_analysis(rule)?.unanalyzable;
         anyhow::ensure!(
             !options.csp_files.is_empty(),
             "{RULE_ID} requires non-empty options.cspFiles naming the file(s) that declare your Content-Security-Policy"
@@ -61,11 +63,16 @@ pub(super) fn applications<'a>(
         }
         let mut self_origins = Vec::with_capacity(options.self_origins.len());
         for raw in options.self_origins {
-            let origin = ParsedOrigin::parse(raw.trim()).ok_or_else(|| {
-                anyhow::anyhow!(
-                    "{RULE_ID} options.selfOrigins entry '{raw}' must be a valid origin (for example https://app.example.com)"
-                )
-            })?;
+            let trimmed = raw.trim();
+            let origin = trimmed
+                .contains("://")
+                .then(|| ParsedOrigin::parse(trimmed))
+                .flatten()
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "{RULE_ID} options.selfOrigins entry '{raw}' must be a valid origin (for example https://app.example.com)"
+                    )
+                })?;
             self_origins.push(origin);
         }
         let filter = RulePathFilter::new(root, config, rule)?;
@@ -83,6 +90,7 @@ pub(super) fn applications<'a>(
             self_origins,
             target_files,
             message: rule.message.as_deref(),
+            unanalyzable,
         });
     }
     Ok(applications)
