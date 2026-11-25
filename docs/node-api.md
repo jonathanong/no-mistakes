@@ -450,7 +450,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `vitest-default-excludes`, and `vitest-project-policy` |
+| `check` | `check(options)`, including configured `csp-allowed-origins`, `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `vitest-default-excludes`, and `vitest-project-policy` |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -1045,6 +1045,12 @@ rule runs through async `check()` and `analyzeProject()` check reports.
 `PnpmReleaseAgePermanentPackage` entries with an exact `name` or
 package-name `pattern`, and `PnpmReleaseAgeTemporaryGroup` entries with
 exact version selectors. Configure the rule in the YAML selected by `config`.
+
+The configured [`csp-allowed-origins`](rules/csp-allowed-origins.md) rule runs
+through async `check()` using the existing `checkJson` binding and through
+batched `analyzeProject()` check reports. `CspAllowedOriginsOptions` exports
+`cspFiles` (`options.cspFiles`) and optional `selfOrigins`
+(`options.selfOrigins`). Findings use the standard `RuleFinding` shape.
 
 The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
 rule runs through async `check()` using the existing `checkJson` binding and

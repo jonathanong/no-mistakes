@@ -137,6 +137,7 @@ pub(crate) struct CheckFileFacts {
     >,
     pub(crate) vitest_default_excludes:
         crate::codebase::rules::vitest_default_excludes::CollectedExcludes,
+    pub(crate) csp_allowed_origins: crate::codebase::rules::csp_allowed_origins::CollectedOrigins,
     pub(crate) sql_source_prerequisites: super::SqlSourcePrerequisites,
     pub ts: Arc<TsFileFacts>,
     pub(crate) lint_suppressions:

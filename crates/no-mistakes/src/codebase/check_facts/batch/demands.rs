@@ -17,6 +17,7 @@ pub(super) fn demands_by_path(
             graph: request.plan.graph,
             call_site_paths: request.plan.call_site_paths.clone(),
             vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
+            csp_allowed_origins_paths: request.plan.csp_allowed_origins_paths.clone(),
             test_reliability_paths: request.plan.test_reliability_paths.clone(),
             playwright_fixture_support: request.plan.playwright_fixture_support,
             graph_context: request.plan.graph_context.clone(),
@@ -61,6 +62,7 @@ pub(super) fn demands_by_path(
             .plan
             .vitest_default_exclude_paths
             .iter()
+            .chain(request.plan.csp_allowed_origins_paths.iter())
             .chain(request.plan.test_reliability_paths.keys())
             .filter(|path| !plans.contains_key(path.as_path()))
             .cloned()
@@ -91,6 +93,7 @@ pub(super) fn demands_by_path(
         if !supplemental.is_empty() {
             let supplemental_plan = CheckFactPlan {
                 vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
+                csp_allowed_origins_paths: request.plan.csp_allowed_origins_paths.clone(),
                 test_reliability_paths: request.plan.test_reliability_paths.clone(),
                 playwright_fixture_support: request.plan.playwright_fixture_support,
                 ..CheckFactPlan::default()

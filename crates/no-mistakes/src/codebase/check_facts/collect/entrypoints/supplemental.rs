@@ -61,6 +61,7 @@ fn collect_with_request(
     // without requesting call summaries from unrelated primary/graph files.
     plan.require_call_site_paths(&supplemental_call_sites);
     let vitest_default_exclude_paths = Arc::clone(&plan.vitest_default_exclude_paths);
+    let csp_allowed_origins_paths = Arc::clone(&plan.csp_allowed_origins_paths);
     let test_reliability_paths = Arc::clone(&plan.test_reliability_paths);
     // Main collection can admit these paths through production imports,
     // Playwright sources, or runner helpers. Keep the richer entry when it does.
@@ -81,6 +82,7 @@ fn collect_with_request(
     let missing: std::collections::BTreeSet<_> = supplemental_call_sites
         .iter()
         .chain(vitest_default_exclude_paths.iter())
+        .chain(csp_allowed_origins_paths.iter())
         .chain(test_reliability_paths.keys())
         .filter(|path| !facts.ts.contains_key(path))
         .cloned()
@@ -88,6 +90,7 @@ fn collect_with_request(
     if !missing.is_empty() {
         let mut plan = CheckFactPlan {
             vitest_default_exclude_paths,
+            csp_allowed_origins_paths,
             test_reliability_paths,
             ..Default::default()
         };

@@ -31,6 +31,7 @@ macro_rules! filesystem_rules {
             CONFIG_PATH_REFERENCES => config_path_references::check_with_files => "",
             CSHARP_MAX_LINES_PER_FILE => csharp_max_lines_per_file::check_with_files => "",
             CSHARP_NO_ASYNC_VOID_DELEGATE => csharp_no_async_void_delegate::check_with_files => "",
+            CSP_ALLOWED_ORIGINS => csp_allowed_origins::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/csp-allowed-origins-options.yml")),
             FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files => "",
             FORBIDDEN_LINT_SUPPRESSIONS => forbidden_lint_suppressions::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/lint-suppression-options.yml")),
             FORBIDDEN_WORKSPACE_CLOSURE => forbidden_workspace_closure::check_with_files => "",

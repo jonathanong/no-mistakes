@@ -23,6 +23,10 @@ impl CheckFactPlan {
             Arc::make_mut(&mut self.vitest_default_exclude_paths)
                 .extend(other.vitest_default_exclude_paths.iter().cloned());
         }
+        if !other.csp_allowed_origins_paths.is_empty() {
+            Arc::make_mut(&mut self.csp_allowed_origins_paths)
+                .extend(other.csp_allowed_origins_paths.iter().cloned());
+        }
         if !other.lint_suppression_paths.is_empty() {
             Arc::make_mut(&mut self.lint_suppression_paths)
                 .extend(other.lint_suppression_paths.iter().cloned());

@@ -295,6 +295,9 @@ mod cli_gha_snapshot_local_action_checkout;
 #[path = "cli_snapshot_dependabot_cooldown_policy.rs"]
 mod cli_snapshot_dependabot_cooldown_policy;
 
+#[path = "cli_snapshot_csp_allowed_origins.rs"]
+mod cli_snapshot_csp_allowed_origins;
+
 #[path = "cli_snapshot_vitest_default_excludes.rs"]
 mod cli_snapshot_vitest_default_excludes;
 #[path = "cli_snapshot_vitest_project_policy.rs"]

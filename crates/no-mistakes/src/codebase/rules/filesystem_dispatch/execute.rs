@@ -74,6 +74,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     let owned_facts = if facts.is_none()
         && (rule_enabled(config, FORBIDDEN_LINT_SUPPRESSIONS)
             || rule_enabled(config, VITEST_DEFAULT_EXCLUDES)
+            || rule_enabled(config, CSP_ALLOWED_ORIGINS)
             || super::test_reliability::configured(config)
             || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
             || rule_enabled(config, REQUIRED_COMPANION_IMPORTS)

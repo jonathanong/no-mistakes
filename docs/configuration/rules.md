@@ -734,6 +734,14 @@ rules:
             - runner.arch
 ```
 
+### Content-Security-Policy allowed origins
+
+[`csp-allowed-origins`](../rules/csp-allowed-origins.md) is opt-in and verifies
+static third-party browser origins in JS/TS/JSX/TSX files against static CSP
+directives declared in the root-relative files listed in required
+`options.cspFiles`. Optional `options.selfOrigins` lists first-party origins
+treated as `'self'` (default `[]`).
+
 ### Vitest discovery exclusions
 
 [`vitest-default-excludes`](../rules/vitest-default-excludes.md) checks literal

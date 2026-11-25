@@ -1,0 +1,99 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "headers-text": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://unlisted.example.net' used for img-src is not allowed by CSP in public/_headers. Add 'https://unlisted.example.net' to img-src in public/_headers or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted.example.net/bad.png\" alt=\"\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/violations.tsx",
+          "line": 10,
+          "message": "Origin 'https://unlisted-media.example.net' used for media-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-media.example.net' to media-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<video src=\"https://unlisted-media.example.net/clip.mp4\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 2,
+          "message": "Origin 'https://unlisted-api.example.net' used for connect-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-api.example.net' to connect-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://unlisted-api.example.net/v1/events\");"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 3,
+          "message": "Origin 'wss://unlisted-rt.example.net' used for connect-src is not allowed by CSP in src/csp.ts. Add 'wss://unlisted-rt.example.net' to connect-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void new WebSocket(\"wss://unlisted-rt.example.net/socket\");"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 6,
+          "message": "Origin 'https://unlisted-analytics.example.net' used for script-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-analytics.example.net' to script-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://unlisted-analytics.example.net/sdk.js\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 7,
+          "message": "Origin 'https://unlisted-fonts.example.net' used for style-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-fonts.example.net' to style-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link rel=\"stylesheet\" href=\"https://unlisted-fonts.example.net/app.css\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 8,
+          "message": "Origin 'https://unlisted-cdn.example.net' used for img-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-cdn.example.net' to img-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted-cdn.example.net/hero.png\" alt=\"\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 9,
+          "message": "Origin 'https://unlisted-widget.example.net' used for frame-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-widget.example.net' to frame-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<iframe src=\"https://unlisted-widget.example.net/embed\" title=\"widget\" />"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -15,6 +15,8 @@ pub struct CheckFactPlan {
     #[doc(hidden)]
     pub vitest_default_exclude_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     #[doc(hidden)]
+    pub csp_allowed_origins_paths: Arc<std::collections::BTreeSet<PathBuf>>,
+    #[doc(hidden)]
     pub test_reliability_paths: Arc<
         std::collections::BTreeMap<PathBuf, crate::codebase::rules::test_reliability::SourceDemand>,
     >,
