@@ -319,3 +319,49 @@ fn queue_shared_test_scope_check_json_snapshot() {
         );
     }
 }
+
+#[test]
+fn queue_shared_test_scope_unmasking_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-shared-test-scope-unmasking");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "queue_shared_test_scope_unmasking",
+        &[
+            ("default", root.clone(), PathBuf::new()),
+            (
+                "include-all-tests",
+                root.clone(),
+                root.join("include-all-tests.yml"),
+            ),
+        ],
+        &[],
+        &[],
+    );
+
+    assert_eq!(reports["default"]["exitCode"], 1);
+    let default_queues = reports["default"]["report"]["queues"].as_array().unwrap();
+    assert!(
+        default_queues
+            .iter()
+            .any(|f| f["kind"] == "shared-queue-rate-limit" && f["file"] == "src/dispatch.ts"),
+        "expected unmasked shared-queue-rate-limit on src/dispatch.ts: {default_queues:?}"
+    );
+    assert!(
+        default_queues
+            .iter()
+            .any(|f| f["kind"] == "mixed-priority" && f["file"] == "src/triage.ts"),
+        "expected unmasked mixed-priority on src/triage.ts: {default_queues:?}"
+    );
+    assert!(
+        default_queues
+            .iter()
+            .any(|f| f["kind"] == "mixed-priority" && f["file"] == "src/batch.ts"),
+        "expected unmasked mixed-priority on src/batch.ts: {default_queues:?}"
+    );
+
+    assert_eq!(reports["include-all-tests"]["exitCode"], 0);
+    assert_eq!(
+        reports["include-all-tests"]["report"]["queues"],
+        serde_json::json!([])
+    );
+}
