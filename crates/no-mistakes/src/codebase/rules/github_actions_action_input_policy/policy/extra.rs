@@ -47,7 +47,11 @@ pub(super) fn validate(family: &Family, errors: &mut BTreeSet<String>) {
             ));
         }
     }
-    let required = family.require.keys().map(|key| ("actions[].require", key));
+    let required = family
+        .require
+        .keys()
+        .chain(family.invalid_require_keys.iter())
+        .map(|key| ("actions[].require", key));
     let present = family
         .require_present
         .iter()

@@ -202,6 +202,7 @@ fn invalid_rule_options_fail_early_with_exit_2_and_empty_stdout() {
         "action-input.yml",
         "action-input-dynamic-uses.yml",
         "action-input-empty-actions-bad-include.yml",
+        "action-input-invalid-require-value.yml",
         "action-input-no-files-bad-include.yml",
         "action-input-require-ban-conflict.yml",
         "cache.yml",

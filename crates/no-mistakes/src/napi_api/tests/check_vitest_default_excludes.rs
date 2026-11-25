@@ -178,6 +178,7 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
         ("action-input.yml", 1),
         ("action-input-dynamic-uses.yml", 2),
         ("action-input-empty-actions-bad-include.yml", 1),
+        ("action-input-invalid-require-value.yml", 2),
         ("action-input-no-files-bad-include.yml", 1),
         ("action-input-require-ban-conflict.yml", 2),
         ("duplicate-apps.yml", 2),
@@ -303,4 +304,62 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
     );
     assert_eq!(mixed_ts.reason, cli_ts);
     assert!(cli_ts.contains("options.forbiddenPaths"), "{cli_ts}");
+
+    let outside_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/options-audit/fixture/issue-3958-fragment")
+        .canonicalize()
+        .unwrap();
+    let outside_err = format!(
+        "{:#}",
+        crate::check_runner::run_all_with_options(
+            outside_root,
+            Some(cache_cfg.clone()),
+            None,
+            false,
+            false,
+            crate::check_runner::AnalysisOptions::default(),
+        )
+        .err()
+        .expect("config outside root must fail")
+    );
+    assert!(!outside_err.starts_with('/'), "{outside_err}");
+    assert!(outside_err.contains("cache.yml: "), "{outside_err}");
+
+    let valid_frag_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/options-audit/fixture/issue-3958-valid-fragment")
+        .canonicalize()
+        .unwrap();
+    let valid_frag_batch = batch(json!({
+        "root": valid_frag_root,
+        "reports": [{"type": "ciTopology"}],
+    }));
+    let workflows = valid_frag_batch["reports"][0]["result"]["workflows"]
+        .as_array()
+        .unwrap();
+    assert!(
+        workflows
+            .iter()
+            .any(|w| w["path"] == "custom-workflows/build.yml"),
+        "{valid_frag_batch}"
+    );
+
+    let bad_frag_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/options-audit/fixture/issue-3958-malformed-fragment")
+        .canonicalize()
+        .unwrap();
+    let bad_frag_err = crate::napi_api::analyze_project::analyze_project_json_impl(
+        crate::napi_api::options::test_json_arg(
+            json!({
+                "root": bad_frag_root,
+                "reports": [{"type": "symbols", "files": ["index.ts"]}],
+            })
+            .to_string(),
+        ),
+    )
+    .expect_err("malformed fragment must reject symbols batch");
+    assert!(
+        bad_frag_err.reason.contains("broken.yml"),
+        "{}",
+        bad_frag_err.reason
+    );
 }

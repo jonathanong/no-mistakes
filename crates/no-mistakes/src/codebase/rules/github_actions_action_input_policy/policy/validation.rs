@@ -70,6 +70,9 @@ pub(super) fn merge_action(
                 value,
                 format_args!("a string, number, or boolean for action `{name}`"),
             ));
+            if !family.invalid_require_keys.iter().any(|k| k == key) {
+                family.invalid_require_keys.push(key.to_string());
+            }
             continue;
         };
         if let Some(existing) = family.require.get(key) {

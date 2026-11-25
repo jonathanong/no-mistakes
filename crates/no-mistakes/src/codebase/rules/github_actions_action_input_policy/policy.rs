@@ -20,6 +20,7 @@ pub(super) struct Compiled {
 pub(super) struct Family {
     pub(super) name: String,
     require: BTreeMap<String, String>,
+    pub(super) invalid_require_keys: Vec<String>,
     ban: Vec<String>,
     allowed: Option<Vec<String>>,
     require_present: Vec<String>,
@@ -64,6 +65,7 @@ fn compile_with_errors(opts: Options, errors: &mut BTreeSet<String>) -> Compiled
             let mut scratch = Family {
                 name: action.uses.clone(),
                 require: BTreeMap::new(),
+                invalid_require_keys: Vec::new(),
                 ban: Vec::new(),
                 allowed: None,
                 require_present: Vec::new(),
@@ -76,6 +78,7 @@ fn compile_with_errors(opts: Options, errors: &mut BTreeSet<String>) -> Compiled
         let family = families.entry(name.clone()).or_insert_with(|| Family {
             name,
             require: BTreeMap::new(),
+            invalid_require_keys: Vec::new(),
             ban: Vec::new(),
             allowed: None,
             require_present: Vec::new(),

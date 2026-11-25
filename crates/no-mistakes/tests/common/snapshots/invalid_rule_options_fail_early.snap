@@ -17,6 +17,11 @@ source: crates/no-mistakes/tests/cli_rule_options_audit.rs
     "stdout": "",
     "stderr": "error: action-input-empty-actions-bad-include.yml: Rule `github-actions-action-input-policy` has invalid value \"[unclosed\" for `options.include`. Expected a valid glob (error parsing glob '[unclosed': unclosed character class; missing ']').\n"
   },
+  "action-input-invalid-require-value": {
+    "exitCode": 2,
+    "stdout": "",
+    "stderr": "error: action-input-invalid-require-value.yml: Rule `github-actions-action-input-policy` has invalid value \"format\" for `options.actions[].require`. Expected an input key in allowedInputs [\"name\"] for action `example/publish-widget`.\naction-input-invalid-require-value.yml: Rule `github-actions-action-input-policy` has invalid value Sequence [String(\"json\")] for `options.actions[].require.format`. Expected a string, number, or boolean for action `example/publish-widget`.\n"
+  },
   "action-input-no-files-bad-include": {
     "exitCode": 2,
     "stdout": "",
