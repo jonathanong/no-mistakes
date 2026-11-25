@@ -127,6 +127,9 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
             }
         }
         if let Some(class) = self.bindings.receiver_class(object) {
+            if let Expression::NewExpression(instance) = object {
+                self.visit_arguments(&instance.arguments);
+            }
             for value in receivers::class_field_values(class, property) {
                 if self.visited_fields.insert(value.span()) {
                     self.visit_expression(value);

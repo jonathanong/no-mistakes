@@ -4,6 +4,13 @@ const { memberName } = require("./playwright-static-call");
 const { resolveAlias, variableFor } = require("./playwright-static-call-alias");
 
 const LOCATOR_REFINEMENTS = new Set(["first", "last", "nth", "filter"]);
+const TS_WRAPPERS = new Set([
+  "TSAsExpression",
+  "TSSatisfiesExpression",
+  "TSNonNullExpression",
+  "TSTypeAssertion",
+  "TSInstantiationExpression",
+]);
 
 function sentinelSelector(argument) {
   if (argument?.type === "Literal") return argument.value;
@@ -19,7 +26,7 @@ function isSentinelScrollCall(node, context, locatorNames, testIds) {
   let named = false;
   const seen = new Set();
   for (;;) {
-    if (receiver.type === "ChainExpression") {
+    if (receiver.type === "ChainExpression" || TS_WRAPPERS.has(receiver.type)) {
       receiver = receiver.expression;
       continue;
     }

@@ -173,6 +173,9 @@ pub(super) fn project(
                         .extend(exports.iter().cloned());
                 }
                 verified.contains(&key)
+                    || lookup
+                        .local(path, import)
+                        .is_some_and(|export| lookup.has_uncertain(&export))
             });
             location.resolved_playwright_exports.sort();
             location.resolved_playwright_exports.dedup();

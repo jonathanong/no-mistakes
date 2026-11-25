@@ -180,6 +180,12 @@ const suite = {
       options: [sentinelOptions],
     },
     {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-ts-assertion.spec.ts"),
+      filename: "e2e/sentinel-ts-assertion.spec.ts",
+      languageOptions: { parser: tsParser },
+      options: [sentinelOptions],
+    },
+    {
       code: fixture("playwright-no-raw-scroll-pagination/sentinel-only.js"),
       filename: "e2e/sentinel-only.spec.js",
       options: [{ sentinelLocatorNames: ["sentinel"] }],

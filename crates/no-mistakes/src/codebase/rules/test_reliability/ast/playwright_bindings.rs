@@ -57,9 +57,16 @@ pub(crate) fn fixture_initializers<'a>(
                 .filter(|declaration| declaration.id.is_binding_identifier())
                 .and_then(|declaration| declaration.init.as_ref())
             {
-                if let Some(import) = bindings.playwright_value_origin(initializer).into_resolved() {
-                    result.values.insert(export.local.clone(), import);
-                    continue;
+                match bindings.playwright_value_origin(initializer) {
+                    ValueTrace::Resolved(import) => {
+                        result.values.insert(export.local.clone(), import);
+                        continue;
+                    }
+                    ValueTrace::Unresolved(_, candidates) => {
+                        result.uncertain.insert(export.local.clone(), candidates);
+                        continue;
+                    }
+                    ValueTrace::None => {}
                 }
             }
         }

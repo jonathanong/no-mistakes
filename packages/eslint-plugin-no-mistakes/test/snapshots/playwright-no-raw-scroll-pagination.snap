@@ -362,6 +362,33 @@
       ]
     },
     {
+      "file": "e2e/sentinel-ts-assertion.spec.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 42,
+          "endLine": 5,
+          "file": "e2e/sentinel-ts-assertion.spec.ts",
+          "line": 5,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "sentinelLocatorNames": [
+            "sentinel"
+          ],
+          "sentinelTestIds": [
+            "load-more"
+          ]
+        }
+      ]
+    },
+    {
       "file": "e2e/sentinel-only.spec.js",
       "findings": [
         {

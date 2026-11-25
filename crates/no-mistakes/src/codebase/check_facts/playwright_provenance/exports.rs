@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 mod proof;
 mod wrappers;
+use wrappers::WrapperProof;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(super) struct ExportKey {
@@ -29,21 +30,11 @@ enum ExportProof {
     Unknown,
 }
 
-#[derive(Clone)]
-pub(super) enum WrapperProof {
-    Direct {
-        param_index: usize,
-        deps: Vec<(ExportKey, usize)>,
-    },
-    Alias(ExportKey),
-    Stars(Vec<ExportKey>),
-    Unknown,
-}
-
 pub(super) struct ExportLookup<'a> {
     resolver: &'a dyn ImportResolution,
     visible: &'a PathSet,
     proof: FxHashMap<ExportKey, ExportProof>,
+    uncertain: FxHashSet<ExportKey>,
     wrappers: FxHashMap<ExportKey, WrapperProof>,
     edges: Vec<CanonicalEdge<ExportKey, EdgeKind>>,
 }
@@ -54,9 +45,14 @@ impl<'a> ExportLookup<'a> {
             resolver,
             visible,
             proof: FxHashMap::default(),
+            uncertain: FxHashSet::default(),
             wrappers: FxHashMap::default(),
             edges: Vec::new(),
         }
+    }
+
+    pub(super) fn has_uncertain(&self, key: &ExportKey) -> bool {
+        self.uncertain.contains(key)
     }
 
     pub(super) fn contains(&self, key: &ExportKey) -> bool {
@@ -96,6 +92,13 @@ impl<'a> ExportLookup<'a> {
                 .into_iter()
                 .map(|target| CanonicalEdge::new(key.clone(), target, EdgeKind::SymbolReexport)),
         );
+        if facts
+            .and_then(|file| file.fixture_initializers.as_ref())
+            .and_then(|fixtures| fixtures.uncertain.get(key.name.as_ref()))
+            .is_some_and(|refs| refs.iter().any(ImportRef::is_playwright_test))
+        {
+            self.uncertain.insert(key.clone());
+        }
         self.proof.insert(key.clone(), proof);
         self.wrappers.insert(key, wrapper_proof);
     }

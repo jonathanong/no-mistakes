@@ -549,6 +549,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:4: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/distinct-factory.spec.ts",
           "message": "tests/distinct-factory.spec.ts:9: cannot verify whether `test` is Playwright's `test` (local factory returns multiple distinct fixture origins); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
@@ -611,6 +616,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "test-no-retries",
           "file": "tests/class-this.spec.ts",
           "message": "tests/class-this.spec.ts:8: cannot verify whether `this.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/constructor-arg.spec.ts",
+          "message": "tests/constructor-arg.spec.ts:7: cannot verify whether `new Holder().runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
         {
           "consumer": "test-no-retries",
