@@ -171,9 +171,8 @@ pub(crate) fn first_untraceable_lockfile_dependency(
     if prepared.lockfile_changed_packages.is_empty() {
         return None;
     }
-    let graph = match prepared.graph() {
-        Ok(graph) => graph,
-        Err(error) => return Some(error.to_string()),
+    let Ok(graph) = prepared.graph() else {
+        return Some("Failed to build dependency graph for lockfile check".to_string());
     };
     let all_test_set: HashSet<PathBuf> = discovered_tests.iter().cloned().collect();
     let result = lockfile_seed_candidates(
