@@ -1,61 +1,14 @@
-use super::expr::{call_member, pattern_names, unwrap_expr};
+use super::expr::{call_member, unwrap_expr};
 use super::extract::ExtractCtx;
-use super::item::{ItemUse, ListingItem};
-use crate::queue::extract_model::ProducerBinding;
-use crate::queue::extract_visitor::QueueVisitor;
+pub(super) use super::item::{Action, ActionScope};
 use crate::queue::object_bindings::collect_names;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, BlockStatement, CallExpression, Expression, ForInStatement,
-    ForOfStatement, ForStatement, ForStatementLeft, Function, IdentifierReference, Statement,
+    ArrowFunctionExpression, AssignmentExpression, AssignmentOperator, AssignmentTarget,
+    BindingPattern, BlockStatement, CallExpression, CatchClause, Expression, ForInStatement,
+    ForOfStatement, ForStatement, FormalParameters, Function, Statement, SwitchStatement,
     VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
-
-pub(super) enum ActionScope<'a> {
-    StateGuard(Vec<String>),
-    Listing(ListingItem<'a>),
-}
-
-pub(super) enum Action {
-    Retry,
-    Enqueue(ProducerBinding),
-    Uncertain(ProducerBinding),
-}
-
-impl Action {
-    pub(super) fn into_site(self) -> (Option<ProducerBinding>, bool) {
-        match self {
-            Self::Retry => (None, false),
-            Self::Enqueue(binding) => (Some(binding), false),
-            Self::Uncertain(binding) => (Some(binding), true),
-        }
-    }
-}
-
-impl ActionScope<'_> {
-    fn matches(&self, visitor: &QueueVisitor<'_>, id: &IdentifierReference<'_>) -> bool {
-        match self {
-            Self::StateGuard(names) => names.iter().any(|name| name == id.name.as_str()),
-            Self::Listing(item) => item.matches(visitor, id),
-        }
-    }
-
-    fn enqueue(
-        &self,
-        visitor: &QueueVisitor<'_>,
-        call: &CallExpression<'_>,
-        binding: ProducerBinding,
-    ) -> Option<Action> {
-        match self {
-            Self::StateGuard(_) => Some(Action::Enqueue(binding)),
-            Self::Listing(item) => match item.enqueue_use(visitor, call) {
-                ItemUse::Absent => None,
-                ItemUse::Uncertain => Some(Action::Uncertain(binding)),
-                ItemUse::Proven => Some(Action::Enqueue(binding)),
-            },
-        }
-    }
-}
 
 pub(super) fn find_in_expr(
     ctx: &mut ExtractCtx<'_, '_>,
@@ -111,6 +64,37 @@ impl ActionFinder<'_, '_, '_> {
             *names = saved;
         }
     }
+
+    fn shadow_pattern(&mut self, pattern: &BindingPattern<'_>) {
+        if let ActionScope::StateGuard(job_names) = &mut self.scope {
+            let mut names = Vec::new();
+            collect_names(pattern, &mut names);
+            job_names.retain(|name| !names.contains(&name.as_str()));
+        }
+    }
+
+    fn shadow_params(&mut self, params: &FormalParameters<'_>) {
+        for param in &params.items {
+            self.shadow_pattern(&param.pattern);
+        }
+        if let Some(rest) = &params.rest {
+            self.shadow_pattern(&rest.rest.argument);
+        }
+    }
+
+    fn update_binding(&mut self, name: &str, init: &Expression<'_>, can_alias: bool) {
+        if let ActionScope::StateGuard(job_names) = &mut self.scope {
+            let aliases = can_alias
+                && matches!(
+                    unwrap_expr(init),
+                    Expression::Identifier(src) if job_names.iter().any(|n| n == src.name.as_str())
+                );
+            job_names.retain(|n| n != name);
+            if aliases {
+                job_names.push(name.to_string());
+            }
+        }
+    }
 }
 
 impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
@@ -128,20 +112,37 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
     fn visit_for_in_statement(&mut self, stmt: &ForInStatement<'a>) {
         self.with_scope(|this| walk::walk_for_in_statement(this, stmt));
     }
+    fn visit_switch_statement(&mut self, stmt: &SwitchStatement<'a>) {
+        self.with_scope(|this| walk::walk_switch_statement(this, stmt));
+    }
+    fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
+        self.with_scope(|this| {
+            if let Some(param) = &clause.param {
+                this.shadow_pattern(&param.pattern);
+            }
+            walk::walk_block_statement(this, &clause.body);
+        });
+    }
 
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
-        let Some(init) = &decl.init else {
-            return;
-        };
-        self.visit_expression(init);
-        if let ActionScope::StateGuard(job_names) = &mut self.scope {
-            let names = pattern_names(&decl.id);
-            job_names.retain(|name| !names.contains(name));
-            if let Expression::Identifier(src) = unwrap_expr(init) {
-                if job_names.iter().any(|name| name == src.name.as_str()) {
-                    job_names.extend(names);
-                }
+        if let Some(init) = &decl.init {
+            self.visit_expression(init);
+            if let BindingPattern::BindingIdentifier(id) = &decl.id {
+                self.update_binding(id.name.as_str(), init, true);
+                return;
             }
+        }
+        self.shadow_pattern(&decl.id);
+    }
+
+    fn visit_assignment_expression(&mut self, assign: &AssignmentExpression<'a>) {
+        self.visit_expression(&assign.right);
+        if let AssignmentTarget::AssignmentTargetIdentifier(id) = &assign.left {
+            self.update_binding(
+                id.name.as_str(),
+                &assign.right,
+                assign.operator == AssignmentOperator::Assign,
+            );
         }
     }
 
@@ -151,12 +152,18 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
         }
         match call.callee.get_inner_expression() {
             Expression::ArrowFunctionExpression(arrow) => {
-                self.visit_arrow_function_body(&arrow.body);
+                self.with_scope(|this| {
+                    this.shadow_params(&arrow.params);
+                    this.visit_arrow_function_body(&arrow.body);
+                });
                 return;
             }
             Expression::FunctionExpression(func) => {
                 if let Some(body) = &func.body {
-                    self.visit_function_body(body);
+                    self.with_scope(|this| {
+                        this.shadow_params(&func.params);
+                        this.visit_function_body(body);
+                    });
                 }
                 return;
             }
@@ -185,14 +192,4 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
         }
         walk::walk_call_expression(self, call);
     }
-}
-
-pub(super) fn for_of_names<'a>(left: &ForStatementLeft<'a>) -> Vec<&'a str> {
-    let mut names = Vec::new();
-    if let ForStatementLeft::VariableDeclaration(decl) = left {
-        for declaration in &decl.declarations {
-            collect_names(&declaration.id, &mut names);
-        }
-    }
-    names
 }

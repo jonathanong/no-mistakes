@@ -2,8 +2,9 @@ use super::extract::{ExtractCtx, FnEnv, StateMatch, TrackedJob};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::queue::extract_helpers::static_string;
 use crate::queue::extract_model::ProducerBinding;
+use crate::queue::object_bindings::collect_names;
 use oxc_ast::ast::{
-    Argument, ArrayExpressionElement, BindingPattern, CallExpression, ChainElement, Expression,
+    Argument, ArrayExpressionElement, CallExpression, ChainElement, Expression, ForStatementLeft,
     Statement,
 };
 use oxc_ast_visit::{walk, Visit};
@@ -159,15 +160,12 @@ pub(super) fn is_early_exit(stmt: &Statement<'_>) -> bool {
     }
 }
 
-pub(super) fn pattern_names(pattern: &BindingPattern<'_>) -> Vec<String> {
-    match pattern {
-        BindingPattern::BindingIdentifier(id) => vec![id.name.to_string()],
-        BindingPattern::ObjectPattern(obj) => obj
-            .properties
-            .iter()
-            .flat_map(|prop| pattern_names(&prop.value))
-            .collect(),
-        BindingPattern::AssignmentPattern(assign) => pattern_names(&assign.left),
-        _ => Vec::new(),
+pub(super) fn for_of_names<'a>(left: &ForStatementLeft<'a>) -> Vec<&'a str> {
+    let mut names = Vec::new();
+    if let ForStatementLeft::VariableDeclaration(decl) = left {
+        for declaration in &decl.declarations {
+            collect_names(&declaration.id, &mut names);
+        }
     }
+    names
 }

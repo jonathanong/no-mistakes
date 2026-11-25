@@ -1,5 +1,7 @@
-use super::actions::{find_in_stmts, for_of_names, ActionScope};
-use super::expr::{check_state_expr, is_early_exit, match_get_job, match_state_call, unwrap_expr};
+use super::actions::{find_in_stmts, ActionScope};
+use super::expr::{
+    check_state_expr, for_of_names, is_early_exit, match_get_job, match_state_call, unwrap_expr,
+};
 use super::extract::{ExtractCtx, FnEnv};
 use super::item::ListingItem;
 use super::listing::{check_expr_for_actions, derived_listing_binding};

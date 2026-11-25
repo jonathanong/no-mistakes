@@ -13,6 +13,17 @@ export async function removeAliasedJob(id: string) {
   await sameJob.remove();
 }
 
+// Reported: alias reassigned to tracked job inside guard block
+export async function retryReassignedAlias(firstId: string, secondId: string) {
+  const first = await widgets.getJob(firstId);
+  const second = await widgets.getJob(secondId);
+  if (await first?.isFailed()) {
+    let target = second;
+    target = first;
+    await target?.retry();
+  }
+}
+
 // Reported: namespace-imported re-exported queue receiver
 export async function recreateViaNamespace(id: string) {
   const job = await queues.widgetQueue.getJob(id);
@@ -41,6 +52,11 @@ export async function replayDerivedLoopPayload() {
   for (const job of await widgets.getFailed(0, 10)) {
     const args: [string, object] = [job.name, job.data];
     await widgets.add(...args);
+  }
+  for (const job of await widgets.getFailed(0, 10)) {
+    await widgets.add("repair", {
+      nums: [1].map(() => job.data),
+    });
   }
 }
 
@@ -99,6 +115,7 @@ export async function differentJob(firstId: string, secondId: string) {
   const failed = await first?.isFailed();
   alias = second;
   if (failed) await alias?.retry();
+  const candidate = second;
   if (failed) {
     {
       const candidate = first;
@@ -113,7 +130,27 @@ export async function differentJob(firstId: string, secondId: string) {
     for (const candidate in { first }) {
       void candidate;
     }
-    const candidate = second;
+    switch (secondId) {
+      case "a":
+        const candidate = first;
+        void candidate;
+        break;
+    }
+    for (const first of [second]) {
+      await first?.retry();
+    }
+    try {
+      throw second;
+    } catch (first) {
+      await (first as typeof second)?.retry();
+    }
+    let rebound = first;
+    rebound = second;
+    await rebound?.retry();
+    await ((first, ...rest: unknown[]) => {
+      void rest;
+      return first?.retry();
+    })(second);
     await candidate?.retry();
   }
 }
@@ -136,6 +173,14 @@ export async function unrelatedLoopAdd() {
     await widgets.add("heartbeat", {
       nums: [1].map((job) => job + 1),
       other: [1].map(function (job) {
+        return job + 1;
+      }),
+    });
+  }
+  for (const job of await widgets.getFailed(0, 10)) {
+    await widgets.add("heartbeat", {
+      nums: [1].map(() => {
+        const job = 1;
         return job + 1;
       }),
     });
