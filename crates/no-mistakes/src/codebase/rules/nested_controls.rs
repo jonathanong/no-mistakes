@@ -1,5 +1,7 @@
 //! Checks native HTML controls whose JSX ancestry is visible within one file.
 mod extract;
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod tests;
 
 use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
