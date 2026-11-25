@@ -15,6 +15,7 @@ pub(super) fn collect<const ADVANCED: bool>(
     out: &mut LockWriteFacts,
     positions: PlaceholderPositions<'_>,
     redundant_prelocks: bool,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
 ) {
     match statement {
         Statement::Query(query) if redundant_prelocks => {
@@ -30,7 +31,7 @@ pub(super) fn collect<const ADVANCED: bool>(
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
         Statement::Insert(insert) if ADVANCED => {
-            if let Some(upsert) = upsert::upsert_keys(insert, positions) {
+            if let Some(upsert) = upsert::upsert_keys(insert, positions, tokens) {
                 if redundant_prelocks {
                     if upsert.keys.len() == 1 {
                         out.conditional_write_keys = upsert.keys.clone();
@@ -140,6 +141,7 @@ impl Key {
             recovered_key: None,
             key_identity_unproven: false,
             has_predicate: true,
+            only: false,
         }
     }
 }

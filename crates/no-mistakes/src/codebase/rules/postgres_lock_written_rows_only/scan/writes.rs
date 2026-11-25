@@ -40,14 +40,16 @@ impl<'a> Writes<'a> {
         lock: &RowAccess,
         call: &EmbeddedSqlCall,
     ) -> bool {
-        self.upserts
-            .get(&transaction)
-            .and_then(|relations| relations.get(relation))
-            .is_some_and(|writes| {
-                writes.iter().any(|(write, write_call)| {
-                    compare_keys(lock, call, write, write_call) == Some(true)
+        lock.only
+            && self
+                .upserts
+                .get(&transaction)
+                .and_then(|relations| relations.get(relation))
+                .is_some_and(|writes| {
+                    writes.iter().any(|(write, write_call)| {
+                        compare_keys(lock, call, write, write_call) == Some(true)
+                    })
                 })
-            })
     }
 
     fn insert_write(&mut self, transaction: u32, write: &'a RowAccess, call: &'a EmbeddedSqlCall) {
