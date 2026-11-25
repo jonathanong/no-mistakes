@@ -1,41 +1,30 @@
-use super::actions::{find_guarded_action, find_listing_action};
+use super::actions::{find_in_stmts, ActionMode};
 use super::expr::{
-    check_state_expr, is_early_exit, match_get_job, match_listing, match_state_call, pattern_names,
+    check_state_expr, derived_listing_binding, is_early_exit, match_get_job, match_state_call,
+    pattern_names, unwrap_expr,
 };
-use super::extract::{record, FnEnv};
-use super::listing::{check_expr_for_actions, listing_binding};
-use super::{JobStatePattern, JobStateSite};
-use crate::queue::extract_visitor::QueueVisitor;
+use super::extract::{ExtractCtx, FnEnv};
+use super::listing::check_expr_for_actions;
+use super::JobStatePattern;
 use oxc_ast::ast::{
-    Declaration, ForOfStatement, ForStatementLeft, IfStatement, Statement, SwitchStatement,
-    TryStatement, VariableDeclaration,
+    Declaration, Expression, ForOfStatement, ForStatementLeft, IfStatement, Statement,
+    SwitchStatement, TryStatement, VariableDeclaration,
 };
-use std::collections::HashSet;
 
-struct StmtCtx<'a, 'b> {
-    visitor: &'a QueueVisitor<'b>,
+struct StmtCtx<'a, 'b, 'c> {
+    ctx: &'a mut ExtractCtx<'b, 'c>,
     env: &'a mut FnEnv,
-    sites: &'a mut Vec<JobStateSite>,
-    seen: &'a mut HashSet<(usize, JobStatePattern)>,
 }
 
 pub(super) fn analyze_statements(
-    visitor: &QueueVisitor<'_>,
+    ctx: &mut ExtractCtx<'_, '_>,
     stmts: &[Statement<'_>],
     env: &mut FnEnv,
-    sites: &mut Vec<JobStateSite>,
-    seen: &mut HashSet<(usize, JobStatePattern)>,
 ) {
-    let mut ctx = StmtCtx {
-        visitor,
-        env,
-        sites,
-        seen,
-    };
-    ctx.walk_slice(stmts);
+    StmtCtx { ctx, env }.walk_slice(stmts);
 }
 
-impl StmtCtx<'_, '_> {
+impl StmtCtx<'_, '_, '_> {
     fn walk_slice(&mut self, stmts: &[Statement<'_>]) {
         for (index, stmt) in stmts.iter().enumerate() {
             self.walk_stmt(stmt, &stmts[index + 1..]);
@@ -45,23 +34,25 @@ impl StmtCtx<'_, '_> {
     fn walk_stmt(&mut self, stmt: &Statement<'_>, trailing: &[Statement<'_>]) {
         match stmt {
             Statement::VariableDeclaration(decl) => self.record_decl(decl),
-            Statement::ExportDeclaration(export) => self.record_export(&export.declaration),
+            Statement::ExportDeclaration(export) => {
+                if let Declaration::VariableDeclaration(var_decl) = &export.declaration {
+                    self.record_decl(var_decl);
+                }
+            }
             Statement::IfStatement(if_stmt) => self.handle_if(if_stmt, trailing),
             Statement::SwitchStatement(sw) => self.check_switch(sw),
             Statement::ForOfStatement(for_of) => self.handle_for_of(for_of),
             Statement::BlockStatement(block) => self.walk_slice(&block.body),
             Statement::TryStatement(try_stmt) => self.handle_try(try_stmt),
             Statement::ExpressionStatement(e) => {
-                check_expr_for_actions(self.visitor, &e.expression, self.env, self.sites, self.seen)
+                check_expr_for_actions(self.ctx, &e.expression, self.env)
             }
-            Statement::ReturnStatement(r) => self.handle_return(r.argument.as_ref()),
+            Statement::ReturnStatement(r) => {
+                if let Some(arg) = &r.argument {
+                    check_expr_for_actions(self.ctx, arg, self.env);
+                }
+            }
             _ => {}
-        }
-    }
-
-    fn record_export(&mut self, decl: &Declaration<'_>) {
-        if let Declaration::VariableDeclaration(var_decl) = decl {
-            self.record_decl(var_decl);
         }
     }
 
@@ -74,70 +65,65 @@ impl StmtCtx<'_, '_> {
     }
 
     fn check_if(&mut self, if_stmt: &IfStatement<'_>, trailing: &[Statement<'_>]) {
-        let Some(binding) = check_state_expr(self.visitor, &if_stmt.test, self.env) else {
+        let Some(matched) = check_state_expr(self.ctx, &if_stmt.test, self.env) else {
             return;
         };
-        let action = find_guarded_action(self.visitor, &if_stmt.consequent, self.env)
-            .or_else(|| {
-                if_stmt
-                    .alternate
-                    .as_ref()
-                    .and_then(|alt| find_guarded_action(self.visitor, alt, self.env))
-            })
-            .or_else(|| {
-                (if_stmt.alternate.is_none() && is_early_exit(&if_stmt.consequent)).then(|| {
-                    trailing
-                        .iter()
-                        .find_map(|rest| find_guarded_action(self.visitor, rest, self.env))
-                })?
-            });
+        let names = self.env.job_names_for(matched.job_id);
+        let mode = ActionMode::Guarded;
+        let action = find_in_stmts(
+            self.ctx,
+            std::slice::from_ref(&if_stmt.consequent),
+            &names,
+            mode,
+        )
+        .or_else(|| {
+            if_stmt
+                .alternate
+                .as_ref()
+                .and_then(|alt| find_in_stmts(self.ctx, std::slice::from_ref(alt), &names, mode))
+        })
+        .or_else(|| {
+            (if_stmt.alternate.is_none() && is_early_exit(&if_stmt.consequent))
+                .then(|| find_in_stmts(self.ctx, trailing, &names, mode))?
+        });
         if let Some(action_binding) = action {
-            record(
-                self.visitor,
+            self.ctx.record(
                 if_stmt.span.start,
-                binding,
+                matched.binding,
                 action_binding,
                 JobStatePattern::GetJobStateGuard,
-                self.sites,
-                self.seen,
             );
         }
     }
 
     fn check_switch(&mut self, sw: &SwitchStatement<'_>) {
-        let Some(binding) = check_state_expr(self.visitor, &sw.discriminant, self.env) else {
+        let Some(matched) = check_state_expr(self.ctx, &sw.discriminant, self.env) else {
             return;
         };
+        let names = self.env.job_names_for(matched.job_id);
         let action = sw.cases.iter().find_map(|case| {
-            case.consequent
-                .iter()
-                .find_map(|s| find_guarded_action(self.visitor, s, self.env))
+            find_in_stmts(self.ctx, &case.consequent, &names, ActionMode::Guarded)
         });
         if let Some(action) = action {
-            record(
-                self.visitor,
+            self.ctx.record(
                 sw.span.start,
-                binding,
+                matched.binding,
                 action,
                 JobStatePattern::GetJobStateGuard,
-                self.sites,
-                self.seen,
             );
         }
     }
 
     fn handle_for_of(&mut self, for_of: &ForOfStatement<'_>) {
-        if let Some(binding) = listing_binding(self.visitor, &for_of.right, self.env) {
+        if let Some(binding) = derived_listing_binding(self.ctx, &for_of.right, self.env) {
             let loop_vars = for_of_names(&for_of.left);
-            if let Some(action) = find_listing_action(self.visitor, &for_of.body, &loop_vars) {
-                record(
-                    self.visitor,
+            let body = std::slice::from_ref(&for_of.body);
+            if let Some(action) = find_in_stmts(self.ctx, body, &loop_vars, ActionMode::Listing) {
+                self.ctx.record(
                     for_of.span.start,
                     binding,
                     action,
                     JobStatePattern::ListingFeedsAction,
-                    self.sites,
-                    self.seen,
                 );
             }
         }
@@ -154,12 +140,6 @@ impl StmtCtx<'_, '_> {
         }
     }
 
-    fn handle_return(&mut self, arg: Option<&oxc_ast::ast::Expression<'_>>) {
-        if let Some(arg) = arg {
-            check_expr_for_actions(self.visitor, arg, self.env, self.sites, self.seen);
-        }
-    }
-
     fn walk_child(&mut self, stmt: &Statement<'_>) {
         match stmt {
             Statement::BlockStatement(block) => self.walk_slice(&block.body),
@@ -172,16 +152,24 @@ impl StmtCtx<'_, '_> {
             let Some(init) = &declarator.init else {
                 continue;
             };
-            check_expr_for_actions(self.visitor, init, self.env, self.sites, self.seen);
+            check_expr_for_actions(self.ctx, init, self.env);
             let names = pattern_names(&declarator.id);
             let Some(name) = names.first() else {
                 continue;
             };
-            if let Some(binding) = match_get_job(self.visitor, init) {
-                self.env.job_vars.insert(name.clone(), binding);
-            } else if let Some(binding) = match_state_call(self.visitor, init, &self.env.job_vars) {
-                self.env.state_vars.insert(name.clone(), binding);
-            } else if let Some(binding) = match_listing(self.visitor, init) {
+            if let Some(binding) = match_get_job(self.ctx, init) {
+                self.env.alloc_job(name.clone(), binding);
+            } else if let Expression::Identifier(src) = unwrap_expr(init) {
+                if let Some(job) = self.env.job_vars.get(src.name.as_str()).cloned() {
+                    self.env.job_vars.insert(name.clone(), job);
+                } else if let Some(state) = self.env.state_vars.get(src.name.as_str()).cloned() {
+                    self.env.state_vars.insert(name.clone(), state);
+                } else if let Some(list) = self.env.listing_vars.get(src.name.as_str()).cloned() {
+                    self.env.listing_vars.insert(name.clone(), list);
+                }
+            } else if let Some(matched) = match_state_call(self.ctx, init, &self.env.job_vars) {
+                self.env.state_vars.insert(name.clone(), matched);
+            } else if let Some(binding) = derived_listing_binding(self.ctx, init, self.env) {
                 self.env.listing_vars.insert(name.clone(), binding);
             }
         }

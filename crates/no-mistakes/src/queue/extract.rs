@@ -28,7 +28,9 @@ pub(crate) fn needs_job_id_scoping(source: &str) -> bool {
 pub(crate) fn needs_rate_limit_scoping(source: &str) -> bool {
     let bytes = source.as_bytes();
     super::extract_prefilter::contains_bytes(bytes, b"import")
-        && super::extract_prefilter::contains_bytes(bytes, b"rateLimit")
+        && (super::extract_prefilter::contains_bytes(bytes, b"rateLimit")
+            || super::extract_prefilter::contains_bytes(bytes, b"RateLimitError")
+            || bytes.contains(&b'\\'))
 }
 
 pub(crate) fn needs_scheduler_scoping(
@@ -124,6 +126,9 @@ fn extract_queue_facts<'a>(
         top_level_callables: 0,
         worker_stack: Vec::new(),
         worker_rate_limit: Default::default(),
+        shared_rate_limit: super::extract_visitor::RateLimitState::new(
+            scoping.is_some() && needs_rate_limit_scoping(source),
+        ),
     };
     super::number_scope::seed_program(&mut visitor, program);
     visitor.visit_program(program);
@@ -139,6 +144,7 @@ fn extract_queue_facts<'a>(
     super::enqueue_wrapper::collect_exports(&mut visitor, program);
     super::extract_job_id::finish(&mut visitor);
     super::extract_worker_rate_limit::finish(&mut visitor, program);
+    visitor.finish_shared_rate_limits();
     super::number_scope::finish_opaque(&mut visitor.facts);
     super::extract_processor::finish(&mut visitor);
     super::job_options::finish(&mut visitor.facts, &visitor.object_bindings);

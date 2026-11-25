@@ -10,13 +10,20 @@ use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+fn normalize_allow_path(pattern: &str) -> &str {
+    pattern.trim_start_matches("./")
+}
+
 pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
     if patterns.is_empty() {
         return None;
     }
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
-        if let Ok(glob) = GlobBuilder::new(pattern).literal_separator(false).build() {
+        if let Ok(glob) = GlobBuilder::new(normalize_allow_path(pattern))
+            .literal_separator(false)
+            .build()
+        {
             builder.add(glob);
         }
     }
@@ -25,7 +32,7 @@ pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
 
 pub(super) fn validate_allow_paths(key: &str, patterns: &[String]) -> Result<(), String> {
     for pattern in patterns {
-        GlobBuilder::new(pattern)
+        GlobBuilder::new(normalize_allow_path(pattern))
             .literal_separator(false)
             .build()
             .map_err(|error| format!("invalid {key} glob `{pattern}`: {error}"))?;

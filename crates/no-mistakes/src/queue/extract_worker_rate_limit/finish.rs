@@ -4,6 +4,7 @@ use super::predicates::is_class_or_function;
 use super::{LocalInit, PendingReceiver, State};
 use crate::queue::extract_model::{WorkerRateLimitCall, WorkerRateLimitTarget};
 use crate::queue::extract_visitor::QueueVisitor;
+use crate::queue::source::line_number;
 use oxc_syntax::symbol::SymbolId;
 use std::collections::HashSet;
 
@@ -13,8 +14,11 @@ pub(super) fn finish(visitor: &mut QueueVisitor<'_>) {
     finish_module_exports(visitor, &state);
     for call in std::mem::take(&mut state.pending_calls) {
         if let Some((target, mutated)) = resolve_pending(visitor, &state, call.receiver) {
+            if let WorkerRateLimitTarget::LocalWorker(Some(worker)) = &target {
+                visitor.note_shared_rate_limit_receiver(call.start, *worker);
+            }
             visitor.facts.worker_rate_limits.push(WorkerRateLimitCall {
-                line: call.line,
+                line: line_number(visitor.source, call.start),
                 target,
                 mutated,
             });

@@ -1,15 +1,13 @@
+use super::extract::{ExtractCtx, FnEnv, StateMatch, TrackedJob};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::queue::extract_helpers::static_string;
 use crate::queue::extract_model::ProducerBinding;
-use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
     Argument, ArrayExpressionElement, BindingPattern, CallExpression, ChainElement, Expression,
     Statement,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
-
-use super::extract::FnEnv;
 
 pub(super) fn unwrap_expr<'a>(mut expr: &'a Expression<'a>) -> &'a Expression<'a> {
     loop {
@@ -44,30 +42,17 @@ pub(super) fn call_member<'a>(
     }
 }
 
-pub(super) fn queue_receiver(
-    visitor: &QueueVisitor<'_>,
-    object: &Expression<'_>,
-    at: u32,
-) -> Option<ProducerBinding> {
-    match unwrap_ts_wrappers(object) {
-        Expression::Identifier(id) => Some(visitor.producer_binding(id.name.as_str(), at)),
-        other => visitor
-            .imported_member_binding(other)
-            .map(ProducerBinding::Named),
-    }
-}
-
 pub(super) fn match_get_job(
-    visitor: &QueueVisitor<'_>,
+    ctx: &mut ExtractCtx<'_, '_>,
     expr: &Expression<'_>,
 ) -> Option<ProducerBinding> {
     let call = as_call(expr)?;
     let (object, method) = call_member(call)?;
-    (method == "getJob").then(|| queue_receiver(visitor, object, call.span.start))?
+    (method == "getJob").then(|| ctx.queue_receiver(object, call.span.start))?
 }
 
 pub(super) fn match_listing(
-    visitor: &QueueVisitor<'_>,
+    ctx: &mut ExtractCtx<'_, '_>,
     expr: &Expression<'_>,
 ) -> Option<ProducerBinding> {
     let call = as_call(expr)?;
@@ -77,7 +62,32 @@ pub(super) fn match_listing(
         "getJobs" => call.arguments.first().is_some_and(has_terminal_job_state),
         _ => false,
     };
-    is_listing.then(|| queue_receiver(visitor, object, call.span.start))?
+    is_listing.then(|| ctx.queue_receiver(object, call.span.start))?
+}
+
+pub(super) fn derived_listing_binding(
+    ctx: &mut ExtractCtx<'_, '_>,
+    expr: &Expression<'_>,
+    env: &FnEnv,
+) -> Option<ProducerBinding> {
+    if let Some(binding) = match_listing(ctx, expr) {
+        return Some(binding);
+    }
+    match unwrap_expr(expr) {
+        Expression::Identifier(id) => env.listing_vars.get(id.name.as_str()).cloned(),
+        Expression::CallExpression(call) => {
+            let (object, method) = call_member(call)?;
+            matches!(method, "map" | "filter" | "flatMap" | "slice" | "concat")
+                .then(|| derived_listing_binding(ctx, object, env))?
+        }
+        Expression::ArrayExpression(array) => array.elements.iter().find_map(|el| match el {
+            ArrayExpressionElement::SpreadElement(spread) => {
+                derived_listing_binding(ctx, &spread.argument, env)
+            }
+            _ => None,
+        }),
+        _ => None,
+    }
 }
 
 fn has_terminal_job_state(arg: &Argument<'_>) -> bool {
@@ -97,45 +107,51 @@ fn has_terminal_job_state(arg: &Argument<'_>) -> bool {
 }
 
 pub(super) fn match_state_call(
-    visitor: &QueueVisitor<'_>,
+    ctx: &mut ExtractCtx<'_, '_>,
     expr: &Expression<'_>,
-    job_vars: &HashMap<String, ProducerBinding>,
-) -> Option<ProducerBinding> {
+    job_vars: &HashMap<String, TrackedJob>,
+) -> Option<StateMatch> {
     let call = as_call(expr)?;
     let (object, method) = call_member(call)?;
     if !matches!(method, "getState" | "isFailed" | "isCompleted") {
         return None;
     }
     if let Expression::Identifier(id) = unwrap_expr(object) {
-        if let Some(binding) = job_vars.get(id.name.as_str()) {
-            return Some(binding.clone());
+        if let Some(tracked) = job_vars.get(id.name.as_str()) {
+            return Some(StateMatch {
+                job_id: Some(tracked.id),
+                binding: tracked.binding.clone(),
+            });
         }
     }
-    match_get_job(visitor, object)
+    match_get_job(ctx, object).map(|binding| StateMatch {
+        job_id: None,
+        binding,
+    })
 }
 
 pub(super) fn check_state_expr(
-    visitor: &QueueVisitor<'_>,
+    ctx: &mut ExtractCtx<'_, '_>,
     expr: &Expression<'_>,
     env: &FnEnv,
-) -> Option<ProducerBinding> {
-    struct StateFinder<'c, 'b> {
-        visitor: &'b QueueVisitor<'c>,
-        env: &'b FnEnv,
-        found: Option<ProducerBinding>,
+) -> Option<StateMatch> {
+    struct StateFinder<'a, 'b, 'c> {
+        ctx: &'a mut ExtractCtx<'b, 'c>,
+        env: &'a FnEnv,
+        found: Option<StateMatch>,
     }
-    impl<'a> Visit<'a> for StateFinder<'_, '_> {
+    impl<'a> Visit<'a> for StateFinder<'_, '_, '_> {
         fn visit_expression(&mut self, expr: &Expression<'a>) {
             if self.found.is_some() {
                 return;
             }
-            if let Some(binding) = match_state_call(self.visitor, expr, &self.env.job_vars) {
-                self.found = Some(binding);
+            if let Some(matched) = match_state_call(self.ctx, expr, &self.env.job_vars) {
+                self.found = Some(matched);
                 return;
             }
             if let Expression::Identifier(id) = expr {
-                if let Some(binding) = self.env.state_vars.get(id.name.as_str()) {
-                    self.found = Some(binding.clone());
+                if let Some(matched) = self.env.state_vars.get(id.name.as_str()) {
+                    self.found = Some(matched.clone());
                     return;
                 }
             }
@@ -143,7 +159,7 @@ pub(super) fn check_state_expr(
         }
     }
     let mut finder = StateFinder {
-        visitor,
+        ctx,
         env,
         found: None,
     };

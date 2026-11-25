@@ -6,6 +6,46 @@ expression: snapshot
   {
     "kind": "job-state-as-record",
     "severity": "advisory",
+    "file": "edges.ts",
+    "line": 8,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+    "sourceLine": "if (!completed) return;"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "edges.ts",
+    "line": 16,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+    "sourceLine": "if (await job?.isFailed()) await widgets.add(\"repair\", { id });"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "edges.ts",
+    "line": 23,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+    "sourceLine": "await widgets.addBulk(batch);"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "edges.ts",
+    "line": 28,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+    "sourceLine": "for (const job of await widgets.getFailed(0, 100)) {"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
     "file": "usage.ts",
     "line": 12,
     "queueFile": "queues.ts",

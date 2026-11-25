@@ -109,6 +109,9 @@ pub(super) fn note_worker(
         .worker_rate_limit
         .note_worker_span(call.span.start, index);
     if let Some(arg) = call.arguments.get(processor_index) {
+        if crate::queue::extract_job_id::is_imported_callee(visitor, &call.callee) {
+            visitor.note_rate_limit_processor(arg, index, true);
+        }
         let span = arg.span();
         visitor.processor_spans.push((span.start, span.end, index));
     }
