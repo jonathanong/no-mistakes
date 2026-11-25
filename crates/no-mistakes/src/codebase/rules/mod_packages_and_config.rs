@@ -8,6 +8,7 @@ pub mod forbidden_dependencies;
 pub mod forbidden_workspace_closure;
 pub mod lockfile_allowlist;
 pub mod no_mistakes_config;
+pub mod package_json_export_target_prefix;
 pub mod package_json_nested_workspace_coverage;
 pub mod package_json_registry_only;
 pub mod package_json_required_fields;

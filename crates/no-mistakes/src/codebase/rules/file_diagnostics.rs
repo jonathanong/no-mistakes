@@ -80,6 +80,7 @@ pub fn handles(rule: &str) -> bool {
             | super::CSHARP_MAX_LINES_PER_FILE
             | super::NO_EMPTY_OR_COMMENTS_ONLY_FILES
             | super::NO_RAW_EPHEMERAL_PORT
+            | super::PACKAGE_JSON_EXPORT_TARGET_PREFIX
             | super::STRUCTURED_CONFIG_POLICY
             | super::github_actions_pinned_hash::RULE_ID
     )
@@ -104,6 +105,7 @@ pub fn diagnostics_with_files_and_sources(
         super::csharp_max_lines_per_file::diagnostics_with_files_and_sources,
         super::no_empty_or_comments_only_files::diagnostics_with_files_and_sources,
         super::no_raw_ephemeral_port::diagnostics_with_files_and_sources,
+        super::package_json_export_target_prefix::diagnostics_with_files_and_sources,
         super::structured_config_policy::diagnostics_with_files_and_sources,
         super::github_actions_pinned_hash::diagnostics_with_files_and_sources,
     ];

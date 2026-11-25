@@ -253,7 +253,6 @@ fn queue_required_options_standalone_rejects_a_missing_explicit_config() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("unavailable.yml"), "{stderr}");
 }
-
 #[test]
 fn queue_shared_test_scope_check_json_snapshot() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -364,4 +363,59 @@ fn queue_shared_test_scope_unmasking_check_json_snapshot() {
         reports["include-all-tests"]["report"]["queues"],
         serde_json::json!([])
     );
+}
+
+#[test]
+fn queue_retention_and_listing_followups_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/queue-followups/fixture");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "queue_retention_and_listing_followups",
+        &[("queue-followups", root, PathBuf::new())],
+        &[],
+        &[],
+    );
+    let result = &reports["queue-followups"];
+    assert_eq!(result["exitCode"], 1);
+    let report = &result["report"];
+    let findings = report["queues"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding["kind"] == "unbounded-job-retention"));
+    assert!(findings.iter().any(|finding| {
+        finding["job"] == "known-missing"
+            && finding["message"] == "unbounded job retention: removeOnFail unset"
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding["job"] == "welcome"
+            && finding["queueFile"] == "queue:opaque"
+            && finding["message"] == "unbounded job retention: removeOnFail kept without a bound"
+    }));
+
+    let advisories = report["advisories"].as_array().unwrap();
+    let lines: Vec<_> = advisories
+        .iter()
+        .map(|row| row["line"].as_u64().unwrap())
+        .collect();
+    assert_eq!(lines, [23, 29, 35, 52, 66, 72, 76]);
+    assert!(advisories.iter().all(|row| row["file"] == "listing.ts"));
+
+    let warnings = report["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 5, "{warnings:?}");
+    for (location, rule) in [
+        ("enqueue.ts:8", "unbounded-job-retention"),
+        ("enqueue.ts:13", "unbounded-job-retention"),
+        ("listing.ts:45", "job-state-as-record"),
+        ("listing.ts:59", "job-state-as-record"),
+        ("listing.ts:91", "job-state-as-record"),
+    ] {
+        assert!(
+            warnings.iter().any(|warning| {
+                let warning = warning.as_str().unwrap();
+                warning.contains(location) && warning.contains(&format!("{rule} was not judged"))
+            }),
+            "{location}: {warnings:?}"
+        );
+    }
 }
