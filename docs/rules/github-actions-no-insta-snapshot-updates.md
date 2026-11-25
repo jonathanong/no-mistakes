@@ -8,16 +8,24 @@ that needs review into a passing check.
 
 ## What it catches
 
-The rule reports literal `INSTA_UPDATE` settings of `always`, `1`, `force`,
-and `unseen` in workflow, job, and step `env` mappings. The finding points
-to the declaration that enables snapshot acceptance. `unseen` accepts
-missing snapshots while leaving changed snapshots pending review.
+The rule checks `INSTA_UPDATE` declarations in workflow, job, and step `env`
+mappings directly under `.github/workflows/`.
+
+- Literal values of `always`, `1`, `force`, and `unseen` are reported as
+  findings pointing to the declaration that enables snapshot acceptance.
+  `unseen` accepts missing snapshots while leaving changed snapshots pending
+  review.
+- Inputs the rule cannot decide statically — unparsable workflow YAML, a
+  non-mapping `env:` value (such as `env: ${{ fromJSON(vars.ENV) }}` or
+  `env: []`), a non-scalar `INSTA_UPDATE` value, or a GitHub expression such
+  as `${{ vars.SNAPSHOT_MODE }}` — are routed through the rule's
+  `unanalyzable` policy (`advise` by default).
 
 ## Options and defaults
 
-This rule is off by default. Add it to `rules` to enable it. It has no
-rule-specific options and honors the rule's standard `include` and `exclude`
-scopes.
+This rule is off by default. Add it to `rules` to enable it. It honors the
+rule's standard `include` and `exclude` scopes and the `unanalyzable` policy
+(`advise` by default, or `report` / `ignore`).
 
 ```yaml
 rules:
@@ -71,19 +79,20 @@ For a single declaration use `no-mistakes-disable-line` or
 
 ## Limits
 
-The rule reads literal declarations in YAML files directly under
-`.github/workflows/`. It leaves dynamic GitHub expressions, local composite
-actions, shell assignments, and standalone Insta configuration to other
-checks or review. It checks the declaration at each scope, including one
-overridden by a job or step. Malformed workflows are handled by workflow
-validation.
+This rule checks `INSTA_UPDATE` declarations in `env:` mappings directly under
+`.github/workflows/` only. It does not examine `run:` command lines (such as
+`cargo insta test --accept`, `cargo insta accept`, or inline shell
+`INSTA_UPDATE=...` assignments), local composite actions, or standalone Insta
+configuration. It checks the declaration at each scope, including one
+overridden by a job or step.
 
 See [Insta's snapshot update modes](https://insta.rs/docs/advanced/#controlling-snapshot-updating)
 for the runner's behavior.
 
 ## Related rules
 
-Use [GitHub Actions environment policy](github-actions-env-policy.md) to
-require one exact value wherever the variable is defined. Use
-[GitHub Actions run command policy](github-actions-run-command-policy.md)
-to forbid known snapshot-update flags for configured test commands.
+Use [GitHub Actions run command policy](github-actions-run-command-policy.md)
+to forbid `cargo insta test --accept`, `cargo insta accept`, and other
+snapshot-updating flags in `run:` steps. Use
+[GitHub Actions environment policy](github-actions-env-policy.md) to require
+one exact value wherever an environment variable is defined.

@@ -24,7 +24,11 @@ pub(in crate::codebase::rules) fn run(
         )),
         github_actions_no_insta_snapshot_updates::RULE_ID => Some(
             github_actions_no_insta_snapshot_updates::check_with_files_and_sources(
-                root, config, files, sources,
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
             ),
         ),
         no_poll_wait_job::RULE_ID => Some(no_poll_wait_job::check_with_files_and_sources(

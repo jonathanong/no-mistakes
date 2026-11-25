@@ -10,9 +10,6 @@ jobs:
       - run: cargo test --doc
         env:
           INSTA_UPDATE: new
-      - run: cargo test -p example
-        env:
-          INSTA_UPDATE: ${{ vars.SNAPSHOT_MODE }}
       - run: echo 'INSTA_UPDATE=always'
       - run: cargo test
         env:

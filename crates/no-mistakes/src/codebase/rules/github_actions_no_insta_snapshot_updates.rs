@@ -1,16 +1,13 @@
-use super::github_actions_workflow_files::{
-    env_policy::{
-        lines::{locate, parse, Seg},
-        scalar_text, visit_workflow_scopes,
-    },
-    gha_kind,
-};
+use super::analysis_policy::AnalysisDiagnostics;
 use super::RuleFinding;
-use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use crate::codebase::ts_source::SourceStore;
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
+
+mod scan;
 
 pub const RULE_ID: &str = "github-actions-no-insta-snapshot-updates";
 const NAME: &str = "INSTA_UPDATE";
@@ -19,52 +16,68 @@ const NAME: &str = "INSTA_UPDATE";
 #[serde(deny_unknown_fields)]
 struct Options {}
 
-super::sourced_file_rule_entrypoints!();
-
-fn scan(
+pub(crate) fn check_with_files(
     root: &Path,
-    _options: &Options,
-    files: &[PathBuf],
-    sources: &SourceStore,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    Ok(files
-        .par_iter()
-        .filter_map(|path| check_workflow(root, path, sources))
-        .flatten()
-        .collect())
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources, false)
 }
 
-fn check_workflow(root: &Path, path: &Path, sources: &SourceStore) -> Option<Vec<RuleFinding>> {
-    let relative = relative_slash_path(root, path);
-    if gha_kind(&relative) != Some(false) {
-        return None;
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|output| output.findings)
+}
+
+fn resolve_unanalyzable(
+    config: &NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> Result<Unanalyzable> {
+    let explicit = rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some();
+    if explicit {
+        Ok(config.effective_rule_analysis(rule)?.unanalyzable)
+    } else {
+        Ok(Unanalyzable::Advise)
     }
-    let yaml = sources.parse_yaml_path(path).ok()?;
-    let source = super::read_language_source(sources, path)?;
-    let locations = parse(&source);
-    let mut findings = Vec::new();
-    visit_workflow_scopes(&yaml, &mut |owner, path, scope| {
-        let Some(mode) = owner
-            .get("env")
-            .and_then(|env| env.get(NAME))
-            .and_then(scalar_text)
-            .filter(|mode| matches!(mode.as_str(), "always" | "1" | "force" | "unseen"))
-        else {
-            return;
-        };
-        let mut at = path.to_vec();
-        at.extend([Seg::Key("env".into()), Seg::Key(NAME.into())]);
-        findings.push(RuleFinding {
-            rule: RULE_ID.into(),
-            file: relative.clone(),
-            line: locate(locations.as_ref(), &at),
-            message: format!(
-                "{scope} sets `{NAME}` to `{mode}`, which can accept snapshots during CI. Set `{NAME}` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately."
-            ),
-            import: None,
-            target: Some(NAME.into()),
-            causes: Vec::new(),
-        });
-    });
-    Some(findings)
+}
+
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    let mut output = AnalysisDiagnostics::default();
+    for rule in config.rule_applications(RULE_ID) {
+        let _opts: Options = rule.try_rule_options()?;
+        let unanalyzable = resolve_unanalyzable(config, rule)?;
+        let roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &roots))
+            .cloned()
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let chunks: Vec<AnalysisDiagnostics> = files
+            .par_iter()
+            .filter_map(|path| {
+                scan::check_workflow(root, path, sources, defer_suppression, unanalyzable)
+            })
+            .collect();
+        for chunk in chunks {
+            output.append(chunk);
+        }
+    }
+    super::sort_findings(&mut output.findings);
+    super::sort_findings(&mut output.advisories);
+    Ok(output)
 }

@@ -8,6 +8,8 @@ fn github_actions_no_insta_snapshot_updates_json_matches_snapshot() {
         ("demo", "demo", "enabled"),
         ("scopes", "scopes", "enabled"),
         ("pass", "pass", "enabled"),
+        ("unanalyzable", "unanalyzable", "enabled"),
+        ("unanalyzable-report", "unanalyzable", "unanalyzable-report"),
         ("suppression", "suppression", "enabled"),
         ("off-by-default", "demo", "disabled"),
     ]
