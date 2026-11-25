@@ -67,10 +67,10 @@ jobs:
       timeout-policy-browser: ${{ steps.timeout-policy-browser-paths.outputs.changed }}
       # Path metadata only; Rust and macOS use their own conservative scopes.
       docs-only: ${{ github.event_name == 'pull_request' && steps.docs-only-paths.outputs.docs-only == 'true' }}
-      # Pull requests run one macOS smoke job instead of the full macOS suite.
+      # Pull requests run macOS smoke when the changed paths can affect it.
       # Pushes and workflow_dispatch run the full suite. Release is a separate workflow.
       macos: ${{ github.event_name != 'pull_request' }}
-      macos-smoke: ${{ github.event_name == 'pull_request' && steps.rust-paths.outputs.rust != 'false' }}
+      macos-smoke: ${{ github.event_name == 'pull_request' && steps.rust-paths.outputs.macos-smoke != 'false' }}
       # Pull requests run one Windows smoke job instead of the full Windows suite.
       windows: ${{ github.event_name != 'pull_request' }}
       windows-smoke: ${{ github.event_name == 'pull_request' && steps.rust-paths.outputs.rust != 'false' }}
@@ -161,14 +161,23 @@ jobs:
         run: |
           set -euo pipefail
 
+          emit_native_scopes() {
+            local input=$1
+            shift
+            node .github/scripts/rust-pr-scope.cjs "$@" < "$input" >> "$GITHUB_OUTPUT"
+            DIFF_BASE="${DIFF_BASE:-}" node .github/scripts/macos-pr-scope.cjs "$@" < "$input" >> "$GITHUB_OUTPUT"
+          }
+
           if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
-            node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+            emit_native_scopes /dev/null --all
             exit 0
           fi
 
           for sha in "$BASE_SHA" "$HEAD_SHA"; do
-            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
-              git fetch --no-tags --depth=1 origin "$sha"
+            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null &&
+               ! git fetch --no-tags --depth=1 origin "$sha"; then
+              emit_native_scopes /dev/null --all
+              exit 0
             fi
           done
 
@@ -178,23 +187,26 @@ jobs:
             while ! git merge-base "$BASE_SHA" "$HEAD_SHA" >/dev/null 2>&1; do
               attempts=$((attempts + 1))
               if (( attempts > 4 )); then
-                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                emit_native_scopes /dev/null --all
                 exit 0
               fi
               if ! git fetch --no-tags --deepen=300 origin "$BASE_SHA" "$HEAD_SHA"; then
-                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                emit_native_scopes /dev/null --all
                 exit 0
               fi
             done
           fi
 
           if ! DIFF_BASE=$(node .github/scripts/pr-diff-scope.cjs --diff-base "$GITHUB_EVENT_NAME" "$BASE_SHA" "$HEAD_SHA"); then
-            node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+            emit_native_scopes /dev/null --all
             exit 0
           fi
 
-          git diff --no-renames --name-status -z "$DIFF_BASE" "$HEAD_SHA" > "$RUNNER_TEMP/native-changes"
-          node .github/scripts/rust-pr-scope.cjs < "$RUNNER_TEMP/native-changes" >> "$GITHUB_OUTPUT"
+          if ! git diff --no-renames --name-status -z "$DIFF_BASE" "$HEAD_SHA" > "$RUNNER_TEMP/native-changes"; then
+            emit_native_scopes /dev/null --all
+            exit 0
+          fi
+          emit_native_scopes "$RUNNER_TEMP/native-changes"
   quality-source:
     name: Source policy and tooling tests
     runs-on: ubuntu-latest
@@ -352,7 +364,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs .github/scripts/benchmark-rustflags.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/push-diff-base.test.cjs .github/scripts/fixture-baseline-workflow.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs .github/scripts/ci-no-serialization.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/pr-diff-scope.test.cjs .github/scripts/push-diff-base.test.cjs .github/scripts/fixture-baseline-workflow.test.cjs .github/scripts/smoke-tests.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/macos-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs .github/scripts/ci-no-serialization.test.cjs
       - name: Test documentation link scope and gateway handling
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs .github/scripts/lychee-inputs.test.cjs
@@ -2691,17 +2703,22 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
+      - name: Checkout
+        timeout-minutes: 3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Require all component jobs
         timeout-minutes: 1
         env:
           RESULTS: ${{ toJSON(needs) }}
           RUST_REQUIRED: ${{ needs.changes.outputs.rust }}
           MACOS_REQUIRED: ${{ needs.changes.outputs.macos }}
+          MACOS_SMOKE_REQUIRED: ${{ needs.changes.outputs.macos-smoke }}
           MACOS_EVENT: ${{ github.event_name }}
           MACOS_REF: ${{ github.ref }}
           WINDOWS_REQUIRED: ${{ needs.changes.outputs.windows }}
-        run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const mainPush=process.env.MACOS_EVENT==="push"&&process.env.MACOS_REF==="refs/heads/main"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; const windows=/^(native-build|native-test-build|native-rust-tests|native-api-tests)$/; const producer={ "native-rust-tests-macos":"native-test-build-macos", "native-api-tests-macos":"native-build-macos" }; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (process.env.RUST_REQUIRED==="false" && job.result==="skipped" && /^(native-(build|test-build|rust-tests|api-tests)(-macos)?|macos-smoke|windows-smoke)$/.test(name)) continue; if (macos.test(name) && job.result==="skipped" && allow) continue; if (name==="macos-smoke" && job.result==="skipped" && !allow && process.env.MACOS_REQUIRED==="true") continue; if (windows.test(name) && job.result==="skipped" && process.env.WINDOWS_REQUIRED==="false") continue; if (name==="windows-smoke" && job.result==="skipped" && process.env.WINDOWS_REQUIRED==="true") continue; if (macos.test(name) && job.result==="cancelled" && mainPush) continue; if (mainPush && job.result==="skipped" && producer[name] && jobs[producer[name]] && jobs[producer[name]].result==="cancelled") continue; console.error(name+": "+job.result); process.exitCode=1; }'
+        run: node .github/scripts/native-tests-gate.cjs
   standalone-build:
     name: Build standalone library tests
     needs: changes
