@@ -1,0 +1,10 @@
+id: first
+language: TypeScript
+rule: { pattern: sample }
+---
+id: second
+language: TypeScript
+base: &base {pattern: sample}
+shared: &shared {<<: *base}
+copy: *shared
+rule: {<<: 7}

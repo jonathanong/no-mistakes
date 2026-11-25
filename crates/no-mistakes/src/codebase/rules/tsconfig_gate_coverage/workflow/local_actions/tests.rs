@@ -302,6 +302,7 @@ fn scalar_defaults_and_action_contexts_catalog_local_actions_for_the_step_scanne
 
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/typecheck.yml".to_string(),
             value: Ok(serde_yaml::from_str(
                 "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ./.github/actions/cataloged\n      - run: tsc --noEmit -p app/tsconfig.json\n",

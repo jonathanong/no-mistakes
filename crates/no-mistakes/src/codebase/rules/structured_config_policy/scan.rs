@@ -56,14 +56,14 @@ pub(super) fn scan_with_state(
                     }
                 };
             let value =
-                match crate::codebase::structured_value::parse_structured_value(&path, &source) {
+                match crate::codebase::structured_value::parse_structured_value_located(&path, &source) {
                     Ok(value) => value,
-                    Err(error) => {
+                    Err((line, error)) => {
                         findings.push(RuleFinding {
                             causes: Vec::new(),
                             rule: RULE_ID.to_string(),
                             file: rel.clone(),
-                            line: 1,
+                            line: line.unwrap_or(1),
                             message: format!("{rel}: {error}"),
                             import: None,
                             target: None,

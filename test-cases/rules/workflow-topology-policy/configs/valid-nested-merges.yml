@@ -1,0 +1,29 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      forbidReusableWorkflowConcurrency: true
+      concurrencyPolicy:
+        ".github/workflows/job.yml#template":
+          pending: coalesce-latest
+          cancellation: retain-running
+          scope: [fixed-resource]
+      stepOrders:
+        - jobId: ".github/workflows/job.yml#verify"
+          steps:
+            - { id: build, uses: "example/build@v1" }
+        - jobId: ".github/workflows/step.yml#verify"
+          steps:
+            - { id: verify, uses: "example/build@v1" }
+        - jobId: ".github/workflows/quoted.yml#verify"
+          steps:
+            - { id: verify, uses: "example/build@v1" }
+  - rule: github-actions-job-timeouts
+    scope: repository
+  - rule: github-actions-step-timeouts
+    scope: repository
+  - rule: github-actions-job-permissions
+    scope: repository
+  - rule: github-actions-pinned-hash
+    scope: repository

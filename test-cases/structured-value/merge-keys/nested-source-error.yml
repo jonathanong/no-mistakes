@@ -1,0 +1,5 @@
+runtime:
+  <<:
+    - flavor: plain
+      <<: 7
+    - flavor: other
