@@ -423,3 +423,52 @@ fn missing_location_in_a_nested_merge_source_is_an_error() {
     .unwrap_err();
     assert_eq!(error, (1, "missing source location".to_string()));
 }
+
+#[test]
+fn quoted_literal_key_survives_when_source_location_scan_stops() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/structured-config-policy/merge-location-unavailable/long-tag-quoted.yml"
+    );
+    let value = super::parse_structured_value_located(Path::new("long-tag-quoted.yml"), source)
+        .expect("quoted literal key should stay accepted");
+    assert_eq!(value["runtime"]["<<"].as_str(), Some("keep"));
+
+    let documents = parse_yaml_documents(source);
+    assert!(documents.errors.is_empty(), "{:?}", documents.errors);
+    assert_eq!(documents.values.len(), 1);
+    assert_eq!(documents.values[0]["runtime"]["<<"].as_str(), Some("keep"));
+
+    let raw: Value = serde_yaml::from_str(source).unwrap();
+    let expanded = super::expand_yaml_mapping_if_merged(&raw, Some(source)).unwrap();
+    assert_eq!(expanded["runtime"]["<<"].as_str(), Some("keep"));
+}
+
+#[test]
+fn multi_document_unlocated_merge_uses_document_start_line() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/multi-doc-location-unavailable.yml"
+    );
+    let documents = parse_yaml_documents(source);
+    assert_eq!(documents.values.len(), 1);
+    assert_eq!(documents.values[0]["id"].as_str(), Some("widgets"));
+    assert_eq!(documents.errors.len(), 1);
+    assert_eq!(documents.errors[0].0, 3);
+    assert!(
+        documents.errors[0]
+            .1
+            .contains("could not match a YAML `<<` key to its source location"),
+        "{}",
+        documents.errors[0].1
+    );
+
+    let quoted = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/multi-doc-long-tag-quoted.yml"
+    );
+    let quoted_docs = parse_yaml_documents(quoted);
+    assert!(quoted_docs.errors.is_empty(), "{:?}", quoted_docs.errors);
+    assert_eq!(quoted_docs.values.len(), 2);
+    assert_eq!(
+        quoted_docs.values[1]["runtime"]["<<"].as_str(),
+        Some("keep")
+    );
+}

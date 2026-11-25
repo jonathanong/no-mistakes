@@ -1,5 +1,7 @@
+mod document_spans;
 mod merge_keys;
 mod merge_locations;
+mod plain_merge_scan;
 
 pub(crate) use merge_keys::expand_merge_keys;
 use merge_locations::MergeLocations;

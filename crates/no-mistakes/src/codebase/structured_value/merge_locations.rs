@@ -1,10 +1,13 @@
+use super::document_spans::{document_spans, DocumentSpan};
 use super::merge_keys::{expand_located, KeyLocation};
+use super::plain_merge_scan::has_plain_merge_key;
 use crate::fx::FxHashMap;
 use granit_parser::{Event, Parser, ScalarStyle};
 use serde_yaml::Value;
 
-#[derive(Default)]
-pub(super) struct MergeLocations {
+pub(super) struct MergeLocations<'a> {
+    source: &'a str,
+    doc_spans: Vec<DocumentSpan>,
     roots: Vec<Option<usize>>,
     nodes: Vec<Node>,
 }
@@ -23,17 +26,26 @@ enum Kind {
     Alias(usize),
 }
 
-impl MergeLocations {
-    pub(super) fn parse(source: &str) -> Self {
+impl<'a> MergeLocations<'a> {
+    pub(super) fn parse(source: &'a str) -> Self {
+        Self::parse_with_offset(source, 0)
+    }
+
+    fn parse_with_offset(source: &'a str, line_offset: usize) -> Self {
         let options = granit_parser::options! { emit_comments: false };
-        let mut locations = Self::default();
+        let mut locations = Self {
+            source,
+            doc_spans: document_spans(source),
+            roots: Vec::new(),
+            nodes: Vec::new(),
+        };
         let mut anchors = FxHashMap::default();
         let mut stack: Vec<usize> = Vec::new();
         for event in Parser::new_from_str_with_options(source, options) {
             let Ok((event, span)) = event else {
                 break;
             };
-            let line = span.start.line();
+            let line = span.start.line() + line_offset;
             let (anchor, kind) = match event {
                 Event::DocumentStart(..) => {
                     locations.roots.push(None);
@@ -79,17 +91,39 @@ impl MergeLocations {
     }
 
     pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), (usize, String)> {
+        let doc_span = self.doc_spans.get(index).copied();
+        let doc_source = doc_span.map_or(self.source, |span| {
+            &self.source[span.start_byte..span.end_byte]
+        });
         let root = self.roots.get(index).copied().flatten();
-        let fallback_line = root.map_or(1, |root| self.nodes[root].line);
+        if root.is_none() {
+            if let Some(span) = doc_span {
+                if span.start_byte > 0 {
+                    let reparsed = Self::parse_with_offset(doc_source, span.start_line - 1);
+                    if reparsed.roots.first().copied().flatten().is_some() {
+                        return reparsed.expand(0, value);
+                    }
+                }
+            }
+        }
+        let fallback_line = root
+            .map(|root| self.nodes[root].line)
+            .or_else(|| doc_span.map(|span| span.start_line))
+            .unwrap_or(1);
         let locations =
             root.map_or_else(FxHashMap::default, |root| self.key_locations(root, value));
+        let literal_only = !has_plain_merge_key(doc_source);
         expand_located(value, &|key| {
-            locations.get(&key.as_ptr()).copied().ok_or_else(|| {
-                (
-                    fallback_line,
-                    "could not match a YAML `<<` key to its source location".to_string(),
-                )
-            })
+            if let Some(location) = locations.get(&key.as_ptr()).copied() {
+                return Ok(location);
+            }
+            if literal_only {
+                return Ok(KeyLocation::Literal);
+            }
+            Err((
+                fallback_line,
+                "could not match a YAML `<<` key to its source location".to_string(),
+            ))
         })
     }
 

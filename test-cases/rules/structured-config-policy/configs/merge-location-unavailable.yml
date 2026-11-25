@@ -8,3 +8,5 @@ rules:
           bannedKeys: [runtime.legacy]
         - files: [quoted.yml]
           requiredKeys: [merged.owner, "literal.<<"]
+        - files: [long-tag-quoted.yml]
+          requiredKeys: ["runtime.<<"]
