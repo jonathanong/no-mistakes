@@ -401,11 +401,17 @@ mod cli_check_queue_diagnostics;
 #[path = "cli_check_queue_rate_limit.rs"]
 mod cli_check_queue_rate_limit;
 
+#[path = "cli_check_queue_debounce_ttl.rs"]
+mod cli_check_queue_debounce_ttl;
+
 #[path = "cli_check_queue_shared_rate_limit.rs"]
 mod cli_check_queue_shared_rate_limit;
 
 #[path = "cli_check_rules_no_single_enqueue_in_loop.rs"]
 mod cli_check_rules_no_single_enqueue_in_loop;
+
+#[path = "cli_check_rules_queue_rate_limit_error_delay.rs"]
+mod cli_check_rules_queue_rate_limit_error_delay;
 
 #[path = "cli_suppression_index.rs"]
 mod cli_suppression_index;

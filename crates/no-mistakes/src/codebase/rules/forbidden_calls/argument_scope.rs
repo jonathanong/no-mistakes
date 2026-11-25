@@ -59,11 +59,14 @@ fn for_config(root: &Path, config: &NoMistakesConfig) -> Option<Arc<ArgumentFact
     {
         return Some(Arc::new(ArgumentFactScope { filters: None }));
     }
-    let applications = config
+    let mut applications = config
         .rule_applications(super::RULE_ID)
         .into_iter()
         .filter(|application| requires_arguments(application))
         .collect::<Vec<_>>();
+    applications.extend(
+        config.rule_applications(crate::codebase::rules::queue_rate_limit_error_delay::RULE_ID),
+    );
     if applications.is_empty() {
         return None;
     }

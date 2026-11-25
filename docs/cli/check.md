@@ -89,6 +89,9 @@ rule remains enabled when `tests.playwright.selectors.htmlIds` is `false`. See
 Enable [`react-no-nested-buttons-and-links`](../rules/react-no-nested-buttons-and-links.md) to check native HTML buttons and links in selected JSX and TSX files. The finding points to the inner control.
 Configure [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
 to report unconditional Darwin imports in selected Swift test files.
+Configure [`queue-rate-limit-error-delay`](../rules/queue-rate-limit-error-delay.md)
+to require a positive delay duration when constructing or calling configured
+queue rate-limit errors.
 
 For `nextjs-no-caching`, `low` checks literal cache settings without constant
 propagation or configuration wrapper inference. Indirect settings follow the

@@ -83,6 +83,7 @@ fn every_registered_configurable_rule_id_has_a_unique_option_validator() {
         crate::codebase::rules::GITHUB_ACTIONS_ACTION_INPUT_POLICY,
         crate::codebase::rules::GITHUB_ACTIONS_CACHE_KEY_POLICY,
         crate::codebase::rules::GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS,
+        crate::codebase::rules::QUEUE_RATE_LIMIT_ERROR_DELAY,
         crate::codebase::rules::VITEST_DEFAULT_EXCLUDES,
         crate::codebase::rules::POSTGRES_LOCK_REASON,
     ]

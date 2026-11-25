@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: queue-rate-limit-error-delay
+    scope: repository
+    options:
+      unanalyzable: ignore
+      targets:
+        - module: glide-mq
+          export: RateLimitError
+        - module: glide-mq
+          export: Worker.RateLimitError
+        - module: ./src/custom-error
+          export: ProviderRateLimitError
+          delayArgument: 1
+          delayProperty: retryAfterMs

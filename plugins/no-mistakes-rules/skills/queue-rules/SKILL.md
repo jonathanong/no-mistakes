@@ -24,6 +24,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT sleep inside a job; defer it through the queue.
 - SHOULD NOT ship bulk work without sizing it against production volume.
 - SHOULD NOT keep completed or failed jobs without a bound; set a count or age limit, and keep the durable record of the work in the database.
+- MUST NOT set `ttl` on debounce-mode `deduplication` (`{ mode: "debounce", ttl }`); debounce ignores `ttl` (only throttle mode reads it). Enforced by `queues check` (`debounce-ttl`).
+- MUST NOT throw a rate-limit error with no delay duration when the queue error carries the provider's `Retry-After` cooldown; pass the positive delay. Enforced by the opt-in `queue-rate-limit-error-delay` rule.
 
 ## Leases
 

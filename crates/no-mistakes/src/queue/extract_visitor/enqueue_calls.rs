@@ -50,7 +50,11 @@ impl<'a> QueueVisitor<'a> {
                 &mut self.facts,
                 call,
             );
-            note_self_dedup(self, call, recorded);
+            if method == "addBulk" {
+                crate::queue::extract_debounce::check_bulk_call(self, call);
+            } else {
+                note_self_dedup(self, call, recorded);
+            }
         }
         self.stamp_worker(recorded);
     }

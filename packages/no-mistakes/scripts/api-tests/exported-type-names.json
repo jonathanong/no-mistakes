@@ -433,6 +433,8 @@
   "QueueJobStateAsRecordOptions",
   "QueueNameFactoryOptions",
   "QueueProducer",
+  "QueueRateLimitErrorDelayOptions",
+  "QueueRateLimitErrorDelayTarget",
   "QueueRateLimitFindingKind",
   "QueueRelatedOptions",
   "QueueReport",

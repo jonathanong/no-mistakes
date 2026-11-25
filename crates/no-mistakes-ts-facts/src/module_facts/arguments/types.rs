@@ -156,8 +156,8 @@ pub struct PathProvenance {
     /// Imports and references that can make a callee's callers unknowable.
     pub route_sites: Vec<RouteSite>,
     pub registry_dispatches: Vec<(u32, String, Option<String>, String)>,
+    pub absent_or_non_finite_args: FxHashMap<u32, Vec<(usize, Option<String>)>>,
 }
-/// One import or reference that blocks a parameter-root proof.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouteSite {
     pub start: u32,

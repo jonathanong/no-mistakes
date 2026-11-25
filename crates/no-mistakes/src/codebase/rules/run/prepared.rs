@@ -1,4 +1,7 @@
-use super::super::{no_single_enqueue_in_loop, postgres_sql_cross_file, query_reached_per_item};
+use super::super::{
+    no_single_enqueue_in_loop, postgres_sql_cross_file, query_reached_per_item,
+    queue_rate_limit_error_delay,
+};
 use super::{
     any_codebase_rule_enabled, forbidden_calls, forbidden_dependencies, nextjs_no_api_routes,
     nextjs_no_caching, require_storybook_stories, required_entrypoint_reachability, rule_enabled,
@@ -109,6 +112,10 @@ fn graph_plan_with_forbidden(
         plan.include(enqueue_plan);
         needed = true;
     }
+    if let Some(delay_plan) = queue_rate_limit_error_delay::graph_plan(config) {
+        plan.include(delay_plan);
+        needed = true;
+    }
     if let Some(sql_plan) = postgres_sql_cross_file::graph_plan(config) {
         plan.include(sql_plan);
         needed = true;
@@ -132,6 +139,7 @@ pub fn canonical_graph_requires_full_file_universe(
         || config.rule_configured(UNCONSTRUCTED_ERROR_CLASS)
         || config.rule_configured(super::super::production_exports_test_only::RULE_ID)
         || no_single_enqueue_in_loop::demands_analysis(config)
+        || queue_rate_limit_error_delay::demands_analysis(config)
 }
 
 pub fn run_check_with_config_and_facts_and_playwright(

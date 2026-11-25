@@ -164,6 +164,12 @@ portable Swift test paths. It flags unconditional `Darwin` imports. Only
 `#if` and `#elseif` conditions the rule can verify count as guards. The rule
 classifies imports in branches without a provable guard as unanalyzable.
 
+`check` can run the opt-in `queue-rate-limit-error-delay` rule for configured
+rate-limit error exports (`options.targets`). It flags missing, `undefined`,
+non-finite, non-numeric, or non-positive delays, and routes spread arguments,
+non-closed options objects, and unresolved matching callees through
+`options.unanalyzable` (`report` by default, or `advise` / `ignore`).
+
 ## Structural / AST-pattern blast radius — use `ast-grep`
 
 `no-mistakes` answers **graph-aware** and **config-aware** queries. It does not

@@ -253,3 +253,32 @@ fn postgres_lock_reason_is_in_the_public_rule_inventory() {
         assert!(read(&root.join(entry)).contains(rule), "{entry}");
     }
 }
+
+#[test]
+fn queue_rate_limit_error_delay_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::QUEUE_RATE_LIMIT_ERROR_DELAY;
+    assert_eq!(rule, "queue-rate-limit-error-delay");
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let page = format!("{rule}.md");
+    let body = read(&root.join("docs/rules").join(&page));
+    for phrase in [
+        "options.targets",
+        "delayArgument",
+        "delayProperty",
+        "unanalyzable",
+        "## Suppression",
+    ] {
+        assert!(body.contains(phrase), "missing {phrase}");
+    }
+    for entry in [
+        "docs/rules/README.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/configuration/rules.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(entry)).contains(rule), "{entry}");
+    }
+}

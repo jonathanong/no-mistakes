@@ -3,6 +3,7 @@ use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::Semantic;
 use serde_json::Value;
+mod absent;
 mod aliases;
 use aliases::AliasSafety;
 mod path_origin;
@@ -104,6 +105,10 @@ pub(super) fn collect(
                 }
             })
             .collect();
+        let absent = projector.collect_absent_or_non_finite(arguments, spread_from);
+        if !absent.is_empty() {
+            provenance.absent_or_non_finite_args.insert(offset, absent);
+        }
         let path = callee.and_then(|call| projector.call_path(call, &imported));
         result.insert(
             offset,
@@ -116,6 +121,7 @@ pub(super) fn collect(
     }
     if dynamic_scope {
         provenance.call_guards.clear();
+        provenance.absent_or_non_finite_args.clear();
         for call in result.values_mut() {
             call.values.fill(ArgumentValue::Unknown);
             call.spread_from = Some(0);

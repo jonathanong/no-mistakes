@@ -69,5 +69,6 @@ export type * from "./github-actions-run-command-policy-types";
 export type * from "./workflow-topology-policy-types";
 
 export type * from "./no-single-enqueue-in-loop-types";
+export type * from "./queue-rate-limit-error-delay-types";
 
 export type * from "./changes-types";

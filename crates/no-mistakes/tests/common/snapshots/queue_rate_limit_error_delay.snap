@@ -1,0 +1,687 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "ProviderRateLimitError",
+          "line": 15,
+          "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new ProviderRateLimitError(\"429\", opts);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "ProviderRateLimitError",
+          "line": 17,
+          "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new ProviderRateLimitError(\"429\", { ...opts });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "RateLimitError",
+          "line": 6,
+          "message": "queue-rate-limit-error-delay could not verify delay (spread argument at or before argument 0 hides whether a delay is supplied); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError(...args);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "StarRateLimitError",
+          "line": 10,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `StarRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new StarRateLimitError();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "dynamicPkg.RateLimitError",
+          "line": 26,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `dynamicPkg.RateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new dynamicPkg.RateLimitError();",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/violations.ts",
+          "import": "BarrelRateLimitError",
+          "line": 27,
+          "message": "`BarrelRateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new BarrelRateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "PauseError",
+          "line": 22,
+          "message": "`PauseError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new PauseError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 48,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) omits options argument 1 with required `retryAfterMs` delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.75) throw new ProviderRateLimitError(\"429\");",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 49,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options argument 1 omits required `retryAfterMs` delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.5) throw new ProviderRateLimitError(\"429\", {});",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 50,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options property `retryAfterMs` must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.25) throw new ProviderRateLimitError(\"429\", { retryAfterMs: 0 });",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 51,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options property `retryAfterMs` is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new ProviderRateLimitError(\"429\", { retryAfterMs: undefined });",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 10,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 15,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 31,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.9) throw new RateLimitError(undefined);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 32,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.8) throw new RateLimitError(void 0);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 33,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.7) throw new RateLimitError(UNSET_DELAY);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 34,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.6) throw new RateLimitError(ZERO_DELAY);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 35,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.5) throw new RateLimitError(-500);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 36,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.4) throw new RateLimitError(null);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 37,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.3) throw new RateLimitError(\"rate limited\");",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 38,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.2) throw new RateLimitError(NaN);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 39,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError(Infinity);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 43,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "const err = new RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "Worker.RateLimitError",
+          "line": 17,
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw Worker.RateLimitError();",
+          "target": "glide-mq#Worker.RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "mq.RateLimitError",
+          "line": 25,
+          "message": "`mq.RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new mq.RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/violations.ts",
+          "import": "BarrelRateLimitError",
+          "line": 27,
+          "message": "`BarrelRateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new BarrelRateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "PauseError",
+          "line": 22,
+          "message": "`PauseError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new PauseError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 48,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) omits options argument 1 with required `retryAfterMs` delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.75) throw new ProviderRateLimitError(\"429\");",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 49,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options argument 1 omits required `retryAfterMs` delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.5) throw new ProviderRateLimitError(\"429\", {});",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 50,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options property `retryAfterMs` must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.25) throw new ProviderRateLimitError(\"429\", { retryAfterMs: 0 });",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 51,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options property `retryAfterMs` is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new ProviderRateLimitError(\"429\", { retryAfterMs: undefined });",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 10,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 15,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 31,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.9) throw new RateLimitError(undefined);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 32,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.8) throw new RateLimitError(void 0);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 33,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.7) throw new RateLimitError(UNSET_DELAY);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 34,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.6) throw new RateLimitError(ZERO_DELAY);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 35,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.5) throw new RateLimitError(-500);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 36,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.4) throw new RateLimitError(null);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 37,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.3) throw new RateLimitError(\"rate limited\");",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 38,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.2) throw new RateLimitError(NaN);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 39,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError(Infinity);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 43,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "const err = new RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "Worker.RateLimitError",
+          "line": 17,
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw Worker.RateLimitError();",
+          "target": "glide-mq#Worker.RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "mq.RateLimitError",
+          "line": 25,
+          "message": "`mq.RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new mq.RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "ProviderRateLimitError",
+          "line": 15,
+          "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new ProviderRateLimitError(\"429\", opts);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "ProviderRateLimitError",
+          "line": 17,
+          "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new ProviderRateLimitError(\"429\", { ...opts });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "RateLimitError",
+          "line": 6,
+          "message": "queue-rate-limit-error-delay could not verify delay (spread argument at or before argument 0 hides whether a delay is supplied); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError(...args);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "StarRateLimitError",
+          "line": 10,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `StarRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new StarRateLimitError();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "dynamicPkg.RateLimitError",
+          "line": 26,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `dynamicPkg.RateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new dynamicPkg.RateLimitError();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "BarrelRateLimitError",
+          "line": 27,
+          "message": "`BarrelRateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new BarrelRateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "PauseError",
+          "line": 22,
+          "message": "`PauseError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new PauseError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 48,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) omits options argument 1 with required `retryAfterMs` delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.75) throw new ProviderRateLimitError(\"429\");",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 49,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options argument 1 omits required `retryAfterMs` delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.5) throw new ProviderRateLimitError(\"429\", {});",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 50,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options property `retryAfterMs` must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.25) throw new ProviderRateLimitError(\"429\", { retryAfterMs: 0 });",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "ProviderRateLimitError",
+          "line": 51,
+          "message": "`ProviderRateLimitError` (./src/custom-error#ProviderRateLimitError) options property `retryAfterMs` is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new ProviderRateLimitError(\"429\", { retryAfterMs: undefined });",
+          "target": "./src/custom-error#ProviderRateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 10,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 15,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 31,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.9) throw new RateLimitError(undefined);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 32,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.8) throw new RateLimitError(void 0);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 33,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.7) throw new RateLimitError(UNSET_DELAY);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 34,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.6) throw new RateLimitError(ZERO_DELAY);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 35,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.5) throw new RateLimitError(-500);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 36,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.4) throw new RateLimitError(null);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 37,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.3) throw new RateLimitError(\"rate limited\");",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 38,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "if (Math.random() > 0.2) throw new RateLimitError(NaN);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 39,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) delay argument 0 is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new RateLimitError(Infinity);",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "RateLimitError",
+          "line": 43,
+          "message": "`RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "const err = new RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "Worker.RateLimitError",
+          "line": 17,
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw Worker.RateLimitError();",
+          "target": "glide-mq#Worker.RateLimitError"
+        },
+        {
+          "file": "src/violations.ts",
+          "import": "mq.RateLimitError",
+          "line": 25,
+          "message": "`mq.RateLimitError` (glide-mq#RateLimitError) omits delay argument at position 0; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new mq.RateLimitError();",
+          "target": "glide-mq#RateLimitError"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

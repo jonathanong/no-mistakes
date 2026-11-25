@@ -1,5 +1,8 @@
 use super::selection::{closed_property, local_value, Selected};
-use crate::queue::extract_factory::{debounce_object, dedup_id_token};
+use crate::queue::extract_debounce::{
+    check_dedup_value, DebounceTtlVerdict, DEBOUNCE_TTL_KIND, DEBOUNCE_TTL_MESSAGE,
+};
+use crate::queue::extract_factory::dedup_id_token;
 use crate::queue::extract_model::{EnqueuePriority, JobOptionEvidence, LocalCheck};
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::Expression;
@@ -70,21 +73,25 @@ pub(super) fn dedup<'a>(
     visitor: &QueueVisitor<'a>,
     layers: &[Selected<'a>],
     line: usize,
-) -> (bool, Vec<LocalCheck>) {
+) -> (bool, Vec<LocalCheck>, bool) {
     let Some(value) = effective_property(visitor, layers, "deduplication") else {
-        return (false, Vec::new());
+        return (false, Vec::new(), false);
     };
     let closed = closed_dedup(value);
-    let checks = (closed && debounce_object(value))
-        .then(|| LocalCheck {
-            line,
-            kind: "debounce-ttl".to_string(),
-            job: None,
-            message: "deduplication ttl is ignored when mode is debounce".to_string(),
-        })
-        .into_iter()
-        .collect();
-    (closed && dedup_id_token(visitor, value), checks)
+    let (checks, abstained) = match check_dedup_value(visitor, value) {
+        DebounceTtlVerdict::Clean => (Vec::new(), false),
+        DebounceTtlVerdict::Finding => (
+            vec![LocalCheck {
+                line,
+                kind: DEBOUNCE_TTL_KIND.to_string(),
+                job: None,
+                message: DEBOUNCE_TTL_MESSAGE.to_string(),
+            }],
+            false,
+        ),
+        DebounceTtlVerdict::Abstain => (Vec::new(), true),
+    };
+    (closed && dedup_id_token(visitor, value), checks, abstained)
 }
 
 fn closed_dedup<'a>(value: &'a Expression<'a>) -> bool {

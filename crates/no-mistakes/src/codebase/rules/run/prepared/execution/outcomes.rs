@@ -15,6 +15,7 @@ pub(super) const GRAPH_CONSUMERS: &[&str] = &[
     "test-no-live-repository-scan",
     "query-reached-per-item",
     "no-single-enqueue-in-loop",
+    "queue-rate-limit-error-delay",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
     postgres_sql_fragment_escape::RULE_ID,

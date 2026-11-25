@@ -137,6 +137,9 @@ fn application_errors(
         super::POSTGRES_LOCK_REASON => {
             super::postgres_lock_reason::collect_application_errors(root, config, rule)
         }
+        super::QUEUE_RATE_LIMIT_ERROR_DELAY => {
+            super::queue_rate_limit_error_delay::collect_application_errors(root, config, rule)
+        }
         _ => {
             let validate = VALIDATORS
                 .iter()

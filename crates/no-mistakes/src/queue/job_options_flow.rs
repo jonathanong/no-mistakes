@@ -104,12 +104,14 @@ fn note_flow_node<'a>(
                 .is_some_and(|binding| binding.value().is_some())
         })
     });
+    let job = members.job();
+    crate::queue::extract_debounce::check_flow_node(visitor, object, job.clone());
     push_site(
         visitor,
         start,
         None,
         queue_name.clone(),
-        members.job(),
+        job,
         evidence.unwrap_or_else(JobOptionEvidence::open),
     );
     if known_spreads {

@@ -4,7 +4,6 @@ use super::super::extract_model::{
 use super::super::extract_visitor::QueueVisitor;
 use super::super::source::line_number;
 use super::site::{evidence_at, push_site};
-use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
 use std::collections::{HashMap, HashSet};
@@ -13,12 +12,12 @@ use std::path::{Path, PathBuf};
 #[path = "job_options_default_read.rs"]
 mod read;
 
-pub(crate) fn note_factory_defaults(
-    visitor: &mut QueueVisitor<'_>,
+pub(crate) fn note_factory_defaults<'a>(
+    visitor: &mut QueueVisitor<'a>,
     declaration: u32,
     queue_name: Option<&str>,
     name_index: usize,
-    call: &CallExpression<'_>,
+    call: &CallExpression<'a>,
 ) {
     let line = line_number(visitor.source, call.span().start);
     let mut recorded = blank(declaration, line, queue_name.map(str::to_string));
@@ -26,15 +25,15 @@ pub(crate) fn note_factory_defaults(
         if index == name_index {
             continue;
         }
-        note_options_argument(arg, &visitor.object_bindings, &mut recorded);
+        note_options_argument(visitor, arg, line, &mut recorded);
     }
     visitor.facts.queue_defaults.push(recorded);
 }
 
-pub(crate) fn note_constructed_defaults(
-    visitor: &mut QueueVisitor<'_>,
+pub(crate) fn note_constructed_defaults<'a>(
+    visitor: &mut QueueVisitor<'a>,
     declaration: u32,
-    new_expr: &oxc_ast::ast::NewExpression<'_>,
+    new_expr: &oxc_ast::ast::NewExpression<'a>,
 ) {
     let line = line_number(visitor.source, new_expr.span().start);
     let mut recorded = blank(
@@ -46,7 +45,7 @@ pub(crate) fn note_constructed_defaults(
             .and_then(|arg| visitor.literal_arg(arg)),
     );
     if let Some(arg) = new_expr.arguments.get(1) {
-        note_options_argument(arg, &visitor.object_bindings, &mut recorded);
+        note_options_argument(visitor, arg, line, &mut recorded);
     }
     visitor.facts.queue_defaults.push(recorded);
 }
@@ -79,9 +78,10 @@ fn blank(declaration: u32, line: usize, queue_name: Option<String>) -> QueueDefa
     }
 }
 
-fn note_options_argument(
-    arg: &Argument<'_>,
-    bindings: &ObjectBindings<'_>,
+fn note_options_argument<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    arg: &Argument<'a>,
+    line: usize,
     recorded: &mut QueueDefaultOptions,
 ) {
     let Some(expr) = arg.as_expression() else {
@@ -89,7 +89,8 @@ fn note_options_argument(
         return;
     };
     if !matches!(expr.get_inner_expression(), Expression::StringLiteral(_)) {
-        recorded.evidence = read::queue_defaults(expr, bindings);
+        recorded.evidence = read::queue_defaults(expr, &visitor.object_bindings);
+        crate::queue::extract_debounce::check_queue_options(visitor, expr, line);
     }
 }
 

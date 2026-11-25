@@ -57,7 +57,7 @@ fn build_report_and_relationships(
     let wildcards = checks::wildcard_queues(&workers);
     let mut relationships = Vec::new();
     let mut check = Vec::new();
-    let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
+    let mut report_diagnostics = diagnostics(root, facts, &producers, &workers, test_scope);
     for (job, producers_for_job) in &producer_index {
         let workers_for_job = worker_index.get(job).cloned().unwrap_or_default();
         if workers_for_job.is_empty() && !wildcards.contains(&checks::queue_key(job)) {

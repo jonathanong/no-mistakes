@@ -12,7 +12,7 @@ mod enqueue;
 #[path = "extract_factory_scheduler.rs"]
 mod scheduler;
 
-pub(crate) fn note_factory_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
+pub(crate) fn note_factory_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpression<'a>) {
     scheduler::note_scheduler(visitor, call);
     match call.callee.get_inner_expression() {
         Expression::Identifier(id) => {

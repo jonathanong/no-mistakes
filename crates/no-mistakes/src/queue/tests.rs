@@ -147,7 +147,13 @@ fn diagnostics_include_parser_warnings_from_facts() {
     let path = root.join("enqueue.ts");
     let mut facts = FileFacts::default();
     facts.diagnostics.push((7, "synthetic warning".to_string()));
-    let diagnostics = diagnostics(&root, &HashMap::from([(path, facts)]), &[], &[]);
+    let diagnostics = diagnostics(
+        &root,
+        &HashMap::from([(path, facts)]),
+        &[],
+        &[],
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
     assert_eq!(diagnostics[0].line, 7);
     assert_eq!(diagnostics[0].message, "synthetic warning");
 }

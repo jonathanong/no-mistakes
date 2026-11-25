@@ -111,21 +111,24 @@ pub(super) fn diagnostics(
     facts: &HashMap<PathBuf, FileFacts>,
     producers: &[InternalProducer],
     workers: &[InternalWorker],
+    test_scope: &crate::queue::test_scope::ConfiguredTestScope,
 ) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     for (path, facts) in facts {
-        out.extend(
-            facts
-                .check_abstentions
-                .iter()
-                .map(|&(line, message)| Diagnostic {
-                    kind: DiagnosticKind::CheckAbstention,
-                    severity: Severity::Warning,
-                    file: relative_string(root, path),
-                    line,
-                    message: message.to_string(),
-                }),
-        );
+        if !test_scope.is_match(root, path) {
+            out.extend(
+                facts
+                    .check_abstentions
+                    .iter()
+                    .map(|&(line, message)| Diagnostic {
+                        kind: DiagnosticKind::CheckAbstention,
+                        severity: Severity::Warning,
+                        file: relative_string(root, path),
+                        line,
+                        message: message.to_string(),
+                    }),
+            );
+        }
         for (line, message) in &facts.diagnostics {
             out.push(Diagnostic {
                 kind: DiagnosticKind::AnalysisNote,

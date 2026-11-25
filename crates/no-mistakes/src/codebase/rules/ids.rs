@@ -103,6 +103,7 @@ pub use super::postgres_table_shape::RULE_ID as POSTGRES_TABLE_SHAPE;
 pub use super::production_dependency_declarations::RULE_ID as PRODUCTION_DEPENDENCY_DECLARATIONS;
 pub use super::production_exports_test_only::RULE_ID as PRODUCTION_EXPORTS_ONLY_USED_BY_TESTS;
 pub use super::query_reached_per_item::RULE_ID as QUERY_REACHED_PER_ITEM;
+pub use super::queue_rate_limit_error_delay::RULE_ID as QUEUE_RATE_LIMIT_ERROR_DELAY;
 pub use super::require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;
 pub use super::require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;
 pub use super::require_test_per_subdir::RULE_ID as REQUIRE_TEST_PER_SUBDIR;

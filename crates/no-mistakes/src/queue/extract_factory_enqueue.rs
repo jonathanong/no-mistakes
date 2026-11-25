@@ -6,9 +6,9 @@ use crate::queue::source::line_number;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
 
-pub(super) fn note_enqueue(
-    visitor: &mut QueueVisitor<'_>,
-    call: &CallExpression<'_>,
+pub(super) fn note_enqueue<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    call: &CallExpression<'a>,
     queue_index: usize,
     job_index: usize,
     options: Option<usize>,

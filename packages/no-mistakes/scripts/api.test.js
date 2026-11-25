@@ -276,6 +276,7 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/postgres-lock-inventory/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/queue-rate-limit-error-delay/public.mts"),
       join(repositoryRoot, "fixtures/node-api/shell-compatibility/public.mts"),
       join(repositoryRoot, "fixtures/node-api/test-fixture-size-cap/public.mts"),
       join(repositoryRoot, "fixtures/node-api/test-reliability/public.mts"),

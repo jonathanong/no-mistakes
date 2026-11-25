@@ -7,6 +7,7 @@ mod fragment_escape;
 mod part0;
 mod part1;
 mod part2;
+mod rate_limit_delay;
 mod relative_imports;
 mod request;
 
@@ -114,6 +115,7 @@ fn collect_application(
     part0::collect(request, session, findings, advisories)?;
     part1::collect(request, session, findings, advisories)?;
     part2::collect(request, session, findings, advisories)?;
+    rate_limit_delay::collect(request, session, findings, advisories)?;
     relative_imports::collect(request, session, findings, advisories)?;
     coverage::collect(request, session, findings, advisories)
 }

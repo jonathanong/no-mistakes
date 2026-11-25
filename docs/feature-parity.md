@@ -1047,7 +1047,9 @@ non-production. v1 emits `dart test`, not `flutter test`.
 The CLI and async Node check APIs share the opt-in [`react-no-nested-buttons-and-links`](rules/react-no-nested-buttons-and-links.md) rule for native buttons and links in selected JSX and TSX files.
 The CLI and async Node check APIs share the opt-in
 [`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
-rule for portable Swift files.
+rule for portable Swift files and the opt-in
+[`queue-rate-limit-error-delay`](rules/queue-rate-limit-error-delay.md)
+rule for TypeScript and JavaScript queue rate-limit error calls.
 
 Language route visitors emit `route` edges. HTTP callers emit `http`.
 Language queue visitors and the shared Kafka scanner emit
