@@ -132,6 +132,7 @@ rules:
   - {rule: strict-package-layout, scope: repository, options: {bogusOption: true}}
   - {rule: structured-config-policy, scope: repository, options: {bogusOption: true}}
   - {rule: swift-no-raw-print, scope: repository, options: {bogusOption: true}}
+  - {rule: swift-no-unguarded-darwin-import, scope: repository, options: {bogusOption: true}}
   - {rule: swift-viewmodel-main-actor, scope: repository, options: {bogusOption: true}}
   - {rule: test-email-domain-policy, scope: repository, options: {bogusOption: true}}
   - {rule: test-fixture-size-cap, scope: repository, options: {bogusOption: true}}

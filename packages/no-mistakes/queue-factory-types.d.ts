@@ -67,3 +67,6 @@ export interface QueueJobStateAsRecordOptions {
 }
 
 export type QueueJobStateAsRecordConfig = boolean | QueueJobStateAsRecordOptions;
+
+/** Configuration for `queues.includeTests` in the selected config file. */
+export type QueueIncludeTestsConfig = boolean | string[];

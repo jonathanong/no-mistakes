@@ -1,0 +1,80 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "src/batch.ts",
+          "job": "rush",
+          "kind": "mixed-priority",
+          "line": 13,
+          "message": "queue \"batch\" mixes priority 0 and priority > 0; this producer sets priority 1 while other producers enqueue with priority 0: src/batch.ts:12 (standard)",
+          "queueFile": "src/batch.ts",
+          "queueName": "batch",
+          "sourceLine": "await batchQueue.add(\"rush\", { id }, { priority: 1 });"
+        },
+        {
+          "file": "src/batch.ts",
+          "job": "standard",
+          "kind": "mixed-priority",
+          "line": 12,
+          "message": "queue \"batch\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: src/batch.ts:13 (rush, priority 1)",
+          "queueFile": "src/batch.ts",
+          "queueName": "batch",
+          "sourceLine": "await batchQueue.add(\"standard\", { id });"
+        },
+        {
+          "file": "src/dispatch.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 7,
+          "message": "`dispatch` carries more than one job (send-email, send-sms), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "src/dispatch.ts",
+          "queueName": "dispatch",
+          "sourceLine": "throw Worker.RateLimitError();"
+        },
+        {
+          "file": "src/triage.ts",
+          "job": "normal",
+          "kind": "mixed-priority",
+          "line": 12,
+          "message": "queue \"triage\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: src/triage.ts:13 (urgent, priority 2)",
+          "queueFile": "src/triage.ts",
+          "queueName": "triage",
+          "sourceLine": "await triageQueue.add(\"normal\", { id });"
+        },
+        {
+          "file": "src/triage.ts",
+          "job": "urgent",
+          "kind": "mixed-priority",
+          "line": 13,
+          "message": "queue \"triage\" mixes priority 0 and priority > 0; this producer sets priority 2 while other producers enqueue with priority 0: src/triage.ts:12 (normal)",
+          "queueFile": "src/triage.ts",
+          "queueName": "triage",
+          "sourceLine": "await triageQueue.add(\"urgent\", { id }, { priority: 2 });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include-all-tests": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -434,12 +434,12 @@ fn postgres_lock_written_rows_redundant_prelocks_check_json_snapshot() {
         ),
         [11]
     );
-    assert!(
-        reports["invalid_fail"]["report"]["incomplete"][0]["message"]
-            .as_str()
-            .unwrap()
-            .contains("supports only advise or ignore")
-    );
+    assert_eq!(reports["invalid_fail"]["exitCode"], 2);
+    assert!(reports["invalid_fail"]["report"].is_null());
+    assert!(reports["invalid_fail"]["stderr"]
+        .as_str()
+        .unwrap()
+        .contains("supports only advise or ignore"));
     assert!(lines(
         &reports["disabled"]["report"],
         "advisories",

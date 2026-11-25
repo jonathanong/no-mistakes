@@ -72,6 +72,11 @@ pub(super) fn compiled(rule: &RuleDef) -> Result<bool> {
                 rule.strict_rule_options::<rules::swift_no_raw_print::Options>()?,
             )?;
         }
+        rules::swift_no_unguarded_darwin_import::RULE_ID => {
+            rules::swift_no_unguarded_darwin_import::compile_options(
+                rule.strict_rule_options::<rules::swift_no_unguarded_darwin_import::Options>()?,
+            )?;
+        }
         rules::swift_viewmodel_main_actor::RULE_ID => {
             rules::swift_viewmodel_main_actor::compile_options(
                 rule.strict_rule_options::<rules::swift_viewmodel_main_actor::Options>()?,

@@ -89,18 +89,20 @@ fn build_report_and_relationships(
         test_scope,
     ));
     let (job_state_checks, job_state_diagnostics) =
-        crate::queue::job_state::findings_and_diagnostics(root, facts);
+        crate::queue::job_state::findings_and_diagnostics(root, facts, test_scope);
     check.extend(job_state_checks);
-    check.extend(crate::queue::job_options::local_checks(root, facts));
+    check.extend(crate::queue::job_options::local_checks(
+        root, facts, test_scope,
+    ));
     check.extend(crate::queue::cycles::queue_cycles(
-        root, &producers, &workers,
+        root, &producers, &workers, test_scope,
     ));
     let (dedup_checks, dedup_diagnostics) =
-        crate::queue::rate_limit::findings(root, &producers, &workers, facts);
+        crate::queue::rate_limit::findings(root, &producers, &workers, facts, test_scope);
     check.extend(dedup_checks);
     let mut check = dedup_sorted(check);
     check.extend(crate::queue::priority_mix::mixed_priority_findings(
-        root, &producers, facts,
+        root, &producers, facts, test_scope,
     ));
     check.sort();
     report_diagnostics.extend(job_state_diagnostics);

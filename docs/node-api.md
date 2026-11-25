@@ -305,6 +305,10 @@ For `playwright-unique-html-ids`, `low` checks literal HTML IDs and routes
 other ID expressions through the shared unanalyzable policy. The rule remains
 independent of `tests.playwright.selectors.htmlIds`; see
 [its Effort section](rules/playwright-unique-html-ids.md#effort).
+The opt-in [`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
+rule runs through async `check()` via `checkJson` and through the
+`analyzeProject()` check report.
+
 For `nextjs-no-caching`, `low` checks
 [literal cache settings](rules/nextjs-no-caching.md#effort) without preparing
 constant propagation or configuration wrapper facts. Both APIs preserve shared
@@ -529,6 +533,9 @@ describe its YAML shape.
 `advisories` in `check()` / `analyzeProject()`). Exported types
 `QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
 `QueueCheckSeverity` describe its configuration and finding severity.
+`queues.includeTests` explicitly opts configured test files back into the
+shared queue scope across every queue check; exported type
+`QueueIncludeTestsConfig` describes its YAML shape.
 
 ## Queue factory configuration types
 
