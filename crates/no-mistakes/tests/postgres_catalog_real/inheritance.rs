@@ -17,6 +17,11 @@ fn catalog_retains_ordinary_inheritance_separately_from_partitions() {
         serde_json::json!(["parent", "shared.other_parent"])
     );
     assert!(catalog["tables"]["parent"].get("inheritedFrom").is_none());
+    assert_eq!(catalog["tables"]["parent"]["hasDescendants"], true);
+    assert_eq!(catalog["tables"]["child"]["hasDescendants"], false);
+    assert_eq!(catalog["tables"]["partitioned"]["hasDescendants"], true);
+    let shared = database.catalog("shared", None);
+    assert_eq!(shared["tables"]["other_parent"]["hasDescendants"], true);
     let partition = &catalog["tables"]["partitioned_child"];
     assert_eq!(partition["partitionOf"], "partitioned");
     assert!(partition.get("inheritedFrom").is_none());
@@ -27,4 +32,5 @@ fn catalog_retains_ordinary_inheritance_separately_from_partitions() {
     );
     let ordering = database.catalog("family", Some("ordering"));
     assert!(ordering["tables"]["child"].get("inheritedFrom").is_none());
+    assert!(ordering["tables"]["child"].get("hasDescendants").is_none());
 }

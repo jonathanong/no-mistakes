@@ -32,9 +32,14 @@ their local constraints. Handwritten snapshots may also set `partitionOf` to
 identify partition children; explicit key facts on a leaf are interpreted as
 that leaf's own constraints. Ordinary inheritance records a sorted
 `inheritedFrom` array of immediate parent names, schema-qualified when needed;
-partition parents stay in `partitionOf`. Older catalogs omit `inheritedFrom`
-and provide no ordinary inheritance evidence. The DDL purpose proof in
+partition parents stay in `partitionOf`. The DDL purpose proof in
 `postgres-lock-written-rows-only` uses these relationships and foreign keys.
+
+Complete generated table entries carry `hasDescendants`, an explicit boolean
+covering children in any schema, including partition leaves omitted from the
+snapshot. When the value is absent, descendant scope is unknown. Regenerate
+older catalogs to establish that a lock without `ONLY` covers just its target
+table.
 
 `postgres-key-column-types` reads primary-key columns, foreign-key referencing
 columns, enum types, and partition relationships. `postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`

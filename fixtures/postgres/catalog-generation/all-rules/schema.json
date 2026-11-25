@@ -104,6 +104,7 @@
       },
       "comment": "People and organizations that own orders.",
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "accounts_email_key": {
           "accessMethod": "btree",
@@ -201,6 +202,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "alias_tags_pkey": {
           "accessMethod": "btree",
@@ -262,6 +264,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "archived_posts_pkey": {
           "accessMethod": "btree",
@@ -333,6 +336,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "blocked_posts_pkey": {
           "accessMethod": "btree",
@@ -384,6 +388,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "current_posts_pkey": {
           "accessMethod": "btree",
@@ -445,6 +450,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "direct_tags_pkey": {
           "accessMethod": "btree",
@@ -526,6 +532,7 @@
       },
       "comment": "Append-only event log.",
       "foreignKeys": {},
+      "hasDescendants": true,
       "indexes": {
         "events_pkey": {
           "accessMethod": "btree",
@@ -589,6 +596,7 @@
       },
       "comment": "A domain over an external enum is not an enum key.",
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "external_enum_domain_keys_pkey": {
           "accessMethod": "btree",
@@ -640,6 +648,7 @@
       },
       "comment": "A key using a shared schema enum.",
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "external_enum_keys_pkey": {
           "accessMethod": "btree",
@@ -691,6 +700,7 @@
       },
       "comment": "An external enum should not receive a local naming finding.",
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "external_enum_name_keys_pkey": {
           "accessMethod": "btree",
@@ -813,6 +823,7 @@
           "validated": true
         }
       },
+      "hasDescendants": false,
       "indexes": {
         "invoices_pkey": {
           "accessMethod": "btree",
@@ -874,6 +885,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "live_topics_topic_id_live_key": {
           "accessMethod": "btree",
@@ -935,6 +947,7 @@
           "validated": true
         }
       },
+      "hasDescendants": false,
       "indexes": {
         "local_key_leaf_pkey": {
           "accessMethod": "btree",
@@ -993,6 +1006,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": true,
       "indexes": {
         "nested_events_pkey": {
           "accessMethod": "btree",
@@ -1066,6 +1080,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": true,
       "indexes": {
         "nested_events_2026_pkey": {
           "accessMethod": "btree",
@@ -1130,6 +1145,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "nullable_slugs_slug_key": {
           "accessMethod": "btree",
@@ -1183,6 +1199,7 @@
       },
       "comment": "Prior order states.",
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "order_history_pkey": {
           "accessMethod": "btree",
@@ -1258,6 +1275,7 @@
           "validated": true
         }
       },
+      "hasDescendants": false,
       "indexes": {
         "order_lines_pkey": {
           "accessMethod": "btree",
@@ -1403,6 +1421,7 @@
           "validated": true
         }
       },
+      "hasDescendants": false,
       "indexes": {
         "orders_account_id_idx": {
           "accessMethod": "btree",
@@ -1511,6 +1530,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "post_reads_pkey": {
           "accessMethod": "btree",
@@ -1592,6 +1612,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "post_tags_pkey": {
           "accessMethod": "btree",
@@ -1683,6 +1704,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "posts_pkey": {
           "accessMethod": "btree",
@@ -1773,6 +1795,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {},
       "physicalPartition": null,
       "primaryKey": null,
@@ -1806,6 +1829,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "request_items_pkey": {
           "accessMethod": "btree",
@@ -1867,6 +1891,7 @@
       },
       "comment": null,
       "foreignKeys": {},
+      "hasDescendants": false,
       "indexes": {
         "topic_memberships_pkey": {
           "accessMethod": "btree",
