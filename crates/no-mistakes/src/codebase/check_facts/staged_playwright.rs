@@ -159,6 +159,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         );
         integration_runner_configs
     });
+    super::playwright_provenance::project(session, root, &sources, &plan, &mut ts);
     let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
         session.session,
         root,

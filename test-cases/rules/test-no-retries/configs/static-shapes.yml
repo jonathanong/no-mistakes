@@ -1,0 +1,25 @@
+tests:
+  playwright:
+    configs:
+      - config/browser.mts
+      - config/common.cjs
+      - config/destructured.ts
+      - config/external.ts
+      - config/missing-export.ts
+      - config/mutable.ts
+      - config/shadowed.cjs
+      - config/wrapper.ts
+    testExclude: [tests/excluded.spec.ts]
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      maxRetries: 1
+  - rule: playwright-no-serial
+    scope: repository
+    include: [config/**, scripts/quality.ts, tests/**]
+    message: Keep this Playwright suite parallel.
+    options:
+      allowlist:
+        - path: ./tests/isolated.spec.ts
+          reason: This suite exercises an intentionally ordered flow

@@ -3,7 +3,7 @@ use crate::queue::extract_helpers::is_queue_package;
 use crate::queue::extract_model::{ExportedWorkerBinding, WorkerRateLimitTarget};
 use crate::queue::graph_model::{CheckFinding, InternalWorker};
 use crate::queue::source::relative_string;
-use crate::queue::types::{Diagnostic, Severity};
+use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -18,7 +18,7 @@ pub const WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE: &str =
     "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve";
 
 pub fn is_worker_rate_limit_unresolved_diagnostic(diagnostic: &Diagnostic) -> bool {
-    diagnostic.message == WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE
+    diagnostic.kind == DiagnosticKind::WorkerRateLimitUnresolved
 }
 
 pub(super) fn findings(
@@ -59,6 +59,7 @@ pub(super) fn findings(
                 | WorkerRateLimitTarget::CallImported { .. }
                 | WorkerRateLimitTarget::CallNamespace { .. } => {
                     diagnostics.push(Diagnostic {
+                        kind: DiagnosticKind::WorkerRateLimitUnresolved,
                         severity: Severity::Warning,
                         file: relative_string(root, path),
                         line: site.line,

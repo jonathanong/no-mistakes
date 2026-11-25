@@ -1,6 +1,57 @@
 {
   "ruleTester": [
     {
+      "file": "src/example.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "sentinelLocatorNames": [
+            "sentinel"
+          ],
+          "sentinelTestIds": [
+            "load-more"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "e2e/other-scrolls.spec.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "sentinelLocatorNames": [
+            "sentinel"
+          ],
+          "sentinelTestIds": [
+            "load-more"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "e2e/unconfigured-sentinels.spec.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/suppressed-sentinel.spec.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "sentinelLocatorNames": [
+            "sentinel"
+          ],
+          "sentinelTestIds": [
+            "load-more"
+          ]
+        }
+      ]
+    },
+    {
       "file": "src/util.ts",
       "findings": [],
       "kind": "valid",
@@ -125,6 +176,80 @@
       "findings": [],
       "kind": "valid",
       "options": null
+    },
+    {
+      "file": "e2e/sentinel-only.spec.js",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 42,
+          "endLine": 3,
+          "file": "e2e/sentinel-only.spec.js",
+          "line": 3,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "sentinelLocatorNames": [
+            "sentinel"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "specs/sentinels.spec.js",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 42,
+          "endLine": 5,
+          "file": "specs/sentinels.spec.js",
+          "line": 5,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use scrollToLoadMore, which scrolls repeatedly until the request fires, instead.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 63,
+          "endLine": 6,
+          "file": "specs/sentinels.spec.js",
+          "line": 6,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use scrollToLoadMore, which scrolls repeatedly until the request fires, instead.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 72,
+          "endLine": 7,
+          "file": "specs/sentinels.spec.js",
+          "line": 7,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use scrollToLoadMore, which scrolls repeatedly until the request fires, instead.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "scrollHelper": "scrollToLoadMore",
+          "sentinelLocatorNames": [
+            "sentinel"
+          ],
+          "sentinelTestIds": [
+            "load-more"
+          ]
+        }
+      ]
     },
     {
       "file": "playwright/reviews.spec.mts",

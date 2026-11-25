@@ -1,0 +1,17 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      fixtures:
+        - module: helpers/opaque-wrapper.mts
+          export: test
+        - module: helpers/factory.mts
+          export: createOpaqueTest
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      fixtures:
+        - module: helpers/opaque-wrapper.mts
+          export: test
+        - module: helpers/factory.mts
+          export: createOpaqueTest

@@ -64,6 +64,8 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         call_site_paths: Default::default(),
         production_import_paths: Default::default(),
         vitest_default_exclude_paths: Default::default(),
+        test_reliability_paths: Default::default(),
+        playwright_fixture_support: false,
         companion_import_plans: Default::default(),
         symbols: enabled.unique_exports || enabled.storybook_stories,
         symbols_paths: Default::default(),

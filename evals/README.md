@@ -306,10 +306,10 @@ that says "use `rg` here, the graph won't help" is ideal.
 
 The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
 `rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
-topics (`testing`, `postgresql`, `queue`, `github-actions`) with 14 cases
-between them (`testing` and `github-actions` have three, the others four),
-plus four off-topic guards. Every case
-exposes all installed plugin skills.
+topics (`testing`, `postgresql`, `queue`, `github-actions`) with 17 cases
+between them (`testing` has six, `github-actions` has three, and the others
+have four), plus four off-topic guards. Every case exposes all installed
+plugin skills.
 
 - **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
   test, worker, workflow). The prompt never names the rule; breaking one
@@ -339,8 +339,15 @@ plugin fired at all.
 ### Current trigger comparison
 
 The results below measure the earlier 16-skill inventory. The current plugin
-contains 15 skills after #3587; it has not been re-measured. Cases and graders
-are unchanged. See [history](HISTORY.md).
+contains 15 skills after #3587. The three cases below are pending measurement.
+The historical comparison still refers to its original case set. See
+[history](HISTORY.md).
+
+| Unmeasured case | What it checks |
+| --- | --- |
+| `rules-testing-write-flaky-response-wait` | Register the response wait before the click so a fast response cannot be missed and hidden by retries. |
+| `rules-testing-review-lowered-coverage-floor` | Flag a lower coverage floor that lets a newly uncovered path pass. |
+| `rules-testing-exception-raised-coverage-floor` | Accept a higher floor based on measured coverage gains under the same scope. |
 
 Measured 2026-11-17 on `77413ee9411801db8de00cb94d2cb348d1e30283`
 (release 0.109.78), Claude plugin eval 2.1.325, Sonnet 5.5 agent and Opus 5.5
@@ -486,7 +493,7 @@ the Claude table.
 
 `python3 evals/codex_rules.py` prints `cases x arms x runs` and exits. It does
 not call a model. Dollars are unknown until a paid run; the preview says so.
-A full rules pass at the case default is 18 cases x 2 arms x 3 runs = 108
+A full rules pass at the case default is 21 cases x 2 arms x 3 runs = 126
 attempts. Pilot with one case before that:
 
 ```sh
@@ -507,18 +514,31 @@ Read the pilot `transcript.jsonl` before starting the group run.
 `--output` is a directory. The runner writes `aggregate-result.json` there, in
 the shape `summarize.py` and `power.py` already read (`arms.with` and
 `arms.without`). It also writes `attempts/<case>/<arm>/<n>/transcript.jsonl`
-as soon as that attempt ends, then updates the aggregate. Run the same command
-again to resume; an attempt with `result.json` is skipped. `--runs` must be 1
-or greater. Before any paid attempt, `codex plugin list --json` must show
-`no-mistakes-rules` installed and enabled on the with arm and no plugins on
-the without arm. `skill-fired` on each arm is the primary measure: a finished
-command that reads `<skill>-rules/SKILL.md` from that attempt's installed
-plugin cache or its marketplace copy, including a relative path after `cd`
-and a canonical path after the attempt directory is gone.
-`--regrade` recomputes that bit from the saved transcripts and does not call
-a model. The pass rate is a regression check: `summarize.py` exits 1 when the
-with-arm score is below the without-arm score. A judge failure is recorded on
-that grader and leaves `skill-fired` in place.
+as soon as that attempt ends, then updates the aggregate. Resume with the
+same inputs and effective run counts. `run-inputs.json` binds the directory to
+its plugin contents, agent and judge settings, prompts, and graders. Use a
+fresh directory for changed inputs or to run again from a legacy directory
+without a fingerprint. `--runs` must be 1 or greater.
+
+Before a paid agent attempt, the runner verifies that only the with arm has
+the rules plugin. The primary measure is `skill-fired`: a completed command
+must read the skill from the attempt's installed plugin or marketplace copy.
+`--regrade` updates trigger and isolation findings from saved transcripts
+without model calls, including for legacy reports. The runner reports judge
+failures as incomplete grading and retries failed verdicts on resume using
+the saved transcript and final answer. The summary leaves affected content
+scores blank and exits 1 on a scored with-arm regression.
+
+Both arms use a read-only sandbox with ambient read access. The transcript
+audit flags some accesses outside the attempt and to its credential file.
+Flagged attempts leave the report incomplete and withhold new judge calls.
+
+Run the credential-free isolation and runner tests locally with the same
+command CI uses:
+
+```sh
+python3 -m unittest discover -s evals
+```
 
 Authenticate as the ChatGPT Codex account that has spare budget, not a shared
 or capped login. Pass `CODEX_AUTH_FILE` (a copy of that account's `auth.json`

@@ -35,7 +35,7 @@ pub(super) fn or_empty_tsconfig(root: &Path, config: Option<Arc<TsConfig>>) -> A
     })
 }
 
-pub(super) fn workspace_for(
+pub(in crate::codebase::check_facts) fn workspace_for(
     session: &AnalysisSession,
     root: &Path,
     sources: &SourceStore,

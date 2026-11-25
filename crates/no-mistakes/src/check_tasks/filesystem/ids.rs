@@ -94,6 +94,8 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::SWIFT_VIEWMODEL_MAIN_ACTOR,
     rules::TEST_EMAIL_DOMAIN_POLICY,
     rules::TEST_FIXTURE_SIZE_CAP,
+    rules::TEST_NO_RETRIES,
+    rules::PLAYWRIGHT_NO_SERIAL,
     rules::TEST_NO_DEPENDENCY_PINS,
     rules::POSTGRES_LOCK_ORDERING,
     rules::POSTGRES_LOCK_INVENTORY,

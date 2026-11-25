@@ -70,6 +70,19 @@ pub(crate) fn collect_fact_map_with_sources(
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> FileIdMap<CheckFileFacts> {
+    let collected =
+        collect_fact_entries_with_sources(session, root, files, plan, playwright, sources);
+    FileIdMap::from_iter_with_inventory(collected, Arc::clone(sources.inventory()))
+}
+
+pub(super) fn collect_fact_entries_with_sources(
+    session: crate::codebase::check_facts::FactRequest<'_>,
+    root: &Path,
+    files: &[PathBuf],
+    plan: &CheckFactPlan,
+    playwright: Option<&PlaywrightFactPlan>,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<(PathBuf, CheckFileFacts)> {
     let files =
         crate::codebase::ts_source::deduplicate_analysis_paths(files.iter().filter(|path| {
             is_indexable(path)
@@ -114,7 +127,7 @@ pub(crate) fn collect_fact_map_with_sources(
         .flatten()
         .collect();
     collected.extend(parallel);
-    FileIdMap::from_iter_with_inventory(collected, Arc::clone(sources.inventory()))
+    collected
 }
 
 pub(super) fn collect_fact_map_sequential_with_sources(
