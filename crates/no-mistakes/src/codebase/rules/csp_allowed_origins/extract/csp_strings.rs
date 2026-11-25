@@ -1,110 +1,136 @@
 use super::super::CspDirective;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrayExpression, ArrayExpressionElement, BinaryExpression, BinaryOperator, CallExpression,
-    Expression, TemplateLiteral,
+    ArrayExpression, BinaryExpression, BinaryOperator, CallExpression, ConditionalExpression,
+    Expression, LogicalExpression, TemplateLiteral,
 };
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 
-pub(super) fn try_collect_join_call(call: &CallExpression<'_>, out: &mut Vec<String>) -> bool {
+mod detect;
+mod eval;
+
+use detect::{
+    array_contains_csp_fragment, expr_contains_csp_fragment, template_contains_csp_fragment,
+};
+pub(super) use eval::{eval_static_string, static_template_text};
+use eval::{csp_array_strings, eval_csp_binary, eval_csp_template, unwrap_join_array_target};
+
+pub(super) enum CspExprResult {
+    Resolved,
+    Unanalyzable(u32),
+    Ignored,
+}
+
+pub(super) fn try_collect_join_call(
+    call: &CallExpression<'_>,
+    out: &mut Vec<String>,
+) -> CspExprResult {
     let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
-        return false;
+        return CspExprResult::Ignored;
     };
     if member.optional || member.property.name.as_str() != "join" || call.arguments.len() > 1 {
-        return false;
+        return CspExprResult::Ignored;
     }
-    let Expression::ArrayExpression(array) = unwrap_ts_wrappers(&member.object) else {
-        return false;
+    let Some((array, unfiltered)) = unwrap_join_array_target(&member.object) else {
+        return CspExprResult::Ignored;
     };
     let separator = match call.arguments.first() {
-        None => Cow::Borrowed(","),
-        Some(arg) => {
-            let Some(sep) = arg.as_expression().and_then(eval_static_string) else {
-                return false;
-            };
-            sep
+        None => Some(Cow::Borrowed(",")),
+        Some(arg) => arg.as_expression().and_then(eval_static_string),
+    };
+    if unfiltered {
+        if let (Some(sep), Some(items)) = (separator, csp_array_strings(array)) {
+            let joined = items.join(&sep);
+            if joined.contains("-src") {
+                out.push(joined);
+            }
+            return CspExprResult::Resolved;
         }
-    };
-    let Some(items) = static_array_strings(array) else {
-        return false;
-    };
-    let joined = items.join(&separator);
-    if joined.contains("-src") {
-        out.push(joined);
     }
-    true
+    if array_contains_csp_fragment(array) {
+        CspExprResult::Unanalyzable(call.span.start)
+    } else {
+        CspExprResult::Ignored
+    }
 }
 
-pub(super) fn try_collect_array(array: &ArrayExpression<'_>, out: &mut Vec<String>) -> bool {
-    let Some(items) = static_array_strings(array) else {
-        return false;
-    };
-    if !items.iter().any(|item| item.contains("-src")) {
-        return true;
-    }
-    if has_overlapping_directives(&items) {
-        for item in items {
-            if item.contains("-src") {
-                out.push(item);
+pub(super) fn try_collect_array(
+    array: &ArrayExpression<'_>,
+    out: &mut Vec<String>,
+) -> CspExprResult {
+    if let Some(items) = csp_array_strings(array) {
+        if items.iter().any(|item| item.contains("-src")) {
+            if has_overlapping_directives(&items) {
+                for item in items {
+                    if item.contains("-src") {
+                        out.push(item);
+                    }
+                }
+            } else {
+                out.push(items.join("; "));
             }
         }
+        return CspExprResult::Resolved;
+    }
+    if array_contains_csp_fragment(array) {
+        CspExprResult::Unanalyzable(array.span.start)
     } else {
-        out.push(items.join("; "));
+        CspExprResult::Ignored
     }
-    true
 }
 
-pub(super) fn try_collect_binary(expr: &BinaryExpression<'_>, out: &mut Vec<String>) -> bool {
+pub(super) fn try_collect_binary(
+    expr: &BinaryExpression<'_>,
+    out: &mut Vec<String>,
+) -> CspExprResult {
     if expr.operator != BinaryOperator::Addition {
-        return false;
+        return CspExprResult::Ignored;
     }
-    let Some(left) = eval_static_string(&expr.left) else {
-        return false;
-    };
-    let Some(right) = eval_static_string(&expr.right) else {
-        return false;
-    };
-    let combined = format!("{left}{right}");
-    if combined.contains("-src") {
-        out.push(combined);
-    }
-    true
-}
-
-pub(super) fn static_template_text<'a>(template: &'a TemplateLiteral<'a>) -> Option<Cow<'a, str>> {
-    if !template.expressions.is_empty() {
-        return None;
-    }
-    let quasi = template.quasis.first()?;
-    quasi.value.cooked?;
-    Some(crate::ast::template_quasi_text(quasi))
-}
-
-pub(super) fn eval_static_string<'a>(expression: &'a Expression<'a>) -> Option<Cow<'a, str>> {
-    match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(value) => Some(crate::ast::js_literal(value)),
-        Expression::TemplateLiteral(template) => static_template_text(template),
-        Expression::BinaryExpression(bin) if bin.operator == BinaryOperator::Addition => {
-            let left = eval_static_string(&bin.left)?;
-            let right = eval_static_string(&bin.right)?;
-            Some(Cow::Owned(format!("{left}{right}")))
+    if let Some(combined) = eval_csp_binary(expr) {
+        if combined.contains("-src") {
+            out.push(combined);
         }
-        _ => None,
+        return CspExprResult::Resolved;
+    }
+    if expr_contains_csp_fragment(&expr.left) || expr_contains_csp_fragment(&expr.right) {
+        CspExprResult::Unanalyzable(expr.span.start)
+    } else {
+        CspExprResult::Ignored
     }
 }
 
-fn static_array_strings(array: &ArrayExpression<'_>) -> Option<Vec<String>> {
-    let mut items = Vec::with_capacity(array.elements.len());
-    for element in &array.elements {
-        let ArrayExpressionElement::SpreadElement(_) = element else {
-            let expr = element.as_expression()?;
-            items.push(eval_static_string(expr)?.into_owned());
-            continue;
-        };
-        return None;
+pub(super) fn try_collect_template(
+    template: &TemplateLiteral<'_>,
+    out: &mut Vec<String>,
+) -> CspExprResult {
+    if let Some(value) = eval_csp_template(template) {
+        if value.contains("-src") {
+            out.push(value.into_owned());
+        }
+        return CspExprResult::Resolved;
     }
-    Some(items)
+    if template_contains_csp_fragment(template) {
+        CspExprResult::Unanalyzable(template.span.start)
+    } else {
+        CspExprResult::Ignored
+    }
+}
+
+pub(super) fn try_collect_conditional(cond: &ConditionalExpression<'_>) -> CspExprResult {
+    if expr_contains_csp_fragment(&cond.consequent) || expr_contains_csp_fragment(&cond.alternate) {
+        CspExprResult::Unanalyzable(cond.span.start)
+    } else {
+        CspExprResult::Ignored
+    }
+}
+
+pub(super) fn try_collect_logical(logical: &LogicalExpression<'_>) -> CspExprResult {
+    if expr_contains_csp_fragment(&logical.left) || expr_contains_csp_fragment(&logical.right) {
+        CspExprResult::Unanalyzable(logical.span.start)
+    } else {
+        CspExprResult::Ignored
+    }
 }
 
 fn has_overlapping_directives(items: &[String]) -> bool {

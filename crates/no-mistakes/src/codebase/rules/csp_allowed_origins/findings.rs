@@ -24,6 +24,7 @@ pub(crate) struct CollectedOrigins {
     pub(crate) refs: Vec<OriginRef>,
     pub(crate) unanalyzable: Vec<UnanalyzableRef>,
     pub(crate) csp_strings: Vec<String>,
+    pub(crate) csp_unanalyzable: Vec<usize>,
 }
 
 pub(super) fn origin_finding(
@@ -79,6 +80,27 @@ pub(super) fn unanalyzable_finding(
         rule: RULE_ID.into(),
         file: file.to_owned(),
         line: item.line,
+        message,
+        import: None,
+        target: Some("unanalyzable".into()),
+    }
+}
+
+pub(super) fn csp_unanalyzable_finding(
+    file: &str,
+    line: usize,
+    custom_message: Option<&str>,
+) -> RuleFinding {
+    let message = custom_message.map(str::to_owned).unwrap_or_else(|| {
+        format!(
+            "Dynamic CSP policy expression in {file} cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'."
+        )
+    });
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.into(),
+        file: file.to_owned(),
+        line,
         message,
         import: None,
         target: Some("unanalyzable".into()),

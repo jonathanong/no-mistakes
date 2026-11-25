@@ -41,6 +41,96 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "dynamic-join-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/dynamic-join.ts",
+          "line": 2,
+          "message": "Dynamic CSP policy expression in src/dynamic-join.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return [",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic-join-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/dynamic-join.ts",
+          "line": 2,
+          "message": "Dynamic CSP policy expression in src/dynamic-join.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return [",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic-nonce-join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://unlisted-img.example.net' used for img-src is not allowed by CSP in src/nonce-join.ts. Add 'https://unlisted-img.example.net' to img-src in src/nonce-join.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted-img.example.net/b.png\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 7,
+          "message": "Origin 'https://unlisted-script.example.net' used for script-src is not allowed by CSP in src/nonce-join.ts. Add 'https://unlisted-script.example.net' to script-src in src/nonce-join.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://unlisted-script.example.net/c.js\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic-ternary": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/ternary.ts",
+          "line": 2,
+          "message": "Dynamic CSP policy expression in src/ternary.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return isDev",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "headers-text": {
     "exitCode": 1,
     "report": {

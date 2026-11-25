@@ -18,7 +18,7 @@ mod options;
 mod policy;
 
 pub(crate) use extract::collect;
-use findings::{origin_finding, unanalyzable_finding};
+use findings::{csp_unanalyzable_finding, origin_finding, unanalyzable_finding};
 pub(crate) use findings::{CollectedOrigins, OriginRef, UnanalyzableReason, UnanalyzableRef};
 use load::load_policy;
 use options::{applications, Application};
@@ -140,7 +140,7 @@ fn check_application(
     facts: Option<&CheckFactMap>,
     sources: &SourceStore,
 ) -> Result<AnalysisDiagnostics> {
-    let policy = load_policy(root, &app.csp_files, facts, sources)?;
+    let loaded = load_policy(root, &app.csp_files, facts, sources)?;
     let csp_label = app
         .csp_files
         .iter()
@@ -148,6 +148,12 @@ fn check_application(
         .collect::<Vec<_>>()
         .join(", ");
     let mut diagnostics = AnalysisDiagnostics::default();
+    for (csp_file, line) in &loaded.unanalyzable {
+        diagnostics.unanalyzable(
+            app.unanalyzable,
+            csp_unanalyzable_finding(csp_file, *line, app.message),
+        );
+    }
     for path in &app.target_files {
         let file = relative_slash_path(root, path);
         let Some(file_facts) = facts.and_then(|facts| facts.ts.get(path)) else {
@@ -156,16 +162,21 @@ fn check_application(
         if file_facts.parse_error.is_some() {
             continue;
         }
-        for origin_ref in &file_facts.csp_allowed_origins.refs {
-            if !policy.allows(origin_ref.directive, &origin_ref.origin, &app.self_origins) {
-                diagnostics.findings.push(origin_finding(
-                    &file,
-                    origin_ref.line,
-                    origin_ref.directive,
-                    &origin_ref.origin,
-                    &csp_label,
-                    app.message,
-                ));
+        if !loaded.policy.is_empty() {
+            for origin_ref in &file_facts.csp_allowed_origins.refs {
+                if !loaded
+                    .policy
+                    .allows(origin_ref.directive, &origin_ref.origin, &app.self_origins)
+                {
+                    diagnostics.findings.push(origin_finding(
+                        &file,
+                        origin_ref.line,
+                        origin_ref.directive,
+                        &origin_ref.origin,
+                        &csp_label,
+                        app.message,
+                    ));
+                }
             }
         }
         for item in &file_facts.csp_allowed_origins.unanalyzable {

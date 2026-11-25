@@ -38,17 +38,18 @@ Protocol-relative URLs (`//cdn.example.com/a.js`) are checked as `https://` orig
 
 Policy parsing follows browser CSP3 semantics:
 
-- Within a single policy (including `[...].join("; ")` arrays and multi-line YAML block scalars), the **first** occurrence of a duplicate directive wins and later duplicates of the same directive are ignored.
+- Within a single policy (including `[...].join("; ")` arrays, static or `'nonce-${...}'` / `'sha256-${...}'` template literals, and multi-line YAML block scalars), the **first** occurrence of a duplicate directive wins and later duplicates of the same directive are ignored.
 - Across multiple policies (separate policy strings in a JS/TS module, multiple `Content-Security-Policy` headers, comma-separated serialized policies, or multiple files in `options.cspFiles`), policies are **intersected**: an origin is allowed only when every enforced policy allows it.
+- Non-static JS/TS CSP expressions that cannot be statically resolved (such as `[...].join("; ")` with opaque dynamic elements or separators, `.filter(...).join(...)`, non-static `+` concatenations, non-nonce template interpolations, or conditional/logical policy branches) are never split into separate intersected policies; instead they are routed through `options.unanalyzable`.
 - Unquoted non-JS CSP lines (such as YAML block scalars containing `img-src https://cdn.example.com;`) keep directive names intact and strip a `Header:` / key prefix only when the prefix before `:` has no whitespace, is not a URL scheme, and is not followed by `//`.
 
-Dynamic URLs whose origin cannot be statically determined (for example `fetch(url)`, `` fetch(`https://${host}/x`) ``, `<img src={src} />`), malformed network URLs, and dynamic `<link rel={rel}>` / `as={kind}` attributes are routed through `options.unanalyzable` (default `report`).
+Dynamic URLs whose origin cannot be statically determined (for example `fetch(url)`, `` fetch(`https://${host}/x`) ``, `<img src={src} />`), malformed network URLs, dynamic `<link rel={rel}>` / `as={kind}` attributes, and unresolvable dynamic CSP policy expressions in `options.cspFiles` are routed through `options.unanalyzable` (default `report`).
 
 ## Options
 
 - `cspFiles` (`string[]`, **required**): Non-empty list of repository-relative paths declaring static CSP directives. Supports JS/TS/JSX/TSX modules (read from static string/template literals, `+` concatenations, and `[...].join(...)` expressions in the prepared AST) as well as non-JS/TS files such as JSON, HTML, YAML, and `_headers`. Missing, unreadable, or directive-free files are reported as incomplete check inputs.
 - `selfOrigins` (`string[]`, optional, default: `[]`): First-party origins (for example `https://app.example.com`) that satisfy `'self'` in the parsed CSP.
-- `unanalyzable` (`"report" | "advise" | "ignore"`, optional, default: `"report"`): Controls how dynamic URLs, malformed network URLs, and dynamic `<link>` `rel`/`as` attributes are handled. `report` emits failing findings, `advise` emits non-failing advisories, and `ignore` omits unanalyzable diagnostics. Definite origin violations remain failing findings.
+- `unanalyzable` (`"report" | "advise" | "ignore"`, optional, default: `"report"`): Controls how dynamic URLs, malformed network URLs, dynamic `<link>` `rel`/`as` attributes, and unresolvable dynamic CSP policy expressions are handled. `report` emits failing findings, `advise` emits non-failing advisories, and `ignore` omits unanalyzable diagnostics. Definite origin violations remain failing findings.
 
 ## Valid example
 
