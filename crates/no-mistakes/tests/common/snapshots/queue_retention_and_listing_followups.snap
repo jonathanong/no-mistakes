@@ -83,6 +83,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [],
       "warnings": [
+        "queues-check: enqueue.ts:13 mixed-priority was not judged for queue \"tracked\" because the flow queue has multiple definition files",
         "queues-check: enqueue.ts:13 unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known",
         "queues-check: enqueue.ts:8 unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known",
         "queues-check: listing.ts:45 job-state-as-record was not judged because the enqueue argument's listing item dependency is not statically known",

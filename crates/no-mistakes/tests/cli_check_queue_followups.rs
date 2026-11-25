@@ -80,7 +80,13 @@ fn queue_required_options_resolved_receiver_check_json_snapshot() {
         assert_eq!(finding["queueFile"], file);
         assert_eq!(finding["message"], message);
     }
-    assert_eq!(report["warnings"], serde_json::json!([]));
+    assert_eq!(
+        report["warnings"],
+        serde_json::json!([
+            r#"queues-check: enqueue.ts:15 mixed-priority was not judged for queue "shared" because the flow queue has multiple definition files"#,
+            r#"queues-check: enqueue.ts:16 mixed-priority was not judged for queue "shared" because the flow queue has multiple definition files"#,
+        ])
+    );
 
     let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args([
@@ -107,6 +113,18 @@ fn queue_required_options_resolved_receiver_check_json_snapshot() {
                 "file": "enqueue.ts",
                 "line": 15,
                 "message": "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions",
+                "severity": "warning"
+            },
+            {
+                "file": "enqueue.ts",
+                "line": 15,
+                "message": "mixed-priority was not judged for queue \"shared\" because the flow queue has multiple definition files",
+                "severity": "warning"
+            },
+            {
+                "file": "enqueue.ts",
+                "line": 16,
+                "message": "mixed-priority was not judged for queue \"shared\" because the flow queue has multiple definition files",
                 "severity": "warning"
             },
             {
