@@ -80,10 +80,7 @@ pub(super) fn build(
                 continue;
             }
             let target = ids.path(*id);
-            let Some(file) = files.get(target) else {
-                uncacheable.insert(*id);
-                continue;
-            };
+            let file = &files[target];
             if !executor_scan::is_statically_pure_top_level(file, target, resolve) {
                 uncacheable.insert(*id);
                 continue;

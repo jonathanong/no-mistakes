@@ -254,6 +254,7 @@ fn build_handles_missing_module_ids_cyclic_candidates_and_non_verbose_notes() {
             reason: "no_shared_imports"
         }
     ));
+    assert_eq!(status.seed_root(), None);
 
     let ids = Arc::new(ModuleIds::new([
         r1.clone(),
@@ -427,8 +428,7 @@ fn shared_capture_rejects_impure_dep_mutated_dep_and_foreign_env() {
         Some(SharedEntry::Impure)
     ));
     // Already-present entry returns early without overwriting.
-    let guard2 = eval.begin_shared_capture(target_id, env);
-    assert!(guard2.is_none());
+    assert!(eval.begin_shared_capture(target_id, env).is_none());
 
     // 2. Mutated dependency scope during capture marks target Impure.
     let mut expected_dep_vals = FxHashMap::default();

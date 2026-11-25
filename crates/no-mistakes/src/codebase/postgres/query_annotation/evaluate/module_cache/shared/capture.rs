@@ -1,11 +1,15 @@
 use super::super::super::{Environment, Evaluator, Scope};
-use super::{remap::remap_scope, remap::remap_scope_strict, CachedModule, SharedEntry, SharedInit};
+use super::{
+    remap::{remap_scope, remap_scope_strict},
+    CachedModule, SharedEntry, SharedInit,
+};
 use crate::codebase::postgres::query_annotation::module_ids::ModuleId;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 pub(in crate::codebase::postgres::query_annotation) struct SharedCaptureGuard {
+    shared: Arc<SharedInit>,
     before_untrusted: bool,
     before_events: usize,
     before_invalidated: usize,
@@ -24,6 +28,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             return None;
         }
         Some(SharedCaptureGuard {
+            shared: Arc::clone(shared),
             before_untrusted: self.untrusted_array_intrinsics,
             before_events: self.event_log.len(),
             before_invalidated: self.invalidated_builders.len(),
@@ -42,12 +47,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: Environment,
         guard: SharedCaptureGuard,
     ) {
-        let Some(shared) = self.modules.shared.as_ref() else {
-            return;
-        };
-        if shared.entries.contains_key(&module_id) {
-            return;
-        }
+        let shared = &guard.shared;
         if !self.is_clean_shared_init(env, &guard) {
             shared
                 .entries
@@ -104,42 +104,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 None => return BuildOutcome::Defer,
             }
         }
-        let loaded_deps: Vec<ModuleId> = all_deps
-            .iter()
-            .copied()
-            .filter(|dep| self.modules.contains_key(dep))
-            .collect();
         let mut dep_refs = Vec::new();
         let mut seen = FxHashSet::default();
-        let mut raw_dep_scopes: Vec<(ModuleId, Scope)> = Vec::new();
-        for &dep in &loaded_deps {
-            if collect_dep_refs(shared, dep, &mut seen, &mut dep_refs, &mut raw_dep_scopes)
-                .is_none()
-            {
-                return BuildOutcome::Impure;
-            }
+        let mut raw_dep_scopes = Vec::new();
+        for &dep in all_deps.iter().filter(|d| self.modules.contains_key(d)) {
+            collect_dep_refs(shared, dep, &mut seen, &mut dep_refs, &mut raw_dep_scopes);
         }
         let mut eval_to_canon = FxHashMap::default();
         let mut canon_to_eval = Vec::with_capacity(dep_refs.len());
         for (index, &(dep_id, slot)) in dep_refs.iter().enumerate() {
-            let Some(&dep_base) = self.modules.get(&dep_id) else {
-                return BuildOutcome::Impure;
-            };
-            let eval_env = dep_base + slot;
+            let eval_env = self.modules[&dep_id] + slot;
             eval_to_canon.insert(eval_env, index);
             canon_to_eval.push(eval_env);
         }
         let mut dep_scopes = Vec::with_capacity(dep_refs.len());
-        for (index, _) in dep_refs.iter().enumerate() {
-            let eval_env = canon_to_eval[index];
-            let Some(current) = self.scopes.get(eval_env) else {
-                return BuildOutcome::Impure;
-            };
-            let expected = remap_scope(&raw_dep_scopes[index].1, &canon_to_eval);
+        for (index, raw_scope) in raw_dep_scopes.iter().enumerate() {
+            let current = &self.scopes[canon_to_eval[index]];
+            let expected = remap_scope(raw_scope, &canon_to_eval);
             if !current.same_bindings(&expected) && *current != expected {
                 return BuildOutcome::Impure;
             }
-            dep_scopes.push(raw_dep_scopes[index].1.clone());
+            dep_scopes.push(raw_scope.clone());
         }
         eval_to_canon.insert(env, dep_refs.len());
         let Some(own_scope) = remap_scope_strict(&self.scopes[env], &eval_to_canon) else {
@@ -165,25 +150,30 @@ fn collect_dep_refs(
     dep: ModuleId,
     seen: &mut FxHashSet<ModuleId>,
     dep_refs: &mut Vec<(ModuleId, usize)>,
-    raw_dep_scopes: &mut Vec<(ModuleId, Scope)>,
-) -> Option<()> {
+    raw_dep_scopes: &mut Vec<Scope>,
+) {
     if !seen.insert(dep) {
-        return Some(());
+        return;
     }
-    let entry = shared.entries.get(&dep)?;
-    let SharedEntry::Pure(cached) = entry.value() else {
-        return None;
+    let cached = {
+        let entry = shared
+            .entries
+            .get(&dep)
+            .expect("pure dependency must exist in SharedInit");
+        let SharedEntry::Pure(cached) = entry.value() else {
+            unreachable!("pure dependency must be Pure")
+        };
+        Arc::clone(cached)
     };
-    let cached = Arc::clone(cached);
-    drop(entry);
     for &sub in &cached.deps {
-        collect_dep_refs(shared, sub, seen, dep_refs, raw_dep_scopes)?;
+        collect_dep_refs(shared, sub, seen, dep_refs, raw_dep_scopes);
     }
     let mut sub_remap = Vec::with_capacity(cached.dep_refs.len() + cached.own_scopes.len());
     for &(sub_id, sub_slot) in &cached.dep_refs {
         let pos = dep_refs
             .iter()
-            .position(|&(id, slot)| id == sub_id && slot == sub_slot)?;
+            .position(|&(id, slot)| id == sub_id && slot == sub_slot)
+            .expect("transitive dep must be collected first");
         sub_remap.push(pos);
     }
     let base = dep_refs.len();
@@ -192,7 +182,6 @@ fn collect_dep_refs(
     }
     for (slot, scope) in cached.own_scopes.iter().enumerate() {
         dep_refs.push((dep, slot));
-        raw_dep_scopes.push((dep, remap_scope(scope, &sub_remap)));
+        raw_dep_scopes.push(remap_scope(scope, &sub_remap));
     }
-    Some(())
 }

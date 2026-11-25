@@ -76,9 +76,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let Some(&dep_base) = self.modules.get(&dep_mod) else {
                 continue;
             };
-            let Some(current) = self.scopes.get(dep_base + slot) else {
-                return false;
-            };
+            let current = &self.scopes[dep_base + slot];
             let expected = &cached.dep_scopes[index];
             if current.same_bindings(expected) {
                 continue;
@@ -96,24 +94,20 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         module_id: ModuleId,
         cached: &CachedModule,
     ) -> Environment {
-        if let Some(env) = self.modules.get(&module_id) {
-            return *env;
-        }
         for &dep_id in &cached.deps {
             if !self.modules.contains_key(&dep_id) {
                 let dep_path = self.module_ids().path(dep_id).to_path_buf();
-                let dep_cached = self
-                    .modules
-                    .shared
-                    .as_ref()
-                    .and_then(|shared| {
-                        let entry = shared.entries.get(&dep_id)?;
-                        match entry.value() {
-                            SharedEntry::Pure(cached) => Some(Arc::clone(cached)),
-                            SharedEntry::Impure => None,
-                        }
-                    })
-                    .expect("cached module dependency must exist in SharedInit");
+                let dep_cached = {
+                    let shared = self.modules.shared.as_ref().expect("SharedInit active");
+                    let entry = shared
+                        .entries
+                        .get(&dep_id)
+                        .expect("cached module dependency must exist in SharedInit");
+                    let SharedEntry::Pure(cached) = entry.value() else {
+                        unreachable!("cached module dependency must be Pure")
+                    };
+                    Arc::clone(cached)
+                };
                 self.install_cached_module(&dep_path, dep_id, &dep_cached);
             }
         }
