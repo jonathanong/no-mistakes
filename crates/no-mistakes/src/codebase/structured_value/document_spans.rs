@@ -15,7 +15,7 @@ pub(super) fn document_spans(source: &str) -> Vec<DocumentSpan> {
         let line_start = offset;
         offset += raw_line.len();
         let line = raw_line.trim_end_matches(['\r', '\n']);
-        let check = if idx == 0 {
+        let check = if !in_doc {
             line.strip_prefix('\u{feff}').unwrap_or(line)
         } else {
             line
