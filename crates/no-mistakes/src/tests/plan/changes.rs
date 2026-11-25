@@ -114,21 +114,56 @@ pub(super) fn unplanned_changed_file_reason(
             relative_path(&prepared.root, deleted)
         ));
     }
+    if let Some(reason) = dependency_fallback_reason(prepared, framework) {
+        return Some(reason);
+    }
     warnings.iter().find_map(|warning| {
         matches!(
             warning.r#type.as_str(),
             "fallback-warning"
                 | "deleted-file"
-                | "lockfile-no-baseline"
-                | "lockfile-binary-unsupported"
-                | "lockfile-pnpm-unmodeled-installation-section"
-                | "package-manifest-no-baseline"
                 | "package-dependency-untraceable"
-                | "dotnet-dependency-no-baseline"
-                | "swift-manifest-no-baseline"
-                | "swift-resolved-no-baseline"
+                | "swift-dependency-untraceable"
+                | "dotnet-dependency-untraceable"
         )
         .then(|| warning.message.clone())
+    })
+}
+
+fn dependency_fallback_reason(
+    prepared: &PreparedTestPlanRequest,
+    framework: Option<TestFramework>,
+) -> Option<String> {
+    let js = crate::tests::prepared_plan::javascript_dependency_framework(framework);
+    let swift = matches!(framework, None | Some(TestFramework::Swift));
+    let dotnet = matches!(framework, None | Some(TestFramework::Dotnet));
+    [
+        (
+            js && prepared.lockfile_analysis.fallback_triggered,
+            &prepared.lockfile_analysis.warnings,
+        ),
+        (
+            js && prepared.package_manifest_analysis.fallback_triggered,
+            &prepared.package_manifest_analysis.warnings,
+        ),
+        (
+            swift && prepared.swift_resolved_analysis.fallback_triggered,
+            &prepared.swift_resolved_analysis.warnings,
+        ),
+        (
+            swift && prepared.swift_manifest_analysis.fallback_triggered,
+            &prepared.swift_manifest_analysis.warnings,
+        ),
+        (
+            dotnet && prepared.dotnet_dependency_analysis.fallback_triggered,
+            &prepared.dotnet_dependency_analysis.warnings,
+        ),
+    ]
+    .into_iter()
+    .find_map(|(triggered, warnings)| {
+        triggered
+            .then(|| warnings.first().map(|warning| warning.message.clone()))
+            .flatten()
     })
 }
 
