@@ -1,0 +1,12 @@
+name: non-mapping-shapes
+on: push
+jobs:
+  opaque: ${{ vars.JOB }}
+  build:
+    runs-on: ubuntu-latest
+    steps: ${{ fromJSON(vars.STEPS) }}
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - ${{ vars.STEP }}
+      - run: echo ok

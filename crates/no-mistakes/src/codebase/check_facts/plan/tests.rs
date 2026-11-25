@@ -210,3 +210,26 @@ fn annotation_heads_survive_plan_union_as_import_and_binding_demand_only() {
     assert!(collected.module_bindings);
     assert!(!collected.call_arguments);
 }
+
+#[test]
+fn explain_write_plan_paths_union_without_widening_scope() {
+    use std::{path::PathBuf, sync::Arc};
+    let first = PathBuf::from("benchmarks/update.sql");
+    let second = PathBuf::from("benchmarks/transactions.sql");
+    let paths = |path| CheckFactPlan {
+        postgres_explain_write_rollback_paths: Arc::new([path].into()),
+        ..Default::default()
+    };
+    let original = paths(first.clone());
+    let mut combined = original.clone();
+    combined.include(paths(second.clone()));
+    combined.include(CheckFactPlan::default());
+    assert_eq!(
+        *combined.postgres_explain_write_rollback_paths,
+        std::collections::BTreeSet::from([first.clone(), second])
+    );
+    assert_eq!(
+        *original.postgres_explain_write_rollback_paths,
+        std::collections::BTreeSet::from([first])
+    );
+}

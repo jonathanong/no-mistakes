@@ -1,0 +1,21 @@
+name: Tests
+on: [pull_request]
+env:
+  INSTA_UPDATE: force
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    env: { "INSTA_UPDATE": 1 }
+    steps:
+      - run: cargo test -p example
+        env:
+          INSTA_UPDATE: "1"
+      - run: cargo test --doc
+        env:
+          INSTA_UPDATE: unseen
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo test
+        env:
+          INSTA_UPDATE: always

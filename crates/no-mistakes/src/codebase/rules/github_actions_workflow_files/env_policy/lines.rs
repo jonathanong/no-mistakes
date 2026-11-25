@@ -1,17 +1,17 @@
 use super::super::job_lines::document::Document;
 
 #[derive(Clone)]
-pub(super) enum Seg {
+pub(in crate::codebase::rules) enum Seg {
     Key(String),
     Idx(usize),
 }
 
-pub(super) fn parse(source: &str) -> Option<Document> {
+pub(in crate::codebase::rules) fn parse(source: &str) -> Option<Document> {
     Document::parse(source)
 }
 
 // Returns the deepest line that matches; a missing child falls back to its parent.
-pub(super) fn locate(doc: Option<&Document>, path: &[Seg]) -> usize {
+pub(in crate::codebase::rules) fn locate(doc: Option<&Document>, path: &[Seg]) -> usize {
     let Some(doc) = doc else {
         return 1;
     };

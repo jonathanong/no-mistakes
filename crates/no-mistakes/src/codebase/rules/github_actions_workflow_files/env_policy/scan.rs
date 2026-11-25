@@ -1,5 +1,6 @@
 use super::super::job_lines::document::Document;
 use super::lines::{locate, parse, Seg};
+use super::scopes::{shape_detail, visit_action_scopes, visit_workflow_scopes, ScopeEvent};
 use super::{scalar_text, Policy, RuleFinding, RULE_ID};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::ts_source::relative_slash_path;
@@ -63,47 +64,31 @@ pub(super) fn check_parsed(
         policy,
     };
     let mut out = Out::default();
-    if let Some(top) = value.as_mapping() {
-        judge(&ctx, top, &[], "workflow", &mut out);
-    }
-    if let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) {
-        for (key, job) in jobs {
-            let (Some(id), Some(job)) = (key.as_str(), job.as_mapping()) else {
-                continue;
-            };
-            let base = [Seg::Key("jobs".into()), Seg::Key(id.into())];
-            let owner = format!("job \"{id}\"");
-            judge(&ctx, job, &base, &owner, &mut out);
-            let steps = job.get("steps").and_then(Value::as_sequence);
-            let at = [base[0].clone(), base[1].clone(), Seg::Key("steps".into())];
-            judge_steps(&ctx, steps, &at, &owner, &mut out);
+    let mut visit = |event: ScopeEvent<'_>| match event {
+        ScopeEvent::Mapping { owner, path, scope } => {
+            judge(&ctx, owner, path, scope, &mut out);
         }
-    }
-    if let Some(runs) = value.get("runs").and_then(Value::as_mapping) {
-        if runs.get("using").and_then(Value::as_str) == Some("composite") {
-            let steps = runs.get("steps").and_then(Value::as_sequence);
-            let at = [Seg::Key("runs".into()), Seg::Key("steps".into())];
-            judge_steps(&ctx, steps, &at, "composite action", &mut out);
+        ScopeEvent::Unanalyzable {
+            path,
+            target,
+            description,
+        } => {
+            out.undecidable.push(RuleFinding {
+                causes: Vec::new(),
+                rule: RULE_ID.to_string(),
+                file: rel.to_string(),
+                line: locate(ctx.doc, path),
+                message: format!(
+                    "{rel}: {description}, which cannot be checked statically. Write literal workflow mappings and step sequences so the env policy can verify them, or suppress this line."
+                ),
+                import: None,
+                target: Some(target.to_string()),
+            });
         }
-    }
+    };
+    visit_workflow_scopes(value, &mut visit);
+    visit_action_scopes(value, &mut visit);
     (out.findings, out.undecidable)
-}
-
-fn judge_steps(
-    ctx: &Ctx<'_>,
-    steps: Option<&Vec<Value>>,
-    path: &[Seg],
-    owner: &str,
-    out: &mut Out,
-) {
-    for (index, step) in steps.into_iter().flatten().enumerate() {
-        let Some(step) = step.as_mapping() else {
-            continue;
-        };
-        let mut at = path.to_vec();
-        at.push(Seg::Idx(index));
-        judge(ctx, step, &at, &format!("{owner} step {}", index + 1), out);
-    }
 }
 
 fn judge(ctx: &Ctx<'_>, owner: &Mapping, path: &[Seg], scope: &str, out: &mut Out) {
@@ -117,7 +102,7 @@ fn judge(ctx: &Ctx<'_>, owner: &Mapping, path: &[Seg], scope: &str, out: &mut Ou
     let Some(env) = raw_env.as_mapping() else {
         let mut at = path.to_vec();
         at.push(Seg::Key("env".into()));
-        let detail = scalar_text(raw_env).unwrap_or_else(|| "a non-mapping value".into());
+        let detail = shape_detail(raw_env, "a non-mapping value");
         out.undecidable.push(RuleFinding {
             causes: Vec::new(),
             rule: RULE_ID.to_string(),
@@ -131,6 +116,21 @@ fn judge(ctx: &Ctx<'_>, owner: &Mapping, path: &[Seg], scope: &str, out: &mut Ou
         });
         return;
     };
+    if env.contains_key("<<") {
+        let mut at = path.to_vec();
+        at.extend([Seg::Key("env".into()), Seg::Key("<<".into())]);
+        out.undecidable.push(RuleFinding {
+            causes: Vec::new(),
+            rule: RULE_ID.to_string(),
+            file: rel.to_string(),
+            line: locate(ctx.doc, &at),
+            message: format!(
+                "{rel}: {scope} `env` uses YAML merge key `<<`, which cannot be checked statically. Write literal `env:` entries so the env policy can verify them, or suppress this line."
+            ),
+            import: None,
+            target: Some("env".to_string()),
+        });
+    }
     for (key, value) in env {
         let Some(name) = key.as_str() else {
             continue;

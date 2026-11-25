@@ -13,6 +13,7 @@ pub(in crate::tests::plan) fn apply(
         plan,
         discovered: &discovered,
         selected: BTreeMap::new(),
+        full_suite_fallback: false,
     };
     match &input.report {
         Ok(report) => selection.apply_categories(report, framework),
@@ -27,6 +28,7 @@ struct Selection<'a> {
     plan: &'a mut TestPlan,
     discovered: &'a DiscoveredTests,
     selected: BTreeMap<String, SelectedTest>,
+    full_suite_fallback: bool,
 }
 
 impl Selection<'_> {
@@ -73,6 +75,13 @@ impl Selection<'_> {
                     }
                 }
                 Err(error) => self.fallback(error, None),
+            }
+        }
+        if !report.changed_files.is_empty() && !self.full_suite_fallback {
+            if let Some(reason) =
+                unplanned_changed_file_reason(self.prepared, framework, self.discovered, self.plan)
+            {
+                self.fallback(reason, None);
             }
         }
     }
@@ -125,11 +134,9 @@ impl Selection<'_> {
     }
 
     fn fallback(&mut self, reason: String, targets: Option<&matching::RunnerTargets>) {
-        let warning = if targets.is_some() {
-            format!("{reason}. Selected configured runner targets.")
-        } else {
-            format!("{reason}. Selected the full discovered suite.")
-        };
+        self.full_suite_fallback |= targets.is_none();
+        let scope = targets.map_or("the full discovered suite", |_| "configured runner targets");
+        let warning = format!("{reason}. Selected {scope}.");
         self.plan.warnings.push(Warning {
             r#type: "changes-fallback".into(),
             message: warning,

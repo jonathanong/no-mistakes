@@ -15,6 +15,8 @@ mod saved_fixture;
 
 #[path = "cli_test_plan_changes.rs"]
 mod cli_test_plan_changes;
+#[path = "cli_test_plan_changes_fallbacks.rs"]
+mod cli_test_plan_changes_fallbacks;
 #[path = "cli_test_plan_config.rs"]
 mod cli_test_plan_config;
 #[path = "cli_test_plan_config2.rs"]

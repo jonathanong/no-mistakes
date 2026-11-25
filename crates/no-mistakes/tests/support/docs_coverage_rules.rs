@@ -195,3 +195,24 @@ pub(super) fn assert_run_command_policy_docs(root: &std::path::Path, rule: &str)
         assert!(read(&root.join(path)).contains(rule), "{path}");
     }
 }
+
+#[test]
+fn postgres_explain_write_rollback_docs_are_reachable_from_check_surfaces() {
+    let root = repo_root();
+    for (page, link) in [
+        (
+            "docs/cli/check.md",
+            "../rules/postgres-explain-write-rollback.md",
+        ),
+        (
+            "docs/node-api.md",
+            "rules/postgres-explain-write-rollback.md",
+        ),
+        ("docs/rules/README.md", "postgres-explain-write-rollback.md"),
+    ] {
+        assert!(
+            read(&root.join(page)).contains(&format!("]({link})")),
+            "{page}"
+        );
+    }
+}

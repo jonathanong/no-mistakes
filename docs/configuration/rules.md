@@ -932,6 +932,13 @@ it. It uses the same scoped
 SQL inputs, catalog and `columnBounds` declarations as the parent rule. See the
 [rule examples](../rules/postgres-bounded-statements.md#independent-candidate-bodies).
 
+[`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
+requires a nonempty `options.sqlInclude` list. Select standalone SQL scripts
+run with autocommit enabled, where each transaction can be understood from
+the script itself. `options.unanalyzable` (`report`, `advise`, or `ignore`;
+default `advise`) controls unparseable scripts, unknown savepoint targets, and
+dynamic read-only settings.
+
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 is opt-in and always advisory, even when severity is omitted. Explicit severity
 must be `advisory`; `error`, `fail`, and `options.fail` are rejected. Set

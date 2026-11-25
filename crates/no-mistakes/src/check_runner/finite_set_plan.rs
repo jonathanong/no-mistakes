@@ -11,6 +11,7 @@ pub(crate) struct PreparedFactDemand {
     vitest_default_exclude_files: Vec<PathBuf>,
     nested_control_files: Vec<PathBuf>,
     test_reliability_files: Vec<PathBuf>,
+    postgres_explain_write_files: Vec<PathBuf>,
     runner_config_files: Vec<PathBuf>,
     needs_other_facts: bool,
 }
@@ -40,6 +41,15 @@ impl PreparedFactDemand {
             root, config, files, sources, plan,
         )?;
         self.include_companion_plan(plan);
+        plan.postgres_explain_write_rollback_paths =
+            no_mistakes::codebase::rules::postgres_explain_write_rollback::required_files(
+                root, config, files, sources,
+            )?;
+        self.postgres_explain_write_files = plan
+            .postgres_explain_write_rollback_paths
+            .iter()
+            .cloned()
+            .collect();
         plan.vitest_default_exclude_paths =
             no_mistakes::codebase::rules::vitest_default_excludes::required_files(
                 root, config, files,
@@ -69,6 +79,7 @@ impl PreparedFactDemand {
             || !self.vitest_default_exclude_files.is_empty()
             || !self.nested_control_files.is_empty()
             || !self.test_reliability_files.is_empty()
+            || !self.postgres_explain_write_files.is_empty()
             || !self.runner_config_files.is_empty()
     }
 
@@ -89,6 +100,7 @@ impl PreparedFactDemand {
         requested.extend(self.vitest_default_exclude_files.iter().cloned());
         requested.extend(self.nested_control_files.iter().cloned());
         requested.extend(self.test_reliability_files.iter().cloned());
+        requested.extend(self.postgres_explain_write_files.iter().cloned());
         ordered_path_intersection(&requested, &discovered)
     }
 
@@ -137,6 +149,7 @@ pub(crate) fn prepare(
         vitest_default_exclude_files: plan.vitest_default_exclude_paths.iter().cloned().collect(),
         nested_control_files: Vec::new(),
         test_reliability_files: Vec::new(),
+        postgres_explain_write_files: Vec::new(),
         runner_config_files: plan
             .integration_runner_configs
             .as_ref()

@@ -26,7 +26,9 @@ fn changes_diff_reports_paths_with_invalid_utf8_without_lossy_classification() {
     .unwrap();
     let report = changes::diff(&args).unwrap();
     assert!(!report.complete);
-    assert_eq!(report.unclassified, ["edited.txt", "redirect.txt"]);
+    assert_eq!(report.categories["files"].changed, ["edited.txt"]);
+    assert_eq!(report.categories["files"].removed, ["redirect.txt"]);
+    assert!(report.unclassified.is_empty());
     assert_eq!(report.reasons.len(), 1);
     assert!(report.reasons[0].contains("non-UTF-8 head path"));
 }
@@ -44,7 +46,7 @@ fn changes_diff_compares_links_by_target_without_reading_through_them() {
     assert!(report.reasons.is_empty());
     assert_eq!(report.categories["docs"].changed, ["docs/guide.md"]);
     assert_eq!(report.categories["skills"].changed, [".claude/skills/y"]);
-    assert_eq!(report.unclassified, ["other/swap", "tests/FooTests.cs"]);
+    assert!(report.unclassified.is_empty());
 }
 
 #[test]
@@ -60,7 +62,7 @@ fn changes_diff_treats_a_dangling_link_with_a_new_target_as_a_path_change() {
     })
     .unwrap();
     assert!(report.complete);
-    assert!(report.unclassified.contains(&"other/gone".to_owned()));
+    assert_eq!(report.unclassified, ["other/gone"]);
 }
 
 #[test]
@@ -75,7 +77,8 @@ fn changes_diff_reports_read_failures_on_either_side_and_keeps_other_changes() {
     fs::set_permissions(head, fs::Permissions::from_mode(0o600)).unwrap();
     let report = result.unwrap();
     assert!(!report.complete);
-    assert_eq!(report.unclassified, ["edited.txt"]);
+    assert_eq!(report.categories["files"].changed, ["edited.txt"]);
+    assert!(report.unclassified.is_empty());
     assert_eq!(report.reasons.len(), 2);
     assert!(report.reasons[0].contains(r#"cannot read base file "restricted/base.txt""#));
     assert!(report.reasons[1].contains(r#"cannot read head file "restricted/head.txt""#));
@@ -93,7 +96,8 @@ fn changes_diff_does_not_infer_removals_from_an_unreadable_subtree() {
     fs::set_permissions(blocked, original).unwrap();
     let partial = result_with_default_config.unwrap();
     assert!(!partial.complete);
-    assert_eq!(partial.unclassified, ["edited.txt"]);
+    assert_eq!(partial.categories["files"].changed, ["edited.txt"]);
+    assert!(partial.unclassified.is_empty());
     assert_eq!(partial.reasons.len(), 1);
     assert!(partial.reasons[0].contains("cannot enumerate head root"));
     assert!(partial.reasons[0].contains("restricted"));

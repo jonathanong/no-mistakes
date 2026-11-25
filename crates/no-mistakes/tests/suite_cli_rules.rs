@@ -179,6 +179,8 @@ mod cli_gha_snapshot_env_policy;
 mod cli_gha_snapshot_job_permissions;
 #[path = "cli_gha_snapshot_job_timeouts.rs"]
 mod cli_gha_snapshot_job_timeouts;
+#[path = "cli_gha_snapshot_no_insta_snapshot_updates.rs"]
+mod cli_gha_snapshot_no_insta_snapshot_updates;
 #[path = "cli_gha_snapshot_no_poll_wait_job.rs"]
 mod cli_gha_snapshot_no_poll_wait_job;
 #[path = "cli_gha_snapshot_pinned_hash.rs"]
