@@ -34,6 +34,7 @@ test("cache setup policy exports both workflow selectors", () => {
   assert.match(options, /export interface GitHubActionsCacheSetupPolicyOptions/);
   assert.match(options, /export interface GitHubActionsCacheKeyShape/);
   assert.match(options, /export interface GitHubActionsSetupDeadline/);
+  assert.match(options, /unanalyzable\?: Unanalyzable;/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/github-actions-cache-setup-policy-types";/,

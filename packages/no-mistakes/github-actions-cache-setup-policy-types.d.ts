@@ -1,8 +1,12 @@
+import type { Effort, Unanalyzable } from "./traversal-types";
+
 /** Opt-in GitHub Actions authored cache-key templates and setup deadline caps. */
 export interface GitHubActionsCacheSetupPolicyOptions {
   include?: string[];
   caches?: GitHubActionsCacheKeyShape[];
   setup?: GitHubActionsSetupDeadline[];
+  effort?: Effort;
+  unanalyzable?: Unanalyzable;
 }
 
 export interface GitHubActionsCacheKeyShape {
