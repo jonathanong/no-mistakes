@@ -1,6 +1,5 @@
 use super::ProducerBinding;
-use crate::config::v2::schema::JobRetentionKey;
-use globset::GlobSet;
+use crate::config::v2::schema::{JobRetentionKey, UnboundedJobRetentionConfig};
 use oxc_ast::ast::IdentifierReference;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -150,8 +149,4 @@ impl RequiredJobOptions {
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct UnboundedRetentionPolicy {
-    pub require: Vec<JobRetentionKey>,
-    pub allow: Option<GlobSet>,
-}
+pub(crate) type UnboundedRetentionPolicy = UnboundedJobRetentionConfig;

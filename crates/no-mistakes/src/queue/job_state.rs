@@ -6,10 +6,8 @@ use crate::queue::graph_model::{CheckFinding, CheckSeverity};
 use crate::queue::graph_resolution::{local_queues, resolved_binding};
 use crate::queue::source::relative_string;
 use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
-use globset::GlobSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 #[path = "job_state_actions.rs"]
 mod actions;
@@ -47,12 +45,9 @@ const UNRESOLVED_RECEIVER_MESSAGE: &str =
     "job-state-as-record was not judged because the queue receiver did not resolve";
 
 pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopLevelConfig) {
-    let allow = queues
-        .job_state_as_record
-        .as_ref()
-        .map(|config| Arc::new(config.allow_globset().unwrap_or_else(GlobSet::empty)));
     for file in facts.values_mut() {
-        file.job_state_as_record.clone_from(&allow);
+        file.job_state_as_record
+            .clone_from(&queues.job_state_as_record);
     }
 }
 
@@ -120,14 +115,23 @@ pub(super) fn findings_and_diagnostics(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
+    let policy = facts.values().find_map(|file| {
+        file.job_state_as_record
+            .as_ref()
+            .filter(|_| !file.job_state_sites.is_empty())
+    });
+    let Some(policy) = policy else {
+        return (Vec::new(), Vec::new());
+    };
+    let allow = policy.allow_globset();
     let mut out = Vec::new();
     let mut diags = Vec::new();
     for (path, file) in facts {
-        let Some(allow) = &file.job_state_as_record else {
-            continue;
-        };
-        if file.job_state_sites.is_empty()
-            || (!allow.is_empty() && allow.is_match(relative_string(root, path)))
+        if file.job_state_as_record.is_none()
+            || file.job_state_sites.is_empty()
+            || allow
+                .as_ref()
+                .is_some_and(|globset| globset.is_match(relative_string(root, path)))
         {
             continue;
         }

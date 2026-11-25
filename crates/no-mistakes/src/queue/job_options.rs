@@ -1,10 +1,9 @@
-use super::extract_model::{FileFacts, RequiredJobOptions, UnboundedRetentionPolicy};
+use super::extract_model::{FileFacts, RequiredJobOptions};
 use super::graph_model::CheckFinding;
 use super::source::relative_string;
 use crate::config::v2::schema::QueuesTopLevelConfig;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 #[path = "job_options_defaults.rs"]
 mod defaults;
@@ -33,9 +32,6 @@ pub(crate) use note::note_call;
 pub(super) use walk::{finish, read as read_evidence};
 
 pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopLevelConfig) {
-    if facts.is_empty() {
-        return;
-    }
     let policy = (!queues.required_job_options.is_empty()
         || !queues.required_job_options_by_queue.is_empty())
     .then(|| RequiredJobOptions {
@@ -44,14 +40,8 @@ pub(crate) fn stamp(facts: &mut HashMap<PathBuf, FileFacts>, queues: &QueuesTopL
     });
     let retention = queues
         .unbounded_job_retention
-        .as_ref()
-        .filter(|config| config.is_enabled())
-        .map(|config| {
-            Arc::new(UnboundedRetentionPolicy {
-                require: config.require.clone(),
-                allow: config.allow_globset(),
-            })
-        });
+        .clone()
+        .filter(|config| config.is_enabled());
     for file in facts.values_mut() {
         file.required_job_options.clone_from(&policy);
         file.unbounded_job_retention.clone_from(&retention);

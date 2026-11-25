@@ -133,45 +133,26 @@ fn unresolved_receiver_abstains_without_queue_overrides() {
 }
 
 #[test]
-fn stamps_each_compiled_allow_policy_once_for_all_files() {
-    use crate::config::v2::schema::{
-        JobStateAsRecordConfig, QueuesTopLevelConfig, UnboundedJobRetentionConfig,
-    };
-    use std::sync::Arc;
+fn each_rule_builds_its_allow_matcher_once_for_multiple_files() {
+    use crate::queue::allow_paths_test_hook::take_builds;
 
-    let queues = QueuesTopLevelConfig {
-        unbounded_job_retention: Some(UnboundedJobRetentionConfig {
-            allow_paths: vec!["retention/**".into()],
-            ..UnboundedJobRetentionConfig::all()
-        }),
-        job_state_as_record: Some(JobStateAsRecordConfig {
-            allow_paths: vec!["state/**".into()],
-        }),
-        ..QueuesTopLevelConfig::default()
-    };
-    let mut facts = HashMap::from([
-        (PathBuf::from("retention/first.ts"), FileFacts::default()),
-        (PathBuf::from("state/second.ts"), FileFacts::default()),
-    ]);
+    for name in ["unbounded-retention", "job-state-as-record"] {
+        take_builds();
+        analyze_project(&fixture(name), None, &[]).unwrap();
+        assert_eq!(take_builds(), 1, "{name}");
+    }
+}
 
-    crate::queue::job_options::stamp(&mut facts, &queues);
+#[test]
+fn empty_and_disabled_allow_lists_build_no_matcher() {
+    use crate::queue::allow_paths_test_hook::take_builds;
 
-    let first = &facts[Path::new("retention/first.ts")];
-    let second = &facts[Path::new("state/second.ts")];
-    let retention = first.unbounded_job_retention.as_ref().unwrap();
-    assert!(Arc::ptr_eq(
-        retention,
-        second.unbounded_job_retention.as_ref().unwrap(),
-    ));
-    assert!(retention
-        .allow
-        .as_ref()
-        .unwrap()
-        .is_match("retention/first.ts"));
-    let state = first.job_state_as_record.as_ref().unwrap();
-    assert!(Arc::ptr_eq(
-        state,
-        second.job_state_as_record.as_ref().unwrap()
-    ));
-    assert!(state.is_match("state/second.ts"));
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check");
+    for rule in ["queue-retention-config", "queue-job-state-config"] {
+        for mode in ["default-on", "default-off"] {
+            take_builds();
+            analyze_project(&root.join(rule).join(mode), None, &[]).unwrap();
+            assert_eq!(take_builds(), 0, "{rule}/{mode}");
+        }
+    }
 }
