@@ -116,6 +116,16 @@ impl ExportLookup<'_> {
         ok
     }
 
+    pub(in crate::codebase::check_facts::playwright_provenance) fn reaches_uncertain(
+        &self,
+        relationships: &EdgeIndex<ExportKey, EdgeKind>,
+        root: &ExportKey,
+    ) -> bool {
+        self.reachable_exports(relationships, root)
+            .iter()
+            .any(|key| self.uncertain.contains(key))
+    }
+
     pub(in crate::codebase::check_facts::playwright_provenance) fn reachable_exports(
         &self,
         relationships: &EdgeIndex<ExportKey, EdgeKind>,

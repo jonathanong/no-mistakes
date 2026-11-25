@@ -134,9 +134,10 @@ await page.getByTestId("heading").scrollIntoViewIfNeeded();
   into the report message. It defaults to `""`, which uses a generic hint
   instead.
 - `sentinelLocatorNames` lists exact identifier names reserved for pagination
-  sentinel locators in the configured files. The name matches an imported
-  binding or a local, single-write binding initialized by a call expression
-  (a locator builder or a factory helper).
+  sentinel locators in the configured files. The name matches globals,
+  imported or destructured bindings, and local bindings initialized by a call
+  expression (a locator builder or a factory helper); same-named object
+  literals and shadowing parameters stay clean.
 - `sentinelTestIds` lists exact IDs in `getByTestId(...)` or in a single
   `[data-testid="..."]` selector passed to `locator(...)`.
   Use a string literal or a template literal without substitutions. Both

@@ -389,6 +389,55 @@
       ]
     },
     {
+      "file": "e2e/sentinel-unresolved-and-refinement.spec.js",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 42,
+          "endLine": 3,
+          "file": "e2e/sentinel-unresolved-and-refinement.spec.js",
+          "line": 3,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 44,
+          "endLine": 6,
+          "file": "e2e/sentinel-unresolved-and-refinement.spec.js",
+          "line": 6,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 44,
+          "endLine": 10,
+          "file": "e2e/sentinel-unresolved-and-refinement.spec.js",
+          "line": 10,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "sentinelLocatorNames": [
+            "sentinel"
+          ],
+          "sentinelTestIds": [
+            "load-more"
+          ]
+        }
+      ]
+    },
+    {
       "file": "e2e/sentinel-only.spec.js",
       "findings": [
         {

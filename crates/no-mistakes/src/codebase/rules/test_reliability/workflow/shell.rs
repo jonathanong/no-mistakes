@@ -20,8 +20,13 @@ pub(super) fn rerun_loops(script: &str, commands: &[Vec<String>]) -> Vec<Option<
         };
         let words = words.as_slice();
         let first = words.first().map(String::as_str);
-        for frame in loops.iter_mut().filter(|frame| frame.in_body || first == Some("do")) {
-            frame.uses_input |= lexer::expands_any(segment, &frame.variables);
+        if reaches_test_command(words, commands) {
+            for frame in loops
+                .iter_mut()
+                .filter(|frame| frame.in_body || first == Some("do"))
+            {
+                frame.uses_input |= lexer::expands_any(segment, &frame.variables);
+            }
         }
         match first {
             Some("for") => {
@@ -138,6 +143,18 @@ fn read_variables(words: &[String]) -> Vec<String> {
         vars.push("REPLY".into());
     }
     vars
+}
+
+fn reaches_test_command(words: &[String], commands: &[Vec<String>]) -> bool {
+    let words = match words.first().map(String::as_str) {
+        Some("do" | "if" | "elif" | "then" | "else") => &words[1..],
+        _ => words,
+    };
+    matching_command(words, commands)
+        || matches!(
+            words.first().map(String::as_str),
+            Some("cd" | "pushd" | "export")
+        )
 }
 
 fn matching_command(words: &[String], prefixes: &[Vec<String>]) -> bool {

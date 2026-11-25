@@ -7,8 +7,10 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
     let mut quote = None;
     let mut arithmetic_parens: Option<usize> = None;
     let mut token_start = true;
+    let mut prev_gt = false;
     let mut heredocs = Vec::new();
     while let Some((offset, character)) = chars.next() {
+        let after_gt = std::mem::replace(&mut prev_gt, false);
         if character == '\\' && quote != Some('\'') {
             chars.next();
             token_start = false;
@@ -21,6 +23,10 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
             continue;
         }
         match character {
+            '>' => {
+                prev_gt = true;
+                token_start = false;
+            }
             '\'' | '"' | '`' => {
                 quote = Some(character);
                 token_start = false;
@@ -49,9 +55,7 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
                 && !script[offset..].starts_with("<<<")
                 && !script[..offset].ends_with('<') =>
             {
-                if let Some(heredoc) = HereDoc::parse(&script[offset + 2..]) {
-                    heredocs.push(heredoc);
-                }
+                heredocs.extend(HereDoc::parse(&script[offset + 2..]));
                 token_start = false;
             }
             '#' if token_start => {
@@ -68,7 +72,7 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
                 start = offset + 1;
                 token_start = true;
             }
-            '|' if arithmetic_parens.is_none() && !script[..offset].ends_with('>') => {
+            '|' if arithmetic_parens.is_none() && !after_gt => {
                 found.push(&script[start..offset]);
                 start = chars
                     .next_if(|(_, next)| matches!(next, '|' | '&'))

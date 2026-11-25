@@ -51,10 +51,6 @@ impl<'a> ExportLookup<'a> {
         }
     }
 
-    pub(super) fn has_uncertain(&self, key: &ExportKey) -> bool {
-        self.uncertain.contains(key)
-    }
-
     pub(super) fn contains(&self, key: &ExportKey) -> bool {
         self.proof.contains_key(key)
     }
@@ -92,9 +88,18 @@ impl<'a> ExportLookup<'a> {
                 .into_iter()
                 .map(|target| CanonicalEdge::new(key.clone(), target, EdgeKind::SymbolReexport)),
         );
+        let local_name = facts
+            .and_then(|file| {
+                file.ts
+                    .exported_bindings
+                    .iter()
+                    .find(|binding| binding.exported == key.name.as_ref())
+                    .map(|binding| binding.local.as_str())
+            })
+            .unwrap_or(key.name.as_ref());
         if facts
             .and_then(|file| file.fixture_initializers.as_ref())
-            .and_then(|fixtures| fixtures.uncertain.get(key.name.as_ref()))
+            .and_then(|fixtures| fixtures.uncertain.get(local_name))
             .is_some_and(|refs| refs.iter().any(ImportRef::is_playwright_test))
         {
             self.uncertain.insert(key.clone());

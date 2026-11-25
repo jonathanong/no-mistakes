@@ -40,17 +40,18 @@ function isSentinelScrollCall(node, context, locatorNames, testIds) {
       }
       if (named || isConfigured) {
         const variable = variableFor(receiver, context);
-        if (variable?.defs?.[0]?.type === "ImportBinding") return true;
+        const def = variable?.defs?.[0];
+        if (!def || def.type !== "Parameter") return true;
       }
       return false;
     }
     if (receiver.type !== "CallExpression") return false;
+    if (named) return true;
     const method = memberName(receiver.callee);
     if (LOCATOR_REFINEMENTS.has(method)) {
       receiver = receiver.callee.object;
       continue;
     }
-    if (named) return true;
     const selector = sentinelSelector(receiver.arguments[0]);
     if (method === "getByTestId") return testIds.has(selector);
     if (method === "locator" && typeof selector === "string") {

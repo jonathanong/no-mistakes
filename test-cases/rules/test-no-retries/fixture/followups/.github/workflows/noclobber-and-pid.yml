@@ -15,3 +15,14 @@ jobs:
             echo "$$i"
             pnpm test
           done
+      - name: Rerun while logging the loop counter
+        run: |
+          for i in 1 2; do
+            echo "attempt $i"
+            pnpm test
+          done
+      - name: Rerun after escaped greater-than before pipe
+        run: |
+          for i in 1 2; do
+            printf x \>| pnpm test
+          done

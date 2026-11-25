@@ -534,6 +534,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/class-alias.spec.ts",
+          "message": "tests/class-alias.spec.ts:9: cannot verify whether `declared.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/class-instance.spec.ts",
           "message": "tests/class-instance.spec.ts:12: cannot verify whether `test` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
@@ -550,7 +555,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "playwright-no-serial",
           "file": "tests/conditional-fixture.spec.ts",
-          "message": "tests/conditional-fixture.spec.ts:4: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+          "message": "tests/conditional-fixture.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:8: cannot verify whether `reexported` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -590,7 +600,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "playwright-no-serial",
           "file": "tests/namespace-alias.spec.ts",
-          "message": "tests/namespace-alias.spec.ts:8: cannot verify whether `alias.test` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+          "message": "tests/namespace-alias.spec.ts:12: cannot verify whether `localAlias.base` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/namespace-alias.spec.ts",
+          "message": "tests/namespace-alias.spec.ts:9: cannot verify whether `alias.test` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -700,6 +715,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "GitHub Actions test rerun loop"
         },
         {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 19,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 25,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
           "file": "playwright.config.ts",
           "line": 4,
           "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
@@ -709,7 +740,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/namespace-alias.spec.ts",
-          "line": 4,
+          "line": 5,
           "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
           "rule": "playwright-no-serial",
           "sourceLine": "ns.test.describe.serial(\"ordered\", () => {});",
@@ -717,7 +748,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/namespace-alias.spec.ts",
-          "line": 5,
+          "line": 6,
           "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
           "rule": "test-no-retries",
           "sourceLine": "ns.test.describe.configure({ retries: 2 });",

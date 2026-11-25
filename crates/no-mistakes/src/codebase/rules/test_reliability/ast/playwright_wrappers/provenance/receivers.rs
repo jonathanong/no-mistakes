@@ -95,25 +95,49 @@ impl<'ast> Bindings<'_, 'ast> {
         }).collect()
     }
 
-    pub(super) fn receiver_class(&self, object: &Expression<'_>) -> Option<&'ast Class<'ast>> {
+    pub(super) fn class_declaration(&self, symbol: SymbolId) -> Option<&'ast Class<'ast>> {
+        match self
+            .semantic
+            .nodes()
+            .kind(self.semantic.scoping().symbol_declaration(symbol))
+        {
+            AstKind::Class(class) => Some(class),
+            _ => None,
+        }
+    }
+
+    pub(super) fn receiver_class<'a>(&'a self, object: &'a Expression<'a>) -> Option<&'a Class<'a>> {
         let nodes = self.semantic.nodes();
-        match object {
-            Expression::NewExpression(instance) => {
-                let Expression::Identifier(name) = unwrap_ts_wrappers(&instance.callee) else {
-                    return None;
-                };
-                let symbol = self.symbol(name)?;
-                match nodes.kind(self.semantic.scoping().symbol_declaration(symbol)) {
-                    AstKind::Class(class) => Some(class),
-                    AstKind::VariableDeclarator(decl) => {
-                        let Expression::ClassExpression(class) = self.constant_initializer(name)? else {
-                            return None;
-                        };
-                        decl.id.is_binding_identifier().then_some(class)
+        let mut current = unwrap_ts_wrappers(object);
+        for _ in 0..8 {
+            let Expression::Identifier(identifier) = current else {
+                break;
+            };
+            let Some(init) = self.constant_initializer(identifier) else {
+                break;
+            };
+            current = unwrap_ts_wrappers(init);
+        }
+        match current {
+            Expression::NewExpression(instance) => match unwrap_ts_wrappers(&instance.callee) {
+                Expression::ClassExpression(class) => Some(class),
+                Expression::Identifier(name) => {
+                    let symbol = self.symbol(name)?;
+                    match nodes.kind(self.semantic.scoping().symbol_declaration(symbol)) {
+                        AstKind::Class(class) => Some(class),
+                        AstKind::VariableDeclarator(decl) => {
+                            let Expression::ClassExpression(class) =
+                                unwrap_ts_wrappers(self.constant_initializer(name)?)
+                            else {
+                                return None;
+                            };
+                            decl.id.is_binding_identifier().then_some(class)
+                        }
+                        _ => None,
                     }
-                    _ => None,
                 }
-            }
+                _ => None,
+            },
             Expression::ThisExpression(this) => {
                 for node in nodes.ancestors(this.node_id.get()) {
                     match node.kind() {

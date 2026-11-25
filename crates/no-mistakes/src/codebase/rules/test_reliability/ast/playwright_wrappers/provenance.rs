@@ -85,24 +85,36 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
     }
 
     fn visit_symbol(&mut self, symbol: SymbolId) {
-        if !self.visited.insert(symbol) {
+        self.visit_symbol_member(symbol, None);
+    }
+
+    fn visit_symbol_member(&mut self, symbol: SymbolId, member: Option<&str>) {
+        if self.bindings.is_namespace_import(symbol) {
+            if let Some(import) = self.bindings.import_origin(symbol, member.or(Some("test"))) {
+                self.record(import);
+            }
+            return;
+        }
+        if member.is_none() && !self.visited.insert(symbol) {
             return;
         }
         if let Some(import) = self.bindings.import_origin(symbol, None) {
             self.record(import);
             return;
         }
-        if self.bindings.is_namespace_import(symbol) {
-            if let Some(import) = self.bindings.import_origin(symbol, Some("test")) {
-                self.record(import);
+        if let Some(class) = self.bindings.class_declaration(symbol) {
+            for value in receivers::class_field_values(class, None) {
+                if self.visited_fields.insert(value.span()) {
+                    self.visit_expression(value);
+                }
             }
             return;
         }
         if let Some(init) = self.bindings.any_var_initializer(symbol) {
-            self.visit_expression(init);
+            self.visit_aliased_expression(init, member);
         }
         for value in self.bindings.possible_binding_values(symbol) {
-            self.visit_expression(value);
+            self.visit_aliased_expression(value, member);
         }
         if let Some((_, body)) = self.bindings.function_def(symbol) {
             match body {
@@ -112,20 +124,22 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
         }
     }
 
-    fn visit_member(&mut self, object: &Expression<'_>, property: Option<&str>) {
-        let object = unwrap_ts_wrappers(object);
-        if let Expression::Identifier(identifier) = object {
-            if let Some(symbol) = self.bindings.symbol(identifier) {
-                if self.bindings.is_namespace_import(symbol) {
-                    if let Some(import) =
-                        self.bindings.import_origin(symbol, property.or(Some("test")))
-                    {
-                        self.record(import);
+    fn visit_aliased_expression(&mut self, expr: &Expression<'_>, member: Option<&str>) {
+        if member.is_some() {
+            if let Expression::Identifier(identifier) = unwrap_ts_wrappers(expr) {
+                if let Some(symbol) = self.bindings.symbol(identifier) {
+                    if self.visited.insert(symbol) || self.bindings.is_namespace_import(symbol) {
+                        self.visit_symbol_member(symbol, member);
                     }
                     return;
                 }
             }
         }
+        self.visit_expression(expr);
+    }
+
+    fn visit_member(&mut self, object: &Expression<'_>, property: Option<&str>) {
+        let object = unwrap_ts_wrappers(object);
         if let Some(class) = self.bindings.receiver_class(object) {
             if let Expression::NewExpression(instance) = object {
                 self.visit_arguments(&instance.arguments);
@@ -136,6 +150,12 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
                 }
             }
             return;
+        }
+        if let Expression::Identifier(identifier) = object {
+            if let Some(symbol) = self.bindings.symbol(identifier) {
+                self.visit_symbol_member(symbol, property);
+                return;
+            }
         }
         self.visit_expression(object);
     }

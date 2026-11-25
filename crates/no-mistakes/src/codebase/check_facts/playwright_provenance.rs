@@ -175,7 +175,7 @@ pub(super) fn project(
                 verified.contains(&key)
                     || lookup
                         .local(path, import)
-                        .is_some_and(|export| lookup.has_uncertain(&export))
+                        .is_some_and(|export| lookup.reaches_uncertain(&relationships, &export))
             });
             location.resolved_playwright_exports.sort();
             location.resolved_playwright_exports.dedup();
