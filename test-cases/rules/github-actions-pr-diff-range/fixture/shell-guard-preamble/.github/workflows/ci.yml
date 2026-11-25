@@ -1,0 +1,20 @@
+name: Preamble before event guard
+on: [pull_request, merge_group]
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    env:
+      EVENT_NAME: ${{ github.event_name }}
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+    steps:
+      - run: |
+          set -euo pipefail
+          echo "selecting base"
+          base=""
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
