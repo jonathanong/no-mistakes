@@ -17,15 +17,6 @@ pub(super) struct Snapshot {
 }
 
 impl Snapshot {
-    pub(super) fn is_unchanged(&self, path: &str, head: &Self) -> Result<bool, String> {
-        if self.is_link(path) || head.is_link(path) {
-            return Ok(self.link_identity(path)? == head.link_identity(path)?);
-        }
-        let base_source = self.read(path)?;
-        let head_source = head.read(path)?;
-        Ok(self.bytes(path, &base_source)? == head.bytes(path, &head_source)?)
-    }
-
     pub fn discover(root: &Path, side: &'static str) -> Result<Self, String> {
         let root = root.canonicalize().map_err(|error| {
             format!(

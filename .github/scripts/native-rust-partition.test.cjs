@@ -118,11 +118,11 @@ test("new cases use the equal placeholder and removed weighted cases are harmles
   );
   assert.deepEqual(
     plans.map(
-      (plan) => schedulingSummary(plan, skewed.entries, skewed.evidence).assignedWeightUnits,
+      (plan) => schedulingSummary(plan, skewed.entries, 2, skewed.evidence).assignedWeightUnits,
     ),
     skewed.expectedWeightUnits,
   );
-  const summary = schedulingSummary(plans.flat(), skewed.entries, skewed.evidence);
+  const summary = schedulingSummary(plans.flat(), skewed.entries, 2, skewed.evidence);
   assert.equal(summary.caseWeights.find((row) => row.name === "new_case").units, 1);
   assert.equal(
     summary.caseWeights.find((row) => row.harness === "other" && row.name === "alpha").units,
@@ -165,7 +165,7 @@ test("macOS three-shard scheduling spreads heavy outliers across three balanced 
   const plans = [1, 2, 3].map((index) => casePlan("macOS", entries, groups, index, 3));
   assert.equal(full.length, 373);
   assert.deepEqual(
-    plans.map((plan) => schedulingSummary(plan, entries, costs, 3).assignedWeightUnits),
+    plans.map((plan) => schedulingSummary(plan, entries, 3).assignedWeightUnits),
     [287, 287, 286],
   );
   const identities = (rows) => rows.map((row) => `${row.executable}:${row.name}`).sort();
@@ -173,17 +173,14 @@ test("macOS three-shard scheduling spreads heavy outliers across three balanced 
   assert.equal(new Set(identities(plans.flat())).size, 373);
   assert.deepEqual(
     plans.map((plan) =>
-      schedulingSummary(plan, entries, costs, 3)
+      schedulingSummary(plan, entries, 3)
         .caseWeights.filter((row) => row.source === "observed-lower-bound")
         .map((row) => row.units)
         .sort((a, b) => b - a),
     ),
     [[174], [96, 71], [78, 73]],
   );
-  assert.equal(
-    schedulingSummary(plans[0], entries, costs, 3).strategy,
-    "macOS-3-shard-outlier-LPT",
-  );
+  assert.equal(schedulingSummary(plans[0], entries, 3).strategy, "macOS-3-shard-outlier-LPT");
 });
 
 test("invalid outlier configuration fails before selecting a partial plan", () => {

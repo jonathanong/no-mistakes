@@ -110,3 +110,18 @@ impl CategoryBuilder {
         changes
     }
 }
+
+pub(super) fn path_change(
+    id: String,
+    old: Option<&[u8]>,
+    new: Option<&[u8]>,
+    unchanged: bool,
+    attribute_paths: Option<Arc<[String]>>,
+) -> Observation {
+    Observation {
+        before: old.map(|_| id.clone()).into_iter().collect(),
+        after: new.map(|_| id.clone()).into_iter().collect(),
+        touched: (!unchanged).then_some(id).into_iter().collect(),
+        attribute_paths,
+    }
+}

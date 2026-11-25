@@ -452,3 +452,38 @@ fn changes_relative_path_resolves_against_root_like_config() {
         );
     }
 }
+
+#[test]
+fn changes_report_changed_files_fallback_for_deleted_config_and_invalid_paths() {
+    let source = union_fixture_root();
+    let head = source.join("head");
+    let reports = source.join("reports");
+    for report_name in [
+        "deleted-file.json",
+        "config-changed.json",
+        "outside-root.json",
+    ] {
+        let report_path = reports.join(report_name);
+        let result = plan(&head, "1", &["--changes", report_path.to_str().unwrap()]);
+        assert_eq!(result["fallback_triggered"], true, "{report_name}");
+        assert_eq!(selected_files(&result).len(), 4, "{report_name}");
+    }
+    let generic = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["tests", "plan", "--root"])
+        .arg(&head)
+        .args([
+            "--format",
+            "json",
+            "--changes",
+            reports.join("config-changed.json").to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        generic.status.success(),
+        "{}",
+        String::from_utf8_lossy(&generic.stderr)
+    );
+    let generic_report: Value = serde_json::from_slice(&generic.stdout).unwrap();
+    assert_eq!(generic_report["fallback_triggered"], true);
+}
