@@ -347,6 +347,10 @@ when both exist. Configure PR limits, exclusion globs, and ecosystem exemptions
 as needed. Exempt ecosystems skip every check, including the PR limit.
 Unreadable or malformed input appears in the JSON `incomplete` list.
 
+Enable [`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md)
+to require narrower resources or a suppression in selected Terraform IAM Allow
+statements. Findings point to the opening line of the `resources` attribute.
+
 Enable [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) for
 scripts targeting Bash before 4.4 and
 [`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md) for zsh scripts.

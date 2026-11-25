@@ -27,4 +27,5 @@ pub mod server_route_client_boundary;
 pub mod shellcheck_runner;
 pub mod swift_no_raw_print;
 pub mod swift_viewmodel_main_actor;
+mod terraform_iam_no_undocumented_wildcards;
 pub mod unconstructed_error_class;

@@ -49,6 +49,10 @@ checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
 floor, explicit PR limit check, exclusion globs, ecosystem exemptions, and
 incomplete-input diagnostics.
 
+The opt-in [`terraform-iam-no-undocumented-wildcards`](rules/terraform-iam-no-undocumented-wildcards.md)
+checks native Terraform and OpenTofu source through Rust, CLI `check`, and
+async Node `check()` or `analyzeProject()` check reports.
+
 Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
 literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
 produce scoped aggregate-check warnings; see

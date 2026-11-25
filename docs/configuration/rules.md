@@ -745,6 +745,12 @@ required. Optional `requiredGlobs` replaces the default list of
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
 
+### Terraform IAM wildcard resources
+
+[`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md) is opt-in.
+Select native `.tf` files with the standard rule scope and path filters.
+The rule needs no `options` block.
+
 ### Dependabot cooldown
 
 [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md) is opt-in

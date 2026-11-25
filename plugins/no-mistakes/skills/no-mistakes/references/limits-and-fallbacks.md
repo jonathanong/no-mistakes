@@ -212,6 +212,12 @@ any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.
 Repair YAML when the rule appears in `incomplete`, then rerun the check.
 See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/dependabot-cooldown-policy.md).
 
+For `terraform-iam-no-undocumented-wildcards`, scope `check` to the
+Terraform or OpenTofu files that declare AWS IAM policy documents. Replace
+wildcard grants with explicit resource ARNs or explain a required wildcard in
+a suppression beside the `resources` attribute.
+See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/terraform-iam-no-undocumented-wildcards.md).
+
 ## Fact extraction failures
 
 `check` isolates an unwinding panic during a single file's fact extraction.

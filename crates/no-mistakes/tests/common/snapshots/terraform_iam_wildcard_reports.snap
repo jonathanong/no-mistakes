@@ -1,0 +1,114 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "policies/receipt.tf",
+          "line": 10,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = (["
+        },
+        {
+          "file": "policies/receipt.tf",
+          "line": 4,
+          "message": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "resources = [\"*\"]"
+        }
+      ],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "filesystem",
+          "file": "policies/generated.tf",
+          "line": 5,
+          "reason": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceFile": "policies/generated.tf",
+          "sourceLine": "resources = [\"*\"]"
+        },
+        {
+          "directive": {
+            "kind": "line",
+            "line": 10
+          },
+          "domain": "filesystem",
+          "file": "policies/justified.tf",
+          "line": 10,
+          "reason": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceFile": "policies/justified.tf",
+          "sourceLine": "resources = [\"*\"] # no-mistakes-disable-line terraform-iam-no-undocumented-wildcards: This action requires all resources."
+        },
+        {
+          "directive": {
+            "kind": "nextLine",
+            "line": 4
+          },
+          "domain": "filesystem",
+          "file": "policies/justified.tf",
+          "line": 5,
+          "reason": "Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceFile": "policies/justified.tf",
+          "sourceLine": "resources = [\"*\"]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "suppressed": [],
+      "warnings": []
+    }
+  },
+  "incomplete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "terraform-iam-no-undocumented-wildcards",
+          "file": "incomplete/broken.tf",
+          "message": "Could not parse Terraform source at line 3, column 19. Fix the HCL syntax and run the check again."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "incomplete/receipt.tf",
+          "line": 2,
+          "message": "Check receipt grants: Replace the IAM resource wildcard with explicit resource ARNs. If this action requires a wildcard, add a suppression with the reason beside the resources attribute.",
+          "rule": "terraform-iam-no-undocumented-wildcards",
+          "sourceLine": "statement { resources = [\"arn:aws:s3:::example.invalid/&{aws:username}/*\"] }"
+        }
+      ],
+      "suppressed": [],
+      "warnings": []
+    }
+  }
+}

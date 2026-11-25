@@ -450,7 +450,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `vitest-default-excludes`, and `vitest-project-policy` |
+| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `terraform-iam-no-undocumented-wildcards`, `vitest-default-excludes`, and `vitest-project-policy` |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -1028,6 +1028,11 @@ same outcome as CLI `check`. Configure it in the YAML selected by `config`.
 `DependabotCooldownPolicyOptions` is exported for typed configuration.
 Policy violations use `RuleFinding`, and unreadable or malformed input uses
 `CheckReport.incomplete` (`CheckFailure[]`).
+
+The opt-in [`terraform-iam-no-undocumented-wildcards`](rules/terraform-iam-no-undocumented-wildcards.md)
+runs through async `check()` and `analyzeProject()` check reports. Configure it
+in the YAML selected by `config`. Wildcard resources use `RuleFinding` and
+unreadable or malformed files appear in `CheckReport.incomplete`.
 
 The configured [`pnpm-release-age-policy`](rules/pnpm-release-age-policy.md)
 rule runs through async `check()` and `analyzeProject()` check reports.
