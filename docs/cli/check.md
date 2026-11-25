@@ -80,6 +80,9 @@ and [playwright-coverage](../rules/playwright-coverage.md#effort).
 checked, and other ID expressions use the selected unanalyzable policy. This
 rule remains enabled when `tests.playwright.selectors.htmlIds` is `false`. See
 [the rule](../rules/playwright-unique-html-ids.md#effort).
+Configure [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
+to report unconditional Darwin imports in selected Swift test files.
+
 For `nextjs-no-caching`, `low` checks literal cache settings without constant
 propagation or configuration wrapper inference. Indirect settings follow the
 shared unanalyzable policy; literal violations, directives, and cache API checks
