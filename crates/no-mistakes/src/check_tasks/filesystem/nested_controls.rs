@@ -13,9 +13,8 @@ pub(super) fn run<'a>(
     if !config.rule_configured(rules::REACT_NO_NESTED_BUTTONS_AND_LINKS) {
         return Ok((Cow::Borrowed(config), AnalysisDiagnostics::default()));
     }
-    let diagnostics = no_mistakes::perf_trace::filesystem_rule(
-        rules::REACT_NO_NESTED_BUTTONS_AND_LINKS,
-        || {
+    let diagnostics =
+        no_mistakes::perf_trace::filesystem_rule(rules::REACT_NO_NESTED_BUTTONS_AND_LINKS, || {
             rules::nested_controls::diagnostics_prepared(
                 root,
                 config,
@@ -25,8 +24,7 @@ pub(super) fn run<'a>(
                 prepared.session,
                 defer_suppression,
             )
-        },
-    )?;
+        })?;
     let mut remaining = config.clone();
     super::handled::mark(&mut remaining, |id| {
         id == rules::REACT_NO_NESTED_BUTTONS_AND_LINKS

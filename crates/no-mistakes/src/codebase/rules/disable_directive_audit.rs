@@ -113,12 +113,17 @@ impl PreparedDisableDirectives {
 
     /// Finalization only matches retained comments to consumed provenance.
     pub fn findings(&self, suppressed: &[SuppressedFinding]) -> Vec<RuleFinding> {
-        let items = suppressed.iter().map(|i| (i.source_file.as_str(), i.rule.as_str(), &i.directive));
+        let items = suppressed
+            .iter()
+            .map(|i| (i.source_file.as_str(), i.rule.as_str(), &i.directive));
         self.findings_for_locations(items, &BTreeSet::new())
     }
 
     /// Complete internal consumption, independent of deduplicated public findings.
-    pub fn findings_from_consumed(&self, consumed: &[ConsumedDisableDirective]) -> Vec<RuleFinding> {
+    pub fn findings_from_consumed(
+        &self,
+        consumed: &[ConsumedDisableDirective],
+    ) -> Vec<RuleFinding> {
         self.findings_excluding_unparsed(consumed, &BTreeSet::new())
     }
 
@@ -127,7 +132,9 @@ impl PreparedDisableDirectives {
         consumed: &[ConsumedDisableDirective],
         unparsed_files: &BTreeSet<String>,
     ) -> Vec<RuleFinding> {
-        let items = consumed.iter().map(|i| (i.source_file.as_str(), i.rule.as_str(), &i.directive));
+        let items = consumed
+            .iter()
+            .map(|i| (i.source_file.as_str(), i.rule.as_str(), &i.directive));
         self.findings_for_locations(items, unparsed_files)
     }
 
@@ -137,7 +144,13 @@ impl PreparedDisableDirectives {
         unparsed_files: &BTreeSet<String>,
     ) -> Vec<RuleFinding> {
         let used: BTreeSet<_> = consumed
-            .map(|(file, rule, directive)| (relative_slash_path(&self.root, Path::new(file)), rule, directive.clone()))
+            .map(|(file, rule, directive)| {
+                (
+                    relative_slash_path(&self.root, Path::new(file)),
+                    rule,
+                    directive.clone(),
+                )
+            })
             .collect();
         let mut findings = self.comments.iter().filter_map(|comment| {
             if matches!(comment.status, DirectiveStatus::Enabled) && unparsed_files.contains(&comment.file) { return None }

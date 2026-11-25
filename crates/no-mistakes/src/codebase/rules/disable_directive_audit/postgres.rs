@@ -29,8 +29,7 @@ impl PreparedDisableDirectives {
             .filter(|(_, file_facts)| file_facts.parse_error.is_some())
             .map(|(path, _)| relative_slash_path(&self.root, path))
             .collect();
-        let mut findings =
-            self.findings_excluding_unparsed(consumed, &unparsed_files);
+        let mut findings = self.findings_excluding_unparsed(consumed, &unparsed_files);
         if config.report_unused_disable_directives == DisableDirectivePolicy::Ignore {
             return Ok(findings);
         }
