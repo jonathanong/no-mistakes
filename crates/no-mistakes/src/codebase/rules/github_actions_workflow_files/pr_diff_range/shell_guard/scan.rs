@@ -1,143 +1,133 @@
-pub(super) fn keyword(source: &str) -> &str {
-    source
-        .split(|ch: char| ch.is_whitespace() || matches!(ch, ';' | '|' | '&'))
-        .next()
-        .unwrap_or_default()
-}
+use std::ops::Range;
 
-pub(super) fn unsupported_control(source: &str, in_double_bracket: bool) -> bool {
-    let source = source
-        .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
-    let word = keyword(source);
-    (!in_double_bracket && source.starts_with(['(', '{']))
-        || matches!(
-            word,
-            "if" | "then"
-                | "elif"
-                | "else"
-                | "fi"
-                | "case"
-                | "esac"
-                | "while"
-                | "until"
-                | "for"
-                | "do"
-                | "done"
-                | "select"
-                | "function"
-                | "time"
-                | "coproc"
-        )
-        || word.ends_with("()")
-}
-
-enum Expansion {
-    None,
-    Simple(usize),
-    Complex,
+pub(super) fn has_arithmetic_in_range(
+    script: &str,
+    range: Range<usize>,
+    heredocs: &[Range<usize>],
+) -> bool {
+    let mut cursor = range.start;
+    for doc in heredocs {
+        if doc.end <= cursor {
+            continue;
+        }
+        if doc.start >= range.end {
+            break;
+        }
+        if doc.start > cursor && has_arithmetic_command(&script[cursor..doc.start]) {
+            return true;
+        }
+        cursor = cursor.max(doc.end.min(range.end));
+    }
+    cursor < range.end && has_arithmetic_command(&script[cursor..range.end])
 }
 
 pub(super) fn has_complex_expansion(source: &str) -> bool {
     let bytes = source.as_bytes();
-    let mut quote: Option<u8> = None;
+    let mut in_double = false;
     let mut i = 0;
     while i < bytes.len() {
         let byte = bytes[i];
-        match quote {
-            Some(b'\'') => {
-                if byte == b'\'' {
-                    quote = None;
-                }
+        if in_double {
+            if byte == b'\\'
+                && bytes
+                    .get(i + 1)
+                    .is_some_and(|next| matches!(next, b'"' | b'\\' | b'$' | b'`' | b'\n'))
+            {
+                i += 2;
+            } else if byte == b'"' {
+                in_double = false;
                 i += 1;
-            }
-            Some(b'"') => {
-                if byte == b'\\'
-                    && bytes
-                        .get(i + 1)
-                        .is_some_and(|next| matches!(next, b'"' | b'\\' | b'$' | b'`' | b'\n'))
-                {
-                    i += 2;
-                } else if byte == b'"' {
-                    quote = None;
-                    i += 1;
-                } else {
-                    match check_expansion(bytes, i) {
-                        Expansion::Complex => return true,
-                        Expansion::Simple(next) => i = next,
-                        Expansion::None => i += 1,
-                    }
+            } else {
+                match check_expansion(bytes, i) {
+                    Expansion::Complex => return true,
+                    Expansion::Simple(next) => i = next,
+                    Expansion::None => i += 1,
                 }
             }
-            _ => {
-                if byte == b'\\' {
-                    i += 2;
-                } else if matches!(byte, b'\'' | b'"') {
-                    quote = Some(byte);
-                    i += 1;
-                } else if is_comment_start(bytes, i) {
-                    i = skip_comment(bytes, i);
-                } else {
-                    match check_expansion(bytes, i) {
-                        Expansion::Complex => return true,
-                        Expansion::Simple(next) => i = next,
-                        Expansion::None => i += 1,
-                    }
-                }
+        } else if byte == b'\\' {
+            i += 2;
+        } else if byte == b'\'' {
+            i = skip_single(bytes, i + 1);
+        } else if byte == b'$' && bytes.get(i + 1) == Some(&b'\'') {
+            i = skip_ansi_c(bytes, i + 2);
+        } else if byte == b'"' {
+            in_double = true;
+            i += 1;
+        } else if is_comment_start(bytes, i) {
+            i = skip_comment(bytes, i);
+        } else {
+            match check_expansion(bytes, i) {
+                Expansion::Complex => return true,
+                Expansion::Simple(next) => i = next,
+                Expansion::None => i += 1,
             }
         }
     }
     false
 }
 
-pub(super) fn has_arithmetic_command(source: &str) -> bool {
+fn has_arithmetic_command(source: &str) -> bool {
     let bytes = source.as_bytes();
-    let mut quote: Option<u8> = None;
+    let mut in_double = false;
     let mut at_cmd_start = true;
     let mut i = 0;
     while i < bytes.len() {
         let byte = bytes[i];
-        match quote {
-            Some(b'\'') => {
-                if byte == b'\'' {
-                    quote = None;
-                }
+        if in_double {
+            if byte == b'\\' && i + 1 < bytes.len() {
+                i += 2;
+            } else {
+                in_double = byte != b'"';
                 i += 1;
             }
-            Some(b'"') => {
-                if byte == b'\\' && i + 1 < bytes.len() {
-                    i += 2;
-                } else {
-                    if byte == b'"' {
-                        quote = None;
-                    }
-                    i += 1;
-                }
-            }
-            _ => {
-                if byte == b'\\' {
-                    at_cmd_start = false;
-                    i += 2;
-                } else if matches!(byte, b'\'' | b'"') {
-                    at_cmd_start = false;
-                    quote = Some(byte);
-                    i += 1;
-                } else if is_comment_start(bytes, i) {
-                    i = skip_comment(bytes, i);
-                } else if matches!(byte, b';' | b'\n' | b'|' | b'&') {
-                    at_cmd_start = true;
-                    i += 1;
-                } else if byte.is_ascii_whitespace() {
-                    i += 1;
-                } else if at_cmd_start && byte == b'(' && bytes.get(i + 1) == Some(&b'(') {
-                    return true;
-                } else {
-                    at_cmd_start = false;
-                    i += 1;
-                }
-            }
+        } else if byte == b'\\' {
+            at_cmd_start = false;
+            i += 2;
+        } else if byte == b'\'' {
+            at_cmd_start = false;
+            i = skip_single(bytes, i + 1);
+        } else if byte == b'$' && bytes.get(i + 1) == Some(&b'\'') {
+            at_cmd_start = false;
+            i = skip_ansi_c(bytes, i + 2);
+        } else if byte == b'"' {
+            at_cmd_start = false;
+            in_double = true;
+            i += 1;
+        } else if is_comment_start(bytes, i) {
+            i = skip_comment(bytes, i);
+        } else if matches!(byte, b';' | b'\n' | b'|' | b'&') {
+            at_cmd_start = true;
+            i += 1;
+        } else if byte.is_ascii_whitespace() {
+            i += 1;
+        } else if at_cmd_start && byte == b'(' && bytes.get(i + 1) == Some(&b'(') {
+            return true;
+        } else {
+            at_cmd_start = false;
+            i += 1;
         }
     }
     false
+}
+
+fn skip_single(bytes: &[u8], mut i: usize) -> usize {
+    while i < bytes.len() && bytes[i] != b'\'' {
+        i += 1;
+    }
+    (i + 1).min(bytes.len())
+}
+
+fn skip_ansi_c(bytes: &[u8], mut i: usize) -> usize {
+    while i < bytes.len() {
+        if bytes[i] == b'\\' && i + 1 < bytes.len() {
+            i += 2;
+        } else if bytes[i] == b'\'' {
+            return i + 1;
+        } else {
+            i += 1;
+        }
+    }
+    i
 }
 
 fn is_comment_start(bytes: &[u8], i: usize) -> bool {
@@ -154,12 +144,17 @@ fn skip_comment(bytes: &[u8], mut i: usize) -> usize {
     i
 }
 
+enum Expansion {
+    None,
+    Simple(usize),
+    Complex,
+}
+
 fn check_expansion(bytes: &[u8], i: usize) -> Expansion {
-    let byte = bytes[i];
-    if byte == b'`' {
+    if bytes[i] == b'`' {
         return Expansion::Complex;
     }
-    if byte != b'$' {
+    if bytes[i] != b'$' {
         return Expansion::None;
     }
     match bytes.get(i + 1) {

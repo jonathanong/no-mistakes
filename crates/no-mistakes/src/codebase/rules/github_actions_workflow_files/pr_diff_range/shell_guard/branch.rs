@@ -1,6 +1,7 @@
+use super::control::{drop_leading_word, keyword};
 use super::eval::{eval_condition, OnMergeGroup};
-use super::scan::{self, keyword};
-use super::{drop_leading_word, BranchState, GuardScan};
+use super::scan;
+use super::{BranchState, GuardScan};
 
 enum Phase {
     InCondition {
@@ -29,7 +30,9 @@ impl GuardScan<'_> {
         };
         let start_slice = self.slice(start_idx);
         let start_words = drop_leading_word(&self.commands[start_idx].words, "if");
-        if !self.consume_body(start_slice[2..].trim_start(), start_words, true, &mut state) {
+        if self.has_arithmetic_at(start_idx)
+            || !self.consume_body(start_slice[2..].trim_start(), start_words, true, &mut state)
+        {
             return None;
         }
         let mut pending = Vec::new();
@@ -38,6 +41,12 @@ impl GuardScan<'_> {
             let cmd = &self.commands[idx];
             let cmd_start = self.positions[cmd.anchor];
             let slice = self.slice(idx);
+            let closing_outer = matches!(phase, Phase::InBranch { .. })
+                && state.depth == 0
+                && keyword(slice) == "fi";
+            if !closing_outer && self.has_arithmetic_at(idx) {
+                return None;
+            }
             match phase {
                 Phase::InCondition {
                     cond_start,
@@ -128,9 +137,15 @@ impl GuardScan<'_> {
                                 if excluded {
                                     pending.push(body_start..cmd_start);
                                 }
+                                let range = self.slice_range(idx);
+                                let fi_end = range.end - slice.len() + 2;
                                 let tail = &slice[2..];
                                 if scan::has_complex_expansion(tail)
-                                    || scan::has_arithmetic_command(tail)
+                                    || scan::has_arithmetic_in_range(
+                                        self.script,
+                                        fi_end..range.end,
+                                        &self.heredocs,
+                                    )
                                 {
                                     self.mutated_all = true;
                                 }

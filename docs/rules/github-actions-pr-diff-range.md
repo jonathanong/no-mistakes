@@ -55,14 +55,15 @@ literal event name such as `pull_request`, `pull_request_target`, or
 `${{ github.event_name }}`, and no preceding statement (including `if` / `elif`
 conditions and `!`-negated commands) may reassign it or run any command outside
 a small non-mutating allowlist (`:`, `true`, `false`, `echo`, `set`, `shopt`,
-`[`, `test`, `[[` without arithmetic or name-reference operators, `exit`, `return`, `cat`,
-`git`, literal `printf` without `-v`, and static-target `export` / `readonly` /
-`local` / `declare` / `typeset` / `unset` without name-reference (`-n`),
-function (`-f`), or integer (`-i`) flags). Any unlisted command, dynamic command
-or target name, arithmetic command (`(( ... ))`), command or arithmetic
-substitution (`$(...)`, `$((...))`, `$[...]`, or backticks, including inside
-redirections), or non-simple parameter expansion (`${X:-...}`, `${X:=...}`) is
-treated as mutating every variable. The rule skips
+`[` and `test` without subscripted `-v` operands, `[[` without arithmetic or
+name-reference operators, `exit`, `return`, `cat`, `git`, literal `printf`
+without `-v`, and simple static-target `export` / `readonly` / `local` /
+`declare` / `typeset` / `unset` without compound array assignments or
+name-reference (`-n`), function (`-f`), or integer (`-i`) flags). Any unlisted
+command, dynamic command or target name, compound array assignment, arithmetic
+command (`(( ... ))`), command or arithmetic substitution (`$(...)`, `$((...))`,
+`$[...]`, or backticks, including inside redirections), or non-simple parameter
+expansion (`${X:-...}`, `${X:=...}`) is treated as mutating every variable. The rule skips
 environment reads in branches that `merge_group` cannot reach — including nested
 `if` blocks such as regex checks inside a guarded branch — and checks reads in
 reachable branches and outside the `if`. Compound tests and other unmodeled

@@ -20,9 +20,9 @@ pub(super) fn record_mutations(
         index += 1;
     }
     while let Some(word) = words.get(index) {
-        if let Some((lhs, _)) = word.text.split_once('=') {
+        if let Some((lhs, rhs)) = word.text.split_once('=') {
             let name = lhs.strip_suffix('+').unwrap_or(lhs);
-            if is_plain_target(word, name) {
+            if is_plain_target(word, name) && !rhs.starts_with('(') {
                 mutated_vars.insert(name.to_string());
                 index += 1;
                 continue;
@@ -59,14 +59,27 @@ pub(super) fn record_mutations(
     }
     let args = &words[index + 1..];
     match cmd.text.as_str() {
-        ":" | "true" | "false" | "echo" | "set" | "shopt" | "[" | "test" | "exit" | "return"
-        | "cat" | "git" => {}
+        ":" | "true" | "false" | "echo" | "set" | "shopt" | "exit" | "return" | "cat" | "git" => {}
+        "[" | "test" => record_test_builtin(args, mutated_all),
         "[[" => record_double_bracket(args, mutated_vars, mutated_all),
         "printf" => record_printf(args, mutated_vars, mutated_all),
         "export" | "readonly" | "local" | "declare" | "typeset" | "unset" => {
             record_target_builtin(args, mutated_vars, mutated_all);
         }
         _ => *mutated_all = true,
+    }
+}
+
+fn record_test_builtin(args: &[Word], mutated_all: &mut bool) {
+    for pair in args.windows(2) {
+        if pair[0].text == "-v" && (!is_literal_word(&pair[1]) || pair[1].text.contains('[')) {
+            *mutated_all = true;
+            return;
+        }
+        if !is_literal_word(&pair[0]) && pair[1].text.contains('[') {
+            *mutated_all = true;
+            return;
+        }
     }
 }
 
@@ -130,13 +143,11 @@ fn record_target_builtin(
             *mutated_all = true;
             return;
         }
-        let target = arg
-            .text
-            .split_once('=')
-            .map_or(arg.text.as_str(), |(lhs, _)| {
-                lhs.strip_suffix('+').unwrap_or(lhs)
-            });
-        if is_plain_target(arg, target) {
+        let (target, is_compound) = match arg.text.split_once('=') {
+            Some((lhs, rhs)) => (lhs.strip_suffix('+').unwrap_or(lhs), rhs.starts_with('(')),
+            None => (arg.text.as_str(), false),
+        };
+        if is_plain_target(arg, target) && !is_compound {
             mutated_vars.insert(target.to_string());
         } else {
             *mutated_all = true;
