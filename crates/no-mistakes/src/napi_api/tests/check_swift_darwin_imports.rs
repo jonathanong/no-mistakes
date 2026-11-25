@@ -56,3 +56,27 @@ fn check_json_reports_unconditional_swift_darwin_imports() {
     .unwrap();
     assert_eq!(batch["reports"][0]["result"], result);
 }
+
+#[test]
+fn check_json_uses_configured_swift_import_modules() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/swift-no-unguarded-darwin-import");
+    let result: Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": fixture.join("apple-modules"),
+                "config": fixture.join("configs/modules.yml"),
+            })
+            .to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let lines: Vec<_> = result["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect();
+    assert_eq!(lines, [2, 7, 27, 49]);
+}

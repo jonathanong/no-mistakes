@@ -310,7 +310,8 @@ through the selected unanalyzable policy. This remains independent of
 
 Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
 rule on portable Swift test sources. Select those files with common
-`include` and `exclude` filters.
+`include` and `exclude` filters. Set `options.modules` to select
+which module imports require a guard.
 
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported

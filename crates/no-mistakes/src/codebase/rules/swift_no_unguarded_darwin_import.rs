@@ -7,6 +7,7 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
+use rustc_hash::FxHashSet;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -15,20 +16,48 @@ use imports::Import;
 
 pub const RULE_ID: &str = "swift-no-unguarded-darwin-import";
 
-const FIX: &str =
-    "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.";
-const UNPROVEN: &str = "Cannot verify that this compilation branch guards the Darwin import.";
+const DEFAULT_MODULES: [&str; 4] = ["Darwin", "Security", "UIKit", "AppKit"];
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize)]
 #[serde(default)]
 pub(super) struct Options {
     allow: Vec<String>,
     message: Option<String>,
+    modules: Vec<ModuleName>,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self {
+            allow: Vec::new(),
+            message: None,
+            modules: DEFAULT_MODULES
+                .into_iter()
+                .map(|name| ModuleName(name.to_owned()))
+                .collect(),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(try_from = "String")]
+struct ModuleName(String);
+
+impl TryFrom<String> for ModuleName {
+    type Error = &'static str;
+
+    fn try_from(name: String) -> Result<Self, Self::Error> {
+        if !imports::valid_module_name(&name) {
+            return Err("expected a bare Swift module identifier");
+        }
+        Ok(Self(name))
+    }
 }
 
 pub(super) struct CompiledOptions {
     allow: FileAllow,
-    message: String,
+    message: Option<String>,
+    modules: FxHashSet<String>,
 }
 
 super::diagnostic_source_rule_entrypoints!();
@@ -45,7 +74,12 @@ pub(crate) fn diagnostics_with_files_and_sources(
         let mut compiled = compile_options(rule.try_rule_options()?)?;
         compiled.allow.setup(root, config, rule, sources);
         let files = super::selected_rule_files_matching_with_sources(
-            root, config, rule, all_files, sources, is_swift_file,
+            root,
+            config,
+            rule,
+            all_files,
+            sources,
+            is_swift_file,
         )?;
         let mut findings: Vec<_> = files
             .par_iter()
@@ -53,7 +87,13 @@ pub(crate) fn diagnostics_with_files_and_sources(
             .collect();
         findings.extend(compiled.allow.finish(root, sources));
         diagnostics.append(file_diagnostics::application(
-            root, sources, config, rule, findings, defer_suppression, InputUncertainty::ReadOrParse,
+            root,
+            sources,
+            config,
+            rule,
+            findings,
+            defer_suppression,
+            InputUncertainty::ReadOrParse,
         )?);
     }
     Ok(file_diagnostics::sorted(diagnostics))
@@ -62,10 +102,8 @@ pub(crate) fn diagnostics_with_files_and_sources(
 pub(super) fn compile_options(options: Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         allow: FileAllow::new(&options.allow, &format!("{RULE_ID} options.allow"))?,
-        message: match options.message.filter(|message| !message.is_empty()) {
-            Some(message) => format!("{FIX} {message}"),
-            None => FIX.to_string(),
-        },
+        message: options.message.filter(|message| !message.is_empty()),
+        modules: options.modules.into_iter().map(|name| name.0).collect(),
     })
 }
 
@@ -84,8 +122,10 @@ fn check_file(
         Ok(source) => {
             options.allow.checked(path);
             let code = super::lexical_mask::swift_declaration_mask(&source);
-            imports::unproven_imports(&code)
-                .map(|(line, kind)| finding(&file, line, kind, &options.message))
+            imports::unproven_imports(&code, &options.modules)
+                .map(|(line, module, kind)| {
+                    finding(&file, line, module, kind, options.message.as_deref())
+                })
                 .collect()
         }
         Err(error) => vec![source_access::read_failure(root, path, RULE_ID, &error)],
@@ -96,11 +136,20 @@ fn check_file(
     findings
 }
 
-fn finding(file: &str, line: usize, kind: Import, fix: &str) -> RuleFinding {
-    let (message, target) = match kind {
-        Import::Unguarded => (fix.to_owned(), None),
-        Import::Unproven => (format!("{UNPROVEN} {fix}"), Some("unanalyzable".to_owned())),
+fn finding(file: &str, line: usize, module: &str, kind: Import, hint: Option<&str>) -> RuleFinding {
+    let fix =
+        format!("Wrap the {module} import and the tests that use it in `#if canImport({module})`.");
+    let (mut message, target) = match kind {
+        Import::Unguarded => (fix, None),
+        Import::Unproven => (
+            format!("Cannot verify that this compilation branch guards the {module} import. {fix}"),
+            Some("unanalyzable".to_owned()),
+        ),
     };
+    if let Some(hint) = hint {
+        message.push(' ');
+        message.push_str(hint);
+    }
     RuleFinding {
         rule: RULE_ID.to_owned(),
         file: file.to_owned(),

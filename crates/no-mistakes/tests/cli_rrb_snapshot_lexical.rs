@@ -256,3 +256,60 @@ fn swift_no_unguarded_darwin_import_json_matches_snapshot() {
         serde_json::json!([])
     );
 }
+
+#[test]
+fn swift_apple_module_imports_json_matches_snapshot() {
+    use super::check_json_snapshot::assert_saved_fixture_report;
+
+    let fixture = "swift-no-unguarded-darwin-import/apple-modules";
+    let reports = assert_saved_fixture_report(
+        "swift_apple_module_imports",
+        &[
+            c("default_modules", fixture, "../configs/check.yml"),
+            c("custom_modules", fixture, "../configs/modules.yml"),
+            c("empty_modules", fixture, "../configs/no-modules.yml"),
+        ],
+        &[],
+        &[],
+    );
+    assert_eq!(
+        reports["default_modules"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        10
+    );
+    assert_eq!(
+        reports["custom_modules"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        4
+    );
+    assert_eq!(reports["empty_modules"]["exitCode"], 0);
+    assert_eq!(
+        reports["empty_modules"]["report"]["rules"],
+        serde_json::json!([])
+    );
+}
+
+#[test]
+fn swift_apple_module_imports_reject_invalid_module_options_before_emitting_a_report() {
+    let (_, root, config) = c(
+        "invalid_module",
+        "swift-no-unguarded-darwin-import/apple-modules",
+        "../configs/invalid-modules.yml",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["--lock-timeout", "0", "check", "--root"])
+        .arg(root)
+        .arg("--config")
+        .arg(config)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let error = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{error}");
+    assert!(output.stdout.is_empty());
+    assert!(error.contains("options.modules[1]"), "{error}");
+}

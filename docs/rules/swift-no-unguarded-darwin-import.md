@@ -4,8 +4,8 @@
 
 ## Why and when
 
-Enable this rule on Swift test sources that compile on Apple and other
-platforms. An unconditional `Darwin` import prevents the test target from
+Enable this rule on Swift test sources that also compile on Linux. An
+unconditional import of an Apple-only module prevents the test target from
 compiling where the module is unavailable.
 [Swift conditional compilation](https://docs.swift.org/latest/documentation/the-swift-programming-language/statements/#Conditional-Compilation-Block).
 
@@ -20,16 +20,17 @@ rules:
 
 ## What it catches
 
-The rule reports plain and selective `Darwin` imports in selected `.swift`
-files. Other Apple-only modules such as UIKit, AppKit, and Security are
-outside its scope. It points to the `import` keyword when the
+The rule reports plain and selective imports of configured modules in selected
+`.swift` files. It points to the `import` keyword when the
 declaration spans lines, follows a semicolon, or has attributes with arguments.
 Comments and import-shaped text in strings and regex literals are ignored.
 
-A direct `canImport(Darwin)` or `os(macOS)`, `os(iOS)`, `os(tvOS)`,
-`os(watchOS)`, or `os(visionOS)` condition proves a guard in its `#if` or
-`#elseif` branch. That proof also applies inside nested blocks. Each sibling
-branch needs its own proof. A branch without a provable guard is unanalyzable.
+A direct `canImport(Module)` guard proves an import of that same module.
+A direct `os(...)` guard proves the branch excludes Linux when it names a
+recognized non-Linux platform, such as `macOS`, `Windows`, or `FreeBSD`.
+These proofs apply to the selected `#if` or `#elseif` branch and its nested
+blocks. Each sibling branch needs its own proof. A branch without a provable
+guard is unanalyzable.
 This includes feature flags, negated or compound conditions, and `#else`
 without a proven enclosing guard.
 
@@ -38,8 +39,26 @@ direct imports.
 
 ## Options and defaults
 
-The rule is off by default. `options.allow` defaults to an empty set of path
-globs. The optional `options.message` appends a hint to the default fix.
+The rule is off by default. `options.modules` defaults to
+`[Darwin, Security, UIKit, AppKit]`. Set it to replace that list with the modules
+your repository needs to guard.
+
+```yaml
+rules:
+  - rule: swift-no-unguarded-darwin-import
+    scope: repository
+    include: ["Tests/**"]
+    options:
+      modules: [Darwin, Security, SampleFramework]
+```
+
+Use bare, case-sensitive module identifiers without spaces, periods, or
+backticks. An empty list selects no modules. An invalid entry fails the check
+with exit code 2. `CoreFoundation` is available on Linux and is omitted from the
+default list.
+
+`options.allow` defaults to an empty set of path globs. The optional
+`options.message` appends a hint to the default fix.
 Use `options.unanalyzable` to route unproven guards and unreadable files.
 It defaults to `report`. Use `advise` for non-failing advisories or `ignore`
 to omit these diagnostics. Unconditional imports remain findings.
@@ -78,9 +97,9 @@ final class ClockTests: XCTestCase {
 
 ## Fix
 
-Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.
-When a test can use a portable API instead, move to that API and remove the
-Darwin import.
+Wrap the import and the tests that use it in a matching `#if canImport(...)`
+guard. When a test can use a portable API, move to that API and remove the
+platform-specific import.
 
 ## Analysis
 

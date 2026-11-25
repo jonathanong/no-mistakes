@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: swift-no-unguarded-darwin-import
+    scope: repository
+    include: ["Tests/**"]
+    options:
+      modules: [Security, "Bad-Name"]
