@@ -11,9 +11,11 @@ fn shift_and_here_string_operators_do_not_open_documents() {
         Some(Operator::HereString)
     );
     assert!(line_opener(lines[0]).is_none());
+    assert!(ascii_document(here_string, false).is_none());
     assert!(line_opener(lines[1]).is_none());
     let shift = &lines[2][lines[2].find("<<").unwrap()..];
     assert_eq!(operator(shift.as_bytes(), true), None);
+    assert!(ascii_document(shift, true).is_none());
     assert_eq!(
         operator(shift.as_bytes(), false),
         Some(Operator::Document { strip_tabs: false })
@@ -27,6 +29,9 @@ fn quoted_and_tab_stripped_delimiters_close_in_order() {
     let (first, quoted) = line_opener(opener).unwrap();
     assert_eq!(first.delimiter, "FIRST");
     assert!(quoted && first.strip_tabs);
+    let ascii_first = ascii_document(&opener[opener.find("<<-").unwrap()..], false).unwrap();
+    assert_eq!(ascii_first.delimiter, first.delimiter);
+    assert!(ascii_first.strip_tabs);
     let second: Vec<_> = opener.rsplit_once("<<").unwrap().1.chars().collect();
     assert_eq!(
         char_delimiter(&second, DelimiterStyle::LeadingQuote),
@@ -115,4 +120,16 @@ fn bare_opener_and_unterminated_body_keep_the_callers_recovery() {
     );
     let lines: Vec<_> = source.lines().collect();
     assert_eq!(trimmed_body_lines(&lines, &doc), (lines.as_slice(), 1));
+}
+
+#[test]
+fn ascii_delimiters_keep_shell_word_and_recovery_rules() {
+    let source = include_str!("../../../fixtures/shell-heredoc/ascii-delimiters.sh");
+    let mut openers = source.lines().map(|line| line.split_once(' ').unwrap().1);
+    let escaped = ascii_document(openers.next().unwrap(), false).unwrap();
+    assert_eq!(escaped.delimiter, "DOC");
+    let unicode = ascii_document(openers.next().unwrap(), false).unwrap();
+    assert_eq!(unicode.delimiter, "EOF\u{a0}TAG");
+    assert!(ascii_document(openers.next().unwrap(), false).is_none());
+    assert!(ascii_document(openers.next().unwrap(), false).is_none());
 }

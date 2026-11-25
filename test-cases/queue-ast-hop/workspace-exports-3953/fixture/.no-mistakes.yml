@@ -1,0 +1,10 @@
+version: 2
+queues:
+  factories:
+    enqueue:
+      - callee: enqueueMail
+        queueName: mail
+        job: { arg: 0, property: name }
+      - callee: enqueueBilling
+        queueName: billing
+        job: { arg: 0, property: name }

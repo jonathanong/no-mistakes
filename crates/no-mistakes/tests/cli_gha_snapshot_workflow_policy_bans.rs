@@ -108,3 +108,14 @@ fn check_json_snapshot_workflow_policy_bans_reusable_concurrency_through_merges(
     )];
     assert_saved_fixture("workflow_policy_merge_keys", &cases);
 }
+
+#[test]
+fn check_json_snapshot_workflow_policy_valid_nested_merges() {
+    const RULE: &str = "workflow-topology-policy";
+    let cases = [(
+        "valid-nested-merges",
+        rules_path(RULE, "fixture", "valid-nested-merges"),
+        rules_path(RULE, "configs", "valid-nested-merges.yml"),
+    )];
+    assert_saved_fixture("workflow_policy_valid_nested_merges", &cases);
+}

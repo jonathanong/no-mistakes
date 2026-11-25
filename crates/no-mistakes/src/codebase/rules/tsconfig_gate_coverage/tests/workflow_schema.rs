@@ -10,6 +10,7 @@ mod strategy_runtime;
 
 fn workflow(path: &str, yaml: &str) -> ParsedWorkflowDocument {
     ParsedWorkflowDocument {
+        source: None,
         path: path.to_string(),
         value: Ok(serde_yaml::from_str(yaml).unwrap()),
     }

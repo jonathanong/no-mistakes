@@ -18,6 +18,7 @@ pub(super) fn access(
             name,
             alias,
             args: None,
+            inheritance,
             ..
         } => {
             let keys = predicate
@@ -36,6 +37,10 @@ pub(super) fn access(
                     || alias
                         .as_ref()
                         .is_some_and(|alias| !alias.columns.is_empty()),
+                only: matches!(
+                    inheritance,
+                    Some(sqlparser::ast::TableInheritance::Only { .. })
+                ),
             }
         }
         _ => RowAccess {
@@ -44,6 +49,7 @@ pub(super) fn access(
             recovered_key: None,
             key_identity_unproven: false,
             has_predicate: predicate.is_some(),
+            only: false,
         },
     }
 }

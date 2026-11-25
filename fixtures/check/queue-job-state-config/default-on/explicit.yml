@@ -1,0 +1,9 @@
+version: 2
+projects:
+  dispatch:
+    root: .
+    queues:
+      enqueues: [usage.ts]
+      workers: [usage.ts]
+queues:
+  jobStateAsRecord: false
