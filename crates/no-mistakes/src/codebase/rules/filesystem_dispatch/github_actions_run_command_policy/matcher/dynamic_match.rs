@@ -50,12 +50,11 @@ pub(super) fn value_is_dynamically_emptiable(
 }
 
 fn split_dynamic_segments(text: &str) -> Vec<&str> {
-    let bytes = text.as_bytes();
     let mut parts = Vec::new();
     let mut seg_start = 0;
     let mut i = 0;
-    while i < bytes.len() {
-        if let Some(end) = dynamic_span_end(bytes, i) {
+    while i < text.len() {
+        if let Some(end) = dynamic_span_end(text, i) {
             parts.push(&text[seg_start..i]);
             i = end;
             seg_start = i;
@@ -67,51 +66,42 @@ fn split_dynamic_segments(text: &str) -> Vec<&str> {
     parts
 }
 
-fn dynamic_span_end(bytes: &[u8], start: usize) -> Option<usize> {
+fn dynamic_span_end(text: &str, start: usize) -> Option<usize> {
+    let bytes = text.as_bytes();
     if bytes[start] == b'`' {
-        let mut i = start + 1;
-        while i < bytes.len() {
-            if bytes[i] == b'`' {
-                return Some(i + 1);
-            }
-            i += 1;
-        }
-        return Some(bytes.len());
+        return Some(
+            text[start + 1..]
+                .find('`')
+                .map_or(bytes.len(), |offset| start + 2 + offset),
+        );
     }
     if bytes[start] != b'$' {
         return None;
     }
     let next = *bytes.get(start + 1)?;
     if next == b'{' && bytes.get(start + 2) == Some(&b'{') {
-        let mut i = start + 3;
-        while i + 1 < bytes.len() {
-            if bytes[i] == b'}' && bytes[i + 1] == b'}' {
-                return Some(i + 2);
-            }
-            i += 1;
-        }
-        return Some(bytes.len());
+        return Some(
+            text[start + 3..]
+                .find("}}")
+                .map_or(bytes.len(), |offset| start + 5 + offset),
+        );
     }
     if next == b'{' || next == b'(' {
         let close = if next == b'{' { b'}' } else { b')' };
         let mut depth = 1usize;
         let mut i = start + 2;
         while i < bytes.len() && depth > 0 {
-            if bytes[i] == next {
-                depth += 1;
-            } else if bytes[i] == close {
-                depth -= 1;
-            }
+            depth = depth + usize::from(bytes[i] == next) - usize::from(bytes[i] == close);
             i += 1;
         }
         return Some(i);
     }
     if next.is_ascii_alphanumeric() || next == b'_' {
-        let mut i = start + 2;
-        while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
-            i += 1;
-        }
-        return Some(i);
+        let len = bytes[start + 2..]
+            .iter()
+            .take_while(|byte| byte.is_ascii_alphanumeric() || **byte == b'_')
+            .count();
+        return Some(start + 2 + len);
     }
     matches!(next, b'@' | b'*' | b'#' | b'?' | b'-' | b'$' | b'!').then_some(start + 2)
 }
