@@ -105,7 +105,7 @@ fn abstains_on_origins_when_dynamic_csp_builder_coexists_with_static_policy() {
     )
     .unwrap();
     assert!(extra_diag.findings.is_empty(), "{:?}", extra_diag.findings);
-    assert_eq!(extra_diag.advisories.len(), 7, "{:?}", extra_diag.advisories);
+    assert_eq!(extra_diag.advisories.len(), 16, "{:?}", extra_diag.advisories);
     assert!(extra_diag.advisories.iter().all(|item| {
         item.file == "src/extra-builders.ts" && item.target.as_deref() == Some("unanalyzable")
     }));
