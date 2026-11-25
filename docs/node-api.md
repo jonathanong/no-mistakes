@@ -1194,7 +1194,10 @@ and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
 
 `changesDiff({ baseRoot, headRoot, config })` asynchronously compares two local
 roots without Git or network access. It returns the CLI's schemaVersion 1
-report, including `complete: false` and reasons for unreadable roots. Use
+report, including `complete: false` and `reasons` for unreadable roots,
+`changedFiles` (omitted when empty) for changed paths matched by no category's
+`paths`, and `unclassified` for paths matched by a category's `paths` that every
+matching category excluded or no rule could classify. Use
 `changesDiff<"fixtures" | "localization">(...)` to name configured category
 fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
 `ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `FixtureAttributePaths`,
@@ -1202,9 +1205,15 @@ fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
 `ChangeCategory`, `ChangeRule`, `ChangeIdRule`, `KeyedDiffOptions`, and
 `KeyedDiffFormat`.
 
-`testsPlan({ root, changes: "changes.json", framework: "vitest" })` consumes the
-same saved report as CLI `tests plan --changes`. Invalid or incomplete input
-selects the full suite with a structured reason. For categories marked
+`testsPlan({ root, changes: "../changes.json", framework: "vitest" })` consumes
+the same saved report as CLI `tests plan --changes` (relative `changes` paths
+resolve against `root`, matching `config`). `changedFiles` from the report route
+through the import graph in union with any explicit `changedFiles` or `base`
+inputs without triggering a full-suite fallback, unless an entry cannot be
+traced without a baseline (such as a lockfile, manifest, global config, or
+deleted file without `base`). Missing, invalid, or incomplete reports, unknown
+categories, and `unclassified` paths select the full suite with a structured
+`fallback_reason` and warning. For categories marked
 `assertPureJsonLoader: true` (user assertion that the loader returns parsed
 JSON unchanged without extra fixture exposure or side effects), the planner
 uses `attributePaths` to narrow matching fixture tests when it can trace their
