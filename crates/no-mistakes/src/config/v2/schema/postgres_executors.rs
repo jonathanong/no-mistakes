@@ -18,6 +18,7 @@ pub(crate) const RULE_IDS: &[&str] = &[
     "postgres-conflict-ordering",
     "postgres-lock-written-rows-only",
     "postgres-lock-inventory",
+    "postgres-lock-reason",
     "postgres-lock-ordering",
     "postgres-idempotent-insert",
     "postgres-require-query-annotation",
@@ -39,6 +40,7 @@ pub(crate) const ALL_RULE_IDS: &[&str] = &[
     "postgres-conflict-ordering",
     "postgres-lock-written-rows-only",
     "postgres-lock-inventory",
+    "postgres-lock-reason",
     "postgres-lock-ordering",
     "postgres-idempotent-insert",
     "postgres-require-query-annotation",
@@ -62,14 +64,15 @@ pub(super) fn validate(rule: &RuleDef) -> Result<()> {
     let names = rule.options.get("executorNames");
     let extras = rule.options.get("extraExecutorNames");
     let helpers = rule.options.get("helpers");
-    if rule.rule == "postgres-lock-inventory"
-        && helpers.is_some_and(|value| {
-            !value.is_sequence()
-                || value
-                    .as_sequence()
-                    .is_some_and(|helpers| !helpers.is_empty())
-        })
-    {
+    if matches!(
+        rule.rule.as_str(),
+        "postgres-lock-inventory" | "postgres-lock-reason"
+    ) && helpers.is_some_and(|value| {
+        !value.is_sequence()
+            || value
+                .as_sequence()
+                .is_some_and(|helpers| !helpers.is_empty())
+    }) {
         return Ok(());
     }
     if import.is_some_and(|value| value.as_str().is_some_and(|s| !s.is_empty()))
@@ -102,6 +105,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-conflict-ordering",
     "postgres-lock-written-rows-only",
     "postgres-lock-inventory",
+    "postgres-lock-reason",
     "postgres-lock-ordering",
     "postgres-required-predicates",
     "postgres-generated-column-predicates",

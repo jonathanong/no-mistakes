@@ -1,0 +1,15 @@
+projects:
+  db:
+    root: .
+    postgres:
+      sqlInclude: ["sql/**/*.sql"]
+      executors:
+        importSpecifier: "@example/db"
+        executorNames: [query]
+rules:
+  - rule: postgres-lock-inventory
+    projects: [db]
+    options:
+      baselineFile: baseline.json
+  - rule: postgres-lock-reason
+    projects: [db]

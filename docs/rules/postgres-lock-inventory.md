@@ -162,6 +162,8 @@ acceptable.
 ## Related rules
 
 Combine this inventory with
+[`postgres-lock-reason`](postgres-lock-reason.md) to require a `lock-reason:`
+comment on every lock site,
 [`postgres-lock-written-rows-only`](postgres-lock-written-rows-only.md) to review
 row-lock targets and transaction ownership, and
 [`postgres-lock-ordering`](postgres-lock-ordering.md) to check acquisition order.

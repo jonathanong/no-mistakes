@@ -176,3 +176,19 @@ test("EXPLAIN write rollback exports the required standalone SQL scope", () => {
     /export type \* from "\.\/postgres-explain-write-rollback-types";/,
   );
 });
+
+test("PostgreSQL lock reason exports its YAML options contract", () => {
+  const declaration = readFileSync(join(packageRoot, "postgres-lock-reason-types.d.ts"), "utf8");
+  assert.match(declaration, /export interface PostgresLockReasonOptions \{/);
+  for (const field of [
+    "helpers?: string[];",
+    "sqlInclude?: string[];",
+    "unanalyzable?: Unanalyzable;",
+  ]) {
+    assert.ok(declaration.includes(field), `missing ${field}`);
+  }
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/postgres-lock-reason-types";/,
+  );
+});

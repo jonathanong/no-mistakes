@@ -60,6 +60,7 @@ mod manifests;
 mod nested_controls;
 mod partial;
 mod payload_compatibility;
+mod postgres;
 mod redirects;
 mod selected_sources;
 mod terraform;

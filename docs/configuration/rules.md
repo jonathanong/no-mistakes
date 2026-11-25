@@ -1036,3 +1036,12 @@ by reason and directory in the inventory report. Initialize or prune the
 baseline with
 [`postgres lock-inventory --write-baseline`](../cli/postgres-lock-inventory.md).
 Record reviewed additions manually in the baseline before pruning.
+
+[`postgres-lock-reason`](../rules/postgres-lock-reason.md) reuses the same
+PostgreSQL lock-site projection (row locks, `LOCK TABLE`, `pg_advisory*` /
+`pg_try_advisory*`, and configured `helpers`) without repeating SQL extraction
+when paired with `postgres-lock-inventory`. It defaults to `severity: advisory`
+so missing or incomplete `lock-reason:` comments report without failing `check`
+until raised to `severity: error`. `options.unanalyzable` (`report`, `advise`,
+or `ignore`; default `advise`) controls unresolved SQL, parse errors, stored
+routine bodies, and unresolved executor receivers.

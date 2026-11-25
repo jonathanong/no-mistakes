@@ -36,6 +36,9 @@ canonical graph and resolver for these checks.
 
 Configure [`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
 to flag write plans that can persist in explicitly selected standalone SQL scripts.
+Configure [`postgres-lock-reason`](../rules/postgres-lock-reason.md) to require
+`lock-reason:` comments (`prevents:` and `writer:`) on configured PostgreSQL
+row, table, advisory, and helper locks (advisory by default).
 
 The `postgres-sql-statement-policy` rule can ban extension version pins and
 cascading drops through `options.bannedClauses`. The setting applies to matching

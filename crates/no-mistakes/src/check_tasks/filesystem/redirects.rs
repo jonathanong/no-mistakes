@@ -162,6 +162,16 @@ pub(super) fn run(
         explain_write_rollback::run(root, config, files, &prepared, facts, defer_suppression)?;
     diagnostics.append(explain_write_diagnostics);
     let config = config.as_ref();
+    let (config, lock_reason_diagnostics) = super::postgres::run(
+        root,
+        config,
+        files,
+        &prepared.sources,
+        facts,
+        defer_suppression,
+    )?;
+    diagnostics.append(lock_reason_diagnostics);
+    let config = config.as_ref();
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

@@ -72,6 +72,7 @@ include!("domain_parity_tests/language_rules.rs");
 
 include!("domain_parity_tests/postgres_identifier.rs");
 include!("domain_parity_tests/postgres_explain_write_rollback.rs");
+include!("domain_parity_tests/postgres_lock_reason.rs");
 
 include!("domain_parity_tests/postgres_shapes.rs");
 include!("domain_parity_tests/postgres_writes.rs");

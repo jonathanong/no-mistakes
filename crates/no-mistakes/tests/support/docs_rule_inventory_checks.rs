@@ -230,3 +230,31 @@ fn postgres_no_duplicate_keyed_lookups_is_documented() {
         assert!(read(&root.join(path)).contains(rule), "{path}");
     }
 }
+
+#[test]
+fn postgres_lock_reason_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::POSTGRES_LOCK_REASON;
+    assert_eq!(rule, "postgres-lock-reason");
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let body = read(&root.join(format!("docs/rules/{rule}.md")));
+    for phrase in [
+        "lock-reason:",
+        "prevents:",
+        "writer:",
+        "deadlock-safe",
+        "pg_advisory_",
+        "severity: advisory",
+        "## Suppression",
+    ] {
+        assert!(body.contains(phrase), "missing {phrase}");
+    }
+    for entry in [
+        "docs/rules/README.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/configuration/rules.md",
+    ] {
+        assert!(read(&root.join(entry)).contains(rule), "{entry}");
+    }
+}

@@ -17,24 +17,26 @@ pub(crate) fn helper_call_site_files(
     files: &[PathBuf],
 ) -> Result<Vec<PathBuf>> {
     let mut selected = Vec::new();
-    for rule in config.rule_applications("postgres-lock-inventory") {
-        let options: Options = rule.try_rule_options()?;
-        if options.helpers.is_empty() {
-            continue;
+    for rule_id in ["postgres-lock-inventory", "postgres-lock-reason"] {
+        for rule in config.rule_applications(rule_id) {
+            let options: Options = rule.try_rule_options()?;
+            if options.helpers.is_empty() {
+                continue;
+            }
+            let paths = crate::codebase::rules::RuleGlobFilter::new(
+                rule_id,
+                &options.include,
+                &options.exclude,
+            )?;
+            selected.extend(
+                crate::codebase::rules::selected_rule_files(root, config, rule, files)?
+                    .into_iter()
+                    .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+                    .filter(|path| {
+                        paths.includes(&crate::codebase::ts_source::relative_slash_path(root, path))
+                    }),
+            );
         }
-        let paths = crate::codebase::rules::RuleGlobFilter::new(
-            "postgres-lock-inventory",
-            &options.include,
-            &options.exclude,
-        )?;
-        selected.extend(
-            crate::codebase::rules::selected_rule_files(root, config, rule, files)?
-                .into_iter()
-                .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
-                .filter(|path| {
-                    paths.includes(&crate::codebase::ts_source::relative_slash_path(root, path))
-                }),
-        );
     }
     selected.sort();
     selected.dedup();

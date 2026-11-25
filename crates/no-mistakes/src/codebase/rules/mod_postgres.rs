@@ -20,6 +20,7 @@ pub mod postgres_json_relation_ids;
 pub mod postgres_key_column_types;
 pub mod postgres_lock_inventory;
 pub mod postgres_lock_ordering;
+pub mod postgres_lock_reason;
 pub mod postgres_lock_written_rows_only;
 pub mod postgres_materialized_view_shape;
 pub mod postgres_no_add_column;
