@@ -10,10 +10,18 @@ use std::collections::HashMap;
 pub(super) fn analyze_project(
     root: &Path,
     tsconfig_path: Option<&Path>,
+    config_path: Option<&Path>,
     filters: &[String],
     snapshot: crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> anyhow::Result<ProjectReport> {
-    analyze_project_inner(root, tsconfig_path, filters, snapshot, build_report)
+    analyze_project_inner(
+        root,
+        tsconfig_path,
+        config_path,
+        filters,
+        snapshot,
+        build_report,
+    )
 }
 
 pub(super) fn analyze_project_indexed(
@@ -25,6 +33,7 @@ pub(super) fn analyze_project_indexed(
     analyze_project_inner(
         root,
         tsconfig_path,
+        None,
         filters,
         snapshot,
         build_prepared_report,
@@ -34,6 +43,7 @@ pub(super) fn analyze_project_indexed(
 fn analyze_project_inner<T>(
     root: &Path,
     tsconfig_path: Option<&Path>,
+    config_path: Option<&Path>,
     filters: &[String],
     snapshot: crate::codebase::ts_source::VisiblePathSnapshot,
     builder: impl FnOnce(
@@ -75,7 +85,11 @@ fn analyze_project_inner<T>(
         ),
     };
     let filter = build_filter(filters)?;
-    let loaded_config = dataset.config(None).ok();
+    let loaded_config = if config_path.is_some() {
+        Some(dataset.config(config_path)?)
+    } else {
+        dataset.config(None).ok()
+    };
     let roles = loaded_config
         .as_ref()
         .map(|config| {

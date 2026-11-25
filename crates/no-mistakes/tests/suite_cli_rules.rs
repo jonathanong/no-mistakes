@@ -154,6 +154,8 @@ mod cli_check_rules_unconstructed_error_class;
 mod cli_check_rules_version_pin;
 #[path = "cli_check_rules_workflow_topology.rs"]
 mod cli_check_rules_workflow_topology;
+#[path = "cli_check_test_reliability.rs"]
+mod cli_check_test_reliability;
 #[path = "cli_check_unused_disable_directives.rs"]
 mod cli_check_unused_disable_directives;
 #[path = "cli_gha_snapshot_action_input_policy.rs"]
@@ -354,6 +356,9 @@ mod cli_check_queue_wait_wrappers;
 
 #[path = "cli_check_queue_required_options.rs"]
 mod cli_check_queue_required_options;
+
+#[path = "cli_check_queue_followups.rs"]
+mod cli_check_queue_followups;
 
 #[path = "cli_check_queue_priority.rs"]
 mod cli_check_queue_priority;

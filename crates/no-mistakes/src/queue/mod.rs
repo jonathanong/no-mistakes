@@ -32,8 +32,8 @@ mod types;
 mod worker_rate_limit;
 
 pub use graph::{
-    analyze_project, analyze_project_indexed, analyze_project_with_facts,
-    analyze_project_with_prepared_facts,
+    analyze_project, analyze_project_indexed, analyze_project_with_config,
+    analyze_project_with_facts, analyze_project_with_prepared_facts,
     analyze_project_with_prepared_facts_and_catalog_and_session,
     analyze_project_with_prepared_facts_indexed,
     analyze_project_with_prepared_facts_indexed_and_catalog_and_session, RelatedDirection,
@@ -44,7 +44,9 @@ pub use graph_model::{
 };
 pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};
-pub use types::{Diagnostic, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity};
+pub use types::{
+    Diagnostic, DiagnosticKind, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity,
+};
 pub use worker_rate_limit::{
     is_worker_rate_limit_unresolved_diagnostic, WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE,
 };

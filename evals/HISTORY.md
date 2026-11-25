@@ -19,6 +19,14 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-24 — testing rules for retries and coverage gates
+
+PR #3963 added three cases. They check that an agent fixes a missed Playwright
+response instead of adding retries, flags a lower coverage floor that hides
+an uncovered path, and accepts a measured, justified increase to that floor.
+The existing cases and graders are unchanged. Results are pending, and the
+expanded case set has no comparable aggregate score yet.
+
 ## 2026-11-21 — re-baseline under the Sonnet agent and Opus judge
 
 Resets the control arm after the 2026-11-14 move from an Opus agent / Sonnet

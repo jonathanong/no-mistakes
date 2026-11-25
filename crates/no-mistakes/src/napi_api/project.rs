@@ -50,8 +50,14 @@ pub(crate) fn queue_related_json_impl(options: serde_json::Value) -> napi::Resul
 
 pub(crate) fn queue_check_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let (options, root, tsconfig) = project_setup(options)?;
-    let report = crate::queue::analyze_project(&root, tsconfig.as_deref(), &options.filters)
-        .map_err(to_napi_error)?;
+    let config = options.config.as_deref().map(std::path::Path::new);
+    let report = crate::queue::analyze_project_with_config(
+        &root,
+        tsconfig.as_deref(),
+        config,
+        &options.filters,
+    )
+    .map_err(to_napi_error)?;
     if options.include_diagnostics {
         Ok(crate::cli::json_string(&crate::queue::CheckReport {
             findings: &report.check,

@@ -91,7 +91,7 @@ pub(super) fn print_check(
             for f in findings {
                 println!("- `{}`:{} {}", f.file, f.line, f.message);
             }
-            if include_diagnostics {
+            if include_diagnostics && !diagnostics.is_empty() {
                 println!("## diagnostics");
                 for d in diagnostics {
                     println!("- `{}`:{} ({}) {}", d.file, d.line, d.severity, d.message);

@@ -71,9 +71,7 @@ impl<'a> Collector<'a> {
         match kind {
             AstKind::Program(program) => {
                 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-                {
-                    self.bindings.program_visits += 1;
-                }
+                super::test_hook::note_program_visit();
                 self.push_span(program.span, ScopeKind::Function);
             }
             AstKind::Function(func) => {

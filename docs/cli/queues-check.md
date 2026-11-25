@@ -7,14 +7,19 @@ no-mistakes queues check --format json
 no-mistakes queues check --format json --include-diagnostics
 ```
 
-Without `--include-diagnostics`, `--format json` and `--format yml` print the
-bare findings array so existing callers keep the same list shape. Pass
-`--include-diagnostics` to return `{ "findings": [...], "diagnostics": [...] }`
-in JSON/YAML (and append a `## diagnostics` section in `--format md`).
-`queues check` prints only unresolved worker `.rateLimit()` receiver
-diagnostics to `stderr`, as `warning: <file>:<line> <message>`, without changing
-the exit code when there are no findings. Pass `--include-diagnostics` to print
-every queue diagnostic to `stderr` as well. A `.add(...)` or `.addBulk(...)`
+JSON and YAML print a findings array by default. With
+`--include-diagnostics`, they return `{ "findings": [...], "diagnostics": [...] }`.
+Markdown adds a `## diagnostics` section when the flag is set and diagnostics
+exist. Human and paths stdout contain findings only.
+
+Both `queues check` and aggregate `check` print unresolved worker
+`.rateLimit()` receiver warnings to stderr by default. The standalone flag
+prints all queue diagnostics to stderr in every format, including human and
+paths, so topology notes are available without altering those stdout streams.
+Aggregate `check` reports worker receiver warnings in JSON `warnings` too.
+Diagnostics leave the exit status unchanged.
+
+A `.add(...)` or `.addBulk(...)`
 call on a `const` local initialized to a provable non-queue JavaScript built-in
 (`new Set(...)`, `new Map(...)`, `new WeakSet(...)`, `new WeakMap(...)`, an
 array literal, or a primitive/function literal) is ignored and never produces a
@@ -46,7 +51,7 @@ Findings use these
 | `worker-rate-limit-per-process` | `.rateLimit(...)` (or `["rateLimit"](...)`) is called on a binding that resolves to a `Worker` / `TestWorker` from `bullmq` or `glide-mq`, a subclass of one, or a configured `queues.factories.worker` factory. A worker-level rate limit delays jobs inside one worker process only, so N processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait instead. Unresolved receivers whose binding originates from a queue module or worker construction abstain with a diagnostic; unrelated receivers are not reported. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`. See [Per-process worker rate limit](#per-process-worker-rate-limit). |
 | `enqueue-and-wait-declaration` | An explicitly matched wait-wrapper declaration is forbidden by `queues.factories.forbidEnqueueAndWaitDeclarations`. Replace it with enqueue-only behavior; the fix hint is included in `message`. Disabled by default. |
 | `debounce-ttl` | `deduplication: { mode: "debounce", ttl }` sets a `ttl` that debounce mode ignores. Remove `ttl`, or use a mode that reads it. |
-| `invalid-job-id` | A custom `jobId` literal, or a static part of a template literal, contains `:`, `{`, `}`, or a control character. `:` is the BullMQ and glide-mq key separator, so an id containing it can collide with internal keys. `{` and `}` collide with Redis or Valkey cluster hash tags. Interpolations such as `${id}` are not judged, and neither is a fully dynamic id. Use `-` or `_` as the separator. A `const` job ID resolves from its lexical binding. The last explicit `jobId` supplies the ID. The check abstains if a later spread or computed property could override that ID. The check reads `jobId` on proven queue receivers and configured producers, including `add` options, each `addBulk` item's `opts`, flow-node `opts` (including children), `upsertJobScheduler` template `opts`, and a configured enqueue factory's options argument. |
+| `invalid-job-id` | A custom `jobId` literal, or a static part of a template literal, contains `:`, `{`, `}`, or a control character. `:` is the BullMQ and glide-mq key separator, so an id containing it can collide with internal keys. `{` and `}` collide with Redis or Valkey cluster hash tags. Interpolations such as `${id}` are not judged, and neither is a fully dynamic id. Use `-` or `_` as the separator. The check resolves a `const` job ID or label from its lexical binding. If the label is dynamic, the finding omits the job name. The last explicit `jobId` supplies the ID. The check abstains if a later spread or computed property could override that ID. The check reads `jobId` on proven queue receivers and configured producers, including `add` options, each `addBulk` item's `opts`, flow-node `opts` (including children), `upsertJobScheduler` template `opts`, and a configured enqueue factory's options argument. |
 | `scheduler-template-option` | A job-scheduler template sets `delay`, `deduplication`, `parent`, or `jobId`. The scheduler's repeat settings control timing and identity, so the call does not do what that option reads as. Remove the option from the template. The check reads literal keys on the template and inside its `opts`, including a spread of a same-file `const` object literal. The last `opts` supplied by an explicit property or a known spread determines which options are checked. A module `const` is visible to functions declared earlier in the file. An unknown or cyclic spread, a non-literal key, or a binding that is not a `const` object literal makes that call abstain. Keys nested under `data` or any other object are not options. Built-in `upsertJobScheduler` and a literal computed `queue["upsertJobScheduler"]` read the third argument. `queues.factories.jobScheduler` reads the configured `template` argument on calls to the named import, including its local alias. |
 | `empty-glob` | A configured `enqueues` or `workers` glob matches no file. Fix the glob or remove it. An empty list still disables that side and is not a finding. |
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
@@ -137,6 +142,10 @@ priority greater than 0.
 
 ## Required job options
 
+Use `no-mistakes queues check --root <project> --config <path>` to select a
+configuration file. Relative paths are resolved from the project root.
+When `--config` is omitted, the project configuration is discovered as usual.
+
 `queues.requiredJobOptions` lists option keys every producer must set.
 The default is `[]`, and an empty list leaves this command's output unchanged.
 `queues.requiredJobOptionsByQueue` replaces that list for one queue name,
@@ -161,16 +170,22 @@ keys, and a later object without `opts` does not erase them. A later known
 `queueName` sets the queue used for per-queue overrides. A spread that may
 replace `queueName` leaves it unknown until a later known value resolves it.
 Unresolved spreads and dynamic computed keys can prevent the check from
-judging the node and its children. A spread before the options argument abstains
-that call. `.add` counts only
-when the receiver is a resolved queue binding or the call is a configured
-enqueue factory. An unresolved receiver abstains.
+judging the node and its children. The check stops at a repeated child in a
+cyclic flow and can still report findings on children it already reached.
+A spread before the options argument makes the check abstain on that call.
 
-An unknown spread, call, or computed key abstains. Abstentions are not
-findings. `queues check` still prints only the findings array. The warning is
-a queue-report diagnostic: `job options were not judged because the options
-object is not statically known`, or the same sentence for `defaultJobOptions`
-or an unresolved queue name. The queue-name warning is emitted only when a
+Direct calls to `.add`, `.addBulk`, and `.upsertJobScheduler` require a resolved
+queue receiver. When multiple constructions share a queue name, the check uses
+a resolved definition's defaults if that file has one construction of the
+queue. Calls that identify a queue only by name, such as flow nodes, abstain
+if multiple constructions could supply the defaults. Explicit options can
+still satisfy every required key.
+
+An unknown spread, call, or computed key makes the check abstain. With
+`--include-diagnostics`, the queue report includes the reason, such as
+`job options were not judged because the options object is not statically
+known`. The diagnostic can also identify unknown `defaultJobOptions` or an
+unresolved queue name. The queue-name warning is emitted only when a
 per-queue override is configured, because that override might exempt the
 queue. A call that already sets every required key is not abstained when
 `defaultJobOptions` itself is open.
@@ -214,10 +229,8 @@ queue module or worker construction: an unresolvable export or a helper call
 from a queue module (not configured under `queues.factories.worker`), a mutated
 local variable initialized with or assigned a worker, or a subclass with an
 unresolvable base inside a queue module. Those warnings appear on
-`QueueReport.diagnostics`, in `queues check --include-diagnostics`, on `stderr`
-from `queues check` and `no-mistakes check`, and in aggregate
-`no-mistakes check --format json` `warnings` (without failing exit code when no
-findings exist). Unrelated receivers — function parameters, ambient globals,
+`QueueReport.diagnostics` and the CLI diagnostic output described above.
+Unrelated receivers — function parameters, ambient globals,
 arbitrary property chains (`x.y.rateLimit()`), external non-queue limiters, and
 imports from modules skipped by the queue source filter — emit neither a
 finding nor a diagnostic.
@@ -243,12 +256,14 @@ await worker.rateLimit(1000);
 
 ## Suppression
 
-`queues check` findings use the rule id `queues-check`. Directives apply on
-aggregate `no-mistakes check`. Standalone `queues check` prints the raw
-findings. A file directive suppresses every finding in that file. A next-line
-directive suppresses the finding on the following line. The rule id is
-required. A bare
-`no-mistakes-disable-file`, with no rule id, does not suppress these findings:
+`queues-check` directives apply to findings and unresolved worker receiver
+warnings in aggregate `no-mistakes check` and Node `check()`. Use
+`no-mistakes-disable-file queues-check` for a whole file,
+`no-mistakes-disable-line queues-check` for the current line, or
+`no-mistakes-disable-next-line queues-check` for the following line. The rule
+id is required. Aggregate `--include-suppressed` records each suppressed
+warning in the suppression ledger. Standalone `queues check` and Node
+`queueCheck()` return the raw analysis.
 
 ```ts
 // no-mistakes-disable-file queues-check: unmatched topology is intentional

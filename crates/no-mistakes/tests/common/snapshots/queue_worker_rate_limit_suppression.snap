@@ -1,0 +1,60 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "worker-rate-limit-suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "queues",
+          "file": "file-disabled.ts",
+          "line": 7,
+          "reason": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+          "rule": "queues-check",
+          "sourceFile": "file-disabled.ts",
+          "sourceLine": "await worker.rateLimit(1000);"
+        },
+        {
+          "directive": {
+            "kind": "line",
+            "line": 11
+          },
+          "domain": "queues",
+          "file": "worker.ts",
+          "line": 11,
+          "reason": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+          "rule": "queues-check",
+          "sourceFile": "worker.ts",
+          "sourceLine": "await worker.rateLimit(3000); // no-mistakes-disable-line queues-check"
+        },
+        {
+          "directive": {
+            "kind": "nextLine",
+            "line": 9
+          },
+          "domain": "queues",
+          "file": "worker.ts",
+          "line": 10,
+          "reason": "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve",
+          "rule": "queues-check",
+          "sourceFile": "worker.ts",
+          "sourceLine": "await worker.rateLimit(2000);"
+        }
+      ],
+      "warnings": [
+        "queues-check: worker.ts:8 worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve"
+      ]
+    }
+  }
+}

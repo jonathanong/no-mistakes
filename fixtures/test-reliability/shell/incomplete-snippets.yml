@@ -1,0 +1,19 @@
+unmatched-control: |-
+  for attempt in 1 2; do pnpm test:unit; done
+  do pnpm test:unit
+  done
+unclosed-command-quote: |-
+  for attempt in 1 2; do pnpm test:unit; done
+  printf '%s
+missing-heredoc-delimiter: |-
+  for attempt in 1 2; do pnpm test:unit; done
+  cat <<
+unclosed-heredoc-delimiter: |-
+  for attempt in 1 2; do pnpm test:unit; done
+  cat <<'EXAMPLE
+incomplete-heredoc-escape: |-
+  for attempt in 1 2; do pnpm test:unit; done
+  cat <<\
+missing-heredoc-word: |-
+  for attempt in 1 2; do pnpm test:unit; done
+  cat <<;
