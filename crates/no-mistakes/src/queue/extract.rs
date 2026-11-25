@@ -30,6 +30,7 @@ pub(crate) fn needs_rate_limit_scoping(source: &str) -> bool {
     super::extract_prefilter::contains_bytes(bytes, b"import")
         && (super::extract_prefilter::contains_bytes(bytes, b"rateLimit")
             || super::extract_prefilter::contains_bytes(bytes, b"RateLimitError")
+            || super::extract_prefilter::contains_bytes(bytes, b"throw")
             || bytes.contains(&b'\\'))
 }
 
@@ -144,6 +145,7 @@ fn extract_queue_facts<'a>(
     super::enqueue_wrapper::collect_exports(&mut visitor, program);
     super::extract_job_id::finish(&mut visitor);
     super::extract_worker_rate_limit::finish(&mut visitor, program);
+    visitor.collect_rate_limit_exports(program);
     visitor.finish_shared_rate_limits();
     super::number_scope::finish_opaque(&mut visitor.facts);
     super::extract_processor::finish(&mut visitor);

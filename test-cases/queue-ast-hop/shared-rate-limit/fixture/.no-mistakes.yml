@@ -1,4 +1,10 @@
 version: 2
+projects:
+  workers:
+    root: .
+    queues:
+      enqueues: ["**/*.ts"]
+      workers: ["**/*.ts"]
 queues:
   factories:
     worker:

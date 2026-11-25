@@ -1,47 +1,67 @@
 use super::{QueueVisitor, State};
-use crate::queue::extract_helpers::export_name;
+use crate::ast::js_literal;
+use crate::queue::extract_helpers::{export_name, static_string};
 use crate::queue::extract_job_id::referenced_symbol;
-use oxc_ast::ast::{
-    Argument, BindingPattern, Expression, FormalParameters, ImportDeclaration,
-    ImportDeclarationSpecifier, TSType, TSTypeName,
-};
+use oxc_ast::ast::{Expression, ImportDeclaration, ImportDeclarationSpecifier};
 use oxc_syntax::symbol::SymbolId;
 
+#[path = "imports_params.rs"]
+mod params;
+
 pub(super) struct Import {
-    member: Member,
-    value: bool,
+    pub(super) origin: ImportOrigin,
+    pub(super) value: bool,
+}
+
+pub(super) enum ImportOrigin {
+    Queue(Member),
+    LocalNamed { source: String, imported: String },
+    LocalNamespace { source: String },
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Member {
+pub(super) enum Member {
     Error,
     Worker,
     Namespace,
-    WorkerOrNamespace,
+    Other,
 }
 
 pub(super) struct ImportedMember {
-    symbol: SymbolId,
-    member: Member,
+    pub(super) symbol: SymbolId,
+    pub(super) member: Member,
+}
+
+pub(super) enum ThrowTarget {
+    Identifier {
+        symbol: Option<SymbolId>,
+        is_rate_limit_name: bool,
+    },
+    MemberRateLimit {
+        object: MemberObject,
+    },
+}
+
+pub(super) enum MemberObject {
+    Identifier(Option<SymbolId>),
+    NamespaceWorker {
+        symbol: Option<SymbolId>,
+        member: String,
+    },
+    Opaque,
 }
 
 impl State {
     pub(super) fn matches_value(&self, member: &ImportedMember) -> bool {
         self.imports.get(&member.symbol).is_some_and(|import| {
-            let matches = match member.member {
-                Member::WorkerOrNamespace => {
-                    matches!(import.member, Member::Worker | Member::Namespace)
-                }
-                expected => import.member == expected,
-            };
-            import.value && matches
+            import.value && matches!(import.origin, ImportOrigin::Queue(m) if m == member.member)
         })
     }
 
     pub(super) fn matches_type(&self, member: &ImportedMember) -> bool {
-        self.imports
-            .get(&member.symbol)
-            .is_some_and(|import| import.member == member.member)
+        self.imports.get(&member.symbol).is_some_and(
+            |import| matches!(import.origin, ImportOrigin::Queue(m) if m == member.member),
+        )
     }
 }
 
@@ -51,29 +71,56 @@ impl QueueVisitor<'_> {
         decl: &ImportDeclaration<'_>,
         queue_package: bool,
     ) {
-        if !queue_package || !self.shared_rate_limit.enabled {
+        if !self.shared_rate_limit.enabled {
             return;
         }
+        let source = js_literal(&decl.source).into_owned();
         for spec in decl.specifiers.iter().flatten() {
-            let (binding, member, type_only) = match spec {
+            let (binding, origin, type_only) = match spec {
                 ImportDeclarationSpecifier::ImportSpecifier(spec) => {
-                    let member = match export_name(&spec.imported).as_str() {
-                        "RateLimitError" => Member::Error,
-                        "Worker" | "TestWorker" => Member::Worker,
-                        _ => continue,
+                    let imported = export_name(&spec.imported);
+                    let origin = if queue_package {
+                        let member = match imported.as_str() {
+                            "RateLimitError" => Member::Error,
+                            "Worker" | "TestWorker" => Member::Worker,
+                            _ => Member::Other,
+                        };
+                        ImportOrigin::Queue(member)
+                    } else {
+                        ImportOrigin::LocalNamed {
+                            source: source.clone(),
+                            imported,
+                        }
                     };
-                    (&spec.local, member, spec.import_kind.is_type())
+                    (&spec.local, origin, spec.import_kind.is_type())
                 }
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
-                    (&spec.local, Member::Namespace, false)
+                    let origin = if queue_package {
+                        ImportOrigin::Queue(Member::Namespace)
+                    } else {
+                        ImportOrigin::LocalNamespace {
+                            source: source.clone(),
+                        }
+                    };
+                    (&spec.local, origin, false)
                 }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(_) => continue,
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(spec) => {
+                    let origin = if queue_package {
+                        ImportOrigin::Queue(Member::Other)
+                    } else {
+                        ImportOrigin::LocalNamed {
+                            source: source.clone(),
+                            imported: "default".to_string(),
+                        }
+                    };
+                    (&spec.local, origin, false)
+                }
             };
             if let Some(symbol) = binding.symbol_id.get() {
                 self.shared_rate_limit.imports.insert(
                     symbol,
                     Import {
-                        member,
+                        origin,
                         value: !type_only && !decl.import_kind.is_type(),
                     },
                 );
@@ -81,99 +128,55 @@ impl QueueVisitor<'_> {
         }
     }
 
-    pub(super) fn rate_limit_error(&self, expr: &Expression<'_>) -> Option<ImportedMember> {
+    pub(super) fn rate_limit_error(&self, expr: &Expression<'_>) -> Option<ThrowTarget> {
         let callee = match expr.get_inner_expression() {
             Expression::NewExpression(new_expr) => &new_expr.callee,
             Expression::CallExpression(call) => &call.callee,
             _ => return None,
         };
         match callee.get_inner_expression() {
-            Expression::Identifier(_) => self.rate_limit_imported_member(callee, Member::Error),
+            Expression::Identifier(id) => {
+                let is_rate_limit_name = id.name == "RateLimitError";
+                let symbol = referenced_symbol(self, id);
+                (is_rate_limit_name || symbol.is_some()).then_some(ThrowTarget::Identifier {
+                    symbol,
+                    is_rate_limit_name,
+                })
+            }
             Expression::StaticMemberExpression(member)
                 if member.property.name == "RateLimitError" =>
             {
-                if matches!(
-                    member.object.get_inner_expression(),
-                    Expression::Identifier(_)
-                ) {
-                    self.rate_limit_imported_member(&member.object, Member::WorkerOrNamespace)
-                } else {
-                    self.worker_member(&member.object)
-                }
+                Some(ThrowTarget::MemberRateLimit {
+                    object: self.classify_member_object(&member.object),
+                })
+            }
+            Expression::ComputedMemberExpression(member)
+                if static_string(&member.expression).as_deref() == Some("RateLimitError") =>
+            {
+                Some(ThrowTarget::MemberRateLimit {
+                    object: self.classify_member_object(&member.object),
+                })
             }
             _ => None,
         }
     }
 
-    pub(in crate::queue) fn note_constructor_rate_limit_processor(
-        &mut self,
-        callee: &Expression<'_>,
-        argument: &Argument<'_>,
-        worker: usize,
-    ) {
-        if self.shared_rate_limit.enabled
-            && self
-                .worker_member(callee)
-                .is_some_and(|import| self.shared_rate_limit.matches_value(&import))
-        {
-            self.note_rate_limit_processor(argument, worker, false);
-        }
-    }
-
-    fn worker_member(&self, expr: &Expression<'_>) -> Option<ImportedMember> {
-        if let Expression::StaticMemberExpression(member) = expr.get_inner_expression() {
-            if matches!(member.property.name.as_str(), "Worker" | "TestWorker") {
-                return self.rate_limit_imported_member(&member.object, Member::Namespace);
-            }
-        }
-        self.rate_limit_imported_member(expr, Member::Worker)
-    }
-
-    fn rate_limit_imported_member(
-        &self,
-        expr: &Expression<'_>,
-        member: Member,
-    ) -> Option<ImportedMember> {
-        let Expression::Identifier(id) = expr.get_inner_expression() else {
-            return None;
-        };
-        Some(ImportedMember {
-            symbol: referenced_symbol(self, id)?,
-            member,
-        })
-    }
-
-    pub(super) fn note_worker_parameters(&mut self, start: u32, params: &FormalParameters<'_>) {
-        for param in &params.items {
-            let Some(annotation) = &param.type_annotation else {
-                continue;
-            };
-            let TSType::TSTypeReference(reference) = &annotation.type_annotation else {
-                continue;
-            };
-            let (name, member) = match &reference.type_name {
-                TSTypeName::IdentifierReference(name) => (name, Member::Worker),
-                TSTypeName::QualifiedName(qualified)
-                    if matches!(qualified.right.name.as_str(), "Worker" | "TestWorker") =>
-                {
-                    let TSTypeName::IdentifierReference(name) = &qualified.left else {
-                        continue;
-                    };
-                    (name, Member::Namespace)
+    fn classify_member_object(&self, object: &Expression<'_>) -> MemberObject {
+        match object.get_inner_expression() {
+            Expression::Identifier(id) => MemberObject::Identifier(referenced_symbol(self, id)),
+            Expression::StaticMemberExpression(inner)
+                if matches!(inner.property.name.as_str(), "Worker" | "TestWorker") =>
+            {
+                if let Expression::Identifier(ns) = inner.object.get_inner_expression() {
+                    MemberObject::NamespaceWorker {
+                        symbol: referenced_symbol(self, ns),
+                        member: inner.property.name.to_string(),
+                    }
+                } else {
+                    MemberObject::Opaque
                 }
-                _ => continue,
-            };
-            let BindingPattern::BindingIdentifier(binding) = &param.pattern else {
-                continue;
-            };
-            if let (Some(parameter), Some(symbol)) = (
-                self.stable_rate_limit_symbol(binding),
-                referenced_symbol(self, name),
-            ) {
-                self.shared_rate_limit
-                    .parameters
-                    .insert(parameter, (start, ImportedMember { symbol, member }));
             }
+            _ => MemberObject::Opaque,
         }
     }
 }

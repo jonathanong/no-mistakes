@@ -13,8 +13,9 @@ Markdown adds a `## diagnostics` section when the flag is set and diagnostics
 exist. Human and paths stdout contain findings only.
 
 Both `queues check` and aggregate `check` print unresolved worker
-`.rateLimit()` receiver warnings and the retention and listing abstentions
-described below to stderr by default. The standalone flag
+`.rateLimit()` receiver warnings, untraceable `RateLimitError` abstentions, and
+the retention and listing abstentions described below to stderr by default. The
+standalone flag
 prints all queue diagnostics to stderr in every format, including human and
 paths, so topology notes are available without altering those stdout streams.
 Aggregate `check` includes these warnings in JSON `warnings` too.
@@ -48,7 +49,7 @@ Findings use these
 | `unmatched-worker-unresolved-producers` | A producer for this handler did not resolve, so the handler is not known to be dead. The message names those producer lines. A producer with neither a resolved queue nor a resolved job is listed on every unmatched worker. |
 | `self-dedup-enqueue` | A processor enqueues its own job on its own queue with `deduplication.id` or `jobId` taken from the active job. The job binding is a parameter named `job`, or otherwise the processor's first parameter: `task.id` / `task.deduplicationId`, or a destructured `{ name, id }`. A nested callback is not that binding unless one of its parameters is named `job`. A local function or `const` callback passed by name is tied to its configured worker even when declared earlier. A copied `const id = task.id` or `const id = task.deduplicationId` remains a job token within its lexical scope, as does a destructured `const { id } = task` or `const { deduplicationId } = task`. A defaulted binding such as `const { deduplicationId: dedup = "fallback" } = task` is not a token. Unrelated values and shadowed parameters do not. A configured enqueue factory does the same check on its `options` argument. The queue drops that add while the job is active. Publish a new id, or enqueue a different job. The same job name on a different queue is not a finding. If the worker queue or the target queue does not resolve, the check abstains and emits a diagnostic. |
 | `enqueue-and-wait` | Waiting on a job result holds a worker or request slot. Return control instead of blocking on the result. The check covers calls to `addAndWait`, `waitUntilFinished`, and explicitly configured wrappers. |
-| `shared-queue-rate-limit` | A processor throws a queue package's `RateLimitError` (including renamed or namespace imports and `Worker.RateLimitError()`) or calls `.rateLimit()` / `["rateLimit"]()` on its worker for a queue whose producers enqueue more than one job name. That limit stalls every job on the queue. Move that job kind to its own queue, or use per-group rate limits. One known job name is not a finding. A producer on that queue with no resolved job name, or a worker queue that does not resolve, abstains with a diagnostic instead of a finding. A local processor shared by multiple worker instances is checked for each queue; a helper outside a worker processor or a `.rateLimit()` call on an unrelated receiver is not a finding. See [Shared queue rate limit](#shared-queue-rate-limit). |
+| `shared-queue-rate-limit` | A processor throws a queue package's `RateLimitError` (including renamed, namespace, or local barrel re-export imports and `Worker.RateLimitError()`) or calls `.rateLimit()` / `["rateLimit"]()` on its worker for a queue whose producers enqueue more than one job name. That limit stalls every job on the queue. Move that job kind to its own queue, or use per-group rate limits. One known job name is not a finding. A producer on that queue with no resolved job name, a worker queue that does not resolve, or a `RateLimitError` throw that cannot be traced to a queue package or a local non-queue declaration abstains with a diagnostic instead of a finding. A local processor shared by multiple worker instances is checked for each queue; a helper outside a worker processor or a `.rateLimit()` call on an unrelated receiver is not a finding. See [Shared queue rate limit](#shared-queue-rate-limit). |
 | `worker-rate-limit-per-process` | `.rateLimit(...)` (or `["rateLimit"](...)`) is called on a binding that resolves to a `Worker` / `TestWorker` from `bullmq` or `glide-mq`, a subclass of one, or a configured `queues.factories.worker` factory. A worker-level rate limit delays jobs inside one worker process only, so N processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait instead. Unresolved receivers whose binding originates from a queue module or worker construction abstain with a diagnostic; unrelated receivers are not reported. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`. See [Per-process worker rate limit](#per-process-worker-rate-limit). |
 | `enqueue-and-wait-declaration` | An explicitly matched wait-wrapper declaration is forbidden by `queues.factories.forbidEnqueueAndWaitDeclarations`. Replace it with enqueue-only behavior; the fix hint is included in `message`. Disabled by default. |
 | `debounce-ttl` | `deduplication: { mode: "debounce", ttl }` sets a `ttl` that debounce mode ignores. Remove `ttl`, or use a mode that reads it. |
@@ -240,12 +241,19 @@ queue. A call that already sets every required key is not abstained when
 ## Shared queue rate limit
 
 The processor can throw a queue package's `RateLimitError` through a named,
-renamed, or namespace import, or through `Worker.RateLimitError()`. A direct
-or literal computed `rateLimit` call must resolve to the associated worker.
-A configured worker factory can also pass a parameter typed as an imported
-`Worker` or `TestWorker`. A local processor shared by multiple worker instances
-is checked for each queue. Calls on a different receiver, such as an API
-client that exposes its own `rateLimit` method, do not trigger this finding.
+renamed, or namespace import, through `Worker.RateLimitError()`, or through
+local barrel re-exports (named re-exports, `export *`, namespace re-exports,
+default exports, and `const` aliases). A direct or literal computed `rateLimit`
+call must resolve to the associated worker. A configured worker factory can
+also pass a parameter typed as an imported `Worker` or `TestWorker`. A local
+processor shared by multiple worker instances is checked for each queue. Calls
+on a different receiver, such as an API client that exposes its own `rateLimit`
+method, and throws of a proven local non-queue `RateLimitError` declaration do
+not trigger this finding. A `RateLimitError` throw on a multi-job, unknown-job,
+or unresolved queue that cannot be traced to a queue package or a local
+non-queue declaration (such as an unresolvable import, an external non-queue
+package, or an opaque expression) abstains with a warning diagnostic instead of
+passing silently.
 
 ## Per-process worker rate limit
 
