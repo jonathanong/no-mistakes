@@ -214,3 +214,38 @@ fn native_control_nesting_handles_clean_bare_children_and_nested_spread() {
         edge_diag.advisories
     );
 }
+
+#[test]
+fn native_control_nesting_propagates_parse_errors_invalid_options_and_custom_messages() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/react-no-nested-buttons-and-links");
+    let parse_root = crate::codebase::ts_resolver::normalize_path(&fixture.join("parse-error"));
+    let parse_cfg =
+        crate::config::v2::load_v2_config(&parse_root, Some(&fixture.join("configs/parse-error.yml")))
+            .unwrap();
+    let disabled = parse_root.join("a-disabled.tsx");
+    let broken = parse_root.join("broken.tsx");
+    assert!(check_with_files(&parse_root, &parse_cfg, std::slice::from_ref(&disabled))
+        .unwrap()
+        .is_empty());
+    let parse_err = check_with_files(&parse_root, &parse_cfg, &[disabled, broken])
+        .err()
+        .unwrap();
+    assert!(parse_err.to_string().contains("Repair the JSX"), "{parse_err}");
+
+    let root = fixture_root();
+    let actions = root.join("actions.tsx");
+    let files = vec![actions.clone()];
+    let sources = super::super::source_store_for_files(&files);
+    let mut cfg =
+        crate::config::v2::load_v2_config(&root, Some(&fixture.join("configs/check.yml"))).unwrap();
+    assert!(check_prepared(&root, &cfg, &files, None, &sources, None).is_err());
+
+    cfg.rules[0].message = Some("custom nesting hint".into());
+    let custom = check_with_files(&root, &cfg, &files).unwrap();
+    assert_eq!(custom.len(), 1);
+    assert_eq!(custom[0].message, "custom nesting hint");
+
+    cfg.rules[0].options = serde_yaml::from_str("unanalyzable: bogus").unwrap();
+    assert!(diagnostics_prepared(&root, &cfg, &files, None, &sources, None, false).is_err());
+}
