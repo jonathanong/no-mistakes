@@ -19,7 +19,8 @@ enum Export {
     Playwright(Option<u32>, Vec<(ExportKey, usize)>),
     Local(ExportKey, Option<u32>, Vec<(ExportKey, usize)>),
     Stars(Vec<ExportKey>),
-    Unknown(Option<&'static str>),
+    Unresolved(&'static str),
+    Unknown,
 }
 
 #[derive(Clone)]
@@ -27,7 +28,8 @@ enum ExportProof {
     Playwright(Option<u32>, Vec<(ExportKey, usize)>),
     Alias(Option<u32>, Vec<(ExportKey, usize)>),
     Stars,
-    Unknown(Option<&'static str>),
+    Unresolved(&'static str),
+    Unknown,
 }
 
 #[derive(Clone)]
@@ -80,7 +82,8 @@ impl<'a> ExportLookup<'a> {
                 (ExportProof::Alias(derived_at, deps), vec![target])
             }
             Export::Stars(targets) => (ExportProof::Stars, targets),
-            Export::Unknown(reason) => (ExportProof::Unknown(reason), Vec::new()),
+            Export::Unresolved(reason) => (ExportProof::Unresolved(reason), Vec::new()),
+            Export::Unknown => (ExportProof::Unknown, Vec::new()),
         };
         let wrapper_proof = self.wrapper_export(facts, &key);
         match &wrapper_proof {
@@ -119,15 +122,14 @@ impl<'a> ExportLookup<'a> {
         if import.is_playwright_test() {
             return Export::Playwright(derived_at, deps);
         }
-        self.local(from, import)
-            .map_or(Export::Unknown(None), |target| {
-                Export::Local(target, derived_at, deps)
-            })
+        self.local(from, import).map_or(Export::Unknown, |target| {
+            Export::Local(target, derived_at, deps)
+        })
     }
 
     fn export(&self, facts: Option<&CheckFileFacts>, key: &ExportKey) -> Export {
         let Some(facts) = facts.filter(|file| file.parse_error.is_none() && file.parsed) else {
-            return Export::Unknown(None);
+            return Export::Unknown;
         };
         let ts = &facts.ts;
         if let Some(binding) = ts
@@ -150,10 +152,10 @@ impl<'a> ExportLookup<'a> {
             {
                 let init = match init {
                     Ok(init) => init,
-                    Err(reason) => return Export::Unknown(Some(reason)),
+                    Err(reason) => return Export::Unresolved(reason),
                 };
                 let Some(deps) = self.resolve_wrappers(&key.file, &init.wrappers) else {
-                    return Export::Unknown(None);
+                    return Export::Unknown;
                 };
                 return self.imported(&key.file, &init.import, init.derived_at, deps);
             }
@@ -169,7 +171,7 @@ impl<'a> ExportLookup<'a> {
                     Vec::new(),
                 );
             }
-            return Export::Unknown(None);
+            return Export::Unknown;
         }
         if key.name.as_ref() == "default" {
             return Export::Stars(Vec::new());
@@ -181,11 +183,11 @@ impl<'a> ExportLookup<'a> {
                 return if ts.star_reexport_specifiers.len() == 1 {
                     Export::Playwright(None, Vec::new())
                 } else {
-                    Export::Unknown(None)
+                    Export::Unknown
                 };
             }
             let Some(target) = self.local(&key.file, &reference) else {
-                return Export::Unknown(None);
+                return Export::Unknown;
             };
             stars.push(target);
         }

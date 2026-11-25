@@ -140,13 +140,13 @@ pub(super) fn project(
         let mut reason = proof.unresolved_reason();
         let mut wrappers_ok = true;
         for wrapper in wrappers {
-            let Some(key) = lookup.local(path, &wrapper.callee) else {
+            let key = lookup.local(path, &wrapper.callee);
+            if !key
+                .as_ref()
+                .is_some_and(|key| lookup.proves_wrapper(key, wrapper.arg_index))
+            {
                 wrappers_ok = false;
-                continue;
-            };
-            if !lookup.proves_wrapper(&key, wrapper.arg_index) {
-                wrappers_ok = false;
-                reason = reason.or_else(|| proof_for(&key).unresolved_reason());
+                reason = reason.or_else(|| proof_for(key.as_ref()?).unresolved_reason());
             }
         }
         if matches!(proof, FixtureProof::Playwright) && wrappers_ok {

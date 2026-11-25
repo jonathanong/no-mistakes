@@ -80,7 +80,7 @@ impl ExportLookup<'_> {
                         _ => Binding::Unproven,
                     },
                     Some(ExportProof::Stars) => upstream,
-                    Some(ExportProof::Unknown(Some(reason))) => Binding::Unresolved(reason),
+                    Some(ExportProof::Unresolved(reason)) => Binding::Unresolved(reason),
                     _ => Binding::Unproven,
                 };
                 bindings.insert(key, proven);

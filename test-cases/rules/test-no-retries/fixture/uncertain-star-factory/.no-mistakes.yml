@@ -1,0 +1,3 @@
+rules:
+  - rule: test-no-retries
+    scope: repository

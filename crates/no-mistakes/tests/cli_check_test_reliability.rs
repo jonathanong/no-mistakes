@@ -116,3 +116,28 @@ fn uncertain_playwright_factory_check_json_snapshot() {
                 .contains("local factory has an unverified return branch")
     }));
 }
+
+#[test]
+fn uncertain_star_playwright_factory_check_json_snapshot() {
+    let root = rules_path("test-no-retries", "fixture", "uncertain-star-factory");
+    let reports = super::check_json_snapshot::assert_saved_fixture_report(
+        "uncertain_star_playwright_factory",
+        &[
+            ("uncertain", root.clone(), root.join(".no-mistakes.yml")),
+            ("configured", root.clone(), root.join("configured.yml")),
+        ],
+        &[],
+        &[],
+    );
+    let report = &reports["uncertain"]["report"];
+    assert_eq!(reports["uncertain"]["exitCode"], 1);
+    assert!(report["rules"].as_array().unwrap().is_empty());
+    let incomplete = report["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 1);
+    assert!(incomplete[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("expression in fixture chain could not be traced statically"));
+    assert_eq!(reports["configured"]["exitCode"], 0);
+    assert!(reports["configured"]["report"]["incomplete"].is_null());
+}
