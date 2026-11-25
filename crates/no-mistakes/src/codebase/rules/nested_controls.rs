@@ -12,7 +12,7 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 use crate::config::v2::Unanalyzable;
 use anyhow::{Context, Result};
-use extract::{Kind, UnanalyzableReason};
+use extract::Kind;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -28,7 +28,10 @@ fn selected_files(
     sources: &SourceStore,
 ) -> Result<Vec<PathBuf>> {
     super::selected_rule_files_matching_with_sources(root, config, rule, files, sources, |path| {
-        matches!(path.extension().and_then(|ext| ext.to_str()), Some("jsx" | "tsx"))
+        matches!(
+            path.extension().and_then(|ext| ext.to_str()),
+            Some("jsx" | "tsx")
+        )
     })
 }
 
@@ -68,14 +71,15 @@ pub fn check_with_files(
         nested_control_paths: required_files(root, config, files, &sources)?,
         ..Default::default()
     };
-    let facts = crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
-        root,
-        plan.nested_control_paths.iter().cloned().collect(),
-        Vec::new(),
-        plan,
-        None,
-        Arc::clone(&sources),
-    );
+    let facts =
+        crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
+            root,
+            plan.nested_control_paths.iter().cloned().collect(),
+            Vec::new(),
+            plan,
+            None,
+            Arc::clone(&sources),
+        );
     Ok(diagnostics_prepared(root, config, files, Some(&facts), &sources, None, false)?.findings)
 }
 
@@ -90,6 +94,15 @@ pub(crate) fn check_prepared(
     Ok(diagnostics_prepared(root, config, files, facts, sources, session, true)?.findings)
 }
 
+fn resolve_unanalyzable(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Unanalyzable> {
+    let resolved = config.effective_rule_analysis(rule)?.unanalyzable;
+    if rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some() {
+        Ok(resolved)
+    } else {
+        Ok(Unanalyzable::Advise)
+    }
+}
+
 #[doc(hidden)]
 pub fn diagnostics_prepared(
     root: &Path,
@@ -102,7 +115,7 @@ pub fn diagnostics_prepared(
 ) -> Result<AnalysisDiagnostics> {
     let mut diagnostics = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
-        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
+        let policy = resolve_unanalyzable(config, rule)?;
         for path in selected_files(root, config, rule, files, sources)? {
             let result = check_file(root, &path, facts, sources, rule.message.as_deref(), policy);
             if let Some(session) = session {
@@ -159,7 +172,7 @@ fn check_file(
                 None,
                 format!("<{inner}> is nested inside <{outer}>. Move the inner control outside the outer control and render them as sibling elements."),
             ),
-            Kind::Unanalyzable(reason) => (Some("unanalyzable".into()), unanalyzable_message(reason)),
+            Kind::Unanalyzable(reason) => (Some("unanalyzable".into()), reason.message()),
         };
         let finding = RuleFinding {
             rule: RULE_ID.into(),
@@ -177,14 +190,4 @@ fn check_file(
         }
     }
     Ok(diagnostics)
-}
-
-fn unanalyzable_message(reason: &UnanalyzableReason) -> String {
-    match reason {
-        UnanalyzableReason::UncertainHref => "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.".into(),
-        UnanalyzableReason::ChildExpression => "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.".into(),
-        UnanalyzableReason::ChildSpread => "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.".into(),
-        UnanalyzableReason::WrapperTag(Some(name)) => format!("<{name}> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason."),
-        UnanalyzableReason::WrapperTag(None) => "Unresolved JSX element inside a button or link cannot be proven free of nested controls. Use a supported native wrapper, move controls to siblings, or suppress with a reason.".into(),
-    }
 }

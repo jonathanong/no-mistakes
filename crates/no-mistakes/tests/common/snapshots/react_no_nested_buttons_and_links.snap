@@ -5,7 +5,128 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "configured": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "variants.jsx",
+          "line": 27,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const dynamic = <a href={destination}><button type=\"button\">Save</button></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 28,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const dynamicInner = <button type=\"button\"><a href={destination}>Items</a></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 30,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const overwritten = <a href=\"/items\" {...props}><button type=\"button\">Save</button></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 31,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const spreadSelfClosing = <button type=\"button\" {...props} />;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 33,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const valueLess = <a href><button type=\"button\">Save</button></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 36,
+          "message": "<Wrapper> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const component = <a href=\"/items\"><Wrapper><button type=\"button\">Save</button></Wrapper></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 37,
+          "message": "<p> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const paragraphWrapper = <a href=\"/items\"><p><button type=\"button\">Save</button></p></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 38,
+          "message": "Unresolved JSX element inside a button or link cannot be proven free of nested controls. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const memberWrapper = <button type=\"button\"><UI.Icon /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 40,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const labelExpression = <button type=\"button\">{label}</button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 41,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const callExpression = <button type=\"button\">{translate(\"save\")}</button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 42,
+          "message": "<Icon> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const iconChild = <a href=\"/items\"><Icon /></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 49,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropExpression = <button type=\"button\" children={label} />;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 51,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperSpread = <button type=\"button\"><span {...props} /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 52,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperSpreadAfterChildren = <button type=\"button\"><span children=\"Save\" {...props} /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 56,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const spreadChild = <button type=\"button\">{...items}</button>;",
+          "target": "unanalyzable"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -20,101 +141,49 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 14,
+          "line": 16,
           "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<a href={\"/items\"}>Items</a>"
         },
         {
           "file": "variants.jsx",
-          "line": 20,
+          "line": 22,
           "message": "<a> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<strong><a href=\"\">Items</a></strong>"
         },
         {
           "file": "variants.jsx",
-          "line": 25,
-          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "line": 39,
+          "message": "<button> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const dynamic = <a href={destination}><button type=\"button\">Save</button></a>;",
-          "target": "unanalyzable"
+          "sourceLine": "export const expressionElement = <a href=\"/items\">{<button type=\"button\">Save</button>}</a>;"
         },
         {
           "file": "variants.jsx",
-          "line": 26,
-          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "line": 46,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const dynamicInner = <button type=\"button\"><a href={destination}>Items</a></button>;",
-          "target": "unanalyzable"
+          "sourceLine": "export const childrenPropNested = <button type=\"button\" children={<a href=\"/items\">Items</a>} />;"
         },
         {
           "file": "variants.jsx",
-          "line": 28,
-          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "line": 47,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const overwritten = <a href=\"/items\" {...props}><button type=\"button\">Save</button></a>;",
-          "target": "unanalyzable"
+          "sourceLine": "export const childrenPropFragment = <button type=\"button\" children={<><a href=\"/items\">Items</a></>} />;"
         },
         {
           "file": "variants.jsx",
-          "line": 29,
-          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "line": 48,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const spreadSelfClosing = <button type=\"button\" {...props} />;",
-          "target": "unanalyzable"
+          "sourceLine": "export const wrapperChildrenPropNested = <button type=\"button\"><span children={<a href=\"/items\">Items</a>} /></button>;"
         },
         {
           "file": "variants.jsx",
-          "line": 31,
-          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
-          "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const valueLess = <a href><button type=\"button\">Save</button></a>;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "variants.jsx",
-          "line": 34,
-          "message": "<Wrapper> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
-          "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const component = <a href=\"/items\"><Wrapper><button type=\"button\">Save</button></Wrapper></a>;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "variants.jsx",
-          "line": 35,
-          "message": "<p> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
-          "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const paragraphWrapper = <a href=\"/items\"><p><button type=\"button\">Save</button></p></a>;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "variants.jsx",
-          "line": 36,
-          "message": "Unresolved JSX element inside a button or link cannot be proven free of nested controls. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
-          "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const memberWrapper = <button type=\"button\"><UI.Icon /></button>;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "variants.jsx",
-          "line": 37,
-          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
-          "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const expression = <a href=\"/items\">{<button type=\"button\">Save</button>}</a>;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "variants.jsx",
-          "line": 38,
-          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
-          "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const spreadChild = <button type=\"button\">{...items}</button>;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "variants.jsx",
-          "line": 7,
+          "line": 9,
           "message": "<button> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<button type=\"button\" disabled>Save</button>"
@@ -168,7 +237,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "variants.jsx",
-          "line": 25,
+          "line": 27,
           "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const dynamic = <a href={destination}><button type=\"button\">Save</button></a>;",
@@ -176,7 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 26,
+          "line": 28,
           "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const dynamicInner = <button type=\"button\"><a href={destination}>Items</a></button>;",
@@ -184,7 +253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 28,
+          "line": 30,
           "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const overwritten = <a href=\"/items\" {...props}><button type=\"button\">Save</button></a>;",
@@ -192,7 +261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 29,
+          "line": 31,
           "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const spreadSelfClosing = <button type=\"button\" {...props} />;",
@@ -200,7 +269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 31,
+          "line": 33,
           "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const valueLess = <a href><button type=\"button\">Save</button></a>;",
@@ -208,7 +277,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 34,
+          "line": 36,
           "message": "<Wrapper> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const component = <a href=\"/items\"><Wrapper><button type=\"button\">Save</button></Wrapper></a>;",
@@ -216,7 +285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 35,
+          "line": 37,
           "message": "<p> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const paragraphWrapper = <a href=\"/items\"><p><button type=\"button\">Save</button></p></a>;",
@@ -224,7 +293,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 36,
+          "line": 38,
           "message": "Unresolved JSX element inside a button or link cannot be proven free of nested controls. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const memberWrapper = <button type=\"button\"><UI.Icon /></button>;",
@@ -232,15 +301,55 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 37,
+          "line": 40,
           "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
-          "sourceLine": "export const expression = <a href=\"/items\">{<button type=\"button\">Save</button>}</a>;",
+          "sourceLine": "export const labelExpression = <button type=\"button\">{label}</button>;",
           "target": "unanalyzable"
         },
         {
           "file": "variants.jsx",
-          "line": 38,
+          "line": 41,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const callExpression = <button type=\"button\">{translate(\"save\")}</button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 42,
+          "message": "<Icon> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const iconChild = <a href=\"/items\"><Icon /></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 49,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropExpression = <button type=\"button\" children={label} />;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 51,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperSpread = <button type=\"button\"><span {...props} /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 52,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperSpreadAfterChildren = <button type=\"button\"><span children=\"Save\" {...props} /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 56,
           "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "export const spreadChild = <button type=\"button\">{...items}</button>;",
@@ -261,21 +370,49 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 14,
+          "line": 16,
           "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<a href={\"/items\"}>Items</a>"
         },
         {
           "file": "variants.jsx",
-          "line": 20,
+          "line": 22,
           "message": "<a> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<strong><a href=\"\">Items</a></strong>"
         },
         {
           "file": "variants.jsx",
-          "line": 7,
+          "line": 39,
+          "message": "<button> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const expressionElement = <a href=\"/items\">{<button type=\"button\">Save</button>}</a>;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 46,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropNested = <button type=\"button\" children={<a href=\"/items\">Items</a>} />;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 47,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropFragment = <button type=\"button\" children={<><a href=\"/items\">Items</a></>} />;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 48,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperChildrenPropNested = <button type=\"button\"><span children={<a href=\"/items\">Items</a>} /></button>;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 9,
           "message": "<button> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<button type=\"button\" disabled>Save</button>"
@@ -302,21 +439,238 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "variants.jsx",
-          "line": 14,
+          "line": 16,
           "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<a href={\"/items\"}>Items</a>"
         },
         {
           "file": "variants.jsx",
-          "line": 20,
+          "line": 22,
           "message": "<a> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<strong><a href=\"\">Items</a></strong>"
         },
         {
           "file": "variants.jsx",
-          "line": 7,
+          "line": 39,
+          "message": "<button> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const expressionElement = <a href=\"/items\">{<button type=\"button\">Save</button>}</a>;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 46,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropNested = <button type=\"button\" children={<a href=\"/items\">Items</a>} />;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 47,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropFragment = <button type=\"button\" children={<><a href=\"/items\">Items</a></>} />;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 48,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperChildrenPropNested = <button type=\"button\"><span children={<a href=\"/items\">Items</a>} /></button>;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 9,
+          "message": "<button> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<button type=\"button\" disabled>Save</button>"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "actions.tsx",
+          "line": 5,
+          "message": "<button> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<button type=\"button\">Save</button>"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 16,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<a href={\"/items\"}>Items</a>"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 22,
+          "message": "<a> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<strong><a href=\"\">Items</a></strong>"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 27,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const dynamic = <a href={destination}><button type=\"button\">Save</button></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 28,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const dynamicInner = <button type=\"button\"><a href={destination}>Items</a></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 30,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const overwritten = <a href=\"/items\" {...props}><button type=\"button\">Save</button></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 31,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const spreadSelfClosing = <button type=\"button\" {...props} />;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 33,
+          "message": "<a> has a non-literal or spread-overwritten href, so control nesting cannot be proven. Use a literal href string, remove the trailing spread, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const valueLess = <a href><button type=\"button\">Save</button></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 36,
+          "message": "<Wrapper> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const component = <a href=\"/items\"><Wrapper><button type=\"button\">Save</button></Wrapper></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 37,
+          "message": "<p> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const paragraphWrapper = <a href=\"/items\"><p><button type=\"button\">Save</button></p></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 38,
+          "message": "Unresolved JSX element inside a button or link cannot be proven free of nested controls. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const memberWrapper = <button type=\"button\"><UI.Icon /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 39,
+          "message": "<button> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const expressionElement = <a href=\"/items\">{<button type=\"button\">Save</button>}</a>;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 40,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const labelExpression = <button type=\"button\">{label}</button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 41,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const callExpression = <button type=\"button\">{translate(\"save\")}</button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 42,
+          "message": "<Icon> inside a button or link is outside the supported static wrapper tags (a, button, div, em, span, strong), so nested controls cannot be proven absent. Use a supported native wrapper, move controls to siblings, or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const iconChild = <a href=\"/items\"><Icon /></a>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 46,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropNested = <button type=\"button\" children={<a href=\"/items\">Items</a>} />;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 47,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropFragment = <button type=\"button\" children={<><a href=\"/items\">Items</a></>} />;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 48,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperChildrenPropNested = <button type=\"button\"><span children={<a href=\"/items\">Items</a>} /></button>;"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 49,
+          "message": "JSX child expression inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const childrenPropExpression = <button type=\"button\" children={label} />;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 51,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperSpread = <button type=\"button\"><span {...props} /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 52,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const wrapperSpreadAfterChildren = <button type=\"button\"><span children=\"Save\" {...props} /></button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 56,
+          "message": "JSX spread inside a button or link cannot be proven free of nested controls. Render static sibling elements or suppress with a reason.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const spreadChild = <button type=\"button\">{...items}</button>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 9,
           "message": "<button> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
           "rule": "react-no-nested-buttons-and-links",
           "sourceLine": "<button type=\"button\" disabled>Save</button>"

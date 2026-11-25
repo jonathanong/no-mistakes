@@ -1,38 +1,13 @@
+mod props;
+
 use oxc_ast::ast::{
-    JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXElement, JSXElementName,
-    JSXExpression, JSXFragment, JSXOpeningElement, Program,
+    Expression, JSXAttribute, JSXAttributeValue, JSXChild, JSXElement, JSXExpression, JSXFragment,
+    Program,
 };
 use oxc_ast_visit::Visit;
+use props::{Ancestor, ChildrenProp};
 
-pub(crate) struct Location {
-    pub(super) line: usize,
-    pub(super) kind: Kind,
-}
-
-pub(crate) enum Kind {
-    Nested { inner: &'static str, outer: &'static str },
-    Unanalyzable(UnanalyzableReason),
-}
-
-pub(crate) enum UnanalyzableReason {
-    UncertainHref,
-    ChildExpression,
-    ChildSpread,
-    WrapperTag(Option<String>),
-}
-
-#[derive(Clone, Copy)]
-enum Ancestor {
-    Definite(&'static str),
-    UncertainLink,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum HrefStatus {
-    Literal,
-    Absent,
-    Uncertain,
-}
+pub(crate) use props::{Kind, Location, UnanalyzableReason};
 
 #[derive(Default)]
 struct Collector {
@@ -57,65 +32,74 @@ pub(super) fn collect(source: &str, program: &Program<'_>) -> Vec<Location> {
         .collect()
 }
 
-fn tag_name<'a>(opening: &'a JSXOpeningElement<'_>) -> Option<&'a str> {
-    match &opening.name {
-        JSXElementName::Identifier(name) => Some(name.name.as_str()),
-        JSXElementName::IdentifierReference(name) => Some(name.name.as_str()),
-        _ => None,
-    }
-}
-
-fn has_spread_attribute(opening: &JSXOpeningElement<'_>) -> bool {
-    opening.attributes.iter().any(|item| matches!(item, JSXAttributeItem::SpreadAttribute(_)))
-}
-
-fn href_status(opening: &JSXOpeningElement<'_>) -> HrefStatus {
-    for item in opening.attributes.iter().rev() {
-        match item {
-            JSXAttributeItem::SpreadAttribute(_) => return HrefStatus::Uncertain,
-            JSXAttributeItem::Attribute(attribute)
-                if matches!(&attribute.name, JSXAttributeName::Identifier(name) if name.name == "href") =>
-            {
-                return match &attribute.value {
-                    Some(JSXAttributeValue::StringLiteral(_)) => HrefStatus::Literal,
-                    Some(JSXAttributeValue::ExpressionContainer(value)) => match &value.expression {
-                        JSXExpression::StringLiteral(_) => HrefStatus::Literal,
-                        JSXExpression::NullLiteral(_) => HrefStatus::Absent,
-                        _ => HrefStatus::Uncertain,
-                    },
-                    _ => HrefStatus::Uncertain,
-                };
+impl Collector {
+    fn child_expression<'a>(
+        &mut self,
+        expression: &JSXExpression<'a>,
+        span_start: u32,
+        ancestor: Option<Ancestor>,
+    ) {
+        let Some(expr) = expression.as_expression() else {
+            return;
+        };
+        let inner = expr.get_inner_expression();
+        match inner {
+            Expression::JSXElement(element) => {
+                self.ancestor = ancestor;
+                self.visit_jsx_element(element);
             }
-            _ => {}
+            Expression::JSXFragment(fragment) => {
+                self.ancestor = ancestor;
+                self.visit_jsx_fragment(fragment);
+            }
+            _ if props::is_safe_literal_child(inner) => {
+                self.ancestor = None;
+                self.visit_expression(expr);
+            }
+            _ => {
+                if ancestor.is_some() {
+                    self.matches.push((
+                        span_start,
+                        Kind::Unanalyzable(UnanalyzableReason::ChildExpression),
+                    ));
+                }
+                self.ancestor = None;
+                self.visit_expression(expr);
+            }
         }
     }
-    HrefStatus::Absent
-}
 
-fn next_ancestor(control: Option<Ancestor>, ancestor: Option<Ancestor>) -> Option<Ancestor> {
-    match (control, ancestor) {
-        (Some(def @ Ancestor::Definite(_)), _) | (_, Some(def @ Ancestor::Definite(_))) => Some(def),
-        (Some(uncertain), _) | (_, Some(uncertain)) => Some(uncertain),
-        (None, None) => None,
+    fn children_attribute<'a>(&mut self, attr: &JSXAttribute<'a>, ancestor: Option<Ancestor>) {
+        match &attr.value {
+            None | Some(JSXAttributeValue::StringLiteral(_)) => {}
+            Some(JSXAttributeValue::Element(el)) => {
+                self.ancestor = ancestor;
+                self.visit_jsx_element(el);
+            }
+            Some(JSXAttributeValue::Fragment(frag)) => {
+                self.ancestor = ancestor;
+                self.visit_jsx_fragment(frag);
+            }
+            Some(JSXAttributeValue::ExpressionContainer(c)) => {
+                self.child_expression(&c.expression, c.span.start, ancestor);
+            }
+        }
     }
-}
 
-impl Collector {
     fn children<'a>(&mut self, children: &[JSXChild<'a>], ancestor: Option<Ancestor>) {
         for child in children {
             match child {
-                JSXChild::Element(_) | JSXChild::Fragment(_) => self.ancestor = ancestor,
-                JSXChild::Text(_) => self.ancestor = None,
-                JSXChild::ExpressionContainer(container) => {
-                    if ancestor.is_some()
-                        && !matches!(container.expression, JSXExpression::EmptyExpression(_))
-                    {
-                        self.matches.push((
-                            container.span.start,
-                            Kind::Unanalyzable(UnanalyzableReason::ChildExpression),
-                        ));
-                    }
-                    self.ancestor = None;
+                JSXChild::Element(el) => {
+                    self.ancestor = ancestor;
+                    self.visit_jsx_element(el);
+                }
+                JSXChild::Fragment(frag) => {
+                    self.ancestor = ancestor;
+                    self.visit_jsx_fragment(frag);
+                }
+                JSXChild::Text(_) => {}
+                JSXChild::ExpressionContainer(c) => {
+                    self.child_expression(&c.expression, c.span.start, ancestor);
                 }
                 JSXChild::Spread(spread) => {
                     if ancestor.is_some() {
@@ -125,9 +109,41 @@ impl Collector {
                         ));
                     }
                     self.ancestor = None;
+                    self.visit_jsx_spread_child(spread);
                 }
             }
-            self.visit_jsx_child(child);
+        }
+    }
+
+    fn check_nested(
+        &mut self,
+        span_start: u32,
+        tag: Option<&str>,
+        control: Option<Ancestor>,
+        ancestor: Option<Ancestor>,
+    ) -> bool {
+        let Some(outer) = ancestor else {
+            return false;
+        };
+        match (control, outer) {
+            (Some(Ancestor::Definite(inner)), Ancestor::Definite(outer)) => {
+                self.matches
+                    .push((span_start, Kind::Nested { inner, outer }));
+                true
+            }
+            (Some(_), _) => {
+                self.matches.push((
+                    span_start,
+                    Kind::Unanalyzable(UnanalyzableReason::UncertainHref),
+                ));
+                true
+            }
+            (None, _) if !props::is_allowed_wrapper(tag) => {
+                let reason = UnanalyzableReason::WrapperTag(tag.map(str::to_owned));
+                self.matches.push((span_start, Kind::Unanalyzable(reason)));
+                true
+            }
+            (None, _) => false,
         }
     }
 }
@@ -136,52 +152,40 @@ impl<'a> Visit<'a> for Collector {
     fn visit_jsx_element(&mut self, element: &JSXElement<'a>) {
         let opening = &element.opening_element;
         let ancestor = self.ancestor.take();
-        let tag = tag_name(opening);
+        let tag = props::tag_name(opening);
         // SVG and MathML use a different native element namespace.
         if matches!(tag, Some("svg" | "math")) {
             self.ancestor = ancestor;
             return;
         }
-        let control = match tag {
-            Some("button") => Some(Ancestor::Definite("button")),
-            Some("a") => match href_status(opening) {
-                HrefStatus::Literal => Some(Ancestor::Definite("a")),
-                HrefStatus::Uncertain => Some(Ancestor::UncertainLink),
-                HrefStatus::Absent => None,
-            },
-            _ => None,
-        };
-        if let Some(outer) = ancestor {
-            match (control, outer) {
-                (Some(Ancestor::Definite(inner)), Ancestor::Definite(outer)) => {
-                    self.matches.push((opening.span.start, Kind::Nested { inner, outer }));
-                }
-                (Some(_), _) => {
+        let control = props::classify_control(tag, opening);
+        let reported_opening = self.check_nested(opening.span.start, tag, control, ancestor);
+        let through = props::is_allowed_wrapper(tag)
+            .then(|| props::next_ancestor(control, ancestor))
+            .flatten();
+        let mut handled_children_attr = None;
+        if through.is_some() && !props::has_effective_jsx_children(&element.children) {
+            match props::children_prop(opening) {
+                ChildrenProp::Absent => {}
+                ChildrenProp::Spread if !reported_opening => {
                     self.matches.push((
                         opening.span.start,
-                        Kind::Unanalyzable(UnanalyzableReason::UncertainHref),
+                        Kind::Unanalyzable(UnanalyzableReason::ChildSpread),
                     ));
                 }
-                (None, _) if !matches!(tag, Some("a" | "button" | "div" | "em" | "span" | "strong")) => {
-                    self.matches.push((
-                        opening.span.start,
-                        Kind::Unanalyzable(UnanalyzableReason::WrapperTag(tag.map(str::to_owned))),
-                    ));
+                ChildrenProp::Spread => {}
+                ChildrenProp::Attribute(index, attr) => {
+                    handled_children_attr = Some(index);
+                    self.children_attribute(attr, through);
                 }
-                (None, _) => {}
             }
         }
-        if control.is_some() && element.children.is_empty() && has_spread_attribute(opening) {
-            self.matches.push((
-                opening.span.start,
-                Kind::Unanalyzable(UnanalyzableReason::ChildSpread),
-            ));
+        for (index, item) in opening.attributes.iter().enumerate() {
+            if handled_children_attr != Some(index) {
+                self.ancestor = None;
+                self.visit_jsx_attribute_item(item);
+            }
         }
-        let through = match tag {
-            Some("a" | "button" | "div" | "em" | "span" | "strong") => next_ancestor(control, ancestor),
-            _ => None,
-        };
-        self.visit_jsx_opening_element(opening);
         self.children(&element.children, through);
         self.ancestor = ancestor;
     }

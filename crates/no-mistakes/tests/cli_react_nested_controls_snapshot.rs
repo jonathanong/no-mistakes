@@ -13,6 +13,11 @@ fn check_json_snapshot_native_button_and_link_nesting() {
                 rules_path(RULE, "configs", "check.yml"),
             ),
             (
+                "unanalyzable_report",
+                rules_path(RULE, "fixture", "."),
+                rules_path(RULE, "configs", "unanalyzable-report.yml"),
+            ),
+            (
                 "unanalyzable_advise",
                 rules_path(RULE, "fixture", "."),
                 rules_path(RULE, "configs", "unanalyzable-advise.yml"),
@@ -39,28 +44,43 @@ fn check_json_snapshot_native_button_and_link_nesting() {
     let configured = &reports["configured"];
     assert_eq!(configured["exitCode"], 1);
     let findings = configured["report"]["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 14);
+    assert_eq!(findings.len(), 8);
     assert!(findings.iter().all(|finding| finding["rule"] == RULE));
+    assert_eq!(
+        configured["report"]["advisories"].as_array().unwrap().len(),
+        15
+    );
+    assert_eq!(
+        reports["unanalyzable_report"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        23
+    );
+    assert_eq!(
+        reports["unanalyzable_report"]["report"]["advisories"],
+        serde_json::json!([])
+    );
     assert_eq!(
         reports["unanalyzable_advise"]["report"]["rules"]
             .as_array()
             .unwrap()
             .len(),
-        4
+        8
     );
     assert_eq!(
         reports["unanalyzable_advise"]["report"]["advisories"]
             .as_array()
             .unwrap()
             .len(),
-        10
+        15
     );
     assert_eq!(
         reports["unanalyzable_ignore"]["report"]["rules"]
             .as_array()
             .unwrap()
             .len(),
-        4
+        8
     );
     assert_eq!(
         reports["unanalyzable_ignore"]["report"]["advisories"],

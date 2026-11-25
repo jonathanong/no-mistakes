@@ -304,7 +304,7 @@ For `playwright-unique-html-ids`, `low` checks literal HTML IDs and routes
 other ID expressions through the shared unanalyzable policy. The rule remains
 independent of `tests.playwright.selectors.htmlIds`; see
 [its Effort section](rules/playwright-unique-html-ids.md#effort).
-The opt-in [`react-no-nested-buttons-and-links`](rules/react-no-nested-buttons-and-links.md) rule runs through async `check()` via `checkJson` and through the `analyzeProject()` check report. It uses common YAML rule options and returns ordinary `rules` findings.
+The opt-in [`react-no-nested-buttons-and-links`](rules/react-no-nested-buttons-and-links.md) rule runs through async `check()` via `checkJson` and through the `analyzeProject()` check report. It uses common YAML rule options, returns definite nested controls in `rules`, and routes unanalyzable shapes through `options.unanalyzable` (defaulting to `advise` in `advisories`).
 
 For `nextjs-no-caching`, `low` checks
 [literal cache settings](rules/nextjs-no-caching.md#effort) without preparing

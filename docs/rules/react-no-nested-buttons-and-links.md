@@ -24,32 +24,51 @@ to hydration mismatches. [HTML buttons](https://html.spec.whatwg.org/multipage/f
 The rule checks native `<button>` elements and native `<a>` elements whose
 effective `href` is a JSX string or string literal expression. A spread before a
 literal `href` preserves the literal, and `href={null}` clears a preceding
-`href`. It follows direct children through JSX fragments and the native elements
-`a`, `button`, `div`, `em`, `span`, and `strong`.
+`href`. It follows authored children — including an effective `children` prop
+when no JSX children are present — through JSX fragments, inline JSX element or
+fragment expressions, and the native elements `a`, `button`, `div`, `em`,
+`span`, and `strong`.
 
-Shapes the rule cannot statically prove safe are reported through the
-`unanalyzable` policy (`report` by default, or `advise` / `ignore`) rather than
+String literals, untagged template literals, primitive literals, and empty
+comment expressions inside a control (such as `<button>{"Save"}</button>` or
+``<button>{`Save ${count}`}</button>``) cannot render nested controls and pass
+cleanly.
+
+Shapes the rule cannot statically prove safe are routed through the
+`unanalyzable` policy (`advise` by default, or `report` / `ignore`) rather than
 passed silently:
 
 - An `<a>` with a non-literal `href`, value-less `href`, or trailing attribute
   spread when it sits inside a control or encloses a control or unanalyzable
   child.
-- A self-closing `<button>` or `<a>` with a spread attribute that could supply
-  `children`.
-- A non-empty JSX child expression or spread child inside a tracked button or
-  link.
+- A `<button>`, `<a>`, or allowed inner wrapper (`div`, `em`, `span`, `strong`)
+  with no effective JSX children and a spread attribute that could supply or
+  overwrite `children` (such as `<button {...props} />` or
+  `<button><span {...props} /></button>`).
+- A non-literal JSX child expression, `children` prop expression, or spread
+  child inside a tracked button or link (such as `<button>{label}</button>` or
+  `<button>{t("save")}</button>`).
 - Any component, member tag, or native wrapper element outside `a`, `button`,
   `div`, `em`, `span`, and `strong` (other than `svg` and `math`) inside a
-  tracked button or link.
+  tracked button or link (such as `<a href="/items"><Icon /></a>`).
 
 ## Options
 
 This rule is off by default. Use the common `projects` or `scope` and
-`include` / `exclude` filters, plus the shared `options.unanalyzable`
-(`report` | `advise` | `ignore`, inheriting repository `unanalyzable` and
-defaulting to `report`). The check runs at `max` effort. Selected JSX parse
-failures report an incomplete check with the file and parse error; a file that
-could not be parsed does not produce `unused-disable-directive` advisories.
+`include` / `exclude` filters, plus `options.unanalyzable` (`advise` | `report`
+| `ignore`).
+
+`options.unanalyzable` inherits top-level `unanalyzable` when configured and
+otherwise defaults to `advise`. Ordinary React buttons and links frequently
+render dynamic label expressions (`{label}`, `{t("save")}`) or icon components
+(`<Icon />`) that single-file syntax analysis cannot see into; defaulting to
+`advise` surfaces those uncertain shapes as non-failing advisories so adoption
+fails only on definite nested controls unless a repository opts into
+`options.unanalyzable: report` (or `ignore`).
+
+The check runs at `max` effort. Selected JSX parse failures report an
+incomplete check with the file and parse error; a file that could not be parsed
+does not produce `unused-disable-directive` advisories.
 
 The existing async `check()` Node API and `analyzeProject()` check mode use
 the same fact collection and rule report as the CLI.
@@ -57,8 +76,13 @@ the same fact collection and rule report as the CLI.
 ## Valid example
 
 ```tsx
-export function ItemActions() {
-  return <div><a href="/items">Items</a><button type="button">Save</button></div>;
+export function ItemActions({ count }: { count: number }) {
+  return (
+    <div>
+      <a href="/items">Items</a>
+      <button type="button">{`Save ${count}`}</button>
+    </div>
+  );
 }
 ```
 
@@ -98,9 +122,10 @@ has no suitable JavaScript comment position, restructure the markup or use
 
 This check proves native `<button>` and `<a>` ancestry within one file.
 SVG and MathML subtrees, other interactive native tags, and ARIA or
-handler-based controls are outside that scope. Component wrappers, child
-expressions, spreads, and uncertain `href` values inside or around controls are
-surfaced as unanalyzable instead of passed silently.
+handler-based controls are outside that scope. Component wrappers, non-literal
+child expressions, spreads that may supply `children`, and uncertain `href`
+values inside or around controls are surfaced through `unanalyzable` instead of
+passed silently.
 
 ## Related rules
 
