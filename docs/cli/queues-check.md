@@ -42,8 +42,8 @@ Findings use these
 
 | `kind` | Meaning |
 | --- | --- |
-| `unmatched-producer` | A job is enqueued and no worker handles it. |
-| `unmatched-worker` | A worker handles a job that no producer enqueues. |
+| `unmatched-producer` | A production job is enqueued and no production worker handles it. Files matched by configured `tests.*` scopes are excluded by default; see [Producer and worker matching](#producer-and-worker-matching). |
+| `unmatched-worker` | A production worker handles a job that no production producer enqueues. Files matched by configured `tests.*` scopes are excluded by default; see [Producer and worker matching](#producer-and-worker-matching). |
 | `unmatched-worker-unresolved-producers` | A producer for this handler did not resolve, so the handler is not known to be dead. The message names those producer lines. A producer with neither a resolved queue nor a resolved job is listed on every unmatched worker. |
 | `self-dedup-enqueue` | A processor enqueues its own job on its own queue with `deduplication.id` or `jobId` taken from the active job. The job binding is a parameter named `job`, or otherwise the processor's first parameter: `task.id` / `task.deduplicationId`, or a destructured `{ name, id }`. A nested callback is not that binding unless one of its parameters is named `job`. A local function or `const` callback passed by name is tied to its configured worker even when declared earlier. A copied `const id = task.id` or `const id = task.deduplicationId` remains a job token within its lexical scope, as does a destructured `const { id } = task` or `const { deduplicationId } = task`. A defaulted binding such as `const { deduplicationId: dedup = "fallback" } = task` is not a token. Unrelated values and shadowed parameters do not. A configured enqueue factory does the same check on its `options` argument. The queue drops that add while the job is active. Publish a new id, or enqueue a different job. The same job name on a different queue is not a finding. If the worker queue or the target queue does not resolve, the check abstains and emits a diagnostic. |
 | `enqueue-and-wait` | Waiting on a job result holds a worker or request slot. Return control instead of blocking on the result. The check covers calls to `addAndWait`, `waitUntilFinished`, and explicitly configured wrappers. |
@@ -57,6 +57,8 @@ Findings use these
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
 | `mixed-priority` | Producers on one queue enqueue both priority 0 and a priority greater than 0. See [Mixed priority](#mixed-priority). |
 | `missing-job-option` | A producer omits one or more keys from [`queues.requiredJobOptions`](../configuration/queues.md#required-job-options). One finding lists every missing key in configuration order. `message` is `job options missing {keys}`. |
+| `unbounded-job-retention` | A queue `defaultJobOptions` or producer keeps completed or failed jobs without a bound under [`queues.unboundedJobRetention`](../configuration/queues.md#unbounded-job-retention). |
+| `job-state-as-record` | Advisory (`severity: "advisory"`). Code reads ephemeral queue job state (`getJob` -> `getState`/`isFailed`/`isCompleted` guarding `retry`/`remove`/`add`, or `getFailed`/`getCompleted`/`getJobs` feeding `add`/`addBulk`/`retry`) under [`queues.jobStateAsRecord`](../configuration/queues.md#queue-job-state-as-record-of-work). Report-only: does not fail `queues check` and moves to `advisories` in aggregate `check`. |
 
 The wait check recognizes member calls such as `this.queue.addAndWait(...)`
 and literal computed members such as `queue["addAndWait"](...)`. It also
@@ -98,6 +100,43 @@ helper does not adopt that helper module's job names.
 The scheduler template check takes same-file binding declarations from the
 queue processor index, which already visits the file to resolve named
 callbacks. It groups those declarations by name on the first binding lookup.
+
+## Producer and worker matching
+
+`unmatched-producer`, `unmatched-worker`, `unmatched-worker-unresolved-producers`,
+and `queues edges` match producers and workers across the project:
+
+- **Configured test scopes suppress findings on test files by default:** Files
+  matched by declared `tests.*` scopes in `.no-mistakes.yml` (or a declared
+  Vitest/Playwright config) still participate in producer/worker matching, but
+  no `unmatched-producer`, `unmatched-worker`, or
+  `unmatched-worker-unresolved-producers` finding is reported on a test-scope
+  file, and test-scope files are omitted from `queues edges`. No hardcoded
+  filename conventions (`*.test.*`, `__tests__`) are applied when no test scope
+  is declared.
+- **Test-file producers without workers:** A producer inside a configured test
+  scope is not reported as `unmatched-producer` even when no worker exists
+  anywhere, because integration and harness tests commonly enqueue synthetic
+  jobs against partial fixtures.
+- **Same-file raw `new Worker` and configured worker factories:** A raw
+  `new Worker(<queueName>, ...)` (or `new TestWorker(...)`) or a configured
+  `queues.factories.worker` call (including namespace calls and options such as
+  `{ prefix }`) counts as a matching worker for producers on the same queue name,
+  including when the file creates its own `new Queue(<queueName>, ...)` or
+  `createQueue(<queueName>, ...)` handle, aliases an imported queue-name
+  constant, or passes `queue.name`. Module-level non-test queue bindings win
+  canonical queue ownership over function-local handles and test files.
+- **Workers with unresolved queue names abstain only when scoped to the queue:**
+  When a worker's queue name does not resolve, it could handle the job
+  (wildcard or matching job name), and either the worker passed an unresolved
+  imported queue name (`queue_name_import`) or the worker's file reaches the
+  producer's queue definition file, `unmatched-producer` abstains for that
+  producer and emits a warning diagnostic (`unmatched-producer was not judged
+  because unresolved workers at <file>:<line> could handle this queue`)
+  alongside the worker's `dynamic or unresolved queue worker` diagnostic.
+  Unrelated fully dynamic wildcard workers (such as a parameter-named
+  `new Worker(name, ...)` helper or `process.env.X` worker whose file does not
+  reach the producer's queue definition) do not suppress `unmatched-producer`.
 
 ## Mixed priority
 
@@ -253,6 +292,88 @@ Suppression (applies on aggregate `no-mistakes check`):
 // no-mistakes-disable-next-line queues-check
 await worker.rateLimit(1000);
 ```
+
+## Unbounded job retention
+
+BullMQ and compatible libraries keep every completed and failed job in Redis or
+Valkey unless told otherwise. Opt into `queues.unboundedJobRetention` to report:
+
+- `removeOnComplete: false` or `removeOnFail: false` in a queue's
+  `defaultJobOptions`, at a producer site (`add`, `addBulk`, flow nodes,
+  configured enqueue factories), or in an `upsertJobScheduler` template.
+- A producer whose resolved options (call options over queue defaults) leave a
+  required retention key unset.
+
+`true`, a non-negative number, or an object with a `count` or `age` property
+counts as bounded. Non-literal expressions and open spreads abstain. When both
+`queues.requiredJobOptions` and `queues.unboundedJobRetention` cover the same
+key on a producer, `unbounded-job-retention` reports it once so the site is not
+reported twice.
+
+```ts
+// reported: failed jobs are kept forever
+const widgets = new Queue("widgets", {
+  defaultJobOptions: { removeOnComplete: true, removeOnFail: false },
+});
+
+// reported: nothing bounds failed jobs, and the queue has no bounded default
+await bare.add("build", data, { removeOnComplete: { count: 100 } });
+
+// accepted: both bounded by count or age
+const bounded = new Queue("bounded", {
+  defaultJobOptions: {
+    removeOnComplete: true,
+    removeOnFail: { age: 86_400, count: 1_000 },
+  },
+});
+```
+
+Fix: set `removeOnComplete` and `removeOnFail` to `true`, a count, or an
+`{ age, count }` object in `defaultJobOptions` or at the producer call site,
+and store durable work records in the database. Exempt operator tooling or
+one-off scripts with `queues.unboundedJobRetention.allowPaths`, or suppress a
+single call with `// no-mistakes-disable-next-line queues-check`.
+
+## Queue job state as record of work
+
+Queue job state is ephemeral: jobs disappear under retention limits, Redis or
+Valkey flushes, or failover. Opt into `queues.jobStateAsRecord` to emit an
+advisory, report-only `job-state-as-record` finding (`severity: "advisory"`)
+for two patterns on resolved queue bindings:
+
+- `getJob(...)` followed by `getState()`, `isFailed()`, or `isCompleted()`
+  whose result guards `retry()`, `remove()`, or a queue `add` / `addBulk` in
+  the same function.
+- A failed or completed job listing (`getFailed`, `getCompleted`, or
+  `getJobs([...])` including `"failed"` or `"completed"`) whose results feed
+  `add`, `addBulk`, or `retry`.
+
+Unresolved queue receivers abstain with a diagnostic (`job-state-as-record was
+not judged because the queue receiver did not resolve`) and non-queue action
+objects (such as `Set.add`) are ignored. Because the finding is advisory,
+`queues check` still exits `0` when only advisory findings are present, and
+aggregate `no-mistakes check` reports it under `advisories`.
+
+```ts
+// reported (advisory): the queue is the record of whether the work is done
+const job = await widgets.getJob(id);
+if ((await job?.getState()) === "failed") await job.retry();
+
+// reported (advisory): re-enqueue driven by the failed set
+for (const job of await widgets.getFailed(0, 100)) {
+  await widgets.add(job.name, job.data);
+}
+
+// accepted: the database decides what is pending
+for (const row of await pendingWidgets(db, 100)) {
+  await widgets.add("build", { id: row.id });
+}
+```
+
+Fix: query durable application state from the database to decide what to
+enqueue or retry. Exempt operator tooling and dashboards with
+`queues.jobStateAsRecord.allowPaths`, or suppress a single location with
+`// no-mistakes-disable-next-line queues-check`.
 
 ## Suppression
 

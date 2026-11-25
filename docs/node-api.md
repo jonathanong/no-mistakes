@@ -511,6 +511,16 @@ path or by path relative to `root`. In `analyzeProject()` set `config` on the
 request for all queue reports. Set `queues.requiredJobOptions` in that file.
 A `missing-job-option` finding lists the absent keys in `message`. Abstentions
 appear in the queue report diagnostics.
+`queues.unboundedJobRetention` is also configured in that file (selected by
+`config` in `queueCheck()`, `check()`, and `analyzeProject()`), emitting
+`unbounded-job-retention` findings. Exported types `QueueJobRetentionKey`,
+`QueueUnboundedJobRetentionOptions`, and `QueueUnboundedJobRetentionConfig`
+describe its YAML shape.
+`queues.jobStateAsRecord` is opt-in configuration emitting advisory
+`job-state-as-record` findings (`severity: "advisory"` in `queueCheck()` and
+`advisories` in `check()` / `analyzeProject()`). Exported types
+`QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
+`QueueCheckSeverity` describe its configuration and finding severity.
 
 ## Queue factory configuration types
 

@@ -65,8 +65,6 @@ impl ParameterCache {
         Arc::new(OriginNode::new(kind, height))
     }
     pub(super) fn acquire(&self, key: ParameterKey) -> CacheAccess<'_> {
-        #[cfg(all(test, feature = "test-instrumentation"))]
-        scheduling::configure(self, &key);
         let thread = std::thread::current().id();
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         loop {
@@ -75,11 +73,6 @@ impl ParameterCache {
                 Some(Entry::Computing(owner)) => {
                     let owner = *owner;
                     if owner == thread || waits_for(&state, owner, thread) {
-                        #[cfg(all(test, feature = "test-instrumentation"))]
-                        if let Some(hook) = self.scheduling.get() {
-                            drop(state);
-                            hook(scheduling::Event::Cycle, &key);
-                        }
                         return CacheAccess::Cycle;
                     }
                     state.waiting.insert(thread, key.clone());
@@ -102,11 +95,6 @@ impl ParameterCache {
                 None => {
                     state.entries.insert(key.clone(), Entry::Computing(thread));
                     state.computations += 1;
-                    #[cfg(all(test, feature = "test-instrumentation"))]
-                    if let Some(hook) = self.scheduling.get() {
-                        drop(state);
-                        hook(scheduling::Event::Computing, &key);
-                    }
                     return CacheAccess::Compute(Lease {
                         cache: self,
                         key: Some(key),

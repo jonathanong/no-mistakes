@@ -1,8 +1,7 @@
 use crate::check_parallel::DomainResults;
-use crate::check_tasks::CheckTask;
 use anyhow::Result;
 use no_mistakes::codebase::rules::RuleFinding;
-use no_mistakes::codebase::unique_exports::{PreparedUniqueExportFinding, UniqueExportFinding};
+use no_mistakes::codebase::unique_exports::UniqueExportFinding;
 use no_mistakes::config::v2::DisableDirectivePolicy;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
@@ -12,7 +11,7 @@ mod advisories;
 mod partial;
 pub(crate) use partial::retain_domain_checks;
 mod empty;
-pub(crate) use empty::empty_results;
+pub(crate) use empty::{empty_results, CompletedDomainChecks};
 mod render;
 pub(crate) use render::json_value;
 pub(crate) mod suppression;
@@ -63,15 +62,6 @@ pub(crate) struct CheckResults {
     pub(crate) accepted_bounds: Vec<no_mistakes::codebase::check_facts::AcceptedStatementBound>,
 }
 
-pub(crate) struct CompletedDomainChecks {
-    pub(crate) react: CheckTask<Vec<react_traits::Violation>>,
-    pub(crate) queues: CheckTask<Vec<CheckFinding>>,
-    pub(crate) rules: CheckTask<Vec<RuleFinding>>,
-    pub(crate) integration: CheckTask<Vec<IntegrationFinding>>,
-    pub(crate) codebase: CheckTask<Vec<PreparedUniqueExportFinding>>,
-    pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
-}
-
 pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckResults> {
     let FinalizeInput {
         root,
@@ -96,14 +86,16 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         warnings,
         analysis_warning_count,
     } = warnings::collect(root, facts, config, react_warning, &mut completed);
-    let mut react = completed.react;
+    let CompletedDomainChecks {
+        mut react,
+        mut queues,
+        mut rules,
+        mut integration,
+        mut codebase,
+        mut filesystem_rules,
+    } = completed;
     let react_suppression_targets = react.react_suppression_targets.as_slice();
-    let mut queues = completed.queues;
-    let mut rules = completed.rules;
     let rule_suppression_sources = rules.suppression_sources.as_slice();
-    let mut integration = completed.integration;
-    let mut codebase = completed.codebase;
-    let mut filesystem_rules = completed.filesystem_rules;
     let audit_directives = config.audits_disable_directives();
     let retain_suppression = include_suppressed || audit_directives;
     let mut advisories = advisories::collect(
@@ -151,30 +143,32 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     // filesystem findings in that domain order. Preserve it while retaining
     // the distinct adapter identity in optional suppression accounting.
     rules.findings.extend(filesystem_rules.findings);
-    let (rules_out, codebase_out) = (&mut rules.findings, &mut codebase.findings);
-    advisories::demote(config, rules_out, codebase_out, &mut advisories);
+    advisories::demote(
+        config,
+        &mut queues.findings,
+        &mut rules.findings,
+        &mut codebase.findings,
+        &mut advisories,
+    );
+    let codebase_findings = codebase.findings.into_iter().map(|p| p.finding).collect();
     Ok(CheckResults {
         incomplete: Vec::new(),
-        timings: vec![
-            ("discover", discover_duration),
-            ("parse_extract", facts_duration),
-            ("react", react.duration),
-            ("queues", queues.duration),
-            ("rules", rules.duration),
-            ("integration", integration.duration),
-            ("codebase", codebase.duration),
-            ("filesystem_rules", filesystem_rules.duration),
-        ],
+        timings: empty::timings([
+            discover_duration,
+            facts_duration,
+            react.duration,
+            queues.duration,
+            rules.duration,
+            integration.duration,
+            codebase.duration,
+            filesystem_rules.duration,
+        ]),
         react: react.findings,
         queues: queues.findings,
         rules: rules.findings,
         integration: integration.findings,
         runner_config_deadlines,
-        codebase: codebase
-            .findings
-            .into_iter()
-            .map(|prepared| prepared.finding)
-            .collect(),
+        codebase: codebase_findings,
         warnings,
         analysis_warning_count,
         analysis_fallbacks: config.analysis_fallbacks.clone(),

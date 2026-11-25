@@ -106,13 +106,13 @@ fn queue_required_options_resolved_receiver_check_json_snapshot() {
             {
                 "file": "enqueue.ts",
                 "line": 15,
-                "message": "job options were not judged because defaultJobOptions is not statically known",
+                "message": "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions",
                 "severity": "warning"
             },
             {
                 "file": "enqueue.ts",
                 "line": 17,
-                "message": "job options were not judged because defaultJobOptions is not statically known",
+                "message": "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions",
                 "severity": "warning"
             }
         ])

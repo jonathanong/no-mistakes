@@ -1,0 +1,17 @@
+name: Example job merge
+on: push
+permissions:
+  contents: write
+jobs:
+  template: &example-job
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    concurrency: example-build
+    steps:
+      - uses: example/build@v1
+        id: build
+        timeout-minutes: 2
+  verify:
+    <<: *example-job
