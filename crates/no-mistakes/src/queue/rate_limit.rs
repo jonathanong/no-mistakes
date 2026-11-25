@@ -2,7 +2,7 @@ use crate::queue::cycles::self_dedup_findings;
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
-use crate::queue::types::{Diagnostic, QueueKey, Severity};
+use crate::queue::types::{Diagnostic, DiagnosticKind, QueueKey, Severity};
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -125,6 +125,7 @@ fn job_names(queue: &QueueKey, producers: &[InternalProducer]) -> JobNames {
 
 fn abstain(root: &Path, path: &Path, line: usize, message: &str) -> Diagnostic {
     Diagnostic {
+        kind: DiagnosticKind::AnalysisNote,
         severity: Severity::Warning,
         file: relative_string(root, path),
         line,

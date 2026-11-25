@@ -13,7 +13,8 @@ use std::path::{Path, PathBuf};
 mod head_helpers;
 mod imported_sql;
 mod setup;
-use setup::{tsconfig_for, workspace_for};
+use setup::tsconfig_for;
+pub(super) use setup::workspace_for;
 mod unproven;
 pub(super) use unproven::count_unproven_member_queries;
 #[doc(hidden)]

@@ -306,10 +306,10 @@ that says "use `rg` here, the graph won't help" is ideal.
 
 The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
 `rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
-topics (`testing`, `postgresql`, `queue`, `github-actions`) with 14 cases
-between them (`testing` and `github-actions` have three, the others four),
-plus four off-topic guards. Every case
-exposes all installed plugin skills.
+topics (`testing`, `postgresql`, `queue`, `github-actions`) with 17 cases
+between them (`testing` has six, `github-actions` has three, and the others
+have four), plus four off-topic guards. Every case exposes all installed
+plugin skills.
 
 - **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
   test, worker, workflow). The prompt never names the rule; breaking one
@@ -339,8 +339,15 @@ plugin fired at all.
 ### Current trigger comparison
 
 The results below measure the earlier 16-skill inventory. The current plugin
-contains 15 skills after #3587; it has not been re-measured. Cases and graders
-are unchanged. See [history](HISTORY.md).
+contains 15 skills after #3587. The three cases below are pending measurement.
+The historical comparison still refers to its original case set. See
+[history](HISTORY.md).
+
+| Unmeasured case | What it checks |
+| --- | --- |
+| `rules-testing-write-flaky-response-wait` | Register the response wait before the click so a fast response cannot be missed and hidden by retries. |
+| `rules-testing-review-lowered-coverage-floor` | Flag a lower coverage floor that lets a newly uncovered path pass. |
+| `rules-testing-exception-raised-coverage-floor` | Accept a higher floor based on measured coverage gains under the same scope. |
 
 Measured 2026-11-17 on `77413ee9411801db8de00cb94d2cb348d1e30283`
 (release 0.109.78), Claude plugin eval 2.1.325, Sonnet 5.5 agent and Opus 5.5
@@ -486,7 +493,7 @@ the Claude table.
 
 `python3 evals/codex_rules.py` prints `cases x arms x runs` and exits. It does
 not call a model. Dollars are unknown until a paid run; the preview says so.
-A full rules pass at the case default is 18 cases x 2 arms x 3 runs = 108
+A full rules pass at the case default is 21 cases x 2 arms x 3 runs = 126
 attempts. Pilot with one case before that:
 
 ```sh

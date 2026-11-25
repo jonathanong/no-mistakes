@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      allowlist:
+        - path: apps/../../external/*.test.ts
+          reason: A runner outside this repository owns these tests

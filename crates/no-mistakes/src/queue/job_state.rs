@@ -5,7 +5,7 @@ use crate::queue::extract_model::{FileFacts, ProducerBinding};
 use crate::queue::graph_model::{CheckFinding, CheckSeverity};
 use crate::queue::graph_resolution::{local_queues, resolved_binding};
 use crate::queue::source::relative_string;
-use crate::queue::types::{Diagnostic, Severity};
+use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -132,6 +132,7 @@ pub(super) fn findings_and_diagnostics(
                         file: relative_string(root, path),
                         line: site.line,
                         message: UNRESOLVED_RECEIVER_MESSAGE.to_string(),
+                        kind: DiagnosticKind::AnalysisNote,
                     });
                 }
                 continue;

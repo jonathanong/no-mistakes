@@ -1,0 +1,48 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "resolution": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueue.ts",
+          "job": "real-bulk",
+          "kind": "missing-job-option",
+          "line": 11,
+          "message": "job options missing backoff",
+          "queueFile": "queue-primary.ts",
+          "queueName": "shared",
+          "sourceLine": "primary.addBulk([{ name: \"real-bulk\", data: {} }]);"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "real-scheduler",
+          "kind": "missing-job-option",
+          "line": 12,
+          "message": "job options missing attempts",
+          "queueFile": "queue-secondary.ts",
+          "queueName": "shared",
+          "sourceLine": "secondary.upsertJobScheduler(\"real-schedule\", {}, { name: \"real-scheduler\" });"
+        },
+        {
+          "file": "queue-primary.ts",
+          "job": "real-local-scheduler",
+          "kind": "missing-job-option",
+          "line": 6,
+          "message": "job options missing backoff",
+          "queueFile": "queue-primary.ts",
+          "queueName": "shared",
+          "sourceLine": "primary.upsertJobScheduler(\"local-schedule\", {}, { name: \"real-local-scheduler\" });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

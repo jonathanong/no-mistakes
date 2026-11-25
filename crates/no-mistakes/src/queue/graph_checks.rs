@@ -1,7 +1,7 @@
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
 use crate::queue::test_scope::ConfiguredTestScope;
-use crate::queue::types::{Diagnostic, JobKey, QueueKey, Severity};
+use crate::queue::types::{Diagnostic, DiagnosticKind, JobKey, QueueKey, Severity};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -67,6 +67,7 @@ pub(super) fn record_unmatched_producers(
                     "unmatched-producer was not judged because unresolved workers at {} could handle this queue",
                     blocking_workers.join(", ")
                 ),
+                kind: DiagnosticKind::AnalysisNote,
             });
         }
     }

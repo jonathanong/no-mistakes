@@ -13,30 +13,22 @@ pub(crate) fn note_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpressio
         Expression::Identifier(id) => Some(id.name.to_string()),
         other => visitor.imported_member_binding(other),
     };
+    let Some(binding) = binding else {
+        return;
+    };
     match member.property.name.as_str() {
         "add"
-            if binding.as_deref().is_some_and(|name| {
-                matches!(
-                    visitor.producer_binding(name, call.span.start),
-                    ProducerBinding::Local(at) if visitor.flow_bindings.contains(&at)
-                )
-            }) =>
+            if matches!(
+                visitor.producer_binding(&binding, call.span.start),
+                ProducerBinding::Local(at) if visitor.flow_bindings.contains(&at)
+            ) =>
         {
             super::flow::note_flow(visitor, call);
         }
-        "add" => {
-            if binding.is_some() {
-                note_add(visitor, call, binding);
-            }
-        }
-        "addBulk" => {
-            if binding.is_some() {
-                note_bulk(visitor, call, binding);
-            }
-        }
+        "add" => note_add(visitor, call, binding),
+        "addBulk" => note_bulk(visitor, call, binding),
         "upsertJobScheduler"
-            if binding.is_some()
-                && (!visitor.facts.imports.is_empty() || !visitor.namespace_imports.is_empty()) =>
+            if !visitor.facts.imports.is_empty() || !visitor.namespace_imports.is_empty() =>
         {
             super::flow::note_scheduler(visitor, call, binding);
         }
@@ -44,19 +36,19 @@ pub(crate) fn note_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpressio
     }
 }
 
-fn note_add(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding: Option<String>) {
+fn note_add(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding: String) {
     let evidence = evidence_at(call, 2, &visitor.object_bindings);
     push_site(
         visitor,
         call.span().start,
-        binding,
+        Some(binding),
         None,
         job_at(visitor, call, 0),
         evidence,
     );
 }
 
-fn note_bulk(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding: Option<String>) {
+fn note_bulk(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding: String) {
     let Some(Expression::ArrayExpression(array)) = call
         .arguments
         .first()
@@ -66,7 +58,7 @@ fn note_bulk(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding:
         push_site(
             visitor,
             call.span().start,
-            binding,
+            Some(binding),
             None,
             None,
             JobOptionEvidence::open(),
@@ -81,7 +73,7 @@ fn note_bulk(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding:
             ArrayExpressionElement::SpreadElement(spread) => push_site(
                 visitor,
                 spread.span().start,
-                binding.clone(),
+                Some(binding.clone()),
                 None,
                 None,
                 JobOptionEvidence::open(),
@@ -89,7 +81,7 @@ fn note_bulk(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding:
             _ => push_site(
                 visitor,
                 element.span().start,
-                binding.clone(),
+                Some(binding.clone()),
                 None,
                 None,
                 JobOptionEvidence::open(),
@@ -98,16 +90,12 @@ fn note_bulk(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding:
     }
 }
 
-fn note_bulk_item(
-    visitor: &mut QueueVisitor<'_>,
-    object: &ObjectExpression<'_>,
-    binding: Option<String>,
-) {
+fn note_bulk_item(visitor: &mut QueueVisitor<'_>, object: &ObjectExpression<'_>, binding: String) {
     let evidence = read_member(object, "opts", &visitor.object_bindings).unwrap_or_default();
     push_site(
         visitor,
         object.span().start,
-        binding,
+        Some(binding),
         None,
         member_string(object, "name"),
         evidence,

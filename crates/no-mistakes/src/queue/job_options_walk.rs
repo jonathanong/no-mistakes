@@ -1,7 +1,8 @@
 use super::super::extract_model::{FileFacts, JobOptionEvidence, JobOptionSpread};
 use super::super::object_bindings::ObjectBindings;
 use super::retention_read;
-use crate::fx::{FxHashMap, FxHashSet};
+use super::traversal::DeclarationTraversal;
+use crate::fx::FxHashMap;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 
 pub(in crate::queue) fn read(
@@ -97,7 +98,7 @@ pub(in crate::queue) fn finish(facts: &mut FileFacts, bindings: &ObjectBindings<
         bindings,
         objects: FxHashMap::default(),
         members: FxHashMap::default(),
-        active: FxHashSet::default(),
+        traversal: DeclarationTraversal::default(),
     };
     let wrappers = facts
         .enqueue_wrappers
@@ -116,7 +117,7 @@ struct SpreadResolver<'binding, 'ast> {
     bindings: &'binding ObjectBindings<'ast>,
     objects: FxHashMap<u32, JobOptionEvidence>,
     members: FxHashMap<u32, Option<JobOptionEvidence>>,
-    active: FxHashSet<u32>,
+    traversal: DeclarationTraversal,
 }
 
 impl SpreadResolver<'_, '_> {
@@ -144,13 +145,14 @@ impl SpreadResolver<'_, '_> {
         if let Some(found) = self.objects.get(&declaration) {
             return found.clone();
         }
-        if !self.active.insert(declaration) {
+        let Some(cycle_count) = self.traversal.enter(declaration) else {
             return JobOptionEvidence::open();
-        }
+        };
         let mut evidence = read(value, self.bindings);
         self.fold_keys(&mut evidence);
-        self.active.remove(&declaration);
-        self.objects.insert(declaration, evidence.clone());
+        if self.traversal.complete(declaration, cycle_count) {
+            self.objects.insert(declaration, evidence.clone());
+        }
         evidence
     }
 
@@ -161,9 +163,9 @@ impl SpreadResolver<'_, '_> {
         if let Some(found) = self.members.get(&declaration) {
             return found.clone();
         }
-        if !self.active.insert(declaration) {
+        let Some(cycle_count) = self.traversal.enter(declaration) else {
             return Some(JobOptionEvidence::open());
-        }
+        };
         let member = match value {
             Expression::ObjectExpression(object) => {
                 read_member(object, "opts", self.bindings).map(|mut opts| {
@@ -174,8 +176,9 @@ impl SpreadResolver<'_, '_> {
             Expression::Identifier(id) => self.opts_member(&(&**id).into()),
             _ => Some(JobOptionEvidence::open()),
         };
-        self.active.remove(&declaration);
-        self.members.insert(declaration, member.clone());
+        if self.traversal.complete(declaration, cycle_count) {
+            self.members.insert(declaration, member.clone());
+        }
         member
     }
 }
@@ -186,3 +189,7 @@ impl<'ast> SpreadResolver<'_, 'ast> {
         Some((binding.resolve_at, binding.value()?))
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "job_options_walk_tests.rs"]
+mod tests;

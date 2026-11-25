@@ -15,10 +15,10 @@ const perProcess: QueueRateLimitFindingKind = "worker-rate-limit-per-process";
 const unrelated: QueueRateLimitFindingKind = "unmatched-worker";
 const otherKind: QueueCheckFinding["kind"] = "worker-rate-limit-per-process";
 
-const bareOptions: QueueCheckOptions = { root: "." };
+const bareOptions = { root: ".", config: "selected.yml" } satisfies QueueCheckOptions;
 const batched: BatchedQueueCheckOptions = { includeDiagnostics: true };
 async function checkOverloads() {
-  const bare: QueueCheckFinding[] = await queueCheck({ root: "." });
+  const bare: QueueCheckFinding[] = await queueCheck(bareOptions);
   const detailed: QueueCheckReport = await queueCheck({
     root: ".",
     includeDiagnostics: true,

@@ -1,6 +1,8 @@
 use super::CheckTask;
 use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactMap;
+use no_mistakes::codebase::rules::{suppress_domain_findings_with_sources, SuppressionTarget};
+use no_mistakes::codebase::ts_source::SourceStore;
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::queue::{
     format_aggregate_warning, is_worker_rate_limit_unresolved_diagnostic, CheckFinding,
@@ -13,6 +15,7 @@ pub(crate) fn run_queue_check(
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
     session: &no_mistakes::codebase::analysis_session::AnalysisSession,
+    sources: &SourceStore,
 ) -> Result<CheckTask<Vec<CheckFinding>>> {
     let (result, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.queues",
@@ -28,22 +31,35 @@ pub(crate) fn run_queue_check(
                         facts,
                         session,
                     )?;
-                let analysis_warnings = report
+                let mut warnings = report
                     .diagnostics
-                    .iter()
-                    .filter(|diagnostic| is_worker_rate_limit_unresolved_diagnostic(diagnostic))
-                    .map(format_aggregate_warning)
+                    .into_iter()
+                    .filter(is_worker_rate_limit_unresolved_diagnostic)
                     .collect();
-                (report.check, analysis_warnings)
+                let suppressed = suppress_domain_findings_with_sources(
+                    root,
+                    &mut warnings,
+                    sources,
+                    |diagnostic| SuppressionTarget {
+                        domain: "queues",
+                        rule: "queues-check",
+                        file: &diagnostic.file,
+                        line: Some(diagnostic.line),
+                        reason: &diagnostic.message,
+                        identity: None,
+                    },
+                );
+                let analysis_warnings = warnings.iter().map(format_aggregate_warning).collect();
+                (report.check, analysis_warnings, suppressed)
             } else {
-                (Vec::new(), Vec::new())
+                (Vec::new(), Vec::new(), Vec::new())
             })
         },
     );
-    let (findings, analysis_warnings) = result?;
+    let (findings, analysis_warnings, pre_suppressed) = result?;
     Ok(CheckTask {
         findings,
-        pre_suppressed: Vec::new(),
+        pre_suppressed,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),

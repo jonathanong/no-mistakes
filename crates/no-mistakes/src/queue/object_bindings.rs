@@ -180,3 +180,7 @@ impl<'a> Collector<'a> {
 
 #[path = "object_bindings_visit.rs"]
 mod visit;
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "object_bindings_test_hook.rs"]
+pub(super) mod test_hook;

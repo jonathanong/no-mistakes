@@ -14,6 +14,12 @@ fn queue_required_options_use_the_selected_config_in_prepared_reports() {
         let standalone: Value = serde_json::from_str(&standalone).unwrap();
         assert_eq!(standalone.as_array().unwrap().len(), default_count);
 
+        let explicit =
+            crate::napi_api::queue_check_json_impl(crate::napi_api::options::test_json_arg(
+                json!({ "root": root, "config": "explicit.yml" }).to_string(),
+            ))
+            .unwrap();
+        let explicit: Value = serde_json::from_str(&explicit).unwrap();
         for traversal in [false, true] {
             let mut reports = vec![json!({ "type": "queueCheck" }), json!({ "type": "check" })];
             if traversal {
@@ -28,6 +34,7 @@ fn queue_required_options_use_the_selected_config_in_prepared_reports() {
             let queue_check = &output["reports"][0]["result"];
             let aggregate = &output["reports"][1]["result"]["queues"];
             assert_eq!(queue_check, aggregate, "{directory}: {output}");
+            assert_eq!(queue_check, &explicit, "{directory}: {output}");
             let findings = queue_check.as_array().unwrap();
             assert_eq!(findings.len(), explicit_count, "{directory}: {output}");
             for finding in findings {
