@@ -19,9 +19,10 @@ rules:
 ```
 
 `workflows` lists exact repository-relative `.yml` and `.yaml` workflow paths.
-The default empty list selects no files. Rule and project scopes can narrow
-the list further. Use the workflows that publish required checks in your
-branch protection or rulesets.
+The default empty list selects no files. Every configured path must match a
+workflow file; renamed, deleted, or misspelled entries fail the check early.
+Rule and project scopes can narrow the list further. Use the workflows that
+publish required checks in your branch protection or rulesets.
 
 ## What it catches
 
@@ -68,8 +69,13 @@ results from the selected jobs.
 
 The rule inspects the workflow declaration. It does not query GitHub or
 verify job conditions, activity types, branch filters, or the required
-status check's settings. A selected workflow that cannot be read or parsed
-follows the shared `unanalyzable` policy.
+status check's settings. A selected workflow that cannot be read or parsed, or
+that uses an unrecognised `on` / `on.pull_request` / `on.pull_request_target`
+shape (such as a non-mapping value, a custom YAML tag, or a YAML merge key),
+follows the shared `unanalyzable` policy. When a PR trigger reuses a mapping
+through a YAML alias, the finding is reported at the alias use site rather than
+the anchor definition, so a suppression comment on an anchor (for example on
+`push:`) does not suppress the aliased PR trigger.
 
 ## Suppression
 

@@ -1,5 +1,5 @@
 use super::file_diagnostics::{self, InputUncertainty};
-use super::github_actions_workflow_files::{gha_kind, job_lines::document::Document};
+use super::github_actions_workflow_files::gha_kind;
 use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
@@ -8,6 +8,9 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+#[path = "github_actions_no_required_pr_path_filters/inspect.rs"]
+mod inspect;
 
 pub const RULE_ID: &str = "github-actions-no-required-pr-path-filters";
 
@@ -50,11 +53,26 @@ pub fn diagnostics_with_files_and_sources(
             sources,
             |path| options.workflows.contains(&relative_slash_path(root, path)),
         )?;
+        let selected_paths: BTreeSet<String> = selected
+            .iter()
+            .map(|path| relative_slash_path(root, path))
+            .collect();
+        let missing: Vec<&str> = options
+            .workflows
+            .iter()
+            .filter(|workflow| !selected_paths.contains(workflow.as_str()))
+            .map(String::as_str)
+            .collect();
+        ensure!(
+            missing.is_empty(),
+            "{RULE_ID}: configured workflows matched no workflow file: {}",
+            missing.join(", ")
+        );
         let findings = selected
             .par_iter()
             .flat_map(|path| {
                 let rel = relative_slash_path(root, path);
-                check_file(&rel, path, sources)
+                inspect::check_file(&rel, path, sources)
             })
             .collect();
         output.append(file_diagnostics::application(
@@ -68,58 +86,4 @@ pub fn diagnostics_with_files_and_sources(
         )?);
     }
     Ok(file_diagnostics::sorted(output))
-}
-
-fn check_file(rel: &str, path: &Path, sources: &SourceStore) -> Vec<RuleFinding> {
-    let value = match sources.parse_yaml_path(path) {
-        Ok(value) => value,
-        Err(error) => {
-            return vec![finding(rel, 1, "unanalyzable", format!(
-                "Cannot inspect PR trigger filters for {rel} ({error}). Repair the workflow YAML and run the check again."
-            ))];
-        }
-    };
-    let Some(triggers) = value.get("on") else {
-        return Vec::new();
-    };
-    let filters: Vec<_> = ["pull_request", "pull_request_target"]
-        .into_iter()
-        .flat_map(|event| {
-            ["paths", "paths-ignore"]
-                .into_iter()
-                .filter_map(move |key| {
-                    triggers.get(event)?.get(key)?;
-                    Some((event, key))
-                })
-        })
-        .collect();
-    if filters.is_empty() {
-        return Vec::new();
-    }
-    let locations = sources
-        .read_path(path)
-        .ok()
-        .and_then(|source| Document::parse(&source));
-    filters.into_iter().map(|(event, key)| {
-        let line = locations.as_ref().and_then(|doc| {
-            let trigger = doc.field(*doc.roots().first()?, "on")?;
-            doc.field_line(doc.field(trigger, event)?, key)
-        }).unwrap_or(1);
-        let target = format!("on.{event}.{key}");
-        finding(rel, line, &target, format!(
-            "{rel}:{line}: remove the workflow-level path filter `{target}` from the required PR trigger. Select work inside the workflow and keep the required gate reporting on every PR."
-        ))
-    }).collect()
-}
-
-fn finding(file: &str, line: usize, target: &str, message: String) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.into(),
-        file: file.into(),
-        line,
-        message,
-        import: None,
-        target: Some(target.into()),
-        causes: Vec::new(),
-    }
 }

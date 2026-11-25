@@ -5,7 +5,17 @@ const RULE: &str = "github-actions-no-required-pr-path-filters";
 #[test]
 fn github_actions_required_pr_path_filters_json_matches_snapshot() {
     let root = rules_path(RULE, "fixture", "");
-    let cases = ["default", "disabled", "invalid", "advisory"].map(|case| {
+    let cases = [
+        "default",
+        "disabled",
+        "invalid",
+        "missing",
+        "advisory",
+        "aliased",
+        "unrecognised",
+        "unrecognised-advisory",
+    ]
+    .map(|case| {
         (
             case,
             root.clone(),
