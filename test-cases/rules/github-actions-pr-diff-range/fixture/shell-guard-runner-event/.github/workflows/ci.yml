@@ -1,0 +1,23 @@
+name: Runner GITHUB_EVENT_NAME guard
+on: [pull_request, merge_group]
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    env:
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+    steps:
+      - run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"

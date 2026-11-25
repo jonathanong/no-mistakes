@@ -107,9 +107,7 @@ fn scan_file(
                             .or_default()
                             .extend(triggers.relations(&versions[0].lock_writes.trigger_writes));
                     }
-                    for write in &versions[0].lock_writes.writes {
-                        writes.insert(id, write, call);
-                    }
+                    writes.insert(id, &versions[0].lock_writes, call);
                 }
             }
         }

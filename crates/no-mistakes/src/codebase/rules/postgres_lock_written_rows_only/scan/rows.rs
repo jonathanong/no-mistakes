@@ -28,7 +28,7 @@ pub(super) fn check_transaction(
     if unresolved {
         output.unresolved(site, "transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set");
     } else if let Some(relation) = &lock.relation {
-        if !written_by_trigger {
+        if !written_by_trigger && !writes.matches_upsert(id, relation, lock, site.call) {
             let (candidates, ambiguous) = writes.for_relation(id, relation);
             check(output, site, lock, candidates, relation, ambiguous);
         }

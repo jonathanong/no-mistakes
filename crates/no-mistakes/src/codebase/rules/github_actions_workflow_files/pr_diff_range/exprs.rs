@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+pub(super) const PULL_REQUEST_READ: &str = "github.event.pull_request.";
+
 /// What one end of a diff range names, as far as this rule can tell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum End {
@@ -17,14 +19,11 @@ pub(super) fn extract(script: &str) -> (String, Vec<String>) {
     let mut text = String::new();
     let mut exprs = Vec::new();
     let mut rest = script;
-    while let Some(start) = rest.find("${{") {
-        let Some(len) = rest[start + 3..].find("}}") else {
-            break;
-        };
-        text.push_str(&rest[..start]);
+    while let Some((prefix, expression, suffix)) = split_expression(rest) {
+        text.push_str(prefix);
         text.push_str(&format!("__ghx{}__", exprs.len()));
-        exprs.push(rest[start + 3..start + 3 + len].trim().to_string());
-        rest = &rest[start + 3 + len + 2..];
+        exprs.push(expression.trim().to_string());
+        rest = suffix;
     }
     text.push_str(rest);
     (text, exprs)
@@ -47,23 +46,24 @@ fn classify_literal(piece: &str, exprs: &[String]) -> End {
         .strip_prefix("refs/remotes/origin/")
         .or_else(|| piece.strip_prefix("origin/"))
         .unwrap_or(piece);
-    let Some(index) = piece
+    let Some(expression) = piece
         .strip_prefix("__ghx")
         .and_then(|rest| rest.strip_suffix("__"))
         .and_then(|digits| digits.parse::<usize>().ok())
+        .and_then(|index| exprs.get(index))
     else {
         return End::Other;
     };
-    match exprs.get(index).map(String::as_str) {
-        Some("github.event.pull_request.base.sha") => End::BaseSha,
-        Some("github.base_ref") => End::BaseRef,
-        Some("github.event.pull_request.head.sha") => End::HeadSha,
-        Some("github.sha") => End::GithubSha,
-        _ => End::Other,
+    match expression.as_str() {
+        "github.event.pull_request.base.sha" => End::BaseSha,
+        "github.base_ref" => End::BaseRef,
+        "github.event.pull_request.head.sha" => End::HeadSha,
+        "github.sha" => End::GithubSha,
+        expression => fallback_end(expression).unwrap_or(End::Other),
     }
 }
 
-fn variable(piece: &str) -> Option<&str> {
+pub(super) fn variable(piece: &str) -> Option<&str> {
     let name = piece
         .strip_prefix("${")
         .and_then(|rest| rest.strip_suffix('}'))
@@ -73,4 +73,44 @@ fn variable(piece: &str) -> Option<&str> {
     (first == '_' || first.is_ascii_alphabetic())
         .then_some(name)
         .filter(|_| chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric()))
+}
+
+fn fallback_end(expression: &str) -> Option<End> {
+    let (left, right) = expression.split_once("||")?;
+    match (left.trim(), right.trim()) {
+        ("github.event.pull_request.base.sha", "github.event.merge_group.base_sha")
+        | ("github.event.merge_group.base_sha", "github.event.pull_request.base.sha") => {
+            Some(End::BaseSha)
+        }
+        ("github.event.pull_request.head.sha", "github.event.merge_group.head_sha")
+        | ("github.event.merge_group.head_sha", "github.event.pull_request.head.sha") => {
+            Some(End::HeadSha)
+        }
+        _ => None,
+    }
+}
+
+fn split_expression(text: &str) -> Option<(&str, &str, &str)> {
+    let (prefix, tail) = text.split_once("${{")?;
+    let (expression, suffix) = tail.split_once("}}")?;
+    Some((prefix, expression, suffix))
+}
+
+pub(super) fn unguarded_pull_request_read(text: &str) -> Option<usize> {
+    let mut rest = text;
+    let mut offset = 0;
+    while let Some((prefix, expression, suffix)) = split_expression(rest) {
+        let read = prefix.find(PULL_REQUEST_READ).or_else(|| {
+            expression
+                .find(PULL_REQUEST_READ)
+                .filter(|_| fallback_end(expression).is_none())
+                .map(|read| prefix.len() + 3 + read)
+        });
+        if let Some(read) = read {
+            return Some(offset + read);
+        }
+        offset += rest.len() - suffix.len();
+        rest = suffix;
+    }
+    rest.find(PULL_REQUEST_READ).map(|read| offset + read)
 }
