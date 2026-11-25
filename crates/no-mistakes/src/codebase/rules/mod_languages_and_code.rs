@@ -25,6 +25,7 @@ pub mod rust_no_inline_tests;
 pub mod rust_rules_combined;
 pub mod server_route_client_boundary;
 pub mod shellcheck_runner;
+pub mod swift_no_unguarded_darwin_import;
 pub mod swift_no_raw_print;
 pub mod swift_viewmodel_main_actor;
 pub mod unconstructed_error_class;

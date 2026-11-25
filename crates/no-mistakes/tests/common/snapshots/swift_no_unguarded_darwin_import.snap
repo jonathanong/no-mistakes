@@ -1,0 +1,92 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_and_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/Imports.swift",
+          "line": 30,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import func Darwin.getpagesize"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 31,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@preconcurrency import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 32,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import /* system module */ `Darwin`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/ClockTests.swift",
+          "line": 2,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 30,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import func Darwin.getpagesize"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 31,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@preconcurrency import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 32,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import /* system module */ `Darwin`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

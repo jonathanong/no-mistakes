@@ -148,6 +148,10 @@ Text-based Playwright selector edges are approximate. Prefer exact configured
 test ID attributes and literal locator values for strong route/component
 coverage.
 
+`check` can run the opt-in `swift-no-unguarded-darwin-import` rule on configured
+portable Swift test paths. It flags unconditional imports and leaves the
+meaning of compilation conditions to Swift.
+
 ## Structural / AST-pattern blast radius — use `ast-grep`
 
 `no-mistakes` answers **graph-aware** and **config-aware** queries. It does not

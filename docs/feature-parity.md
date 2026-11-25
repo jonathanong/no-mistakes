@@ -957,6 +957,10 @@ non-production. v1 emits `dart test`, not `flutter test`.
 
 ## Shared Domain Rules
 
+The CLI and async Node check APIs share the opt-in
+[`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
+rule for portable Swift files.
+
 Route, queue, and Kafka extractors are language-specific visitors. Route
 visitors emit `route` edges. HTTP callers emit `http`. Queue and Kafka
 visitors emit `queue-enqueue` and `queue-worker`. `server-route` and

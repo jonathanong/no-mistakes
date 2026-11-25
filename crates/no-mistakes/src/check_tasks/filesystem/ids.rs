@@ -90,6 +90,7 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::ZSH_READONLY_PARAMETER,
     rules::STRICT_PACKAGE_LAYOUT,
     rules::STRUCTURED_CONFIG_POLICY,
+    rules::SWIFT_NO_UNGUARDED_DARWIN_IMPORT,
     rules::SWIFT_NO_RAW_PRINT,
     rules::SWIFT_VIEWMODEL_MAIN_ACTOR,
     rules::TEST_EMAIL_DOMAIN_POLICY,

@@ -57,6 +57,15 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
+        SWIFT_NO_UNGUARDED_DARWIN_IMPORT => {
+            swift_no_unguarded_darwin_import::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         SWIFT_NO_RAW_PRINT => {
             swift_no_raw_print::check_with_files_sources_and_deferred_suppression(
                 root,
