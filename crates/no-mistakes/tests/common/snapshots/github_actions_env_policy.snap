@@ -64,6 +64,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "non-mapping-scopes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/actions/opaque/action.yml",
+          "line": 4,
+          "message": ".github/actions/opaque/action.yml: composite action sets `steps` to `${{ fromJSON(vars.STEPS) }}` instead of a sequence, which cannot be checked statically. Write literal workflow mappings and step sequences so the env policy can verify them, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "steps: ${{ fromJSON(vars.STEPS) }}",
+          "target": "steps"
+        },
+        {
+          "file": ".github/workflows/jobs.yml",
+          "line": 3,
+          "message": ".github/workflows/jobs.yml: workflow sets `jobs` to `${{ fromJSON(vars.JOBS) }}` instead of a mapping, which cannot be checked statically. Write literal workflow mappings and step sequences so the env policy can verify them, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "jobs: ${{ fromJSON(vars.JOBS) }}",
+          "target": "jobs"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "line": 11,
+          "message": ".github/workflows/shapes.yml: job \"verify\" step 1 is `${{ vars.STEP }}` instead of a mapping, which cannot be checked statically. Write literal workflow mappings and step sequences so the env policy can verify them, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "- ${{ vars.STEP }}",
+          "target": "steps"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "line": 4,
+          "message": ".github/workflows/shapes.yml: job \"opaque\" is `${{ vars.JOB }}` instead of a mapping, which cannot be checked statically. Write literal workflow mappings and step sequences so the env policy can verify them, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "opaque: ${{ vars.JOB }}",
+          "target": "jobs"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "line": 7,
+          "message": ".github/workflows/shapes.yml: job \"build\" sets `steps` to `${{ fromJSON(vars.STEPS) }}` instead of a sequence, which cannot be checked statically. Write literal workflow mappings and step sequences so the env policy can verify them, or suppress this line.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "steps: ${{ fromJSON(vars.STEPS) }}",
+          "target": "steps"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {
