@@ -5,6 +5,8 @@ use std::ops::Range;
 
 mod branch;
 mod eval;
+mod mutations;
+mod scan;
 
 pub(super) fn excluded_on_merge_group(
     script: &str,
@@ -62,11 +64,18 @@ pub(super) struct BranchState {
 
 impl<'a> GuardScan<'a> {
     fn run(&mut self) {
+        if self
+            .commands
+            .first()
+            .is_some_and(|first| scan::has_arithmetic_command(&self.script[..self.positions[first.anchor]]))
+        {
+            return;
+        }
         let mut in_double_bracket = false;
         let mut idx = 0;
         while idx < self.commands.len() {
             let slice = self.slice(idx);
-            if keyword(slice) == "if" {
+            if scan::keyword(slice) == "if" {
                 let Some(next) = self.scan_if(idx) else {
                     break;
                 };
@@ -74,10 +83,13 @@ impl<'a> GuardScan<'a> {
                 continue;
             }
             update_double_bracket(&self.commands[idx].words, &mut in_double_bracket);
-            if unsupported_control(slice, in_double_bracket) {
+            if scan::unsupported_control(slice, in_double_bracket)
+                || scan::has_arithmetic_command(slice)
+            {
                 break;
             }
-            eval::record_mutations(
+            mutations::record_mutations(
+                slice,
                 &self.commands[idx].words,
                 &mut self.mutated_vars,
                 &mut self.mutated_all,
@@ -102,9 +114,10 @@ impl<'a> GuardScan<'a> {
         record: bool,
         state: &mut BranchState,
     ) -> bool {
-        let (slice, words) = match keyword(slice) {
+        let (slice, words) = match scan::keyword(slice) {
             "then" => (slice[4..].trim_start(), drop_leading_word(words, "then")),
             "else" => (slice[4..].trim_start(), drop_leading_word(words, "else")),
+            "elif" if state.depth > 0 => (slice[4..].trim_start(), drop_leading_word(words, "elif")),
             _ => (slice, words),
         };
         self.consume_body(slice, words, record, state)
@@ -112,43 +125,64 @@ impl<'a> GuardScan<'a> {
 
     pub(super) fn consume_body(
         &mut self,
-        slice: &str,
-        words: &[Word],
+        mut slice: &str,
+        mut words: &[Word],
         record: bool,
         state: &mut BranchState,
     ) -> bool {
         let was_in_bracket = state.in_double_bracket;
         update_double_bracket(words, &mut state.in_double_bracket);
-        let trimmed = slice
-            .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
-        let ok = match keyword(trimmed) {
-            "if" => {
-                state.depth += 1;
-                true
-            }
-            "fi" if state.depth > 0 => {
-                state.depth -= 1;
-                true
-            }
-            "elif" if state.depth > 0 => true,
-            _ => !unsupported_control(trimmed, was_in_bracket),
-        };
-        if ok && record {
-            eval::record_mutations(words, &mut self.mutated_vars, &mut self.mutated_all);
+        if scan::has_arithmetic_command(slice) {
+            return false;
         }
-        ok
+        loop {
+            let trimmed = slice
+                .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
+            match scan::keyword(trimmed) {
+                "if" => {
+                    state.depth += 1;
+                    slice = trimmed[2..].trim_start();
+                    words = drop_leading_word(drop_leading_bangs(words), "if");
+                }
+                "fi" if state.depth > 0 => {
+                    state.depth -= 1;
+                    slice = trimmed[2..].trim_start();
+                    words = drop_leading_word(drop_leading_bangs(words), "fi");
+                    if words.is_empty() {
+                        if record && scan::has_complex_expansion(slice) {
+                            self.mutated_all = true;
+                        }
+                        return true;
+                    }
+                }
+                _ => {
+                    if scan::unsupported_control(trimmed, was_in_bracket) {
+                        return false;
+                    }
+                    if record {
+                        mutations::record_mutations(
+                            slice,
+                            words,
+                            &mut self.mutated_vars,
+                            &mut self.mutated_all,
+                        );
+                    }
+                    return true;
+                }
+            }
+        }
     }
+}
+
+fn drop_leading_bangs(mut words: &[Word]) -> &[Word] {
+    while words.first().is_some_and(|word| word.text == "!") {
+        words = &words[1..];
+    }
+    words
 }
 
 pub(super) fn drop_leading_word<'a>(words: &'a [Word], kw: &str) -> &'a [Word] {
     &words[usize::from(words.first().is_some_and(|word| word.text == kw))..]
-}
-
-pub(super) fn keyword(source: &str) -> &str {
-    source
-        .split(|ch: char| ch.is_whitespace() || matches!(ch, ';' | '|' | '&'))
-        .next()
-        .unwrap_or_default()
 }
 
 fn update_double_bracket(words: &[Word], in_double_bracket: &mut bool) {
@@ -159,24 +193,4 @@ fn update_double_bracket(words: &[Word], in_double_bracket: &mut bool) {
             *in_double_bracket = false;
         }
     }
-}
-
-fn unsupported_control(source: &str, in_double_bracket: bool) -> bool {
-    let source = source
-        .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
-    let word = keyword(source);
-    (!in_double_bracket && source.starts_with(['(', '{']))
-        || matches!(
-            word,
-            "if" | "elif"
-                | "else"
-                | "fi"
-                | "case"
-                | "while"
-                | "until"
-                | "for"
-                | "select"
-                | "function"
-        )
-        || word.ends_with("()")
 }

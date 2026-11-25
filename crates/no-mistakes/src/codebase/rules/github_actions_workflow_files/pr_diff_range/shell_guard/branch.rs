@@ -1,5 +1,6 @@
 use super::eval::{eval_condition, OnMergeGroup};
-use super::{drop_leading_word, keyword, BranchState, GuardScan};
+use super::scan::{self, keyword};
+use super::{drop_leading_word, BranchState, GuardScan};
 
 enum Phase {
     InCondition {
@@ -26,6 +27,11 @@ impl GuardScan<'_> {
             depth: 0,
             in_double_bracket: false,
         };
+        let start_slice = self.slice(start_idx);
+        let start_words = drop_leading_word(&self.commands[start_idx].words, "if");
+        if !self.consume_body(start_slice[2..].trim_start(), start_words, true, &mut state) {
+            return None;
+        }
         let mut pending = Vec::new();
         let mut idx = start_idx + 1;
         while idx < self.commands.len() {
@@ -84,6 +90,15 @@ impl GuardScan<'_> {
                                 if excluded {
                                     pending.push(body_start..cmd_start);
                                 }
+                                let cond_words = drop_leading_word(&cmd.words, "elif");
+                                if !self.consume_body(
+                                    slice[4..].trim_start(),
+                                    cond_words,
+                                    !already_taken,
+                                    &mut state,
+                                ) {
+                                    return None;
+                                }
                                 phase = Phase::InCondition {
                                     cond_start: cmd_start,
                                     cond_cmd_idx: idx,
@@ -112,6 +127,12 @@ impl GuardScan<'_> {
                             "fi" => {
                                 if excluded {
                                     pending.push(body_start..cmd_start);
+                                }
+                                let tail = &slice[2..];
+                                if scan::has_complex_expansion(tail)
+                                    || scan::has_arithmetic_command(tail)
+                                {
+                                    self.mutated_all = true;
                                 }
                                 self.excluded.extend(pending);
                                 return Some(idx + 1);
