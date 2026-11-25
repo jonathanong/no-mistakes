@@ -1,4 +1,4 @@
-use super::merge_keys::expand_located;
+use super::merge_keys::{expand_located, KeyLocation};
 use crate::fx::FxHashMap;
 use granit_parser::{Event, Parser, ScalarStyle};
 use serde_yaml::Value;
@@ -17,6 +17,7 @@ struct Node {
 enum Kind {
     Scalar,
     MergeKey,
+    LiteralMergeKey,
     Mapping(Vec<usize>),
     Sequence(Vec<usize>),
     Alias(usize),
@@ -48,6 +49,9 @@ impl MergeLocations {
                 Event::Scalar(text, ScalarStyle::Plain, anchor, None) if text == "<<" => {
                     (anchor, Kind::MergeKey)
                 }
+                Event::Scalar(text, _, anchor, _) if text == "<<" => {
+                    (anchor, Kind::LiteralMergeKey)
+                }
                 Event::Scalar(_, _, anchor, _) => (anchor, Kind::Scalar),
                 // The parser emits Alias only after emitting its anchor node.
                 Event::Alias(anchor) => (0, Kind::Alias(anchors[&anchor])),
@@ -75,32 +79,36 @@ impl MergeLocations {
     }
 
     pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), (usize, String)> {
-        let lines = self
-            .roots
-            .get(index)
-            .copied()
-            .flatten()
-            .map_or_else(FxHashMap::default, |root| self.key_lines(root, value));
+        let root = self.roots.get(index).copied().flatten();
+        let fallback_line = root.map_or(1, |root| self.nodes[root].line);
+        let locations =
+            root.map_or_else(FxHashMap::default, |root| self.key_locations(root, value));
         expand_located(value, &|key| {
-            key.as_str()
-                .and_then(|key| lines.get(&key.as_ptr()).copied())
+            locations.get(&key.as_ptr()).copied().ok_or_else(|| {
+                (
+                    fallback_line,
+                    "could not match a YAML `<<` key to its source location".to_string(),
+                )
+            })
         })
     }
 
-    fn merge_line(&self, key: usize) -> Option<usize> {
+    fn key_location(&self, key: usize) -> Option<KeyLocation> {
         let node = &self.nodes[key];
-        match node.kind {
-            Kind::MergeKey => Some(node.line),
-            Kind::Alias(anchor) if matches!(self.nodes[anchor].kind, Kind::MergeKey) => {
-                Some(node.line)
-            }
+        let kind = match node.kind {
+            Kind::Alias(anchor) => &self.nodes[anchor].kind,
+            _ => &node.kind,
+        };
+        match kind {
+            Kind::MergeKey => Some(KeyLocation::Merge(node.line)),
+            Kind::LiteralMergeKey => Some(KeyLocation::Literal),
             _ => None,
         }
     }
 
-    // Expansion moves YAML keys in place. Their string allocations retain
-    // their identity even when a merge moves an entry into a different map.
-    fn key_lines(&self, root: usize, value: &Value) -> FxHashMap<*const u8, usize> {
+    // Expansion moves YAML keys in place. A lost string identity is an error
+    // because only a key matched to a literal source node can be left intact.
+    fn key_locations(&self, root: usize, value: &Value) -> FxHashMap<*const u8, KeyLocation> {
         let mut lines = FxHashMap::default();
         let mut pending = vec![(root, value)];
         while let Some((id, value)) = pending.pop() {
@@ -116,8 +124,8 @@ impl MergeLocations {
                     let (marks, _) = children.as_chunks::<2>();
                     for ((key, value), &[key_mark, value_mark]) in mapping.iter().zip(marks) {
                         if let Some(key) = key.as_str().filter(|key| *key == "<<") {
-                            if let Some(line) = self.merge_line(key_mark) {
-                                lines.insert(key.as_ptr(), line);
+                            if let Some(location) = self.key_location(key_mark) {
+                                lines.insert(key.as_ptr(), location);
                             }
                         }
                         pending.push((value_mark, value));
