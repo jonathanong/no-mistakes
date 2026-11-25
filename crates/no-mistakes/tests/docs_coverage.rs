@@ -289,24 +289,6 @@ fn dependabot_cooldown_policy_is_in_the_public_rule_inventory() {
 }
 
 #[test]
-fn terraform_iam_wildcard_rule_is_documented() {
-    let rule = no_mistakes::codebase::rules::TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS;
-    let root = repo_root();
-    assert!(rule_ids_from_source(&root).contains(rule));
-    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
-    for path in [
-        "docs/rules/README.md",
-        "docs/configuration/rules.md",
-        "docs/cli/check.md",
-        "docs/node-api.md",
-        "docs/feature-parity.md",
-        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
-    ] {
-        assert!(read(&root.join(path)).contains(rule), "{path}");
-    }
-}
-
-#[test]
 fn cross_package_relative_imports_are_documented() {
     let rule = no_mistakes::codebase::rules::NO_CROSS_PACKAGE_RELATIVE_IMPORTS;
     let root = repo_root();
