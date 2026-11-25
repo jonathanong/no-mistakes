@@ -55,8 +55,7 @@ test("standalone library compilation stays inside the 16 GB runner", () => {
     /bash \.github\/scripts\/with-resource-samples\.sh node \.github\/scripts\/standalone-shards\.cjs build target\/standalone-bundle/,
   );
   assert.ok(
-    producer.indexOf("standalone library build:") <
-      producer.indexOf("with-resource-samples.sh"),
+    producer.indexOf("standalone library build:") < producer.indexOf("with-resource-samples.sh"),
   );
   assert.match(
     producer,
@@ -82,7 +81,8 @@ function rustFiles(dir, out = []) {
 
 test("unit-test modules are split across three compile shards", () => {
   const counts = { 0: 0, 1: 0, 2: 0 };
-  const shardLine = /^(\s*)#\[cfg\(all\(test, any\(nm_shard_all, nm_shard_(\d)\)\)\)\]\s*$/;
+  const shardLine =
+    /^(\s*)#\[cfg\(all\(test, any\(nm_shard_all, nm_shard_(\d)(?:, nm_shard_postgres_source)?\)\)\)\]\s*$/;
   const exact = /^(\s*)#\[cfg\(test\)\]\s*$/;
   const attr = /^\s*#\[/;
   const modRe = /^(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z0-9_]+)\b/;
@@ -117,7 +117,7 @@ test("unit-test modules are split across three compile shards", () => {
   assert.ok(helpers < 300, String(helpers));
   const buildRs = readFileSync(join(root, "crates/no-mistakes/build.rs"), "utf8");
   assert.match(buildRs, /nm_shard_all/);
-  assert.match(buildRs, /NM_TEST_SHARD must be 0, 1, or 2/);
+  assert.match(buildRs, /NM_TEST_SHARD must be 0, 1, 2, or postgres-source/);
 });
 
 test("nested test modules inherit the parent shard", () => {
