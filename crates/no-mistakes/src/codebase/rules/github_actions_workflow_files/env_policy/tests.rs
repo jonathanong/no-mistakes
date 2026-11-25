@@ -280,3 +280,22 @@ fn non_mapping_workflow_and_composite_scopes_are_unanalyzable() {
             .unwrap();
     assert!(ignore.findings.is_empty() && ignore.advisories.is_empty());
 }
+
+#[test]
+fn yaml_merge_keys_and_stepless_composite_actions_are_handled() {
+    let opts: Options = serde_yaml::from_str("forbidden: [B]").unwrap();
+    let policy = compile(&opts).unwrap();
+    let workflow = "x-base: &base\n  B: v\n<<: *base\njobs:\n  <<: *base\n  unit:\n    env:\n      <<: *base\n";
+    let value: Value = serde_yaml::from_str(workflow).unwrap();
+    let (findings, undecidable) = scan::check_parsed("w.yml", workflow, &value, &policy);
+    assert!(findings.is_empty());
+    assert_eq!(
+        undecidable.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [3, 5, 8]
+    );
+    let action = "x-base: &base\n  using: composite\nruns:\n  <<: *base\n  using: composite\n";
+    let value: Value = serde_yaml::from_str(action).unwrap();
+    let (findings, undecidable) = scan::check_parsed("a.yml", action, &value, &policy);
+    assert!(findings.is_empty());
+    assert_eq!(undecidable.iter().map(|f| f.line).collect::<Vec<_>>(), [4]);
+}

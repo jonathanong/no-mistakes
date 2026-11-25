@@ -94,3 +94,24 @@ fn parse_error_uses_real_line_and_custom_message_overrides_output() {
         "Custom snapshot update policy message."
     );
 }
+
+#[test]
+fn yaml_merge_keys_report_unanalyzable_in_workflow_jobs_and_env() {
+    let root = crate::test_support::rule_fixture_root(RULE_ID).join("merge-keys");
+    let files = [root.join(".github/workflows/merge.yml")];
+    let sources = source_store_for_files(&files);
+    let out = diagnostics_with_files_and_sources(
+        &root,
+        &config("enabled.yml"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+    let lines: Vec<_> = out.findings.iter().map(|f| f.line).collect();
+    assert_eq!(lines, [3, 5, 9], "{:?}", out.findings);
+    assert!(out
+        .findings
+        .iter()
+        .all(|f| f.target.as_deref() == Some("unanalyzable")));
+}
