@@ -134,6 +134,18 @@ fn shell_compatibility_regression_cases_match_snapshot() {
 }
 
 #[test]
+fn shell_compatibility_loop_budget_matches_snapshot() {
+    let fixture = "test-cases/rules/shell-compatibility/loop-budget";
+    let cases = [
+        case("advise", fixture, "check.yml"),
+        case("report", fixture, "check-report.yml"),
+    ];
+    let report = assert_saved_fixture_report("bash_loop_budget", &cases, &[], &[]);
+    assert_eq!(report["advise"]["exitCode"], 1);
+    assert_eq!(report["report"]["exitCode"], 1);
+}
+
+#[test]
 fn shell_compatibility_rejects_invalid_file_globs() {
     let (_, root, config) = case("invalid_glob", FIXTURE, "invalid-glob.yml");
     let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))

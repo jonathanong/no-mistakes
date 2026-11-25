@@ -151,3 +151,20 @@ use "${brk_bad[@]}"
     let unan: Vec<usize> = res.unanalyzable.iter().map(|(l, _)| *l).collect();
     assert_eq!(unan, vec![54]);
 }
+
+#[test]
+fn nested_loop_budget_reports_uncertainty_and_keeps_weakened_expansions() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/shell-compatibility/loop-budget/deep.sh"
+    ));
+    let result = super::analyze(source);
+    for expected in [72, 82] {
+        assert!(result.unanalyzable.iter().any(|(line, detail)| {
+            *line == expected && detail.contains("file-wide Bash loop replay budget exhausted")
+        }));
+    }
+    assert!(result.findings.contains(&("level_4_third", 55)));
+    assert!(result.findings.contains(&("final", 76)));
+    assert!(result.findings.contains(&("later", 83)));
+}

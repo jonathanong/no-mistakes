@@ -1,0 +1,352 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "deep.sh",
+          "line": 42,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 43,
+          "message": "Cannot prove bash array safety: array `level_7_first` safety could not be proved after loop widening; guard with ${level_7_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_7_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 47,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 48,
+          "message": "Cannot prove bash array safety: array `level_6_first` safety could not be proved after loop widening; guard with ${level_6_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_6_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 52,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 53,
+          "message": "Cannot prove bash array safety: array `level_5_first` safety could not be proved after loop widening; guard with ${level_5_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_5_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 57,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 58,
+          "message": "Cannot prove bash array safety: array `level_4_first` safety could not be proved after loop widening; guard with ${level_4_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_4_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 62,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 63,
+          "message": "Cannot prove bash array safety: array `level_3_first` safety could not be proved after loop widening; guard with ${level_3_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_3_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 67,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 68,
+          "message": "Cannot prove bash array safety: array `level_2_first` safety could not be proved after loop widening; guard with ${level_2_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_2_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 72,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 73,
+          "message": "Cannot prove bash array safety: array `level_1_first` safety could not be proved after loop widening; guard with ${level_1_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_1_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 82,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "deep.sh",
+          "line": 55,
+          "message": "Array `level_4_third` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${level_4_third[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "level_4_second=(\"${level_4_third[@]}\")",
+          "target": "level_4_third"
+        },
+        {
+          "file": "deep.sh",
+          "line": 76,
+          "message": "Array `final` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${final[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${final[@]}\"",
+          "target": "final"
+        },
+        {
+          "file": "deep.sh",
+          "line": 83,
+          "message": "Array `later` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${later[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${later[@]}\"",
+          "target": "later"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 14,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 17,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "deep.sh",
+          "line": 42,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 43,
+          "message": "Cannot prove bash array safety: array `level_7_first` safety could not be proved after loop widening; guard with ${level_7_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_7_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 47,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 48,
+          "message": "Cannot prove bash array safety: array `level_6_first` safety could not be proved after loop widening; guard with ${level_6_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_6_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 52,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 53,
+          "message": "Cannot prove bash array safety: array `level_5_first` safety could not be proved after loop widening; guard with ${level_5_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_5_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 55,
+          "message": "Array `level_4_third` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${level_4_third[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "level_4_second=(\"${level_4_third[@]}\")",
+          "target": "level_4_third"
+        },
+        {
+          "file": "deep.sh",
+          "line": 57,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 58,
+          "message": "Cannot prove bash array safety: array `level_4_first` safety could not be proved after loop widening; guard with ${level_4_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_4_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 62,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 63,
+          "message": "Cannot prove bash array safety: array `level_3_first` safety could not be proved after loop widening; guard with ${level_3_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_3_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 67,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 68,
+          "message": "Cannot prove bash array safety: array `level_2_first` safety could not be proved after loop widening; guard with ${level_2_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_2_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 72,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 73,
+          "message": "Cannot prove bash array safety: array `level_1_first` safety could not be proved after loop widening; guard with ${level_1_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_1_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 76,
+          "message": "Array `final` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${final[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${final[@]}\"",
+          "target": "final"
+        },
+        {
+          "file": "deep.sh",
+          "line": 82,
+          "message": "Cannot prove bash array safety: file-wide Bash loop replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 83,
+          "message": "Array `later` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${later[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${later[@]}\"",
+          "target": "later"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 14,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 17,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
