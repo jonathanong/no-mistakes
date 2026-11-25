@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      include:
+        - "[unclosed"
+      actions: []
