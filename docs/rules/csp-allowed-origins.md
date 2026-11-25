@@ -61,6 +61,14 @@ export function Page() {
 
 ## Counterexample
 
+```ts
+// src/csp.ts
+export const contentSecurityPolicy = [
+  "default-src 'self'",
+  "img-src 'self' https://cdn.example.com",
+].join("; ");
+```
+
 ```tsx
 // src/page.tsx
 export function Page() {
