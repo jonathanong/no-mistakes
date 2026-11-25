@@ -23,7 +23,10 @@ order.
 - `test.describe.configure({ mode: "serial" })` and `test.describe.serial()`,
   including local fixtures statically extended from Playwright's `test`.
 - `workers: 1` and `fullyParallel: false` in Playwright configuration or an
-  inline project.
+  inline project. A static one-worker branch such as
+  `workers: process.env.CI ? 1 : undefined` counts because CI still runs
+  with one worker. Use a reasoned project or path allowlist entry when a
+  shared CI resource requires serial execution.
 
 ## Options
 
@@ -81,7 +84,12 @@ export, or an unrelated imported object with a `.describe.configure` method),
 the rule never drops it silently: it records an `incomplete` entry naming the
 file, line, and binding rather than a finding. Add the export to
 `options.fixtures` if it is a Playwright fixture, or exclude/suppress the file
-if it is not. Computed configuration, omitted options, and CLI worker flags
+if it is not. The rule also records `incomplete` when it can find Playwright
+provenance but cannot resolve the whole receiver, for example through later
+assignments, a loop binding, arguments to a local function, an initialized
+class field, or a factory with an untraceable return branch. A missing initializer or an unknown
+branch does not discard provenance from another path. Computed
+configuration, omitted options, and CLI worker flags
 need separate review. An unreadable or malformed selected test or config also
 appears in the JSON `incomplete` list.
 
