@@ -41,6 +41,7 @@ continue to produce findings.
 ## Valid example
 
 ```hcl
+// infra/policies/receipt.tf
 data "aws_iam_policy_document" "receipt_reader" {
   statement {
     actions   = ["s3:GetObject"]
@@ -52,6 +53,7 @@ data "aws_iam_policy_document" "receipt_reader" {
 ## Counterexample
 
 ```hcl
+// infra/policies/receipt.tf
 data "aws_iam_policy_document" "receipt_reader" {
   statement {
     actions   = ["s3:GetObject"]
@@ -84,3 +86,8 @@ data "aws_iam_policy_document" "bucket_catalog" {
 Run `no-mistakes check --root . --format json` or the async Node `check()` API.
 Add `--include-suppressed` in the CLI, or `includeSuppressed: true` in Node, to
 inspect the scoped exceptions.
+
+## Related rules
+
+[`structured-config-policy`](structured-config-policy.md) checks declared key
+and value shapes in JSON and YAML configuration.
