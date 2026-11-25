@@ -1,5 +1,7 @@
 //! Literal extraction helpers for PostgreSQL read-only setting evaluation.
-use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, Ident, SetExpr, Statement, Value};
+use sqlparser::ast::{
+    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Ident, SetExpr, Statement, Value,
+};
 
 pub(super) fn normalize_ident(ident: &Ident) -> String {
     if ident.quote_style.is_some() {
@@ -26,24 +28,28 @@ pub(super) fn direct_write_kind(statement: &Statement) -> Option<&'static str> {
     }
 }
 
-pub(super) fn arg_expr(arg: &FunctionArg) -> Option<&Expr> {
+pub(super) fn three_arg_exprs(args: &FunctionArguments) -> Option<(&Expr, &Expr, &Expr)> {
+    let FunctionArguments::List(arguments) = args else {
+        return None;
+    };
+    let [a, b, c] = arguments.args.as_slice() else {
+        return None;
+    };
+    Some((arg_expr(a)?, arg_expr(b)?, arg_expr(c)?))
+}
+
+fn arg_expr(arg: &FunctionArg) -> Option<&Expr> {
     match arg {
-        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
-        | FunctionArg::Named {
-            arg: FunctionArgExpr::Expr(expr),
-            ..
-        } => Some(expr),
+        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => Some(expr),
         _ => None,
     }
 }
 
 pub(super) fn unwrap_expr(mut expr: &Expr) -> &Expr {
-    loop {
-        match expr {
-            Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => expr = inner,
-            _ => return expr,
-        }
+    while let Expr::Nested(inner) | Expr::Cast { expr: inner, .. } = expr {
+        expr = inner;
     }
+    expr
 }
 
 pub(super) fn string_literal(expr: &Expr) -> Option<&str> {
@@ -51,8 +57,7 @@ pub(super) fn string_literal(expr: &Expr) -> Option<&str> {
         return None;
     };
     match &value.value {
-        Value::SingleQuotedString(text) | Value::EscapedStringLiteral(text) => Some(text.as_str()),
-        Value::DollarQuotedString(dollar) => Some(dollar.value.as_str()),
+        Value::SingleQuotedString(text) => Some(text.as_str()),
         _ => None,
     }
 }
@@ -61,10 +66,7 @@ pub(super) fn parse_bool_guc(expr: &Expr) -> Option<bool> {
     match unwrap_expr(expr) {
         Expr::Value(value) => match &value.value {
             Value::Boolean(flag) => Some(*flag),
-            Value::SingleQuotedString(text) | Value::EscapedStringLiteral(text) => {
-                parse_bool_text(text)
-            }
-            Value::DollarQuotedString(dollar) => parse_bool_text(&dollar.value),
+            Value::SingleQuotedString(text) => parse_bool_text(text),
             _ => None,
         },
         Expr::Identifier(ident) => parse_bool_text(&ident.value),

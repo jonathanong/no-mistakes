@@ -86,3 +86,20 @@ fn unknown_savepoints_and_dynamic_read_only_settings_report_unanalyzable() {
         .collect();
     assert_eq!(lines, [2, 3, 6, 7, 8, 9, 10]);
 }
+
+#[test]
+fn quoted_savepoints_local_set_and_filtered_queries_keep_write_tracking_sound() {
+    let root = fixture_root();
+    let cases = root.join("coverage-cases.sql");
+    let files = std::slice::from_ref(&cases);
+    let sources = crate::codebase::rules::source_store_for_files(files);
+    let facts = prepare_scripts(&root, files, &sources);
+    let file = facts.explain_write_rollback(&cases).unwrap();
+    let writes: Vec<_> = file
+        .writes
+        .iter()
+        .map(|plan| (plan.kind, plan.location.line, plan.autocommit))
+        .collect();
+    assert_eq!(writes, [("UPDATE", 9, false), ("DELETE", 20, true)]);
+    assert!(file.unanalyzable.is_empty());
+}

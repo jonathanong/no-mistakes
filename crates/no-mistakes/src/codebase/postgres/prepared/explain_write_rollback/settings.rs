@@ -1,9 +1,9 @@
 //! Read-only transaction and session setting recognition for EXPLAIN write rollback.
-use super::literals::{arg_expr, parse_bool_guc, string_literal, unwrap_expr};
+use super::literals::{parse_bool_guc, string_literal, three_arg_exprs, unwrap_expr};
 use crate::codebase::postgres::idents::object_name_identity;
 use sqlparser::ast::{
-    ContextModifier, Expr, FunctionArguments, ObjectNamePart, Query, SelectItem, Set, SetExpr,
-    TransactionAccessMode, TransactionMode,
+    ContextModifier, Expr, ObjectNamePart, Query, SelectItem, Set, SetExpr, TransactionAccessMode,
+    TransactionMode,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -62,36 +62,24 @@ pub(super) fn set_statement_effect(set: &Set) -> Option<SettingEffect> {
             values,
             ..
         } => {
-            let setting = match variable.0.as_slice() {
-                [ObjectNamePart::Identifier(name)]
-                    if name
-                        .value
-                        .eq_ignore_ascii_case("default_transaction_read_only") =>
-                {
-                    ReadOnlySetting::DefaultTransaction
-                }
-                [ObjectNamePart::Identifier(name)]
-                    if name.value.eq_ignore_ascii_case("transaction_read_only") =>
-                {
-                    ReadOnlySetting::CurrentTransaction
-                }
-                _ => return None,
+            let [ObjectNamePart::Identifier(name)] = variable.0.as_slice() else {
+                return None;
             };
+            let setting = read_only_setting(&name.value)?;
             let is_local = matches!(scope, Some(ContextModifier::Local));
-            let [value] = values.as_slice() else {
-                return Some(SettingEffect::Unanalyzable(
-                    "SET read-only setting value could not be statically evaluated",
-                ));
+            let read_only = match values.as_slice() {
+                [value] => parse_bool_guc(value),
+                _ => None,
             };
-            let Some(read_only) = parse_bool_guc(value) else {
-                return Some(SettingEffect::Unanalyzable(
+            Some(match read_only {
+                Some(read_only) => SettingEffect::Change {
+                    setting,
+                    read_only,
+                    is_local,
+                },
+                None => SettingEffect::Unanalyzable(
                     "SET read-only setting value could not be statically evaluated",
-                ));
-            };
-            Some(SettingEffect::Change {
-                setting,
-                read_only,
-                is_local,
+                ),
             })
         }
         _ => None,
@@ -131,19 +119,7 @@ fn set_config_effect(expr: &Expr) -> Option<SettingEffect> {
     ) {
         return None;
     }
-    let FunctionArguments::List(arguments) = &function.args else {
-        return Some(SettingEffect::Unanalyzable(
-            "set_config arguments could not be statically evaluated",
-        ));
-    };
-    let [arg0, arg1, arg2] = arguments.args.as_slice() else {
-        return Some(SettingEffect::Unanalyzable(
-            "set_config arguments could not be statically evaluated",
-        ));
-    };
-    let (Some(name_expr), Some(value_expr), Some(local_expr)) =
-        (arg_expr(arg0), arg_expr(arg1), arg_expr(arg2))
-    else {
+    let Some((name_expr, value_expr, local_expr)) = three_arg_exprs(&function.args) else {
         return Some(SettingEffect::Unanalyzable(
             "set_config arguments could not be statically evaluated",
         ));
@@ -153,21 +129,12 @@ fn set_config_effect(expr: &Expr) -> Option<SettingEffect> {
             "set_config setting name could not be statically evaluated",
         ));
     };
-    let setting = if name.eq_ignore_ascii_case("default_transaction_read_only") {
-        ReadOnlySetting::DefaultTransaction
-    } else if name.eq_ignore_ascii_case("transaction_read_only") {
-        ReadOnlySetting::CurrentTransaction
-    } else {
-        return None;
-    };
-    let Some(read_only) = parse_bool_guc(value_expr) else {
+    let setting = read_only_setting(name)?;
+    let (Some(read_only), Some(is_local)) =
+        (parse_bool_guc(value_expr), parse_bool_guc(local_expr))
+    else {
         return Some(SettingEffect::Unanalyzable(
-            "set_config read-only value could not be statically evaluated",
-        ));
-    };
-    let Some(is_local) = parse_bool_guc(local_expr) else {
-        return Some(SettingEffect::Unanalyzable(
-            "set_config is_local flag could not be statically evaluated",
+            "set_config read-only arguments could not be statically evaluated",
         ));
     };
     Some(SettingEffect::Change {
@@ -175,4 +142,14 @@ fn set_config_effect(expr: &Expr) -> Option<SettingEffect> {
         read_only,
         is_local,
     })
+}
+
+fn read_only_setting(name: &str) -> Option<ReadOnlySetting> {
+    if name.eq_ignore_ascii_case("default_transaction_read_only") {
+        Some(ReadOnlySetting::DefaultTransaction)
+    } else if name.eq_ignore_ascii_case("transaction_read_only") {
+        Some(ReadOnlySetting::CurrentTransaction)
+    } else {
+        None
+    }
 }

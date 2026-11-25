@@ -83,6 +83,14 @@ fn explain_write_rule_routes_parse_failures_through_unanalyzable_policy() {
     .unwrap();
     assert!(ignored.findings.is_empty());
     assert!(ignored.advisories.is_empty());
+
+    let mut prefixed = report_cfg;
+    prefixed.rules[0].message = Some("custom prefix:".to_owned());
+    let with_prefix = diagnostics_with_files_sources_and_facts(
+        &root, &prefixed, files, &sources, None, false,
+    )
+    .unwrap();
+    assert!(with_prefix.findings[0].message.starts_with("custom prefix:"));
 }
 
 #[test]
