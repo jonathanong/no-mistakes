@@ -59,3 +59,22 @@ resource "aws_iam_role_policy" "indexed_doc" {
 resource "aws_s3_bucket" "unrelated" {
   bucket = "example-bucket"
 }
+
+data "aws_iam_policy_document" "empty_merged" {
+  source_policy_documents = []
+  dynamic "other" {
+    for_each = []
+    content {}
+  }
+}
+
+resource "aws_iam_role" "empty_inline" {
+  name = "empty-inline"
+  inline_policy {
+    name = "no-policy-attr"
+  }
+  dynamic "other" {
+    for_each = []
+    content {}
+  }
+}
