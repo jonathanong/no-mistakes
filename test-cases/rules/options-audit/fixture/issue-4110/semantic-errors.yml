@@ -127,3 +127,28 @@ rules:
     name: invalid-command-include
     options:
       include: ["[actions"]
+  - rule: github-actions-run-command-policy
+    scope: repository
+    name: blank-conditional-argument
+    options:
+      commands:
+        - command: [tool]
+          whenAnyArgs: [""]
+  - rule: github-actions-run-command-policy
+    scope: repository
+    name: empty-required-choice
+    options:
+      commands:
+        - command: [tool]
+          requireAnyArgs: [[]]
+  - rule: test-no-retries
+    scope: repository
+    name: blank-fixture-export
+    options:
+      fixtures:
+        - {module: "tests/fixture.ts", export: ""}
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      scopes:
+        helpers: ["[test-data"]

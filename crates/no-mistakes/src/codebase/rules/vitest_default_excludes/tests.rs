@@ -140,6 +140,13 @@ rules:
     .unwrap();
     let mut errors = Vec::new();
     super::options::collect_config_errors(&root, None, &bad_filter, &mut errors);
+    let config_path = root.join(".no-mistakes.yml");
+    let mut with_location = Vec::new();
+    super::options::collect_config_errors(&root, Some(&config_path), &bad_filter, &mut with_location);
+    assert_eq!(
+        with_location,
+        errors.iter().map(|error| format!(".no-mistakes.yml: {error}")).collect::<Vec<_>>()
+    );
     let joined = errors.join("\n");
     assert!(joined.contains("[unclosed"), "{joined}");
     assert!(check_with_files(&root, &bad_filter, &[]).is_err());

@@ -48,7 +48,7 @@ pub(super) fn compile_globs<'p>(patterns: impl Iterator<Item = &'p str>) -> Resu
     for pattern in patterns {
         builder.add(Glob::new(pattern.trim_start_matches("./"))?);
     }
-    Ok(builder.build()?)
+    builder.build().map_err(Into::into)
 }
 
 pub(crate) fn matching_files(

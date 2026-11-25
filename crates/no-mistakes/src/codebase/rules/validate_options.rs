@@ -171,10 +171,11 @@ fn semantic_option_path(message: &str) -> ConfigPath {
     };
     option
         .split(|c: char| !(c.is_alphanumeric() || matches!(c, '_' | '.' | '-')))
-        .next()
+        .take(1)
         .filter(|key| !key.is_empty())
-        .map_or_else(
-            || path.clone(),
-            |key| key.split('.').fold(path.clone(), ConfigPath::key),
-        )
+        .flat_map(|key| key.split('.'))
+        .fold(path, ConfigPath::key)
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;
