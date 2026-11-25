@@ -34,13 +34,25 @@ fn postgres_lock_written_rows_upsert_locked_key_check_json_snapshot() {
                 "upsert-written-only.yml",
             ),
             ("write_set", "upsert-locked-key", "upsert-write-set.yml"),
+            ("allow", "upsert-locked-key", "upsert-allow.yml"),
+            (
+                "sibling_unanalyzable",
+                "upsert-locked-key",
+                "upsert-sibling-unanalyzable.yml",
+            ),
             ("controls", "upsert-locked-key", "upsert-controls.yml"),
         ],
     );
-    for case in ["matching", "trigger_column", "written_only"] {
+    for case in [
+        "matching",
+        "trigger_column",
+        "written_only",
+        "sibling_unanalyzable",
+    ] {
         let report = &reports[case]["report"];
         assert!(lines(report, "rules", "row-lock-unwritten-relation").is_empty());
     }
+    assert_eq!(reports["sibling_unanalyzable"]["exitCode"], 0);
     assert_eq!(reports["write_set"]["exitCode"], 1);
     assert_eq!(
         lines(&reports["write_set"]["report"], "rules", "src/matches.ts:4"),
@@ -54,6 +66,15 @@ fn postgres_lock_written_rows_upsert_locked_key_check_json_snapshot() {
         ),
         [24]
     );
+    assert_eq!(reports["allow"]["exitCode"], 1);
+    assert_eq!(
+        lines(&reports["allow"]["report"], "rules", "allow[1]"),
+        [20]
+    );
+    assert_eq!(
+        lines(&reports["allow"]["report"], "rules", "allow[2]"),
+        [24]
+    );
     let report = &reports["matching"]["report"];
     assert_eq!(lines(report, "advisories", "redundant-prelock"), [5]);
     assert_eq!(lines(report, "advisories", "unanalyzable"), [14]);
@@ -63,7 +84,7 @@ fn postgres_lock_written_rows_upsert_locked_key_check_json_snapshot() {
             "rules",
             "row-lock-unwritten-relation"
         ),
-        [5, 12, 22, 28, 38, 48, 57, 67, 78]
+        [5, 12, 22, 28, 38, 48, 57, 67, 78, 88, 98]
     );
     assert_eq!(
         lines(

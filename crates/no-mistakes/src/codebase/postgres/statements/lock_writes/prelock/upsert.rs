@@ -42,7 +42,7 @@ pub(super) fn upsert_keys(
         || source.limit_clause.is_some()
         || source.fetch.is_some()
         || has_overriding_user_value(insert, source, tokens)
-        || has_conflict_target_predicate(source, tokens)
+        || !is_plain_single_column_conflict_target(source, tokens)
         || generated_name(relation, positions)
         || generated(key, positions)
         || !plain_assignments(&update.assignments)
@@ -114,25 +114,18 @@ fn has_overriding_user_value(insert: &Insert, source: &Query, tokens: &[TokenWit
     false
 }
 
-fn has_conflict_target_predicate(source: &Query, tokens: &[TokenWithSpan]) -> bool {
+fn is_plain_single_column_conflict_target(source: &Query, tokens: &[TokenWithSpan]) -> bool {
     let start = source.span().end;
     let first = tokens.partition_point(|token| token.span.start < start);
-    let mut depth = 0usize;
-    for token in &tokens[first..] {
-        match &token.token {
-            Token::LParen => depth += 1,
-            Token::RParen => depth = depth.saturating_sub(1),
-            Token::Word(word) if depth == 0 && word.quote_style.is_none() => {
-                if word.value.eq_ignore_ascii_case("where") {
-                    return true;
-                }
-                if word.value.eq_ignore_ascii_case("do") {
-                    return false;
-                }
-            }
-            Token::SemiColon if depth == 0 => return false,
-            _ => {}
-        }
-    }
-    false
+    let mut iter = tokens[first..]
+        .iter()
+        .map(|token| &token.token)
+        .filter(|token| !matches!(token, Token::Whitespace(_)));
+    let kw = |token: Option<&Token>, expected: &str| matches!(token, Some(Token::Word(word)) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected));
+    kw(iter.next(), "on")
+        && kw(iter.next(), "conflict")
+        && matches!(iter.next(), Some(Token::LParen))
+        && matches!(iter.next(), Some(Token::Word(_)))
+        && matches!(iter.next(), Some(Token::RParen))
+        && kw(iter.next(), "do")
 }

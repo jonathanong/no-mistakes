@@ -82,3 +82,23 @@ export async function twoLocksMixed(id: number, otherId: number) {
     [id],
   );
 }
+
+export async function mixedConflictTarget(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id, (lower(state))) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
+
+export async function operatorClassConflictTarget(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id int4_ops) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}

@@ -179,8 +179,9 @@ following hold:
 
 - The lock uses `FROM ONLY` on the same relation, column, and key value (locks
   without `ONLY` also lock inheritance child tables, which `INSERT` never writes).
-- The `ON CONFLICT` clause targets a single column with no target `WHERE`
-  predicate, and `DO UPDATE` has no `WHERE` clause.
+- The `ON CONFLICT` clause targets a single plain column (no expressions,
+  operator classes, or `COLLATE` clauses) with no target `WHERE` predicate, and
+  `DO UPDATE` has no `WHERE` clause.
 - The `INSERT` has no `OVERRIDING USER VALUE`, and its `VALUES` query has no
   `WITH`, `LIMIT`, or `FETCH` clause.
 - Every expression in every `VALUES` row is a plain literal (number,
@@ -191,9 +192,12 @@ following hold:
 This applies to both single-row and multi-row `VALUES`, independently of the
 redundancy advisory or any `triggerMaintainedColumns` configuration. Missing
 `ONLY` on the lock, `OVERRIDING USER VALUE`, `ON CONFLICT (column) WHERE ...`,
-conditional `DO UPDATE ... WHERE ...`, `ON CONFLICT DO NOTHING`, composite
-conflict targets, non-plain `VALUES` or `SET` expressions, different tables,
-different conflict columns, and different key values leave the finding in place.
+conditional `DO UPDATE ... WHERE ...`, `ON CONFLICT DO NOTHING`, composite,
+expression, or operator-class conflict targets, non-plain `VALUES` or `SET`
+expressions, different tables, different conflict columns, and different key
+values leave the finding in place. As with direct `UPDATE` and `DELETE`
+statements, `BEFORE INSERT` triggers that return `NULL` or rewrite `NEW`
+columns (such as `NEW.id`) are not modelled.
 
 A top-level helper with a straight-line body of static executor calls can accept
 an executor parameter. Each invocation through a known transaction substitutes
