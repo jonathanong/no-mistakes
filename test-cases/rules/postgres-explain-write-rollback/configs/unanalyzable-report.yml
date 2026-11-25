@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-explain-write-rollback
+    scope: repository
+    options:
+      sqlInclude: [benchmarks/*.sql]
+      unanalyzable: report

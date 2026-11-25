@@ -33,6 +33,8 @@ pub(super) fn prepare_call_site_facts(
     };
     plan.lint_suppression_paths =
         crate::codebase::rules::forbidden_lint_suppressions::required_files(root, config, files)?;
+    plan.postgres_explain_write_rollback_paths =
+        super::postgres_explain_write_rollback::required_files(root, config, files, sources)?;
     plan.require_call_site_paths(&call_site_files);
     plan.vitest_default_exclude_paths =
         super::vitest_default_excludes::required_files(root, config, files)?;
@@ -65,6 +67,7 @@ pub(super) fn prepare_call_site_facts(
         && plan.companion_import_plans.is_empty()
         && plan.production_import_paths.is_empty()
         && plan.postgres_schema_catalog_paths.is_empty()
+        && plan.postgres_explain_write_rollback_paths.is_empty()
         && !plan.postgres_schema
         && !plan.postgres_dml
         && !plan.embedded_sql
@@ -77,6 +80,7 @@ pub(super) fn prepare_call_site_facts(
     files.extend(plan.vitest_default_exclude_paths.iter().cloned());
     files.extend(plan.test_reliability_paths.keys().cloned());
     files.extend(plan.production_import_paths.iter().cloned());
+    files.extend(plan.postgres_explain_write_rollback_paths.iter().cloned());
     if plan.postgres_schema || plan.postgres_dml {
         files.extend(crate::codebase::postgres::postgres_sql_paths(
             root,

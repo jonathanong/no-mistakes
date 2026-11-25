@@ -390,10 +390,18 @@ rewrite. This policy never executes config or discovers additional source files.
 
 Use `changes diff --base-root before --head-root after --config changes.yml`
 to produce a schemaVersion 1 categorized report without Git or network access.
-Pass its JSON file to `tests plan <framework> --changes changes.json` alongside
-normal changed-file inputs. Invalid/incomplete reports or unclassified paths
-select the full suite; inspect `fallback_reason` and warnings. Matchers use
-configured test-source globs and literal ID templates. A trusted report can
-supersede a path trigger marked `supersededByChanges`; without the flag that
-trigger is unchanged. See [the shared changes schema](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/changes.md) for the shared schema.
+Changed paths matched by no category's `paths` (such as ordinary source files)
+are recorded in `changedFiles` (omitted when empty), while `unclassified` holds
+only paths matched by a category's `paths` that every matching category excluded
+or no rule could classify. Pass the report JSON to
+`tests plan <framework> --changes ../changes.json` (relative `--changes` paths
+resolve against `--root`): `changedFiles` entries route through the import graph
+in union with any explicit `--changed-file` or `--base` inputs without
+triggering a full-suite fallback, unless an entry cannot be traced without a
+baseline (such as a lockfile, manifest, global config, or deleted file without
+`--base`). Missing files, invalid/incomplete reports, unknown categories, and
+`unclassified` paths select the full suite; inspect `fallback_reason` and
+warnings. Matchers use configured test-source globs and literal ID templates. A
+trusted report can supersede a path trigger marked `supersededByChanges`;
+without the flag that trigger is unchanged. See [the shared changes schema](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/changes.md) for the shared schema.
 The async APIs are `changesDiff(options)` and `testsPlan({ changes, ...options })`.

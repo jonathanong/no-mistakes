@@ -157,3 +157,29 @@ fn invalid_source_demands_fail_instead_of_becoming_complete_checks() {
     }
     assert_eq!(sources.physical_read_count(), 0);
 }
+
+#[test]
+fn unprepared_explain_write_demand_selects_sql_without_reading_it() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-explain-write-rollback/fixture/cases"),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let selected = root.join("benchmarks/transactions.sql");
+    let candidates = [selected.clone(), root.join("other/outside.sql")];
+    let sources = crate::codebase::rules::source_store_for_files(&candidates);
+    assert_eq!(
+        files(
+            &root,
+            &config,
+            POSTGRES_EXPLAIN_WRITE_ROLLBACK,
+            &candidates,
+            None,
+            &sources
+        )
+        .unwrap(),
+        [selected],
+    );
+    assert_eq!(sources.physical_read_count(), 0);
+}

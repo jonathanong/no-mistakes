@@ -1,5 +1,5 @@
 use super::report::Observation;
-use super::rules::{Id, Rules};
+use super::rules::{Id, Rule, Rules};
 use super::Snapshot;
 use crate::codebase::keyed_diff;
 
@@ -7,6 +7,7 @@ use crate::codebase::keyed_diff;
 pub(super) struct FileDiff<'a> {
     pub categories: Vec<(&'a str, Observation)>,
     pub unclassified: Option<String>,
+    pub changed_file: Option<String>,
     pub reasons: Vec<String>,
     pub deferred: Vec<(&'a str, String)>,
 }
@@ -20,7 +21,14 @@ pub(super) fn compare<'a>(
     if !base.knows(path) || !head.knows(path) {
         return None;
     }
-    match compare_readable(path, base, head, rules) {
+    let selector_matches = rules.selectors.matches(path);
+    let matches: Vec<_> = selector_matches
+        .iter()
+        .map(|&index| &rules.rules[index])
+        .filter(|rule| !rule.is_excluded(path, &rules.excludes))
+        .collect();
+    let excluded_by_category = matches.is_empty() && !selector_matches.is_empty();
+    match compare_readable(path, base, head, rules, &matches, excluded_by_category) {
         Ok(diff) => diff,
         Err(reason) => Some(FileDiff {
             reasons: vec![reason],
@@ -34,6 +42,8 @@ fn compare_readable<'a>(
     base: &Snapshot,
     head: &Snapshot,
     rules: &Rules<'a>,
+    matches: &[&Rule<'a>],
+    excluded_by_category: bool,
 ) -> Result<Option<FileDiff<'a>>, String> {
     if base.is_link(path) || head.is_link(path) {
         let old = base.link_identity(path)?;
@@ -42,6 +52,8 @@ fn compare_readable<'a>(
         return Ok(classify(
             path,
             rules,
+            matches,
+            excluded_by_category,
             old.as_deref(),
             new.as_deref(),
             unchanged,
@@ -53,34 +65,51 @@ fn compare_readable<'a>(
     let old = base.bytes(path, &base_source)?;
     let new = head.bytes(path, &head_source)?;
     let unchanged = old == new;
-    Ok(classify(path, rules, old, new, unchanged, false))
+    Ok(classify(
+        path,
+        rules,
+        matches,
+        excluded_by_category,
+        old,
+        new,
+        unchanged,
+        false,
+    ))
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "internal helper carries path, rule matches, and old/new file projections"
+)]
 fn classify<'a>(
     path: &str,
     rules: &Rules<'a>,
+    matches: &[&Rule<'a>],
+    excluded_by_category: bool,
     old: Option<&[u8]>,
     new: Option<&[u8]>,
     unchanged: bool,
     link: bool,
 ) -> Option<FileDiff<'a>> {
-    let mut result = FileDiff::default();
-    let matches: Vec<_> = rules
-        .selectors
-        .matches(path)
-        .into_iter()
-        .map(|index| &rules.rules[index])
-        .filter(|rule| !rule.is_excluded(path, &rules.excludes))
-        .collect();
     if matches.is_empty() {
         if unchanged {
             return None;
         }
-        result.unclassified = Some(path.to_owned());
-        return Some(result);
+        return Some(if excluded_by_category {
+            FileDiff {
+                unclassified: Some(path.to_owned()),
+                ..FileDiff::default()
+            }
+        } else {
+            FileDiff {
+                changed_file: Some(path.to_owned()),
+                ..FileDiff::default()
+            }
+        });
     }
+    let mut result = FileDiff::default();
     let mut parsed = vec![None; rules.keyed.len()];
-    for rule in matches {
+    for &rule in matches {
         let changes = match rule.id {
             Id::Path => path_change(path.to_owned(), old, new, unchanged),
             Id::FromPath {

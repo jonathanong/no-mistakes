@@ -1,0 +1,524 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "custom-message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "Custom snapshot update policy message.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: always",
+          "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "demo": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to `always`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: always",
+          "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off-by-default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scopes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 12,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to `1`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: \"1\"",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 15,
+          "message": "job \"unit\" step 2 sets `INSTA_UPDATE` to `unseen`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: unseen",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 21,
+          "message": "job \"fixtures\" step 1 sets `INSTA_UPDATE` to `always`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: always",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 4,
+          "message": "workflow sets `INSTA_UPDATE` to `force`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: force",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "job \"unit\" sets `INSTA_UPDATE` to `1`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: { \"INSTA_UPDATE\": 1 }",
+          "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 16,
+          "message": "job \"other\" sets `INSTA_UPDATE` to `1`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: \"1\"",
+          "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/expression.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to the expression `${{ vars.SNAPSHOT_MODE }}`, which cannot be checked statically. Set `INSTA_UPDATE` to a literal value such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: ${{ vars.SNAPSHOT_MODE }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/invalid.yml",
+          "line": 2,
+          "message": "workflow YAML could not be parsed (did not find expected node content at line 2 column 1, while parsing a flow node), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-jobs.yml",
+          "line": 3,
+          "message": "workflow sets `jobs` to `${{ fromJSON(vars.JOBS) }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "jobs: ${{ fromJSON(vars.JOBS) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-root.yml",
+          "line": 1,
+          "message": "workflow document is `a non-mapping value` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- not-a-workflow-mapping",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-scalar.yml",
+          "line": 12,
+          "message": "job \"unit\" step 2 sets `INSTA_UPDATE` to a non-scalar value, which cannot be checked statically. Set `INSTA_UPDATE` to a literal string such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-scalar.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to a non-scalar value, which cannot be checked statically. Set `INSTA_UPDATE` to a literal string such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: [always]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-sequence-steps.yml",
+          "line": 6,
+          "message": "job \"unit\" sets `steps` to `${{ fromJSON(vars.STEPS) }}` instead of a sequence, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "steps: ${{ fromJSON(vars.STEPS) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 2,
+          "message": "workflow sets `env` to `${{ fromJSON(vars.ENV) }}`, which cannot be checked statically for `INSTA_UPDATE`. Write a literal `env:` mapping so the rule can verify it, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: ${{ fromJSON(vars.ENV) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 4,
+          "message": "job \"unknown\" is `${{ vars.JOB }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "unknown: ${{ vars.JOB }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 7,
+          "message": "job \"unit\" step 1 is `${{ vars.STEP }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- ${{ vars.STEP }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 8,
+          "message": "job \"unit\" step 2 sets `env` to `a non-mapping value`, which cannot be checked statically for `INSTA_UPDATE`. Write a literal `env:` mapping so the rule can verify it, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- env: []",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/syntax-line.yml",
+          "line": 5,
+          "message": "workflow YAML could not be parsed (did not find expected ',' or ']' at line 5 column 15, while parsing a flow sequence at line 5 column 10), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: [a: b: c]",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/expression.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to the expression `${{ vars.SNAPSHOT_MODE }}`, which cannot be checked statically. Set `INSTA_UPDATE` to a literal value such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: ${{ vars.SNAPSHOT_MODE }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/invalid.yml",
+          "line": 2,
+          "message": "workflow YAML could not be parsed (did not find expected node content at line 2 column 1, while parsing a flow node), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-jobs.yml",
+          "line": 3,
+          "message": "workflow sets `jobs` to `${{ fromJSON(vars.JOBS) }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "jobs: ${{ fromJSON(vars.JOBS) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-root.yml",
+          "line": 1,
+          "message": "workflow document is `a non-mapping value` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- not-a-workflow-mapping",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-scalar.yml",
+          "line": 12,
+          "message": "job \"unit\" step 2 sets `INSTA_UPDATE` to a non-scalar value, which cannot be checked statically. Set `INSTA_UPDATE` to a literal string such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-scalar.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to a non-scalar value, which cannot be checked statically. Set `INSTA_UPDATE` to a literal string such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: [always]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-sequence-steps.yml",
+          "line": 6,
+          "message": "job \"unit\" sets `steps` to `${{ fromJSON(vars.STEPS) }}` instead of a sequence, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "steps: ${{ fromJSON(vars.STEPS) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 2,
+          "message": "workflow sets `env` to `${{ fromJSON(vars.ENV) }}`, which cannot be checked statically for `INSTA_UPDATE`. Write a literal `env:` mapping so the rule can verify it, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: ${{ fromJSON(vars.ENV) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 4,
+          "message": "job \"unknown\" is `${{ vars.JOB }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "unknown: ${{ vars.JOB }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 7,
+          "message": "job \"unit\" step 1 is `${{ vars.STEP }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- ${{ vars.STEP }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 8,
+          "message": "job \"unit\" step 2 sets `env` to `a non-mapping value`, which cannot be checked statically for `INSTA_UPDATE`. Write a literal `env:` mapping so the rule can verify it, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- env: []",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/syntax-line.yml",
+          "line": 5,
+          "message": "workflow YAML could not be parsed (did not find expected ',' or ']' at line 5 column 15, while parsing a flow sequence at line 5 column 10), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: [a: b: c]",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/expression.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to the expression `${{ vars.SNAPSHOT_MODE }}`, which cannot be checked statically. Set `INSTA_UPDATE` to a literal value such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: ${{ vars.SNAPSHOT_MODE }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/invalid.yml",
+          "line": 2,
+          "message": "workflow YAML could not be parsed (did not find expected node content at line 2 column 1, while parsing a flow node), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-jobs.yml",
+          "line": 3,
+          "message": "workflow sets `jobs` to `${{ fromJSON(vars.JOBS) }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "jobs: ${{ fromJSON(vars.JOBS) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-mapping-root.yml",
+          "line": 1,
+          "message": "workflow document is `a non-mapping value` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- not-a-workflow-mapping",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-scalar.yml",
+          "line": 12,
+          "message": "job \"unit\" step 2 sets `INSTA_UPDATE` to a non-scalar value, which cannot be checked statically. Set `INSTA_UPDATE` to a literal string such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-scalar.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to a non-scalar value, which cannot be checked statically. Set `INSTA_UPDATE` to a literal string such as `\"no\"`, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: [always]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/non-sequence-steps.yml",
+          "line": 6,
+          "message": "job \"unit\" sets `steps` to `${{ fromJSON(vars.STEPS) }}` instead of a sequence, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "steps: ${{ fromJSON(vars.STEPS) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 2,
+          "message": "workflow sets `env` to `${{ fromJSON(vars.ENV) }}`, which cannot be checked statically for `INSTA_UPDATE`. Write a literal `env:` mapping so the rule can verify it, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: ${{ fromJSON(vars.ENV) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 4,
+          "message": "job \"unknown\" is `${{ vars.JOB }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "unknown: ${{ vars.JOB }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 7,
+          "message": "job \"unit\" step 1 is `${{ vars.STEP }}` instead of a mapping, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- ${{ vars.STEP }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/opaque.yml",
+          "line": 8,
+          "message": "job \"unit\" step 2 sets `env` to `a non-mapping value`, which cannot be checked statically for `INSTA_UPDATE`. Write a literal `env:` mapping so the rule can verify it, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- env: []",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/syntax-line.yml",
+          "line": 5,
+          "message": "workflow YAML could not be parsed (did not find expected ',' or ']' at line 5 column 15, while parsing a flow sequence at line 5 column 10), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: [a: b: c]",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unreadable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/invalid-utf8.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-no-insta-snapshot-updates: cannot read source: invalid utf-8 sequence of 1 bytes from index 32; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unreadable-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/invalid-utf8.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-no-insta-snapshot-updates: cannot read source: invalid utf-8 sequence of 1 bytes from index 32; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

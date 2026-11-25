@@ -42,7 +42,7 @@ fn prepared_conflict_program_preserves_native_delimiters_and_errors() {
             let tokens = Tokenizer::new(&PostgreSqlDialect {}, line)
                 .tokenize_with_location()
                 .unwrap();
-            program::parse(tokens)
+            program::parse(tokens, None)
         })
         .collect::<Vec<_>>();
     let (statements, calls, _) = outcomes[0].as_ref().unwrap();
@@ -68,7 +68,7 @@ fn prepared_conflict_extension_preserves_native_outer_with_query() {
         let tokens = Tokenizer::new(&PostgreSqlDialect {}, line)
             .tokenize_with_location()
             .unwrap();
-        let (statements, mut calls, _) = program::parse(tokens).unwrap();
+        let (statements, mut calls, _) = program::parse(tokens, None).unwrap();
         assert!(matches!(&statements[0], Statement::Query(query) if query.with.is_some()));
         function_calls::collect(&statements[0], &mut calls);
         let mut clauses = calls.iter().map(|call| call.clause).collect::<Vec<_>>();
@@ -125,7 +125,7 @@ fn cte_conflict_predicate_calls_belong_to_their_own_program_statement() {
     let tokens = Tokenizer::new(&PostgreSqlDialect {}, sql.trim_end_matches('\n'))
         .tokenize_with_location()
         .unwrap();
-    let (statements, calls, _) = program::parse(tokens).unwrap();
+    let (statements, calls, _) = program::parse(tokens, None).unwrap();
     assert_eq!(statements.len(), 3);
     let mut names = calls
         .iter()

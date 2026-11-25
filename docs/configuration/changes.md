@@ -56,9 +56,13 @@ reports them as `changed` rather than `removed`).
 
 `exclude` is scoped per category: excluding a path in one category prevents only
 that category's rules from matching it. Another category whose `paths` match the
-path still classifies and diffs it, and any changed path matched by no category
-goes into `unclassified`. Category names `schemaVersion`, `complete`,
-`unclassified`, and `reasons` are reserved for report metadata.
+path still classifies and diffs it; if every matching category excludes it, or
+no rule in a matching category can classify it, the changed path goes into
+`unclassified` so `tests plan --changes` keeps its safety fallback active.
+Changed paths matched by no category's `paths` (such as ordinary source files)
+are recorded in `changedFiles` so `tests plan --changes` routes them through
+the import graph. Category names `schemaVersion`, `complete`, `unclassified`,
+`changedFiles`, and `reasons` are reserved for report metadata.
 
 `tests` limits the test sources searched for each ID. `match` is a literal
 substring template containing `{id}` or `<id>`; by default it searches for the

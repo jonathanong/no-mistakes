@@ -1,5 +1,10 @@
 use super::{ResolutionKind, ResolvedPackage};
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum BunValidationError {
+    Malformed,
+}
+
 pub fn parse(content: &str) -> Vec<ResolvedPackage> {
     let stripped = strip_jsonc(content);
     let Ok(root) = serde_json::from_str::<serde_json::Value>(&stripped) else {
@@ -10,54 +15,76 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
     };
     packages
         .iter()
-        .filter_map(|(name, entry)| {
-            let arr = entry.as_array()?;
-            let specifier = arr.first().and_then(|v| v.as_str()).unwrap_or("");
-            let version = specifier.rsplit_once('@').map(|(_, v)| v).unwrap_or("");
-            // Real bun.lock: ["pkg@ver", url, peer-deps, "sha512-..."] (4 elements)
-            // Simplified:    ["pkg@ver", {}, {integrity, resolved}] (3 elements)
-            // Try bare SRI integrity string first (real format), then fall back to object.
-            let sri = arr
-                .iter()
-                .rev()
-                .find_map(|v| v.as_str().filter(|s| s.starts_with("sha")));
-            let fingerprint = if let Some(h) = sri {
-                h.to_string()
-            } else {
-                let info = arr.iter().rev().find(|v| {
-                    v.is_object() && (v.get("integrity").is_some() || v.get("resolved").is_some())
-                });
-                let integrity = info
-                    .and_then(|v| v.get("integrity"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("");
-                let resolved = info
-                    .and_then(|v| v.get("resolved"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("");
-                if integrity.is_empty() {
-                    resolved.to_string()
-                } else {
-                    integrity.to_string()
-                }
-            };
-            // Derive name from specifier (e.g. "maath@0.6.0" → "maath") rather than
-            // the raw map key, which for nested entries like "@react-three/postprocessing/maath"
-            // does not match the actual package name.  Fall back to the key for URL
-            // specifiers (no clean pkg@ver structure) so the key is authoritative there.
-            let pkg_name = specifier
-                .rsplit_once('@')
-                .map(|(n, _)| n)
-                .filter(|n| !n.contains("://"))
-                .unwrap_or(name.as_str());
-            Some(ResolvedPackage {
-                name: pkg_name.to_string(),
-                version: version.to_string(),
-                fingerprint,
-                kind: ResolutionKind::Registry,
-            })
-        })
+        .filter_map(|(name, entry)| parse_entry(name, entry))
         .collect()
+}
+
+pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, BunValidationError> {
+    let stripped = strip_jsonc(content);
+    let root: serde_json::Value =
+        serde_json::from_str(&stripped).map_err(|_| BunValidationError::Malformed)?;
+    let packages = root
+        .get("packages")
+        .and_then(|v| v.as_object())
+        .ok_or(BunValidationError::Malformed)?;
+    packages
+        .iter()
+        .map(|(name, entry)| parse_entry(name, entry).ok_or(BunValidationError::Malformed))
+        .collect()
+}
+
+fn parse_entry(name: &str, entry: &serde_json::Value) -> Option<ResolvedPackage> {
+    if name.is_empty() {
+        return None;
+    }
+    let arr = entry.as_array()?;
+    let specifier = arr
+        .first()
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())?;
+    let version = specifier.rsplit_once('@').map(|(_, v)| v).unwrap_or("");
+    // Real bun.lock: ["pkg@ver", url, peer-deps, "sha512-..."] (4 elements)
+    // Simplified:    ["pkg@ver", {}, {integrity, resolved}] (3 elements)
+    // Try bare SRI integrity string first (real format), then fall back to object.
+    let sri = arr
+        .iter()
+        .rev()
+        .find_map(|v| v.as_str().filter(|s| s.starts_with("sha")));
+    let fingerprint = if let Some(h) = sri {
+        h.to_string()
+    } else {
+        let info = arr.iter().rev().find(|v| {
+            v.is_object() && (v.get("integrity").is_some() || v.get("resolved").is_some())
+        });
+        let integrity = info
+            .and_then(|v| v.get("integrity"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let resolved = info
+            .and_then(|v| v.get("resolved"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        if integrity.is_empty() {
+            resolved.to_string()
+        } else {
+            integrity.to_string()
+        }
+    };
+    // Derive name from specifier (e.g. "maath@0.6.0" → "maath") rather than
+    // the raw map key, which for nested entries like "@react-three/postprocessing/maath"
+    // does not match the actual package name.  Fall back to the key for URL
+    // specifiers (no clean pkg@ver structure) so the key is authoritative there.
+    let pkg_name = specifier
+        .rsplit_once('@')
+        .map(|(n, _)| n)
+        .filter(|n| !n.contains("://"))
+        .unwrap_or(name);
+    Some(ResolvedPackage {
+        name: pkg_name.to_string(),
+        version: version.to_string(),
+        fingerprint,
+        kind: ResolutionKind::Registry,
+    })
 }
 
 // Strip JSONC syntax (// and /* */ comments, trailing commas) so serde_json can parse it.

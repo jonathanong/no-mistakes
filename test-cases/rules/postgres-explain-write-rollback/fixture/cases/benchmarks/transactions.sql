@@ -1,0 +1,91 @@
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+EXPLAIN (ANALYZE TRUE) INSERT INTO sample_jobs (id) VALUES (42) ON CONFLICT (id) DO NOTHING;
+
+COMMIT;
+BEGIN;
+BEGIN;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+COMMIT;
+
+START TRANSACTION;
+EXPLAIN ANALYZE MERGE INTO sample_jobs AS j
+USING (VALUES (42)) AS s(id) ON j.id = s.id
+WHEN MATCHED THEN DELETE;
+END;
+
+BEGIN;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+ROLLBACK;
+
+BEGIN;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+ROLLBACK AND CHAIN;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+COMMIT AND CHAIN;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+ROLLBACK;
+
+BEGIN;
+SAVEPOINT before_plan;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+ROLLBACK TO SAVEPOINT before_plan;
+COMMIT;
+
+BEGIN;
+SAVEPOINT released_plan;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+RELEASE SAVEPOINT released_plan;
+COMMIT;
+
+BEGIN;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+SAVEPOINT after_first;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+ROLLBACK TO SAVEPOINT after_first;
+COMMIT;
+
+BEGIN;
+SAVEPOINT outer_sp;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+SAVEPOINT inner_sp;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+ROLLBACK TO SAVEPOINT outer_sp;
+COMMIT;
+
+BEGIN;
+SAVEPOINT repeat_sp;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+ROLLBACK TO SAVEPOINT repeat_sp;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+ROLLBACK TO SAVEPOINT repeat_sp;
+COMMIT;
+
+BEGIN READ ONLY;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+COMMIT;
+
+BEGIN;
+SET TRANSACTION READ ONLY;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+COMMIT;
+
+BEGIN READ ONLY;
+SET TRANSACTION READ WRITE;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+COMMIT;
+
+BEGIN;
+SET transaction_read_only = 'on';
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+COMMIT;
+
+EXPLAIN (ANALYZE OFF) UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+EXPLAIN DELETE FROM sample_jobs WHERE id = 42;
+EXPLAIN ANALYZE SELECT id FROM sample_jobs;
+EXPLAIN ANALYZE EXECUTE sample_plan;
+EXPLAIN
+  ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
+EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42; EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 43;
+
+BEGIN;
+EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;

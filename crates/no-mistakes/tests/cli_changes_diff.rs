@@ -245,5 +245,6 @@ fn changes_diff_distinguishes_binary_bytes_from_their_lossy_text_projection() {
     })
     .unwrap();
     assert!(report.complete, "{:?}", report.reasons);
-    assert_eq!(report.unclassified, ["raw.txt"]);
+    assert_eq!(report.categories["raw"].changed, ["raw.txt"]);
+    assert!(report.unclassified.is_empty());
 }

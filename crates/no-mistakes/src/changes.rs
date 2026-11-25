@@ -34,6 +34,8 @@ pub struct ChangesReport {
     #[serde(flatten)]
     pub categories: BTreeMap<String, KeyChanges>,
     pub unclassified: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub changed_files: Vec<String>,
     pub complete: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub reasons: Vec<String>,
@@ -45,6 +47,7 @@ impl ChangesReport {
             schema_version: 1,
             categories: BTreeMap::new(),
             unclassified: Vec::new(),
+            changed_files: Vec::new(),
             complete: reasons.is_empty(),
             reasons,
         }
@@ -52,6 +55,7 @@ impl ChangesReport {
 
     fn finish(mut self) -> Self {
         sort_unique(&mut self.unclassified);
+        sort_unique(&mut self.changed_files);
         sort_unique(&mut self.reasons);
         self.complete = self.reasons.is_empty();
         self

@@ -3,6 +3,11 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+The opt-in [`postgres-explain-write-rollback`](rules/postgres-explain-write-rollback.md)
+rule uses the same YAML configuration and report fields in CLI `check`,
+Node `check()`, and `analyzeProject()` check reports.
+`PostgresExplainWriteRollbackOptions` names its YAML options.
+
 Configured [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
 accepts optional `schemaCatalogPath` through `PostgresLockWrittenRowsOnlyOptions`.
 Async `check()` and `analyzeProject()` check reports use the same prepared catalog
@@ -1196,14 +1201,23 @@ and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
 
 `changesDiff({ baseRoot, headRoot, config })` asynchronously compares two local
 roots without Git or network access. It returns the CLI's schemaVersion 1
-report, including `complete: false` and reasons for unreadable roots. Use
+report, including `complete: false` and `reasons` for unreadable roots,
+`changedFiles` (omitted when empty) for changed paths matched by no category's
+`paths`, and `unclassified` for paths matched by a category's `paths` that every
+matching category excluded or no rule could classify. Use
 `changesDiff<"fixtures" | "localization">(...)` to name configured category
 fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
 `ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `ChangesConfig`,
 `ChangeCategory`, `ChangeRule`, `ChangeIdRule`, `KeyedDiffOptions`, and
 `KeyedDiffFormat`.
 
-`testsPlan({ root, changes: "changes.json", framework: "vitest" })` consumes the
-same saved report as CLI `tests plan --changes`. Invalid or incomplete input
-selects the full suite with a structured reason. Configured matchers reuse
-prepared source contents. See [changes configuration](configuration/changes.md).
+`testsPlan({ root, changes: "../changes.json", framework: "vitest" })` consumes
+the same saved report as CLI `tests plan --changes` (relative `changes` paths
+resolve against `root`, matching `config`). `changedFiles` from the report route
+through the import graph in union with any explicit `changedFiles` or `base`
+inputs without triggering a full-suite fallback, unless an entry cannot be
+traced without a baseline (such as a lockfile, manifest, global config, or
+deleted file without `base`). Missing, invalid, or incomplete reports, unknown
+categories, and `unclassified` paths select the full suite with a structured
+`fallback_reason` and warning. Configured matchers reuse prepared source
+contents. See [changes configuration](configuration/changes.md).
