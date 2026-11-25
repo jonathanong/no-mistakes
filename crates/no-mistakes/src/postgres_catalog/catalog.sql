@@ -107,6 +107,7 @@ WITH selected AS (
     'indexes', (SELECT value FROM relation_indexes WHERE oid = r.oid)
   ) || CASE WHEN __COMPLETE__ THEN jsonb_build_object(
     'comment', obj_description(r.oid, 'pg_class'),
+    'hasDescendants', EXISTS (SELECT 1 FROM pg_inherits i WHERE i.inhparent = r.oid),
     'physicalPartition', CASE WHEN r.relkind = 'p'
       THEN jsonb_build_object('key', pg_get_partkeydef(r.oid)) END,
     'foreignKeys', COALESCE((SELECT jsonb_object_agg(c.name, jsonb_build_object(

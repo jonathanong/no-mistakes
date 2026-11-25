@@ -1,0 +1,13 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      testCommands:
+        - [pnpm, test]
+        - [pnpm, test:unit]
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      allowlist:
+        - project: migration
+          reason: Uses one shared migration dataset on CI

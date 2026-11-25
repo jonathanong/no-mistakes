@@ -113,16 +113,18 @@ directly awaited before the lock does not match this sequence.
 ## Redundant pre-lock before a conditional write
 
 This check is advisory-only. Set `checks.redundant-prelock: advise` to report a
-direct, awaited `SELECT 1 FROM ONLY ... FOR UPDATE` whose result is discarded when the
-next direct awaited SQL call is a conditional `UPDATE` or supported upsert with
+direct, awaited `SELECT 1` or a plain projection of the equality key with
+`FOR UPDATE` whose result is discarded when the next direct awaited SQL call is
+a conditional `UPDATE` or supported upsert with
 the same statically proven unique row key. An `UPDATE` requires a matching
 unique key in the complete catalog supplied through `schemaCatalogPath`.
 For a supported upsert with one `VALUES` row, a single-column `ON CONFLICT`
 target establishes the unique key. A fully decoded multi-row upsert that
 targets the locked relation and the same stable key in the transaction
 can produce an `unanalyzable` diagnostic under `unanalyzableSql`. The
-redundancy advisory requires a single-row upsert. Use `FROM ONLY` when the lock should exclude inherited rows, since
-a parent table's unique key does not constrain its inheritance children.
+redundancy advisory requires a single-row upsert. It accepts `FROM ONLY` or a
+plain `FROM` for an upsert when a complete catalog proves the table has no
+descendants. The conditional `UPDATE` advisory requires `FROM ONLY`.
 The rule abstains when it cannot prove that the selected values are
 unused, the key predicates match, the key binds stay unchanged, and both calls
 belong to the same known transaction. An awaited write can be the first
@@ -174,24 +176,28 @@ export async function updateChild(childId: string, name: string) {
 
 The same relation and key are locked and updated within one transaction.
 An unconditional `INSERT INTO table (columns...) VALUES (...) ON CONFLICT (column) DO UPDATE SET ...`
-in that transaction can also satisfy a `FROM ONLY` row lock when all of the
-following hold:
+in that transaction can also satisfy a row lock when all of the following hold:
 
-- The lock uses `FROM ONLY` on the same relation, column, and key value (locks
-  without `ONLY` also lock inheritance child tables, which `INSERT` never writes).
+- The lock targets the same relation, column, and key value. The select list
+  does not affect write-set membership. `FROM ONLY` establishes the physical
+  scope directly. A lock without `ONLY` requires a complete catalog with
+  `hasDescendants: false` on that relation. Wider or unknown physical scope
+  produces an `unanalyzable` diagnostic.
 - The `ON CONFLICT` clause targets a single plain column (no expressions,
   operator classes, or `COLLATE` clauses) with no target `WHERE` predicate, and
   `DO UPDATE` has no `WHERE` clause.
 - The `INSERT` has no `OVERRIDING USER VALUE`, and its `VALUES` query has no
   `WITH`, `LIMIT`, or `FETCH` clause.
 - Every expression in every `VALUES` row is a plain literal (number,
-  single-quoted string, or boolean) or a bind placeholder (`$n`), and every
-  `DO UPDATE SET` right-hand side is an identifier, qualified identifier (such
-  as `EXCLUDED.state`), or plain literal/placeholder value.
+  single-quoted string, or boolean) or a bind placeholder (`$n`). Non-key
+  columns can also use `DEFAULT`. Every `DO UPDATE SET` right-hand side is an
+  identifier, qualified identifier such as `EXCLUDED.state`, or plain
+  literal/placeholder value.
 
 This applies to both single-row and multi-row `VALUES`, independently of the
-redundancy advisory or any `triggerMaintainedColumns` configuration. Missing
-`ONLY` on the lock, `OVERRIDING USER VALUE`, `ON CONFLICT (column) WHERE ...`,
+redundancy advisory. A `SET` that only assigns a trigger-maintained column
+still updates the conflicting row. `OVERRIDING USER VALUE`,
+`ON CONFLICT (column) WHERE ...`,
 conditional `DO UPDATE ... WHERE ...`, `ON CONFLICT DO NOTHING`, composite,
 expression, or operator-class conflict targets, non-plain `VALUES` or `SET`
 expressions, different tables, different conflict columns, and different key

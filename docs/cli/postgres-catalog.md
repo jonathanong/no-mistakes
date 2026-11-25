@@ -62,6 +62,8 @@ partitioned table in the schema:
 
 - the relation kind, the table comment, and the partition key
   (`pg_get_partkeydef`, such as `RANGE (created_at)`);
+- `hasDescendants`, which includes children in other schemas and partition
+  leaves omitted from the catalog;
 - every column: `dataType` (`format_type`), nullability, default expression,
   identity, comment, ordinal position among the live columns, and generated kind
   (`stored`, or PostgreSQL 18 `virtual`) with its expression;

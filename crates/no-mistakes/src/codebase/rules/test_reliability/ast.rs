@@ -69,6 +69,7 @@ impl Collector<'_, '_> {
             project: project.map(str::to_owned),
             origin: Origin::Settings,
             playwright_import: None,
+            playwright_candidates: Vec::new(),
             playwright_binding: None,
             playwright_wrappers: Vec::new(),
             resolved_playwright_exports: Vec::new(),

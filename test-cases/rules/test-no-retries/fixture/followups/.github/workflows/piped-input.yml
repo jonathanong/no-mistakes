@@ -1,0 +1,38 @@
+name: Piped loop input
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pipe loop input into test command
+        run: |
+          for suite in unit integration; do
+            printf '%s\n' "$suite" | pnpm test
+          done
+      - name: Pipe loop input across stages and lines
+        run: |
+          for suite in unit integration; do
+            printf '%s\n' "$suite" | sed 's/unit/fast/' |
+              pnpm test
+          done
+      - name: Retry loop piping attempt counter with && break
+        run: |
+          for attempt in 1 2 3; do
+            printf '%s\n' "$attempt" | pnpm test && break
+          done
+      - name: Unrelated pipeline before test command
+        run: |
+          for attempt in 1 2; do
+            printf '%s\n' "$attempt" | cat
+            pnpm test
+          done
+      - name: Pipe literal single-quoted variable name
+        run: |
+          for suite in unit integration; do
+            printf '%s\n' '$suite' | pnpm test
+          done
+      - name: Downstream pipe after test command
+        run: |
+          for suite in unit integration; do
+            pnpm test | grep "$suite"
+          done
