@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    options:
+      caches:
+        - path: .cache/widgets
+          lockfile: widgets.lock
+          keyParts: [runner.os]
+      forbiddenPaths: [.cache/widgets]

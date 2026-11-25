@@ -300,3 +300,12 @@ step, the findings share the step line, so one directive on that line covers the
 - [`github-actions-pinned-hash`](github-actions-pinned-hash.md) owns action reference SHAs.
 - [`github-actions-script-expressions`](github-actions-script-expressions.md) owns untrusted expressions inside scripts.
 - [`github-actions-download-integrity`](github-actions-download-integrity.md) owns `curl` and `wget` checksums.
+
+## Invalid options
+
+An invalid cache option is a configuration error: `check` validates options
+before any analysis runs, exits with status 2 and empty stdout, and prints
+semantic option diagnostics sorted to stderr (naming the config file, rule,
+option path, rejected value, and constraint). No partial report or `incomplete`
+entry is emitted, and the async Node API rejects with the same message. Keep each
+`forbiddenPaths` value unique and outside the configured `caches` paths.

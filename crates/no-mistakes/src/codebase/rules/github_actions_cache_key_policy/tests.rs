@@ -207,10 +207,55 @@ fn unreadable_workflow_bytes_are_reported() {
 
 #[test]
 fn empty_cache_list_is_a_config_error() {
-    let error = check(&fixture("policy"), &config("invalid")).unwrap_err();
-    assert!(error
-        .to_string()
-        .contains("caches must list at least one cache"));
+    let error = check(&fixture("policy"), &config("invalid"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(RULE_ID), "{error}");
+    assert!(error.contains("options.caches"), "{error}");
+    assert!(
+        error.contains("Expected a non-empty list of caches when forbiddenPaths is empty."),
+        "{error}"
+    );
+}
+
+#[test]
+fn multiple_invalid_cache_options_are_reported_sorted() {
+    let invalid = options::Options {
+        forbidden_paths_message: Some("  ".into()),
+        caches: vec![spec(".cache/widgets", "", &["os"])],
+        forbidden_paths: vec![".cache/widgets".into()],
+        ..options::Options::default()
+    };
+    let error = options::validate(&invalid).unwrap_err().to_string();
+    let lines: Vec<_> = error.lines().collect();
+    assert_eq!(lines.len(), 4, "{error}");
+    let mut sorted = lines.clone();
+    sorted.sort();
+    assert_eq!(lines, sorted, "{error}");
+    assert!(error.contains("options.caches[].lockfile"), "{error}");
+    assert!(error.contains("options.caches[].keyParts"), "{error}");
+    assert!(error.contains("options.forbiddenPaths"), "{error}");
+    assert!(error.contains("options.forbiddenPathsMessage"), "{error}");
+}
+
+#[test]
+fn collect_config_errors_reports_filter_and_schema_errors() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    include: ["[unclosed"]
+    options:
+      caches: true
+"#,
+    )
+    .unwrap();
+    let mut errors = Vec::new();
+    super::collect_config_errors(std::path::Path::new("/repo"), None, &config, &mut errors);
+    let joined = errors.join("\n");
+    assert!(joined.contains("[unclosed"), "{joined}");
+    assert!(joined.contains("options.caches"), "{joined}");
 }
 
 #[test]
@@ -223,13 +268,13 @@ fn duplicate_paths_and_undotted_fragments_are_rejected() {
         ..options::Options::default()
     };
     let error = options::validate(&duplicate).unwrap_err().to_string();
-    assert!(error.contains("listed more than once"), "{error}");
+    assert!(error.contains("a unique cache path"), "{error}");
     let fragment = options::Options {
         caches: vec![spec(".cache/widgets", "widgets.lock", &["os"])],
         ..options::Options::default()
     };
     let error = options::validate(&fragment).unwrap_err().to_string();
-    assert!(error.contains("dotted context fragments"), "{error}");
+    assert!(error.contains("dotted context fragment"), "{error}");
 }
 
 fn spec(path: &str, lockfile: &str, parts: &[&str]) -> options::CacheSpec {
