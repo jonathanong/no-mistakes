@@ -242,6 +242,7 @@ fn workflow_load_errors_are_rendered_for_both_failure_kinds() {
     let workflows = ParsedWorkflowSet {
         documents: vec![
             ParsedWorkflowDocument {
+                source: None,
                 path: ".github/workflows/read.yml".into(),
                 value: Err(WorkflowDocumentError {
                     kind: WorkflowDocumentErrorKind::Read,
@@ -249,6 +250,7 @@ fn workflow_load_errors_are_rendered_for_both_failure_kinds() {
                 }),
             },
             ParsedWorkflowDocument {
+                source: None,
                 path: ".github/workflows/parse.yml".into(),
                 value: Err(WorkflowDocumentError {
                     kind: WorkflowDocumentErrorKind::Parse,
@@ -274,10 +276,12 @@ fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
     let workflows = ParsedWorkflowSet {
         documents: vec![
             ParsedWorkflowDocument {
+                source: None,
                 path: ".github/workflows/no-jobs.yml".into(),
                 value: Ok(Value::Null),
             },
             ParsedWorkflowDocument {
+                source: None,
                 path: ".github/workflows/incomplete.yml".into(),
                 value: Ok(incomplete),
             },
@@ -295,6 +299,7 @@ fn ci_scanner_honors_static_posix_shell_overrides_and_defaults() {
     add_static_runners(&mut workflow);
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/shells.yml".into(),
             value: Ok(workflow),
         }],
@@ -319,6 +324,7 @@ fn ci_scanner_rejects_an_empty_shell_setting() {
     add_static_runners(&mut workflow);
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/empty-shell.yml".into(),
             value: Ok(workflow),
         }],
@@ -336,6 +342,7 @@ fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
     add_static_runners(&mut workflow);
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/template-flags.yml".into(),
             value: Ok(workflow),
         }],

@@ -8,10 +8,24 @@ use no_mistakes::config::v2::{DisableDirectivePolicy, NoMistakesConfig};
 /// hygiene follows its own policy after the rule scope has proved staleness.
 pub(in crate::check_runner::results) fn demote(
     config: &NoMistakesConfig,
+    queues: &mut Vec<no_mistakes::queue::CheckFinding>,
     rules: &mut Vec<RuleFinding>,
     codebase: &mut Vec<PreparedUniqueExportFinding>,
     advisories: &mut Vec<RuleFinding>,
 ) {
+    let (advisory_queues, failing_queues): (Vec<_>, Vec<_>) = std::mem::take(queues)
+        .into_iter()
+        .partition(no_mistakes::queue::CheckFinding::is_advisory);
+    *queues = failing_queues;
+    advisories.extend(advisory_queues.into_iter().map(|finding| RuleFinding {
+        causes: Vec::new(),
+        rule: "queues-check".to_string(),
+        file: finding.file,
+        line: finding.line,
+        message: finding.message,
+        import: None,
+        target: None,
+    }));
     rules.retain(|finding| {
         finding.rule != "unused-allow-entry"
             || config.report_unused_allow_entries != DisableDirectivePolicy::Ignore

@@ -461,11 +461,20 @@ reason, with details in the original transcript. An audit flag makes the
 attempt unavailable for scoring. New flagged attempts withhold LLM judging.
 Review the saved transcript for context. Standard process-stream and discard
 devices (`/dev/null`, `/dev/stdout`, `/dev/stderr`, `/dev/tty`) are exempt from
-the audit. The audit covers recognized paths only and can miss host reads,
-including symlinks (paths are normalized without resolving links), unexpanded
-variables or command substitutions such as `$PWD`, `$TMPDIR`, `~user`, and
-`$(...)`, unlisted reader commands or wrappers (such as `env`, `xargs`,
-`base64`, `jq`, or `git -C`), and non-literal Python paths.
+the audit. Shell quoting and escapes distinguish literal words from redirection
+operators. The audit checks file operands of `sed` and `awk`, including
+program files supplied via `-f` and GNU awk's `-E`, and recognizes unique
+abbreviations of supported GNU options. Inline program text and GNU sed's
+attached `-i` backup suffix stay out of path checks. The audit also recognizes the command after a plain
+leading shell assignment such as `FLAG=1`.
+
+The audit covers recognized paths only. Its limits include symlinks (paths
+are normalized without resolving links), unexpanded variables or command
+substitutions such as `$PWD`, `$TMPDIR`, `~user`, and `$(...)`, unlisted
+reader commands or wrappers (such as `env`, `xargs`, `base64`, `jq`, or
+`git -C`), non-literal Python paths, and file access inside text-processing
+programs. The audit identifies the command after assignment prefixes and leaves
+their values unevaluated when locating operands.
 
 A judge failure sets `error` on the LLM grader and increments
 `judgeErrorCount` for the attempt and suite. The report stays partial and

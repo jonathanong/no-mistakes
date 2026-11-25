@@ -23,6 +23,16 @@ impl<'a> QueueVisitor<'a> {
         if let Some(init) = &decl.init {
             if let Some(value) = static_string(init) {
                 self.const_strings.insert(name.clone(), value);
+            } else if self.binding_is_const {
+                if let Expression::Identifier(id) = init.get_inner_expression() {
+                    if let Some(value) = self.const_strings.get(id.name.as_str()).cloned() {
+                        self.const_strings.insert(name.clone(), value);
+                    } else if let Some(imported) =
+                        self.facts.string_imports.get(id.name.as_str()).cloned()
+                    {
+                        self.facts.string_imports.insert(name.clone(), imported);
+                    }
+                }
             }
             if self.binding_is_const {
                 let value = crate::queue::extract_priority::const_nonnegative_integer(
@@ -45,12 +55,22 @@ impl<'a> QueueVisitor<'a> {
         }
         if let Some(Expression::NewExpression(new_expr)) = &decl.init {
             if self.is_queue_constructor(&new_expr.callee) {
-                if let Some(queue_name) = new_expr
+                let (queue_name, queue_import) = new_expr
                     .arguments
                     .first()
-                    .and_then(|arg| self.literal_arg(arg))
-                {
+                    .map(|arg| self.resolve_queue_name_arg(arg))
+                    .unwrap_or((None, None));
+                if let Some(queue_name) = queue_name {
                     self.note_queue_declaration(&name, declaration, LocalQueue::Known(queue_name));
+                    if extract_job_id::is_imported_callee(self, &new_expr.callee) {
+                        extract_job_id::note_queue_binding(self, &decl.id);
+                    }
+                } else if let Some(imported) = queue_import {
+                    self.note_queue_declaration(
+                        &name,
+                        declaration,
+                        LocalQueue::ImportedName(imported),
+                    );
                     if extract_job_id::is_imported_callee(self, &new_expr.callee) {
                         extract_job_id::note_queue_binding(self, &decl.id);
                     }

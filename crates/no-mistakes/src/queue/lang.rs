@@ -149,6 +149,7 @@ fn language_worker(root: &Path, path: &Path, job: &str, cluster: Option<&str>) -
             wildcard: false,
         },
         queue: Some(queue_key(root, cluster)),
+        reachable_files: Default::default(),
     }
 }
 

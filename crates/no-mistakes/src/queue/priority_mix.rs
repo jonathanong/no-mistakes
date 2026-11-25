@@ -89,6 +89,7 @@ fn emit(
             queue_name: Some(queue.queue_name.clone()),
             job: producer.site.job.clone(),
             message: message(&queue.queue_name, producer, &others, root),
+            severity: None,
         })
         .collect()
 }

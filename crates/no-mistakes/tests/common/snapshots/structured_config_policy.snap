@@ -658,6 +658,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "aliased-location.yml",
+          "line": 4,
+          "message": "aliased-location.yml: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar)",
+          "rule": "structured-config-policy",
+          "sourceLine": "runtime: {<<: 7}"
+        },
+        {
           "file": "app.yml",
           "line": 1,
           "message": "app.yml: banned config key `runtime.legacy.enabled` is present",
@@ -675,17 +682,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "scalar.yml",
-          "line": 1,
+          "line": 4,
           "message": "scalar.yml: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar)",
           "rule": "structured-config-policy",
-          "sourceLine": "# A merge value that is not a mapping cannot be applied, so the file is unanalyzable."
+          "sourceLine": "<<: *label"
         },
         {
           "file": "sequence-scalar-item.yml",
-          "line": 1,
+          "line": 7,
           "message": "sequence-scalar-item.yml: failed to apply YAML merge keys (expected a mapping for merging, but found scalar)",
           "rule": "structured-config-policy",
-          "sourceLine": "# A scalar item in a merge sequence cannot be applied, so the file is unanalyzable."
+          "sourceLine": "<<: [*first, *note]"
         },
         {
           "file": "sequence.yml",

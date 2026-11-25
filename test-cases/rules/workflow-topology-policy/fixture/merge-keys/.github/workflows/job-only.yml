@@ -1,0 +1,8 @@
+name: Jobs
+on: [workflow_dispatch]
+jobs:
+  verify:
+    <<: 7
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo verify

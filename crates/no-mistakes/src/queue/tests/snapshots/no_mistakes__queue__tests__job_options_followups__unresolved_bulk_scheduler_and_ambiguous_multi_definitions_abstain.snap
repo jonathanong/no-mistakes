@@ -1,0 +1,56 @@
+---
+source: crates/no-mistakes/src/queue/tests/job_options_followups.rs
+expression: snapshot
+---
+{
+  "findings": [
+    {
+      "kind": "missing-job-option",
+      "file": "producers.ts",
+      "line": 29,
+      "queueFile": "queue-a.ts",
+      "queueName": "shared",
+      "job": "from-a",
+      "message": "job options missing backoff",
+      "sourceLine": "sharedA.add(\"from-a\", {});"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "producers.ts",
+      "line": 30,
+      "queueFile": "queue-b.ts",
+      "queueName": "shared",
+      "job": "from-b",
+      "message": "job options missing attempts",
+      "sourceLine": "sharedB.add(\"from-b\", {});"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "producers.ts",
+      "line": 45,
+      "queueFile": "producers.ts",
+      "queueName": "local-dup",
+      "job": "local-one",
+      "message": "job options missing backoff",
+      "sourceLine": "localFirst.add(\"local-one\", {});"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "producers.ts",
+      "line": 46,
+      "queueFile": "producers.ts",
+      "queueName": "local-dup",
+      "job": "local-two",
+      "message": "job options missing attempts",
+      "sourceLine": "localSecond.add(\"local-two\", {});"
+    }
+  ],
+  "diagnostics": [
+    {
+      "file": "producers.ts",
+      "line": 34,
+      "message": "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions",
+      "sourceLine": "flow.add({ name: \"ambiguous-flow\", queueName: \"shared\", data: {} });"
+    }
+  ]
+}

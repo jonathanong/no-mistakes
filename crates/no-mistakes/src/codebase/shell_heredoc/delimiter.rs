@@ -1,10 +1,12 @@
-use super::{first_document, Document};
+use super::{first_document, operator, Document, Operator};
+use crate::codebase::shell_words::{split_quoted_words, Whitespace};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum DelimiterStyle {
     StripQuotes,
     LeadingQuote,
     WhitespaceWord,
+    AsciiQuotedWords,
 }
 
 struct Word {
@@ -39,6 +41,28 @@ pub(crate) fn line_opener(line: &str) -> Option<(Document, bool)> {
     ))
 }
 
+pub(crate) fn ascii_document(input: &str, arithmetic: bool) -> Option<Document> {
+    let opener @ Operator::Document { strip_tabs } = operator(input.as_bytes(), arithmetic)? else {
+        return None;
+    };
+    let text = input[opener.width()..].trim_start_matches([' ', '\t']);
+    let word = read_word(text.chars(), DelimiterStyle::AsciiQuotedWords);
+    if !word.closed {
+        return None;
+    }
+    let end = text
+        .char_indices()
+        .nth(word.width)
+        .map_or(text.len(), |(offset, _)| offset);
+    let [delimiter] = split_quoted_words(&text[..end], Whitespace::Ascii)?
+        .try_into()
+        .ok()?;
+    Some(Document {
+        delimiter,
+        strip_tabs,
+    })
+}
+
 fn read_word(input: impl Iterator<Item = char>, style: DelimiterStyle) -> Word {
     let mut input = input.peekable();
     let quote = if style == DelimiterStyle::StripQuotes {
@@ -58,8 +82,12 @@ fn read_word(input: impl Iterator<Item = char>, style: DelimiterStyle) -> Word {
             word.closed = true;
             break;
         }
+        let is_whitespace = match style {
+            DelimiterStyle::AsciiQuotedWords => ch.is_ascii_whitespace(),
+            _ => ch.is_whitespace(),
+        };
         if quote.is_none()
-            && (ch.is_whitespace()
+            && (is_whitespace
                 || (style != DelimiterStyle::WhitespaceWord
                     && matches!(ch, ';' | '|' | '&' | '<' | '>' | '(' | ')')))
         {

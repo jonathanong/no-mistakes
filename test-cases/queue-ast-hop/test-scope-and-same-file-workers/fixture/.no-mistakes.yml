@@ -1,0 +1,18 @@
+version: 2
+projects:
+  workers:
+    root: .
+    queues:
+      enqueues: ["apps/**/*.mts", "packages/**/*.mts"]
+      workers: ["apps/**/*.mts", "packages/**/*.mts"]
+tests:
+  vitest:
+    projects:
+      integration:
+        include: ["apps/workers/integration/**/*.test.mts"]
+queues:
+  factories:
+    queue:
+      - { callee: createQueue, name: 0 }
+    worker:
+      - { callee: createWorker, name: 0, processor: 1 }

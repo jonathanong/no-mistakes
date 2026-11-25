@@ -1,0 +1,71 @@
+---
+source: crates/no-mistakes/src/queue/tests/workspace_exports.rs
+expression: snapshot
+---
+{
+  "jobs": [
+    {
+      "queueFile": "queue:billing",
+      "queueName": "billing",
+      "job": "charge"
+    },
+    {
+      "queueFile": "queue:mail",
+      "queueName": "mail",
+      "job": "welcome"
+    }
+  ],
+  "edges": [
+    {
+      "from": "apps/alpha/billing.mts",
+      "to": "queue:billing#charge",
+      "kind": "queue-enqueue"
+    },
+    {
+      "from": "apps/api/send.mts",
+      "to": "queue:mail#welcome",
+      "kind": "queue-enqueue"
+    },
+    {
+      "from": "apps/zeta/billing.mts",
+      "to": "queue:billing#charge",
+      "kind": "queue-enqueue"
+    },
+    {
+      "from": "queue:billing#charge",
+      "to": "apps/workers/mail-worker.mts",
+      "kind": "queue-worker"
+    },
+    {
+      "from": "queue:mail#welcome",
+      "to": "apps/workers/mail-worker.mts",
+      "kind": "queue-worker"
+    }
+  ],
+  "workers": [
+    {
+      "file": "apps/workers/mail-worker.mts",
+      "line": 4,
+      "processorFile": null,
+      "queueFile": "queue:mail",
+      "queueName": "mail",
+      "jobs": [
+        "welcome"
+      ],
+      "wildcard": false,
+      "library": null
+    },
+    {
+      "file": "apps/workers/mail-worker.mts",
+      "line": 10,
+      "processorFile": null,
+      "queueFile": "queue:billing",
+      "queueName": "billing",
+      "jobs": [
+        "charge"
+      ],
+      "wildcard": false,
+      "library": null
+    }
+  ]
+}
