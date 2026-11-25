@@ -211,3 +211,86 @@ mod conflict_functions;
 mod conflict_location_demand;
 
 mod scan_compatibility;
+
+#[test]
+fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-explain-write-rollback/fixture"),
+    );
+    let shared = root.join("example/benchmarks/update.sql");
+    let explain_only = root.join("cases/benchmarks/suppressions.sql");
+    let writes_only = root.join("cases/other/outside.sql");
+    let unparsed = root.join("cases/benchmarks/unparsed.sql");
+    let missing = root.join("missing.sql");
+    let files = [
+        shared.clone(),
+        explain_only.clone(),
+        writes_only.clone(),
+        unparsed.clone(),
+        missing.clone(),
+    ];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let facts = prepare(
+        &root,
+        &files,
+        &sources,
+        &CheckFactPlan {
+            postgres_schema: true,
+            postgres_dml: true,
+            postgres_sql_include: vec![
+                "example/benchmarks/update.sql".into(),
+                "cases/benchmarks/unparsed.sql".into(),
+            ],
+            postgres_write_sql_include: vec!["cases/other/outside.sql".into()],
+            postgres_explain_write_rollback_paths: Arc::new(
+                [
+                    shared.clone(),
+                    explain_only.clone(),
+                    unparsed.clone(),
+                    missing.clone(),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+            ..Default::default()
+        },
+        &CheckFactMap::default(),
+    );
+    let plans = facts.explain_write_rollback(&shared).unwrap();
+    assert_eq!(plans.writes.len(), 1);
+    assert_eq!(plans.writes[0].kind, "UPDATE");
+    assert_eq!(plans.writes[0].location.line, 1);
+    assert!(plans.unanalyzable.is_empty());
+    assert_eq!(facts.statements(&shared, None).unwrap().len(), 1);
+    assert_eq!(facts.schema(&shared).unwrap().path, shared);
+
+    assert_eq!(
+        facts
+            .explain_write_rollback(&explain_only)
+            .unwrap()
+            .writes
+            .len(),
+        3
+    );
+    assert!(facts.statements(&explain_only, None).is_err());
+    assert!(facts.schema(&explain_only).is_err());
+    assert_eq!(facts.statements(&writes_only, None).unwrap().len(), 1);
+    assert!(facts.explain_write_rollback(&writes_only).is_err());
+
+    assert!(facts.statements(&unparsed, None).unwrap()[0].parse_failed);
+    let unparsed_plans = facts.explain_write_rollback(&unparsed).unwrap();
+    assert!(unparsed_plans.writes.is_empty());
+    assert_eq!(unparsed_plans.unanalyzable.len(), 1);
+    assert_eq!(
+        facts.explain_write_rollback[&missing]
+            .as_ref()
+            .unwrap_err()
+            .source_kind,
+        Some(std::io::ErrorKind::NotFound)
+    );
+    assert!(facts.explain_write_rollback(&missing).is_err());
+    assert_eq!(sources.physical_read_count(), files.len());
+}
+
+mod explain_write_rollback;
