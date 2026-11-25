@@ -118,16 +118,14 @@ fn skip_single(bytes: &[u8], mut i: usize) -> usize {
 }
 
 fn skip_ansi_c(bytes: &[u8], mut i: usize) -> usize {
-    while i < bytes.len() {
-        if bytes[i] == b'\\' && i + 1 < bytes.len() {
-            i += 2;
-        } else if bytes[i] == b'\'' {
-            return i + 1;
+    while i < bytes.len() && bytes[i] != b'\'' {
+        i += if bytes[i] == b'\\' && i + 1 < bytes.len() {
+            2
         } else {
-            i += 1;
-        }
+            1
+        };
     }
-    i
+    (i + 1).min(bytes.len())
 }
 
 fn is_comment_start(bytes: &[u8], i: usize) -> bool {
