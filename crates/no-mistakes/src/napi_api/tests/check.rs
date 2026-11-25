@@ -4,6 +4,9 @@ use serde_json::json;
 #[path = "check_partial.rs"]
 mod check_partial;
 
+#[path = "check_swift_darwin_imports.rs"]
+mod check_swift_darwin_imports;
+
 #[path = "check_job_permissions.rs"]
 mod check_job_permissions;
 

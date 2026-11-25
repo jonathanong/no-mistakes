@@ -77,6 +77,8 @@ checked, and other ID expressions use the selected unanalyzable policy. This
 rule remains enabled when `tests.playwright.selectors.htmlIds` is `false`. See
 [the rule](../rules/playwright-unique-html-ids.md#effort).
 Enable [`react-no-nested-buttons-and-links`](../rules/react-no-nested-buttons-and-links.md) to check native HTML buttons and links in selected JSX and TSX files. The finding points to the inner control.
+Configure [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
+to report unconditional Darwin imports in selected Swift test files.
 
 For `nextjs-no-caching`, `low` checks literal cache settings without constant
 propagation or configuration wrapper inference. Indirect settings follow the

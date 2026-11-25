@@ -154,6 +154,11 @@ coverage.
 
 `check` can run the opt-in `react-no-nested-buttons-and-links` rule for native buttons and links in selected JSX and TSX files. Custom render paths and dynamic destinations are outside its scope.
 
+`check` can run the opt-in `swift-no-unguarded-darwin-import` rule on configured
+portable Swift test paths. It flags unconditional `Darwin` imports. Only
+`#if` and `#elseif` conditions the rule can verify count as guards. The rule
+classifies imports in branches without a provable guard as unanalyzable.
+
 ## Structural / AST-pattern blast radius — use `ast-grep`
 
 `no-mistakes` answers **graph-aware** and **config-aware** queries. It does not
