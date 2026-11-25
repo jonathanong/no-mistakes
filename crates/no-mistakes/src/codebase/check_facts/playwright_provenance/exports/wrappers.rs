@@ -1,5 +1,16 @@
 use super::*;
 
+#[derive(Clone)]
+pub(super) enum WrapperProof {
+    Direct {
+        param_index: usize,
+        deps: Vec<(ExportKey, usize)>,
+    },
+    Alias(ExportKey),
+    Stars(Vec<ExportKey>),
+    Unknown,
+}
+
 impl ExportLookup<'_> {
     pub(super) fn resolve_wrappers(
         &self,
