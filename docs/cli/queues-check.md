@@ -313,10 +313,11 @@ Valkey unless told otherwise. Opt into `queues.unboundedJobRetention` to report:
   required retention key unset.
 
 `true`, a non-negative number, or an object with a `count` or `age` property
-counts as bounded. Non-literal expressions and open spreads abstain. An unset
-key requires statically known queue defaults. If a producer omits a required
-key and its default is unknown or ambiguous, the check emits a not-judged
-warning. An explicit unbounded override still produces a finding.
+counts as bounded. The check emits a not-judged warning at a producer when
+a required retention value is unknown or an options spread or computed key
+leaves it uncertain. A missing key also produces a not-judged warning when
+the corresponding queue default is unknown or ambiguous. An explicit
+unbounded override still produces a finding.
 
 With both `queues.requiredJobOptions` and `queues.unboundedJobRetention`
 enabled, shared retention keys use the `unbounded-job-retention` finding

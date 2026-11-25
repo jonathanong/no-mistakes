@@ -419,3 +419,50 @@ fn queue_retention_and_listing_followups_check_json_snapshot() {
         );
     }
 }
+
+#[test]
+fn queue_retention_call_site_abstentions_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-retention-call-site");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "queue_retention_call_site_abstentions",
+        &[("call-sites", root, PathBuf::new())],
+        &[],
+        &["--include-suppressed"],
+    );
+    let result = &reports["call-sites"];
+    assert_eq!(result["exitCode"], 1);
+    let report = &result["report"];
+    let findings = report["queues"].as_array().unwrap();
+    let mut jobs: Vec<_> = findings
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["kind"], "unbounded-job-retention");
+            finding["job"].as_str().unwrap()
+        })
+        .collect();
+    jobs.sort_unstable();
+    assert_eq!(jobs, ["mixed", "unbounded"]);
+
+    let warnings = report["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 6, "{warnings:?}");
+    for line in [11, 12, 13, 14, 23] {
+        assert!(
+            warnings.iter().any(|warning| {
+                let warning = warning.as_str().unwrap();
+                warning.starts_with(&format!("queues-check: enqueue.ts:{line} "))
+                    && warning.contains("unbounded-job-retention was not judged")
+            }),
+            "{warnings:?}"
+        );
+    }
+    assert!(warnings.iter().any(|warning| {
+        warning.as_str().unwrap().starts_with(
+            "queues-check: enqueue.ts:26 unbounded-job-retention was not judged for missing options",
+        )
+    }));
+    let suppressed = report["suppressed"].as_array().unwrap();
+    assert_eq!(suppressed.len(), 1, "{suppressed:?}");
+    assert_eq!(suppressed[0]["file"], "enqueue.ts");
+    assert_eq!(suppressed[0]["line"], 19);
+}

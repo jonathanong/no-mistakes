@@ -23,7 +23,14 @@ and aggregate `no-mistakes check` report `unbounded-job-retention` for:
   `defaultJobOptions`) leave a required retention key unset.
 
 `true`, a non-negative number, or an object with a `count` or `age` property
-counts as bounded. Non-literal expressions and open spreads abstain. When both
+counts as bounded. The check emits a not-judged warning at the producer
+when a required retention value is unknown or a spread or computed property
+leaves that value uncertain. An explicit value after a spread can still prove
+the retention setting. A producer on a locally constructed queue can report
+an uncertain call option even when the queue name is dynamic. If a call on
+that queue omits a required key, the check reports that the defaults could
+not be established. For a resolved queue, the check reports a definite
+violation even when another required key at the same site is uncertain. When both
 `queues.requiredJobOptions` and `queues.unboundedJobRetention` cover the same
 key on a producer, `unbounded-job-retention` reports it once so the site is not
 duplicated.
