@@ -9,4 +9,14 @@ function readWorkflow(file) {
   return parse(readFileSync(file, "utf8"));
 }
 
-module.exports = { workflowJob, readWorkflow };
+function workflowGateCommand(job) {
+  const run = job.match(/^ {8}run: node (\.github\/scripts\/[\w.-]+\.cjs)$/m)?.[1];
+  if (run) {
+    const path = require("node:path");
+    return [process.execPath, [path.resolve(__dirname, "../..", run)]];
+  }
+  const script = job.split("        run: |\n")[1].replace(/^          /gm, "");
+  return ["bash", ["-eu", "-c", script]];
+}
+
+module.exports = { workflowJob, readWorkflow, workflowGateCommand };

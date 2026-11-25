@@ -1,11 +1,15 @@
 use super::super::{
     changed_unmodeled_installation_sections, impact_importer_paths, impact_names, parse,
-    parse_importers, validate_for_planning, PnpmValidationError,
+    parse_importers, prepare_documents, PnpmValidationError,
 };
 use crate::codebase::lockfile::{diff, ResolutionKind};
 use crate::codebase::pnpm_lock::parse_pnpm_lock;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
+
+fn validate_for_planning(content: &str) -> Result<(), PnpmValidationError> {
+    prepare_documents(content).map(|_| ())
+}
 
 fn issue_lock(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -6,13 +6,17 @@ The caller fetches or prepares the directories first. This command does not
 invoke version control, contact a server, or infer repository history.
 
 ```sh
-no-mistakes changes diff --base-root before --head-root after --config changes.yml
-no-mistakes tests plan vitest --root after --changes changes.json --format json
+no-mistakes changes diff --base-root before --head-root after --config changes.yml > changes.json
+no-mistakes tests plan vitest --root after --changes ../changes.json --format json
 ```
 
-Redirect the first command's JSON to `changes.json` before running the second.
-Relative `--config` paths are relative to `--head-root`. Without it, the ordinary
-configuration loader uses the head tree. See [changes configuration](../configuration/changes.md).
+Redirect the first command's JSON to a report file outside the compared trees
+before running the second. Relative `--config` paths are relative to
+`--head-root`, and relative `--changes` paths in `tests plan` are relative to
+`--root` (matching `--config`; pass a parent-relative path such as
+`../changes.json` or an absolute path when the report sits beside `--root`).
+Without `--config`, the ordinary configuration loader uses the head tree. See
+[changes configuration](../configuration/changes.md).
 
 Each declared category produces sorted `changed`, `added`, and `removed` IDs.
 A path-only category reports relative paths. `id.fromPath` extracts IDs from a
@@ -37,8 +41,14 @@ keyed arrays, Apple `.strings` (UTF-8 or BOM-marked UTF-16), and .NET `.resx`.
 The localization format is old-style `.strings`, not `.xcstrings`.
 
 Category `exclude` globs apply only to the category that declares them; another
-category whose `paths` match the same path still classifies and diffs it, and
-any changed path matched by no category appears in `unclassified`. Unreadable roots or files, malformed
+category whose `paths` match the same path still classifies and diffs it. A
+changed file matched by at least one category's `paths` that every matching
+category excludes, or that no rule in a matching category can classify (such as
+a changed symbolic link matching a `keysOf` category), appears in
+`unclassified`. Changed files matched by no category's `paths` (such as ordinary
+source files) are recorded in `changedFiles` (omitted when empty) so
+`tests plan --changes` can route them through the import graph on its own
+without requiring `--changed-file` or `--base`. Unreadable roots or matched files, malformed
 structured files, and unsupported entries produce `complete: false` with
 `reasons`. An unreadable root still produces valid report JSON and exits 1.
 Symbolic links compare by link target, as git does, and are never followed:
