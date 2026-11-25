@@ -44,6 +44,7 @@ runtime:
         "runtime:\n  a:\n    first\n    'second\n  \"<<\": keep\n"
     ));
     assert!(!has_plain_merge_key("runtime:\n  ?\nother: a << b\n"));
+    assert!(!has_plain_merge_key("note: & \n"));
 }
 
 #[test]

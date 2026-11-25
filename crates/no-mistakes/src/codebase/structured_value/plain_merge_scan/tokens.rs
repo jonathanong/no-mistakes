@@ -9,6 +9,10 @@ pub(super) fn is_space_or_end(bytes: &[u8], pos: usize) -> bool {
     pos >= bytes.len() || matches!(bytes[pos], b' ' | b'\t' | b'\n' | b'\r')
 }
 
+pub(super) fn is_comment_start(bytes: &[u8], pos: usize) -> bool {
+    pos == 0 || matches!(bytes[pos - 1], b' ' | b'\t' | b'\n' | b'\r')
+}
+
 pub(super) fn is_doc_marker(bytes: &[u8], pos: usize) -> bool {
     pos + 3 <= bytes.len()
         && matches!(&bytes[pos..pos + 3], b"---" | b"...")

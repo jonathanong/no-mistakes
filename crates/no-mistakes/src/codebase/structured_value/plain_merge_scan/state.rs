@@ -104,29 +104,33 @@ impl ScanState {
             return after + 3;
         }
         if self.flow_depth == 0 {
-            self.after_tag = false;
-            if self.plain_indent.is_some_and(|owner| spaces > owner) {
-                self.at_token_start = false;
-                self.pending_owner_indent = None;
-                self.clear_prefix();
-            } else {
-                self.plain_indent = None;
-                self.at_token_start = true;
-                self.candidate_key_col = None;
-                if let Some(owner) = self.pending_owner_indent.take().filter(|&o| spaces > o) {
-                    self.entry_indent = owner;
-                    self.after_indicator = true;
-                } else {
-                    self.entry_indent = spaces;
-                    self.after_indicator = false;
-                    self.after_anchor = false;
-                }
-                if self.explicit_key_indent.is_some_and(|ind| spaces < ind) {
-                    self.explicit_key_indent = None;
-                }
-            }
-            self.after_json_like = false;
+            self.reset_block_line(spaces);
         }
         after
+    }
+
+    fn reset_block_line(&mut self, spaces: usize) {
+        self.after_tag = false;
+        if self.plain_indent.is_some_and(|owner| spaces > owner) {
+            self.at_token_start = false;
+            self.pending_owner_indent = None;
+            self.clear_prefix();
+        } else {
+            self.plain_indent = None;
+            self.at_token_start = true;
+            self.candidate_key_col = None;
+            if let Some(owner) = self.pending_owner_indent.take().filter(|&o| spaces > o) {
+                self.entry_indent = owner;
+                self.after_indicator = true;
+            } else {
+                self.entry_indent = spaces;
+                self.after_indicator = false;
+                self.after_anchor = false;
+            }
+            if self.explicit_key_indent.is_some_and(|ind| spaces < ind) {
+                self.explicit_key_indent = None;
+            }
+        }
+        self.after_json_like = false;
     }
 }
