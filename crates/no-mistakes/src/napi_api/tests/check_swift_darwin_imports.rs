@@ -15,7 +15,14 @@ fn check_json_reports_unconditional_swift_darwin_imports() {
     )
     .unwrap();
     let rules = result["rules"].as_array().unwrap();
-    assert_eq!(rules.len(), 4, "{result}");
+    assert_eq!(rules.len(), 15, "{result}");
+    assert_eq!(
+        rules
+            .iter()
+            .filter(|finding| finding["target"] == "unanalyzable")
+            .count(),
+        6
+    );
     assert_eq!(rules[0]["file"], "Tests/ClockTests.swift");
     assert_eq!(rules[0]["line"], 2);
     assert_eq!(rules[0]["rule"], "swift-no-unguarded-darwin-import");
@@ -31,7 +38,7 @@ fn check_json_reports_unconditional_swift_darwin_imports() {
     assert_eq!(serde_json::to_value(library).unwrap(), result["rules"]);
 
     let suppressed = result["suppressed"].as_array().unwrap();
-    assert_eq!(suppressed.len(), 3, "{result}");
+    assert_eq!(suppressed.len(), 4, "{result}");
 
     let batch: Value = serde_json::from_str(
         &crate::napi_api::analyze_project::analyze_project_json_impl(

@@ -8,7 +8,13 @@ mod csharp;
 mod swift;
 
 pub(crate) use csharp::csharp_code_mask;
-pub(crate) use swift::swift_code_mask;
+pub(crate) fn swift_code_mask(source: &str) -> String {
+    swift::mask(source, false)
+}
+
+pub(crate) fn swift_declaration_mask(source: &str) -> String {
+    swift::mask(source, true)
+}
 
 #[cfg(test)]
 mod tests;

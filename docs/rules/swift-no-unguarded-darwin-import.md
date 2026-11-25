@@ -20,20 +20,28 @@ rules:
 
 ## What it catches
 
-The rule reports explicit `Darwin` imports in selected `.swift` files on the
-line of the import. It covers plain and selective imports, including an access
-modifier or argument-free attributes on the import line. It ignores matching
-text in comments, strings, and extended regex literals.
+The rule reports plain and selective `Darwin` imports in selected `.swift`
+files. It points to the `import` keyword when the declaration spans lines,
+follows a semicolon, or has attributes with arguments. Comments and
+import-shaped text in strings and regex literals are ignored.
 
-The check skips imports within `#if` blocks, including alternate branches.
-Swift evaluates the condition. Use `#if canImport(Darwin)` to check the
-module's availability. Scope the rule with `include` and `exclude` so
-Apple-only targets can keep direct imports.
+A direct `canImport(Darwin)` or `os(macOS)`, `os(iOS)`, `os(tvOS)`,
+`os(watchOS)`, or `os(visionOS)` condition proves a guard in its `#if` or
+`#elseif` branch. That proof also applies inside nested blocks. Each sibling
+branch needs its own proof. A branch without a provable guard is unanalyzable.
+This includes feature flags, negated or compound conditions, and `#else`
+without a proven enclosing guard.
+
+Scope the rule with `include` and `exclude` so Apple-only targets can keep
+direct imports.
 
 ## Options and defaults
 
 The rule is off by default. `options.allow` defaults to an empty set of path
 globs. The optional `options.message` appends a hint to the default fix.
+Use `options.unanalyzable` to route unproven guards and unreadable files.
+It defaults to `report`. Use `advise` for non-failing advisories or `ignore`
+to omit these diagnostics. Unconditional imports remain findings.
 The CLI and the async Node `check()`, `checkJson()`, and `analyzeProject()`
 check report use the same rule.
 
@@ -82,10 +90,11 @@ the check at `max`.
 
 ### Limits
 
-The check reads explicit import lines and conditional compilation markers. It
-does not resolve module aliases, interpret platform predicates, or infer test
-paths. Swift files with invalid UTF-8 are decoded lossily. Unreadable files
-are skipped.
+The rule recognizes individual positive predicates, including parenthesized
+forms. It leaves general condition evaluation to Swift and uses the configured
+paths to identify portable tests. Swift files with invalid UTF-8 are decoded
+lossily. If the source cannot be read, the diagnostic names the file and asks
+the user to restore access.
 
 ## Suppression
 

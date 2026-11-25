@@ -1,13 +1,21 @@
 use super::common::{blank, blank_range, repeated, starts_with, utf8_width};
 
-pub(crate) fn swift_code_mask(source: &str) -> String {
+mod bare_regex;
+
+pub(super) fn mask(source: &str, bare_regex: bool) -> String {
     let bytes = source.as_bytes();
     let mut masked = bytes.to_vec();
-    mask_swift_code(bytes, &mut masked, 0, false);
+    mask_swift_code(bytes, &mut masked, 0, false, bare_regex);
     String::from_utf8(masked).expect("masking replaces UTF-8 bytes with ASCII spaces")
 }
 
-fn mask_swift_code(source: &[u8], masked: &mut [u8], mut i: usize, close_paren: bool) -> usize {
+fn mask_swift_code(
+    source: &[u8],
+    masked: &mut [u8],
+    mut i: usize,
+    close_paren: bool,
+    bare_regex: bool,
+) -> usize {
     let mut paren_depth = 0;
     while i < source.len() {
         if close_paren && source[i] == b')' {
@@ -32,8 +40,13 @@ fn mask_swift_code(source: &[u8], masked: &mut [u8], mut i: usize, close_paren: 
             i = mask_swift_block_comment(source, masked, i);
             continue;
         }
+        if let Some(end) = bare_regex.then(|| bare_regex::end(source, i)).flatten() {
+            blank_range(masked, i, end);
+            i = end;
+            continue;
+        }
         if let Some(literal) = swift_literal_start(source, i) {
-            i = mask_swift_literal(source, masked, literal);
+            i = mask_swift_literal(source, masked, literal, bare_regex);
             continue;
         }
         i += 1;
@@ -85,7 +98,12 @@ fn swift_string_literal(start: usize, hashes: usize, open: usize, source: &[u8])
     }
 }
 
-fn mask_swift_literal(source: &[u8], masked: &mut [u8], literal: SwiftLiteral) -> usize {
+fn mask_swift_literal(
+    source: &[u8],
+    masked: &mut [u8],
+    literal: SwiftLiteral,
+    bare_regex: bool,
+) -> usize {
     let mut i = literal.open + literal.delimiter_len;
     blank_range(masked, literal.start, i);
     while i < source.len() {
@@ -93,7 +111,7 @@ fn mask_swift_literal(source: &[u8], masked: &mut [u8], literal: SwiftLiteral) -
             if interpolation_starts(source, i, literal.hashes) {
                 let open_end = i + 2 + literal.hashes;
                 blank_range(masked, i, open_end);
-                i = mask_swift_code(source, masked, open_end, true);
+                i = mask_swift_code(source, masked, open_end, true, bare_regex);
                 continue;
             }
             if let Some(end) = swift_escape_end(source, i, literal.hashes) {

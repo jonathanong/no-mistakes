@@ -1,6 +1,4 @@
 const assert = require("node:assert/strict");
-const { cp, mkdtemp, rm } = require("node:fs/promises");
-const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
@@ -110,35 +108,29 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const fixture = join(__dirname, "../../../test-cases/rules/postgres-key-column-types/fixture");
-    const directory = await mkdtemp(join(tmpdir(), "no-mistakes-key-types-"));
-    try {
-      for (const [scenario, detail] of [
-        ["fail-empty-primary", "primary key orders.orders_pkey has no columns"],
-        ["fail-empty-foreign", "foreign key orders.invalid_fkey has no columns"],
-      ]) {
-        const root = join(directory, scenario);
-        await cp(join(fixture, scenario), root, { recursive: true });
-        const check = await cjs.check({ root });
-        const esmCheck = await esm.check({ root });
-        const prepared = (await cjs.analyzeProject({ root, reports: [{ type: "check" }] }))
-          .reports[0].result;
-        const esmPrepared = (await esm.analyzeProject({ root, reports: [{ type: "check" }] }))
-          .reports[0].result;
-        for (const report of [check, esmCheck, prepared, esmPrepared]) {
-          const failure = report.incomplete?.find(
-            (entry) => entry.consumer === "postgres-key-column-types",
-          );
-          assert.ok(failure, "invalid schema catalog must make the requested rule incomplete");
-          assert.ok(failure.message.includes("schemaCatalogPath schema.json"), failure.message);
-          assert.ok(failure.message.includes(detail), failure.message);
-          assert.ok(failure.message.includes("regenerate the schema catalog"), failure.message);
-        }
-        assert.deepEqual(esmCheck, check);
-        assert.deepEqual(prepared, check);
-        assert.deepEqual(esmPrepared, check);
+    for (const [scenario, detail] of [
+      ["fail-empty-primary", "primary key orders.orders_pkey has no columns"],
+      ["fail-empty-foreign", "foreign key orders.invalid_fkey has no columns"],
+    ]) {
+      const root = join(fixture, scenario);
+      const check = await cjs.check({ root });
+      const esmCheck = await esm.check({ root });
+      const prepared = (await cjs.analyzeProject({ root, reports: [{ type: "check" }] })).reports[0]
+        .result;
+      const esmPrepared = (await esm.analyzeProject({ root, reports: [{ type: "check" }] }))
+        .reports[0].result;
+      for (const report of [check, esmCheck, prepared, esmPrepared]) {
+        const failure = report.incomplete?.find(
+          (entry) => entry.consumer === "postgres-key-column-types",
+        );
+        assert.ok(failure, "invalid schema catalog must make the requested rule incomplete");
+        assert.ok(failure.message.includes("schemaCatalogPath schema.json"), failure.message);
+        assert.ok(failure.message.includes(detail), failure.message);
+        assert.ok(failure.message.includes("regenerate the schema catalog"), failure.message);
       }
-    } finally {
-      await rm(directory, { recursive: true, force: true });
+      assert.deepEqual(esmCheck, check);
+      assert.deepEqual(prepared, check);
+      assert.deepEqual(esmPrepared, check);
     }
   },
 );

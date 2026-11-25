@@ -1,30 +1,22 @@
+use super::analysis_policy::AnalysisDiagnostics;
+use super::file_diagnostics::{self, InputUncertainty};
 use super::masked_source::FileAllow;
-use super::{MaskedFileContext, RuleFinding};
-use crate::codebase::ts_source::SourceStore;
+use super::{source_access, RuleFinding};
+use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use regex::Regex;
+use rayon::prelude::*;
 use serde::Deserialize;
-use std::path::Path;
-use std::sync::LazyLock;
+use std::path::{Path, PathBuf};
+
+mod imports;
+use imports::Import;
 
 pub const RULE_ID: &str = "swift-no-unguarded-darwin-import";
 
 const FIX: &str =
     "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.";
-
-static OPEN_CONDITIONAL: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?:^|;)[ \t\x0B\x00]*#if(?:[ \t\x0B\x00(!][^/]*)?$").unwrap()
-});
-
-static DARWIN_IMPORT: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(concat!(
-        r"^(?:@[A-Za-z_][A-Za-z0-9_]*[ \t]+)*",
-        r"(?:(?:public|package|internal|fileprivate|private)[ \t]+)?",
-        r"import[ \t]+(?:(?:typealias|struct|class|enum|protocol|let|var|func)[ \t]+)?",
-        r"(?:Darwin|\x60Darwin\x60)[ \t]*(?:[.;]|$)",
-    ))
-    .unwrap()
-});
+const UNPROVEN: &str = "Cannot verify that this compilation branch guards the Darwin import.";
 
 #[derive(Deserialize, Default)]
 #[serde(default)]
@@ -38,16 +30,39 @@ struct CompiledOptions {
     message: String,
 }
 
-super::masked_source_rule_entrypoints!(compile_options, is_swift_file, check_file);
+super::diagnostic_source_rule_entrypoints!();
 
-fn compile_options(options: Options) -> Result<CompiledOptions> {
-    Ok(CompiledOptions {
-        allow: FileAllow::new(&options.allow, &format!("{RULE_ID} allow"))?,
-        message: match options.message.filter(|message| !message.is_empty()) {
-            Some(message) => format!("{FIX} {message}"),
-            None => FIX.to_string(),
-        },
-    })
+pub(crate) fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    let mut diagnostics = AnalysisDiagnostics::default();
+    for rule in config.rule_applications(RULE_ID) {
+        let options: Options = rule.try_rule_options()?;
+        let mut compiled = CompiledOptions {
+            allow: FileAllow::new(&options.allow, &format!("{RULE_ID} allow"))?,
+            message: match options.message.filter(|message| !message.is_empty()) {
+                Some(message) => format!("{FIX} {message}"),
+                None => FIX.to_string(),
+            },
+        };
+        compiled.allow.setup(root, config, rule, sources);
+        let files = super::selected_rule_files_matching_with_sources(
+            root, config, rule, all_files, sources, is_swift_file,
+        )?;
+        let mut findings: Vec<_> = files
+            .par_iter()
+            .flat_map_iter(|path| check_file(root, path, &compiled, sources))
+            .collect();
+        findings.extend(compiled.allow.finish(root, sources));
+        diagnostics.append(file_diagnostics::application(
+            root, sources, config, rule, findings, defer_suppression, InputUncertainty::ReadOrParse,
+        )?);
+    }
+    Ok(file_diagnostics::sorted(diagnostics))
 }
 
 fn is_swift_file(path: &Path) -> bool {
@@ -59,38 +74,39 @@ fn check_file(
     path: &Path,
     options: &CompiledOptions,
     sources: &SourceStore,
-    defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    super::scan_masked_file(
-        MaskedFileContext::new(root, path, RULE_ID, &options.allow, sources, defer_suppression),
-        super::lexical_mask::swift_code_mask,
-        |_, code, file| {
-            import_lines(code)
-                .map(|line| RuleFinding {
-                    rule: RULE_ID.to_string(),
-                    file: file.to_string(),
-                    line,
-                    message: options.message.clone(),
-                    import: None,
-                    target: None,
-                    causes: Vec::new(),
-                })
+    let file = relative_slash_path(root, path);
+    let mut findings = match sources.read_source_path(path) {
+        Ok(source) => {
+            options.allow.checked(path);
+            let code = super::lexical_mask::swift_declaration_mask(&source);
+            imports::unproven_imports(&code)
+                .map(|(line, kind)| finding(&file, line, kind, &options.message))
                 .collect()
-        },
-    )
+        }
+        Err(error) => vec![source_access::read_failure(root, path, RULE_ID, &error)],
+    };
+    if options.allow.suppress(&file, !findings.is_empty()) {
+        findings.clear();
+    }
+    findings
 }
 
-fn import_lines(code: &str) -> impl Iterator<Item = usize> + '_ {
-    let mut conditional_depth = 0usize;
-    code.lines().enumerate().filter_map(move |(index, line)| {
-        let line = line.trim_matches([' ', '\t', '\x0B', '\0']);
-        if matches!(line, "#endif" | "#endif;") {
-            conditional_depth = conditional_depth.saturating_sub(1);
-        } else if OPEN_CONDITIONAL.is_match(line) {
-            conditional_depth += 1;
-        } else if conditional_depth == 0 && DARWIN_IMPORT.is_match(line) {
-            return Some(index + 1);
-        }
-        None
-    })
+fn finding(file: &str, line: usize, kind: Import, fix: &str) -> RuleFinding {
+    let (message, target) = match kind {
+        Import::Unguarded => (fix.to_owned(), None),
+        Import::Unproven => (format!("{UNPROVEN} {fix}"), Some("unanalyzable".to_owned())),
+    };
+    RuleFinding {
+        rule: RULE_ID.to_owned(),
+        file: file.to_owned(),
+        line,
+        message,
+        import: None,
+        target,
+        causes: Vec::new(),
+    }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod tests;
