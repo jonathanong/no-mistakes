@@ -81,3 +81,6 @@ pub fn diagnostics_with_files_and_sources(
     super::sort_findings(&mut output.advisories);
     Ok(output)
 }
+
+#[cfg(test)]
+mod tests;

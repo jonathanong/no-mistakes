@@ -16,5 +16,6 @@ jobs:
           OTHER_UPDATE: always
   plain:
     runs-on: ubuntu-latest
+    env:
     steps:
       - run: cargo test
