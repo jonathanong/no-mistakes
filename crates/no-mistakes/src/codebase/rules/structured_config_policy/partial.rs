@@ -50,3 +50,6 @@ fn selector_known(value: &Value, path: &[&str]) -> bool {
     }
     child(value, part).is_some_and(|item| item.is_none_or(|item| selector_known(item, rest)))
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;

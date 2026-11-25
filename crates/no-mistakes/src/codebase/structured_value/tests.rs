@@ -406,6 +406,20 @@ fn merge_key_must_match_the_corresponding_source_key() {
 }
 
 #[test]
+fn a_source_shape_disagreement_abstains_before_mutating_the_value() {
+    let source =
+        include_str!("../../../../../test-cases/structured-value/merge-keys/location-mismatch.yml");
+    let mut value: Value = serde_yaml::from_str(source).unwrap();
+    let runtime = value["runtime"].as_mapping_mut().unwrap();
+    runtime.insert(Value::String("<<".into()), Value::Null);
+    let original = value.clone();
+
+    let result = super::MergeLocations::parse(source).expand(0, &mut value);
+    assert!(matches!(result, Err(super::MergeError::MissingLocation(1))));
+    assert_eq!(value, original);
+}
+
+#[test]
 fn missing_location_in_a_nested_merge_source_is_an_error() {
     use super::merge_keys::{expand_located, KeyLocation, MergeError};
 

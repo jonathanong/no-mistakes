@@ -1,0 +1,7 @@
+defaults: &defaults {owner: widgets}
+enabled: yes
+runtime:
+  <<: *defaults
+  rows:
+    - owner: orders
+    - <<: *defaults

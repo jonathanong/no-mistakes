@@ -35,3 +35,6 @@ pub(super) fn run<'a>(
     super::super::handled::mark(&mut remaining, |id| id == rules::WORKFLOW_TOPOLOGY_POLICY);
     Ok(std::borrow::Cow::Owned(remaining))
 }
+
+#[cfg(test)]
+mod tests;
