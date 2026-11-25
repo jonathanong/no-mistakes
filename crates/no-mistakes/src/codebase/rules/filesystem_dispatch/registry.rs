@@ -13,6 +13,7 @@ macro_rules! filesystem_rules {
             GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => github_actions_action_timeout_pair::check_with_files => "",
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files => "",
             GITHUB_ACTIONS_JOB_TIMEOUTS => github_actions_job_timeouts::check_with_files => "",
+            GITHUB_ACTIONS_CACHE_SETUP_POLICY => github_actions_cache_setup_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/cache-setup-policy-options.yml")),
             GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT => github_actions_local_action_checkout::check_with_files => "",
             GITHUB_ACTIONS_JOB_PERMISSIONS => github_actions_job_permissions::check_with_files => "",
             GITHUB_ACTIONS_CACHE_KEY_POLICY => github_actions_cache_key_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/cache-key-policy-options.yml")),

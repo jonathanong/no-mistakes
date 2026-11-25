@@ -1,0 +1,553 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/actions/no-steps/action.yml",
+          "line": 1,
+          "message": ".github/actions/no-steps/action.yml:1: composite action needs a steps sequence",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "name: Widget",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/unresolved/action.yml",
+          "line": 1,
+          "message": ".github/actions/unresolved/action.yml:1: cannot determine whether the action is composite; declare runs.using literally",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "name: Widget",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 16,
+          "message": ".github/workflows/boundaries.yml:16: cannot determine all cache paths; declare the paths literally",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "path: 9",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 20,
+          "message": ".github/workflows/boundaries.yml:20: cannot verify the cache key for `.cache/widgets`; write an explicit key template",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: prefix-${{ inputs.key",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 4,
+          "message": ".github/workflows/boundaries.yml:4: workflow job must be a mapping",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "broken: false",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 6,
+          "message": ".github/workflows/boundaries.yml:6: workflow steps must be a sequence",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "steps: {}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 9,
+          "message": ".github/workflows/boundaries.yml:9: workflow step must be a mapping",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- false",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 1,
+          "message": ".github/workflows/malformed.yml:1: cannot parse Actions YAML (did not find expected node content at line 3 column 1, while parsing a flow node)",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "name: Unreadable shape",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 12,
+          "message": ".github/workflows/unknown.yml:12: cannot determine all cache paths; declare the paths literally",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "path: [\"${{ inputs.cache_path }}\", .cache/widgets]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 17,
+          "message": ".github/workflows/unknown.yml:17: cannot verify the cache key for `.cache/widgets`; write an explicit key template",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: ${{ inputs.cache_key }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 19,
+          "message": ".github/workflows/unknown.yml:19: cannot verify an expression-valued setup deadline; set a literal timeout-minutes",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: ${{ inputs.deadline }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 7,
+          "message": ".github/workflows/unknown.yml:7: cannot determine the action family; use a literal action reference",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- uses: ${{ inputs.action }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 9,
+          "message": ".github/workflows/unknown.yml:9: cannot determine cache paths from a non-mapping with value",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "with: ${{ inputs.cache }}",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/local/action.yml",
+          "line": 9,
+          "message": ".github/actions/local/action.yml:9: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: old",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 16,
+          "message": ".github/workflows/steps.yml:16: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: pnpm-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('widgets.lock') }}",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 18,
+          "message": ".github/workflows/steps.yml:18: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "with:",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 27,
+          "message": ".github/workflows/steps.yml:27: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 4",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 28,
+          "message": ".github/workflows/steps.yml:28: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- uses: example/setup-package-manager@v1",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 30,
+          "message": ".github/workflows/steps.yml:30: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: \"2\"",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 35,
+          "message": ".github/workflows/steps.yml:35: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 0",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 13,
+          "message": ".github/workflows/unknown.yml:13: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: bad",
+          "target": "cache-key-shape"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cache-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/outside.yml",
+          "line": 1,
+          "message": "directive for `github-actions-cache-setup-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-cache-setup-policy",
+          "target": "github-actions-cache-setup-policy"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 37,
+          "message": "directive for `github-actions-cache-setup-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-cache-setup-policy",
+          "target": "github-actions-cache-setup-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 16,
+          "message": ".github/workflows/steps.yml:16: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: pnpm-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('widgets.lock') }}",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 18,
+          "message": ".github/workflows/steps.yml:18: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "with:",
+          "target": "cache-key-shape"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/local/action.yml",
+          "line": 9,
+          "message": ".github/actions/local/action.yml:9: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: old",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 16,
+          "message": ".github/workflows/steps.yml:16: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: pnpm-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('widgets.lock') }}",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 18,
+          "message": ".github/workflows/steps.yml:18: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "with:",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 27,
+          "message": ".github/workflows/steps.yml:27: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 4",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 28,
+          "message": ".github/workflows/steps.yml:28: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- uses: example/setup-package-manager@v1",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 30,
+          "message": ".github/workflows/steps.yml:30: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: \"2\"",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 35,
+          "message": ".github/workflows/steps.yml:35: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 0",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 13,
+          "message": ".github/workflows/unknown.yml:13: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: bad",
+          "target": "cache-key-shape"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/local/action.yml",
+          "line": 9,
+          "message": ".github/actions/local/action.yml:9: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: old",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/actions/no-steps/action.yml",
+          "line": 1,
+          "message": ".github/actions/no-steps/action.yml:1: composite action needs a steps sequence",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "name: Widget",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/unresolved/action.yml",
+          "line": 1,
+          "message": ".github/actions/unresolved/action.yml:1: cannot determine whether the action is composite; declare runs.using literally",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "name: Widget",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 16,
+          "message": ".github/workflows/boundaries.yml:16: cannot determine all cache paths; declare the paths literally",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "path: 9",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 20,
+          "message": ".github/workflows/boundaries.yml:20: cannot verify the cache key for `.cache/widgets`; write an explicit key template",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: prefix-${{ inputs.key",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 4,
+          "message": ".github/workflows/boundaries.yml:4: workflow job must be a mapping",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "broken: false",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 6,
+          "message": ".github/workflows/boundaries.yml:6: workflow steps must be a sequence",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "steps: {}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/boundaries.yml",
+          "line": 9,
+          "message": ".github/workflows/boundaries.yml:9: workflow step must be a mapping",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- false",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 1,
+          "message": ".github/workflows/malformed.yml:1: cannot parse Actions YAML (did not find expected node content at line 3 column 1, while parsing a flow node)",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "name: Unreadable shape",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 16,
+          "message": ".github/workflows/steps.yml:16: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: pnpm-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('widgets.lock') }}",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 18,
+          "message": ".github/workflows/steps.yml:18: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "with:",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 27,
+          "message": ".github/workflows/steps.yml:27: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 4",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 28,
+          "message": ".github/workflows/steps.yml:28: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- uses: example/setup-package-manager@v1",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 30,
+          "message": ".github/workflows/steps.yml:30: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: \"2\"",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 35,
+          "message": ".github/workflows/steps.yml:35: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 0",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 12,
+          "message": ".github/workflows/unknown.yml:12: cannot determine all cache paths; declare the paths literally",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "path: [\"${{ inputs.cache_path }}\", .cache/widgets]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 13,
+          "message": ".github/workflows/unknown.yml:13: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: bad",
+          "target": "cache-key-shape"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 17,
+          "message": ".github/workflows/unknown.yml:17: cannot verify the cache key for `.cache/widgets`; write an explicit key template",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: ${{ inputs.cache_key }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 19,
+          "message": ".github/workflows/unknown.yml:19: cannot verify an expression-valued setup deadline; set a literal timeout-minutes",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: ${{ inputs.deadline }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 7,
+          "message": ".github/workflows/unknown.yml:7: cannot determine the action family; use a literal action reference",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- uses: ${{ inputs.action }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unknown.yml",
+          "line": 9,
+          "message": ".github/workflows/unknown.yml:9: cannot determine cache paths from a non-mapping with value",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "with: ${{ inputs.cache }}",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "setup-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/outside.yml",
+          "line": 1,
+          "message": "directive for `github-actions-cache-setup-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-cache-setup-policy",
+          "target": "github-actions-cache-setup-policy"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 42,
+          "message": "directive for `github-actions-cache-setup-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "key: old # no-mistakes-disable-line github-actions-cache-setup-policy",
+          "target": "github-actions-cache-setup-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 27,
+          "message": ".github/workflows/steps.yml:27: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 4",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 28,
+          "message": ".github/workflows/steps.yml:28: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "- uses: example/setup-package-manager@v1",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 30,
+          "message": ".github/workflows/steps.yml:30: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: \"2\"",
+          "target": "setup-deadline"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 35,
+          "message": ".github/workflows/steps.yml:35: configured setup action needs a literal integer timeout-minutes from 1 through 3",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "timeout-minutes: 0",
+          "target": "setup-deadline"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

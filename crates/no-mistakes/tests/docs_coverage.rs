@@ -498,3 +498,18 @@ fn package_json_export_target_prefix_is_in_the_public_rule_inventory() {
         assert!(read(&root.join(path)).contains(rule), "{path}");
     }
 }
+
+#[test]
+fn github_actions_cache_setup_policy_is_in_the_public_inventory() {
+    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_CACHE_SETUP_POLICY;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    for file in [
+        "docs/configuration/rules.md",
+        "docs/node-api.md",
+        "plugins/no-mistakes-rules/skills/github-actions-rules/SKILL.md",
+    ] {
+        assert!(read(&root.join(file)).contains(rule), "{file}");
+    }
+}

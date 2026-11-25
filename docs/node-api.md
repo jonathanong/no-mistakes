@@ -31,6 +31,10 @@ Explicit integration-policy includes/excludes narrow test discovery while
 retaining imported helper summaries and parse diagnostics. This preparation
 change adds no invocation option, runtime export, or report field.
 
+Configured `github-actions-cache-setup-policy` uses the same authored key
+patterns, setup deadline caps, and unanalyzable policy in `check()` and
+`analyzeProject()`. [Rule options](rules/github-actions-cache-setup-policy.md)
+
 Configured `workflow-topology-policy.options.forbiddenActivityTypes` runs through
 async `check({ root, config })` and `analyzeProject()` check reports with the same
 exact matching, event filtering, `types` key locations, custom messages, and

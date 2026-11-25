@@ -1,0 +1,10 @@
+version: 2
+unanalyzable: report
+rules:
+  - rule: github-actions-cache-setup-policy
+    scope: repository
+    options:
+      include: [.github/workflows/steps.yml]
+      setup:
+        - uses: example/setup-package-manager
+          maxMinutes: 3

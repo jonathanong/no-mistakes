@@ -129,6 +129,9 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
+        GITHUB_ACTIONS_CACHE_SETUP_POLICY => {
+            github_actions_cache_setup_policy::check_with_files_sources_and_deferred_suppression(root, config, files, sources, defer_suppression)
+        }
         GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT => {
             github_actions_local_action_checkout::check_with_files_sources_and_deferred_suppression(root, config, files, sources, defer_suppression)
         }

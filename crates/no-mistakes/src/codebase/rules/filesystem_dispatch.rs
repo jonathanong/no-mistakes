@@ -8,9 +8,9 @@ use super::{
     declared_payload_compatibility, doc_consistency, file_extension_policy, finite_set_consistency,
     forbidden_lint_suppressions, forbidden_workspace_closure, github_actions_action_input_policy,
     github_actions_action_timeout_pair, github_actions_cache_key_policy,
-    github_actions_checkout_credentials, github_actions_composite_step_schema,
-    github_actions_docker_host_ports, github_actions_download_integrity,
-    github_actions_job_permissions, github_actions_job_timeouts,
+    github_actions_cache_setup_policy, github_actions_checkout_credentials,
+    github_actions_composite_step_schema, github_actions_docker_host_ports,
+    github_actions_download_integrity, github_actions_job_permissions, github_actions_job_timeouts,
     github_actions_local_action_checkout, github_actions_max_inline_script_lines,
     github_actions_no_insta_snapshot_updates, github_actions_pinned_hash,
     github_actions_script_expressions, github_actions_step_timeouts,
@@ -180,3 +180,6 @@ pub use execute::{
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
+
+pub(super) const GITHUB_ACTIONS_CACHE_SETUP_POLICY: &str =
+    github_actions_cache_setup_policy::RULE_ID;

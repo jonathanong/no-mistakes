@@ -1,0 +1,9 @@
+name: Setup
+runs:
+  using: composite
+  steps:
+    - uses: example/setup-package-manager@v1
+    - uses: example/cache@v2
+      with:
+        path: .cache/widgets
+        key: old
