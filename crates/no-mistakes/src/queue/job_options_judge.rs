@@ -16,17 +16,18 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
     let any_required = facts
         .values()
         .any(|file| file.required_job_options.is_some());
-    let any_retention = facts
+    // Stamping applies the selected retention policy to every file for this root.
+    let retention = facts
         .values()
-        .any(|file| file.unbounded_job_retention.is_some());
-    if !any_required && !any_retention {
+        .find_map(|file| file.unbounded_job_retention.as_ref());
+    if !any_required && retention.is_none() {
         return;
     }
+    let allow = retention.and_then(|policy| policy.allow_globset());
     let defaults = index_defaults(facts);
     let mut notes = Vec::new();
     for (path, file) in facts.iter() {
         let retention_policy = file.unbounded_job_retention.as_ref();
-        let allow = retention_policy.and_then(|policy| policy.allow_globset());
         if let Some(retention_policy) = retention_policy {
             for note in
                 retention::judge_file_defaults(root, path, file, retention_policy, allow.as_ref())

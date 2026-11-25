@@ -54,4 +54,6 @@ pub use worker_rate_limit::{
 };
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+pub(crate) mod allow_paths_test_hook;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod tests;
