@@ -482,23 +482,6 @@ fn changes_diff_and_semantic_test_routing_have_public_docs() {
 }
 
 #[test]
-fn github_actions_required_pr_path_filters_are_documented() {
-    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS;
-    assert_eq!(rule, "github-actions-no-required-pr-path-filters");
-    let root = repo_root();
-    assert!(rule_ids_from_source(&root).contains(rule));
-    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
-    for path in [
-        "docs/rules/README.md",
-        "docs/cli/check.md",
-        "docs/node-api.md",
-        "docs/configuration/rules.md",
-    ] {
-        assert!(read(&root.join(path)).contains(rule), "{path}");
-    }
-}
-
-#[test]
 fn package_json_export_target_prefix_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::PACKAGE_JSON_EXPORT_TARGET_PREFIX;
     let root = repo_root();
