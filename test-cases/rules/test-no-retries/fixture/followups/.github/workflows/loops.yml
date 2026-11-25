@@ -1,0 +1,45 @@
+name: Unit tests
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test each input from the pipeline
+        run: |
+          for group in a b; do
+            printf '%s\n' sample | while read -r file; do
+              pnpm test:unit "$file"
+            done
+          done
+      - name: Rerun the same command inside the pipeline
+        run: |
+          for group in a b; do
+            printf '%s\n' sample | while read -r file; do
+              pnpm test:unit
+            done
+          done
+      - name: Change directories before testing
+        run: |
+          for package in a b; do
+            cd "$package"
+            pnpm test
+          done
+      - name: Rerun in the same directory
+        run: |
+          for package in a b; do
+            cd .
+            pnpm test
+          done
+      - name: Export a different shard for each run
+        run: |
+          for shard in 1 2; do
+            export SHARD=${shard}
+            pnpm test
+          done
+      - name: Rerun the same shard with a literal dollar sign
+        run: |
+          for shard in 1 2; do
+            export SHARD='$shard'
+            export PRINTED_SHARD=\$shard
+            pnpm test
+          done

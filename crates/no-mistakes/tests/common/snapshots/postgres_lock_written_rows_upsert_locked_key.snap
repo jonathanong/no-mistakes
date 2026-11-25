@@ -48,7 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/controls.ts",
           "line": 57,
-          "message": "src/controls.ts:57: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table",
+          "message": "src/controls.ts:57: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "unanalyzable"
@@ -105,14 +105,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/controls.ts:5: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = 1 FOR UPDATE`);",
-          "target": "row-lock-unwritten-relation"
-        },
-        {
-          "file": "src/controls.ts",
-          "line": 57,
-          "message": "src/controls.ts:57: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
-          "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "row-lock-unwritten-relation"
         },
         {

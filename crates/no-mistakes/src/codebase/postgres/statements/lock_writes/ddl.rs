@@ -12,6 +12,7 @@ pub(crate) enum DdlEvent {
     Lock(usize),
     Read(String),
     Change(String),
+    DescendantsChanged(String),
     Related(String, String),
 }
 
@@ -46,6 +47,10 @@ pub(super) fn collect(
                             if let Some(partition) = identity(partition) {
                                 out.ddl_events.push(DdlEvent::Change(partition));
                             }
+                        }
+                        AlterTableOperation::Inherit { parent }
+                        | AlterTableOperation::NoInherit { parent } => {
+                            record_descendants_change(out, identity(parent));
                         }
                         _ => {}
                     }
@@ -91,7 +96,14 @@ pub(super) fn collect(
                                 }
                             }),
                     );
-                for target in parents.chain(foreign).filter_map(identity) {
+                for parent in parents {
+                    let parent = identity(parent);
+                    record_descendants_change(out, parent.clone());
+                    if let Some(parent) = parent {
+                        out.ddl_events.push(DdlEvent::Related(name.clone(), parent));
+                    }
+                }
+                for target in foreign.filter_map(identity) {
                     out.ddl_events.push(DdlEvent::Related(name.clone(), target));
                 }
             }
@@ -105,6 +117,12 @@ pub(super) fn collect(
         positions,
     });
 }
+fn record_descendants_change(out: &mut LockWriteFacts, relation: Option<String>) {
+    out.relation_identity_changed |= relation.is_none();
+    out.ddl_events
+        .extend(relation.map(DdlEvent::DescendantsChanged));
+}
+
 struct Reads<'a, 'p> {
     events: &'a mut Vec<DdlEvent>,
     scopes: Vec<BTreeSet<String>>,
