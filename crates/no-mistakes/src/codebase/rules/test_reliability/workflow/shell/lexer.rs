@@ -68,7 +68,7 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
                 start = offset + 1;
                 token_start = true;
             }
-            '|' if arithmetic_parens.is_none() => {
+            '|' if arithmetic_parens.is_none() && !script[..offset].ends_with('>') => {
                 found.push(&script[start..offset]);
                 start = chars
                     .next_if(|(_, next)| matches!(next, '|' | '&'))
@@ -103,6 +103,10 @@ pub(super) fn expands_any(segment: &str, variables: &[String]) -> bool {
             ch if quote == Some(ch) => quote = None,
             '$' if quote != Some('\'') => {
                 let tail = &segment[offset + 1..];
+                if tail.starts_with('$') {
+                    chars.next();
+                    continue;
+                }
                 let name = tail.strip_prefix('{').unwrap_or(tail);
                 let end = name
                     .find(|c: char| !c.is_ascii_alphanumeric() && c != '_')

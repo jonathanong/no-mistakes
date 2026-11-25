@@ -95,17 +95,12 @@ impl Bindings<'_, '_> {
         loop {
             if let Some(member) = value.as_member_expression() {
                 if let Some(property) = member.static_property_name().and_then(|n| n.as_str()) {
-                    if let Expression::Identifier(object) = unwrap_ts_wrappers(member.object()) {
-                        if let Some(import) = self
-                            .symbol(object)
-                            .and_then(|sym| self.import_origin(sym, Some(property)))
-                        {
-                            return ValueTrace::Resolved(FixtureInitializer {
-                                import,
-                                wrappers,
-                                derived_at,
-                            });
-                        }
+                    if let Some(import) = self.namespace_member_origin(member.object(), property) {
+                        return ValueTrace::Resolved(FixtureInitializer {
+                            import,
+                            wrappers,
+                            derived_at,
+                        });
                     }
                 }
                 return self.unresolved_if_provenance(

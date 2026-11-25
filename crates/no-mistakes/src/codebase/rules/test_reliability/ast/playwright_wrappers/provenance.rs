@@ -92,6 +92,12 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
             self.record(import);
             return;
         }
+        if self.bindings.is_namespace_import(symbol) {
+            if let Some(import) = self.bindings.import_origin(symbol, Some("test")) {
+                self.record(import);
+            }
+            return;
+        }
         if let Some(init) = self.bindings.any_var_initializer(symbol) {
             self.visit_expression(init);
         }
@@ -121,11 +127,9 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
             }
         }
         if let Some(class) = self.bindings.receiver_class(object) {
-            if let Some(property) = property {
-                for value in receivers::class_field_values(class, property) {
-                    if self.visited_fields.insert(value.span()) {
-                        self.visit_expression(value);
-                    }
+            for value in receivers::class_field_values(class, property) {
+                if self.visited_fields.insert(value.span()) {
+                    self.visit_expression(value);
                 }
             }
             return;

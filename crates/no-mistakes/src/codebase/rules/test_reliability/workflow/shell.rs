@@ -159,7 +159,7 @@ fn is_assignment(word: &str) -> bool {
 }
 
 fn is_redirection_operator(word: &str) -> bool {
-    matches!(word, "<" | ">" | ">>" | "<<" | "<<<" | "<&" | ">&" | "<>")
+    matches!(word, "<" | ">" | ">>" | ">|" | "<<" | "<<<" | "<&" | ">&" | "<>")
 }
 
 fn is_identifier(word: &str) -> bool {

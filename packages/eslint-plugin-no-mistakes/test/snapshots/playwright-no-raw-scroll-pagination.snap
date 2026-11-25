@@ -302,6 +302,66 @@
       ]
     },
     {
+      "file": "e2e/sentinel-imported-and-factory.spec.js",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 42,
+          "endLine": 4,
+          "file": "e2e/sentinel-imported-and-factory.spec.js",
+          "line": 4,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 50,
+          "endLine": 5,
+          "file": "e2e/sentinel-imported-and-factory.spec.js",
+          "line": 5,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 44,
+          "endLine": 8,
+          "file": "e2e/sentinel-imported-and-factory.spec.js",
+          "line": 8,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 51,
+          "endLine": 12,
+          "file": "e2e/sentinel-imported-and-factory.spec.js",
+          "line": 12,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "sentinelLocatorNames": [
+            "sentinel"
+          ],
+          "sentinelTestIds": [
+            "load-more"
+          ]
+        }
+      ]
+    },
+    {
       "file": "e2e/sentinel-only.spec.js",
       "findings": [
         {

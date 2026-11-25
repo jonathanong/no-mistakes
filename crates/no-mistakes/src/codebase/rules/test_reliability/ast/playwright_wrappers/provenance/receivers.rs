@@ -1,4 +1,5 @@
 use super::Bindings;
+use crate::codebase::rules::test_reliability::playwright_provenance::ImportRef;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Class, ClassElement, Expression, FormalParameter, FormalParameters};
 use oxc_ast::AstKind;
@@ -29,7 +30,15 @@ impl<'ast> Bindings<'_, 'ast> {
                 return None;
             }
             match nodes.parent_kind(reference.node_id()) {
-                AstKind::AssignmentExpression(assignment) if assignment.operator == AssignmentOperator::Assign => {
+                AstKind::AssignmentExpression(assignment)
+                    if matches!(
+                        assignment.operator,
+                        AssignmentOperator::Assign
+                            | AssignmentOperator::LogicalNullish
+                            | AssignmentOperator::LogicalOr
+                            | AssignmentOperator::LogicalAnd
+                    ) =>
+                {
                     Some(&assignment.right)
                 }
                 _ => None,
@@ -118,17 +127,46 @@ impl<'ast> Bindings<'_, 'ast> {
             _ => None,
         }
     }
+    pub(in crate::codebase::rules::test_reliability::ast) fn namespace_member_origin(
+        &self,
+        object: &Expression<'_>,
+        property: &str,
+    ) -> Option<ImportRef> {
+        let Expression::Identifier(identifier) = unwrap_ts_wrappers(object) else {
+            return None;
+        };
+        let symbol = self.symbol(identifier)?;
+        if let Some(import) = self.import_origin(symbol, Some(property)) {
+            return Some(import);
+        }
+        let mut object = self.constant_initializer(identifier)?;
+        for _ in 1..8 {
+            let Expression::Identifier(identifier) = unwrap_ts_wrappers(object) else {
+                return None;
+            };
+            let symbol = self.symbol(identifier)?;
+            if let Some(import) = self.import_origin(symbol, Some(property)) {
+                return Some(import);
+            }
+            object = self.constant_initializer(identifier)?;
+        }
+        None
+    }
 }
 
 pub(super) fn class_field_values<'ast, 'name>(
     class: &'ast Class<'ast>,
-    property: &'name str,
+    property: Option<&'name str>,
 ) -> impl Iterator<Item = &'ast Expression<'ast>> + use<'ast, 'name> {
     class.body.body.iter().filter_map(move |element| {
         let ClassElement::PropertyDefinition(field) = element else {
             return None;
         };
-        (!field.r#static && field.key.static_name().is_some_and(|name| name == property))
+        let matches = match property {
+            Some(property) => field.key.static_name().is_some_and(|name| name == property),
+            None => true,
+        };
+        (!field.r#static && matches)
             .then_some(field.value.as_ref())
             .flatten()
     })

@@ -1,0 +1,17 @@
+name: Shell lexer edge cases
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Redirect with noclobber inside a loop
+        run: |
+          for attempt in 1 2; do
+            printf x >| pnpm test
+          done
+      - name: Rerun with shell pid before loop variable name
+        run: |
+          for i in 1 2; do
+            echo "$$i"
+            pnpm test
+          done

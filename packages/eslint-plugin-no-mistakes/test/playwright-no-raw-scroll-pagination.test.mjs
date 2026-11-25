@@ -175,6 +175,11 @@ const suite = {
       options: [sentinelOptions],
     },
     {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-imported-and-factory.spec.js"),
+      filename: "e2e/sentinel-imported-and-factory.spec.js",
+      options: [sentinelOptions],
+    },
+    {
       code: fixture("playwright-no-raw-scroll-pagination/sentinel-only.js"),
       filename: "e2e/sentinel-only.spec.js",
       options: [{ sentinelLocatorNames: ["sentinel"] }],
