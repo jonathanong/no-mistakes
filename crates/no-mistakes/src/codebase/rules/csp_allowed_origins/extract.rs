@@ -100,9 +100,7 @@ impl OriginVisitor<'_> {
             LinkDirective::Resolved(directive) => self.record_jsx_attr(element, "href", directive),
             LinkDirective::Dynamic => match jsx_attr_value(element, "href") {
                 None => {}
-                Some(JsxAttrValue::Static(url, _))
-                    if ParsedOrigin::parse(&url).is_none()
-                        && !ParsedOrigin::is_network_like_url(&url) => {}
+                Some(JsxAttrValue::Static(url, _)) if !ParsedOrigin::is_network_like_url(&url) => {}
                 Some(JsxAttrValue::Static(_, span)) => record_unanalyzable(
                     &mut self.collected,
                     self.source,
@@ -132,19 +130,17 @@ impl OriginVisitor<'_> {
     }
 
     fn record_first_arg(&mut self, args: &[Argument<'_>], directive: CspDirective) {
-        match args.first() {
-            None => {}
-            Some(Argument::SpreadElement(spread)) => record_unanalyzable(
+        let Some(arg) = args.first() else {
+            return;
+        };
+        match arg.as_expression() {
+            Some(expr) => record_url_expr(&mut self.collected, self.source, expr, directive),
+            None => record_unanalyzable(
                 &mut self.collected,
                 self.source,
-                spread.span.start,
+                arg.span().start,
                 UnanalyzableReason::DynamicUrl(directive),
             ),
-            Some(arg) => {
-                if let Some(expr) = arg.as_expression() {
-                    record_url_expr(&mut self.collected, self.source, expr, directive);
-                }
-            }
         }
     }
 }

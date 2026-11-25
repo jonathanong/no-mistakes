@@ -13,6 +13,9 @@ export function Page(id: string, args: [string], dynAs: string, dynHref: string)
   void fetch(`ftp://files.example.com/${id}`);
   return (
     <div>
+      <script>{"inline"}</script>
+      <img alt="no-src" />
+      <img src />
       <script src="https://shared.example.com/ok.js" />
       <script src="https://dev.example.com/blocked.js" />
       <link rel="preload" href="https://shared.example.com/no-as" />

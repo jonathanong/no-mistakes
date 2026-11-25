@@ -133,6 +133,18 @@ fn models_duplicate_directives_and_policy_intersection() {
         &ParsedOrigin::parse("https://dev.example.com/a.js").unwrap(),
         &[],
     ));
+    assert!(comma_joined.allows(
+        CspDirective::Img,
+        &ParsedOrigin::parse("https://unrestricted.example.com/a.png").unwrap(),
+        &[],
+    ));
+    let invalid_sources =
+        CspPolicySet::parse_from_text("Content-Security-Policy: img-src ftp: https://[::1]junk");
+    assert!(!invalid_sources.allows(
+        CspDirective::Img,
+        &ParsedOrigin::parse("https://cdn.example.com/a.png").unwrap(),
+        &[],
+    ));
 }
 
 #[test]
@@ -377,4 +389,34 @@ fn covers_bare_arrays_binary_concat_and_expression_edge_cases() {
     )
     .unwrap()
     .is_empty());
+
+    let headers_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/csp-allowed-origins/fixture/headers-text");
+    let headers_cfg = crate::config::v2::load_v2_config_with_path(
+        &headers_root,
+        Some(&headers_root.join(".no-mistakes.yml")),
+    )
+    .unwrap()
+    .0;
+    let header_files = vec![headers_root.join("src/page.tsx")];
+    let header_sources = crate::codebase::rules::source_store_for_files(&header_files);
+    assert!(
+        super::check_prepared(&headers_root, &headers_cfg, &header_files, None, &header_sources, None)
+            .is_err()
+    );
+
+    let mut custom_cfg = crate::config::v2::load_v2_config_with_path(
+        &root,
+        Some(&root.join("concat.yml")),
+    )
+    .unwrap()
+    .0;
+    custom_cfg.rules[0].message = Some("Custom CSP hint".into());
+    let custom_files = vec![root.join("src/concat.ts"), root.join("src/page.tsx")];
+    let custom_diag = diagnostics_with_files(&root, &custom_cfg, &custom_files).unwrap();
+    assert!(custom_diag
+        .findings
+        .iter()
+        .chain(&custom_diag.advisories)
+        .all(|item| item.message == "Custom CSP hint"));
 }
