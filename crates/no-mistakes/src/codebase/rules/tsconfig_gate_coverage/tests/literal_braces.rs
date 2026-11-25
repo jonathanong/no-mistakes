@@ -8,6 +8,7 @@ fn ci_scanner_preserves_literal_closing_braces_outside_interpolation() {
     .unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/typecheck.yml".to_string(),
             value: Ok(workflow),
         }],
