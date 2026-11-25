@@ -137,7 +137,6 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
-        GITHUB_ACTIONS_NO_INSTA_SNAPSHOT_UPDATES => github_actions_no_insta_snapshot_updates::check_with_files_and_sources(root, config, files, sources),
         GITHUB_ACTIONS_DOCKER_HOST_PORTS => {
             github_actions_docker_host_ports::check_with_files_and_sources(
                 root, config, files, sources,
