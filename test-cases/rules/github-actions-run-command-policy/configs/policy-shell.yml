@@ -1,0 +1,52 @@
+version: 2
+rules:
+  - rule: github-actions-run-command-policy
+    scope: repository
+    options:
+      shellFiles:
+        - scripts/**/*.sh
+      commands:
+        - command: [gh, api]
+          valueFlags:
+            - -f
+            - -F
+            - --field
+            - --raw-field
+            - -X
+            - --method
+            - -H
+            - --header
+            - -q
+            - --jq
+            - -t
+            - --template
+            - --input
+            - --hostname
+            - --cache
+            - --preview
+          whenAnyArgs: [-f, -F, --field, --raw-field]
+          unlessAnyArgs: [graphql]
+          requireAnyArgs: [--method, -X]
+          message: "gh api with -f/-F defaults to POST; pass --method (or -X) explicitly."
+        - command: [gh, api]
+          valueFlags:
+            - -f
+            - -F
+            - --field
+            - --raw-field
+            - -X
+            - --method
+            - -H
+            - --header
+            - -q
+            - --jq
+            - -t
+            - --template
+            - --input
+            - --hostname
+            - --cache
+            - --preview
+          forbidArgPatterns:
+            - pattern: '[?]'
+              scope: positional
+          message: "Pass query parameters with -f/-F and --method GET instead of a query string in the endpoint."

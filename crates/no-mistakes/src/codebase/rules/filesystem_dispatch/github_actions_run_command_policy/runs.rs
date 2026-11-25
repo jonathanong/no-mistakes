@@ -28,12 +28,33 @@ pub(super) fn check_parsed(
         let place = location_label(&body);
         for hit in judge::scan_script(&body.script, compiled) {
             let line = report_line(source, step_lines, &body.script, &hit);
-            let finding = build_finding(rel, line, &place, &hit, rule_message);
+            let finding = build_finding(rel, line, Some(&place), &hit, rule_message);
             if matches!(hit.kind, HitKind::Unanalyzable { .. }) {
                 diagnostics.unanalyzable(unanalyzable, finding);
             } else {
                 diagnostics.findings.push(finding);
             }
+        }
+    }
+    diagnostics
+}
+
+pub(super) fn check_shell_source(
+    rel: &str,
+    source: &str,
+    compiled: &CompiledOptions,
+    unanalyzable: Unanalyzable,
+    rule_message: Option<&str>,
+) -> AnalysisDiagnostics {
+    let source = source.trim_start_matches('\u{feff}');
+    let mut diagnostics = AnalysisDiagnostics::default();
+    for hit in judge::scan_script(source, compiled) {
+        let line = hit.line.max(1);
+        let finding = build_finding(rel, line, None, &hit, rule_message);
+        if matches!(hit.kind, HitKind::Unanalyzable { .. }) {
+            diagnostics.unanalyzable(unanalyzable, finding);
+        } else {
+            diagnostics.findings.push(finding);
         }
     }
     diagnostics
@@ -47,13 +68,21 @@ fn location_label(body: &RunScript) -> String {
     }
 }
 
+fn prefix(rel: &str, line: usize, place: Option<&str>) -> String {
+    match place {
+        Some(place) => format!("{rel}:{line}: {place}"),
+        None => format!("{rel}:{line}:"),
+    }
+}
+
 fn build_finding(
     rel: &str,
     line: usize,
-    place: &str,
+    place: Option<&str>,
     hit: &Hit,
     rule_message: Option<&str>,
 ) -> RuleFinding {
+    let head = prefix(rel, line, place);
     let (target, message) = match &hit.kind {
         HitKind::MissingRequired {
             command,
@@ -65,9 +94,7 @@ fn build_finding(
             });
             (
                 command.clone(),
-                format!(
-                    "{rel}:{line}: {place} runs `{command}` without required argument `{required}`. {tail}"
-                ),
+                format!("{head} runs `{command}` without required argument `{required}`. {tail}"),
             )
         }
         HitKind::MissingAnyRequired {
@@ -85,7 +112,7 @@ fn build_finding(
             });
             (
                 command.clone(),
-                format!("{rel}:{line}: {place} runs `{command}` without any of {alts}. {tail}"),
+                format!("{head} runs `{command}` without any of {alts}. {tail}"),
             )
         }
         HitKind::ForbiddenArg {
@@ -100,14 +127,13 @@ fn build_finding(
             (
                 command.clone(),
                 format!(
-                    "{rel}:{line}: {place} passes forbidden argument `{argument}` to `{command}` (matched `/{pattern}/`). {tail}"
+                    "{head} passes forbidden argument `{argument}` to `{command}` (matched `/{pattern}/`). {tail}"
                 ),
             )
         }
-        HitKind::Unanalyzable { detail, .. } => (
-            "unanalyzable".to_string(),
-            format!("{rel}:{line}: {place} {detail}"),
-        ),
+        HitKind::Unanalyzable { detail, .. } => {
+            ("unanalyzable".to_string(), format!("{head} {detail}"))
+        }
     };
     RuleFinding {
         causes: Vec::new(),

@@ -107,6 +107,13 @@ describe(id, () => {
     assert.equal(report.diagnostics.length, 7);
     assert.ok(report.diagnostics.every((d) => d.code.includes(id)));
   });
+  it("reports single-segment endpoint queries, -- terminators, and -X= forms", async () => {
+    const file = resolve(fixtureRoot, "single-segment-and-terminator.mjs");
+    const findings = eslintFindings(check("single-segment-and-terminator.mjs"), file);
+    await expect(snapshotDocument(findings)).toMatchFileSnapshot(
+      "snapshots/gh-api-single-segment-and-terminator.snap",
+    );
+  });
   it("preserves oxlint parity for safe calls, wrapper scope and suppressions", () => {
     for (const [name, count] of [
       ["safe.mjs", 0],
@@ -114,6 +121,7 @@ describe(id, () => {
       ["wrappers.ts", 5],
       ["suppressions.mjs", 1],
       ["suppression-file.mjs", 0],
+      ["single-segment-and-terminator.mjs", 7],
     ]) {
       const result = spawnSync(
         process.execPath,

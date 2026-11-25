@@ -1,0 +1,79 @@
+[
+  {
+    "column": 24,
+    "endColumn": 43,
+    "endLine": 2,
+    "file": "test-cases/eslint-snippets/fixture/gh-api-argument-safety/single-segment-and-terminator.mjs",
+    "line": 2,
+    "message": "Use structured -f/-F fields instead of an endpoint query string.",
+    "messageId": "endpointQuery",
+    "ruleId": "no-mistakes/gh-api-argument-safety",
+    "severity": 2
+  },
+  {
+    "column": 24,
+    "endColumn": 41,
+    "endLine": 3,
+    "file": "test-cases/eslint-snippets/fixture/gh-api-argument-safety/single-segment-and-terminator.mjs",
+    "line": 3,
+    "message": "Use structured -f/-F fields instead of an endpoint query string.",
+    "messageId": "endpointQuery",
+    "ruleId": "no-mistakes/gh-api-argument-safety",
+    "severity": 2
+  },
+  {
+    "column": 24,
+    "endColumn": 50,
+    "endLine": 4,
+    "file": "test-cases/eslint-snippets/fixture/gh-api-argument-safety/single-segment-and-terminator.mjs",
+    "line": 4,
+    "message": "Use structured -f/-F fields instead of an endpoint query string.",
+    "messageId": "endpointQuery",
+    "ruleId": "no-mistakes/gh-api-argument-safety",
+    "severity": 2
+  },
+  {
+    "column": 30,
+    "endColumn": 61,
+    "endLine": 5,
+    "file": "test-cases/eslint-snippets/fixture/gh-api-argument-safety/single-segment-and-terminator.mjs",
+    "line": 5,
+    "message": "Use structured -f/-F fields instead of an endpoint query string.",
+    "messageId": "endpointQuery",
+    "ruleId": "no-mistakes/gh-api-argument-safety",
+    "severity": 2
+  },
+  {
+    "column": 1,
+    "endColumn": 63,
+    "endLine": 6,
+    "file": "test-cases/eslint-snippets/fixture/gh-api-argument-safety/single-segment-and-terminator.mjs",
+    "line": 6,
+    "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+    "messageId": "missingMethod",
+    "ruleId": "no-mistakes/gh-api-argument-safety",
+    "severity": 2
+  },
+  {
+    "column": 1,
+    "endColumn": 76,
+    "endLine": 7,
+    "file": "test-cases/eslint-snippets/fixture/gh-api-argument-safety/single-segment-and-terminator.mjs",
+    "line": 7,
+    "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+    "messageId": "missingMethod",
+    "ruleId": "no-mistakes/gh-api-argument-safety",
+    "severity": 2
+  },
+  {
+    "column": 1,
+    "endColumn": 64,
+    "endLine": 9,
+    "file": "test-cases/eslint-snippets/fixture/gh-api-argument-safety/single-segment-and-terminator.mjs",
+    "line": 9,
+    "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+    "messageId": "missingMethod",
+    "ruleId": "no-mistakes/gh-api-argument-safety",
+    "severity": 2
+  }
+]

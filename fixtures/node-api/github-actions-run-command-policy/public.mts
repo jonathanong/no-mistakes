@@ -17,6 +17,7 @@ const policy: GithubActionsRunCommandPolicy = {
   command: ["gh", "api"],
   valueFlags: ["-f", "-F", "--method", "-X"],
   whenAnyArgs: ["-f", "-F"],
+  unlessAnyArgs: ["graphql"],
   requireAnyArgs: ["--method", "-X"],
   forbidArgPatterns: [forbidden],
   message: "Pass --method explicitly with field flags.",
@@ -30,6 +31,7 @@ const options: GithubActionsRunCommandPolicyOptions = {
     },
   ],
   include: [".github/workflows/**/*.yml"],
+  shellFiles: ["scripts/**/*.sh"],
   unanalyzable: "advise",
 };
 

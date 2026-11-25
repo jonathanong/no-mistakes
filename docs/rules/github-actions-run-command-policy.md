@@ -24,6 +24,8 @@ patterns, and messages it wants to enforce.
 The rule parses `run` scripts in workflow files directly under
 `.github/workflows/*.{yml,yaml}` and composite actions under
 `.github/actions/**/action.{yml,yaml}` using the shared shell script parser.
+When `options.shellFiles` is configured, it also scans matching standalone shell
+scripts with the same parser, policy evaluation, abstentions, and suppressions.
 
 For each configured entry in `options.commands`:
 
@@ -39,11 +41,19 @@ For each configured entry in `options.commands`:
   arithmetic expansions are not executed as commands.
 - If `whenAnyArgs` is non-empty, the policy applies only when at least one
   listed argument or argument pair is present on the invocation.
+- If `unlessAnyArgs` is non-empty, the policy is skipped when any listed
+  argument or argument pair is present (for example `unlessAnyArgs: [graphql]`
+  so `gh api graphql -f query=...` stays exempt from requiring `--method`).
+  Non-flag single-token matchers match positional arguments only, so values
+  consumed by `valueFlags` (such as `-q graphql`) never exempt a command.
 - Every entry in `requireArgs` must be present. If `requireAnyArgs` is
   non-empty, at least one listed alternative must be present. Flag matchers
-  accept separate (`--method GET`, `-c core.hooksPath=/dev/null`), inline
-  (`--method=GET`, `-c=core.hooksPath=/dev/null`), and attached short value
-  flag (`-XGET`, `-ccore.hooksPath=/dev/null`) forms, and stop at `--`.
+  skip values consumed by `valueFlags`, accept separate (`--method GET`,
+  `-c core.hooksPath=/dev/null`), inline (`--method=GET`,
+  `-c=core.hooksPath=/dev/null`), and attached short value flag (`-XGET`,
+  `-ccore.hooksPath=/dev/null`) forms, and stop at `--`. Required flags listed
+  in `valueFlags` must also have a non-empty value (`--method=`, `-X ""`, and a
+  dangling `-X` do not satisfy the requirement).
 - Every entry in `forbidArgPatterns` tests either all arguments (`scope: any`,
   the default) or positional arguments after the subcommand (`scope:
   positional`, skipping options and values consumed by `valueFlags`).
@@ -52,10 +62,13 @@ For each configured entry in `options.commands`:
 When the parser encounters a command it cannot statically analyze—such as a
 dynamic command name (`$CMD ...` or `$DIR/$TOOL ...`), `eval`, a dynamic
 `bash -c "$SCRIPT"`, a dynamic subcommand on a configured base command, an
-unquoted word-splitting expansion that could supply a required argument, or an
-unterminated quote, expansion, or here-document—it abstains from reporting a
-policy violation and records a diagnostic under the configured uncertainty
-policy. A variable-prefixed
+unquoted word-splitting expansion that could supply a required argument, a
+dynamic value for a required flag (`--method "$METHOD"`), a dynamic positional
+that could match an `unlessAnyArgs` exemption when a requirement would
+otherwise fail (`gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`),
+or an unterminated quote, expansion, or here-document—it abstains from
+reporting a policy violation and records a diagnostic under the configured
+uncertainty policy. A variable-prefixed
 path whose final path segment is a literal matching no configured policy
 `command[0]` and not a known shell (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`,
 `pwsh`) or wrapper command (`env`, `sudo`, `xargs`, `nohup`, `time`, `exec`,
@@ -69,22 +82,31 @@ arguments are still inspected.
 `options.include` defaults to `[]`, which selects `.github/workflows/*.{yml,yaml}`
 and `.github/actions/**/action.{yml,yaml}`; an explicit glob list narrows the
 matched files within those workflow and composite-action paths.
+`options.shellFiles` defaults to `[]`, which selects no standalone shell scripts;
+an explicit repo-relative glob list (for example `["scripts/**/*.sh"]`) adds
+matching standalone shell scripts within the rule's scope (workflow and
+composite-action YAML files keep their YAML handling and are not scanned twice).
 `options.unanalyzable` accepts `advise`, `report`, or `ignore`. It inherits
 the repository-level `unanalyzable` setting when omitted. With neither
 setting, the rule uses `advise`. Definite command-policy violations remain
 findings in all three modes. [Policy selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/filesystem_dispatch/github_actions_run_command_policy/diagnostics.rs#L61-L71).
+Invalid option values—including invalid globs in `include` or `shellFiles`,
+malformed regexes, or empty command entries—fail early at config load with exit
+code 2.
 
 | Option | Default | Behavior |
 | --- | --- | --- |
 | `commands` | `[]` | List of command policy entries. Each entry requires a non-empty `command` token array and at least one of `requireArgs`, `requireAnyArgs`, or `forbidArgPatterns`. |
 | `commands[].command` | Required | Exact command tokens to match, such as `[gh, api]` or `[git, commit]`. |
-| `commands[].valueFlags` | `[]` | Flags known to consume the following token when written without `=`. Used to separate flag values from subcommands and positional arguments. Two-token flag pairs in `whenAnyArgs`, `requireArgs`, and `requireAnyArgs` are added automatically. |
+| `commands[].valueFlags` | `[]` | Flags known to consume the following token when written without `=`. Used to separate flag values from subcommands and positional arguments, and to require non-empty values when a flag is required. Two-token flag pairs in `whenAnyArgs`, `unlessAnyArgs`, `requireArgs`, and `requireAnyArgs` are added automatically. |
 | `commands[].whenAnyArgs` | `[]` | Optional guard list of arguments or adjacent token pairs; when non-empty, the policy applies only if at least one matches. |
+| `commands[].unlessAnyArgs` | `[]` | Optional exemption list of arguments or adjacent token pairs; when any matches, the policy is skipped. Non-flag entries match positional arguments. |
 | `commands[].requireArgs` | `[]` | Arguments or adjacent token pairs that must all be present on every matching command. |
 | `commands[].requireAnyArgs` | `[]` | Alternative arguments or adjacent token pairs; at least one must be present. |
 | `commands[].forbidArgPatterns` | `[]` | Regex checks with `{ pattern, scope?, message? }`, where `scope` is `any` (default) or `positional`. |
 | `commands[].message` | Omitted | Optional policy explanation appended to findings from this entry. |
 | `include` | `[]` | Optional repo-relative globs narrowing the checked workflow and action files. |
+| `shellFiles` | `[]` | Optional repo-relative globs selecting standalone shell scripts to check with the same command policies. |
 | `unanalyzable` | Repository setting, then `advise` | Controls diagnostics for inputs the rule cannot analyze (`advise`, `report`, or `ignore`). |
 
 ```yaml
@@ -92,14 +114,17 @@ rules:
   - rule: github-actions-run-command-policy
     scope: repository
     options:
+      shellFiles:
+        - scripts/**/*.sh
       commands:
         - command: [gh, api]
-          valueFlags: [-f, -F, --field, --raw-field, -X, --method, -q, --jq]
+          valueFlags: [-f, -F, --field, --raw-field, -X, --method, -H, --header, -q, --jq]
           whenAnyArgs: [-f, -F, --field, --raw-field]
+          unlessAnyArgs: [graphql]
           requireAnyArgs: [--method, -X]
           message: "gh api with -f/-F defaults to POST; pass --method (or -X) explicitly."
         - command: [gh, api]
-          valueFlags: [-f, -F, --field, --raw-field, -X, --method, -q, --jq]
+          valueFlags: [-f, -F, --field, --raw-field, -X, --method, -H, --header, -q, --jq]
           forbidArgPatterns:
             - pattern: '\?'
               scope: positional
@@ -169,7 +194,8 @@ jobs:
 
 ## Suppression
 
-Use a YAML comment on or above the reported line, or at the top of the file:
+Use a YAML comment (or shell comment in files selected by `shellFiles`) on or
+above the reported line, or at the top of the file:
 
 - `# no-mistakes-disable-next-line github-actions-run-command-policy`
 - `# no-mistakes-disable-line github-actions-run-command-policy`
@@ -208,9 +234,12 @@ steps:
   `xargs`/`nohup`/`time`/`exec`/`command`),
   `eval`, dynamic `bash -c` / `sh -c` scripts, dynamic subcommands on a
   configured base command, unquoted word-splitting expansions on a matching
-  command whose required arguments are absent, and unterminated quotes,
-  expansions, or here-documents abstain from policy failure and emit a
-  diagnostic governed by the effective unanalyzable policy.
+  command whose required arguments are absent, dynamic values on required flags
+  (such as `--method "$METHOD"`), dynamic arguments that could match an
+  `unlessAnyArgs` exemption when a policy would otherwise fail (such as
+  `gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`), and
+  unterminated quotes, expansions, or here-documents abstain from policy failure
+  and emit a diagnostic governed by the effective unanalyzable policy.
 - Variable-prefixed script paths whose final path segment is a literal matching
   no configured policy `command[0]`, known shell, or wrapper command (for
   example `$GITHUB_ACTION_PATH/build-images.sh`) abstain silently with no
@@ -229,5 +258,6 @@ steps:
 
 ## Invalid UTF-8
 
-Invalid UTF-8 bytes in workflow or action YAML are decoded lossily so definite
-command-policy violations in the same file are still reported.
+Invalid UTF-8 bytes in workflow YAML, action YAML, or selected `shellFiles`
+scripts are decoded lossily so definite command-policy violations in the same
+file are still reported.

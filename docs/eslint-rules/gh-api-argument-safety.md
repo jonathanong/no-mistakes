@@ -85,12 +85,15 @@ names, mutable aliases, destructuring defaults, and cross-file aliases are not
 followed. Unrelated arrays starting with `api` are ignored.
 
 Only literal arrays are inspected. Endpoint templates retain their static
-segments, so a slash before a question mark is detected across substitutions.
-Field values and jq/template options are not endpoints. Separate and attached
-`-f`, `-F`, `--field`, `--raw-field`, `-X`, and `--method` forms are recognized.
-A separate field flag consumes one argument. When that argument is a single
-expression, the rule can check for an explicit method regardless of the field
-value. A spread or a missing entry leaves the argument layout uncertain.
+segments, so a question mark in any endpoint—including single-segment endpoints
+such as `user?per_page=100`, `graphql?foo=bar`, and `${endpoint}?per_page=100`—is
+detected across substitutions. `--` ends option parsing: subsequent elements are
+positional and do not count as field or method flags.
+Field values and jq/template options are not endpoints. Separate, inline (`=`),
+and attached `-f`, `-F`, `--field`, `--raw-field`, `-X`, and `--method` forms are
+recognized. A separate field flag consumes one argument. When that argument is a
+single expression, the rule can check for an explicit method regardless of the
+field value. A spread or a missing entry leaves the argument layout uncertain.
 A method must have a nonempty static alphabetic value. The exact static endpoint
 `graphql` is exempt from the method diagnostic, but not endpoint-query checking.
 
