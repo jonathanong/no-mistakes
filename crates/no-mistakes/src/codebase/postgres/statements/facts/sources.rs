@@ -63,9 +63,10 @@ impl StatementSources<'_> {
                 positions,
                 self.policy.redundant_prelocks,
                 modes,
+                prepared.tokens(),
             )
         } else {
-            super::super::lock_writes::collect::<false>(statements, positions, false, None)
+            super::super::lock_writes::collect::<false>(statements, positions, false, None, &[])
         }
     }
 }
