@@ -84,6 +84,15 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
+        PACKAGE_JSON_EXPORT_TARGET_PREFIX => {
+            package_json_export_target_prefix::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         NO_RAW_EPHEMERAL_PORT => {
             no_raw_ephemeral_port::check_with_files_sources_and_deferred_suppression(
                 root,
