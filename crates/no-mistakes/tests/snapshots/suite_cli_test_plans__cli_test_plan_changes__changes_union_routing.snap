@@ -1,0 +1,69 @@
+---
+source: crates/no-mistakes/tests/cli_test_plan_changes.rs
+expression: "serde_json::to_string_pretty(&summaries).unwrap()"
+---
+{
+  "fixture_only": {
+    "selected": [
+      "tests/avatar.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "source_only": {
+    "selected": [
+      "tests/cart.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "both": {
+    "selected": [
+      "tests/avatar.test.ts",
+      "tests/cart.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "lockfile_without_base": {
+    "selected": [
+      "tests/avatar.test.ts",
+      "tests/cart.test.ts",
+      "tests/unrelated.test.ts",
+      "tests/widget.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Could not determine old content of `pnpm-lock.yaml`. Provide `--base` to enable targeted lockfile analysis; full-suite selection requires global fallback opt-in.",
+    "warnings": [
+      "lockfile-no-baseline",
+      "package-manifest-no-baseline",
+      "changes-fallback"
+    ]
+  },
+  "both_with_lockfile": {
+    "selected": [
+      "tests/avatar.test.ts",
+      "tests/cart.test.ts",
+      "tests/widget.test.ts"
+    ],
+    "fallback": false,
+    "reason": null,
+    "warnings": []
+  },
+  "excluded_unclassified": {
+    "selected": [
+      "tests/avatar.test.ts",
+      "tests/cart.test.ts",
+      "tests/unrelated.test.ts",
+      "tests/widget.test.ts"
+    ],
+    "fallback": true,
+    "reason": "Changes report has unclassified paths: fixtures/ignored.json",
+    "warnings": [
+      "changes-fallback"
+    ]
+  }
+}

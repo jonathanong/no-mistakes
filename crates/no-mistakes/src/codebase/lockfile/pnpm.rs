@@ -65,10 +65,6 @@ pub(crate) fn prepare_documents(content: &str) -> Result<PnpmDocuments, PnpmVali
     Ok(docs)
 }
 
-pub(crate) fn validate_for_planning(content: &str) -> Result<(), PnpmValidationError> {
-    prepare_documents(content).map(|_| ())
-}
-
 /// Returns changed top-level fields that alter installation behavior but are
 /// not represented by the importer/package/snapshot dependency graph.
 pub(crate) fn changed_unmodeled_installation_sections(old: &str, new: &str) -> Vec<String> {
