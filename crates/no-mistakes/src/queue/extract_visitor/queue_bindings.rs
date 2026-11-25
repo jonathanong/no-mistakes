@@ -1,8 +1,48 @@
 use super::QueueVisitor;
 use crate::queue::extract_model::{LocalQueue, ProducerBinding};
 use crate::queue::object_bindings::ObjectBinding;
+use oxc_ast::ast::{Argument, Expression};
 
 impl QueueVisitor<'_> {
+    pub(in crate::queue) fn resolve_queue_name_arg(
+        &mut self,
+        arg: &Argument<'_>,
+    ) -> (Option<String>, Option<String>) {
+        if let Some(value) = self.literal_arg(arg) {
+            return (Some(value), None);
+        }
+        if let Some(ident) = crate::queue::extract_factory::identifier_arg(arg) {
+            if self.facts.string_imports.contains_key(&ident) {
+                return (None, Some(ident));
+            }
+        }
+        let Some(Expression::StaticMemberExpression(member)) =
+            arg.as_expression().map(Expression::get_inner_expression)
+        else {
+            return (None, None);
+        };
+        let Expression::Identifier(object) = member.object.get_inner_expression() else {
+            return (None, None);
+        };
+        if member.property.name == "name" {
+            match self.local_queue(object.name.as_str(), object.span.start) {
+                Some(LocalQueue::Known(queue_name)) => return (Some(queue_name), None),
+                Some(LocalQueue::ImportedName(imported) | LocalQueue::ImportedQueue(imported)) => {
+                    return (None, Some(imported));
+                }
+                None => {}
+            }
+        }
+        if let Some(specifier) = self.namespace_imports.get(object.name.as_str()).cloned() {
+            let member_name = member.property.name.as_str();
+            let binding = format!("{}.{member_name}", object.name);
+            self.facts
+                .string_imports
+                .insert(binding.clone(), (specifier, member_name.to_string()));
+            return (None, Some(binding));
+        }
+        (None, None)
+    }
     pub fn producer_binding(&self, name: &str, at: u32) -> ProducerBinding {
         self.lexical_binding(name, at)
             .map(|binding| ProducerBinding::Local(binding.resolve_at))

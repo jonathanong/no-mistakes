@@ -14,15 +14,29 @@ mod scheduler;
 
 pub(crate) fn note_factory_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
     scheduler::note_scheduler(visitor, call);
-    let Expression::Identifier(id) = &call.callee else {
-        return;
-    };
-    let local = id.name.as_str();
-    if let Some(&(queue_index, job_index, options)) = visitor.enqueue_factories.get(local) {
-        enqueue::note_enqueue(visitor, call, queue_index, job_index, options);
-    }
-    if let Some(&(name_index, processor_index)) = visitor.worker_factories.get(local) {
-        enqueue::note_worker(visitor, call, name_index, processor_index);
+    match call.callee.get_inner_expression() {
+        Expression::Identifier(id) => {
+            let local = id.name.as_str();
+            if let Some(&(queue_index, job_index, options)) = visitor.enqueue_factories.get(local) {
+                enqueue::note_enqueue(visitor, call, queue_index, job_index, options);
+            }
+            if let Some(&(name_index, processor_index)) = visitor.worker_factories.get(local) {
+                enqueue::note_worker(visitor, call, name_index, processor_index);
+            }
+        }
+        Expression::StaticMemberExpression(member) => {
+            let Expression::Identifier(object) = member.object.get_inner_expression() else {
+                return;
+            };
+            if !visitor.namespace_imports.contains_key(object.name.as_str()) {
+                return;
+            }
+            let callee = member.property.name.as_str();
+            if let Some(spec) = visitor.roles.worker.iter().find(|s| s.callee == callee) {
+                enqueue::note_worker(visitor, call, spec.name, spec.processor);
+            }
+        }
+        _ => {}
     }
 }
 

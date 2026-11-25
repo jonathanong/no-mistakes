@@ -92,7 +92,7 @@ pub(in crate::queue) fn resolve_producers<R: ImportResolverFacade>(
     out
 }
 
-pub(super) fn resolved_binding<R: ImportResolverFacade>(
+pub(in crate::queue) fn resolved_binding<R: ImportResolverFacade>(
     local: &HashMap<String, QueueKey>,
     facts: &HashMap<PathBuf, FileFacts>,
     resolver: &R,
@@ -112,7 +112,10 @@ pub(super) fn resolved_binding<R: ImportResolverFacade>(
         }
         ProducerBinding::Flow(queue_name) => {
             return Some(QueueKey {
-                queue_file: path.to_path_buf(),
+                queue_file: definitions
+                    .get(queue_name)
+                    .cloned()
+                    .unwrap_or_else(|| path.to_path_buf()),
                 queue_name: queue_name.clone(),
             });
         }
@@ -120,7 +123,10 @@ pub(super) fn resolved_binding<R: ImportResolverFacade>(
             match facts[path].queue_declarations.get(declaration)? {
                 LocalQueue::Known(queue_name) => {
                     return Some(QueueKey {
-                        queue_file: path.to_path_buf(),
+                        queue_file: definitions
+                            .get(queue_name)
+                            .cloned()
+                            .unwrap_or_else(|| path.to_path_buf()),
                         queue_name: queue_name.clone(),
                     });
                 }
@@ -141,7 +147,7 @@ pub(super) fn resolved_binding<R: ImportResolverFacade>(
     })
 }
 
-pub(super) fn local_queues<R: ImportResolverFacade>(
+pub(in crate::queue) fn local_queues<R: ImportResolverFacade>(
     path: &Path,
     facts: &FileFacts,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
@@ -156,7 +162,10 @@ pub(super) fn local_queues<R: ImportResolverFacade>(
             (
                 binding.clone(),
                 QueueKey {
-                    queue_file: path.to_path_buf(),
+                    queue_file: definitions
+                        .get(queue_name)
+                        .cloned()
+                        .unwrap_or_else(|| path.to_path_buf()),
                     queue_name: queue_name.clone(),
                 },
             )

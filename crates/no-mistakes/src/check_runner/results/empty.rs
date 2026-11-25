@@ -1,5 +1,34 @@
 use super::CheckResults;
+use crate::check_tasks::CheckTask;
+use no_mistakes::codebase::rules::RuleFinding;
+use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
+use no_mistakes::integration_tests::IntegrationFinding;
+use no_mistakes::queue::CheckFinding;
+use no_mistakes::react_traits;
 use std::time::Duration;
+
+pub(crate) struct CompletedDomainChecks {
+    pub(crate) react: CheckTask<Vec<react_traits::Violation>>,
+    pub(crate) queues: CheckTask<Vec<CheckFinding>>,
+    pub(crate) rules: CheckTask<Vec<RuleFinding>>,
+    pub(crate) integration: CheckTask<Vec<IntegrationFinding>>,
+    pub(crate) codebase: CheckTask<Vec<PreparedUniqueExportFinding>>,
+    pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
+}
+
+pub(super) fn timings(d: [Duration; 8]) -> Vec<(&'static str, Duration)> {
+    const NAMES: [&str; 8] = [
+        "discover",
+        "parse_extract",
+        "react",
+        "queues",
+        "rules",
+        "integration",
+        "codebase",
+        "filesystem_rules",
+    ];
+    NAMES.into_iter().zip(d).collect()
+}
 
 pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
     let warnings = warnings.into_iter().flatten().collect();
@@ -21,15 +50,6 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         include_suppressed: false,
         unproven_member_query_sql: 0,
         accepted_bounds: Vec::new(),
-        timings: vec![
-            ("discover", Duration::ZERO),
-            ("parse_extract", Duration::ZERO),
-            ("react", Duration::ZERO),
-            ("queues", Duration::ZERO),
-            ("rules", Duration::ZERO),
-            ("integration", Duration::ZERO),
-            ("codebase", Duration::ZERO),
-            ("filesystem_rules", Duration::ZERO),
-        ],
+        timings: timings([Duration::ZERO; 8]),
     }
 }

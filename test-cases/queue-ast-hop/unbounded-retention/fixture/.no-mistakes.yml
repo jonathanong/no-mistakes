@@ -1,0 +1,6 @@
+version: 2
+queues:
+  requiredJobOptions: [attempts, removeOnFail]
+  unboundedJobRetention:
+    require: [removeOnComplete, removeOnFail]
+    allowPaths: ["allowed/**"]

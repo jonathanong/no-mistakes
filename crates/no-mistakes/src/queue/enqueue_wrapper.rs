@@ -102,6 +102,8 @@ pub(in crate::queue) fn note_call<'a>(
             binding: None,
             queue_name: None,
             queue_file: None,
+            declaration: None,
+            ambiguous_defaults: false,
             job: None,
             evidence: options,
         },
