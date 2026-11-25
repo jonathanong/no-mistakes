@@ -79,6 +79,27 @@ fn standalone_rule_routes_unanalyzable_inputs_through_policy() {
 }
 
 #[test]
+fn standalone_rule_reports_iam_role_inline_policies_as_unanalyzable() {
+    let root = fixture_root();
+    let files = [root.join("outside/inline_role.tf")];
+    let sources = super::super::source_store_for_files(&files);
+    let reported =
+        diagnostics_prepared(&root, &configured(None), &files, &sources, None, false).unwrap();
+    let locations: Vec<_> = reported
+        .findings
+        .iter()
+        .map(|f| (f.file.as_str(), f.line, f.target.as_deref()))
+        .collect();
+    assert_eq!(
+        locations,
+        [
+            ("outside/inline_role.tf", 6, Some("unanalyzable")),
+            ("outside/inline_role.tf", 16, Some("unanalyzable")),
+        ]
+    );
+}
+
+#[test]
 fn standalone_rule_reports_the_path_of_unreadable_or_malformed_input() {
     let root = fixture_root();
     for file in ["incomplete/missing.tf", "incomplete/broken.tf"] {

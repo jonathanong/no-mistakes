@@ -77,34 +77,48 @@ fn scan_policy_resource(block: &Block, local_docs: &FxHashSet<&str>, hits: &mut 
     let [res_type, _] = block.labels.as_slice() else {
         return;
     };
-    let unsupported = ScanHitKind::Unanalyzable(UnanalyzableReason::UnsupportedPolicyShape);
     match res_type.as_str() {
         "aws_iam_policy"
         | "aws_iam_role_policy"
         | "aws_iam_user_policy"
-        | "aws_iam_group_policy" => {
-            if let Some(policy) = block.body.get_attribute("policy") {
-                if !is_local_policy_doc_ref(&policy.value, local_docs) {
-                    push_attr(hits, policy, unsupported);
-                }
-            }
-        }
-        "aws_iam_role" => {
-            for inline in block.body.get_blocks("inline_policy") {
-                if let Some(policy) = inline.body.get_attribute("policy") {
-                    if !is_local_policy_doc_ref(&policy.value, local_docs) {
-                        push_attr(hits, policy, unsupported.clone());
-                    }
-                }
-            }
-            for dynamic in block.body.get_blocks("dynamic") {
-                if matches!(dynamic.labels.as_slice(), [label] if label.as_str() == "inline_policy")
-                {
-                    push_block(hits, dynamic, unsupported.clone());
-                }
-            }
-        }
+        | "aws_iam_group_policy" => check_policy_attr(&block.body, local_docs, hits),
+        "aws_iam_role" => scan_role_inline_policies(&block.body, local_docs, hits),
         _ => {}
+    }
+}
+
+fn scan_role_inline_policies(
+    body: &hcl::edit::structure::Body,
+    local_docs: &FxHashSet<&str>,
+    hits: &mut Vec<ScanHit>,
+) {
+    for inline in body.get_blocks("inline_policy") {
+        check_policy_attr(&inline.body, local_docs, hits);
+    }
+    for dynamic in body.get_blocks("dynamic") {
+        if matches!(dynamic.labels.as_slice(), [label] if label.as_str() == "inline_policy") {
+            push_block(
+                hits,
+                dynamic,
+                ScanHitKind::Unanalyzable(UnanalyzableReason::UnsupportedPolicyShape),
+            );
+        }
+    }
+}
+
+fn check_policy_attr(
+    body: &hcl::edit::structure::Body,
+    local_docs: &FxHashSet<&str>,
+    hits: &mut Vec<ScanHit>,
+) {
+    if let Some(policy) = body.get_attribute("policy") {
+        if !is_local_policy_doc_ref(&policy.value, local_docs) {
+            push_attr(
+                hits,
+                policy,
+                ScanHitKind::Unanalyzable(UnanalyzableReason::UnsupportedPolicyShape),
+            );
+        }
     }
 }
 
