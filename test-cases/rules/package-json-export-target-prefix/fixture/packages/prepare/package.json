@@ -1,0 +1,11 @@
+{
+  "name": "@example/prepare",
+  "exports": {
+    ".": {
+      "import": "dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./tools/*": "./dist/tools/*.mjs",
+    "./blocked": null
+  }
+}

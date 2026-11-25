@@ -3,6 +3,7 @@ use jsonc_parser::{ast::Value, common::Ranged};
 use std::collections::BTreeMap;
 
 pub(super) fn parse(source: &str, comments: bool) -> Option<ConfigLocations> {
+    let source = source.strip_prefix('\u{FEFF}').unwrap_or(source);
     let mut options = crate::config::jsonc_parse_options();
     options.allow_comments = comments;
     options.allow_trailing_commas = comments;

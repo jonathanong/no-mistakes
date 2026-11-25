@@ -13,10 +13,11 @@ Markdown adds a `## diagnostics` section when the flag is set and diagnostics
 exist. Human and paths stdout contain findings only.
 
 Both `queues check` and aggregate `check` print unresolved worker
-`.rateLimit()` receiver warnings to stderr by default. The standalone flag
+`.rateLimit()` receiver warnings and the retention and listing abstentions
+described below to stderr by default. The standalone flag
 prints all queue diagnostics to stderr in every format, including human and
 paths, so topology notes are available without altering those stdout streams.
-Aggregate `check` reports worker receiver warnings in JSON `warnings` too.
+Aggregate `check` includes these warnings in JSON `warnings` too.
 Diagnostics leave the exit status unchanged.
 
 A `.add(...)` or `.addBulk(...)`
@@ -305,10 +306,15 @@ Valkey unless told otherwise. Opt into `queues.unboundedJobRetention` to report:
   required retention key unset.
 
 `true`, a non-negative number, or an object with a `count` or `age` property
-counts as bounded. Non-literal expressions and open spreads abstain. When both
-`queues.requiredJobOptions` and `queues.unboundedJobRetention` cover the same
-key on a producer, `unbounded-job-retention` reports it once so the site is not
-reported twice.
+counts as bounded. Non-literal expressions and open spreads abstain. An unset
+key requires statically known queue defaults. If a producer omits a required
+key and its default is unknown or ambiguous, the check emits a not-judged
+warning. An explicit unbounded override still produces a finding.
+
+With both `queues.requiredJobOptions` and `queues.unboundedJobRetention`
+enabled, shared retention keys use the `unbounded-job-retention` finding
+kind. `missing-job-option` covers other required keys and takes back the
+shared keys on files exempted by retention `allowPaths`.
 
 ```ts
 // reported: failed jobs are kept forever
@@ -346,7 +352,13 @@ for two patterns on resolved queue bindings:
   the same function.
 - A failed or completed job listing (`getFailed`, `getCompleted`, or
   `getJobs([...])` including `"failed"` or `"completed"`) whose results feed
-  `add`, `addBulk`, or `retry`.
+  `add`, `addBulk`, or `retry`. An enqueue inside a loop or listing callback
+  qualifies when an argument uses the listed item, directly or through a local
+  `const` alias, including an object or array containing the item or one of
+  its properties. An enqueue that uses a call result or destructured alias
+  derived from the item emits a not-judged warning when that alias is the
+  only evidence. A `retry()` on a destructured listing binding also qualifies,
+  including when the binding has a default.
 
 Unresolved queue receivers abstain with a diagnostic (`job-state-as-record was
 not judged because the queue receiver did not resolve`) and non-queue action
@@ -377,7 +389,7 @@ enqueue or retry. Exempt operator tooling and dashboards with
 
 ## Suppression
 
-`queues-check` directives apply to findings and unresolved worker receiver
+`queues-check` directives apply to findings and the default queue check
 warnings in aggregate `no-mistakes check` and Node `check()`. Use
 `no-mistakes-disable-file queues-check` for a whole file,
 `no-mistakes-disable-line queues-check` for the current line, or
