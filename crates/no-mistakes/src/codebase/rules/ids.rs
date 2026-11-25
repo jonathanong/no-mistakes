@@ -24,6 +24,7 @@ pub use super::github_actions_composite_step_schema::RULE_ID as GITHUB_ACTIONS_C
 pub use super::github_actions_job_permissions::RULE_ID as GITHUB_ACTIONS_JOB_PERMISSIONS;
 pub use super::github_actions_job_timeouts::RULE_ID as GITHUB_ACTIONS_JOB_TIMEOUTS;
 pub use super::github_actions_local_action_checkout::RULE_ID as GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT;
+pub use super::github_actions_no_required_pr_path_filters::RULE_ID as GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS;
 pub use super::github_actions_step_timeouts::RULE_ID as GITHUB_ACTIONS_STEP_TIMEOUTS;
 pub use super::github_actions_test_timeout_literals::RULE_ID as GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS;
 pub use super::github_actions_workflow_files::env_policy::RULE_ID as GITHUB_ACTIONS_ENV_POLICY;

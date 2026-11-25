@@ -1,0 +1,167 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/malformed.yml (did not find expected node content at line 2 column 1, while parsing a flow node). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on: { pull_request: [",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed-line.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "paths: ['src/**'] # no-mistakes-disable-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/malformed.yml (did not find expected node content at line 2 column 1, while parsing a flow node). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "on: { pull_request: [",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/required-target.yml",
+          "line": 2,
+          "message": ".github/workflows/required-target.yml:2: remove the workflow-level path filter `on.pull_request_target.paths-ignore` from the required PR trigger. Select work inside the workflow and keep the required gate reporting on every PR.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "'on': { pull_request_target: &filter { paths-ignore: ['docs/**'] } }",
+          "target": "on.pull_request_target.paths-ignore"
+        },
+        {
+          "file": ".github/workflows/required.yml",
+          "line": 4,
+          "message": ".github/workflows/required.yml:4: remove the workflow-level path filter `on.pull_request.paths` from the required PR trigger. Select work inside the workflow and keep the required gate reporting on every PR.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "paths:",
+          "target": "on.pull_request.paths"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed-line.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "paths: ['src/**'] # no-mistakes-disable-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed-line.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "paths: ['src/**'] # no-mistakes-disable-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "filesystem",
+          "message": "github-actions-no-required-pr-path-filters: workflows entries must be literal paths directly under .github/workflows (got \".github/workflows/*.yml\")"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

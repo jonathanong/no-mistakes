@@ -17,6 +17,10 @@ Both default off. See
 and
 [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
 
+Use `github-actions-no-required-pr-path-filters` for workflows that supply required PR checks.
+Declare the workflow paths and keep path selection inside the workflow.
+See [the rule](../rules/github-actions-no-required-pr-path-filters.md).
+
 Enabled TS/JS checks share one source inventory and one parse per file for their
 combined fact demand. Resolution results, including unresolved imports, are
 memoized within the request. Analysis data is discarded when the request ends.

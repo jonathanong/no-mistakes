@@ -638,3 +638,17 @@ test("changes diff and planner changes have exported public contracts", () => {
     /export \{ changesDiff \} from "\.\/changes-types"/,
   );
 });
+
+test("required PR path filters export the workflow scope type", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-no-required-pr-path-filters-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface GithubActionsNoRequiredPrPathFiltersOptions\b/);
+  assert.match(declarations, /workflows\?: string\[\];/);
+  assert.match(declarations, /unanalyzable\?: Unanalyzable;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-no-required-pr-path-filters-types";/,
+  );
+});
