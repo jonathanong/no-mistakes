@@ -148,3 +148,69 @@ fn native_control_nesting_distinguishes_missing_file_and_missing_rule_facts() {
         format!("{RULE_ID}: missing prepared nesting facts for actions.tsx"),
     );
 }
+
+#[test]
+fn native_control_nesting_handles_clean_bare_children_and_nested_spread() {
+    let fixture_dir = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/react-no-nested-buttons-and-links"),
+    );
+    let clean = fixture_dir.join("fixture/clean.jsx");
+    let edge = fixture_dir.join("edge-cases/children-and-spread.jsx");
+    let files = vec![clean.clone(), edge.clone()];
+    let sources = super::super::source_store_for_files(&files);
+    let plan = CheckFactPlan {
+        nested_control_paths: Arc::new(BTreeSet::from([clean.clone(), edge.clone()])),
+        ..Default::default()
+    };
+    let facts =
+        crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
+            &fixture_dir,
+            files,
+            Vec::new(),
+            plan,
+            None,
+            Arc::clone(&sources),
+        );
+
+    let clean_diag = check_file(
+        &fixture_dir,
+        &clean,
+        Some(&facts),
+        &sources,
+        None,
+        Unanalyzable::Report,
+    )
+    .unwrap();
+    assert!(clean_diag.findings.is_empty(), "{:?}", clean_diag.findings);
+    assert!(
+        clean_diag.advisories.is_empty(),
+        "{:?}",
+        clean_diag.advisories
+    );
+
+    let edge_diag = check_file(
+        &fixture_dir,
+        &edge,
+        Some(&facts),
+        &sources,
+        None,
+        Unanalyzable::Report,
+    )
+    .unwrap();
+    let lines: Vec<usize> = edge_diag.findings.iter().map(|f| f.line).collect();
+    assert_eq!(lines, vec![4, 7, 11], "{:?}", edge_diag.findings);
+    assert!(
+        edge_diag
+            .findings
+            .iter()
+            .all(|finding| finding.target.is_none()),
+        "{:?}",
+        edge_diag.findings
+    );
+    assert!(
+        edge_diag.advisories.is_empty(),
+        "{:?}",
+        edge_diag.advisories
+    );
+}
