@@ -87,7 +87,7 @@ pub(super) fn collect(
             }
             Statement::Savepoint { name } => {
                 if let Some(active) = &mut transaction {
-                    active.savepoint(name);
+                    active.savepoint(name, session_read_only);
                 }
             }
             Statement::ReleaseSavepoint { name } => {
@@ -100,7 +100,7 @@ pub(super) fn collect(
                 ..
             } => {
                 if let Some(active) = &mut transaction {
-                    active.rollback_to(name, location, &mut out);
+                    active.rollback_to(name, location, &mut session_read_only, &mut out);
                 }
             }
             Statement::Set(set) => {
@@ -134,37 +134,60 @@ pub(super) fn collect(
                 options,
                 statement,
                 ..
-            } if source::explain_execution(
-                *analyze,
-                *query_plan,
-                *estimate,
-                *format,
-                options.as_deref(),
-            ) == PostgresSqlExecution::ExecutesForAnalysis =>
-            {
-                if let Some(kind) = direct_write_kind(statement) {
-                    match &mut transaction {
-                        Some(active) if active.can_commit_writes => {
-                            active.pending.push(WritePlan {
-                                location,
-                                kind,
-                                autocommit: false,
-                            });
-                        }
-                        Some(_) => {}
-                        None if !session_read_only => {
-                            out.writes.push(WritePlan {
-                                location,
-                                kind,
-                                autocommit: true,
-                            });
-                        }
-                        None => {}
+            } => {
+                let Some(kind) = direct_write_kind(statement) else {
+                    continue;
+                };
+                match source::explain_execution(
+                    *analyze,
+                    *query_plan,
+                    *estimate,
+                    *format,
+                    options.as_deref(),
+                ) {
+                    PostgresSqlExecution::ExecutesForAnalysis => {
+                        record_write(
+                            &mut transaction,
+                            session_read_only,
+                            location,
+                            kind,
+                            &mut out,
+                        );
                     }
+                    PostgresSqlExecution::Unknown => {
+                        out.unanalyzable.push(UnanalyzablePlan {
+                            location,
+                            reason: "EXPLAIN options could not be statically evaluated",
+                        });
+                    }
+                    PostgresSqlExecution::NonExecuting => {}
                 }
             }
             _ => {}
         }
     }
     out
+}
+
+fn record_write(
+    transaction: &mut Option<Transaction>,
+    session_read_only: bool,
+    location: Location,
+    kind: &'static str,
+    out: &mut ExplainWriteRollbackFile,
+) {
+    match transaction {
+        Some(active) if active.can_commit_writes => active.pending.push(WritePlan {
+            location,
+            kind,
+            autocommit: false,
+        }),
+        Some(_) => {}
+        None if !session_read_only => out.writes.push(WritePlan {
+            location,
+            kind,
+            autocommit: true,
+        }),
+        None => {}
+    }
 }

@@ -40,6 +40,7 @@ fn cte_wrapped_direct_writes_retain_outer_locations_and_transaction_outcomes() {
             ("UPDATE", 9, false),
             ("DELETE", 13, false),
             ("MERGE", 17, false),
+            ("DELETE", 22, false),
         ],
     );
     assert!(file.unanalyzable.is_empty());
@@ -84,7 +85,7 @@ fn unknown_savepoints_and_dynamic_read_only_settings_report_unanalyzable() {
         .iter()
         .map(|item| item.location.line)
         .collect();
-    assert_eq!(lines, [2, 3, 6, 7, 8, 9, 10, 11, 12, 13]);
+    assert_eq!(lines, [2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18]);
     assert!(format!("{file:?}").contains("UnanalyzablePlan"));
 }
 

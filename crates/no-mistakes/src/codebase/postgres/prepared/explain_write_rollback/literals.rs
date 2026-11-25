@@ -1,15 +1,7 @@
 //! Literal extraction helpers for PostgreSQL read-only setting evaluation.
 use sqlparser::ast::{
-    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Ident, SetExpr, Statement, Value,
+    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Query, SetExpr, Statement, Value,
 };
-
-pub(super) fn normalize_ident(ident: &Ident) -> String {
-    if ident.quote_style.is_some() {
-        ident.value.clone()
-    } else {
-        ident.value.to_ascii_lowercase()
-    }
-}
 
 pub(super) fn direct_write_kind(statement: &Statement) -> Option<&'static str> {
     match statement {
@@ -17,14 +9,22 @@ pub(super) fn direct_write_kind(statement: &Statement) -> Option<&'static str> {
         Statement::Update(_) => Some("UPDATE"),
         Statement::Delete(_) => Some("DELETE"),
         Statement::Merge(_) => Some("MERGE"),
-        Statement::Query(query) => match query.body.as_ref() {
-            SetExpr::Insert(_) => Some("INSERT"),
-            SetExpr::Update(_) => Some("UPDATE"),
-            SetExpr::Delete(_) => Some("DELETE"),
-            SetExpr::Merge(_) => Some("MERGE"),
-            _ => None,
-        },
+        Statement::Query(query) => query_write_kind(query),
         _ => None,
+    }
+}
+
+fn query_write_kind(query: &Query) -> Option<&'static str> {
+    match query.body.as_ref() {
+        SetExpr::Insert(_) => Some("INSERT"),
+        SetExpr::Update(_) => Some("UPDATE"),
+        SetExpr::Delete(_) => Some("DELETE"),
+        SetExpr::Merge(_) => Some("MERGE"),
+        _ => query.with.as_ref().and_then(|with| {
+            with.cte_tables
+                .iter()
+                .find_map(|cte| query_write_kind(&cte.query))
+        }),
     }
 }
 

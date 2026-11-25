@@ -1,14 +1,21 @@
 //! Transaction and savepoint state machine for EXPLAIN write rollback.
-use super::literals::normalize_ident;
 use super::settings::{ReadOnlySetting, SettingEffect};
 use super::{ExplainWriteRollbackFile, UnanalyzablePlan, WritePlan};
+use crate::codebase::postgres::idents::ident_key;
 use sqlparser::{ast::Ident, tokenizer::Location};
+
+struct Savepoint {
+    name: String,
+    pending_len: usize,
+    can_commit_writes: bool,
+    session_read_only: bool,
+}
 
 pub(super) struct Transaction {
     pub(super) can_commit_writes: bool,
     pub(super) saved_session_read_only: bool,
     pub(super) pending: Vec<WritePlan>,
-    savepoints: Vec<(String, usize)>,
+    savepoints: Vec<Savepoint>,
 }
 
 impl Transaction {
@@ -21,9 +28,13 @@ impl Transaction {
         }
     }
 
-    pub(super) fn savepoint(&mut self, name: &Ident) {
-        self.savepoints
-            .push((normalize_ident(name), self.pending.len()));
+    pub(super) fn savepoint(&mut self, name: &Ident, session_read_only: bool) {
+        self.savepoints.push(Savepoint {
+            name: ident_key(name),
+            pending_len: self.pending.len(),
+            can_commit_writes: self.can_commit_writes,
+            session_read_only,
+        });
     }
 
     pub(super) fn release(
@@ -32,8 +43,8 @@ impl Transaction {
         location: Location,
         out: &mut ExplainWriteRollbackFile,
     ) {
-        let key = normalize_ident(name);
-        if let Some(pos) = self.savepoints.iter().rposition(|(sp, _)| sp == &key) {
+        let key = ident_key(name);
+        if let Some(pos) = self.savepoints.iter().rposition(|sp| sp.name == key) {
             self.savepoints.truncate(pos);
         } else {
             out.unanalyzable.push(UnanalyzablePlan {
@@ -47,11 +58,15 @@ impl Transaction {
         &mut self,
         name: &Ident,
         location: Location,
+        session_read_only: &mut bool,
         out: &mut ExplainWriteRollbackFile,
     ) {
-        let key = normalize_ident(name);
-        if let Some(pos) = self.savepoints.iter().rposition(|(sp, _)| sp == &key) {
-            self.pending.truncate(self.savepoints[pos].1);
+        let key = ident_key(name);
+        if let Some(pos) = self.savepoints.iter().rposition(|sp| sp.name == key) {
+            let saved = &self.savepoints[pos];
+            self.pending.truncate(saved.pending_len);
+            self.can_commit_writes = saved.can_commit_writes;
+            *session_read_only = saved.session_read_only;
             self.savepoints.truncate(pos + 1);
         } else {
             out.unanalyzable.push(UnanalyzablePlan {
@@ -89,9 +104,6 @@ pub(super) fn apply_effect(
         } => {
             if let Some(active) = transaction {
                 active.can_commit_writes = !read_only;
-                if read_only {
-                    active.pending.clear();
-                }
             }
         }
         SettingEffect::Unanalyzable(reason) => {

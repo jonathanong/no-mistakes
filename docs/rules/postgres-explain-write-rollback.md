@@ -15,7 +15,8 @@ autocommit enabled and no caller-owned transaction. The rule's `include`,
 `exclude`, and target scope can narrow that selection.
 
 `options.unanalyzable` (`report`, `advise`, or `ignore`; default `advise`)
-controls scripts that cannot be parsed completely, `RELEASE SAVEPOINT` or
+controls scripts that cannot be parsed completely, `EXPLAIN` plans whose
+execution options cannot be statically evaluated, `RELEASE SAVEPOINT` or
 `ROLLBACK TO SAVEPOINT` targeting an unknown savepoint, and dynamic read-only
 `SET` or `set_config(...)` arguments.
 
@@ -31,7 +32,7 @@ rules:
 ## What it catches/requires
 
 The rule reports an executing `EXPLAIN ANALYZE` or `EXPLAIN (ANALYZE TRUE)`
-of a direct `INSERT`, `UPDATE`, `DELETE`, or `MERGE` when it runs under
+of a direct or CTE `INSERT`, `UPDATE`, `DELETE`, or `MERGE` when it runs under
 autocommit or its transaction ends in `COMMIT`. The finding points to the
 outer `EXPLAIN` keyword. Plan-only EXPLAIN and read-only SELECT plans pass.
 
@@ -71,12 +72,17 @@ nested savepoints (`SAVEPOINT`, `RELEASE SAVEPOINT`, and
 `ROLLBACK TO SAVEPOINT`), `SET` / `SET TRANSACTION` /
 `SET SESSION CHARACTERISTICS` read-only settings, and `set_config(...)` calls
 for `default_transaction_read_only` and `transaction_read_only` respecting
-`is_local` scoping. `RELEASE SAVEPOINT` keeps writes pending for the enclosing
-transaction; only `ROLLBACK` or `ROLLBACK TO` an enclosing savepoint discards
-them. Files that cannot be parsed completely, unknown savepoint targets, and
-dynamic read-only settings are routed through `options.unanalyzable` instead of
-passing silently. Embedded SQL, prepared statements, and indirect writes such
-as function bodies or modifying CTEs are outside its scope.
+`is_local` scoping. Enabling `transaction_read_only` mid-transaction prevents
+only subsequent writes without discarding earlier writes in the transaction.
+`RELEASE SAVEPOINT` keeps writes and settings pending for the enclosing
+transaction; `ROLLBACK` discards the transaction's pending writes and restores
+session read-only state, and `ROLLBACK TO SAVEPOINT` truncates writes and
+restores transaction and session read-only settings to the savepoint snapshot.
+Files that cannot be parsed completely, `EXPLAIN` plans with unknown or
+conflicting execution options, unknown savepoint targets, and dynamic read-only
+settings are routed through `options.unanalyzable` instead of passing silently.
+Embedded SQL, prepared statements, and indirect writes such as function bodies
+are outside its scope.
 
 See the [PostgreSQL EXPLAIN documentation](https://www.postgresql.org/docs/current/sql-explain.html).
 

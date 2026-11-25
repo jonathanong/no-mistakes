@@ -46,13 +46,31 @@ fn postgres_explain_write_rollback_check_json_snapshot() {
         .collect();
     set_config_lines.sort_unstable();
     assert_eq!(set_config_lines, [2, 6, 13, 18, 28, 32]);
+    let mut regression_lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["file"] == "benchmarks/read-only-and-cte.sql")
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect();
+    regression_lines.sort_unstable();
+    assert_eq!(regression_lines, [2, 8, 14, 25, 33]);
     let advisories = reports["transactions"]["report"]["advisories"]
         .as_array()
         .unwrap();
-    assert_eq!(advisories.len(), 1);
-    assert_eq!(advisories[0]["file"], "benchmarks/unparsed.sql");
-    assert_eq!(advisories[0]["target"], "unanalyzable");
-    assert_eq!(findings.len(), 20);
+    assert_eq!(advisories.len(), 4);
+    assert!(advisories
+        .iter()
+        .all(|item| item["target"] == "unanalyzable"));
+    let mut regression_advisories: Vec<_> = advisories
+        .iter()
+        .filter(|item| item["file"] == "benchmarks/read-only-and-cte.sql")
+        .map(|item| item["line"].as_u64().unwrap())
+        .collect();
+    regression_advisories.sort_unstable();
+    assert_eq!(regression_advisories, [35, 36, 37]);
+    assert!(advisories
+        .iter()
+        .any(|item| item["file"] == "benchmarks/unparsed.sql"));
+    assert_eq!(findings.len(), 25);
     assert!(reports["unanalyzable_report"]["report"]["rules"]
         .as_array()
         .unwrap()
