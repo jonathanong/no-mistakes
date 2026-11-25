@@ -319,3 +319,41 @@ fn reports_invalid_options_unreadable_csp_files_and_unanalyzable_modes() {
         .csp_allowed_origins_paths
         .contains(&report_root.join("src/valid.tsx")));
 }
+
+#[test]
+fn covers_bare_arrays_binary_concat_and_expression_edge_cases() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/csp-allowed-origins/fixture/js-policy-forms");
+    for (cfg_name, csp_file) in [
+        ("disjoint.yml", "src/bare-disjoint.ts"),
+        ("overlap.yml", "src/bare-overlap.ts"),
+        ("concat.yml", "src/concat.ts"),
+    ] {
+        let cfg = crate::config::v2::load_v2_config_with_path(&root, Some(&root.join(cfg_name)))
+            .unwrap()
+            .0;
+        let files = vec![root.join(csp_file), root.join("src/page.tsx")];
+        let diag = diagnostics_with_files(&root, &cfg, &files).unwrap();
+        assert!(
+            diag.findings
+                .iter()
+                .any(|f| f.message.contains("https://dev.example.com")),
+            "{cfg_name}: expected dev.example.com violation, got {:?}",
+            diag.findings
+        );
+        assert!(
+            !diag
+                .findings
+                .iter()
+                .any(|f| f.message.contains("script-src") && f.message.contains("https://shared.example.com")),
+            "{cfg_name}: shared.example.com should be allowed for script-src, got {:?}",
+            diag.findings
+        );
+        assert_eq!(
+            diag.advisories.len(),
+            4,
+            "{cfg_name}: expected 4 advisories, got {:?}",
+            diag.advisories
+        );
+    }
+}
