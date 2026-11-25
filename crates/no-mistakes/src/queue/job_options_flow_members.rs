@@ -1,4 +1,5 @@
-use crate::fx::{FxHashMap, FxHashSet};
+use super::super::traversal::DeclarationTraversal;
+use crate::fx::FxHashMap;
 use crate::queue::extract_helpers::static_string;
 use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
@@ -67,7 +68,7 @@ pub(super) fn read<'node, 'ast>(
     Reader {
         bindings,
         memo: FxHashMap::default(),
-        active: FxHashSet::default(),
+        traversal: DeclarationTraversal::default(),
     }
     .object(object)
 }
@@ -75,7 +76,7 @@ pub(super) fn read<'node, 'ast>(
 struct Reader<'bindings, 'ast> {
     bindings: &'bindings ObjectBindings<'ast>,
     memo: FxHashMap<u32, FlowMembers<'ast, 'ast>>,
-    active: FxHashSet<u32>,
+    traversal: DeclarationTraversal,
 }
 
 impl<'ast> Reader<'_, 'ast> {
@@ -120,12 +121,13 @@ impl<'ast> Reader<'_, 'ast> {
         if let Some(members) = self.memo.get(&declaration) {
             return *members;
         }
-        if !self.active.insert(declaration) {
+        let Some(cycle_count) = self.traversal.enter(declaration) else {
             return FlowMembers::UNKNOWN;
-        }
+        };
         let members = self.expression(value);
-        self.active.remove(&declaration);
-        self.memo.insert(declaration, members);
+        if self.traversal.complete(declaration, cycle_count) {
+            self.memo.insert(declaration, members);
+        }
         members
     }
 }

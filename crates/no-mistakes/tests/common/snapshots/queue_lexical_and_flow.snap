@@ -1,0 +1,178 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "flow.ts",
+          "job": "left",
+          "kind": "missing-job-option",
+          "line": 20,
+          "message": "job options missing priority",
+          "queueFile": "flow.ts",
+          "queueName": "items",
+          "sourceLine": "flow.add({ ...left, ...right, opts: {} });"
+        },
+        {
+          "file": "flow.ts",
+          "job": "paint-child",
+          "kind": "missing-job-option",
+          "line": 15,
+          "message": "job options missing priority",
+          "queueFile": "flow.ts",
+          "queueName": "items",
+          "sourceLine": "children: [{ ...paint, name: \"paint-child\", opts: {} }],"
+        },
+        {
+          "file": "jobs.ts",
+          "job": "forward",
+          "kind": "invalid-job-id",
+          "line": 27,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addBulk([{ name: lateLabel, data: {}, opts: { jobId: lateId } }]);"
+        },
+        {
+          "file": "jobs.ts",
+          "job": "nested",
+          "kind": "invalid-job-id",
+          "line": 11,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.add(label, {}, { jobId: \"nested:1\" });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": "nested",
+          "kind": "invalid-job-id",
+          "line": 12,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addBulk([{ name: label, data: {}, opts: { jobId: \"nested:2\" } }]);"
+        },
+        {
+          "file": "jobs.ts",
+          "job": "nested",
+          "kind": "invalid-job-id",
+          "line": 13,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.upsertJobScheduler(\"timed\", {}, { name: label, opts: { jobId: \"nested:3\" } });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": "nested",
+          "kind": "invalid-job-id",
+          "line": 14,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "flow.add({ queueName: \"dispatch\", name: label, opts: { jobId: \"nested:4\" } });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": "nested",
+          "kind": "invalid-job-id",
+          "line": 15,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "enqueue(queue, label, { jobId: \"nested:5\" });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": "outer",
+          "kind": "invalid-job-id",
+          "line": 30,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addBulk([{ name: label, data: {}, opts: { jobId: \"outer:1\" } }]);"
+        },
+        {
+          "file": "jobs.ts",
+          "job": null,
+          "kind": "invalid-job-id",
+          "line": 19,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.add(label, {}, { jobId: \"masked:1\" });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": null,
+          "kind": "invalid-job-id",
+          "line": 20,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addBulk([{ name: label, data: {}, opts: { jobId: \"masked:2\" } }]);"
+        },
+        {
+          "file": "jobs.ts",
+          "job": null,
+          "kind": "invalid-job-id",
+          "line": 21,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.upsertJobScheduler(\"masked\", {}, { name: label, opts: { jobId: \"masked:3\" } });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": null,
+          "kind": "invalid-job-id",
+          "line": 22,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "flow.add({ queueName: \"dispatch\", name: label, opts: { jobId: \"masked:4\" } });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": null,
+          "kind": "invalid-job-id",
+          "line": 23,
+          "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "enqueue(queue, label, { jobId: \"masked:5\" });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": null,
+          "kind": "scheduler-template-option",
+          "line": 13,
+          "message": "`jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity.",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.upsertJobScheduler(\"timed\", {}, { name: label, opts: { jobId: \"nested:3\" } });"
+        },
+        {
+          "file": "jobs.ts",
+          "job": null,
+          "kind": "scheduler-template-option",
+          "line": 21,
+          "message": "`jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity.",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.upsertJobScheduler(\"masked\", {}, { name: label, opts: { jobId: \"masked:3\" } });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

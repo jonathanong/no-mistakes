@@ -1,6 +1,6 @@
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
-use crate::queue::types::{Diagnostic, Severity};
+use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -103,6 +103,7 @@ pub(super) fn self_dedup_findings(
             continue;
         }
         diagnostics.push(Diagnostic {
+            kind: DiagnosticKind::AnalysisNote,
             severity: Severity::Warning,
             file: relative_string(root, &producer.site.file),
             line: producer.site.line,

@@ -483,6 +483,7 @@ remain failures. See
 `queueCheck()` also reports `worker-rate-limit-per-process` when `.rateLimit()` is called on a binding that resolves to a `Worker`, a `Worker` subclass, or a configured worker factory, and abstains with a diagnostic on `QueueReport.diagnostics` only when an unresolved receiver's binding originates from a queue module or worker construction. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`.
 Pass `{ includeDiagnostics: true }` to `queueCheck()` (or `{ type: "queueCheck", includeDiagnostics: true }` in `analyzeProject()`, typed by `QueueCheckOptions` and `BatchedQueueCheckOptions`) to receive a `QueueCheckReport` (`{ findings, diagnostics }`) instead of the default bare `QueueCheckFinding[]` array.
 Aggregate `check()` also surfaces unresolved `worker-rate-limit-per-process` receiver diagnostics in `CheckReport.warnings` without turning a clean run into a failure.
+Source directives for `queues-check` suppress these warnings in aggregate `check()` and batched `check` queries. Set `includeSuppressed: true` to see matching warnings in the suppression ledger.
 Import the exported `QueueRateLimitFindingKind` type for the rate-limit-specific values `"shared-queue-rate-limit" | "worker-rate-limit-per-process"`.
 `queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
 Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
@@ -503,10 +504,11 @@ queue mixes priority 0 and a priority greater than 0. See
 [queues check](cli/queues-check.md).
 Declaration findings carry fix guidance in `message`;
 no separate JSON field is added.
-`queues.requiredJobOptions` is discovered
-configuration, not an inline `queueCheck()` option. A `missing-job-option`
-finding lists the absent keys in `message`. Abstained calls are omitted from
-the findings array; their warnings stay on the queue report diagnostics.
+Call `queueCheck({ root, config })` to select a configuration file by absolute
+path or by path relative to `root`. In `analyzeProject()` set `config` on the
+request for all queue reports. Set `queues.requiredJobOptions` in that file.
+A `missing-job-option` finding lists the absent keys in `message`. Abstentions
+appear in the queue report diagnostics.
 
 ## Queue factory configuration types
 

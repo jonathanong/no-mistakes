@@ -1,0 +1,9 @@
+version: 2
+projects:
+  dispatch:
+    root: .
+    queues:
+      enqueues: ["*.ts"]
+      workers: [workers.ts]
+queues:
+  requiredJobOptions: [attempts, backoff]

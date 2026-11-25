@@ -2,8 +2,8 @@ use crate::edge_index::PreparedRelationshipIndex;
 use crate::queue::extract::FileFacts;
 use crate::queue::source::relative_string;
 use crate::queue::types::{
-    Diagnostic, Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, QueueProducer, QueueWorker,
-    RelationshipNode, Severity,
+    Diagnostic, DiagnosticKind, Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, QueueProducer,
+    QueueWorker, RelationshipNode, Severity,
 };
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::Serialize;
@@ -93,6 +93,7 @@ pub(super) fn diagnostics(
     for (path, facts) in facts {
         for (line, message) in &facts.diagnostics {
             out.push(Diagnostic {
+                kind: DiagnosticKind::AnalysisNote,
                 severity: Severity::Warning,
                 file: relative_string(root, path),
                 line: *line,
@@ -132,6 +133,7 @@ pub(super) fn dedup_sorted<T: Ord>(mut values: Vec<T>) -> Vec<T> {
 
 fn unresolved_producer(root: &Path, producer: &InternalProducer) -> Option<Diagnostic> {
     (producer.queue.is_none() || producer.site.job.is_none()).then(|| Diagnostic {
+        kind: DiagnosticKind::AnalysisNote,
         severity: Severity::Warning,
         file: relative_string(root, &producer.site.file),
         line: producer.site.line,
@@ -141,6 +143,7 @@ fn unresolved_producer(root: &Path, producer: &InternalProducer) -> Option<Diagn
 
 fn unresolved_worker(root: &Path, worker: &InternalWorker) -> Option<Diagnostic> {
     worker.queue.is_none().then(|| Diagnostic {
+        kind: DiagnosticKind::AnalysisNote,
         severity: Severity::Warning,
         file: relative_string(root, &worker.site.file),
         line: worker.site.line,
