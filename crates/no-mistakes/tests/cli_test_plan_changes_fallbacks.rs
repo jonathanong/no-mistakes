@@ -195,3 +195,127 @@ fn changes_report_changed_files_fallback_for_deleted_config_and_invalid_paths() 
         "expected `.no-mistakes.yml` in `{reason}`"
     );
 }
+
+#[test]
+fn malformed_npm_yarn_and_bun_lockfiles_fall_back_with_base() {
+    let source =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/tests-plan-changes-union");
+    let patches = source.join("patches");
+    let reports = source.join("reports");
+    let cases = [
+        (
+            "malformed-npm-base.json",
+            "malformed-npm-head.json",
+            "package-lock.json",
+            "npm-lock-only.json",
+            "lockfile-npm-malformed",
+        ),
+        (
+            "malformed-yarn-base.lock",
+            "malformed-yarn-head.lock",
+            "yarn.lock",
+            "yarn-lock-only.json",
+            "lockfile-yarn-malformed",
+        ),
+        (
+            "malformed-bun-base.lock",
+            "malformed-bun-head.lock",
+            "bun.lock",
+            "bun-lock-only.json",
+            "lockfile-bun-malformed",
+        ),
+    ];
+    for (base_patch, head_patch, target_rel, report_name, expected_warning) in cases {
+        let repo = crate::saved_fixture::materialize_path(&source.join("base"));
+        std::fs::copy(patches.join(base_patch), repo.path().join(target_rel)).unwrap();
+        git_cmd(repo.path(), &["init", "-b", "main"]);
+        git_cmd(
+            repo.path(),
+            &["config", "user.email", "test@example.invalid"],
+        );
+        git_cmd(repo.path(), &["config", "user.name", "Test"]);
+        git_cmd(repo.path(), &["add", "."]);
+        git_cmd(repo.path(), &["commit", "-m", "base"]);
+        let base_sha = git_cmd(repo.path(), &["rev-parse", "HEAD"]);
+        std::fs::copy(patches.join(head_patch), repo.path().join(target_rel)).unwrap();
+        git_cmd(repo.path(), &["add", "."]);
+        git_cmd(repo.path(), &["commit", "-m", "head"]);
+
+        let report_path = reports.join(report_name);
+        let result = plan_vitest(
+            repo.path(),
+            &[
+                "--base",
+                &base_sha,
+                "--changes",
+                report_path.to_str().unwrap(),
+            ],
+        );
+        assert_eq!(result["fallback_triggered"], true, "{target_rel}");
+        assert_eq!(
+            selected_files(&result),
+            [
+                "tests/avatar.test.ts",
+                "tests/cart.test.ts",
+                "tests/unrelated.test.ts",
+                "tests/widget.test.ts",
+            ],
+            "{target_rel}"
+        );
+        assert!(
+            warning_types(&result).contains(&expected_warning),
+            "{target_rel}: expected `{expected_warning}` in {:?}",
+            warning_types(&result)
+        );
+    }
+}
+
+#[test]
+fn early_all_env_with_limit_still_falls_back_to_full_suite_for_untraceable_lockfile() {
+    let source =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/tests-plan-changes-union");
+    let patches = source.join("patches");
+    let reports = source.join("reports");
+    let repo = crate::saved_fixture::materialize_path(&source.join("base"));
+    git_cmd(repo.path(), &["init", "-b", "main"]);
+    git_cmd(
+        repo.path(),
+        &["config", "user.email", "test@example.invalid"],
+    );
+    git_cmd(repo.path(), &["config", "user.name", "Test"]);
+    git_cmd(repo.path(), &["add", "."]);
+    git_cmd(repo.path(), &["commit", "-m", "base"]);
+    let base_sha = git_cmd(repo.path(), &["rev-parse", "HEAD"]);
+    std::fs::copy(
+        patches.join("untraceable-pnpm-lock.yaml"),
+        repo.path().join("pnpm-lock.yaml"),
+    )
+    .unwrap();
+    git_cmd(repo.path(), &["add", "."]);
+    git_cmd(repo.path(), &["commit", "-m", "head"]);
+
+    let report_path = reports.join("lockfile-only.json");
+    let result = plan_vitest(
+        repo.path(),
+        &[
+            "--base",
+            &base_sha,
+            "--changes",
+            report_path.to_str().unwrap(),
+            "--environment",
+            "review",
+            "--limit-files",
+            "1",
+        ],
+    );
+    assert_eq!(result["fallback_triggered"], true);
+    assert_eq!(
+        selected_files(&result),
+        [
+            "tests/avatar.test.ts",
+            "tests/cart.test.ts",
+            "tests/unrelated.test.ts",
+            "tests/widget.test.ts",
+        ]
+    );
+}

@@ -61,7 +61,7 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
 }
 
 // Strip JSONC syntax (// and /* */ comments, trailing commas) so serde_json can parse it.
-fn strip_jsonc(s: &str) -> String {
+pub(super) fn strip_jsonc(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;
