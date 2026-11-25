@@ -1,0 +1,17 @@
+version: 2
+projects:
+  dispatch:
+    root: .
+    queues:
+      enqueues: ["*.ts"]
+      workers: ["*.ts"]
+queues:
+  requiredJobOptionsByQueue:
+    defaults: [priority]
+    items: [priority]
+  factories:
+    enqueue:
+      - callee: enqueue
+        queue: 0
+        job: 1
+        options: 2

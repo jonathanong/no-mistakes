@@ -17,14 +17,14 @@ fn queues_check_include_diagnostics_flag_is_explicit_opt_in() {
         default.command,
         Command::Queues(args) if matches!(
             args.command,
-            super::QueuesCommand::Check { include_diagnostics: false }
+            super::QueuesCommand::Check { config: None, include_diagnostics: false }
         )
     ));
     assert!(matches!(
         requested.command,
         Command::Queues(args) if matches!(
             args.command,
-            super::QueuesCommand::Check { include_diagnostics: true }
+            super::QueuesCommand::Check { config: None, include_diagnostics: true }
         )
     ));
 }

@@ -1,0 +1,43 @@
+---
+source: crates/no-mistakes/tests/cli_check_queue_required_options.rs
+---
+{
+  "default-off": {
+    "exitCode": 0,
+    "report": []
+  },
+  "default-on": {
+    "exitCode": 1,
+    "report": [
+      {
+        "file": "enqueue.ts",
+        "job": "render",
+        "kind": "missing-job-option",
+        "line": 4,
+        "message": "job options missing attempts",
+        "queueFile": "enqueue.ts",
+        "queueName": "dispatch",
+        "sourceLine": "dispatch.add(\"render\", {}, {});"
+      }
+    ]
+  },
+  "explicit-off": {
+    "exitCode": 0,
+    "report": []
+  },
+  "explicit-on": {
+    "exitCode": 1,
+    "report": [
+      {
+        "file": "enqueue.ts",
+        "job": "render",
+        "kind": "missing-job-option",
+        "line": 4,
+        "message": "job options missing attempts",
+        "queueFile": "enqueue.ts",
+        "queueName": "dispatch",
+        "sourceLine": "dispatch.add(\"render\", {}, {});"
+      }
+    ]
+  }
+}

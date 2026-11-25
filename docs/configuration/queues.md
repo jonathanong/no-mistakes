@@ -185,8 +185,8 @@ JavaScript callers can name these config shapes with exported
 `QueueFactoryArgument`, `QueueEnqueueFactoryOptions`, and `QueueFactories`.
 These describe the `queues.factories` config-file value. The existing async
 queue APIs read the root configuration; no direct factory argument is added
-to `queueCheck()`. `check()` and `analyzeProject()` can also select a config
-file through their existing `config` option.
+to `queueCheck()`. `queueCheck()`, `check()`, and `analyzeProject()` accept
+a `config` path to select a file.
 
 ## Required job options
 
@@ -202,8 +202,9 @@ Factories without an `options` argument rely on queue defaults.
 defaults supplied by a same-file const object spread in its options. An unknown
 spread abstains instead of reporting a missing key when it leaves the effective
 options unresolved and the effective list for that queue is non-empty.
-`check --config <path>` and `analyzeProject({ config, ... })` use the
-selected document's required job options, including an empty policy.
+`queues check --config <path>`, `check --config <path>`, and their
+programmatic equivalents use the selected document's required job options,
+including an empty policy.
 Rust callers analyzing prepared facts can pass the selected config to the
 catalog-aware queue API.
 Same-file constant options and spreads resolve from the binding at each use.

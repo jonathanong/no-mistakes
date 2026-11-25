@@ -67,11 +67,17 @@ fn pass5a_visible_adapters_preserve_fixture_backed_discovery_output() {
 
 #[test]
 fn pass5a_public_wrappers_create_one_request_snapshot() {
+    let queue = include_str!("../../../queue/graph.rs");
+    let queue_wrapper = function_body(queue, "pub fn analyze_project(");
+    assert_eq!(
+        queue_wrapper
+            .matches("analyze_project_with_config(")
+            .count(),
+        1
+    );
+    assert!(!queue_wrapper.contains("VisiblePathSnapshot::new"));
     let cases = [
-        (
-            include_str!("../../../queue/graph.rs"),
-            "pub fn analyze_project(",
-        ),
+        (queue, "pub fn analyze_project_with_config("),
         (
             include_str!("../../../react_traits/pipeline/run.rs"),
             "pub fn run_analyze(",
