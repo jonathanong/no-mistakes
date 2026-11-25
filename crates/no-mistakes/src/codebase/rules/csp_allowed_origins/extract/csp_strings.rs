@@ -1,20 +1,21 @@
 use super::super::CspDirective;
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrayExpression, BinaryExpression, BinaryOperator, CallExpression, ConditionalExpression,
-    Expression, LogicalExpression, TemplateLiteral,
+    ArrayExpression, BinaryExpression, BinaryOperator, ConditionalExpression, LogicalExpression,
+    TemplateLiteral,
 };
-use std::borrow::Cow;
 use std::collections::BTreeSet;
 
+mod builders;
 mod detect;
 mod eval;
 
+pub(super) use builders::{is_dynamic_policy_candidate, try_collect_call, try_collect_object};
+pub(super) use detect::{is_csp_identifier, is_static_csp_policy_string};
 use detect::{
     array_contains_csp_fragment, expr_contains_csp_fragment, template_contains_csp_fragment,
 };
 pub(super) use eval::{eval_static_string, static_template_text};
-use eval::{csp_array_strings, eval_csp_binary, eval_csp_template, unwrap_join_array_target};
+use eval::{csp_array_strings, eval_csp_binary, eval_csp_template};
 
 pub(super) enum CspExprResult {
     Resolved,
@@ -22,48 +23,15 @@ pub(super) enum CspExprResult {
     Ignored,
 }
 
-pub(super) fn try_collect_join_call(
-    call: &CallExpression<'_>,
-    out: &mut Vec<String>,
-) -> CspExprResult {
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
-        return CspExprResult::Ignored;
-    };
-    if member.optional || member.property.name.as_str() != "join" || call.arguments.len() > 1 {
-        return CspExprResult::Ignored;
-    }
-    let Some((array, unfiltered)) = unwrap_join_array_target(&member.object) else {
-        return CspExprResult::Ignored;
-    };
-    let separator = match call.arguments.first() {
-        None => Some(Cow::Borrowed(",")),
-        Some(arg) => arg.as_expression().and_then(eval_static_string),
-    };
-    if unfiltered {
-        if let (Some(sep), Some(items)) = (separator, csp_array_strings(array)) {
-            let joined = items.join(&sep);
-            if joined.contains("-src") {
-                out.push(joined);
-            }
-            return CspExprResult::Resolved;
-        }
-    }
-    if array_contains_csp_fragment(array) {
-        CspExprResult::Unanalyzable(call.span.start)
-    } else {
-        CspExprResult::Ignored
-    }
-}
-
 pub(super) fn try_collect_array(
     array: &ArrayExpression<'_>,
     out: &mut Vec<String>,
 ) -> CspExprResult {
     if let Some(items) = csp_array_strings(array) {
-        if items.iter().any(|item| item.contains("-src")) {
+        if items.iter().any(|item| is_static_csp_policy_string(item)) {
             if has_overlapping_directives(&items) {
                 for item in items {
-                    if item.contains("-src") {
+                    if is_static_csp_policy_string(&item) {
                         out.push(item);
                     }
                 }
@@ -88,7 +56,7 @@ pub(super) fn try_collect_binary(
         return CspExprResult::Ignored;
     }
     if let Some(combined) = eval_csp_binary(expr) {
-        if combined.contains("-src") {
+        if is_static_csp_policy_string(&combined) {
             out.push(combined);
         }
         return CspExprResult::Resolved;
@@ -105,7 +73,7 @@ pub(super) fn try_collect_template(
     out: &mut Vec<String>,
 ) -> CspExprResult {
     if let Some(value) = eval_csp_template(template) {
-        if value.contains("-src") {
+        if is_static_csp_policy_string(&value) {
             out.push(value.into_owned());
         }
         return CspExprResult::Resolved;

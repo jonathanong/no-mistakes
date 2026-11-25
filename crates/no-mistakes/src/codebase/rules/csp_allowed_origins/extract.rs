@@ -1,29 +1,35 @@
-use super::{CollectedOrigins, CspDirective, ParsedOrigin, UnanalyzableReason};
-use crate::codebase::ts_source::line_number;
+use super::{CollectedOrigins, CspDirective};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    Argument, ArrayExpression, BinaryExpression, CallExpression, ConditionalExpression,
-    JSXElementName, JSXOpeningElement, LogicalExpression, NewExpression, Program, StringLiteral,
-    TemplateLiteral,
+    ArrayExpression, ArrowFunctionExpression, BinaryExpression, BindingPattern, CallExpression,
+    ConditionalExpression, Expression, Function, JSXOpeningElement, LogicalExpression,
+    NewExpression, ObjectExpression, Program, ReturnStatement, StringLiteral, TSType,
+    TemplateLiteral, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::GetSpan;
+use oxc_syntax::scope::ScopeFlags;
+use std::collections::HashSet;
 
+mod csp_scope;
 mod csp_strings;
 mod jsx;
 mod url;
 
 use csp_strings::{
-    try_collect_array, try_collect_binary, try_collect_conditional, try_collect_join_call,
-    try_collect_logical, try_collect_template, CspExprResult,
+    is_csp_identifier, is_static_csp_policy_string, try_collect_array, try_collect_binary,
+    try_collect_call, try_collect_conditional, try_collect_logical, try_collect_object,
+    try_collect_template,
 };
-use jsx::{jsx_attr_value, link_directive, JsxAttrValue, LinkDirective};
-use url::{is_global_or_bare, record_static_url, record_unanalyzable, record_url_expr};
+use jsx::record_jsx_element;
+use url::is_global_or_bare;
 
 pub(crate) fn collect(program: &Program<'_>, source: &str) -> CollectedOrigins {
     let mut visitor = OriginVisitor {
         source,
         collected: CollectedOrigins::default(),
         csp_depth: 0,
+        in_csp_fn: false,
+        resolved_bindings: HashSet::new(),
     };
     visitor.visit_program(program);
     visitor.collected
@@ -33,13 +39,17 @@ struct OriginVisitor<'a> {
     source: &'a str,
     collected: CollectedOrigins,
     csp_depth: usize,
+    in_csp_fn: bool,
+    resolved_bindings: HashSet<String>,
 }
 
 impl<'a> Visit<'a> for OriginVisitor<'_> {
+    fn visit_ts_type(&mut self, _it: &TSType<'a>) {}
+
     fn visit_string_literal(&mut self, lit: &StringLiteral<'a>) {
         if self.csp_depth == 0 {
             let value = crate::ast::js_literal(lit);
-            if value.contains("-src") {
+            if is_static_csp_policy_string(&value) {
                 self.collected.csp_strings.push(value.into_owned());
             }
         }
@@ -56,6 +66,13 @@ impl<'a> Visit<'a> for OriginVisitor<'_> {
         self.visit_csp_expr(
             |out| try_collect_array(array, out),
             |this| walk::walk_array_expression(this, array),
+        );
+    }
+
+    fn visit_object_expression(&mut self, obj: &ObjectExpression<'a>) {
+        self.visit_csp_expr(
+            |_| try_collect_object(obj),
+            |this| walk::walk_object_expression(this, obj),
         );
     }
 
@@ -81,18 +98,7 @@ impl<'a> Visit<'a> for OriginVisitor<'_> {
     }
 
     fn visit_jsx_opening_element(&mut self, element: &JSXOpeningElement<'a>) {
-        if let JSXElementName::Identifier(tag) = &element.name {
-            match tag.name.as_str() {
-                "script" => self.record_jsx_attr(element, "src", CspDirective::Script),
-                "img" => self.record_jsx_attr(element, "src", CspDirective::Img),
-                "iframe" => self.record_jsx_attr(element, "src", CspDirective::Frame),
-                "audio" | "video" | "source" => {
-                    self.record_jsx_attr(element, "src", CspDirective::Media);
-                }
-                "link" => self.record_link_element(element),
-                _ => {}
-            }
-        }
+        record_jsx_element(&mut self.collected, self.source, element);
         walk::walk_jsx_opening_element(self, element);
     }
 
@@ -101,7 +107,7 @@ impl<'a> Visit<'a> for OriginVisitor<'_> {
             self.record_first_arg(&call.arguments, CspDirective::Connect);
         }
         self.visit_csp_expr(
-            |out| try_collect_join_call(call, out),
+            |out| try_collect_call(call, out),
             |this| walk::walk_call_expression(this, call),
         );
     }
@@ -112,84 +118,58 @@ impl<'a> Visit<'a> for OriginVisitor<'_> {
         }
         walk::walk_new_expression(self, expr);
     }
-}
 
-impl OriginVisitor<'_> {
-    fn visit_csp_expr<T, W>(&mut self, try_collect: T, walk_children: W)
-    where
-        T: FnOnce(&mut Vec<String>) -> CspExprResult,
-        W: FnOnce(&mut Self),
-    {
-        let result = if self.csp_depth == 0 {
-            try_collect(&mut self.collected.csp_strings)
-        } else {
-            CspExprResult::Ignored
-        };
-        match result {
-            CspExprResult::Resolved => {
-                self.csp_depth += 1;
-                walk_children(self);
-                self.csp_depth -= 1;
-            }
-            CspExprResult::Unanalyzable(span) => {
-                self.collected
-                    .csp_unanalyzable
-                    .push(line_number(self.source, span));
-                self.csp_depth += 1;
-                walk_children(self);
-                self.csp_depth -= 1;
-            }
-            CspExprResult::Ignored => walk_children(self),
+    fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
+        let name = func.id.as_ref().map(|id| id.name.as_str());
+        let is_csp = self.csp_depth == 0 && name.is_some_and(is_csp_identifier);
+        let prev = std::mem::replace(&mut self.in_csp_fn, is_csp);
+        let (s0, u0) = self.counts();
+        walk::walk_function(self, func, flags);
+        self.in_csp_fn = prev;
+        if let Some(name) = name.filter(|_| is_csp) {
+            self.note_resolved_binding(name, s0, u0);
         }
     }
 
-    fn record_link_element(&mut self, element: &JSXOpeningElement<'_>) {
-        match link_directive(element) {
-            LinkDirective::Ignore => {}
-            LinkDirective::Resolved(directive) => self.record_jsx_attr(element, "href", directive),
-            LinkDirective::Dynamic => match jsx_attr_value(element, "href") {
-                None => {}
-                Some(JsxAttrValue::Static(url, _)) if !ParsedOrigin::is_network_like_url(&url) => {}
-                Some(JsxAttrValue::Static(_, span)) => record_unanalyzable(
-                    &mut self.collected,
-                    self.source,
-                    span,
-                    UnanalyzableReason::DynamicLinkRel,
-                ),
-                Some(JsxAttrValue::Dynamic(expr)) => record_unanalyzable(
-                    &mut self.collected,
-                    self.source,
-                    expr.span().start,
-                    UnanalyzableReason::DynamicLinkRel,
-                ),
-            },
-        }
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        let prev = std::mem::replace(&mut self.in_csp_fn, false);
+        walk::walk_arrow_function_expression(self, arrow);
+        self.in_csp_fn = prev;
     }
 
-    fn record_jsx_attr(&mut self, el: &JSXOpeningElement<'_>, attr: &str, dir: CspDirective) {
-        match jsx_attr_value(el, attr) {
-            None => {}
-            Some(JsxAttrValue::Static(url, span)) => {
-                record_static_url(&mut self.collected, self.source, span, dir, &url);
-            }
-            Some(JsxAttrValue::Dynamic(expr)) => {
-                record_url_expr(&mut self.collected, self.source, expr, dir);
+    fn visit_return_statement(&mut self, ret: &ReturnStatement<'a>) {
+        if self.in_csp_fn && self.csp_depth == 0 {
+            if let Some(arg) = &ret.argument {
+                self.walk_csp_value_expr(arg);
+                return;
             }
         }
+        walk::walk_return_statement(self, ret);
     }
 
-    fn record_first_arg(&mut self, args: &[Argument<'_>], directive: CspDirective) {
-        let Some(arg) = args.first() else {
+    fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
+        let BindingPattern::BindingIdentifier(id) = &decl.id else {
+            walk::walk_variable_declarator(self, decl);
             return;
         };
-        match arg.as_expression() {
-            Some(expr) => record_url_expr(&mut self.collected, self.source, expr, directive),
-            None => record_unanalyzable(
-                &mut self.collected,
-                self.source,
-                arg.span().start,
-                UnanalyzableReason::DynamicUrl(directive),
-            ),
+        let Some(init) = &decl.init else {
+            return;
+        };
+        let name = id.name.as_str();
+        if self.csp_depth != 0 || !is_csp_identifier(name) {
+            walk::walk_variable_declarator(self, decl);
+            return;
         }
+        let (s0, u0) = self.counts();
+        match unwrap_ts_wrappers(init) {
+            Expression::ArrowFunctionExpression(arrow) => self.walk_csp_arrow(arrow),
+            Expression::FunctionExpression(func) => {
+                let prev = std::mem::replace(&mut self.in_csp_fn, true);
+                walk::walk_function(self, func, ScopeFlags::Function);
+                self.in_csp_fn = prev;
+            }
+            _ => self.walk_csp_value_expr(init),
+        }
+        self.note_resolved_binding(name, s0, u0);
     }
 }

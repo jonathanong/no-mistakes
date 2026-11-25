@@ -8,6 +8,7 @@ fn csp_allowed_origins_json_matches_snapshot() {
     let unanalyzable = rules_path("csp-allowed-origins", "fixture", "unanalyzable-and-urls");
     let yaml_block = rules_path("csp-allowed-origins", "fixture", "yaml-block");
     let dynamic_policies = rules_path("csp-allowed-origins", "fixture", "dynamic-policies");
+    let mixed_static_dynamic = rules_path("csp-allowed-origins", "fixture", "mixed-static-dynamic");
     assert_saved_fixture(
         "csp_allowed_origins",
         &[
@@ -76,6 +77,21 @@ fn csp_allowed_origins_json_matches_snapshot() {
                 "dynamic-ternary",
                 dynamic_policies.clone(),
                 dynamic_policies.join("ternary.yml"),
+            ),
+            (
+                "mixed-static-dynamic-report",
+                mixed_static_dynamic.clone(),
+                mixed_static_dynamic.join("report.yml"),
+            ),
+            (
+                "mixed-static-dynamic-advise",
+                mixed_static_dynamic.clone(),
+                mixed_static_dynamic.join("advise.yml"),
+            ),
+            (
+                "mixed-static-dynamic-ignore",
+                mixed_static_dynamic.clone(),
+                mixed_static_dynamic.join("ignore.yml"),
             ),
         ],
     );

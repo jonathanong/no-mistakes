@@ -1,23 +1,89 @@
+use super::super::{CollectedOrigins, CspDirective, ParsedOrigin, UnanalyzableReason};
 use super::csp_strings::eval_static_string;
-use super::super::CspDirective;
+use super::url::{record_static_url, record_unanalyzable, record_url_expr};
 use oxc_ast::ast::{
-    Expression, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXOpeningElement,
+    Expression, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXElementName,
+    JSXOpeningElement,
 };
 use oxc_span::GetSpan;
 use std::borrow::Cow;
 
-pub(super) enum JsxAttrValue<'a> {
+pub(super) fn record_jsx_element(
+    collected: &mut CollectedOrigins,
+    source: &str,
+    element: &JSXOpeningElement<'_>,
+) {
+    let JSXElementName::Identifier(tag) = &element.name else {
+        return;
+    };
+    match tag.name.as_str() {
+        "script" => record_jsx_attr(collected, source, element, "src", CspDirective::Script),
+        "img" => record_jsx_attr(collected, source, element, "src", CspDirective::Img),
+        "iframe" => record_jsx_attr(collected, source, element, "src", CspDirective::Frame),
+        "audio" | "video" | "source" => {
+            record_jsx_attr(collected, source, element, "src", CspDirective::Media);
+        }
+        "link" => record_link_element(collected, source, element),
+        _ => {}
+    }
+}
+
+fn record_link_element(
+    collected: &mut CollectedOrigins,
+    source: &str,
+    element: &JSXOpeningElement<'_>,
+) {
+    match link_directive(element) {
+        LinkDirective::Ignore => {}
+        LinkDirective::Resolved(directive) => {
+            record_jsx_attr(collected, source, element, "href", directive);
+        }
+        LinkDirective::Dynamic => match jsx_attr_value(element, "href") {
+            None => {}
+            Some(JsxAttrValue::Static(url, _)) if !ParsedOrigin::is_network_like_url(&url) => {}
+            Some(JsxAttrValue::Static(_, span)) => {
+                record_unanalyzable(collected, source, span, UnanalyzableReason::DynamicLinkRel);
+            }
+            Some(JsxAttrValue::Dynamic(expr)) => record_unanalyzable(
+                collected,
+                source,
+                expr.span().start,
+                UnanalyzableReason::DynamicLinkRel,
+            ),
+        },
+    }
+}
+
+fn record_jsx_attr(
+    collected: &mut CollectedOrigins,
+    source: &str,
+    el: &JSXOpeningElement<'_>,
+    attr: &str,
+    dir: CspDirective,
+) {
+    match jsx_attr_value(el, attr) {
+        None => {}
+        Some(JsxAttrValue::Static(url, span)) => {
+            record_static_url(collected, source, span, dir, &url);
+        }
+        Some(JsxAttrValue::Dynamic(expr)) => {
+            record_url_expr(collected, source, expr, dir);
+        }
+    }
+}
+
+enum JsxAttrValue<'a> {
     Static(Cow<'a, str>, u32),
     Dynamic(&'a Expression<'a>),
 }
 
-pub(super) enum LinkDirective {
+enum LinkDirective {
     Resolved(CspDirective),
     Ignore,
     Dynamic,
 }
 
-pub(super) fn link_directive(element: &JSXOpeningElement<'_>) -> LinkDirective {
+fn link_directive(element: &JSXOpeningElement<'_>) -> LinkDirective {
     let Some(rel_attr) = jsx_attr_value(element, "rel") else {
         return LinkDirective::Ignore;
     };
@@ -72,7 +138,7 @@ fn is_non_fetch_link_rel(tokens: &[&str]) -> bool {
     })
 }
 
-pub(super) fn jsx_attr_value<'a>(
+fn jsx_attr_value<'a>(
     element: &'a JSXOpeningElement<'a>,
     name: &str,
 ) -> Option<JsxAttrValue<'a>> {

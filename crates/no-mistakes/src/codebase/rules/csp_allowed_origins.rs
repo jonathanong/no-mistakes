@@ -162,7 +162,7 @@ fn check_application(
         if file_facts.parse_error.is_some() {
             continue;
         }
-        if !loaded.policy.is_empty() {
+        if !loaded.policy.is_empty() && loaded.unanalyzable.is_empty() {
             for origin_ref in &file_facts.csp_allowed_origins.refs {
                 if !loaded
                     .policy
