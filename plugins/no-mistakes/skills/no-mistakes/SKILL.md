@@ -401,6 +401,13 @@ expand. Joining `"$"` to a name is not an expansion. A local
 composite `uses: ./...` counts when its declared output reads that proof. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
+Use `test-no-retries` and `playwright-no-serial` through `check --root <root>
+--format json` to detect flaky-test workarounds. Set `testCommands` to the literal
+command prefixes that identify tests in workflow scripts. Document a deliberate
+exception in `allowlist` with a `path` or `project` and a `reason`. See the
+[retry rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-no-retries.md)
+and [serial rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/playwright-no-serial.md).
+
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths
 and single-argument `Array` and `new Array` lengths in `scopes.tests` and
 `scopes.helpers`. `eachCalls` defaults to `[]`. When it lists a callee, numeric

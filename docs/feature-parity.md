@@ -1250,6 +1250,12 @@ selected sources produce incomplete evidence. Application include/exclude filter
 and source suppressions apply to declaration diagnostics. Config is never executed
 and the rule does not discover repository files.
 
+Opt-in [`test-no-retries`](rules/test-no-retries.md) checks literal TypeScript
+and JavaScript retry settings for Vitest, Playwright, and Jest, plus supported
+GitHub Actions YAML steps. [`playwright-no-serial`](rules/playwright-no-serial.md)
+checks Playwright serial settings in TypeScript and JavaScript. Rust, CLI
+`check`, async Node `check()`, and batched `analyzeProject()` share both rules.
+
 Opt-in [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
 checks configured TypeScript/JavaScript PostgreSQL executors for unwritten-row,
 table, constant advisory, and autocommit row locks. CLI `check` and async Node

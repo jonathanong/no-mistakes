@@ -1,0 +1,33 @@
+name: Implicit shells
+jobs:
+  windows-scalar:
+    runs-on: windows-latest
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+  windows-group:
+    runs-on:
+      group: shared
+      labels: windows
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+  windows-label-array:
+    runs-on: [self-hosted, Windows, X64]
+    steps: [{ run: "for i in 1 2; do pnpm test:unit; done" }]
+  linux-label-array:
+    runs-on: [self-hosted, Linux, X64]
+    steps: [{ run: "for i in 1 2; do pnpm test:unit; done" }]
+  hosted-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+  no-default-run:
+    runs-on: ubuntu-latest
+    defaults: {}
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done
+  no-default-shell:
+    runs-on: ubuntu-latest
+    defaults:
+      run: {}
+    steps:
+      - run: for i in 1 2; do pnpm test:unit; done

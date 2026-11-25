@@ -12,6 +12,13 @@ impl CheckFactPlan {
         self.merge_location_demand(&other);
         super::super::family_scope::include_scopes(self, &other);
         self.merge_call_site_paths(&other);
+        self.playwright_fixture_support |= other.playwright_fixture_support;
+        if !other.test_reliability_paths.is_empty() {
+            let paths = Arc::make_mut(&mut self.test_reliability_paths);
+            for (path, demand) in other.test_reliability_paths.iter() {
+                paths.entry(path.clone()).or_default().include(*demand);
+            }
+        }
         if !other.vitest_default_exclude_paths.is_empty() {
             Arc::make_mut(&mut self.vitest_default_exclude_paths)
                 .extend(other.vitest_default_exclude_paths.iter().cloned());

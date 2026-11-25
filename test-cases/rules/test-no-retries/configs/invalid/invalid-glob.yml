@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      allowlist:
+        - path: "tests/[browser"
+          reason: Remote browser grid

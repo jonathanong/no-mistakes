@@ -373,6 +373,12 @@ appear in the JSON `incomplete` list. Declaration sources honor each
 application's include/exclude filters and source suppressions. The rule never
 imports or executes Vitest configuration.
 
+Enable [`test-no-retries`](../rules/test-no-retries.md) and
+[`playwright-no-serial`](../rules/playwright-no-serial.md) to find retry and
+serial settings that can hide flaky tests. Run `no-mistakes check --root .
+--format json` to see findings at the setting, call, or workflow step. Use the
+rule options to document exceptions and name shell test commands.
+
 PostgreSQL executor selection accepts `excludeExecutorNames` in rule options and
 `projects.<name>.postgres.executors`. Exclusions apply after replacement or
 default-plus-extra selection and suppress omitted-default warnings for those

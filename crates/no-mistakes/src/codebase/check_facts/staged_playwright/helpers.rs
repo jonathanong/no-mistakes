@@ -37,6 +37,8 @@ pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
         graph: plan.graph,
         call_site_paths: plan.call_site_paths.clone(),
         vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
+        test_reliability_paths: plan.test_reliability_paths.clone(),
+        playwright_fixture_support: plan.playwright_fixture_support,
         graph_context: plan.graph_context.clone(),
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
@@ -46,6 +48,7 @@ pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
 pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
     !plan.call_site_paths.is_empty()
         || !plan.vitest_default_exclude_paths.is_empty()
+        || !plan.test_reliability_paths.is_empty()
         || plan.imports
         || plan.forbidden_call_arguments.is_some()
         || plan.query_annotation
