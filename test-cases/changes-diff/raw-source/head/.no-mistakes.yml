@@ -1,0 +1,4 @@
+changes:
+  categories:
+    raw:
+      paths: ["raw.txt"]

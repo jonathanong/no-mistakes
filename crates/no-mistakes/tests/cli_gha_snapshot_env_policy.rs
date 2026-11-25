@@ -36,6 +36,13 @@ fn github_actions_env_policy_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "dynamic-env"),
                 policy.clone(),
             ),
+            // 0 findings, 5 advisories: non-mapping `jobs`, job, step and non-sequence `steps`
+            // (including composite `runs.steps`) are unanalyzable rather than silently skipped.
+            (
+                "non-mapping-scopes",
+                rules_path(RULE, "fixture", "non-mapping-scopes"),
+                policy.clone(),
+            ),
             // 1 finding: line and next-line directives hide two of three.
             ("disabled", rules_path(RULE, "fixture", "disabled"), policy),
         ],

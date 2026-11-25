@@ -24,7 +24,7 @@ mod group_selection;
 mod group_selection_types;
 mod hints;
 mod hints_domains;
-mod lockfile_seeds;
+pub(crate) mod lockfile_seeds;
 mod native_fallback;
 mod native_fallback_lang;
 mod native_semantic_fallback;

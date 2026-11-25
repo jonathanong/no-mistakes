@@ -1,4 +1,4 @@
-const { workflowJob: readWorkflowJob } = require("./workflow-contract.cjs");
+const { workflowJob: readWorkflowJob, workflowGateCommand } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
 const { readFileSync } = require("node:fs");
@@ -39,10 +39,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
     entries
       .filter((entry) => entry[1] === "macos-15")
       .map((entry) => [Number(entry[2]), Number(entry[3])]),
-    [
-      [1, 2],
-      [2, 2],
-    ],
+    [[1, 1]],
   );
   assert.match(
     workflowJob("linux-api-tests"),
@@ -336,13 +333,14 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
       .map((value) => value.trim())
       .filter(Boolean);
     const successful = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
-    const script = body.split("        run: |\n")[1].replace(/^          /gm, "");
+    const [command, args] = workflowGateCommand(body);
     const runGate = (results) =>
-      spawnSync("bash", ["-eu", "-c", script], {
+      spawnSync(command, args, {
         encoding: "utf8",
         env: {
           ...process.env,
           MACOS_REQUIRED: "",
+          MACOS_SMOKE_REQUIRED: "",
           MACOS_EVENT: "",
           MACOS_REF: "",
           RESULTS: JSON.stringify(results),

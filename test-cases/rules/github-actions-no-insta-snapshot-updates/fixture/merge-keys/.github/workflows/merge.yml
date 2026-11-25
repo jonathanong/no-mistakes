@@ -1,0 +1,11 @@
+x-base: &base
+  INSTA_UPDATE: always
+<<: *base
+jobs:
+  <<: *base
+  unit:
+    runs-on: ubuntu-latest
+    env:
+      <<: *base
+    steps:
+      - run: cargo test

@@ -32,7 +32,22 @@ impl PreparedTestPlanInputs {
             &root_visible_paths,
             &sources,
         )?;
-        let collected = collect_changed_files(&args, &root)?;
+        let mut collected = collect_changed_files(&args, &root)?;
+        let mut changes_input = crate::tests::plan::changes::ChangesInput::load_from_parts(
+            &args, &root, &config, &sources,
+        );
+        if let Some(input) = &mut changes_input {
+            if let Ok(report) = &input.report {
+                for path in &report.changed_files {
+                    if let Err(error) = collected.push_manual_path(Path::new(path), &root) {
+                        input.report = Err(format!(
+                            "Invalid changedFiles entry `{path}` in changes report: {error}"
+                        ));
+                        break;
+                    }
+                }
+            }
+        }
 
         Ok(Self {
             args,
@@ -42,6 +57,7 @@ impl PreparedTestPlanInputs {
             config,
             config_path,
             collected,
+            changes_input,
         })
     }
 
@@ -122,6 +138,7 @@ impl PreparedTestPlanInputs {
             config,
             config_path,
             collected,
+            changes_input,
         } = self;
 
         Ok(PreparedTestPlanRequest {
@@ -150,7 +167,7 @@ impl PreparedTestPlanInputs {
             test_filter,
             graph: OnceLock::new(),
             discovered_tests: Mutex::new(HashMap::new()),
-            changes_input: OnceLock::new(),
+            changes_input,
             config_invalidation: OnceLock::new(),
             graph_builds: AtomicUsize::new(0),
             framework_discoveries: AtomicUsize::new(0),

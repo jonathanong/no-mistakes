@@ -52,8 +52,11 @@ test("empty, mixed, deleted and renamed inputs stay conservative", () => {
   assert.equal(result.stdout, "rust=true\n");
 });
 function gate(name, results, required) {
-  const code = job(name).match(/node -e '([^']+)'/)[1];
-  return spawnSync(process.execPath, ["-e", code], {
+  const args =
+    name === "native-tests"
+      ? [path.join(__dirname, "native-tests-gate.cjs")]
+      : ["-e", job(name).match(/node -e '([^']+)'/)[1]];
+  return spawnSync(process.execPath, args, {
     encoding: "utf8",
     env: {
       ...process.env,
