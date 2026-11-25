@@ -16,6 +16,10 @@ fn github_actions_pr_diff_range_json_matches_snapshot() {
         "shell-guard-chain",
         "shell-guard-regex",
         "shell-guard-separator",
+        "shell-guard-command-expansion",
+        "shell-guard-dynamic-target",
+        "shell-guard-condition-mutation",
+        "shell-guard-time-control",
     ]
     .into_iter()
     .map(|name| {

@@ -52,6 +52,46 @@ pub(crate) fn check_with_files(
     check_with_files_and_sources(root, config, all_files, &sources, false)
 }
 
+pub(crate) fn collect_config_errors(
+    root: &Path,
+    config_path: Option<&Path>,
+    config: &NoMistakesConfig,
+    errors: &mut Vec<String>,
+) {
+    for (index, rule) in super::validate_options::indexed_rule_applications(config, RULE_ID) {
+        let mut app_errors = std::collections::BTreeSet::new();
+        if let Err(error) = super::path_filter::RulePathFilter::new(root, config, rule) {
+            app_errors.insert(format!("{error:#}"));
+        }
+        match rule.try_rule_options::<Options>() {
+            Ok(opts) => {
+                for pattern in &opts.include {
+                    if let Err(error) = globset::Glob::new(pattern.trim_start_matches("./")) {
+                        app_errors.insert(super::validate_options::format_invalid_option(
+                            RULE_ID,
+                            "include",
+                            pattern,
+                            format_args!("a valid glob ({error})"),
+                        ));
+                    }
+                }
+                policy::collect_errors(opts, &mut app_errors);
+            }
+            Err(error) => {
+                app_errors.insert(format!("{error:#}"));
+            }
+        }
+        super::validate_options::push_application_errors(
+            root,
+            config,
+            index,
+            config_path,
+            app_errors,
+            errors,
+        );
+    }
+}
+
 pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -59,6 +99,9 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
+    let mut errors = Vec::new();
+    collect_config_errors(root, None, config, &mut errors);
+    super::validate_options::finish(errors)?;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let mut opts = policy::compile(rule.try_rule_options()?)?;

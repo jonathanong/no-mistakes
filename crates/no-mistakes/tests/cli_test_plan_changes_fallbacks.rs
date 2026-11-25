@@ -382,3 +382,91 @@ fn early_all_env_with_limit_still_falls_back_to_full_suite_for_untraceable_lockf
     assert_eq!(source_limited["fallback_triggered"], true);
     assert_eq!(selected_files(&source_limited).len(), 1);
 }
+
+#[test]
+fn zero_dependency_lockfiles_keep_targeted_test_selection_for_all_managers() {
+    let source =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/tests-plan-changes-union");
+    let patches = source.join("patches");
+    let reports = source.join("reports");
+    let cases = [
+        (
+            "empty-pnpm-importers-only.yaml",
+            "pnpm-lock.yaml",
+            "pnpm-lock.yaml",
+            "lockfile-only.json",
+        ),
+        (
+            "empty-npm-lock.json",
+            "valid-npm-head.json",
+            "package-lock.json",
+            "npm-lock-only.json",
+        ),
+        (
+            "empty-yarn-classic.lock",
+            "valid-yarn-classic-base.lock",
+            "yarn.lock",
+            "yarn-lock-only.json",
+        ),
+        (
+            "empty-yarn-berry.lock",
+            "valid-yarn-berry-base.lock",
+            "yarn.lock",
+            "yarn-lock-only.json",
+        ),
+        (
+            "empty-bun.lock",
+            "valid-bun-base.lock",
+            "bun.lock",
+            "bun-lock-only.json",
+        ),
+    ];
+    for (empty_patch, populated_patch, target_rel, report_name) in cases {
+        for (label, base_patch, head_patch) in [
+            ("add-first", empty_patch, populated_patch),
+            ("remove-last", populated_patch, empty_patch),
+        ] {
+            let repo = crate::saved_fixture::materialize_path(&source.join("base"));
+            std::fs::copy(patches.join(base_patch), repo.path().join(target_rel)).unwrap();
+            git_cmd(repo.path(), &["init", "-b", "main"]);
+            git_cmd(
+                repo.path(),
+                &["config", "user.email", "test@example.invalid"],
+            );
+            git_cmd(repo.path(), &["config", "user.name", "Test"]);
+            git_cmd(repo.path(), &["add", "."]);
+            git_cmd(repo.path(), &["commit", "-m", "base"]);
+            let base_sha = git_cmd(repo.path(), &["rev-parse", "HEAD"]);
+            std::fs::copy(patches.join(head_patch), repo.path().join(target_rel)).unwrap();
+            git_cmd(repo.path(), &["add", "."]);
+            git_cmd(repo.path(), &["commit", "-m", "head"]);
+
+            let report_path = reports.join(report_name);
+            for extra in [
+                &["--base", base_sha.as_str()][..],
+                &[
+                    "--base",
+                    base_sha.as_str(),
+                    "--changes",
+                    report_path.to_str().unwrap(),
+                ][..],
+            ] {
+                let result = plan_vitest(repo.path(), extra);
+                assert_eq!(
+                    result["fallback_triggered"], false,
+                    "{target_rel} ({label}, {extra:?}): {result}"
+                );
+                assert_eq!(
+                    selected_files(&result),
+                    ["tests/widget.test.ts"],
+                    "{target_rel} ({label}, {extra:?})"
+                );
+                assert!(
+                    warning_types(&result).is_empty(),
+                    "{target_rel} ({label}, {extra:?}): unexpected warnings {:?}",
+                    warning_types(&result)
+                );
+            }
+        }
+    }
+}
