@@ -44,7 +44,7 @@ The current validation graph is organized as follows:
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
-  On `main`, Windows runs six Rust shards and six real-addon API shards and
+  On `main`, Windows runs six Rust shards and six real-addon API shards.
   The main macOS suite runs one Rust test job and one real-addon API
   test job. Each downloads its archive once and runs every selected case.
   Folding the shards saves runner setup and download time. The test
