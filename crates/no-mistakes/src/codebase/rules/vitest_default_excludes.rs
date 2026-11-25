@@ -17,6 +17,7 @@ use std::{
 mod extract;
 mod options;
 pub(crate) use extract::collect;
+pub(crate) use options::collect_config_errors;
 use options::{applications, Application, CheckMode};
 
 pub const RULE_ID: &str = "vitest-default-excludes";

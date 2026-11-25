@@ -1,0 +1,9 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      files: [""]
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      files: [factory.ts]
