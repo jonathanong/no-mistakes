@@ -304,3 +304,84 @@ fn queue_no_enqueue_in_transaction_json_matches_snapshot() {
         ]
     );
 }
+
+#[test]
+fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
+    let root = rules_path(RULE, "fixture", "scoped-handles");
+    let reports = assert_saved_fixture_report(
+        "queue_no_enqueue_in_transaction_scoped_handles",
+        &[
+            ("handles", root.clone(), root.join(".no-mistakes.yml")),
+            ("mixed_advise", root.clone(), root.join("advise.yml")),
+            ("callback_only", root.clone(), root.join("baseline.yml")),
+        ],
+        &[],
+        &[],
+    );
+
+    let handles = &reports["handles"];
+    assert_eq!(handles["exitCode"], 1);
+    assert_eq!(handles["report"]["advisories"], serde_json::json!([]));
+    let findings = handles["report"]["rules"].as_array().unwrap();
+    let mut locations: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["target"] == "@sample/jobs#enqueue")
+        .map(|finding| {
+            assert_eq!(finding["rule"], RULE);
+            (
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [
+            ("src/explicit.ts", 7),
+            ("src/shadowed.ts", 10),
+            ("src/using.ts", 8)
+        ]
+    );
+    let mut uncertain: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["target"] == "unanalyzable")
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    uncertain.sort_unstable();
+    uncertain.dedup();
+    assert_eq!(
+        uncertain,
+        ["src/conditional.ts", "src/escape.ts", "src/unresolved.ts"]
+    );
+
+    let mixed = &reports["mixed_advise"];
+    assert_eq!(mixed["exitCode"], 1);
+    let callback_only = &reports["callback_only"];
+    assert_eq!(callback_only["exitCode"], 1);
+    let callbacks = callback_only["report"]["rules"].as_array().unwrap();
+    assert_eq!(callbacks.len(), 1);
+    assert_eq!(callbacks[0]["file"], "src/callback.ts");
+    assert_eq!(callbacks[0]["target"], "@sample/jobs#enqueue");
+
+    let mut expected: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["target"] == "@sample/jobs#enqueue")
+        .chain(callbacks)
+        .cloned()
+        .collect();
+    expected.sort_by_key(serde_json::Value::to_string);
+    assert_eq!(mixed["report"]["rules"], serde_json::json!(expected));
+    let mut advised: Vec<_> = mixed["report"]["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["target"], "unanalyzable");
+            finding["file"].as_str().unwrap()
+        })
+        .collect();
+    advised.sort_unstable();
+    advised.dedup();
+    assert_eq!(advised, uncertain);
+}

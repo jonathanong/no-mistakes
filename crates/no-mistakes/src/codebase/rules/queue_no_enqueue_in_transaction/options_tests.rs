@@ -9,9 +9,14 @@ fn queue_transaction_options_reject_incomplete_or_conflicting_contracts() {
     for (name, reason) in [
         ("missing", "must both name at least one API"),
         ("duplicate", "more than once"),
+        ("duplicate-begin", "more than once"),
+        ("overlapping", "more than once"),
         ("blank", "non-empty module and export"),
     ] {
-        let error = cases[name].targets().err().expect("configuration is invalid");
+        let error = cases[name]
+            .targets()
+            .err()
+            .expect("configuration is invalid");
         assert!(error.to_string().contains(reason), "{name}: {error}");
     }
 }

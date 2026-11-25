@@ -122,7 +122,8 @@ See the [rule contract](rules/queue-rate-limit-error-delay.md#options-and-defaul
 Configured [`queue-no-enqueue-in-transaction`](rules/queue-no-enqueue-in-transaction.md)
 runs through asynchronous `check({ root, config })` and `analyzeProject()` check
 reports using the same `RuleFinding` as CLI `check`.
-`QueueNoEnqueueInTransactionOptions`, `QueueNoEnqueueInTransactionBoundary`, and
+The exported `QueueNoEnqueueInTransactionOptions`,
+`QueueNoEnqueueInTransactionBoundary`, `QueueNoEnqueueInTransactionBegin`, and
 `QueueNoEnqueueInTransactionPublisher` describe the YAML rule options, including
 optional `unanalyzable` (`report`, `advise`, or `ignore`).
 

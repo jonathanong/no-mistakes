@@ -19,6 +19,8 @@ pub struct GraphBuildPlan {
     /// Retain scalar provenance for configured SQL identifier analysis.
     #[doc(hidden)]
     pub identifier_provenance: bool,
+    #[doc(hidden)]
+    pub scoped_transaction_handles: bool,
     /// Build opt-in class `extends` edges and class declaration records.
     /// Runs the call resolution pass but keeps its `Call` edges and call sites
     /// out unless `calls` is also set. Excluded from `all()`.
@@ -64,6 +66,7 @@ impl GraphBuildPlan {
             effect_selectors: false,
             value_import_selectors: false,
             identifier_provenance: false,
+            scoped_transaction_handles: false,
             extends: false,
             imports: true,
             // RouteImport is an alternate, deliberately conservative import
@@ -128,6 +131,7 @@ impl GraphBuildPlan {
             effect_selectors: false,
             value_import_selectors: false,
             identifier_provenance: false,
+            scoped_transaction_handles: false,
             extends: allowed.contains(&EdgeKind::Extends),
             // Resolved call and extends edges use the prepared import projection
             // to find direct and re-exported callable targets. Traversal still

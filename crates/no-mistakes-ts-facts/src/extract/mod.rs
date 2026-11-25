@@ -55,6 +55,9 @@ include!("extract_collector.rs");
 include!("extract_visit_effects.rs");
 include!("extract_visit_tail.rs");
 include!("extract_visit_type_and_expression_methods.rs");
+#[path = "extract_scoped_handles.rs"]
+mod extract_scoped_handles;
+pub use extract_scoped_handles::{ScopedHandle, ScopedHandles};
 include!("extract_visit.rs");
 include!("extract_visit_callables.rs");
 include!("extract_visit_modules.rs");

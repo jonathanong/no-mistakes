@@ -1,14 +1,15 @@
 use super::RULE_ID;
-use anyhow::{bail, Result};
 use crate::fx::{FxHashMap, FxHashSet};
+use anyhow::{bail, Result};
 use serde::Deserialize;
 
 pub(super) type Api<'a> = (&'a str, &'a str);
 
 #[derive(Default, Deserialize)]
-#[serde(default, deny_unknown_fields)]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(super) struct Options {
     transactions: Vec<Transaction>,
+    begin_transactions: Vec<Publisher>,
     publishers: Vec<Publisher>,
 }
 
@@ -29,22 +30,46 @@ struct Publisher {
 
 pub(super) struct Targets<'a> {
     pub(super) transactions: FxHashMap<Api<'a>, usize>,
+    pub(super) begins: FxHashSet<Api<'a>>,
     pub(super) transaction_modules: FxHashSet<&'a str>,
     pub(super) publishers: FxHashSet<Api<'a>>,
     pub(super) publisher_modules: FxHashSet<&'a str>,
 }
 
+impl Targets<'_> {
+    pub(super) fn has_boundary(&self, api: Api<'_>) -> bool {
+        self.transactions.contains_key(&api) || self.begins.contains(&api)
+    }
+}
+
 impl Options {
     pub(super) fn targets(&self) -> Result<Targets<'_>> {
-        if self.transactions.is_empty() || self.publishers.is_empty() {
-            bail!("{RULE_ID}: options.transactions and options.publishers must both name at least one API");
+        if (self.transactions.is_empty() && self.begin_transactions.is_empty())
+            || self.publishers.is_empty()
+        {
+            bail!("{RULE_ID}: options.transactions or options.beginTransactions, and options.publishers, must both name at least one API");
         }
         let mut transactions = FxHashMap::default();
         let mut transaction_modules = FxHashSet::default();
         for transaction in &self.transactions {
             let api = api(&transaction.module, &transaction.export, "transactions")?;
-            if transactions.insert(api, transaction.callback_argument).is_some() {
-                bail!("{RULE_ID}: options.transactions lists `{}#{}` more than once", api.0, api.1);
+            if transactions
+                .insert(api, transaction.callback_argument)
+                .is_some()
+            {
+                bail!(
+                    "{RULE_ID}: options.transactions lists `{}#{}` more than once",
+                    api.0,
+                    api.1
+                );
+            }
+            transaction_modules.insert(api.0);
+        }
+        let mut begins = FxHashSet::default();
+        for begin in &self.begin_transactions {
+            let api = api(&begin.module, &begin.export, "beginTransactions")?;
+            if transactions.contains_key(&api) || !begins.insert(api) {
+                bail!("{RULE_ID}: options.beginTransactions lists `{}#{}` more than once across transaction boundaries", api.0, api.1);
             }
             transaction_modules.insert(api.0);
         }
@@ -57,6 +82,7 @@ impl Options {
         }
         Ok(Targets {
             transactions,
+            begins,
             transaction_modules,
             publishers,
             publisher_modules,

@@ -169,7 +169,6 @@ pub struct ValueFlowFacts {
     #[cfg(feature = "test-instrumentation")]
     pub receiver_root_target_decompositions: usize,
     pub receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
-    /// Newly recovered escapes retain possible origins; definite effects stay in `receiver_mutations`.
     pub possible_receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub replacements: Option<std::sync::Arc<replacements::ValueReplacementFacts>>,
     pub bindings: Vec<ValueBinding>,
@@ -184,6 +183,7 @@ pub struct ValueFlowFacts {
     pub widened_string_assertions: FxHashMap<u32, Vec<ValueType>>,
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
+    pub scoped_handles: super::extract_scoped_handles::ScopedHandles,
     pub deferred_calls: FxHashSet<u32>,
     pub type_exports: Vec<ExportedBinding>,
     pub type_shapes: FxHashMap<String, ValueType>,

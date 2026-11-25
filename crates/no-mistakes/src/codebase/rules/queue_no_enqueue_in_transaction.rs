@@ -10,11 +10,14 @@ use rayon::prelude::*;
 use std::path::Path;
 
 mod analyze;
+mod analyze_callback;
 mod builtins;
 mod callbacks;
 mod options;
 mod receivers;
 mod reexports;
+mod scoped;
+mod targets;
 mod transactions;
 use options::{Api, Options};
 
@@ -73,6 +76,15 @@ pub(crate) fn check(
 fn finding(ctx: &analyze::Context<'_>, site: &ResolvedCallSite, api: Api<'_>) -> RuleFinding {
     let body = "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.";
     build_finding(ctx, site, body, format!("{}#{}", api.0, api.1))
+}
+
+fn scoped_finding(ctx: &analyze::Context<'_>, site: &ResolvedCallSite, api: Api<'_>) -> RuleFinding {
+    build_finding(
+        ctx,
+        site,
+        "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+        format!("{}#{}", api.0, api.1),
+    )
 }
 
 fn unanalyzable(ctx: &analyze::Context<'_>, site: &ResolvedCallSite, reason: &str) -> RuleFinding {

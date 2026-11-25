@@ -1,7 +1,10 @@
 impl<'a> Visit<'a> for ImportCollector {
     fn visit_statements(&mut self, statements: &oxc_allocator::Vec<'a, Statement<'a>>) {
         record_dead_statement_suffix(self, statements);
+        self.register_scoped_handles(statements);
         visit_statements_with_receiver_region(self, statements);
+        let scope = self.current_lexical_scope_id();
+        self.value_flow.scoped_handles.leave_group(scope);
     }
     fn visit_expression(&mut self, expression: &Expression<'a>) {
         self.note_widened_string_assertion(expression);

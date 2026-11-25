@@ -10,6 +10,7 @@ macro_rules! visit_import_collector_tail {
         }
 
         fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
+            self.note_scoped_handle_use(identifier);
             visit_identifier_reference_with_namespaces(self, identifier);
         }
 

@@ -1,0 +1,16 @@
+rules:
+  - rule: queue-no-enqueue-in-transaction
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      unanalyzable: advise
+      transactions:
+        - module: "@sample/database"
+          export: transaction
+          callbackArgument: 1
+      beginTransactions:
+        - module: "@sample/transactions"
+          export: beginTransaction
+      publishers:
+        - module: "@sample/jobs"
+          export: enqueue

@@ -51,6 +51,8 @@ pub struct TsFactPlan {
     /// Opt-in scalar provenance consumed by SQL identifier proofs.
     #[doc(hidden)]
     pub identifier_provenance: bool,
+    #[doc(hidden)]
+    pub scoped_transaction_handles: bool,
     /// Per-item invocation positions, collected with canonical call facts.
     pub per_item_calls: bool,
     pub call_sites: bool,
@@ -174,9 +176,7 @@ pub struct TsFactMap {
         crate::codebase::playwright_facts::integration::PreparedLinks,
     facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
-    /// Shared by clones. `bump_playwright_scan_generation` takes the next
-    /// unique value so independently mutated clones cannot collide on
-    /// `(generation, settings)` while still sharing the DashMap Arcs.
+    /// Unique generations keep independently mutated clones from sharing stale cache entries.
     playwright_scan_epoch: Arc<AtomicU64>,
     /// Copied on `Clone` so an unmutated clone keeps the previous universe.
     pub(crate) playwright_scan_generation: u64,

@@ -5,6 +5,7 @@ pub struct ExtractDemands {
     pub value_flow: bool,
     pub identifier_provenance: bool,
     pub call_eligibility: bool,
+    pub scoped_transaction_handles: bool,
 }
 
 pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedImport> {
@@ -82,6 +83,7 @@ fn extract_import_facts_with_rhs_probe(
             value_flow: collect_value_flow,
             identifier_provenance: collect_value_flow,
             call_eligibility: collect_call_eligibility,
+            scoped_transaction_handles: false,
         },
         None,
         probe,

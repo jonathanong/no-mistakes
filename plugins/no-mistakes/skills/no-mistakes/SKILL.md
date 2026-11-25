@@ -424,9 +424,10 @@ reports nothing. See the
 [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
 
 Enable `queue-no-enqueue-in-transaction` in `check` to report independently
-durable publishes in inline callbacks that run before commit. Declare the
-transaction and publisher module exports and the zero-based `callbackArgument`
-for each transaction. See
+durable publishes in inline transaction callbacks or while transaction
+handles are live. Declare module exports under `transactions` for callback APIs,
+with a zero-based `callbackArgument`, and under `beginTransactions` for
+scoped handles. Declare the independently durable APIs under `publishers`. See
 [the rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/queue-no-enqueue-in-transaction.md).
 
 For `vite-optimize-deps-nested-imports`, set required `configFiles` and `packages`.

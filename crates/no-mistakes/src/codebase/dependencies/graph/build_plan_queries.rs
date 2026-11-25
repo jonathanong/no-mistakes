@@ -35,6 +35,7 @@ impl GraphBuildPlan {
             builtin_receivers: self.builtin_receivers,
             value_flow: self.calls,
             identifier_provenance: self.identifier_provenance,
+            scoped_transaction_handles: self.scoped_transaction_handles,
             resources: self.resources,
             symbols: self.symbols || self.symbol_import_selectors || self.queues,
             react: self.react,

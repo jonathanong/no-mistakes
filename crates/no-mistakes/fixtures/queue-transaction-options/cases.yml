@@ -12,3 +12,16 @@ blank:
     - { module: "@sample/database", export: transaction, callbackArgument: 1 }
   publishers:
     - { module: "@sample/jobs", export: " " }
+duplicate-begin:
+  beginTransactions:
+    - { module: "@sample/database", export: beginTransaction }
+    - { module: "@sample/database", export: beginTransaction }
+  publishers:
+    - { module: "@sample/jobs", export: enqueue }
+overlapping:
+  transactions:
+    - { module: "@sample/database", export: transaction, callbackArgument: 0 }
+  beginTransactions:
+    - { module: "@sample/database", export: transaction }
+  publishers:
+    - { module: "@sample/jobs", export: enqueue }

@@ -34,6 +34,7 @@ fn all_ts_and_primary_check_families_keep_full_integration_findings() {
             function_calls: true,
             value_flow: true,
             identifier_provenance: true,
+            scoped_transaction_handles: true,
             per_item_calls: true,
             call_sites: true,
             resources: true,
