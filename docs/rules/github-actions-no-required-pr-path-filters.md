@@ -70,7 +70,7 @@ results from the selected jobs.
 The rule inspects the workflow declaration. It does not query GitHub or
 verify job conditions, activity types, branch filters, or the required
 status check's settings. A selected workflow that cannot be read or parsed, or
-that uses an unrecognised `on` / `on.pull_request` / `on.pull_request_target`
+that uses an unrecognized `on` / `on.pull_request` / `on.pull_request_target`
 shape (such as a non-mapping value, a custom YAML tag, or a YAML merge key),
 follows the shared `unanalyzable` policy. When a PR trigger reuses a mapping
 through a YAML alias, the finding is reported at the alias use site rather than
