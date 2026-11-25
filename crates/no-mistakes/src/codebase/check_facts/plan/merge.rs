@@ -97,6 +97,10 @@ impl CheckFactPlan {
         self.source |= other.source;
         self.raw_source |= other.raw_source;
         self.postgres_schema |= other.postgres_schema;
+        if !other.postgres_explain_write_rollback_paths.is_empty() {
+            Arc::make_mut(&mut self.postgres_explain_write_rollback_paths)
+                .extend(other.postgres_explain_write_rollback_paths.iter().cloned());
+        }
         self.embedded_sql |= other.embedded_sql;
         self.embedded_sql_options.extend(other.embedded_sql_options);
         self.embedded_sql_options.sort();

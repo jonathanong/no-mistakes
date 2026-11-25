@@ -12,14 +12,14 @@ const productionRules = join(
   "../../../test-cases/rules/production-exports-only-used-by-tests/fixture",
 );
 
-test(
-  "compiled production export test-only checks agree across async CJS, ESM, batch and CLI",
-  { skip: !addon?.endsWith(".node") },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const cli = process.env.NO_MISTAKES_TEST_CLI_PATH || join(dirname(addon), "no-mistakes");
-    for (const scenario of ["fail", "pass", "suppressed", "uncertain", "unsupported-modules"]) {
+for (const scenario of ["fail", "pass", "suppressed", "uncertain", "unsupported-modules"]) {
+  test(
+    `compiled production export test-only checks agree across async CJS, ESM, batch and CLI: ${scenario}`,
+    { skip: !addon?.endsWith(".node") },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const cli = process.env.NO_MISTAKES_TEST_CLI_PATH || join(dirname(addon), "no-mistakes");
       const directory = await mkdtemp(join(tmpdir(), "no-mistakes-production-exports-"));
       const project = join(directory, "project");
       try {
@@ -75,9 +75,9 @@ test(
       } finally {
         await rm(directory, { recursive: true, force: true });
       }
-    }
-  },
-);
+    },
+  );
+}
 
 test(
   "computed imports cannot hide definite production export findings under any policy",

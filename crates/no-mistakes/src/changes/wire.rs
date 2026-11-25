@@ -9,6 +9,8 @@ pub(super) struct WireReport {
     #[serde(flatten)]
     categories: BTreeMap<String, ChangeLists>,
     unclassified: Vec<String>,
+    #[serde(default)]
+    changed_files: Vec<String>,
     complete: bool,
     #[serde(default)]
     reasons: Vec<String>,
@@ -53,6 +55,7 @@ impl TryFrom<WireReport> for ChangesReport {
             schema_version: wire.schema_version,
             categories,
             unclassified: wire.unclassified,
+            changed_files: wire.changed_files,
             complete: wire.complete,
             reasons: wire.reasons,
         })

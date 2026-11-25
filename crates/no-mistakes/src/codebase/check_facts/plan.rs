@@ -73,6 +73,8 @@ pub struct CheckFactPlan {
     #[doc(hidden)]
     pub raw_source_paths: super::FamilyPathScope,
     pub postgres_schema: bool,
+    #[doc(hidden)]
+    pub postgres_explain_write_rollback_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     pub embedded_sql: bool,
     /// Owned helper/callback summaries for the annotation-only projection.
     pub query_annotation: bool,

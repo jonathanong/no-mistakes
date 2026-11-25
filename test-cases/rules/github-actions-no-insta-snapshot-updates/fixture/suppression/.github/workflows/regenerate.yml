@@ -1,0 +1,10 @@
+# no-mistakes-disable-file github-actions-no-insta-snapshot-updates
+name: Regenerate snapshots
+on: [workflow_dispatch]
+env:
+  INSTA_UPDATE: force
+jobs:
+  snapshots:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo test

@@ -43,9 +43,10 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
   assert.match(source, /macos: \$\{\{ github\.event_name != 'pull_request' \}\}/);
   assert.match(
     source,
-    /macos-smoke: \$\{\{ github\.event_name == 'pull_request' && steps\.rust-paths\.outputs\.rust != 'false' \}\}/,
+    /macos-smoke: \$\{\{ github\.event_name == 'pull_request' && steps\.rust-paths\.outputs\.macos-smoke != 'false' \}\}/,
   );
   assert.match(source, /node --test[^\n]*pr-diff-scope\.test\.cjs/);
+  assert.match(source, /node --test[^\n]*macos-pr-scope\.test\.cjs/);
   assert.match(source, /docs-only: \$\{\{ github\.event_name == 'pull_request' &&/);
   assert.doesNotMatch(source, /needs\.changes\.outputs\.docs-only/);
   const release = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
@@ -120,7 +121,9 @@ test("the native aggregate accepts a skipped full macOS tier only on pull reques
     .map((name) => name.trim());
   assert.ok(needs.includes("changes"));
   assert.ok(needs.includes("macos-smoke"));
-  const script = native.split("        run: |\n")[1].replace(/^          /gm, "");
+  assert.match(native, /MACOS_SMOKE_REQUIRED: \$\{\{ needs\.changes\.outputs\.macos-smoke \}\}/);
+  assert.match(native, /run: node \.github\/scripts\/native-tests-gate\.cjs/);
+  const script = path.join(__dirname, "native-tests-gate.cjs");
   const macosJobs = needs.filter((name) => name.endsWith("-macos"));
   assert.deepEqual(macosJobs.sort(), [
     "native-api-tests-macos",
@@ -128,12 +131,21 @@ test("the native aggregate accepts a skipped full macOS tier only on pull reques
     "native-rust-tests-macos",
     "native-test-build-macos",
   ]);
-  const runGate = (results, required, event = "", ref = "", rust = "true") =>
-    spawnSync("bash", ["-eu", "-c", script], {
+  const runGate = (
+    results,
+    required,
+    event = "",
+    ref = "",
+    smoke = event === "pull_request" ? "true" : "false",
+    rust = "true",
+  ) =>
+    spawnSync(process.execPath, [script], {
       encoding: "utf8",
       env: {
         ...process.env,
         MACOS_REQUIRED: required,
+        MACOS_SMOKE_REQUIRED: smoke,
+        WINDOWS_REQUIRED: event === "pull_request" ? "false" : "true",
         MACOS_EVENT: event,
         MACOS_REF: ref,
         RUST_REQUIRED: rust,
@@ -147,21 +159,20 @@ test("the native aggregate accepts a skipped full macOS tier only on pull reques
   });
   const skippedMacos = withResult(macosJobs, "skipped");
 
-  // Pull request: the full macOS tier is skipped and the smoke job must pass.
+  const skippedSmoke = { ...skippedMacos, "macos-smoke": { result: "skipped" } };
   assert.equal(runGate(skippedMacos, "false", "pull_request").status, 0);
-  assert.equal(
-    runGate({ ...skippedMacos, "macos-smoke": { result: "failure" } }, "false").status,
-    1,
-  );
-  assert.equal(
-    runGate({ ...skippedMacos, "macos-smoke": { result: "skipped" } }, "false").status,
-    1,
-  );
-  assert.equal(
-    runGate({ ...skippedMacos, "macos-smoke": { result: "skipped" } }, "false", "", "", "false")
-      .status,
-    0,
-  );
+  assert.equal(runGate(skippedSmoke, "false", "pull_request", "", "false").status, 0);
+  for (const scope of ["true", ""]) {
+    assert.equal(runGate(skippedSmoke, "false", "pull_request", "", scope).status, 1);
+  }
+  assert.equal(runGate(skippedSmoke, "false", "pull_request", "", "true", "false").status, 1);
+  for (const result of ["failure", "cancelled"]) {
+    assert.equal(
+      runGate({ ...skippedMacos, "macos-smoke": { result } }, "false", "pull_request", "", "false")
+        .status,
+      1,
+    );
+  }
   // Full run: the smoke job is skipped and the full macOS jobs must pass.
   assert.equal(
     runGate(withResult(["macos-smoke"], "skipped"), "true", "push", "refs/heads/main").status,
@@ -243,7 +254,10 @@ test("pull requests compare Rust paths from the merge base", () => {
     /pr-diff-scope\.cjs --diff-base "\$GITHUB_EVENT_NAME" "\$BASE_SHA" "\$HEAD_SHA"/,
   );
   assert.match(step, /git diff --no-renames --name-status -z "\$DIFF_BASE" "\$HEAD_SHA"/);
-  assert.equal(step.split("rust-pr-scope.cjs --all").length - 1, 4);
+  assert.match(step, /node \.github\/scripts\/rust-pr-scope\.cjs "\$@" < "\$input"/);
+  assert.match(step, /node \.github\/scripts\/macos-pr-scope\.cjs "\$@" < "\$input"/);
+  assert.match(step, /emit_native_scopes "\$RUNNER_TEMP\/native-changes"/);
+  assert.match(step, /emit_native_scopes \/dev\/null --all/);
   const docs = source.slice(
     source.indexOf("      - name: Check docs-only paths"),
     source.indexOf("      - name: Check Rust paths"),
@@ -319,14 +333,14 @@ test("pull requests run one Windows smoke job and the full Windows suite runs el
     .split(",")
     .map((name) => name.trim());
   assert.ok(needs.includes("windows-smoke"));
-  const script = native.split("        run: |\n")[1].replace(/^          /gm, "");
+  const script = path.join(__dirname, "native-tests-gate.cjs");
   const success = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
   const withResult = (names, result) => ({
     ...success,
     ...Object.fromEntries(names.map((name) => [name, { result }])),
   });
   const gate = (results, windows, rust = "true") =>
-    spawnSync("bash", ["-eu", "-c", script], {
+    spawnSync(process.execPath, [script], {
       encoding: "utf8",
       env: {
         ...process.env,

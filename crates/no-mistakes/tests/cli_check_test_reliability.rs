@@ -11,6 +11,7 @@ fn test_reliability_check_json_snapshot() {
         "blank-reason",
         "malformed",
         "static-shapes",
+        "followups",
         "local-playwright",
         "local-playwright-default",
         "playwright-export-shapes",
@@ -22,7 +23,7 @@ fn test_reliability_check_json_snapshot() {
             "workflow-action" | "blank-reason" => {
                 rules_path("test-no-retries", "fixture", "workflow-action")
             }
-            "malformed" | "static-shapes" | "playwright-export-shapes" => {
+            "malformed" | "static-shapes" | "playwright-export-shapes" | "followups" => {
                 rules_path("test-no-retries", "fixture", name)
             }
             "local-playwright" | "local-playwright-default" => {

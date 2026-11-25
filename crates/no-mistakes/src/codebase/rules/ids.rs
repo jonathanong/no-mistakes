@@ -25,6 +25,7 @@ pub use super::github_actions_composite_step_schema::RULE_ID as GITHUB_ACTIONS_C
 pub use super::github_actions_job_permissions::RULE_ID as GITHUB_ACTIONS_JOB_PERMISSIONS;
 pub use super::github_actions_job_timeouts::RULE_ID as GITHUB_ACTIONS_JOB_TIMEOUTS;
 pub use super::github_actions_local_action_checkout::RULE_ID as GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT;
+pub use super::github_actions_no_insta_snapshot_updates::RULE_ID as GITHUB_ACTIONS_NO_INSTA_SNAPSHOT_UPDATES;
 pub use super::github_actions_step_timeouts::RULE_ID as GITHUB_ACTIONS_STEP_TIMEOUTS;
 pub use super::github_actions_test_timeout_literals::RULE_ID as GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS;
 pub use super::github_actions_workflow_files::env_policy::RULE_ID as GITHUB_ACTIONS_ENV_POLICY;
@@ -62,6 +63,7 @@ pub use super::postgres_column_requires_trigger::RULE_ID as POSTGRES_COLUMN_REQU
 pub use super::postgres_conflict_ordering::RULE_ID as POSTGRES_CONFLICT_ORDERING;
 pub use super::postgres_constraint_validate::RULE_ID as POSTGRES_CONSTRAINT_VALIDATE;
 pub use super::postgres_duplicate_function_body::RULE_ID as POSTGRES_DUPLICATE_FUNCTION_BODY;
+pub use super::postgres_explain_write_rollback::RULE_ID as POSTGRES_EXPLAIN_WRITE_ROLLBACK;
 pub use super::postgres_explicit_columns::RULE_ID as POSTGRES_EXPLICIT_COLUMNS;
 pub use super::postgres_finite_text_columns::RULE_ID as POSTGRES_FINITE_TEXT_COLUMNS;
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
