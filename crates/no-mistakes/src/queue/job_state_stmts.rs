@@ -1,14 +1,14 @@
-use super::actions::{find_in_stmts, ActionMode};
-use super::expr::{
-    check_state_expr, for_of_bindings, is_early_exit, match_get_job, match_state_call, unwrap_expr,
-};
+use super::actions::{find_in_stmts, for_of_names, ActionScope};
+use super::expr::{check_state_expr, is_early_exit, match_get_job, match_state_call, unwrap_expr};
 use super::extract::{ExtractCtx, FnEnv};
+use super::item::ListingItem;
 use super::listing::{check_expr_for_actions, derived_listing_binding};
 use super::JobStatePattern;
 use oxc_ast::ast::{
     AssignmentTarget, BindingPattern, Declaration, Expression, ForOfStatement, IfStatement,
     Statement, SwitchStatement, TryStatement, VariableDeclaration,
 };
+use oxc_span::GetSpan;
 
 struct StmtCtx<'a, 'b, 'c> {
     ctx: &'a mut ExtractCtx<'b, 'c>,
@@ -73,23 +73,26 @@ impl StmtCtx<'_, '_, '_> {
             return;
         };
         let names = self.env.job_names_for(matched.job_id);
-        let mode = ActionMode::Guarded;
         let cons = std::slice::from_ref(&if_stmt.consequent);
-        let action = find_in_stmts(self.ctx, cons, &names, &names, mode)
+        let action = find_in_stmts(self.ctx, cons, ActionScope::StateGuard(names.clone()))
             .or_else(|| {
                 if_stmt.alternate.as_ref().and_then(|alt| {
-                    find_in_stmts(self.ctx, std::slice::from_ref(alt), &names, &names, mode)
+                    find_in_stmts(
+                        self.ctx,
+                        std::slice::from_ref(alt),
+                        ActionScope::StateGuard(names.clone()),
+                    )
                 })
             })
             .or_else(|| {
                 (if_stmt.alternate.is_none() && is_early_exit(&if_stmt.consequent))
-                    .then(|| find_in_stmts(self.ctx, trailing, &names, &names, mode))?
+                    .then(|| find_in_stmts(self.ctx, trailing, ActionScope::StateGuard(names)))?
             });
-        if let Some(action_binding) = action {
+        if let Some(action) = action {
             self.ctx.record(
                 if_stmt.span.start,
                 matched.binding,
-                action_binding,
+                action,
                 JobStatePattern::GetJobStateGuard,
             );
         }
@@ -104,9 +107,7 @@ impl StmtCtx<'_, '_, '_> {
             find_in_stmts(
                 self.ctx,
                 &case.consequent,
-                &names,
-                &names,
-                ActionMode::Guarded,
+                ActionScope::StateGuard(names.clone()),
             )
         });
         if let Some(action) = action {
@@ -121,11 +122,13 @@ impl StmtCtx<'_, '_, '_> {
 
     fn handle_for_of(&mut self, for_of: &ForOfStatement<'_>) {
         if let Some(binding) = derived_listing_binding(self.ctx, &for_of.right, self.env) {
-            let (job_vars, arg_vars) = for_of_bindings(&for_of.left);
+            let loop_vars = for_of_names(&for_of.left);
+            let scope = ActionScope::Listing(ListingItem {
+                names: &loop_vars,
+                start: for_of.body.span().start,
+            });
             let body = std::slice::from_ref(&for_of.body);
-            if let Some(action) =
-                find_in_stmts(self.ctx, body, &job_vars, &arg_vars, ActionMode::Listing)
-            {
+            if let Some(action) = find_in_stmts(self.ctx, body, scope) {
                 self.ctx.record(
                     for_of.span.start,
                     binding,

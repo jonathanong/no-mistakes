@@ -1,78 +1,115 @@
-use super::expr::{arg_expr, call_member, pattern_names, unwrap_expr};
+use super::expr::{call_member, pattern_names, unwrap_expr};
 use super::extract::ExtractCtx;
+use super::item::{ItemUse, ListingItem};
 use crate::queue::extract_model::ProducerBinding;
+use crate::queue::extract_visitor::QueueVisitor;
+use crate::queue::object_bindings::collect_names;
 use oxc_ast::ast::{
     ArrowFunctionExpression, BlockStatement, CallExpression, Expression, ForInStatement,
-    ForOfStatement, ForStatement, FormalParameters, Function, IdentifierReference, Statement,
+    ForOfStatement, ForStatement, ForStatementLeft, Function, IdentifierReference, Statement,
     VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 
-#[derive(Clone, Copy)]
-pub(super) enum ActionMode {
-    Guarded,
-    Listing,
+pub(super) enum ActionScope<'a> {
+    StateGuard(Vec<String>),
+    Listing(ListingItem<'a>),
+}
+
+pub(super) enum Action {
+    Retry,
+    Enqueue(ProducerBinding),
+    Uncertain(ProducerBinding),
+}
+
+impl Action {
+    pub(super) fn into_site(self) -> (Option<ProducerBinding>, bool) {
+        match self {
+            Self::Retry => (None, false),
+            Self::Enqueue(binding) => (Some(binding), false),
+            Self::Uncertain(binding) => (Some(binding), true),
+        }
+    }
+}
+
+impl ActionScope<'_> {
+    fn matches(&self, visitor: &QueueVisitor<'_>, id: &IdentifierReference<'_>) -> bool {
+        match self {
+            Self::StateGuard(names) => names.iter().any(|name| name == id.name.as_str()),
+            Self::Listing(item) => item.matches(visitor, id),
+        }
+    }
+
+    fn enqueue(
+        &self,
+        visitor: &QueueVisitor<'_>,
+        call: &CallExpression<'_>,
+        binding: ProducerBinding,
+    ) -> Option<Action> {
+        match self {
+            Self::StateGuard(_) => Some(Action::Enqueue(binding)),
+            Self::Listing(item) => match item.enqueue_use(visitor, call) {
+                ItemUse::Absent => None,
+                ItemUse::Uncertain => Some(Action::Uncertain(binding)),
+                ItemUse::Proven => Some(Action::Enqueue(binding)),
+            },
+        }
+    }
+}
+
+pub(super) fn find_in_expr(
+    ctx: &mut ExtractCtx<'_, '_>,
+    expr: &Expression<'_>,
+    scope: ActionScope<'_>,
+) -> Option<Action> {
+    let mut finder = ActionFinder {
+        ctx,
+        scope,
+        found: None,
+    };
+    finder.visit_expression(expr);
+    finder.found
 }
 
 pub(super) fn find_in_stmts(
     ctx: &mut ExtractCtx<'_, '_>,
     stmts: &[Statement<'_>],
-    job_names: &[String],
-    arg_names: &[String],
-    mode: ActionMode,
-) -> Option<Option<ProducerBinding>> {
-    let mut finder = ActionFinder::new(ctx, job_names, arg_names, mode);
+    scope: ActionScope<'_>,
+) -> Option<Action> {
+    let mut finder = ActionFinder {
+        ctx,
+        scope,
+        found: None,
+    };
     for stmt in stmts {
         finder.visit_statement(stmt);
-        if finder.found.is_some() {
+        if finder.proven() {
             break;
         }
     }
     finder.found
 }
 
-pub(super) fn find_in_expr(
-    ctx: &mut ExtractCtx<'_, '_>,
-    expr: &Expression<'_>,
-    job_names: &[String],
-    arg_names: &[String],
-    mode: ActionMode,
-) -> Option<Option<ProducerBinding>> {
-    let mut finder = ActionFinder::new(ctx, job_names, arg_names, mode);
-    finder.visit_expression(expr);
-    finder.found
-}
-
 struct ActionFinder<'a, 'b, 'c> {
     ctx: &'a mut ExtractCtx<'b, 'c>,
-    job_names: Vec<String>,
-    arg_names: Vec<String>,
-    mode: ActionMode,
-    found: Option<Option<ProducerBinding>>,
+    scope: ActionScope<'a>,
+    found: Option<Action>,
 }
 
-impl<'a, 'b, 'c> ActionFinder<'a, 'b, 'c> {
-    fn new(
-        ctx: &'a mut ExtractCtx<'b, 'c>,
-        job_names: &[String],
-        arg_names: &[String],
-        mode: ActionMode,
-    ) -> Self {
-        Self {
-            ctx,
-            job_names: job_names.to_vec(),
-            arg_names: arg_names.to_vec(),
-            mode,
-            found: None,
-        }
+impl ActionFinder<'_, '_, '_> {
+    fn proven(&self) -> bool {
+        matches!(self.found, Some(Action::Retry | Action::Enqueue(_)))
     }
 
     fn with_scope(&mut self, walk_inner: impl FnOnce(&mut Self)) {
-        let saved_jobs = self.job_names.clone();
-        let saved_args = self.arg_names.clone();
+        let saved = match &self.scope {
+            ActionScope::StateGuard(names) => Some(names.clone()),
+            ActionScope::Listing(_) => None,
+        };
         walk_inner(self);
-        self.job_names = saved_jobs;
-        self.arg_names = saved_args;
+        if let (ActionScope::StateGuard(names), Some(saved)) = (&mut self.scope, saved) {
+            *names = saved;
+        }
     }
 }
 
@@ -93,27 +130,23 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
     }
 
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
-        let names = pattern_names(&decl.id);
         let Some(init) = &decl.init else {
             return;
         };
         self.visit_expression(init);
-        self.job_names.retain(|n| !names.contains(n));
-        self.arg_names.retain(|n| !names.contains(n));
-        if let Expression::Identifier(src) = unwrap_expr(init) {
-            if self.job_names.iter().any(|name| name == src.name.as_str()) {
-                self.job_names.extend(names.iter().cloned());
-                self.arg_names.extend(names);
-                return;
+        if let ActionScope::StateGuard(job_names) = &mut self.scope {
+            let names = pattern_names(&decl.id);
+            job_names.retain(|name| !names.contains(name));
+            if let Expression::Identifier(src) = unwrap_expr(init) {
+                if job_names.iter().any(|name| name == src.name.as_str()) {
+                    job_names.extend(names);
+                }
             }
-        }
-        if matches!(self.mode, ActionMode::Listing) && expr_mentions_any(init, &self.arg_names) {
-            self.arg_names.extend(names);
         }
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if self.found.is_some() {
+        if self.proven() {
             return;
         }
         match call.callee.get_inner_expression() {
@@ -130,25 +163,22 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
             _ => {}
         }
         if let Some((object, method)) = call_member(call) {
-            let allow_remove = matches!(self.mode, ActionMode::Guarded);
-            if method == "retry" || (allow_remove && method == "remove") {
+            let job_action = method == "retry"
+                || (method == "remove" && matches!(self.scope, ActionScope::StateGuard(_)));
+            if job_action {
                 if let Expression::Identifier(id) = unwrap_expr(object) {
-                    if self.job_names.iter().any(|name| name == id.name.as_str()) {
-                        self.found = Some(None);
+                    if self.scope.matches(self.ctx.visitor, id) {
+                        self.found = Some(Action::Retry);
                         return;
                     }
                 }
             } else if matches!(method, "add" | "addBulk") {
-                let feeds = matches!(self.mode, ActionMode::Guarded)
-                    || call
-                        .arguments
-                        .iter()
-                        .filter_map(arg_expr)
-                        .any(|expr| expr_mentions_any(expr, &self.arg_names));
-                if feeds {
-                    if let Some(binding) = self.ctx.queue_receiver(object, call.span.start) {
-                        self.found = Some(Some(binding));
-                        return;
+                if let Some(binding) = self.ctx.queue_receiver(object, call.span.start) {
+                    if let Some(action) = self.scope.enqueue(self.ctx.visitor, call, binding) {
+                        self.found = Some(action);
+                        if self.proven() {
+                            return;
+                        }
                     }
                 }
             }
@@ -157,44 +187,12 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
     }
 }
 
-fn expr_mentions_any(expr: &Expression<'_>, names: &[String]) -> bool {
-    struct RefFinder {
-        names: Vec<String>,
-        found: bool,
-    }
-    impl RefFinder {
-        fn without_params(&mut self, params: &FormalParameters<'_>) -> Vec<String> {
-            let saved = self.names.clone();
-            let hidden: Vec<_> = params
-                .items
-                .iter()
-                .flat_map(|p| pattern_names(&p.pattern))
-                .collect();
-            self.names.retain(|name| !hidden.contains(name));
-            saved
+pub(super) fn for_of_names<'a>(left: &ForStatementLeft<'a>) -> Vec<&'a str> {
+    let mut names = Vec::new();
+    if let ForStatementLeft::VariableDeclaration(decl) = left {
+        for declaration in &decl.declarations {
+            collect_names(&declaration.id, &mut names);
         }
     }
-    impl<'a> Visit<'a> for RefFinder {
-        fn visit_identifier_reference(&mut self, id: &IdentifierReference<'a>) {
-            if !self.found && self.names.iter().any(|name| name == id.name.as_str()) {
-                self.found = true;
-            }
-        }
-        fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
-            let saved = self.without_params(&arrow.params);
-            walk::walk_arrow_function_expression(self, arrow);
-            self.names = saved;
-        }
-        fn visit_function(&mut self, func: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
-            let saved = self.without_params(&func.params);
-            walk::walk_function(self, func, flags);
-            self.names = saved;
-        }
-    }
-    let mut finder = RefFinder {
-        names: names.to_vec(),
-        found: false,
-    };
-    finder.visit_expression(expr);
-    finder.found
+    names
 }

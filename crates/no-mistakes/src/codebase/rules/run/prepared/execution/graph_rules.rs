@@ -7,6 +7,7 @@ mod fragment_escape;
 mod part0;
 mod part1;
 mod part2;
+mod relative_imports;
 mod request;
 
 pub(super) use request::GraphRuleRequest;
@@ -113,6 +114,7 @@ fn collect_application(
     part0::collect(request, session, findings, advisories)?;
     part1::collect(request, session, findings, advisories)?;
     part2::collect(request, session, findings, advisories)?;
+    relative_imports::collect(request, session, findings)?;
     coverage::collect(request, session, findings, advisories)
 }
 

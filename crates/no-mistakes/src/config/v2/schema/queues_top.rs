@@ -18,6 +18,8 @@ pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
     if patterns.is_empty() {
         return None;
     }
+    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+    crate::queue::allow_paths_test_hook::note_build();
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         if let Ok(glob) = GlobBuilder::new(normalize_allow_path(pattern))

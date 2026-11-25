@@ -8,6 +8,7 @@ pub(super) const GRAPH_CONSUMERS: &[&str] = &[
     FORBIDDEN_CALLS,
     FORBIDDEN_DEPENDENCIES,
     REQUIRED_ENTRYPOINT_REACHABILITY,
+    crate::codebase::rules::NO_CROSS_PACKAGE_RELATIVE_IMPORTS,
     UNCONSTRUCTED_ERROR_CLASS,
     "production-exports-only-used-by-tests",
     "coverage-producer-assertion-owner",

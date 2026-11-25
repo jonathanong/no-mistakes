@@ -1,0 +1,2 @@
+// no-mistakes-disable-file package-json-export-target-prefix: retained malformed fixture
+{ "exports": "dist/index.mjs" }

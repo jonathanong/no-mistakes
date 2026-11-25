@@ -1,14 +1,13 @@
-use super::actions::{find_in_expr, find_in_stmts, ActionMode};
-use super::expr::{
-    arg_expr, call_member, check_state_expr, match_listing, pattern_names, unwrap_expr,
-};
+use super::actions::{find_in_expr, find_in_stmts, Action, ActionScope};
+use super::expr::{arg_expr, call_member, check_state_expr, match_listing, unwrap_expr};
 use super::extract::{ExtractCtx, FnEnv};
+use super::item::ListingItem;
 use super::JobStatePattern;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::queue::extract_model::ProducerBinding;
+use crate::queue::object_bindings::collect_names;
 use oxc_ast::ast::{
-    ArrayExpressionElement, BindingPattern, CallExpression, ConditionalExpression, Expression,
-    FormalParameters,
+    ArrayExpressionElement, CallExpression, ConditionalExpression, Expression, FormalParameters,
 };
 use oxc_ast_visit::{walk, Visit};
 
@@ -29,14 +28,17 @@ impl<'a> Visit<'a> for ExprChecker<'_, '_, '_> {
     fn visit_conditional_expression(&mut self, cond: &ConditionalExpression<'a>) {
         if let Some(matched) = check_state_expr(self.ctx, &cond.test, self.env) {
             let names = self.env.job_names_for(matched.job_id);
-            let mode = ActionMode::Guarded;
-            let action = find_in_expr(self.ctx, &cond.consequent, &names, &names, mode)
-                .or_else(|| find_in_expr(self.ctx, &cond.alternate, &names, &names, mode));
-            if let Some(action_binding) = action {
+            let action = find_in_expr(
+                self.ctx,
+                &cond.consequent,
+                ActionScope::StateGuard(names.clone()),
+            )
+            .or_else(|| find_in_expr(self.ctx, &cond.alternate, ActionScope::StateGuard(names)));
+            if let Some(action) = action {
                 self.ctx.record(
                     cond.span.start,
                     matched.binding,
-                    action_binding,
+                    action,
                     JobStatePattern::GetJobStateGuard,
                 );
             }
@@ -48,11 +50,11 @@ impl<'a> Visit<'a> for ExprChecker<'_, '_, '_> {
         if let Some((object, method)) = call_member(call) {
             if matches!(method, "map" | "forEach" | "flatMap") {
                 if let Some(binding) = derived_listing_binding(self.ctx, object, self.env) {
-                    if let Some(action_binding) = callback_listing_action(self.ctx, call) {
+                    if let Some(action) = callback_listing_action(self.ctx, call) {
                         self.ctx.record(
                             call.span.start,
                             binding,
-                            action_binding,
+                            action,
                             JobStatePattern::ListingFeedsAction,
                         );
                     }
@@ -65,7 +67,7 @@ impl<'a> Visit<'a> for ExprChecker<'_, '_, '_> {
                         self.ctx.record(
                             call.span.start,
                             listing_q,
-                            Some(action_q),
+                            Action::Enqueue(action_q),
                             JobStatePattern::ListingFeedsAction,
                         );
                     }
@@ -143,38 +145,40 @@ fn expr_uses_listing(
 fn callback_listing_action(
     ctx: &mut ExtractCtx<'_, '_>,
     call: &CallExpression<'_>,
-) -> Option<Option<ProducerBinding>> {
+) -> Option<Action> {
     let cb = call.arguments.first()?.as_expression()?;
     match unwrap_ts_wrappers(cb) {
         Expression::ArrowFunctionExpression(arrow) => {
-            let (jobs, args) = callback_bindings(&arrow.params);
+            let names = item_names(&arrow.params);
+            let scope = ActionScope::Listing(ListingItem {
+                names: &names,
+                start: arrow.span.start,
+            });
             if let Some(expr) = arrow.body.as_expression() {
-                return find_in_expr(ctx, expr, &jobs, &args, ActionMode::Listing);
+                return find_in_expr(ctx, expr, scope);
             }
             let stmts = crate::ast::arrow_function_body_statements(&arrow.body)?;
-            find_in_stmts(ctx, stmts, &jobs, &args, ActionMode::Listing)
+            find_in_stmts(ctx, stmts, scope)
         }
         Expression::FunctionExpression(func) => {
-            let (jobs, args) = callback_bindings(&func.params);
-            let stmts = &func.body.as_ref()?.statements;
-            find_in_stmts(ctx, stmts, &jobs, &args, ActionMode::Listing)
+            let names = item_names(&func.params);
+            let scope = ActionScope::Listing(ListingItem {
+                names: &names,
+                start: func.span.start,
+            });
+            find_in_stmts(ctx, &func.body.as_ref()?.statements, scope)
         }
         _ => None,
     }
 }
 
-fn callback_bindings(params: &FormalParameters<'_>) -> (Vec<String>, Vec<String>) {
-    let mut jobs = Vec::new();
-    let mut args = Vec::new();
-    if let Some(first) = params.items.first() {
-        let names = pattern_names(&first.pattern);
-        if matches!(first.pattern, BindingPattern::BindingIdentifier(_)) {
-            jobs.extend(names.iter().cloned());
-        }
-        args.extend(names);
+fn item_names<'a>(params: &FormalParameters<'a>) -> Vec<&'a str> {
+    let mut names = Vec::new();
+    if let Some(item) = params.items.first() {
+        collect_names(&item.pattern, &mut names);
     }
-    if let Some(third) = params.items.get(2) {
-        args.extend(pattern_names(&third.pattern));
+    if let Some(all) = params.items.get(2) {
+        collect_names(&all.pattern, &mut names);
     }
-    (jobs, args)
+    names
 }

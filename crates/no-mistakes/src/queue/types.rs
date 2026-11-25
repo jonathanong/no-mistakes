@@ -81,6 +81,7 @@ impl fmt::Display for Severity {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub enum DiagnosticKind {
     AnalysisNote,
+    CheckAbstention,
     WorkerRateLimitUnresolved,
 }
 

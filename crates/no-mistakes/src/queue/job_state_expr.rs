@@ -4,7 +4,7 @@ use crate::queue::extract_helpers::static_string;
 use crate::queue::extract_model::ProducerBinding;
 use oxc_ast::ast::{
     Argument, ArrayExpressionElement, BindingPattern, CallExpression, ChainElement, Expression,
-    ForStatementLeft, Statement,
+    Statement,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
@@ -157,21 +157,6 @@ pub(super) fn is_early_exit(stmt: &Statement<'_>) -> bool {
         Statement::BlockStatement(block) => block.body.last().is_some_and(is_early_exit),
         _ => false,
     }
-}
-
-pub(super) fn for_of_bindings(left: &ForStatementLeft<'_>) -> (Vec<String>, Vec<String>) {
-    let mut jobs = Vec::new();
-    let mut args = Vec::new();
-    if let ForStatementLeft::VariableDeclaration(decl) = left {
-        for declarator in &decl.declarations {
-            let names = pattern_names(&declarator.id);
-            if matches!(declarator.id, BindingPattern::BindingIdentifier(_)) {
-                jobs.extend(names.iter().cloned());
-            }
-            args.extend(names);
-        }
-    }
-    (jobs, args)
 }
 
 pub(super) fn pattern_names(pattern: &BindingPattern<'_>) -> Vec<String> {

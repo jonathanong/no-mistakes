@@ -1,3 +1,4 @@
+use super::actions::Action;
 use super::stmts::analyze_statements;
 use super::{JobStatePattern, JobStateSite};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -88,11 +89,12 @@ impl ExtractCtx<'_, '_> {
         &mut self,
         start: u32,
         binding: ProducerBinding,
-        action_binding: Option<ProducerBinding>,
+        action: Action,
         pattern: JobStatePattern,
     ) {
         let line = line_number(self.visitor.source, start);
         if self.seen.insert((line, pattern)) {
+            let (action_binding, uncertain_item) = action.into_site();
             self.sites.push(JobStateSite {
                 line,
                 binding,
@@ -100,6 +102,7 @@ impl ExtractCtx<'_, '_> {
                 queue_file: None,
                 queue_name: None,
                 unresolved_receiver: false,
+                uncertain_item,
                 pattern,
             });
         }
