@@ -27,40 +27,35 @@ impl QueueVisitor<'_> {
         if !self.shared_rate_limit.enabled {
             return;
         }
-        let Some(symbol) = class
+        if let Some(symbol) = class
             .id
             .as_ref()
             .and_then(|id| self.stable_rate_limit_symbol(id))
-        else {
-            return;
-        };
-        if self.is_non_queue_class(class) {
+            .filter(|_| self.is_non_queue_class(class))
+        {
             self.shared_rate_limit.local_non_queue.insert(symbol);
         }
     }
 
     pub(super) fn note_rate_limit_local_const(&mut self, declaration: &VariableDeclarator<'_>) {
-        let BindingPattern::BindingIdentifier(id) = &declaration.id else {
+        let (BindingPattern::BindingIdentifier(id), Some(init)) = (
+            &declaration.id,
+            declaration
+                .init
+                .as_ref()
+                .map(Expression::get_inner_expression),
+        ) else {
             return;
         };
         let Some(symbol) = self.stable_rate_limit_symbol(id) else {
-            return;
-        };
-        let Some(init) = declaration
-            .init
-            .as_ref()
-            .map(Expression::get_inner_expression)
-        else {
             return;
         };
         match init {
             Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_) => {
                 self.shared_rate_limit.local_non_queue.insert(symbol);
             }
-            Expression::ClassExpression(class) => {
-                if self.is_non_queue_class(class) {
-                    self.shared_rate_limit.local_non_queue.insert(symbol);
-                }
+            Expression::ClassExpression(class) if self.is_non_queue_class(class) => {
+                self.shared_rate_limit.local_non_queue.insert(symbol);
             }
             Expression::Identifier(rhs) => {
                 if let Some(rhs_sym) = referenced_symbol(self, rhs) {

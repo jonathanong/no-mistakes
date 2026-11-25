@@ -5,11 +5,12 @@ import {
 import * as queueMod from "bullmq";
 
 export {
+  Queue,
   RateLimitError,
   InnerPause as RenamedPause,
   Worker,
 } from "./barrel-inner";
-export { ImportedRateLimit as LocalReexport };
+export { ImportedRateLimit as LocalReexport, queueMod as ReexportedNs };
 export const ConstAlias = ImportedRateLimit;
 export const MemberAlias = ImportedWorker.RateLimitError;
 export const NsMemberAlias = queueMod.RateLimitError;

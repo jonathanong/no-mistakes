@@ -21,7 +21,7 @@ fn queue_shared_rate_limit_check_json_snapshot() {
         findings.iter().any(|finding| {
             finding["kind"] == "shared-queue-rate-limit"
                 && finding["file"] == "barrel-errors.ts"
-                && finding["line"] == 32
+                && finding["line"] == 51
         }),
         "barrel re-export must be reported: {findings:?}"
     );

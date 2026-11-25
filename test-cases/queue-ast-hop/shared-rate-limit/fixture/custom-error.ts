@@ -2,6 +2,7 @@ class BaseAppError extends Error {}
 export class RateLimitError extends BaseAppError {}
 export const CustomFnRateLimitError = () => new Error("custom");
 export const CustomHelper = { RateLimitError };
+export const ExprClassError = class extends BaseAppError {};
 export function CustomDeclaredError() {
   return new Error("custom");
 }

@@ -32,7 +32,7 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         exported: &str,
         expect: Expect<'_>,
         saw_rate_limit_name: bool,
-        visited: &mut HashSet<(PathBuf, String, u8)>,
+        visited: &mut HashSet<(PathBuf, String)>,
     ) -> Outcome {
         let saw = saw_rate_limit_name || exported == "RateLimitError";
         if is_queue_package(specifier) {
@@ -53,7 +53,7 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
                 saw_rate_limit_name: saw,
             };
         };
-        if !visited.insert((target.clone(), exported.to_string(), expect_tag(expect))) {
+        if !visited.insert((target.clone(), exported.to_string())) {
             return Outcome::Unresolved {
                 saw_rate_limit_name: saw,
             };
@@ -67,13 +67,9 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         exported: &str,
         expect: Expect<'_>,
         saw: bool,
-        visited: &mut HashSet<(PathBuf, String, u8)>,
+        visited: &mut HashSet<(PathBuf, String)>,
     ) -> Outcome {
-        let Some(file) = self.facts.get(path) else {
-            return Outcome::Unresolved {
-                saw_rate_limit_name: saw,
-            };
-        };
+        let file = &self.facts[path];
         if let Some(export) = file.rate_limit_exports.get(exported) {
             return self.follow_export(path, export, expect, saw, visited);
         }
@@ -110,7 +106,7 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
         export: &RateLimitExport,
         expect: Expect<'_>,
         saw: bool,
-        visited: &mut HashSet<(PathBuf, String, u8)>,
+        visited: &mut HashSet<(PathBuf, String)>,
     ) -> Outcome {
         match export {
             RateLimitExport::FromNamed { source, imported } => {
@@ -129,39 +125,16 @@ impl<R: ImportResolverFacade> ResolveCtx<'_, R> {
                 if expect != Expect::Error {
                     return Outcome::NonQueue;
                 }
-                match imported {
-                    Some(imp) => self.follow_source(
-                        path,
-                        source,
-                        imp,
-                        Expect::WorkerOrNamespace,
-                        true,
-                        visited,
-                    ),
-                    None => self.follow_source(
-                        path,
-                        source,
-                        "RateLimitError",
-                        Expect::Error,
-                        true,
-                        visited,
-                    ),
-                }
+                let (exported, next_expect) = match imported {
+                    Some(imp) => (imp.as_str(), Expect::WorkerOrNamespace),
+                    None => ("RateLimitError", Expect::Error),
+                };
+                self.follow_source(path, source, exported, next_expect, true, visited)
             }
             RateLimitExport::NonQueue => Outcome::NonQueue,
             RateLimitExport::Opaque => Outcome::Unresolved {
                 saw_rate_limit_name: saw,
             },
         }
-    }
-}
-
-fn expect_tag(expect: Expect<'_>) -> u8 {
-    match expect {
-        Expect::Error => 0,
-        Expect::Worker => 1,
-        Expect::WorkerOrNamespace => 2,
-        Expect::NamespaceWithMember("TestWorker") => 4,
-        Expect::NamespaceWithMember(_) => 3,
     }
 }

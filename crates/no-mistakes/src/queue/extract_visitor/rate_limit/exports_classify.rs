@@ -13,12 +13,14 @@ pub(super) fn lookup_local(index: &ExportIndex, local: &str) -> RateLimitExport 
             imported: imported.clone(),
         };
     }
-    if let Some(source) = index.ns_imports.get(local) {
-        return RateLimitExport::FromNamespace {
-            source: source.clone(),
-        };
-    }
-    RateLimitExport::Opaque
+    index
+        .ns_imports
+        .get(local)
+        .map_or(RateLimitExport::Opaque, |source| {
+            RateLimitExport::FromNamespace {
+                source: source.clone(),
+            }
+        })
 }
 
 pub(super) fn classify_class(class: &Class<'_>, index: &ExportIndex) -> RateLimitExport {
@@ -29,20 +31,18 @@ pub(super) fn classify_class(class: &Class<'_>, index: &ExportIndex) -> RateLimi
         return RateLimitExport::Opaque;
     };
     let name = id.name.as_str();
-    if let Some(local) = index.locals.get(name) {
-        return if *local == RateLimitExport::NonQueue {
-            RateLimitExport::NonQueue
-        } else {
-            RateLimitExport::Opaque
-        };
-    }
-    if index.named_imports.contains_key(name)
-        || index.ns_imports.contains_key(name)
-        || name == "RateLimitError"
-    {
-        RateLimitExport::Opaque
-    } else {
+    let non_queue = index.locals.get(name).map_or_else(
+        || {
+            !index.named_imports.contains_key(name)
+                && !index.ns_imports.contains_key(name)
+                && name != "RateLimitError"
+        },
+        |local| *local == RateLimitExport::NonQueue,
+    );
+    if non_queue {
         RateLimitExport::NonQueue
+    } else {
+        RateLimitExport::Opaque
     }
 }
 
@@ -71,26 +71,31 @@ fn classify_member_rate_limit(object: &Expression<'_>, index: &ExportIndex) -> R
                     imported: None,
                 };
             }
-            if let Some((source, imported)) = index.named_imports.get(name) {
-                return RateLimitExport::FromMemberRateLimit {
-                    source: source.clone(),
-                    imported: Some(imported.clone()),
-                };
-            }
-            RateLimitExport::Opaque
+            index
+                .named_imports
+                .get(name)
+                .map_or(RateLimitExport::Opaque, |(source, imported)| {
+                    RateLimitExport::FromMemberRateLimit {
+                        source: source.clone(),
+                        imported: Some(imported.clone()),
+                    }
+                })
         }
         Expression::StaticMemberExpression(inner)
             if matches!(inner.property.name.as_str(), "Worker" | "TestWorker") =>
         {
-            if let Expression::Identifier(ns) = inner.object.get_inner_expression() {
-                if let Some(source) = index.ns_imports.get(ns.name.as_str()) {
-                    return RateLimitExport::FromMemberRateLimit {
+            let Expression::Identifier(ns) = inner.object.get_inner_expression() else {
+                return RateLimitExport::Opaque;
+            };
+            index
+                .ns_imports
+                .get(ns.name.as_str())
+                .map_or(RateLimitExport::Opaque, |source| {
+                    RateLimitExport::FromMemberRateLimit {
                         source: source.clone(),
                         imported: Some(inner.property.name.to_string()),
-                    };
-                }
-            }
-            RateLimitExport::Opaque
+                    }
+                })
         }
         _ => RateLimitExport::Opaque,
     }

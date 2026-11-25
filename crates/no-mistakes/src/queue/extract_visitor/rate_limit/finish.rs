@@ -68,6 +68,13 @@ impl State {
         }
     }
 
+    fn value_import(&self, sym: SymbolId) -> Option<&ImportOrigin> {
+        self.imports
+            .get(&sym)
+            .filter(|import| import.value)
+            .map(|import| &import.origin)
+    }
+
     fn classify_identifier(
         &self,
         symbol: Option<SymbolId>,
@@ -79,13 +86,9 @@ impl State {
         if self.local_non_queue.contains(&sym) {
             return None;
         }
-        if let Some(import) = self.imports.get(&sym) {
-            if !import.value {
-                return None;
-            }
-            return match &import.origin {
+        if let Some(origin) = self.value_import(sym) {
+            return match origin {
                 ImportOrigin::Queue(Member::Error) => Some(RateLimitSiteKind::Confirmed),
-                ImportOrigin::Queue(_) | ImportOrigin::LocalNamespace { .. } => None,
                 ImportOrigin::LocalNamed { source, imported } => {
                     Some(RateLimitSiteKind::ImportedError {
                         source: source.clone(),
@@ -93,6 +96,7 @@ impl State {
                         is_rate_limit_name,
                     })
                 }
+                ImportOrigin::Queue(_) | ImportOrigin::LocalNamespace { .. } => None,
             };
         }
         is_rate_limit_name.then_some(RateLimitSiteKind::Unresolved)
@@ -112,61 +116,46 @@ impl State {
                 if self.local_non_queue.contains(&sym) {
                     return None;
                 }
-                if let Some(import) = self.imports.get(&sym) {
-                    if !import.value {
-                        return None;
+                match self.value_import(sym) {
+                    Some(ImportOrigin::Queue(Member::Worker | Member::Namespace)) => {
+                        Some(RateLimitSiteKind::Confirmed)
                     }
-                    return match &import.origin {
-                        ImportOrigin::Queue(Member::Worker | Member::Namespace) => {
-                            Some(RateLimitSiteKind::Confirmed)
-                        }
-                        ImportOrigin::Queue(_) => None,
-                        ImportOrigin::LocalNamed { source, imported } => {
-                            Some(RateLimitSiteKind::ImportedMemberObject {
-                                source: source.clone(),
-                                imported: imported.clone(),
-                            })
-                        }
-                        ImportOrigin::LocalNamespace { source } => {
-                            Some(RateLimitSiteKind::NamespaceError {
-                                source: source.clone(),
-                            })
-                        }
-                    };
+                    Some(ImportOrigin::Queue(_)) => None,
+                    Some(ImportOrigin::LocalNamed { source, imported }) => {
+                        Some(RateLimitSiteKind::ImportedMemberObject {
+                            source: source.clone(),
+                            imported: imported.clone(),
+                        })
+                    }
+                    Some(ImportOrigin::LocalNamespace { source }) => {
+                        Some(RateLimitSiteKind::NamespaceError {
+                            source: source.clone(),
+                        })
+                    }
+                    None => Some(RateLimitSiteKind::Unresolved),
                 }
-                Some(RateLimitSiteKind::Unresolved)
             }
             MemberObject::NamespaceWorker {
                 symbol: Some(sym),
                 member,
-            } => {
-                let sym = self.resolve_alias(*sym);
-                if let Some(import) = self.imports.get(&sym) {
-                    if !import.value {
-                        return None;
-                    }
-                    return match &import.origin {
-                        ImportOrigin::Queue(Member::Namespace) => {
-                            Some(RateLimitSiteKind::Confirmed)
-                        }
-                        ImportOrigin::Queue(_) => None,
-                        ImportOrigin::LocalNamespace { source } => {
-                            Some(RateLimitSiteKind::NamespaceWorkerError {
-                                source: source.clone(),
-                                member: member.clone(),
-                            })
-                        }
-                        ImportOrigin::LocalNamed { source, imported } => {
-                            Some(RateLimitSiteKind::ImportedNamespaceWorkerError {
-                                source: source.clone(),
-                                imported: imported.clone(),
-                                member: member.clone(),
-                            })
-                        }
-                    };
+            } => match self.value_import(self.resolve_alias(*sym)) {
+                Some(ImportOrigin::Queue(Member::Namespace)) => Some(RateLimitSiteKind::Confirmed),
+                Some(ImportOrigin::Queue(_)) => None,
+                Some(ImportOrigin::LocalNamespace { source }) => {
+                    Some(RateLimitSiteKind::NamespaceWorkerError {
+                        source: source.clone(),
+                        member: member.clone(),
+                    })
                 }
-                Some(RateLimitSiteKind::Unresolved)
-            }
+                Some(ImportOrigin::LocalNamed { source, imported }) => {
+                    Some(RateLimitSiteKind::ImportedNamespaceWorkerError {
+                        source: source.clone(),
+                        imported: imported.clone(),
+                        member: member.clone(),
+                    })
+                }
+                None => Some(RateLimitSiteKind::Unresolved),
+            },
             MemberObject::Identifier(None)
             | MemberObject::NamespaceWorker { symbol: None, .. }
             | MemberObject::Opaque => Some(RateLimitSiteKind::Unresolved),
@@ -174,14 +163,14 @@ impl State {
     }
 
     fn resolve_alias(&self, mut symbol: SymbolId) -> SymbolId {
-        for _ in 0..16 {
-            let Some(&next) = self.local_aliases.get(&symbol) else {
-                break;
-            };
-            if next == symbol {
-                break;
-            }
+        let mut steps = 0;
+        while let Some(&next) = self
+            .local_aliases
+            .get(&symbol)
+            .filter(|&&next| next != symbol && steps < 16)
+        {
             symbol = next;
+            steps += 1;
         }
         symbol
     }
