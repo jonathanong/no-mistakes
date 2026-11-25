@@ -21,12 +21,12 @@ pub fn validate_for_planning(
 }
 
 fn validate_pnpm(content: &str) -> Result<(), LockfileValidationError> {
-    match pnpm::validate_for_planning(content) {
-        Ok(()) if pnpm::parse(content).is_empty() => Err(LockfileValidationError {
+    match pnpm::parse_checked(content) {
+        Ok(packages) if packages.is_empty() => Err(LockfileValidationError {
             kind: "lockfile-pnpm-malformed",
             description: "unparsed or empty pnpm lockfile content",
         }),
-        Ok(()) => Ok(()),
+        Ok(_) => Ok(()),
         Err(pnpm::PnpmValidationError::Malformed) => Err(LockfileValidationError {
             kind: "lockfile-pnpm-malformed",
             description: "malformed pnpm YAML",
@@ -43,21 +43,27 @@ fn validate_pnpm(content: &str) -> Result<(), LockfileValidationError> {
 }
 
 fn validate_npm(content: &str) -> Result<(), LockfileValidationError> {
-    let malformed = || LockfileValidationError {
-        kind: "lockfile-npm-malformed",
-        description: "malformed npm JSON",
-    };
-    let root: serde_json::Value = serde_json::from_str(content).map_err(|_| malformed())?;
-    if !root.is_object() {
-        return Err(malformed());
-    }
-    if npm::parse(content).is_empty() {
-        return Err(LockfileValidationError {
+    match npm::parse_checked(content) {
+        Ok(packages) if packages.is_empty() => Err(LockfileValidationError {
             kind: "lockfile-npm-malformed",
             description: "unparsed or empty npm lockfile content",
-        });
+        }),
+        Ok(_) => Ok(()),
+        Err(error)
+            if error
+                .to_string()
+                .contains("unsupported npm lockfile version") =>
+        {
+            Err(LockfileValidationError {
+                kind: "lockfile-npm-unsupported-version",
+                description: "unsupported npm lockfile version",
+            })
+        }
+        Err(_) => Err(LockfileValidationError {
+            kind: "lockfile-npm-malformed",
+            description: "malformed npm JSON",
+        }),
     }
-    Ok(())
 }
 
 fn validate_yarn(content: &str) -> Result<(), LockfileValidationError> {

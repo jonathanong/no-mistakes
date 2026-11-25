@@ -218,6 +218,27 @@ fn malformed_npm_yarn_and_bun_lockfiles_fall_back_with_base() {
             "lockfile-npm-malformed",
         ),
         (
+            "valid-npm-head.json",
+            "npm-v4-head.json",
+            "package-lock.json",
+            "npm-lock-only.json",
+            "lockfile-npm-unsupported-version",
+        ),
+        (
+            "valid-npm-head.json",
+            "npm-string-record-head.json",
+            "package-lock.json",
+            "npm-lock-only.json",
+            "lockfile-npm-malformed",
+        ),
+        (
+            "pnpm-lock.yaml",
+            "pnpm-string-record-head.yaml",
+            "pnpm-lock.yaml",
+            "lockfile-only.json",
+            "lockfile-pnpm-unsupported-schema",
+        ),
+        (
             "malformed-yarn-base.lock",
             "malformed-yarn-head.lock",
             "yarn.lock",

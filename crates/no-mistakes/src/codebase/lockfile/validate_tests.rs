@@ -40,16 +40,40 @@ fn validates_all_lockfile_managers_and_empty_parses() {
         "lockfile-npm-malformed"
     );
     assert_eq!(
-        validate_for_planning(PackageManager::Npm, "[]")
-            .unwrap_err()
-            .kind,
+        validate_for_planning(
+            PackageManager::Npm,
+            "{\"lockfileVersion\":3,\"packages\":{}}"
+        )
+        .unwrap_err()
+        .kind,
         "lockfile-npm-malformed"
     );
     assert_eq!(
-        validate_for_planning(PackageManager::Npm, "{}")
-            .unwrap_err()
-            .kind,
+        validate_for_planning(
+            PackageManager::Npm,
+            "{\"lockfileVersion\":3,\"packages\":{\"node_modules/a\":{\"version\":\"1.0.0\"},\"node_modules/b\":\"bad\"}}"
+        )
+        .unwrap_err()
+        .kind,
         "lockfile-npm-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Npm,
+            "{\"lockfileVersion\":4,\"packages\":{}}"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-npm-unsupported-version"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Pnpm,
+            "lockfileVersion: '9.0'\npackages:\n  a@1.0.0:\n    resolution: {integrity: sha512-x}\n  bad@1.0.0: unexpected\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-pnpm-unsupported-schema"
     );
     assert_eq!(
         validate_for_planning(PackageManager::Yarn, "__metadata:\n  version: [")
