@@ -6,14 +6,38 @@ use oxc_ast_visit::Visit;
 
 pub(crate) struct Location {
     pub(super) line: usize,
-    pub(super) inner: &'static str,
-    pub(super) outer: &'static str,
+    pub(super) kind: Kind,
+}
+
+pub(crate) enum Kind {
+    Nested { inner: &'static str, outer: &'static str },
+    Unanalyzable(UnanalyzableReason),
+}
+
+pub(crate) enum UnanalyzableReason {
+    UncertainHref,
+    ChildExpression,
+    ChildSpread,
+    WrapperTag(Option<String>),
+}
+
+#[derive(Clone, Copy)]
+enum Ancestor {
+    Definite(&'static str),
+    UncertainLink,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum HrefStatus {
+    Literal,
+    Absent,
+    Uncertain,
 }
 
 #[derive(Default)]
 struct Collector {
-    ancestor: Option<&'static str>,
-    matches: Vec<(u32, &'static str, &'static str)>,
+    ancestor: Option<Ancestor>,
+    matches: Vec<(u32, Kind)>,
 }
 
 pub(super) fn collect(source: &str, program: &Program<'_>) -> Vec<Location> {
@@ -23,48 +47,86 @@ pub(super) fn collect(source: &str, program: &Program<'_>) -> Vec<Location> {
         return Vec::new();
     }
     let newlines = memchr::memchr_iter(b'\n', source.as_bytes()).collect::<Vec<_>>();
-    collector.matches.into_iter().map(|(offset, inner, outer)| Location {
-        line: newlines.partition_point(|newline| *newline < offset as usize) + 1,
-        inner,
-        outer,
-    }).collect()
+    collector
+        .matches
+        .into_iter()
+        .map(|(offset, kind)| Location {
+            line: newlines.partition_point(|newline| *newline < offset as usize) + 1,
+            kind,
+        })
+        .collect()
 }
 
 fn tag_name<'a>(opening: &'a JSXOpeningElement<'_>) -> Option<&'a str> {
     match &opening.name {
         JSXElementName::Identifier(name) => Some(name.name.as_str()),
+        JSXElementName::IdentifierReference(name) => Some(name.name.as_str()),
         _ => None,
     }
 }
 
-fn has_literal_href(opening: &JSXOpeningElement<'_>) -> bool {
+fn has_spread_attribute(opening: &JSXOpeningElement<'_>) -> bool {
+    opening.attributes.iter().any(|item| matches!(item, JSXAttributeItem::SpreadAttribute(_)))
+}
+
+fn href_status(opening: &JSXOpeningElement<'_>) -> HrefStatus {
     for item in opening.attributes.iter().rev() {
         match item {
-            JSXAttributeItem::SpreadAttribute(_) => return false,
+            JSXAttributeItem::SpreadAttribute(_) => return HrefStatus::Uncertain,
             JSXAttributeItem::Attribute(attribute)
                 if matches!(&attribute.name, JSXAttributeName::Identifier(name) if name.name == "href") =>
             {
                 return match &attribute.value {
-                    Some(JSXAttributeValue::StringLiteral(_)) => true,
-                    Some(JSXAttributeValue::ExpressionContainer(value)) => {
-                        matches!(value.expression, JSXExpression::StringLiteral(_))
-                    }
-                    _ => false,
+                    Some(JSXAttributeValue::StringLiteral(_)) => HrefStatus::Literal,
+                    Some(JSXAttributeValue::ExpressionContainer(value)) => match &value.expression {
+                        JSXExpression::StringLiteral(_) => HrefStatus::Literal,
+                        JSXExpression::NullLiteral(_) => HrefStatus::Absent,
+                        _ => HrefStatus::Uncertain,
+                    },
+                    _ => HrefStatus::Uncertain,
                 };
             }
             _ => {}
         }
     }
-    false
+    HrefStatus::Absent
+}
+
+fn next_ancestor(control: Option<Ancestor>, ancestor: Option<Ancestor>) -> Option<Ancestor> {
+    match (control, ancestor) {
+        (Some(def @ Ancestor::Definite(_)), _) | (_, Some(def @ Ancestor::Definite(_))) => Some(def),
+        (Some(uncertain), _) | (_, Some(uncertain)) => Some(uncertain),
+        (None, None) => None,
+    }
 }
 
 impl Collector {
-    fn children<'a>(&mut self, children: &[JSXChild<'a>], ancestor: Option<&'static str>) {
+    fn children<'a>(&mut self, children: &[JSXChild<'a>], ancestor: Option<Ancestor>) {
         for child in children {
-            self.ancestor = match child {
-                JSXChild::Element(_) | JSXChild::Fragment(_) => ancestor,
-                _ => None,
-            };
+            match child {
+                JSXChild::Element(_) | JSXChild::Fragment(_) => self.ancestor = ancestor,
+                JSXChild::Text(_) => self.ancestor = None,
+                JSXChild::ExpressionContainer(container) => {
+                    if ancestor.is_some()
+                        && !matches!(container.expression, JSXExpression::EmptyExpression(_))
+                    {
+                        self.matches.push((
+                            container.span.start,
+                            Kind::Unanalyzable(UnanalyzableReason::ChildExpression),
+                        ));
+                    }
+                    self.ancestor = None;
+                }
+                JSXChild::Spread(spread) => {
+                    if ancestor.is_some() {
+                        self.matches.push((
+                            spread.span.start,
+                            Kind::Unanalyzable(UnanalyzableReason::ChildSpread),
+                        ));
+                    }
+                    self.ancestor = None;
+                }
+            }
             self.visit_jsx_child(child);
         }
     }
@@ -81,15 +143,42 @@ impl<'a> Visit<'a> for Collector {
             return;
         }
         let control = match tag {
-            Some("button") => Some("button"),
-            Some("a") if has_literal_href(opening) => Some("a"),
+            Some("button") => Some(Ancestor::Definite("button")),
+            Some("a") => match href_status(opening) {
+                HrefStatus::Literal => Some(Ancestor::Definite("a")),
+                HrefStatus::Uncertain => Some(Ancestor::UncertainLink),
+                HrefStatus::Absent => None,
+            },
             _ => None,
         };
-        if let (Some(inner), Some(outer)) = (control, ancestor) {
-            self.matches.push((opening.span.start, inner, outer));
+        if let Some(outer) = ancestor {
+            match (control, outer) {
+                (Some(Ancestor::Definite(inner)), Ancestor::Definite(outer)) => {
+                    self.matches.push((opening.span.start, Kind::Nested { inner, outer }));
+                }
+                (Some(_), _) => {
+                    self.matches.push((
+                        opening.span.start,
+                        Kind::Unanalyzable(UnanalyzableReason::UncertainHref),
+                    ));
+                }
+                (None, _) if !matches!(tag, Some("a" | "button" | "div" | "em" | "span" | "strong")) => {
+                    self.matches.push((
+                        opening.span.start,
+                        Kind::Unanalyzable(UnanalyzableReason::WrapperTag(tag.map(str::to_owned))),
+                    ));
+                }
+                (None, _) => {}
+            }
+        }
+        if control.is_some() && element.children.is_empty() && has_spread_attribute(opening) {
+            self.matches.push((
+                opening.span.start,
+                Kind::Unanalyzable(UnanalyzableReason::ChildSpread),
+            ));
         }
         let through = match tag {
-            Some("a" | "button" | "div" | "em" | "span" | "strong") => control.or(ancestor),
+            Some("a" | "button" | "div" | "em" | "span" | "strong") => next_ancestor(control, ancestor),
             _ => None,
         };
         self.visit_jsx_opening_element(opening);

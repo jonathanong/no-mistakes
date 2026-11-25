@@ -16,7 +16,15 @@ fn check_json_reports_native_control_nesting() {
     .unwrap();
     let report: Value = serde_json::from_str(&output).unwrap();
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 4, "{report}");
+    assert_eq!(findings.len(), 14, "{report}");
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding["target"] == "unanalyzable")
+            .count(),
+        10,
+        "{report}"
+    );
     assert!(
         findings.iter().any(|finding| {
             finding["rule"] == "react-no-nested-buttons-and-links"
@@ -42,6 +50,24 @@ fn check_json_reports_native_control_nesting() {
     assert_eq!(batch["reports"][0]["result"], report);
     let suppressed = report["suppressed"].as_array().unwrap();
     assert_eq!(suppressed.len(), 3, "{report}");
+
+    let advised: Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": fixture.join("fixture"),
+                "config": fixture.join("configs/unanalyzable-advise.yml"),
+            })
+            .to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(advised["rules"].as_array().unwrap().len(), 4, "{advised}");
+    assert_eq!(
+        advised["advisories"].as_array().unwrap().len(),
+        10,
+        "{advised}"
+    );
 }
 
 #[test]
@@ -56,6 +82,6 @@ fn rust_checks_native_control_nesting_from_supplied_files() {
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let direct = nested_controls::check_with_files(&root, &config, &files).unwrap();
     let dispatched = run_filesystem_rules_with_config(&root, &config, &files).unwrap();
-    assert_eq!(direct.len(), 4);
+    assert_eq!(direct.len(), 14);
     assert_eq!(direct, dispatched);
 }
