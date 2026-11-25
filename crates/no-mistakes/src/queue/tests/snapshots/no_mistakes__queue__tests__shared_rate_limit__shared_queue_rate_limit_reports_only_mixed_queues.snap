@@ -17,7 +17,17 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "callback-forms.ts",
-      "line": 21,
+      "line": 12,
+      "queueFile": "queues.ts",
+      "queueName": "items",
+      "job": null,
+      "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+      "sourceLine": "throw new RateLimitError();"
+    },
+    {
+      "kind": "shared-queue-rate-limit",
+      "file": "callback-forms.ts",
+      "line": 26,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -118,6 +128,16 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
       "kind": "shared-queue-rate-limit",
       "file": "workers.ts",
       "line": 6,
+      "queueFile": "queues.ts",
+      "queueName": "items",
+      "job": null,
+      "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+      "sourceLine": "await handle.rateLimit(1000);"
+    },
+    {
+      "kind": "shared-queue-rate-limit",
+      "file": "workers.ts",
+      "line": 11,
       "queueFile": "queues.ts",
       "queueName": "items",
       "job": null,

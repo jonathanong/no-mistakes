@@ -19,20 +19,24 @@ export async function recreateViaNamespace(id: string) {
   if (await job?.isFailed()) await widgets.add("repair", { id });
 }
 
-// Reported: derived listing variable mapped and copied before addBulk()
+// Reported: derived listing variable mapped, copied, concat'd, and spread before addBulk()
 export async function replayDerivedCompleted() {
   const completed = await widgets.getCompleted(0, 100);
   const copied = completed;
-  const spread = [...copied];
+  const combined = ([] as typeof copied).concat(copied);
+  const spread = [...combined];
   const batch = spread.map((job) => ({ name: job.name, data: job.data }));
-  await widgets.addBulk(batch);
+  await widgets.addBulk(...([batch] as [typeof batch]));
 }
 
-// Reported: for..of listing loop with derived payload object and spread args
+// Reported: for..of listing loop with derived payload object, destructured field, and spread args
 export async function replayDerivedLoopPayload() {
   for (const job of await widgets.getFailed(0, 100)) {
     const payload = { ...job.data, retried: true };
-    await widgets.addBulk([{ name: job.name, data: payload }]);
+    await widgets.addBulk([{ name: "repair", data: payload }]);
+  }
+  for (const { data: item = {} } of await widgets.getFailed(0, 10)) {
+    await widgets.add("repair", item);
   }
   for (const job of await widgets.getFailed(0, 10)) {
     const args: [string, object] = [job.name, job.data];
@@ -40,20 +44,46 @@ export async function replayDerivedLoopPayload() {
   }
 }
 
-// Reported: chained getJob -> isFailed (no local job variable) and else branch
+// Reported: chained getJob -> isFailed (no local job variable), else branch, and IIFE
 export async function recreateInElse(id: string) {
   if (await (await widgets.getJob(id))?.isCompleted()) {
     return;
   } else {
     await widgets.add("repair", { id });
   }
+  const job = await widgets.getJob(id);
+  if (await job?.isFailed()) await (async () => job.retry())();
+  if (await job?.isCompleted()) {
+    await (function () {
+      return job.remove();
+    })();
+  }
 }
 
-// Accepted: state check on one job does not guard retry on a different job
+// Reported: callback third parameter (source array) feeding addBulk
+export async function replayViaArrayParam() {
+  (await widgets.getFailed(0, 10)).forEach((_job, _index, all) => {
+    void widgets.addBulk(all.map((j) => ({ name: j.name, data: j.data })));
+  });
+}
+
+// Accepted: state check on one job does not guard retry on a different job or reassigned alias
 export async function differentJob(firstId: string, secondId: string) {
   const first = await widgets.getJob(firstId);
   const second = await widgets.getJob(secondId);
   if (await first?.isFailed()) await second?.retry();
+  let alias = first;
+  const failed = await first?.isFailed();
+  alias = second;
+  if (failed) await alias?.retry();
+  if (failed) {
+    {
+      const candidate = first;
+      void candidate;
+    }
+    const candidate = second;
+    await candidate?.retry();
+  }
 }
 
 // Accepted: delayed arrow or function callback returned from guard is not immediate
@@ -67,12 +97,20 @@ export async function delayedCallback(id: string) {
   }
 }
 
-// Accepted: add inside listing loop that does not use the loop job
+// Accepted: add inside listing loop/callback that does not use the loop job
 export async function unrelatedLoopAdd() {
   for (const job of await widgets.getFailed(0, 100)) {
     console.log(job.name);
-    await widgets.add("heartbeat", {});
+    await widgets.add("heartbeat", {
+      nums: [1].map((job) => job + 1),
+      other: [1].map(function (job) {
+        return job + 1;
+      }),
+    });
   }
+  (await widgets.getFailed(0, 10)).forEach((_job, index) => {
+    void widgets.add("heartbeat", { index });
+  });
 }
 
 // Accepted: shadowed namespace binding and non-imported member receiver do not resolve

@@ -151,8 +151,17 @@ impl QueueVisitor<'_> {
             let TSType::TSTypeReference(reference) = &annotation.type_annotation else {
                 continue;
             };
-            let TSTypeName::IdentifierReference(name) = &reference.type_name else {
-                continue;
+            let (name, member) = match &reference.type_name {
+                TSTypeName::IdentifierReference(name) => (name, Member::Worker),
+                TSTypeName::QualifiedName(qualified)
+                    if matches!(qualified.right.name.as_str(), "Worker" | "TestWorker") =>
+                {
+                    let TSTypeName::IdentifierReference(name) = &qualified.left else {
+                        continue;
+                    };
+                    (name, Member::Namespace)
+                }
+                _ => continue,
             };
             let BindingPattern::BindingIdentifier(binding) = &param.pattern else {
                 continue;
@@ -161,16 +170,9 @@ impl QueueVisitor<'_> {
                 self.stable_rate_limit_symbol(binding),
                 referenced_symbol(self, name),
             ) {
-                self.shared_rate_limit.parameters.insert(
-                    parameter,
-                    (
-                        start,
-                        ImportedMember {
-                            symbol,
-                            member: Member::Worker,
-                        },
-                    ),
-                );
+                self.shared_rate_limit
+                    .parameters
+                    .insert(parameter, (start, ImportedMember { symbol, member }));
             }
         }
     }

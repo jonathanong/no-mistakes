@@ -4,7 +4,7 @@ use crate::queue::extract_helpers::static_string;
 use crate::queue::extract_model::ProducerBinding;
 use oxc_ast::ast::{
     Argument, ArrayExpressionElement, BindingPattern, CallExpression, ChainElement, Expression,
-    Statement,
+    ForStatementLeft, Statement,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
@@ -17,6 +17,13 @@ pub(super) fn unwrap_expr<'a>(mut expr: &'a Expression<'a>) -> &'a Expression<'a
             continue;
         }
         return expr;
+    }
+}
+
+pub(super) fn arg_expr<'a>(arg: &'a Argument<'a>) -> Option<&'a Expression<'a>> {
+    match arg {
+        Argument::SpreadElement(spread) => Some(&spread.argument),
+        other => other.as_expression(),
     }
 }
 
@@ -63,31 +70,6 @@ pub(super) fn match_listing(
         _ => false,
     };
     is_listing.then(|| ctx.queue_receiver(object, call.span.start))?
-}
-
-pub(super) fn derived_listing_binding(
-    ctx: &mut ExtractCtx<'_, '_>,
-    expr: &Expression<'_>,
-    env: &FnEnv,
-) -> Option<ProducerBinding> {
-    if let Some(binding) = match_listing(ctx, expr) {
-        return Some(binding);
-    }
-    match unwrap_expr(expr) {
-        Expression::Identifier(id) => env.listing_vars.get(id.name.as_str()).cloned(),
-        Expression::CallExpression(call) => {
-            let (object, method) = call_member(call)?;
-            matches!(method, "map" | "filter" | "flatMap" | "slice" | "concat")
-                .then(|| derived_listing_binding(ctx, object, env))?
-        }
-        Expression::ArrayExpression(array) => array.elements.iter().find_map(|el| match el {
-            ArrayExpressionElement::SpreadElement(spread) => {
-                derived_listing_binding(ctx, &spread.argument, env)
-            }
-            _ => None,
-        }),
-        _ => None,
-    }
 }
 
 fn has_terminal_job_state(arg: &Argument<'_>) -> bool {
@@ -177,9 +159,30 @@ pub(super) fn is_early_exit(stmt: &Statement<'_>) -> bool {
     }
 }
 
+pub(super) fn for_of_bindings(left: &ForStatementLeft<'_>) -> (Vec<String>, Vec<String>) {
+    let mut jobs = Vec::new();
+    let mut args = Vec::new();
+    if let ForStatementLeft::VariableDeclaration(decl) = left {
+        for declarator in &decl.declarations {
+            let names = pattern_names(&declarator.id);
+            if matches!(declarator.id, BindingPattern::BindingIdentifier(_)) {
+                jobs.extend(names.iter().cloned());
+            }
+            args.extend(names);
+        }
+    }
+    (jobs, args)
+}
+
 pub(super) fn pattern_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     match pattern {
         BindingPattern::BindingIdentifier(id) => vec![id.name.to_string()],
+        BindingPattern::ObjectPattern(obj) => obj
+            .properties
+            .iter()
+            .flat_map(|prop| pattern_names(&prop.value))
+            .collect(),
+        BindingPattern::AssignmentPattern(assign) => pattern_names(&assign.left),
         _ => Vec::new(),
     }
 }

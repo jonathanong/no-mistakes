@@ -7,6 +7,10 @@ export const worker = createWorker("items", async (_task, handle: QueueWorker) =
   await (async (handle: QueueWorker) => handle.rateLimit(1000))(handle);
 });
 
+export const namespacedWorker = createWorker("items", async (_task, handle: queue.Worker) => {
+  await handle.rateLimit(1000);
+});
+
 interface Limiter {
   rateLimit(ms: number): Promise<void>;
 }

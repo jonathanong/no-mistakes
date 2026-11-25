@@ -8,6 +8,10 @@ const handle = async function handleItems() {
   throw new RateLimitError();
 };
 
+let stableLet = async () => {
+  throw new RateLimitError();
+};
+
 async function replaced() {
   throw new RateLimitError();
 }
@@ -15,6 +19,7 @@ async function replaced() {
 replaced = async () => {};
 
 export const stable = new Worker("items", handle);
+export const stableLetWorker = new Worker("items", stableLet);
 export const mutable = new Worker("items", replaced);
 export const opaque = new Worker("items", wrap(handle));
 export const wrapped = new Worker("widgets", wrap(async () => {

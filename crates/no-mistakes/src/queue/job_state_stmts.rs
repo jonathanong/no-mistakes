@@ -1,14 +1,13 @@
 use super::actions::{find_in_stmts, ActionMode};
 use super::expr::{
-    check_state_expr, derived_listing_binding, is_early_exit, match_get_job, match_state_call,
-    pattern_names, unwrap_expr,
+    check_state_expr, for_of_bindings, is_early_exit, match_get_job, match_state_call, unwrap_expr,
 };
 use super::extract::{ExtractCtx, FnEnv};
-use super::listing::check_expr_for_actions;
+use super::listing::{check_expr_for_actions, derived_listing_binding};
 use super::JobStatePattern;
 use oxc_ast::ast::{
-    Declaration, Expression, ForOfStatement, ForStatementLeft, IfStatement, Statement,
-    SwitchStatement, TryStatement, VariableDeclaration,
+    AssignmentTarget, BindingPattern, Declaration, Expression, ForOfStatement, IfStatement,
+    Statement, SwitchStatement, TryStatement, VariableDeclaration,
 };
 
 struct StmtCtx<'a, 'b, 'c> {
@@ -45,7 +44,12 @@ impl StmtCtx<'_, '_, '_> {
             Statement::BlockStatement(block) => self.walk_slice(&block.body),
             Statement::TryStatement(try_stmt) => self.handle_try(try_stmt),
             Statement::ExpressionStatement(e) => {
-                check_expr_for_actions(self.ctx, &e.expression, self.env)
+                check_expr_for_actions(self.ctx, &e.expression, self.env);
+                if let Expression::AssignmentExpression(assign) = &e.expression {
+                    if let AssignmentTarget::AssignmentTargetIdentifier(id) = &assign.left {
+                        self.bind_var(id.name.as_str(), &assign.right);
+                    }
+                }
             }
             Statement::ReturnStatement(r) => {
                 if let Some(arg) = &r.argument {
@@ -70,22 +74,17 @@ impl StmtCtx<'_, '_, '_> {
         };
         let names = self.env.job_names_for(matched.job_id);
         let mode = ActionMode::Guarded;
-        let action = find_in_stmts(
-            self.ctx,
-            std::slice::from_ref(&if_stmt.consequent),
-            &names,
-            mode,
-        )
-        .or_else(|| {
-            if_stmt
-                .alternate
-                .as_ref()
-                .and_then(|alt| find_in_stmts(self.ctx, std::slice::from_ref(alt), &names, mode))
-        })
-        .or_else(|| {
-            (if_stmt.alternate.is_none() && is_early_exit(&if_stmt.consequent))
-                .then(|| find_in_stmts(self.ctx, trailing, &names, mode))?
-        });
+        let cons = std::slice::from_ref(&if_stmt.consequent);
+        let action = find_in_stmts(self.ctx, cons, &names, &names, mode)
+            .or_else(|| {
+                if_stmt.alternate.as_ref().and_then(|alt| {
+                    find_in_stmts(self.ctx, std::slice::from_ref(alt), &names, &names, mode)
+                })
+            })
+            .or_else(|| {
+                (if_stmt.alternate.is_none() && is_early_exit(&if_stmt.consequent))
+                    .then(|| find_in_stmts(self.ctx, trailing, &names, &names, mode))?
+            });
         if let Some(action_binding) = action {
             self.ctx.record(
                 if_stmt.span.start,
@@ -102,7 +101,13 @@ impl StmtCtx<'_, '_, '_> {
         };
         let names = self.env.job_names_for(matched.job_id);
         let action = sw.cases.iter().find_map(|case| {
-            find_in_stmts(self.ctx, &case.consequent, &names, ActionMode::Guarded)
+            find_in_stmts(
+                self.ctx,
+                &case.consequent,
+                &names,
+                &names,
+                ActionMode::Guarded,
+            )
         });
         if let Some(action) = action {
             self.ctx.record(
@@ -116,9 +121,11 @@ impl StmtCtx<'_, '_, '_> {
 
     fn handle_for_of(&mut self, for_of: &ForOfStatement<'_>) {
         if let Some(binding) = derived_listing_binding(self.ctx, &for_of.right, self.env) {
-            let loop_vars = for_of_names(&for_of.left);
+            let (job_vars, arg_vars) = for_of_bindings(&for_of.left);
             let body = std::slice::from_ref(&for_of.body);
-            if let Some(action) = find_in_stmts(self.ctx, body, &loop_vars, ActionMode::Listing) {
+            if let Some(action) =
+                find_in_stmts(self.ctx, body, &job_vars, &arg_vars, ActionMode::Listing)
+            {
                 self.ctx.record(
                     for_of.span.start,
                     binding,
@@ -153,36 +160,31 @@ impl StmtCtx<'_, '_, '_> {
                 continue;
             };
             check_expr_for_actions(self.ctx, init, self.env);
-            let names = pattern_names(&declarator.id);
-            let Some(name) = names.first() else {
-                continue;
-            };
-            if let Some(binding) = match_get_job(self.ctx, init) {
-                self.env.alloc_job(name.clone(), binding);
-            } else if let Expression::Identifier(src) = unwrap_expr(init) {
-                if let Some(job) = self.env.job_vars.get(src.name.as_str()).cloned() {
-                    self.env.job_vars.insert(name.clone(), job);
-                } else if let Some(state) = self.env.state_vars.get(src.name.as_str()).cloned() {
-                    self.env.state_vars.insert(name.clone(), state);
-                } else if let Some(list) = self.env.listing_vars.get(src.name.as_str()).cloned() {
-                    self.env.listing_vars.insert(name.clone(), list);
-                }
-            } else if let Some(matched) = match_state_call(self.ctx, init, &self.env.job_vars) {
-                self.env.state_vars.insert(name.clone(), matched);
-            } else if let Some(binding) = derived_listing_binding(self.ctx, init, self.env) {
-                self.env.listing_vars.insert(name.clone(), binding);
+            if let BindingPattern::BindingIdentifier(id) = &declarator.id {
+                self.bind_var(id.name.as_str(), init);
             }
         }
     }
-}
 
-fn for_of_names(left: &ForStatementLeft<'_>) -> Vec<String> {
-    match left {
-        ForStatementLeft::VariableDeclaration(decl) => decl
-            .declarations
-            .iter()
-            .flat_map(|d| pattern_names(&d.id))
-            .collect(),
-        _ => Vec::new(),
+    fn bind_var(&mut self, name: &str, init: &Expression<'_>) {
+        self.env.job_vars.remove(name);
+        self.env.state_vars.remove(name);
+        self.env.listing_vars.remove(name);
+        let key = name.to_string();
+        if let Some(binding) = match_get_job(self.ctx, init) {
+            self.env.alloc_job(key, binding);
+        } else if let Expression::Identifier(src) = unwrap_expr(init) {
+            if let Some(job) = self.env.job_vars.get(src.name.as_str()).cloned() {
+                self.env.job_vars.insert(key, job);
+            } else if let Some(state) = self.env.state_vars.get(src.name.as_str()).cloned() {
+                self.env.state_vars.insert(key, state);
+            } else if let Some(list) = self.env.listing_vars.get(src.name.as_str()).cloned() {
+                self.env.listing_vars.insert(key, list);
+            }
+        } else if let Some(matched) = match_state_call(self.ctx, init, &self.env.job_vars) {
+            self.env.state_vars.insert(key, matched);
+        } else if let Some(binding) = derived_listing_binding(self.ctx, init, self.env) {
+            self.env.listing_vars.insert(key, binding);
+        }
     }
 }

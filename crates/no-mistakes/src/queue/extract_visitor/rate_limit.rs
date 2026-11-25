@@ -90,7 +90,7 @@ impl QueueVisitor<'_> {
     }
 
     pub(super) fn note_rate_limit_const(&mut self, declaration: &VariableDeclarator<'_>) {
-        if self.shared_rate_limit.enabled && self.binding_is_const {
+        if self.shared_rate_limit.enabled {
             if let (BindingPattern::BindingIdentifier(id), Some(start)) = (
                 &declaration.id,
                 declaration.init.as_ref().and_then(callable_start),
