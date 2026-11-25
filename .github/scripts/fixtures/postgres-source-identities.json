@@ -4,9 +4,7 @@
   "jobMinutes": 40,
   "stepMinutes": 30,
   "shards": [
-    "0",
-    "1",
-    "2"
+    "postgres-source"
   ],
   "args": [
     "nextest",

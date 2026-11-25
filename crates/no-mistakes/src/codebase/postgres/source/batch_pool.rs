@@ -38,6 +38,6 @@ fn dispatch<T: Send>(
         .install(work)
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1, nm_shard_postgres_source)))]
 #[path = "batch_pool_tests.rs"]
 mod tests;
