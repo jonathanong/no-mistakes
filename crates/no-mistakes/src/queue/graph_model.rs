@@ -51,6 +51,13 @@ pub fn format_diagnostic(diagnostic: &Diagnostic) -> String {
     )
 }
 
+pub fn is_check_warning(diagnostic: &Diagnostic) -> bool {
+    matches!(
+        diagnostic.kind,
+        DiagnosticKind::WorkerRateLimitUnresolved | DiagnosticKind::CheckAbstention
+    )
+}
+
 pub fn format_aggregate_warning(diagnostic: &Diagnostic) -> String {
     format!(
         "queues-check: {}:{} {}",
@@ -107,6 +114,18 @@ pub(super) fn diagnostics(
 ) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     for (path, facts) in facts {
+        out.extend(
+            facts
+                .check_abstentions
+                .iter()
+                .map(|&(line, message)| Diagnostic {
+                    kind: DiagnosticKind::CheckAbstention,
+                    severity: Severity::Warning,
+                    file: relative_string(root, path),
+                    line,
+                    message: message.to_string(),
+                }),
+        );
         for (line, message) in &facts.diagnostics {
             out.push(Diagnostic {
                 kind: DiagnosticKind::AnalysisNote,

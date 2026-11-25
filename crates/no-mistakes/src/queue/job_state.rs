@@ -15,6 +15,8 @@ mod actions;
 mod expr;
 #[path = "job_state_extract.rs"]
 mod extract;
+#[path = "job_state_item.rs"]
+mod item;
 #[path = "job_state_listing.rs"]
 mod listing;
 #[path = "job_state_stmts.rs"]
@@ -38,6 +40,7 @@ pub(crate) struct JobStateSite {
     pub queue_file: Option<PathBuf>,
     pub queue_name: Option<String>,
     pub unresolved_receiver: bool,
+    pub uncertain_item: bool,
     pub pattern: JobStatePattern,
 }
 
@@ -148,6 +151,16 @@ pub(super) fn findings_and_diagnostics(
                 }
                 continue;
             };
+            if site.uncertain_item {
+                diags.push(Diagnostic {
+                    kind: DiagnosticKind::CheckAbstention,
+                    severity: Severity::Warning,
+                    file: relative_string(root, path),
+                    line: site.line,
+                    message: "job-state-as-record was not judged because the enqueue argument's listing item dependency is not statically known".to_string(),
+                });
+                continue;
+            }
             out.push(CheckFinding {
                 kind: "job-state-as-record".to_string(),
                 file: relative_string(root, path),

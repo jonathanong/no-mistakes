@@ -12,6 +12,9 @@ const DEFAULTS_AMBIGUOUS: &str =
     "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions";
 const NAME_OPEN: &str = "job options were not judged because the queue name did not resolve";
 
+const RETENTION_DEFAULTS_OPEN: &str =
+    "unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known";
+
 pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFacts>) {
     let any_required = facts
         .values()
@@ -42,18 +45,26 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
         let covered = retention::covered_keys(root, path, retention_policy, allow.as_ref());
         for site in &file.job_option_sites {
             if let Some(retention_policy) = retention_policy {
-                if let Some(note) = retention::judge_site(
+                let (finding, unknown_defaults) = retention::judge_site(
                     root,
                     path,
                     site,
                     retention_policy,
                     allow.as_ref(),
                     &defaults,
-                ) {
+                );
+                if let Some(note) = finding {
                     notes.push(Note {
                         path: note.path,
                         line: note.finding.line,
                         body: NoteBody::Finding(note.finding),
+                    });
+                }
+                if unknown_defaults {
+                    notes.push(Note {
+                        path: path.clone(),
+                        line: site.line,
+                        body: NoteBody::Abstention(RETENTION_DEFAULTS_OPEN),
                     });
                 }
             }
@@ -67,6 +78,7 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
     for note in notes {
         let file = facts.get_mut(&note.path).unwrap();
         match note.body {
+            NoteBody::Abstention(message) => file.check_abstentions.push((note.line, message)),
             NoteBody::Diagnostic(message) => file.diagnostics.push((note.line, message)),
             NoteBody::Finding(finding) => file.job_option_findings.push(finding),
         }
@@ -80,6 +92,7 @@ struct Note {
 }
 
 enum NoteBody {
+    Abstention(&'static str),
     Diagnostic(String),
     Finding(JobOptionFinding),
 }
