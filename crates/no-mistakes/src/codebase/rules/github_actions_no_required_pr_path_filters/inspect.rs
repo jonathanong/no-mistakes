@@ -20,7 +20,15 @@ pub(super) fn check_file(rel: &str, path: &Path, sources: &SourceStore) -> Vec<R
         )];
     };
     let Some(triggers) = root_map.get("on") else {
-        return Vec::new();
+        return if has_opaque_key(root_map) {
+            vec![unanalyzable(
+                rel,
+                1,
+                "(unrecognised or merged key in workflow root)".into(),
+            )]
+        } else {
+            Vec::new()
+        };
     };
     let doc = sources
         .read_path(path)

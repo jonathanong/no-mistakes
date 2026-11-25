@@ -200,6 +200,57 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "excluded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/aliased.yml",
+          "line": 3,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed-line.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "paths: ['src/**'] # no-mistakes-disable-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-required-pr-path-filters` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-no-required-pr-path-filters",
+          "target": "github-actions-no-required-pr-path-filters"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "filesystem",
+          "message": "github-actions-no-required-pr-path-filters: configured workflows were excluded by config: .github/workflows/required.yml"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "invalid": {
     "exitCode": 1,
     "report": {
@@ -393,6 +444,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": ".github/workflows/root-merge.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/root-merge.yml (unrecognised or merged key in workflow root). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "x-base: &base",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-tagged-key.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/root-tagged-key.yml (unrecognised or merged key in workflow root). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "!custom on:",
+          "target": "unanalyzable"
+        },
+        {
           "file": ".github/workflows/tagged-trigger.yml",
           "line": 1,
           "message": "Cannot inspect PR trigger filters for .github/workflows/tagged-trigger.yml (unrecognised `on` trigger shape). Repair the workflow YAML and run the check again.",
@@ -454,6 +521,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Cannot inspect PR trigger filters for .github/workflows/non-mapping-root.yml (workflow root is not a YAML mapping). Repair the workflow YAML and run the check again.",
           "rule": "github-actions-no-required-pr-path-filters",
           "sourceLine": "- pull_request",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-merge.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/root-merge.yml (unrecognised or merged key in workflow root). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "x-base: &base",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-tagged-key.yml",
+          "line": 1,
+          "message": "Cannot inspect PR trigger filters for .github/workflows/root-tagged-key.yml (unrecognised or merged key in workflow root). Repair the workflow YAML and run the check again.",
+          "rule": "github-actions-no-required-pr-path-filters",
+          "sourceLine": "!custom on:",
           "target": "unanalyzable"
         },
         {

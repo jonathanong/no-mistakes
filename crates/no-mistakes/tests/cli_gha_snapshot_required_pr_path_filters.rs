@@ -10,6 +10,7 @@ fn github_actions_required_pr_path_filters_json_matches_snapshot() {
         "disabled",
         "invalid",
         "missing",
+        "excluded",
         "advisory",
         "aliased",
         "unrecognised",

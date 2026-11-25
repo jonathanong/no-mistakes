@@ -12,3 +12,5 @@ rules:
         - .github/workflows/bad-seq-on.yml
         - .github/workflows/merge-keys.yml
         - .github/workflows/aliased-on.yml
+        - .github/workflows/root-merge.yml
+        - .github/workflows/root-tagged-key.yml

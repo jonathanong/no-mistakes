@@ -53,21 +53,16 @@ pub fn diagnostics_with_files_and_sources(
             sources,
             |path| options.workflows.contains(&relative_slash_path(root, path)),
         )?;
+        let present_paths: BTreeSet<String> = files
+            .iter()
+            .map(|path| relative_slash_path(root, path))
+            .filter(|rel| options.workflows.contains(rel))
+            .collect();
         let selected_paths: BTreeSet<String> = selected
             .iter()
             .map(|path| relative_slash_path(root, path))
             .collect();
-        let missing: Vec<&str> = options
-            .workflows
-            .iter()
-            .filter(|workflow| !selected_paths.contains(workflow.as_str()))
-            .map(String::as_str)
-            .collect();
-        ensure!(
-            missing.is_empty(),
-            "{RULE_ID}: configured workflows matched no workflow file: {}",
-            missing.join(", ")
-        );
+        validate_configured_workflows(&options.workflows, &present_paths, &selected_paths)?;
         let findings = selected
             .par_iter()
             .flat_map(|path| {
@@ -86,4 +81,38 @@ pub fn diagnostics_with_files_and_sources(
         )?);
     }
     Ok(file_diagnostics::sorted(output))
+}
+
+fn validate_configured_workflows(
+    workflows: &BTreeSet<String>,
+    present: &BTreeSet<String>,
+    selected: &BTreeSet<String>,
+) -> Result<()> {
+    let mut parts = Vec::new();
+    let missing: Vec<&str> = workflows
+        .iter()
+        .filter(|workflow| !present.contains(workflow.as_str()))
+        .map(String::as_str)
+        .collect();
+    if !missing.is_empty() {
+        parts.push(format!(
+            "configured workflows matched no workflow file: {}",
+            missing.join(", ")
+        ));
+    }
+    let excluded: Vec<&str> = workflows
+        .iter()
+        .filter(|workflow| {
+            present.contains(workflow.as_str()) && !selected.contains(workflow.as_str())
+        })
+        .map(String::as_str)
+        .collect();
+    if !excluded.is_empty() {
+        parts.push(format!(
+            "configured workflows were excluded by config: {}",
+            excluded.join(", ")
+        ));
+    }
+    ensure!(parts.is_empty(), "{RULE_ID}: {}", parts.join("; "));
+    Ok(())
 }
