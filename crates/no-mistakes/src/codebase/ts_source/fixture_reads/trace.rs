@@ -49,15 +49,14 @@ impl<'a> Trace<'_, 'a> {
                     if declaration.init.as_ref().map(GetSpan::span) == Some(span) =>
                 {
                     let variable = nodes.parent_id(parent.id());
-                    let AstKind::VariableDeclaration(variables) = nodes.kind(variable) else {
-                        return None;
-                    };
-                    if variables.kind != VariableDeclarationKind::Const
-                        || matches!(
-                            nodes.parent_kind(variable),
-                            AstKind::ExportDeclaration(_) | AstKind::ExportNamedDeclaration(_)
-                        )
-                    {
+                    if !matches!(
+                        nodes.kind(variable),
+                        AstKind::VariableDeclaration(variables)
+                            if variables.kind == VariableDeclarationKind::Const
+                    ) || matches!(
+                        nodes.parent_kind(variable),
+                        AstKind::ExportDeclaration(_) | AstKind::ExportNamedDeclaration(_)
+                    ) {
                         return None;
                     }
                     return self.bind(&declaration.id, path);
@@ -96,15 +95,13 @@ impl<'a> Trace<'_, 'a> {
             BindingPattern::BindingIdentifier(binding) => {
                 let symbol = binding.symbol_id.get()?;
                 let scoping = self.semantic.scoping();
-                if !scoping.symbol_redeclarations(symbol).is_empty() {
-                    return None;
-                }
                 let mut used = false;
                 for reference in scoping.get_resolved_references(symbol) {
                     if reference.is_write() {
                         return None;
                     }
-                    if !reference.is_type() {
+                    let flags = reference.flags();
+                    if flags.is_value() && !flags.is_value_as_type() {
                         used = true;
                         self.pending.push((reference.node_id(), path.clone()));
                     }

@@ -1,1 +1,1 @@
-{"schemaVersion":1,"fixtures":{"changed":["avatar"],"added":[],"removed":[],"attributePaths":{"avatar":["/label"]}},"unclassified":[],"changedFiles":["package.json","pnpm-lock.yaml","src/cart.ts"],"complete":true}
+{"schemaVersion":1,"fixtures":{"changed":["avatar"],"added":[],"removed":[]},"unclassified":[],"changedFiles":["package.json","pnpm-lock.yaml","src/cart.ts"],"complete":true}

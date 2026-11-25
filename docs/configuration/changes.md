@@ -69,9 +69,20 @@ substring template containing `{id}` or `<id>`; by default it searches for the
 ID itself. All changed, added, and removed IDs participate. An unmatched ID
 uses `fallback`, either a named framework full-suite trigger or `full-suite`.
 An absent or unusable fallback selects the full suite. Matching borrows the
-prepared session's test universe and source store. For fixture attribute
-selection, use the complete literal loader call as the match template, as
-in `loadFixture("{id}")`. See [semantic change reports](../cli/tests-plan.md#semantic-change-reports).
+prepared session's test universe and source store.
+
+Set `loaderReturnsParsedJson: true` only when the configured `match` loader
+(a complete literal call such as `loadFixture("{id}")`) returns the parsed
+fixture JSON object unchanged. When enabled, `changes diff` records changed
+JSON Pointers in `attributePaths` and `tests plan --changes` narrows selection
+to tests whose static reads overlap a changed path. If a loader reshapes or
+transforms the JSON (for example, returning `{ label: String(raw.size) }`),
+leave `loaderReturnsParsedJson` unset (`false`) so `changes diff` omits
+`attributePaths` and `tests plan --changes` selects every test matching the
+fixture. Any non-literal loader call or non-call reference to the loader
+identifier (alias, passing it as a value, export, or reassignment) also keeps
+every fixture test in that file selected. See
+[semantic change reports](../cli/tests-plan.md#semantic-change-reports).
 
 To replace a broad path trigger only when a valid semantic report is supplied:
 

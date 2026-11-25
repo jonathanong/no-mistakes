@@ -82,8 +82,12 @@ fn fixture_attributes_preserve_whole_fixture_routing_when_diff_or_read_is_opaque
     assert_eq!(
         selected_files(&report),
         [
+            "tests/alias-loader.test.ts",
+            "tests/export-loader.test.ts",
             "tests/invalid.test.ts",
             "tests/iteration.test.ts",
+            "tests/map-loader.test.ts",
+            "tests/non-literal-call.test.ts",
             "tests/raw.test.ts",
             "tests/replaced.test.ts",
             "tests/spread.test.ts",
@@ -93,6 +97,42 @@ fn fixture_attributes_preserve_whole_fixture_routing_when_diff_or_read_is_opaque
     insta::assert_snapshot!(
         "fixture_attribute_fallback_routing",
         serde_json::to_string_pretty(&json!({ "diff": diff, "plan": summary(&report) })).unwrap()
+    );
+}
+
+#[test]
+fn fixture_attributes_require_opt_in_and_reject_duplicate_attribute_path_keys() {
+    let reshaped = fixture("reshaped");
+    let head = reshaped.join("head");
+    let diff = diff_json(&reshaped.join("base"), &head);
+    assert_eq!(diff, saved_report(&reshaped, "diff.json"));
+    assert!(diff["fixtures"].get("attributePaths").is_none());
+
+    for report_name in ["../reports/diff.json", "../reports/with-paths.json"] {
+        let report = plan(&head, "1", &["--changes", report_name]);
+        assert_eq!(report["fallback_triggered"], false);
+        assert_eq!(selected_files(&report), ["tests/label.test.ts"]);
+    }
+
+    let narrow_head = fixture("narrow").join("head");
+    let report = plan(
+        &narrow_head,
+        "1",
+        &["--changes", "../reports/duplicate-attribute-paths.json"],
+    );
+    assert_eq!(report["fallback_triggered"], true);
+    assert!(report["fallback_reason"]
+        .as_str()
+        .unwrap()
+        .contains("duplicate attributePaths key"));
+    assert_eq!(
+        selected_files(&report),
+        [
+            "tests/alt.test.ts",
+            "tests/encoding.test.ts",
+            "tests/size.test.ts",
+            "tests/unrelated.test.ts",
+        ]
     );
 }
 

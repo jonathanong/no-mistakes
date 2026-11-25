@@ -40,6 +40,8 @@ export interface ChangeCategory {
   tests?: string[];
   /** Literal match template with {id} or <id>; defaults to the ID itself. */
   match?: string;
+  /** Set true only when the match loader returns the parsed fixture JSON unchanged. */
+  loaderReturnsParsedJson?: boolean;
   /** Named framework full-suite trigger, or full-suite. Defaults to full-suite. */
   fallback?: string;
 }

@@ -16,9 +16,18 @@ fn changes_diff_binding_shares_library_reports_and_requires_roots() {
         result["fixtures"]["changed"],
         json!(["profile.avatar", "profile.description"])
     );
+    assert!(result["dotted"].get("attributePaths").is_none());
+    let narrow = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-plan-changes-attributes/narrow/fixture");
+    let opted_in = changes_diff_json_impl(json!({
+        "baseRoot": narrow.join("base"),
+        "headRoot": narrow.join("head")
+    }))
+    .unwrap();
+    let opted_in: serde_json::Value = serde_json::from_str(&opted_in).unwrap();
     assert_eq!(
-        result["dotted"]["attributePaths"]["profile.picture"],
-        json!(["/name"])
+        opted_in["fixtures"]["attributePaths"]["profile.avatar"],
+        json!(["/dimensions/size"])
     );
     let result = changes_diff_json_impl(
         json!({"baseRoot": root.join("missing"), "headRoot": root.join("head")}),

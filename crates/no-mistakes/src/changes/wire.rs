@@ -25,7 +25,7 @@ struct ChangeLists {
     added: Option<Vec<String>>,
     #[serde(default, deserialize_with = "present_list")]
     removed: Option<Vec<String>>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "unique_attribute_paths")]
     attribute_paths: BTreeMap<String, Vec<String>>,
 }
 
@@ -33,6 +33,37 @@ fn present_list<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Option<Vec<String>>, D::Error> {
     Vec::deserialize(deserializer).map(Some)
+}
+
+fn unique_attribute_paths<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<BTreeMap<String, Vec<String>>, D::Error> {
+    struct UniqueMap;
+
+    impl<'de> serde::de::Visitor<'de> for UniqueMap {
+        type Value = BTreeMap<String, Vec<String>>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str("a map of unique fixture IDs to JSON pointer lists")
+        }
+
+        fn visit_map<A: serde::de::MapAccess<'de>>(
+            self,
+            mut map: A,
+        ) -> Result<Self::Value, A::Error> {
+            let mut entries = BTreeMap::new();
+            while let Some((id, paths)) = map.next_entry::<String, Vec<String>>()? {
+                if entries.insert(id.clone(), paths).is_some() {
+                    return Err(serde::de::Error::custom(format!(
+                        "duplicate attributePaths key {id:?}"
+                    )));
+                }
+            }
+            Ok(entries)
+        }
+    }
+
+    deserializer.deserialize_map(UniqueMap)
 }
 
 impl TryFrom<WireReport> for ChangesReport {

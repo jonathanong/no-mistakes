@@ -14,6 +14,7 @@ pub(super) struct Rule<'a> {
     pub category: &'a str,
     pub exclude: Option<usize>,
     pub id: Id<'a>,
+    pub emit_attribute_paths: bool,
 }
 
 impl Rule<'_> {
@@ -82,6 +83,7 @@ impl<'a> Rules<'a> {
                         category: name,
                         exclude,
                         id,
+                        emit_attribute_paths: category.loader_returns_parsed_json,
                     });
                 }
             }

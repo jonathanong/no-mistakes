@@ -1157,6 +1157,8 @@ fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
 
 `testsPlan({ root, changes: "changes.json", framework: "vitest" })` consumes the
 same saved report as CLI `tests plan --changes`. Invalid or incomplete input
-selects the full suite with a structured reason. The planner uses
-`attributePaths` to narrow matching fixture tests when it can trace their
-reads. Configured matchers reuse prepared source contents. See [changes configuration](configuration/changes.md).
+selects the full suite with a structured reason. For categories marked
+`loaderReturnsParsedJson: true`, the planner uses `attributePaths` to narrow
+matching fixture tests when it can trace their reads and all loader uses in
+the file. Configured matchers reuse prepared source contents. See
+[changes configuration](configuration/changes.md).

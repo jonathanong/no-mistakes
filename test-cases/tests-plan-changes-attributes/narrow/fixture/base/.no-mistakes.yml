@@ -5,6 +5,7 @@ changes:
       id: { fromPath: "fixtures/{id}.json" }
       tests: ["tests/**/*.test.ts"]
       match: 'loadFixture("{id}")'
+      loaderReturnsParsedJson: true
 tests:
   vitest:
     configs: vitest.config.mts

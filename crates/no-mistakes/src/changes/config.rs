@@ -29,8 +29,14 @@ pub struct ChangeCategory {
     pub tests: Vec<String>,
     #[serde(rename = "match", skip_serializing_if = "Option::is_none")]
     pub match_pattern: Option<String>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub loader_returns_parsed_json: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fallback: Option<String>,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]

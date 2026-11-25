@@ -1,4 +1,5 @@
 function readFields(key: string) {
+  type LoaderFn = typeof loadFixture;
   consume(loadFixture("direct").size);
   consume(loadFixture("string")["a/b~c"]);
   consume(loadFixture("number")[0]);
@@ -10,10 +11,6 @@ function readFields(key: string) {
   consume(loadFixture("dynamic")[key]);
   consume(loadFixture("prototype").constructor);
   consume(loader.fetch("member").size);
-  consume(loader?.fetch("optional-callee").size);
-  consume(loadFixture?.("optional-call").size);
-  consume(loadFixture("two-args", key).size);
-  consume((loadFixture)("wrapped-callee").size);
 
   const local = loadFixture("alias");
   type FixtureType = typeof local;

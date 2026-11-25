@@ -36,6 +36,9 @@ pub(super) fn index(
 }
 
 pub(super) fn loader_template(category: &ChangeCategory) -> Option<String> {
+    if !category.loader_returns_parsed_json {
+        return None;
+    }
     let template = category.match_pattern.as_deref()?.replace("<id>", "{id}");
     (template.matches("{id}").count() == 1
         && (template.contains(r#""{id}""#) || template.contains("'{id}'")))

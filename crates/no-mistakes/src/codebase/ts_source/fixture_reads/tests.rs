@@ -29,9 +29,6 @@ fn traces_static_reads_and_keeps_ambiguous_uses() {
         "large-number",
         "dynamic",
         "prototype",
-        "optional-call",
-        "two-args",
-        "wrapped-callee",
         "computed-binding",
         "rest",
         "array-pattern",
@@ -55,16 +52,11 @@ fn traces_static_reads_and_keeps_ambiguous_uses() {
         "absent",
     ];
     let member = "loader.fetch(\"member\")";
-    let optional_callee = "loader?.fetch(\"optional-callee\")";
     let literals = precise
         .iter()
         .map(|(id, _)| literal(id))
         .chain(opaque.map(literal))
-        .chain([
-            literal("unused-root"),
-            member.into(),
-            optional_callee.into(),
-        ])
+        .chain([literal("unused-root"), member.into()])
         .collect();
     let reads = FixtureReads::collect(&path, &source, &literals);
 
@@ -81,17 +73,42 @@ fn traces_static_reads_and_keeps_ambiguous_uses() {
     }
     assert!(reads.affects(&source, member, &["/size".into()]));
     assert!(!reads.affects(&source, member, &unrelated));
-    assert!(reads.affects(&source, optional_callee, &unrelated));
     assert!(!reads.affects(&source, &literal("unused-root"), &unrelated));
 }
 
 #[test]
-fn keeps_matches_with_broken_syntax_eval_or_unresolved_loader_arguments() {
+fn keeps_matches_with_broken_syntax_eval_or_unsafe_loader_uses() {
     let root = crate::test_support::fixture_root("fixture-reads");
-    for id in ["broken", "evaluated", "mixed"] {
+    for id in [
+        "broken",
+        "evaluated",
+        "mixed",
+        "alias-call",
+        "passed-value",
+        "exported-loader",
+        "exported-default-loader",
+        "reassigned-loader",
+        "aliased-import",
+        "optional-call",
+        "two-args",
+        "wrapped-callee",
+        "template-call",
+    ] {
         let path = root.join(format!("{id}.ts"));
         let source = std::fs::read_to_string(&path).unwrap();
         let literal = literal(id);
+        let reads = FixtureReads::collect(&path, &source, &BTreeSet::from([literal.clone()]));
+        assert!(reads.affects(&source, &literal, &["/size".into()]), "{id}");
+    }
+    for id in [
+        "member-alias",
+        "member-root-alias",
+        "member-other-call",
+        "optional-callee",
+    ] {
+        let path = root.join(format!("{id}.ts"));
+        let source = std::fs::read_to_string(&path).unwrap();
+        let literal = format!("loader.fetch(\"{id}\")");
         let reads = FixtureReads::collect(&path, &source, &BTreeSet::from([literal.clone()]));
         assert!(reads.affects(&source, &literal, &["/size".into()]), "{id}");
     }

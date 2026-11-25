@@ -6,6 +6,7 @@ use oxc_semantic::{Semantic, SemanticBuilder};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+mod loader_use;
 mod trace;
 
 #[derive(Debug, Clone, Default)]
@@ -50,29 +51,25 @@ impl FixtureReads {
             return reads;
         }
         let mut arguments = BTreeMap::<_, usize>::new();
-        let mut unknown_loaders = BTreeSet::new();
         for node in semantic.nodes().iter() {
             let call = match node.kind() {
                 AstKind::WithStatement(_) => return Self::default(),
                 AstKind::CallExpression(call) => call,
                 _ => continue,
             };
-            let callee = crate::ast::expression_path(&call.callee);
-            let argument = match call.arguments.first() {
-                Some(Argument::StringLiteral(argument)) => argument.value.as_str(),
-                _ => None,
+            let Some(Argument::StringLiteral(argument)) = call.arguments.first() else {
+                continue;
             };
-            let Some(argument) = argument else {
-                unknown_loaders.extend(callee);
+            let Some(argument) = argument.value.as_str() else {
                 continue;
             };
             *arguments.entry(argument).or_default() += 1;
-            let Some(callee) =
-                callee.filter(|_| call.arguments.len() == 1 && is_loader_candidate(call))
-            else {
+            if call.arguments.len() != 1 || !is_loader_candidate(call) {
+                continue;
+            }
+            let Some(callee) = crate::ast::expression_path(&call.callee) else {
                 continue;
             };
-            let start = call.span.start as usize;
             let literal = crate::ast::span_text(source, call.span);
             if !literals.contains(literal) {
                 continue;
@@ -86,18 +83,20 @@ impl FixtureReads {
             });
             if let Some(proven) = entry {
                 if let Some(paths) = trace::reads(semantic, node.id()) {
-                    proven.starts.insert(start);
+                    proven.starts.insert(call.span.start as usize);
                     proven.paths.extend(paths);
                 } else {
                     *entry = None;
                 }
             }
         }
+        if loader_use::has_unsafe_loader_use(semantic, &reads) {
+            return Self::default();
+        }
         // A second call with the same argument may load the fixture through another spelling.
         reads.calls.values_mut().for_each(|entry| {
             if entry.as_ref().is_some_and(|proven| {
                 arguments.get(proven.argument.as_str()) != Some(&proven.starts.len())
-                    || unknown_loaders.contains(&proven.callee)
             }) {
                 *entry = None;
             }
