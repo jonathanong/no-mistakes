@@ -75,3 +75,45 @@ fn in_memory_source_rules_reject_malformed_option_types() {
     assert!(swift.contains("at options.allow: invalid type"), "{swift}");
     assert!(docs.contains("at options.glob: invalid type"), "{docs}");
 }
+
+#[test]
+fn every_registered_configurable_rule_id_has_a_unique_option_validator() {
+    let mut validated = std::collections::BTreeSet::new();
+    for id in [
+        crate::codebase::rules::GITHUB_ACTIONS_ACTION_INPUT_POLICY,
+        crate::codebase::rules::GITHUB_ACTIONS_CACHE_KEY_POLICY,
+        crate::codebase::rules::VITEST_DEFAULT_EXCLUDES,
+    ]
+    .into_iter()
+    .chain(
+        VALIDATORS
+            .iter()
+            .flat_map(|group| group.iter().map(|(id, _)| *id)),
+    ) {
+        assert!(
+            validated.insert(id),
+            "duplicate option validator registered for `{id}`"
+        );
+    }
+    let missing: Vec<_> = crate::codebase::rules::rule_ids::configurable_rule_ids()
+        .filter(|id| !validated.contains(id))
+        .collect();
+    assert!(
+        missing.is_empty(),
+        "registered rules missing from VALIDATORS: {missing:?}"
+    );
+}
+
+#[test]
+fn missing_validator_returns_an_internal_error_instead_of_no_options_fallback() {
+    let rule: RuleDef = serde_yaml::from_str("rule: missing-validator-rule").unwrap();
+    let error = application_errors(Path::new("."), &NoMistakesConfig::default(), &rule)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains(
+            "internal error: rule `missing-validator-rule` has no registered option validator"
+        ),
+        "{error}"
+    );
+}

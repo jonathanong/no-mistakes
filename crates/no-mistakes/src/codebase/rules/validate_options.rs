@@ -31,6 +31,7 @@ pub(super) use applications::{
 mod compiled;
 mod compiled_misc;
 mod locations;
+mod no_options;
 mod postgres;
 mod postgres_compiled;
 mod selectors;
@@ -67,6 +68,7 @@ const VALIDATORS: &[&[RuleValidator]] = &[
     selectors::VALIDATORS,
     workflow::VALIDATORS,
     standard::VALIDATORS,
+    no_options::VALIDATORS,
 ];
 
 pub(crate) fn validate_rule_options(
@@ -149,7 +151,12 @@ fn application_errors(
                 .iter()
                 .flat_map(|group| group.iter())
                 .find_map(|(id, validate)| (*id == rule.rule).then_some(*validate))
-                .unwrap_or(decode::<NoOptions>);
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "internal error: rule `{}` has no registered option validator",
+                        rule.rule
+                    )
+                })?;
             validate(rule, &ValidationContext { root, config })?;
             crate::codebase::postgres::validate_embedded_sql_rule_options(rule)?;
             if rule.options.get("reportUnmatchedExecutorNames").is_some() {
