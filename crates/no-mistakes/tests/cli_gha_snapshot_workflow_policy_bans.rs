@@ -123,12 +123,24 @@ fn check_json_snapshot_workflow_policy_valid_nested_merges() {
 #[test]
 fn check_json_snapshot_workflow_policy_merge_location_unavailable() {
     const RULE: &str = "workflow-topology-policy";
-    let cases = ["unavailable", "advise", "ignore"].map(|mode| {
-        (
-            mode,
-            rules_path(RULE, "fixture", "merge-location-unavailable"),
-            rules_path(RULE, "configs", &format!("merge-location-{mode}.yml")),
-        )
-    });
+    let mut cases = ["unavailable", "advise", "ignore"]
+        .map(|mode| {
+            (
+                mode,
+                rules_path(RULE, "fixture", "merge-location-unavailable"),
+                rules_path(RULE, "configs", &format!("merge-location-{mode}.yml")),
+            )
+        })
+        .to_vec();
+    cases.push((
+        "calls",
+        rules_path(RULE, "fixture", "merge-location-calls"),
+        rules_path(RULE, "configs", "merge-location-calls.yml"),
+    ));
+    cases.push((
+        "calls-violation",
+        rules_path(RULE, "fixture", "merge-location-calls"),
+        rules_path(RULE, "configs", "merge-location-calls-violation.yml"),
+    ));
     assert_saved_fixture("workflow_policy_merge_location_unavailable", &cases);
 }

@@ -53,10 +53,16 @@ pub(super) fn check_equals_file(
             format!("{rel}: equals-file `{}` is missing", assertion.file),
         )];
     };
+    let mut findings = Vec::new();
     let other = match parse_structured_value_located(&other_path, &source) {
         Ok(other) => other,
-        Err(error) if error.missing_merge_location => {
-            return vec![super::merge_location_finding(root, &other_path, error)];
+        Err(mut error) if error.missing_merge_location => {
+            let available = error.partial.take().filter(|partial| {
+                super::partial::selection_known(partial, from_key)
+            });
+            findings.push(super::merge_location_finding(root, &other_path, error));
+            let Some(available) = available else { return findings };
+            *available
         }
         Err(error) => {
             return vec![finding(
@@ -67,9 +73,9 @@ pub(super) fn check_equals_file(
         }
     };
     if values_match(value, &other, assertion, from_key) {
-        return Vec::new();
+        return findings;
     }
-    vec![finding(
+    findings.push(finding(
         rel,
         assertion,
         assertion.message.clone().unwrap_or_else(|| {
@@ -78,7 +84,8 @@ pub(super) fn check_equals_file(
                 assertion.key, from_key, assertion.file
             )
         }),
-    )]
+    ));
+    findings
 }
 
 fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_key: &str) -> bool {

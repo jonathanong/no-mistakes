@@ -24,9 +24,10 @@ fn partial_mappings_keep_explicit_paths_without_assuming_inherited_values() {
         assert_eq!(assertion_known(&value, &assertion), known, "{selector}");
     }
 
-    let ancestors = ValueAssertion {
-        kind: Some(AssertionKind::AncestorOverrideSubset),
+    let boolean = ValueAssertion {
+        key: "runtime".into(),
+        kind: Some(AssertionKind::Boolean),
         ..Default::default()
     };
-    assert!(!assertion_known(&value, &ancestors));
+    assert!(assertion_known(&value, &boolean));
 }

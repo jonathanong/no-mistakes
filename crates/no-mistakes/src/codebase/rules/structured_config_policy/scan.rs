@@ -110,6 +110,12 @@ pub(super) fn scan_with_state(
                 }
             }
             for assertion in &policy.value_assertions {
+                if partial && assertion.kind == Some(AssertionKind::AncestorOverrideSubset) {
+                    findings.extend(super::ancestor_override_subset::validate_partial_extends(
+                        &value, &rel, assertion,
+                    ));
+                    continue;
+                }
                 if partial && !partial::assertion_known(&value, assertion) {
                     continue;
                 }

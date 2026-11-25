@@ -166,6 +166,8 @@ fn check_json_snapshot_structured_config_merge_location_unavailable() {
         "ancestor",
         "definite-advise",
         "definite-ignore",
+        "primary-ignore",
+        "secondary-ignore",
     ]
     .map(|mode| {
         (

@@ -40,12 +40,19 @@ impl Walk<'_> {
         };
         match self.parsed_ancestors.parse(resolved, &source) {
             Ok(value) => Some(value),
-            Err(error) if error.missing_merge_location => {
+            Err(mut error) if error.missing_merge_location => {
+                let available = error.partial.take();
                 self.findings.push(
                     crate::codebase::rules::structured_config_policy::merge_location_finding(
                         self.root, resolved, error,
                     ),
                 );
+                if let Some(available) = available {
+                    let relative = relative_slash_path(self.root, resolved);
+                    self.findings.extend(super::super::validate_partial_extends(
+                        &available, &relative, self.assertion,
+                    ));
+                }
                 None
             }
             Err(error) => {

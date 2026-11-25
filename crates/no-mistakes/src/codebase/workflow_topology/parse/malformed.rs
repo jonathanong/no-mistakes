@@ -37,7 +37,13 @@ pub(super) fn unlocated_workflow(
 ) -> ParsedWorkflow {
     let mut workflow =
         unavailable_workflow(path, model::DiagnosticCode::UnlocatedYamlMerge, message);
-    workflow.node.triggers = super::workflow_values::parse_triggers(value.get("on"));
+    let on = value.get("on");
+    workflow.node.triggers = super::workflow_values::parse_triggers(on);
+    let contract = super::workflow_values::parse_workflow_call(on);
+    workflow.node.callable = contract.is_some();
+    if on.is_none_or(|value| !crate::codebase::structured_value::contains_merge(value)) {
+        workflow.node.workflow_call = contract;
+    }
     workflow
         .node
         .triggers

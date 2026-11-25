@@ -31,6 +31,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "calls": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "calls-violation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/callee.yml",
+          "line": 1,
+          "message": "caller allowlist mismatch: .github/workflows/callee.yml: expected .github/workflows/caller.yml#missing, .github/workflows/partial-caller.yml#call, got .github/workflows/caller.yml#known",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: complete callee"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "ignore": {
     "exitCode": 1,
     "report": {

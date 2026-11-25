@@ -102,3 +102,15 @@ pub(super) fn finding(file: &str, assertion: &ValueAssertion, message: String) -
         target: Some(target),
     }
 }
+
+
+pub(super) fn validate_partial_extends(
+    value: &Value,
+    rel: &str,
+    assertion: &ValueAssertion,
+) -> Option<RuleFinding> {
+    let keys = Keys::from_assertion(assertion);
+    super::partial::key(value, keys.extends, true)??;
+    let message = spec::extends_specs(value, keys.extends).err()?;
+    Some(finding(rel, assertion, format!("{rel}: ancestor-override-subset extends {message}")))
+}

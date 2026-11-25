@@ -27,28 +27,35 @@ fn child<'a>(value: &'a Value, name: &str) -> Option<Option<&'a Value>> {
     Some(selected)
 }
 
-pub(super) fn assertion_known(value: &Value, assertion: &ValueAssertion) -> bool {
-    if assertion.kind == Some(AssertionKind::AncestorOverrideSubset) {
-        return !contains_merge(value);
-    }
-    let path: Vec<_> = assertion.key.split('.').filter(|part| !part.is_empty()).collect();
-    selector_known(value, &path)
+pub(super) fn selection_known(value: &Value, selector: &str) -> bool {
+    let path: Vec<_> = selector.split('.').filter(|part| !part.is_empty()).collect();
+    selector_known(value, &path, false)
 }
 
-fn selector_known(value: &Value, path: &[&str]) -> bool {
+pub(super) fn assertion_known(value: &Value, assertion: &ValueAssertion) -> bool {
+    let path: Vec<_> = assertion.key.split('.').filter(|part| !part.is_empty()).collect();
+    let reads_shape_only = matches!(
+        assertion.kind,
+        Some(AssertionKind::Boolean | AssertionKind::PositiveNumber | AssertionKind::StringArray
+        | AssertionKind::StringPrefix | AssertionKind::StringGlob | AssertionKind::NotSingleFile)
+    );
+    selector_known(value, &path, reads_shape_only)
+}
+
+fn selector_known(value: &Value, path: &[&str], reads_shape_only: bool) -> bool {
     let Some((part, rest)) = path.split_first() else {
-        return !contains_merge(value);
+        return reads_shape_only || !contains_merge(value);
     };
     if *part == "[]" {
         return value.as_sequence().is_none_or(|items| {
-            items.iter().all(|item| selector_known(item, rest))
+            items.iter().all(|item| selector_known(item, rest, reads_shape_only))
         });
     }
     if let Ok(index) = part.parse::<usize>() {
         return value.as_sequence().and_then(|items| items.get(index))
-            .is_none_or(|item| selector_known(item, rest));
+            .is_none_or(|item| selector_known(item, rest, reads_shape_only));
     }
-    child(value, part).is_some_and(|item| item.is_none_or(|item| selector_known(item, rest)))
+    child(value, part).is_some_and(|item| item.is_none_or(|item| selector_known(item, rest, reads_shape_only)))
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]

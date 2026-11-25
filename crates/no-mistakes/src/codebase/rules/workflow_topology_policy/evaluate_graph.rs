@@ -1,20 +1,22 @@
 use super::evaluate::Index;
 use super::LocatedFinding;
 use super::{job_finding, workflow_finding as finding, Options};
-use crate::codebase::workflow_topology::model::WorkflowTopology;
+use crate::codebase::workflow_topology::{model::WorkflowTopology, topology_identifiers::workflow_path_from_id};
+use std::collections::BTreeSet;
 
 pub(super) fn lint(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
+    unavailable: &BTreeSet<&str>,
 ) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
-    findings.extend(edges(index, &opts.required_direct_edges, true, true));
-    findings.extend(edges(index, &opts.forbidden_direct_edges, true, false));
-    findings.extend(edges(index, &opts.required_transitive_edges, false, true));
-    findings.extend(edges(index, &opts.forbidden_transitive_edges, false, false));
+    findings.extend(edges(index, &opts.required_direct_edges, true, true, unavailable));
+    findings.extend(edges(index, &opts.forbidden_direct_edges, true, false, unavailable));
+    findings.extend(edges(index, &opts.required_transitive_edges, false, true, unavailable));
+    findings.extend(edges(index, &opts.forbidden_transitive_edges, false, false, unavailable));
     findings.extend(fan_ins(index, opts));
-    findings.extend(callers(index, opts));
+    findings.extend(callers(index, opts, unavailable));
     findings.extend(unlocked(topology, opts));
     findings
 }
@@ -24,11 +26,15 @@ fn edges(
     rules: &[[String; 2]],
     direct: bool,
     required: bool,
+    unavailable: &BTreeSet<&str>,
 ) -> Vec<LocatedFinding> {
     let kind = if direct { "direct" } else { "transitive" };
     rules
         .iter()
         .filter_map(|[from, to]| {
+            if unavailable.contains(workflow_path_from_id(from)) || unavailable.contains(workflow_path_from_id(to)) {
+                return None;
+            }
             if !index.jobs.contains_key(from.as_str()) || !index.jobs.contains_key(to.as_str()) {
                 return required.then(|| {
                     job_finding(to, format!("required {kind} edge missing: {from} -> {to}"))
@@ -80,7 +86,7 @@ fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
         .collect()
 }
 
-fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
+fn callers(index: &Index<'_>, opts: &Options, unavailable: &BTreeSet<&str>) -> Vec<LocatedFinding> {
     if opts.exact_caller_jobs.is_empty() {
         return Vec::new();
     }
@@ -112,7 +118,15 @@ fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
         let actual = index.direct_caller_jobs(path);
         let mut expected: Vec<&str> = expected.iter().map(String::as_str).collect();
         expected.sort_unstable();
-        if actual != expected {
+        let comparable_expected: Vec<_> = expected
+            .iter()
+            .copied()
+            .filter(|job| {
+                !unavailable.contains(workflow_path_from_id(job))
+                    || actual.binary_search(job).is_ok()
+            })
+            .collect();
+        if actual != comparable_expected {
             findings.push(finding(
                 path,
                 format!(

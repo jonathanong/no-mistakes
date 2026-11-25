@@ -197,3 +197,27 @@ fn unlocated_merge_reports_unavailable_even_for_possibly_quoted_keys() {
         plain.diagnostics[0].message
     );
 }
+
+#[test]
+fn an_unlocated_merge_can_leave_workflow_callability_known_or_unknown() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("workflow-topology-policy")
+            .join("merge-location-calls"),
+    );
+    let topology = load_workflow_topology(&root, &CiConfig::default(), &[]);
+    let workflow = |suffix: &str| {
+        topology
+            .workflows
+            .iter()
+            .find(|row| row.path.ends_with(suffix))
+            .unwrap()
+    };
+    assert!(workflow("/partial-callee.yml").callable);
+    assert!(workflow("/partial-callee.yml").workflow_call.is_some());
+    assert!(!workflow("/unknown-callee.yml").callable);
+    assert_eq!(topology.diagnostics.len(), 3, "{:?}", topology.diagnostics);
+    assert!(topology
+        .diagnostics
+        .iter()
+        .all(|row| row.code == super::super::model::DiagnosticCode::UnlocatedYamlMerge));
+}

@@ -1,0 +1,12 @@
+version: 2
+unanalyzable: ignore
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      exactCallerJobs:
+        .github/workflows/callee.yml:
+          - .github/workflows/caller.yml#known
+          - .github/workflows/partial-caller.yml#call
+        .github/workflows/partial-callee.yml:
+          - .github/workflows/caller.yml#explicit
