@@ -188,15 +188,22 @@ fn invocation_milliseconds_reject_zero_without_starting_a_command() {
 
 #[test]
 fn ordinary_check_accepts_the_shared_millisecond_budget() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
-    let output = run(&[
-        "--invocation-timeout-ms",
-        "3500",
-        "check",
-        "--root",
-        root.to_str().unwrap(),
-    ]);
+    let output = budgeted_check_command()
+        .output()
+        .expect("check empty fixture with an invocation budget");
     assert!(output.status.success(), "{}", stderr(&output));
+}
+
+pub(super) fn budgeted_check_command() -> Command {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
+    let executable = bin();
+    let mut command = Command::new(&executable);
+    command
+        // Archived test binaries can run without Cargo's per-process lock marker.
+        .env("CARGO_BIN_EXE_no-mistakes", &executable)
+        .args(["--invocation-timeout-ms", "3500", "check", "--root"])
+        .arg(root);
+    command
 }
 
 #[cfg(unix)]
