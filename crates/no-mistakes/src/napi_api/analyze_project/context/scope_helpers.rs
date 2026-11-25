@@ -4,6 +4,7 @@ struct EffectiveScopeKey {
     tsconfig: Option<PathBuf>,
     automatic_tsconfig: bool,
     config: Option<PathBuf>,
+    automatic_config: bool,
     effort: Option<crate::config::v2::Effort>,
 }
 
@@ -13,6 +14,7 @@ struct EffectiveScope {
     tsconfig: Option<PathBuf>,
     automatic_tsconfig: bool,
     config: Option<PathBuf>,
+    automatic_config: bool,
 }
 
 impl EffectiveScope {
@@ -37,6 +39,7 @@ impl EffectiveScope {
             tsconfig: self.tsconfig.clone(),
             automatic_tsconfig: self.automatic_tsconfig,
             config: self.config.clone(),
+            automatic_config: self.automatic_config,
             effort: self.key.effort,
         };
         Ok(self)
@@ -57,7 +60,9 @@ fn effective_scope(
         Some(path) => effective_path(&root, Some(path)),
         None => effective_path(&inherited_root, options.tsconfig.as_deref()),
     };
-    let config = match string_option(request, "config")? {
+    let request_config = string_option(request, "config")?;
+    let automatic_config = request_config.is_none() && options.config.is_none();
+    let config = match request_config {
         Some(path) => effective_path(&root, Some(path)),
         None => effective_path(&inherited_root, options.config.as_deref()),
     };
@@ -66,6 +71,7 @@ fn effective_scope(
         tsconfig: tsconfig.clone(),
         automatic_tsconfig,
         config: config.clone(),
+        automatic_config,
         effort: if request.report_type == "check" {
             string_option(request, "effort")?
                 .map(|value| serde_json::from_value(serde_json::Value::String(value.into())))
@@ -80,6 +86,7 @@ fn effective_scope(
         tsconfig,
         automatic_tsconfig,
         config,
+        automatic_config,
     })
 }
 

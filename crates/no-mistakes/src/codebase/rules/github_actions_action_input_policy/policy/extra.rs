@@ -1,8 +1,9 @@
 use super::super::scalar::{input_scalar, InputScalar};
-use super::super::{ActionSpec, RULE_ID};
+use super::super::ActionSpec;
+use super::validation::invalid;
 use super::{Family, InputFault};
-use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
+use std::collections::BTreeSet;
 
 pub(super) fn merge(family: &mut Family, action: &ActionSpec) {
     if let Some(keys) = &action.allowed_inputs {
@@ -23,27 +24,47 @@ fn push_unique(into: &mut Vec<String>, keys: &[String]) {
     }
 }
 
-pub(super) fn validate(family: &Family) -> Result<()> {
+pub(super) fn validate(family: &Family, errors: &mut BTreeSet<String>) {
     let name = &family.name;
     for key in &family.require_present {
         if family.ban.contains(key) || family.require.contains_key(key) {
-            bail!("{RULE_ID}: action `{name}` requiredPresent `{key}` is also banned or required");
+            errors.insert(invalid(
+                "actions[].requiredPresent",
+                key,
+                format_args!("an input key absent from ban and require for action `{name}`"),
+            ));
         }
     }
     let Some(allowed) = &family.allowed else {
-        return Ok(());
+        return;
     };
     for key in &family.ban {
         if allowed.contains(key) {
-            bail!("{RULE_ID}: action `{name}` both allows and bans `{key}`");
+            errors.insert(invalid(
+                "actions[].ban",
+                key,
+                format_args!("an input key outside allowedInputs {allowed:?} for action `{name}`"),
+            ));
         }
     }
-    for key in family.require.keys().chain(&family.require_present) {
+    let required = family
+        .require
+        .keys()
+        .chain(family.invalid_require_keys.iter())
+        .map(|key| ("actions[].require", key));
+    let present = family
+        .require_present
+        .iter()
+        .map(|key| ("actions[].requiredPresent", key));
+    for (option, key) in required.chain(present) {
         if !allowed.contains(key) {
-            bail!("{RULE_ID}: action `{name}` requires `{key}` but allowedInputs omits it");
+            errors.insert(invalid(
+                option,
+                key,
+                format_args!("an input key in allowedInputs {allowed:?} for action `{name}`"),
+            ));
         }
     }
-    Ok(())
 }
 
 pub(super) fn judge(with: Option<&Mapping>, family: &Family, faults: &mut Vec<InputFault>) {
