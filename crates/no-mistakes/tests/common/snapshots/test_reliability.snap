@@ -565,6 +565,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "playwright-no-serial",
           "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:14: cannot verify whether `chainedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
           "message": "tests/conditional-fixture.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
@@ -586,6 +591,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "playwright-no-serial",
           "file": "tests/local-fixture.spec.ts",
           "message": "tests/local-fixture.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:11: cannot verify whether `selfRef` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:14: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",

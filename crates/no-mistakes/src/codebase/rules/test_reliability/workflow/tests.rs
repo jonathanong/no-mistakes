@@ -104,3 +104,9 @@ fn incomplete_shell_keeps_the_findings_from_complete_preceding_loops() {
         assert_eq!(rerun_loops(&script, &test_commands()), [Some(1)], "{name}");
     }
 }
+
+#[test]
+fn shell_splits_or_and_while_without_variables() {
+    let script = "for i in 1 2; do\n  pnpm test:unit || true\ndone\nwhile true; do\n  echo \"try\" && pnpm test:unit\ndone\n";
+    assert_eq!(rerun_loops(script, &test_commands()), [Some(1), None]);
+}
