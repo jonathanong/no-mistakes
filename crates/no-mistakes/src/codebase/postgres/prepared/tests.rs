@@ -285,3 +285,5 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
     assert!(facts.explain_write_rollback(&missing).is_err());
     assert_eq!(sources.physical_read_count(), files.len());
 }
+
+mod explain_write_rollback;

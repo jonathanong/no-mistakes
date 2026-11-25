@@ -120,3 +120,39 @@ fn standalone_schema_and_catalog_rules_share_complete_fact_demand() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn standalone_explain_write_rule_prepares_only_selected_sql() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-explain-write-rollback/fixture/cases"),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let selected = root.join("benchmarks/transactions.sql");
+    let outside = root.join("other/outside.sql");
+    let files = [selected.clone(), outside.clone()];
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
+    let sources = snapshot.source_store_for(&root);
+    let facts = prepare_call_site_facts(&root, &config, &files, &sources)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        facts
+            .postgres
+            .explain_write_rollback(&selected)
+            .unwrap()
+            .len(),
+        8
+    );
+    assert!(facts.postgres.explain_write_rollback(&outside).is_err());
+    assert_eq!(sources.physical_read_count(), 1);
+    let findings = crate::codebase::rules::run_filesystem_rules_with_config_and_snapshot(
+        &root, &config, &files, &snapshot,
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 8);
+    assert!(findings
+        .iter()
+        .all(|finding| finding.rule == crate::codebase::rules::POSTGRES_EXPLAIN_WRITE_ROLLBACK));
+}
