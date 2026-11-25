@@ -1,10 +1,12 @@
 # `github-actions-no-required-pr-path-filters`
 
+## Why and when
+
 A workflow that supplies a required pull-request check must start for every
 pull request in its required scope. If GitHub skips the workflow because of a
 path filter, the required check can stay pending and block the pull request.
 
-## Configuration
+## Options
 
 ```yaml
 version: 2
@@ -20,6 +22,11 @@ rules:
 The default empty list selects no files. Rule and project scopes can narrow
 the list further. Use the workflows that publish required checks in your
 branch protection or rulesets.
+
+## What it catches
+
+In a selected workflow, the rule reports each `paths` or `paths-ignore` key
+under `on.pull_request` or `on.pull_request_target`.
 
 ## Valid example
 
@@ -40,8 +47,7 @@ jobs:
 
 ## Counterexample
 
-In a selected workflow, the rule reports each `paths` or `paths-ignore` key
-under `on.pull_request` or `on.pull_request_target`.
+A pull request that changes only documentation can skip this workflow.
 
 ```yaml
 on:
@@ -73,5 +79,10 @@ a reported key, `no-mistakes-disable-next-line` on the preceding line, or
 
 Run `no-mistakes check --format json` or use async `check()` and
 `analyzeProject()` with the same config.
+
+## Related rules
+
+[`workflow-topology-policy`](workflow-topology-policy.md)
+checks declared jobs and their dependency edges in configured workflows.
 
 [GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore)

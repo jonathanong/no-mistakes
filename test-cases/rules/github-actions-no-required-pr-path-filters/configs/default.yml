@@ -7,6 +7,7 @@ rules:
         - .github/workflows/required.yml
         - .github/workflows/required-target.yml
         - .github/workflows/always.yml
+        - .github/workflows/no-trigger.yml
         - .github/workflows/suppressed.yml
         - .github/workflows/suppressed-file.yml
         - .github/workflows/suppressed-line.yml
