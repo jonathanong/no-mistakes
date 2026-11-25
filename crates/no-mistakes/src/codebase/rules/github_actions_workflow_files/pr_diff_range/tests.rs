@@ -275,6 +275,7 @@ fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
     for mutation in [
         "          EVENT_NAME=pull_request\n",
         "          export EVENT_NAME=pull_request\n",
+        "          declare -x EVENT_NAME=pull_request\n",
         "          unset EVENT_NAME\n",
         "          read -r EVENT_NAME <<< pull_request\n",
         "          printf -v EVENT_NAME pull_request\n",
@@ -286,27 +287,25 @@ fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
         );
         assert_eq!(count(&with_env(&script)), 1, "{mutation}");
     }
-    // Glob patterns in [[ == ... ]] are rejected conservatively.
-    assert_eq!(
-        count(&with_env(
-            "          if [[ \"$EVENT_NAME\" == merge_* ]]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
-        )),
-        1
-    );
-    // Unclosed if, unterminated quotes, and unsupported loops before if do not exclude.
-    assert_eq!(
-        count(&with_env(
-            "          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"\n"
-        )),
-        1
-    );
-    assert_eq!(
-        count(&with_env(
-            "          for x in 1; do echo \"$x\"; done\n          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n"
-        )),
-        1
-    );
-    // Multiple guarded ifs and elif after an already-taken merge_group branch stay quiet.
+    // Non-bracket tests, positional variables, unknown operators, glob patterns, unterminated
+    // quotes, and unsupported nested control flow in then/else/condition/nested-if all bail out.
+    for unguarded in [
+        "          if test \"$EVENT_NAME\" = pull_request x; then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [ \"$1\" = pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [ \"$EVENT_NAME\" -eq pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [[ \"$EVENT_NAME\" == merge_* ]]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then echo \"$PR_BASE_SHA\" \"unterminated\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then (echo \"$PR_BASE_SHA\"); fi\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ] || (true); then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then if :; then (echo \"$PR_BASE_SHA\"); fi; fi\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then echo ok; else (echo \"$PR_BASE_SHA\"); fi\n",
+        "          for x in 1; do echo \"$x\"; done\n          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n",
+    ] {
+        assert_eq!(count(&with_env(unguarded)), 1, "{unguarded}");
+    }
+    // Multiple guarded ifs, != non-merge_group, nested if/elif/fi, and elif after an already-taken
+    // merge_group branch stay quiet.
     let multi = concat!(
         "          set -euo pipefail\n",
         "          if [ \"$EVENT_NAME\" = merge_group ]; then\n",
@@ -315,6 +314,15 @@ fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
         "            base=\"$PR_BASE_SHA\"\n",
         "          else\n",
         "            base=\"$PR_BASE_SHA\"\n",
+        "          fi\n",
+        "          if [ \"$EVENT_NAME\" != pull_request ]; then\n",
+        "            echo \"$MERGE_GROUP_BASE_SHA\"\n",
+        "          else\n",
+        "            if [ -n \"$PR_BASE_SHA\" ]; then\n",
+        "              echo \"$PR_BASE_SHA\"\n",
+        "            elif :; then\n",
+        "              echo \"$PR_BASE_SHA\"\n",
+        "            fi\n",
         "          fi\n",
         "          if [ \"$EVENT_NAME\" != merge_group ]; then\n",
         "            echo \"$PR_BASE_SHA\"\n",

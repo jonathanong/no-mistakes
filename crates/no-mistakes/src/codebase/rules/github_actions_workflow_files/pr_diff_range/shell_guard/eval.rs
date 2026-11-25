@@ -15,12 +15,9 @@ pub(super) fn eval_condition(
     mutated_vars: &BTreeSet<String>,
     mutated_all: bool,
 ) -> OnMergeGroup {
-    let [kw, open, event, operator, value, close] = words else {
+    let [_, open, event, operator, value, close] = words else {
         return OnMergeGroup::Unknown;
     };
-    if !matches!(kw.text.as_str(), "if" | "elif") {
-        return OnMergeGroup::Unknown;
-    }
     let valid_event_word = match (open.text.as_str(), close.text.as_str()) {
         ("[", "]") => event.quoted_expansion == Some((0, event.text.len())),
         ("[[", "]]") => {

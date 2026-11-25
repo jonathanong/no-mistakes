@@ -138,11 +138,7 @@ impl<'a> GuardScan<'a> {
 }
 
 pub(super) fn drop_leading_word<'a>(words: &'a [Word], kw: &str) -> &'a [Word] {
-    if words.first().is_some_and(|word| word.text == kw) {
-        &words[1..]
-    } else {
-        words
-    }
+    &words[usize::from(words.first().is_some_and(|word| word.text == kw))..]
 }
 
 pub(super) fn keyword(source: &str) -> &str {
