@@ -30,5 +30,12 @@ export function trailingHelper() {
   return 0;
 }
 
+export default function () {
+  return 1;
+}
+
+declare const globalProcessor: () => Promise<void>;
 const extraArgs: [() => Promise<void>] = [handle];
 export const spreadArgs = new Worker("items", ...extraArgs);
+export const unresolvedProcessor = new Worker("items", globalProcessor);
+void stable.rateLimit(1000);

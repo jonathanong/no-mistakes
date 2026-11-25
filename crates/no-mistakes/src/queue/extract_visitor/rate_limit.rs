@@ -174,9 +174,7 @@ impl QueueVisitor<'_> {
     }
 
     pub(in crate::queue) fn note_shared_rate_limit_receiver(&mut self, start: u32, worker: usize) {
-        if !self.shared_rate_limit.uses.is_empty() {
-            self.shared_rate_limit.local_receivers.insert(start, worker);
-        }
+        self.shared_rate_limit.local_receivers.insert(start, worker);
     }
 }
 

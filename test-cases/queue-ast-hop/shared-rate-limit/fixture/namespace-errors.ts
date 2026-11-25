@@ -10,5 +10,6 @@ function getQueue() {
 }
 
 export const widgetsWorker = new queue.Worker("widgets", async () => {
-  throw getQueue().Worker.RateLimitError();
+  if (Math.random()) throw getQueue().Worker.RateLimitError();
+  throw getQueue().Other.RateLimitError();
 });

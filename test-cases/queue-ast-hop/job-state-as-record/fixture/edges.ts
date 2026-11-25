@@ -24,9 +24,9 @@ export async function replayDerivedCompleted() {
   const completed = await widgets.getCompleted(0, 100);
   const copied = completed;
   const combined = ([] as typeof copied).concat(copied);
-  const spread = [...combined];
+  const spread = [...combined, ...completed];
   const batch = spread.map((job) => ({ name: job.name, data: job.data }));
-  await widgets.addBulk(...([batch] as [typeof batch]));
+  await widgets.addBulk(...([batch, batch] as [typeof batch, typeof batch]));
 }
 
 // Reported: for..of listing loop with derived payload object, destructured field, and spread args
@@ -69,11 +69,18 @@ export async function replayViaArrayParam() {
   failed.forEach(function (job) {
     void job.retry();
   });
+  failed.forEach(({ data }) => {
+    void widgets.add("repair", data);
+  });
   failed.forEach(console.log);
 }
 
 export const switchAndArrow = async (id: string) => {
   const job = await widgets.getJob(id);
+  const { length } = [id];
+  const box = { count: length };
+  box.count = 1;
+  void ((await job?.isFailed()) ? job.retry() : null);
   switch (await job?.getState()) {
     case "failed":
       await job.retry();
@@ -138,14 +145,22 @@ export async function unrelatedLoopAdd() {
   });
 }
 
-// Accepted: shadowed namespace binding and non-imported member receiver do not resolve
+// Accepted: shadowed namespace binding and non-imported/call member receivers do not resolve
 export async function shadowedNamespace(
   queues: { widgetQueue: typeof widgets },
   holder: { widgetQueue: typeof widgets },
+  getHolder: () => { widgetQueue: typeof widgets; retry: () => Promise<void>; add: (n: string, d: object) => Promise<void> },
+  noop: () => void,
   id: string,
 ) {
   const a = await queues.widgetQueue.getJob(id);
   if (await a?.isFailed()) await a.retry();
   const b = await holder.widgetQueue.getJob(id);
   if (await b?.isFailed()) await b.retry();
+  const c = await getHolder().widgetQueue.getJob(id);
+  if (await c?.isFailed()) {
+    noop();
+    await getHolder().retry();
+    await getHolder().add("noop", {});
+  }
 }

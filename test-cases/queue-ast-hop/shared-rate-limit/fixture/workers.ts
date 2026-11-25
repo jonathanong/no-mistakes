@@ -22,7 +22,12 @@ interface Limiter {
 }
 
 export const unrelated = createWorker("items", async (job: queue.Job, helper: Limiter) => {
-  const readName = ({ name }: QueueWorker, _flag: boolean, _deep: outer.inner.Worker) => name;
+  const readName = (
+    { name }: QueueWorker,
+    _flag: boolean,
+    _deep: outer.inner.Worker,
+    _unknown: UnknownWorkerType,
+  ) => name;
   if (job.name) await helper.rateLimit(1000);
   void readName;
 });
