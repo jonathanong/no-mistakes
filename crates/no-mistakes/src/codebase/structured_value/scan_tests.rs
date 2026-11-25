@@ -1,6 +1,7 @@
 use super::document_spans::document_spans;
-use super::parse_yaml_documents;
 use super::plain_merge_scan::has_plain_merge_key;
+use super::{parse_structured_value_located, parse_yaml_documents};
+use std::path::Path;
 
 #[test]
 fn plain_merge_scan_ignores_quotes_comments_tags_and_block_scalars() {
@@ -12,6 +13,8 @@ double: \"escaped \\\" <<: *defaults\"
 single: 'escaped '' <<: *defaults'
 tagged:
   !!str <<: keep
+  !<tag:yaml.org,2002:str> '<<': keep
+  &k \"<<\": keep
 pipe_in_word: foo|bar
 cmp: a > b
 expr: a << b
@@ -22,11 +25,21 @@ literal_block: |-
   still inside block
 folded_block: >+2 # comment
   <<: *defaults
+note: it's done
+items:
+  - name: first
+    \"<<\": keep
+  - \"quoted\": first
+    '<<': keep
+flow: { note: it's done, \"<<\": keep, '<<': keep, \"a\":\"<<\" }
 runtime:
   \"<<\": keep
   '<<': keep
 ";
     assert!(!has_plain_merge_key(source));
+    assert!(!has_plain_merge_key("\u{feff}--- \"<<\": keep\n"));
+    assert!(!has_plain_merge_key("? '<<'\n: keep\n"));
+    assert!(!has_plain_merge_key("{ ? '<<' : 1 }\n"));
 }
 
 #[test]
@@ -39,6 +52,61 @@ fn plain_merge_scan_detects_plain_flow_explicit_and_anchored_keys() {
     ));
     assert!(has_plain_merge_key("items:\n  - <<: *defaults\n"));
     assert!(!has_plain_merge_key("runtime:\n  <<:not_a_key\n"));
+}
+
+#[test]
+fn plain_merge_scan_does_not_let_mid_scalar_quotes_hide_merge_keys() {
+    assert!(has_plain_merge_key(
+        "note: it's done\nruntime:\n  <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "note: it 's done\nruntime:\n  <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "note: say \"hi\nruntime:\n  <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "note: line one\n  'continuation\nruntime:\n  <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "note: hello, 'world\nruntime:\n  <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "meta: { note: it's done, <<: *defaults }\n"
+    ));
+    assert!(has_plain_merge_key(
+        "items:\n  - note: compare a >\n    <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "items:\n  - text: |\n      <<: *ignored\n    <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "note: <<'s done\nruntime:\n  <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key("'unclosed\n<<: *defaults\n"));
+    assert!(has_plain_merge_key("\"unclosed\n<<: *defaults\n"));
+    assert!(has_plain_merge_key(
+        "tag: !<unterminated\nruntime:\n  <<: *defaults\n"
+    ));
+    assert!(has_plain_merge_key(
+        "note: first\n\n  # comment\nruntime:\n  <<: *defaults\n"
+    ));
+}
+
+#[test]
+fn unlocated_merge_after_apostrophe_is_reported() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/structured-config-policy/merge-location-unavailable/long-tag-apostrophe.yml"
+    );
+    let expected =
+        "failed to apply YAML merge keys (could not match a YAML `<<` key to its source location)";
+    let error =
+        parse_structured_value_located(Path::new("long-tag-apostrophe.yml"), source).unwrap_err();
+    assert_eq!(error, (Some(1), expected.to_string()));
+
+    let documents = parse_yaml_documents(source);
+    assert!(documents.values.is_empty());
+    assert_eq!(documents.errors, vec![(1, expected.to_string())]);
 }
 
 #[test]
