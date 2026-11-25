@@ -639,7 +639,7 @@ For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
 
 ## Standalone library compiler budget
 
-<!-- cspell:ignore nm_shard_all NM_TEST_SHARD codegen nextest CODEGEN dead_code unused_imports -->
+<!-- cspell:ignore nm_shard_all nm_shard_postgres_source NM_TEST_SHARD codegen nextest CODEGEN dead_code unused_imports -->
 
 `Build standalone library tests` compiles the default-feature library test
 target on a 16 GB `ubuntu-latest` runner. Workspace dev and test profiles
@@ -1470,20 +1470,26 @@ checks. This is one local observation with the host and network limits stated
 above, not a hosted tail estimate.
 
 The PostgreSQL source-identity quality check filters tests at runtime, so that
-filter alone does not bound Rust test compilation. It now compiles and runs all
-three existing unit-test slices with the same no-default-feature and
-`test-instrumentation` settings. Each slice uses the standalone library's
-4096 codegen units and zero debug info, and the job retains its 30-minute step
-and 40-minute job bounds. Run 45000861345 exhausted the job bound while the
-original quality command was still active; its runner did not upload the
-step log. The existing standalone memory measurements explain why compiling
-the entire test harness is unsafe on the hosted runner. Resource samples now
-wrap this command too. No tests are dropped and failures are never retried.
-Local validation used eight build jobs under a 12 GiB scope with a warm
-dependency cache: the three crate compilations took 91, 86, and 87 seconds
-and ran 9, 17, and 314 source tests respectively (340 total). This is local
-validation, not a hosted-runner time guarantee. Shared instrumentation helpers
-are available independently of the selected test slice.
+filter alone does not bound Rust test compilation. It previously compiled and
+ran all three unit-test slices (`0`, `1`, `2`) sequentially because the
+`codebase::postgres::source::` tests spanned all three slices, spending ~15
+minutes compiling unrelated test modules three times (e.g., main run
+`45687283513`: 14m51s total, 8927 MiB peak `rustc` RSS, 340 runs covering 328
+unique tests with 6 plain `cfg(test)` tests repeated across slices). It now
+compiles once with `NM_TEST_SHARD=postgres-source` (`cfg(nm_shard_postgres_source)`),
+which includes only the `codebase::postgres::source` unit-test modules and
+shared plain `cfg(test)` modules under the same `--no-default-features` and
+`--features test-instrumentation` settings, 4096 codegen units, and zero debug
+info. The job retains its 30-minute step and 40-minute job bounds, and
+`postgres-source-identities.test.cjs` locks that every
+`codebase::postgres::source::` unit test compiles into the `postgres-source`
+slice. Run 45000861345 exhausted the job bound while the original whole-crate
+quality command was still active; its runner did not upload the step log. The
+existing standalone memory measurements explain why compiling the entire test
+harness is unsafe on the hosted runner. Resource samples continue to wrap this
+command. No tests are dropped and failures are never retried. Shared
+instrumentation helpers remain available independently of the selected test
+slice.
 
 The JavaScript coverage merge keeps its required local coverage and shard
 checks separate from its best-effort upload. In run 45014849129, the required
