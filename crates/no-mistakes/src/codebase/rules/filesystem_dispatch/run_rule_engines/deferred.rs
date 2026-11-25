@@ -57,6 +57,15 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
+        SWIFT_NO_UNGUARDED_DARWIN_IMPORT => {
+            swift_no_unguarded_darwin_import::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         SWIFT_NO_RAW_PRINT => {
             swift_no_raw_print::check_with_files_sources_and_deferred_suppression(
                 root,
@@ -77,6 +86,15 @@ pub(super) fn run(
         }
         VERSION_PIN_CONSISTENCY => {
             version_pin_consistency::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
+        PACKAGE_JSON_EXPORT_TARGET_PREFIX => {
+            package_json_export_target_prefix::check_with_files_sources_and_deferred_suppression(
                 root,
                 config,
                 files,

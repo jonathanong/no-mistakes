@@ -149,6 +149,11 @@ failures. Prerequisites follow each consumer's source and configuration input
 selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
+The cache-key policy, action input policy, and Vitest default exclusion rule
+validate their options before analysis; invalid options reject `check()` and
+`analyzeProject()` with the same sorted configuration error message printed by
+the CLI (exit 2, empty stdout, no `incomplete` entry). See
+[rule configuration](configuration/rules.md).
 An unwinding panic during per-file fact extraction uses the same existing
 `CheckFailure` shape with consumer `fact-extraction`, the file, and the panic
 message. `check()` and check reports in `analyzeProject()` resolve with that
@@ -299,6 +304,10 @@ For `playwright-unique-html-ids`, `low` checks literal HTML IDs and routes
 other ID expressions through the shared unanalyzable policy. The rule remains
 independent of `tests.playwright.selectors.htmlIds`; see
 [its Effort section](rules/playwright-unique-html-ids.md#effort).
+The opt-in [`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
+rule runs through async `check()` via `checkJson` and through the
+`analyzeProject()` check report.
+
 For `nextjs-no-caching`, `low` checks
 [literal cache settings](rules/nextjs-no-caching.md#effort) without preparing
 constant propagation or configuration wrapper facts. Both APIs preserve shared
@@ -390,6 +399,10 @@ UTF-8. `report` fails by default, `advise` emits non-failing advice, and
 unsupported expression shapes retain definite findings under every policy.
 Both findings and advice honor suppression. Invalid UTF-8 points to its first
 invalid byte's line; other read failures use line 1.
+
+For `package-json-export-target-prefix`, CLI `check`, async `check(options)`,
+and `analyzeProject()` check reports use the same configuration, findings,
+and advisory routing. See the [rule contract](rules/package-json-export-target-prefix.md).
 
 For `package-json-required-fields`, CLI `check`, `check(options)`, and check
 reports in `analyzeProject()` apply the same `unanalyzable` policy to selected
@@ -519,6 +532,9 @@ describe its YAML shape.
 `advisories` in `check()` / `analyzeProject()`). Exported types
 `QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
 `QueueCheckSeverity` describe its configuration and finding severity.
+`queues.includeTests` explicitly opts configured test files back into the
+shared queue scope across every queue check; exported type
+`QueueIncludeTestsConfig` describes its YAML shape.
 
 ## Queue factory configuration types
 
@@ -1038,6 +1054,11 @@ same outcome as CLI `check`. Configure it in the YAML selected by `config`.
 `DependabotCooldownPolicyOptions` is exported for typed configuration.
 Policy violations use `RuleFinding`, and unreadable or malformed input uses
 `CheckReport.incomplete` (`CheckFailure[]`).
+
+The opt-in [`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) runs in
+async `check()` and `analyzeProject()` check reports. Select the rule through
+the YAML passed to `config`. Reports use the existing `RuleFinding` fields
+for the importing file, line, specifier, and resolved target.
 
 The configured [`pnpm-release-age-policy`](rules/pnpm-release-age-policy.md)
 rule runs through async `check()` and `analyzeProject()` check reports.

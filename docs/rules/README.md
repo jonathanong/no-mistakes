@@ -38,7 +38,7 @@ behavior.
 | --- | --- |
 | Keep agent context concise and code easy to analyze | [`agents-md-max-size`](agents-md-max-size.md), [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md), [`unconstructed-error-class`](unconstructed-error-class.md), [`unique-exports`](unique-exports.md) |
 | Check declared HTTP and queue payload compatibility | [`declared-payload-compatibility`](declared-payload-compatibility.md) |
-| Check queue producer/worker wiring, retention, and rate limits | [`queues check`](../cli/queues-check.md#producer-and-worker-matching) (`queues-check` excludes configured `tests.*` scopes from `unmatched-producer`/`unmatched-worker` by default and matches same-file raw `new Worker` and configured worker factories), [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md) |
+| Check queue producer/worker wiring, retention, and rate limits | [`queues check`](../cli/queues-check.md#producer-and-worker-matching) (all queue checks share configured `tests.*` scope exclusion and `queues.includeTests` opt-in), [Unbounded job retention](unbounded-job-retention.md), [Job state as record](job-state-as-record.md), [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md) |
 | Protect documentation structure and navigation | [`doc-consistency`](doc-consistency.md), [`markdown-reachability`](markdown-reachability.md), [`markdown-child-links`](markdown-child-links.md) |
 | Enforce package and workspace boundaries | [`forbidden-dependencies`](forbidden-dependencies.md), [`production-dependency-declarations`](production-dependency-declarations.md), [`workspace-package-cycles`](workspace-package-cycles.md) |
 | Make CI reproducible and bounded | [`github-actions-pinned-hash`](github-actions-pinned-hash.md), [`github-actions-cache-key-policy`](github-actions-cache-key-policy.md), [`github-actions-run-command-policy`](github-actions-run-command-policy.md), [`github-actions-script-expressions`](github-actions-script-expressions.md), [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md), [`github-actions-job-permissions`](github-actions-job-permissions.md), [`github-actions-local-action-checkout`](github-actions-local-action-checkout.md), [`github-actions-docker-host-ports`](github-actions-docker-host-ports.md), [`github-actions-download-integrity`](github-actions-download-integrity.md), [`github-actions-vitest-project-selection`](github-actions-vitest-project-selection.md), [`github-actions-no-poll-wait-job`](github-actions-no-poll-wait-job.md), [`github-actions-pr-diff-range`](github-actions-pr-diff-range.md), [`github-actions-job-timeouts`](github-actions-job-timeouts.md), [`github-actions-step-timeouts`](github-actions-step-timeouts.md), [`workflow-topology-policy`](workflow-topology-policy.md) |
@@ -107,6 +107,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md)                             | Ban Next.js API route files.                                                    |
 | [`nextjs-no-caching`](nextjs-no-caching.md)                                   | Ban Next.js caching features.                                                   |
 | [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |
+| [`no-cross-package-relative-imports`](no-cross-package-relative-imports.md) | Report relative imports that cross a declared workspace package boundary. |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md)       | Ban empty/comment-only files.                                                   |
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
 | [`no-sparse-checkout`](no-sparse-checkout.md)                                 | Ban sparse Git checkouts in selected CI YAML.                                   |
@@ -115,6 +116,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md)                   | Report a configured single enqueue inside an open per-item loop or callback.   |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
+| [`package-json-export-target-prefix`](package-json-export-target-prefix.md) | Require the `./` prefix on selected Node package export targets. |
 | [`package-json-nested-workspace-coverage`](package-json-nested-workspace-coverage.md) | Require nested workspace entries to exactly cover configured dependency packages. |
 | [`package-json-required-fields`](package-json-required-fields.md)             | Require configured package.json field-shape policy.                             |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
@@ -183,6 +185,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`strict-package-layout`](strict-package-layout.md)                           | Enforce configured package file layout.                                         |
 | [`structured-config-policy`](structured-config-policy.md)                     | Require or ban structured config keys.                                          |
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |
+| [`swift-no-unguarded-darwin-import`](swift-no-unguarded-darwin-import.md)       | Gate Darwin imports in portable Swift test sources.                            |
 | [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md)                 | Require @MainActor on Swift classes whose names end with ViewModel.             |
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
 | [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |

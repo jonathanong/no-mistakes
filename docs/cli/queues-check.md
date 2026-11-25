@@ -13,10 +13,11 @@ Markdown adds a `## diagnostics` section when the flag is set and diagnostics
 exist. Human and paths stdout contain findings only.
 
 Both `queues check` and aggregate `check` print unresolved worker
-`.rateLimit()` receiver warnings to stderr by default. The standalone flag
+`.rateLimit()` receiver warnings and the retention and listing abstentions
+described below to stderr by default. The standalone flag
 prints all queue diagnostics to stderr in every format, including human and
 paths, so topology notes are available without altering those stdout streams.
-Aggregate `check` reports worker receiver warnings in JSON `warnings` too.
+Aggregate `check` includes these warnings in JSON `warnings` too.
 Diagnostics leave the exit status unchanged.
 
 A `.add(...)` or `.addBulk(...)`
@@ -106,14 +107,21 @@ callbacks. It groups those declarations by name on the first binding lookup.
 `unmatched-producer`, `unmatched-worker`, `unmatched-worker-unresolved-producers`,
 and `queues edges` match producers and workers across the project:
 
-- **Configured test scopes suppress findings on test files by default:** Files
+- **Configured test scopes exclude test files across every queue rule by default:** Files
   matched by declared `tests.*` scopes in `.no-mistakes.yml` (or a declared
   Vitest/Playwright config) still participate in producer/worker matching, but
-  no `unmatched-producer`, `unmatched-worker`, or
-  `unmatched-worker-unresolved-producers` finding is reported on a test-scope
-  file, and test-scope files are omitted from `queues edges`. No hardcoded
-  filename conventions (`*.test.*`, `__tests__`) are applied when no test scope
-  is declared.
+  every queue rule (`unmatched-producer`, `unmatched-worker`,
+  `unmatched-worker-unresolved-producers`, `unbounded-job-retention`,
+  `job-state-as-record`, `missing-job-option`, `invalid-job-id`,
+  `debounce-ttl`, `scheduler-template-option`, `enqueue-and-wait`,
+  `queue-cycle`, `self-dedup-enqueue`, `shared-queue-rate-limit`,
+  `worker-rate-limit-per-process`, and `mixed-priority`) skips findings and
+  rule-specific diagnostics on test-scope files, and test-scope files are
+  omitted from `queues edges`. No hardcoded filename conventions (`*.test.*`,
+  `__tests__`) are applied when no test scope is declared. Set
+  [`queues.includeTests`](../configuration/queues.md#test-file-scope) to `true`
+  or a list of relative globs to explicitly include test files back in the
+  shared queue scope.
 - **Test-file producers without workers:** A producer inside a configured test
   scope is not reported as `unmatched-producer` even when no worker exists
   anywhere, because integration and harness tests commonly enqueue synthetic
@@ -305,10 +313,15 @@ Valkey unless told otherwise. Opt into `queues.unboundedJobRetention` to report:
   required retention key unset.
 
 `true`, a non-negative number, or an object with a `count` or `age` property
-counts as bounded. Non-literal expressions and open spreads abstain. When both
-`queues.requiredJobOptions` and `queues.unboundedJobRetention` cover the same
-key on a producer, `unbounded-job-retention` reports it once so the site is not
-reported twice.
+counts as bounded. Non-literal expressions and open spreads abstain. An unset
+key requires statically known queue defaults. If a producer omits a required
+key and its default is unknown or ambiguous, the check emits a not-judged
+warning. An explicit unbounded override still produces a finding.
+
+With both `queues.requiredJobOptions` and `queues.unboundedJobRetention`
+enabled, shared retention keys use the `unbounded-job-retention` finding
+kind. `missing-job-option` covers other required keys and takes back the
+shared keys on files exempted by retention `allowPaths`.
 
 ```ts
 // reported: failed jobs are kept forever
@@ -332,7 +345,8 @@ Fix: set `removeOnComplete` and `removeOnFail` to `true`, a count, or an
 `{ age, count }` object in `defaultJobOptions` or at the producer call site,
 and store durable work records in the database. Exempt operator tooling or
 one-off scripts with `queues.unboundedJobRetention.allowPaths`, or suppress a
-single call with `// no-mistakes-disable-next-line queues-check`.
+single call with `// no-mistakes-disable-next-line queues-check`. See also
+[Unbounded job retention](../rules/unbounded-job-retention.md).
 
 ## Queue job state as record of work
 
@@ -346,7 +360,13 @@ for two patterns on resolved queue bindings:
   the same function.
 - A failed or completed job listing (`getFailed`, `getCompleted`, or
   `getJobs([...])` including `"failed"` or `"completed"`) whose results feed
-  `add`, `addBulk`, or `retry`.
+  `add`, `addBulk`, or `retry`. An enqueue inside a loop or listing callback
+  qualifies when an argument uses the listed item, directly or through a local
+  `const` alias, including an object or array containing the item or one of
+  its properties. An enqueue that uses a call result or destructured alias
+  derived from the item emits a not-judged warning when that alias is the
+  only evidence. A `retry()` on a destructured listing binding also qualifies,
+  including when the binding has a default.
 
 Unresolved queue receivers abstain with a diagnostic (`job-state-as-record was
 not judged because the queue receiver did not resolve`) and non-queue action
@@ -373,11 +393,12 @@ for (const row of await pendingWidgets(db, 100)) {
 Fix: query durable application state from the database to decide what to
 enqueue or retry. Exempt operator tooling and dashboards with
 `queues.jobStateAsRecord.allowPaths`, or suppress a single location with
-`// no-mistakes-disable-next-line queues-check`.
+`// no-mistakes-disable-next-line queues-check`. See also
+[Job state as record](../rules/job-state-as-record.md).
 
 ## Suppression
 
-`queues-check` directives apply to findings and unresolved worker receiver
+`queues-check` directives apply to findings and the default queue check
 warnings in aggregate `no-mistakes check` and Node `check()`. Use
 `no-mistakes-disable-file queues-check` for a whole file,
 `no-mistakes-disable-line queues-check` for the current line, or

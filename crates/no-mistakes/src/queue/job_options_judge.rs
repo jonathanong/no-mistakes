@@ -1,4 +1,5 @@
 use super::super::extract_model::{FileFacts, JobOptionFinding, JobOptionSite, RequiredJobOptions};
+use super::super::test_scope::ConfiguredTestScope;
 use super::defaults::{index_defaults, DefaultsIndex};
 use super::retention;
 use std::collections::{BTreeSet, HashMap};
@@ -12,21 +13,32 @@ const DEFAULTS_AMBIGUOUS: &str =
     "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions";
 const NAME_OPEN: &str = "job options were not judged because the queue name did not resolve";
 
-pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFacts>) {
+const RETENTION_DEFAULTS_OPEN: &str =
+    "unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known";
+
+pub(crate) fn judge_into_facts(
+    root: &Path,
+    facts: &mut HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
+) {
     let any_required = facts
         .values()
         .any(|file| file.required_job_options.is_some());
-    let any_retention = facts
+    // Stamping applies the selected retention policy to every file for this root.
+    let retention = facts
         .values()
-        .any(|file| file.unbounded_job_retention.is_some());
-    if !any_required && !any_retention {
+        .find_map(|file| file.unbounded_job_retention.as_ref());
+    if !any_required && retention.is_none() {
         return;
     }
+    let allow = retention.and_then(|policy| policy.allow_globset());
     let defaults = index_defaults(facts);
     let mut notes = Vec::new();
     for (path, file) in facts.iter() {
+        if test_scope.is_match(root, path) {
+            continue;
+        }
         let retention_policy = file.unbounded_job_retention.as_ref();
-        let allow = retention_policy.and_then(|policy| policy.allow_globset());
         if let Some(retention_policy) = retention_policy {
             for note in
                 retention::judge_file_defaults(root, path, file, retention_policy, allow.as_ref())
@@ -41,18 +53,26 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
         let covered = retention::covered_keys(root, path, retention_policy, allow.as_ref());
         for site in &file.job_option_sites {
             if let Some(retention_policy) = retention_policy {
-                if let Some(note) = retention::judge_site(
+                let (finding, unknown_defaults) = retention::judge_site(
                     root,
                     path,
                     site,
                     retention_policy,
                     allow.as_ref(),
                     &defaults,
-                ) {
+                );
+                if let Some(note) = finding {
                     notes.push(Note {
                         path: note.path,
                         line: note.finding.line,
                         body: NoteBody::Finding(note.finding),
+                    });
+                }
+                if unknown_defaults {
+                    notes.push(Note {
+                        path: path.clone(),
+                        line: site.line,
+                        body: NoteBody::Abstention(RETENTION_DEFAULTS_OPEN),
                     });
                 }
             }
@@ -66,6 +86,7 @@ pub(crate) fn judge_into_facts(root: &Path, facts: &mut HashMap<PathBuf, FileFac
     for note in notes {
         let file = facts.get_mut(&note.path).unwrap();
         match note.body {
+            NoteBody::Abstention(message) => file.check_abstentions.push((note.line, message)),
             NoteBody::Diagnostic(message) => file.diagnostics.push((note.line, message)),
             NoteBody::Finding(finding) => file.job_option_findings.push(finding),
         }
@@ -79,6 +100,7 @@ struct Note {
 }
 
 enum NoteBody {
+    Abstention(&'static str),
     Diagnostic(String),
     Finding(JobOptionFinding),
 }

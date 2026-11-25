@@ -1,5 +1,8 @@
 # Feature Parity
 
+The opt-in [`package-json-export-target-prefix`](rules/package-json-export-target-prefix.md)
+rule checks Node package export target syntax in both CLI and async Node reports.
+
 The shell compatibility checks
 [`bash-empty-array-nounset`](rules/bash-empty-array-nounset.md) and
 [`zsh-readonly-parameter`](rules/zsh-readonly-parameter.md) share file selection,
@@ -48,6 +51,10 @@ checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
 `analyzeProject()` check reports. These entry points share the same cooldown
 floor, explicit PR limit check, exclusion globs, ecosystem exemptions, and
 incomplete-input diagnostics.
+
+[`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) checks recorded
+TS/JS imports against declared workspace ownership through Rust, CLI `check`,
+and async Node `check()` and `analyzeProject()` check reports.
 
 Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
 literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
@@ -956,6 +963,10 @@ and files outside configured packages are non-edges. Native fallback is
 non-production. v1 emits `dart test`, not `flutter test`.
 
 ## Shared Domain Rules
+
+The CLI and async Node check APIs share the opt-in
+[`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
+rule for portable Swift files.
 
 Route, queue, and Kafka extractors are language-specific visitors. Route
 visitors emit `route` edges. HTTP callers emit `http`. Queue and Kafka

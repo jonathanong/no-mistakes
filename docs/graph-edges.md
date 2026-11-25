@@ -43,6 +43,13 @@ server edges are route-file -> normalized-route relationships plus static
 client-call -> normalized-route relationships. Server-route nodes are
 intentionally not added to unfiltered `dependencies --relationship all` output.
 
+When a configured queue producer resolves a standalone queue name without a
+queue declaration, its `queueFile` is the virtual anchor `queue:<name>`. A job
+on that queue has the edge endpoint `queue:<name>#<job>`, such as
+`queue:mail#welcome`. Use that endpoint with `queues related` or the async
+`queueRelated()` API. For file-based `dependents`, its `related` alias, and
+`tests plan`, use the producer or worker source path.
+
 ## Supported Edges
 
 | Serialized `via`             | Internal edge kind            | Relationship                                                                     | Direction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Fixture proof                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |

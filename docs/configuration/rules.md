@@ -75,6 +75,18 @@ paths relative to either the repository root or the selected project root; a
 matching glob does not select files from an unselected project. Repository-scoped
 applications use repository-relative paths.
 
+The cache-key policy (`github-actions-cache-key-policy`), action input policy
+(`github-actions-action-input-policy`), and Vitest default exclusion rule
+(`vitest-default-excludes`) treat invalid option values as configuration errors.
+`check` validates their options before any analysis runs, aborts with exit
+status 2 and empty stdout, and writes the diagnostic to stderr naming the config
+file, rule, option path, rejected value, and accepted values or constraint.
+Semantic option errors across enabled applications are sorted and printed in one
+run (a YAML schema or type error stops deserialization of that application's
+`options` object while other applications are still checked); no partial report
+or `incomplete` entry is emitted. Async Node `check()` and `analyzeProject()`
+check reports reject with the same error message.
+
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds
 project-relative components alongside export-kind selections. Use a top-level
@@ -290,6 +302,10 @@ require a companion rule.
 also supports `low`: it checks literal HTML IDs and routes other ID expressions
 through the selected unanalyzable policy. This remains independent of
 `tests.playwright.selectors.htmlIds`, which controls coverage analysis.
+Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
+rule on portable Swift test sources. Select those files with common
+`include` and `exclude` filters.
+
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported
 configuration objects without resolving constants or configuration wrappers.
@@ -364,6 +380,10 @@ cannot be read, including invalid UTF-8. The default `report` fails, `advise`
 emits non-failing advice, and `ignore` omits that uncertainty. Invalid YAML,
 unmatched source locations, and unsupported expression shapes remain definite
 findings under every policy.
+
+[`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
+checks selected Node package manifests. The rule is opt-in and uses
+`options.unanalyzable` for manifests that cannot be read or parsed.
 
 [`package-json-required-fields`](../rules/package-json-required-fields.md) uses
 `options.unanalyzable` for selected manifests that cannot be read or parsed
@@ -744,6 +764,12 @@ required. Optional `requiredGlobs` replaces the default list of
 `**/node_modules/**` and `**/.git/**`. Entries must be nonempty strings,
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
+
+### Workspace package relative imports
+
+[`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md) uses declared workspace
+package ownership. Enable it with the normal rule scope and select the importing
+files with the shared `include` and `exclude` filters. No rule options are required.
 
 ### Dependabot cooldown
 

@@ -106,21 +106,15 @@ fn a_bad_config_retains_other_config_findings_and_records_its_failure() {
 fn invalid_options_report_the_problem() {
     let root = fixture_root();
     for (config, expected_error) in [
-        ("missing-config-option.yml", "requires options.config"),
-        ("empty-config-option.yml", "requires options.config"),
-        (
-            "empty-files-glob.yml",
-            "files entries must be nonempty globs",
-        ),
+        ("missing-config-option.yml", "options.files"),
+        ("empty-config-option.yml", "options.config"),
+        ("empty-files-glob.yml", "a valid non-empty glob"),
         ("invalid-files-glob.yml", "invalid glob"),
-        (
-            "empty-glob.yml",
-            "requiredGlobs entries must be nonempty strings",
-        ),
+        ("empty-glob.yml", "a non-empty glob string"),
         ("nonstring-glob.yml", "requiredGlobs[0]"),
         (
             "unsupported-extension.yml",
-            "options.config must name a TypeScript or JavaScript file",
+            "a TypeScript or JavaScript file path",
         ),
     ] {
         let error = check_with_files(&root, &load(&root, config), &[]).unwrap_err();
@@ -129,6 +123,24 @@ fn invalid_options_report_the_problem() {
             "{config}: {error:#}"
         );
     }
+
+    let bad_filter: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    include: ["[unclosed"]
+    options:
+      config: vitest.config.ts
+      requiredGlobs: []
+"#,
+    )
+    .unwrap();
+    let mut errors = Vec::new();
+    collect_config_errors(&root, None, &bad_filter, &mut errors);
+    let joined = errors.join("\n");
+    assert!(joined.contains("[unclosed"), "{joined}");
+    assert!(check_with_files(&root, &bad_filter, &[]).is_err());
 }
 
 #[test]

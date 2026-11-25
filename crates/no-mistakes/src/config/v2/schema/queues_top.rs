@@ -10,10 +10,17 @@ use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+#[path = "queues_include_tests.rs"]
+pub(crate) mod queues_include_tests;
+pub use queues_include_tests::QueueIncludeTestsConfig;
+use queues_include_tests::{deserialize_include_tests, serialize_include_tests};
+
 pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
     if patterns.is_empty() {
         return None;
     }
+    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+    crate::queue::allow_paths_test_hook::note_build();
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         if let Ok(glob) = GlobBuilder::new(pattern).literal_separator(false).build() {
@@ -61,4 +68,11 @@ pub struct QueuesTopLevelConfig {
         serialize_with = "serialize_job_state_as_record"
     )]
     pub job_state_as_record: Option<JobStateAsRecordConfig>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_include_tests",
+        serialize_with = "serialize_include_tests"
+    )]
+    pub include_tests: Option<QueueIncludeTestsConfig>,
 }

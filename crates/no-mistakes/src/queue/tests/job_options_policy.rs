@@ -90,7 +90,11 @@ fn unresolved_queue_uses_the_global_list_when_no_queue_overrides_exist() {
     };
     facts.insert(PathBuf::from("/tmp/widgets.ts"), file);
     facts.insert(PathBuf::from("/tmp/other.ts"), FileFacts::default());
-    crate::queue::job_options::judge_into_facts(Path::new("/tmp"), &mut facts);
+    crate::queue::job_options::judge_into_facts(
+        Path::new("/tmp"),
+        &mut facts,
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
     let finding = &facts
         .get(Path::new("/tmp/widgets.ts"))
         .unwrap()
@@ -126,8 +130,37 @@ fn unresolved_receiver_abstains_without_queue_overrides() {
         ..FileFacts::default()
     };
     facts.insert(PathBuf::from("/tmp/enqueue.ts"), file);
-    crate::queue::job_options::judge_into_facts(Path::new("/tmp"), &mut facts);
+    crate::queue::job_options::judge_into_facts(
+        Path::new("/tmp"),
+        &mut facts,
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
     let judged = facts.get(Path::new("/tmp/enqueue.ts")).unwrap();
     assert!(judged.job_option_findings.is_empty());
     assert!(judged.diagnostics.is_empty());
+}
+
+#[test]
+fn each_rule_builds_its_allow_matcher_once_for_multiple_files() {
+    use crate::queue::allow_paths_test_hook::take_builds;
+
+    for name in ["unbounded-retention", "job-state-as-record"] {
+        take_builds();
+        analyze_project(&fixture(name), None, &[]).unwrap();
+        assert_eq!(take_builds(), 1, "{name}");
+    }
+}
+
+#[test]
+fn empty_and_disabled_allow_lists_build_no_matcher() {
+    use crate::queue::allow_paths_test_hook::take_builds;
+
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check");
+    for rule in ["queue-retention-config", "queue-job-state-config"] {
+        for mode in ["default-on", "default-off"] {
+            take_builds();
+            analyze_project(&root.join(rule).join(mode), None, &[]).unwrap();
+            assert_eq!(take_builds(), 0, "{rule}/{mode}");
+        }
+    }
 }
