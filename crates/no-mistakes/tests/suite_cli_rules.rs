@@ -380,3 +380,6 @@ mod cli_suppression_index;
 
 #[path = "cli_queue_factory_wrappers.rs"]
 mod cli_queue_factory_wrappers;
+
+#[path = "cli_config_rule_validation.rs"]
+mod cli_config_rule_validation;

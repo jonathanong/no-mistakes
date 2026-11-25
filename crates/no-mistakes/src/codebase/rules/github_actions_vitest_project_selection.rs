@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 mod command;
 mod judge;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod runs;
 
 pub const RULE_ID: &str = "github-actions-vitest-project-selection";

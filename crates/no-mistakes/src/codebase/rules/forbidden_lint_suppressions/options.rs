@@ -46,7 +46,7 @@ impl Directive {
 }
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     pub files: Vec<String>,
     #[serde(default)]
     pub rule_ids: Vec<String>,
@@ -58,7 +58,7 @@ pub(super) struct Options {
     pub message: Option<String>,
 }
 impl Options {
-    pub(super) fn validate(&self) -> Result<GlobMatcher> {
+    pub(in crate::codebase::rules) fn validate(&self) -> Result<GlobMatcher> {
         ensure!(
             !self.files.is_empty() && self.files.iter().all(|v| !v.trim().is_empty()),
             "{RULE_ID}: files must contain at least one non-empty glob"

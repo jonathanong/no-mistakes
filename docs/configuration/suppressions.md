@@ -15,14 +15,14 @@ reportUnusedDisableDirectives: advise
 | --- | --- |
 | `advise` (default) | Return non-failing diagnostics in `advisories`. |
 | `report` | Return diagnostics in `rules`; CLI `check` exits nonzero. |
-| `ignore` | Omit suppression hygiene diagnostics. |
+| `ignore` | Report unknown rule IDs in `advisories` and omit other hygiene diagnostics. |
 
 `unused-disable-directive` means the named check rule is enabled but the
 comment hid nothing. `invalid-disable-directive` separately identifies an
 unknown rule name, a known rule that is disabled, or an ineffective comment
 placement. Use the canonical rule ID,
-not a rule application's `name`. The structured finding's `target` contains
-that ID; its `rule` identifies the hygiene diagnostic.
+which is the configured `rule` value. The structured finding's `target` contains
+the ID and its `rule` identifies the hygiene diagnostic.
 
 For example, with `postgres-explicit-columns` enabled for this SQL file:
 
@@ -46,7 +46,9 @@ a file skipped by a rule's own `exclude` option (or an option such as
 `sqlInclude`) can still be reported as unused: the audit selects files from the
 declared roots and top-level filters, not from that rule's input options. A
 known rule outside its enabled application scope is reported as disabled or out
-of scope.
+of scope. With no rule applications, unknown IDs are still checked in
+the configured project scopes. If there are no projects, the check uses
+the existing repository source inventory.
 
 PostgreSQL statement rules also audit next-line comments inside statically
 recovered executor SQL. For example, after an indexed LIMIT-bounded probe is

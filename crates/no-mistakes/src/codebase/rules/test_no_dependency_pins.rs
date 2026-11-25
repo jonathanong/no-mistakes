@@ -48,7 +48,7 @@ struct CompiledPattern {
     line_context: Option<Regex>,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     include: GlobMatcher,
     default_include: Regex,
     patterns: Vec<CompiledPattern>,
@@ -122,7 +122,7 @@ fn scan_with_sources(
     Ok(findings)
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let patterns = if opts.patterns.is_empty() {
         let dependency = DEFAULT_PATTERNS

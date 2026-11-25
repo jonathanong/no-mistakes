@@ -193,9 +193,10 @@ is unchanged; only the list, and therefore the failure decision, differs.
 no-mistakes disable comments using the selected configuration's
 `reportUnusedDisableDirectives` setting. The default `advise` puts
 `unused-disable-directive` and `invalid-disable-directive` diagnostics in
-`CheckReport.advisories`; `report` puts them in `CheckReport.rules`, and
-`ignore` omits them. Locations refer to the comment. Unknown and disabled rule
-IDs have distinct messages. `includeSuppressed` controls only the optional
+`CheckReport.advisories`. The `report` mode puts them in `CheckReport.rules`.
+The `ignore` mode keeps unknown rule IDs in `CheckReport.advisories` and omits
+other hygiene diagnostics. Locations refer to the comment. Unknown and disabled
+rule IDs have distinct messages. `includeSuppressed` controls only the optional
 ledger of hidden findings. See [suppression hygiene](configuration/suppressions.md).
 
 `check()` and `analyzeProject()` check reports include optional

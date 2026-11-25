@@ -43,7 +43,7 @@ pub(crate) fn scalar_text(value: &Value) -> Option<String> {
     }
 }
 
-fn compile(opts: &Options) -> Result<Policy> {
+pub(in crate::codebase::rules) fn compile(opts: &Options) -> Result<Policy> {
     let mut required = BTreeMap::new();
     for (name, value) in &opts.required {
         let Some(text) = scalar_text(value) else {

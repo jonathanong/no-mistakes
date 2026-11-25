@@ -1,0 +1,37 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fragment": {
+    "exitCode": 2,
+    "stderr": "error: .no-mistakes/rules/options.yml:4: invalid options for rule `github-actions-download-integrity` at options.bogusOption: unknown field `bogusOption`, expected one of `trustedHosts`, `downloadHelpers`, `shellSourceInclude`, `strictSequencing`, `skipAnnotationScope`\n"
+  },
+  "invalid-options": {
+    "exitCode": 2,
+    "stderr": "error: invalid-options.yml:6: invalid options for rule `github-actions-download-integrity` at options.bogusOption: unknown field `bogusOption`, expected one of `trustedHosts`, `downloadHelpers`, `shellSourceInclude`, `strictSequencing`, `skipAnnotationScope`\n"
+  },
+  "invalid-values": {
+    "exitCode": 2,
+    "stderr": "error: invalid-values.yml:6: github-actions-download-integrity options.downloadHelpers entry `two words` is not a command name\n"
+  },
+  "unknown": {
+    "exitCode": 2,
+    "stderr": "error: unknown.yml:3: unknown rule ID `github-actions-download-integrit`. Did you mean `github-actions-download-integrity`?\n"
+  },
+  "unknown-jsonc": {
+    "exitCode": 2,
+    "stderr": "error: unknown.jsonc:6: unknown rule ID `github-actions-download-integrit`. Did you mean `github-actions-download-integrity`?\n"
+  },
+  "unknown-map": {
+    "exitCode": 2,
+    "stderr": "error: unknown-map.yml:3: unknown rule ID `github-actions-download-integrit`. Did you mean `github-actions-download-integrity`?\n"
+  },
+  "unknown-override": {
+    "exitCode": 2,
+    "stderr": "error: unknown-override.yml:5: unknown rule ID `github-actions-download-integrit`. Did you mean `github-actions-download-integrity`?\n"
+  },
+  "unknown-project": {
+    "exitCode": 2,
+    "stderr": "error: unknown-project.yml:6: unknown rule ID `github-actions-download-integrit`. Did you mean `github-actions-download-integrity`?\n"
+  }
+}

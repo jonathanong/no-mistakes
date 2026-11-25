@@ -31,7 +31,7 @@ pub(super) const DEFAULT_FIXTURE_DIRS: &[&str] = &["fixtures", "__fixtures__"];
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     /// `forbidden-calls` root selectors. Omitted selects every Vitest project.
     pub(super) roots: Option<serde_yaml::Value>,
     pub(super) exclude_roots: Option<StringOrList>,
@@ -89,7 +89,7 @@ impl Options {
         )
     }
 
-    pub(super) fn validate(&self) -> Result<()> {
+    pub(in crate::codebase::rules) fn validate(&self) -> Result<()> {
         let empty = |value: &str| value.trim().is_empty() || value.contains(['/', '\\']);
         if let Some(dirs) = &self.fixture_dirs {
             if dirs.is_empty() || dirs.iter().any(|dir| empty(dir)) {

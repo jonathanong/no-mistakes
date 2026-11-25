@@ -1,0 +1,3 @@
+version: 2
+rules:
+  github-actions-download-integrit: true

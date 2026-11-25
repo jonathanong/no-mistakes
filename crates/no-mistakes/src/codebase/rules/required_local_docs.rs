@@ -1,4 +1,4 @@
-mod doc_section;
+pub(in crate::codebase::rules) mod doc_section;
 mod scan_pkg;
 
 pub use doc_section::{check_required_doc_section, DocSectionOptions};

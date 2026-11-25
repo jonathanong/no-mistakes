@@ -5,10 +5,10 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 pub(super) mod dispatch;
-pub(super) mod env_policy;
+pub(in crate::codebase::rules) mod env_policy;
 pub(super) mod job_lines;
-pub(super) mod no_poll_wait_job;
-pub(super) mod pr_diff_range;
+pub(in crate::codebase::rules) mod no_poll_wait_job;
+pub(in crate::codebase::rules) mod pr_diff_range;
 pub(super) mod run_scripts;
 pub(super) mod script_line;
 pub(super) mod shell_words;

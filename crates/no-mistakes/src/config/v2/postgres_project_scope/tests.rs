@@ -312,6 +312,8 @@ rules:
     projects: [db]
   - rule: postgres-key-column-types
     projects: [db]
+    options:
+      allowedTypes: [uuid]
 "#,
     )
     .unwrap();

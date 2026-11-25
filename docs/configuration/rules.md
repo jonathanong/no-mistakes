@@ -67,7 +67,8 @@ project config, not by `rules:` entries, so there is no rule entry to carry a
 The repository setting `reportUnusedDisableDirectives: advise | report | ignore`
 audits disable comments independently of rule applications. Its default is
 non-failing advice; unused comments and unknown or disabled rule names are
-reported separately. See [suppression hygiene](suppressions.md).
+reported separately. Unknown directive IDs remain advisory under `ignore`.
+See [suppression hygiene](suppressions.md).
 
 Rules are opt-in. Top-level `include` and `exclude` filters narrow each rule
 application within its selected projects. Shared project scope filtering accepts
@@ -75,17 +76,17 @@ paths relative to either the repository root or the selected project root; a
 matching glob does not select files from an unselected project. Repository-scoped
 applications use repository-relative paths.
 
-The cache-key policy (`github-actions-cache-key-policy`), action input policy
-(`github-actions-action-input-policy`), and Vitest default exclusion rule
-(`vitest-default-excludes`) treat invalid option values as configuration errors.
-`check` validates their options before any analysis runs, aborts with exit
-status 2 and empty stdout, and writes the diagnostic to stderr naming the config
-file, rule, option path, rejected value, and accepted values or constraint.
-Semantic option errors across enabled applications are sorted and printed in one
-run (a YAML schema or type error stops deserialization of that application's
-`options` object while other applications are still checked); no partial report
-or `incomplete` entry is emitted. Async Node `check()` and `analyzeProject()`
-check reports reject with the same error message.
+Configuration loading checks rule IDs and validates the option schema and
+values for every enabled application. An unknown rule ID is rejected even on a
+disabled application. The diagnostic names the config file and line, the rule,
+and the invalid option or ID. Unknown IDs include the closest registered ID.
+This also applies to rule applications loaded from config fragments.
+
+`check` exits with status 2 and empty stdout on invalid rule configuration.
+Diagnostics from option validation are written to stderr before analysis.
+Async Node `check()` and `analyzeProject()` reject invalid rule configuration
+when they load a project. Options omitted from a valid application use that
+rule's documented defaults.
 
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds

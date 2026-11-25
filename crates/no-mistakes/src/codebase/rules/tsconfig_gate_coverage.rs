@@ -4,7 +4,7 @@
 //! reports missing registrations instead of guessing through shell indirection
 //! or expressions, so its results remain deterministic and actionable.
 
-mod application;
+pub(in crate::codebase::rules) mod application;
 mod command_scan;
 mod no_check;
 mod workflow;

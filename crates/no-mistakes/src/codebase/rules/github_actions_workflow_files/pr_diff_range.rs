@@ -16,7 +16,7 @@ pub const RULE_ID: &str = "github-actions-pr-diff-range";
 
 /// The rule has no options. A non-empty options map is rejected.
 #[derive(Debug, Default, Deserialize)]
-struct Options;
+pub(in crate::codebase::rules) struct Options;
 
 pub(crate) fn check_with_files(
     root: &Path,

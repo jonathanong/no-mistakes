@@ -54,8 +54,8 @@ pub(crate) fn collect_config_errors(
     for (index, rule) in
         crate::codebase::rules::validate_options::indexed_rule_applications(config, RULE_ID)
     {
-        let mut app_errors = BTreeSet::new();
-        collect_application_errors(&root, config, rule, &mut app_errors);
+        let app_errors = collect_application_errors(&root, config, rule)
+            .unwrap_or_else(|error| BTreeSet::from([format!("{error:#}")]));
         crate::codebase::rules::validate_options::push_application_errors(
             &root,
             config,
@@ -93,25 +93,19 @@ pub(super) fn applications<'a>(
     Ok(apps)
 }
 
-fn collect_application_errors(
+pub(crate) fn collect_application_errors(
     root: &Path,
     config: &NoMistakesConfig,
     rule: &RuleDef,
-    errors: &mut BTreeSet<String>,
-) {
-    let options: Options = match rule.try_rule_options() {
-        Ok(options) => options,
-        Err(error) => {
-            errors.insert(format!("{error:#}"));
-            return;
-        }
-    };
-    collect_option_errors(&options, errors);
+) -> Result<BTreeSet<String>> {
+    let options: Options = rule.strict_rule_options()?;
+    let mut errors = BTreeSet::new();
+    collect_option_errors(&options, &mut errors);
     let filter = match RulePathFilter::new(root, config, rule) {
         Ok(filter) => filter,
         Err(error) => {
             errors.insert(format!("{error:#}"));
-            return;
+            return Ok(errors);
         }
     };
     let configured = options
@@ -128,6 +122,7 @@ fn collect_application_errors(
             ));
         }
     }
+    Ok(errors)
 }
 
 fn select_application<'a>(

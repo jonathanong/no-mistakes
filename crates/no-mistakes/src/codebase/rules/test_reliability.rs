@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 pub(crate) mod ast;
 mod findings;
-mod options;
+pub(in crate::codebase::rules) mod options;
 pub(crate) mod playwright_provenance;
 mod scope;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

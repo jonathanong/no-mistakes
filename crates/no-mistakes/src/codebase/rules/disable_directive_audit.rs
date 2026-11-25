@@ -3,6 +3,7 @@ use super::suppression::{SuppressionDirective, SuppressionDirectiveKind};
 use super::{RuleFinding, SuppressedFinding};
 mod consumed;
 mod postgres;
+mod scopes;
 use crate::codebase::ts_source::{
     audit_directives_for_path, relative_slash_path, DisableDirective, SourceStore,
 };
@@ -11,7 +12,7 @@ use anyhow::Result;
 #[doc(hidden)]
 pub use consumed::ConsumedDisableDirective;
 use rayon::prelude::*;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 /// Reuses the request inventory, source store, application scopes, and consumed
@@ -55,26 +56,8 @@ impl PreparedDisableDirectives {
         files: &[PathBuf],
         sources: &SourceStore,
     ) -> Result<Self> {
-        if config.report_unused_disable_directives == DisableDirectivePolicy::Ignore {
-            return Ok(Self {
-                root: root.to_path_buf(),
-                comments: Vec::new(),
-            });
-        }
-        let mut scopes: BTreeMap<PathBuf, BTreeSet<&str>> = BTreeMap::new();
-        for rule in &config.rules {
-            // Audit the declared application scope; domain-specific options can
-            // select inputs rather than filter source files and must not be reinterpreted.
-            let mut selected_rule = rule.clone();
-            selected_rule.enabled = true;
-            let selected = super::selected_rule_files(root, config, &selected_rule, files)?;
-            for file in selected {
-                let enabled = scopes.entry(file).or_default();
-                if rule.enabled && known_rule(&rule.rule) && config.rule_configured(&rule.rule) {
-                    enabled.insert(&rule.rule);
-                }
-            }
-        }
+        let audit_hygiene = config.audits_disable_directives() && !config.rules.is_empty();
+        let scopes = scopes::comment_scopes(root, config, files, audit_hygiene)?;
 
         let comments = scopes
             .par_iter()
@@ -85,22 +68,24 @@ impl PreparedDisableDirectives {
                 let file = relative_slash_path(root, path);
                 audit_directives_for_path(&source, path)
                     .into_iter()
-                    .map(|(named, ineffective)| {
-                        let status = if ineffective {
+                    .filter_map(|(named, ineffective)| {
+                        let status = if audit_hygiene && ineffective {
                             DirectiveStatus::IneffectivePlacement
+                        } else if !known_rule(&named.rule) {
+                            DirectiveStatus::Unknown
+                        } else if !audit_hygiene {
+                            return None;
                         } else if enabled.contains(named.rule.as_str()) {
                             DirectiveStatus::Enabled
-                        } else if known_rule(&named.rule) {
-                            DirectiveStatus::Disabled
                         } else {
-                            DirectiveStatus::Unknown
+                            DirectiveStatus::Disabled
                         };
-                        PreparedComment {
+                        Some(PreparedComment {
                             file: file.clone(),
                             rule: named.rule,
                             directive: project(named.directive),
                             status,
-                        }
+                        })
                     })
                     .collect::<Vec<_>>()
             })
@@ -109,6 +94,11 @@ impl PreparedDisableDirectives {
             root: root.to_path_buf(),
             comments,
         })
+    }
+
+    #[doc(hidden)]
+    pub fn is_empty(&self) -> bool {
+        self.comments.is_empty()
     }
 
     /// Finalization only matches retained comments to consumed provenance.
@@ -150,7 +140,7 @@ impl PreparedDisableDirectives {
             })
             .collect();
         let mut findings = self.comments.iter().filter_map(|comment| {
-            if !matches!(comment.status, DirectiveStatus::IneffectivePlacement) && used.contains(&(comment.file.clone(), comment.rule.as_str(), comment.directive.clone())) { return None }
+            if matches!(comment.status, DirectiveStatus::Enabled | DirectiveStatus::Disabled) && used.contains(&(comment.file.clone(), comment.rule.as_str(), comment.directive.clone())) { return None }
             let (rule, detail) = match comment.status {
                 DirectiveStatus::Enabled => ("unused-disable-directive", format!("directive for `{}` suppressed no findings in this invocation", comment.rule)),
                 DirectiveStatus::Disabled => ("invalid-disable-directive", format!("directive names disabled or out-of-scope rule `{}`", comment.rule)),

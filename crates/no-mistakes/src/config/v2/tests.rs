@@ -467,12 +467,13 @@ fn legacy_rule_option_apis_keep_default_fallbacks() {
 }
 
 #[test]
-fn config_view_rule_applications_are_project_scoped() {
-    let cfg = load_v2_config(&fixture("project-unknown-rule"), None).unwrap();
-    let view = ConfigView::new(&cfg);
-    let rules = view.enabled_rules_for("backend");
-    assert!(rules.iter().any(|(id, _)| *id == "known-rule"));
-    assert!(rules.iter().any(|(id, _)| *id == "ghost-rule"));
+fn unknown_project_scoped_rule_application_is_rejected() {
+    let error = load_v2_config(&fixture("project-unknown-rule"), None)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(".no-mistakes.yml:10:"), "{error}");
+    assert!(error.contains("unknown rule ID `uniqe-exports`"), "{error}");
+    assert!(error.contains("Did you mean `unique-exports`?"), "{error}");
 }
 
 // ── parse error propagation ───────────────────────────────────────────────────

@@ -43,49 +43,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "array-required": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy required values must be scalar JSON literals"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: array-required.yml:5: vitest-project-policy required values must be scalar JSON literals\n"
   },
   "array-value": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "suppressed.ts",
-          "line": 1,
-          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
-          "target": "vitest-project-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy declared.forbiddenValues must contain scalar JSON literals"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: array-value.yml:5: vitest-project-policy declared.forbiddenValues must contain scalar JSON literals\n"
   },
   "combined": {
     "exitCode": 1,
@@ -429,49 +392,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "dotted-key": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "suppressed.ts",
-          "line": 1,
-          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
-          "target": "vitest-project-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy property names must be nonempty direct test property names"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: dotted-key.yml:5: vitest-project-policy property names must be nonempty direct test property names\n"
   },
   "dotted-property": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy property names must be nonempty direct test property names"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: dotted-property.yml:5: vitest-project-policy property names must be nonempty direct test property names\n"
   },
   "dynamic-project": {
     "exitCode": 1,
@@ -529,49 +455,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "empty-key": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "suppressed.ts",
-          "line": 1,
-          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
-          "target": "vitest-project-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy property names must be nonempty direct test property names"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: empty-key.yml:5: vitest-project-policy property names must be nonempty direct test property names\n"
   },
   "empty-property": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy property names must be nonempty direct test property names"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: empty-property.yml:5: vitest-project-policy property names must be nonempty direct test property names\n"
   },
   "exclude-and-complete": {
     "exitCode": 0,
@@ -982,22 +871,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "exclude-empty-glob": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy requiredExcludeGlobs entries must be nonempty strings"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: exclude-empty-glob.yml:5: vitest-project-policy requiredExcludeGlobs entries must be nonempty strings\n"
   },
   "exclude-explicit-empty": {
     "exitCode": 0,
@@ -1767,58 +1642,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "invalid-glob": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "suppressed.ts",
-          "line": 1,
-          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
-          "target": "vitest-project-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "error parsing glob 'helpers/[': unclosed character class; missing ']'"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-glob.yml:7: invalid options for rule `vitest-project-policy`: invalid options.helpers: error parsing glob 'helpers/[': unclosed character class; missing ']'\n"
   },
   "invalid-kind": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "suppressed.ts",
-          "line": 1,
-          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
-          "target": "vitest-project-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "invalid options for rule `vitest-project-policy` at options.declared.forbidLiteralKinds.maxWorkers[0]: invalid type: unit value, expected a Value::Tagged enum"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-kind.yml:9: invalid options for rule `vitest-project-policy` at options.declared.forbidLiteralKinds.maxWorkers[0]: invalid type: unit value, expected a Value::Tagged enum\n"
   },
   "known-namespace-member": {
     "exitCode": 0,
@@ -2470,22 +2299,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "no-config": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy requires options.config naming an explicit config file"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: no-config.yml:5: vitest-project-policy requires options.config naming an explicit config file\n"
   },
   "no-projects": {
     "exitCode": 0,
@@ -2560,49 +2375,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "object-required": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy required values must be scalar JSON literals"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: object-required.yml:5: vitest-project-policy required values must be scalar JSON literals\n"
   },
   "object-value": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "suppressed.ts",
-          "line": 1,
-          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
-          "target": "vitest-project-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "vitest-project-policy declared.forbiddenValues must contain scalar JSON literals"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: object-value.yml:5: vitest-project-policy declared.forbiddenValues must contain scalar JSON literals\n"
   },
   "only-type-reexports": {
     "exitCode": 0,
@@ -2695,22 +2473,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "parity-length": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "invalid options for rule `vitest-project-policy` at options.parity[0].properties: invalid length 1, expected an array of length 2"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: parity-length.yml:7: invalid options for rule `vitest-project-policy` at options.parity[0].properties: invalid length 1, expected an array of length 2\n"
   },
   "pass": {
     "exitCode": 0,
@@ -2797,31 +2561,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "removed-required": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "suppressed.ts",
-          "line": 1,
-          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
-          "target": "vitest-project-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "invalid options for rule `vitest-project-policy` at options.declared.required: unknown field `required`, expected `forbiddenValues` or `forbidLiteralKinds`"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: removed-required.yml:8: invalid options for rule `vitest-project-policy` at options.declared.required: unknown field `required`, expected `forbiddenValues` or `forbidLiteralKinds`\n"
   },
   "repeated-helper": {
     "exitCode": 0,
@@ -3270,22 +3011,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "unknown-option": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `requiredExcludeGlobs`, `parity`, `declared`"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: unknown-option.yml:7: invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `requiredExcludeGlobs`, `parity`, `declared`\n"
   },
   "unresolved-local-export": {
     "exitCode": 1,

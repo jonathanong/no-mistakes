@@ -75,16 +75,9 @@ pub(super) fn scan_doc_section_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    if opts.glob.is_empty() || opts.required_heading.is_empty() {
+    let Some(glob_set) = compile_options(opts)? else {
         return Ok(Vec::new());
-    }
-    let glob_set = GlobSetBuilder::new()
-        .add(
-            GlobBuilder::new(&opts.glob)
-                .literal_separator(true)
-                .build()?,
-        )
-        .build()?;
+    };
     let mut findings = Vec::new();
     for file in files {
         let rel = relative_slash_path(root, file);
@@ -113,4 +106,20 @@ pub(super) fn scan_doc_section_with_sources(
         }
     }
     Ok(findings)
+}
+
+pub(in crate::codebase::rules) fn compile_options(
+    opts: &DocSectionOptions,
+) -> Result<Option<globset::GlobSet>> {
+    if opts.glob.is_empty() || opts.required_heading.is_empty() {
+        return Ok(None);
+    }
+    let glob_set = GlobSetBuilder::new()
+        .add(
+            GlobBuilder::new(&opts.glob)
+                .literal_separator(true)
+                .build()?,
+        )
+        .build()?;
+    Ok(Some(glob_set))
 }

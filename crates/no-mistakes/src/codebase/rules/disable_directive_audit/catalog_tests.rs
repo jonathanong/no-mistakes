@@ -90,7 +90,7 @@ fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {
     assert!(!known_rule("typo-configured-as-a-rule"));
 }
 
-fn recent_fixture() -> (PathBuf, Vec<PathBuf>, NoMistakesConfig) {
+pub(super) fn recent_fixture() -> (PathBuf, Vec<PathBuf>, NoMistakesConfig) {
     let root = super::tests::root();
     let files = vec![root.join("recent-rules.mts")];
     let config = serde_yaml::from_str(include_str!(
