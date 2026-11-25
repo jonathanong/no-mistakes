@@ -81,6 +81,8 @@ fn unresolved_queue_uses_the_global_list_when_no_queue_overrides_exist() {
             binding: None,
             queue_name: None,
             queue_file: None,
+            declaration: None,
+            ambiguous_defaults: false,
             job: Some("paint".to_string()),
             evidence: JobOptionEvidence::default(),
         }],
@@ -88,7 +90,7 @@ fn unresolved_queue_uses_the_global_list_when_no_queue_overrides_exist() {
     };
     facts.insert(PathBuf::from("/tmp/widgets.ts"), file);
     facts.insert(PathBuf::from("/tmp/other.ts"), FileFacts::default());
-    crate::queue::job_options::judge_into_facts(&mut facts);
+    crate::queue::job_options::judge_into_facts(Path::new("/tmp"), &mut facts);
     let finding = &facts
         .get(Path::new("/tmp/widgets.ts"))
         .unwrap()
@@ -116,13 +118,15 @@ fn unresolved_receiver_abstains_without_queue_overrides() {
             )),
             queue_name: None,
             queue_file: None,
+            declaration: None,
+            ambiguous_defaults: false,
             job: Some("red".to_string()),
             evidence: JobOptionEvidence::default(),
         }],
         ..FileFacts::default()
     };
     facts.insert(PathBuf::from("/tmp/enqueue.ts"), file);
-    crate::queue::job_options::judge_into_facts(&mut facts);
+    crate::queue::job_options::judge_into_facts(Path::new("/tmp"), &mut facts);
     let judged = facts.get(Path::new("/tmp/enqueue.ts")).unwrap();
     assert!(judged.job_option_findings.is_empty());
     assert!(judged.diagnostics.is_empty());

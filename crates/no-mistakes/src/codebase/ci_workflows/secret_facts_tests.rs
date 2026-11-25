@@ -184,6 +184,7 @@ fn failed_source_read_is_recorded_for_preparsed_documents() {
     let value = serde_yaml::from_str(source).unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: "missing.yml".into(),
             value: Ok(value),
         }],

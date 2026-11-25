@@ -2,7 +2,9 @@ use super::common_graph_args::GraphCommandArgs;
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use no_mistakes::cli::{resolve_root, root_scoped_edge_depth, Format};
-use no_mistakes::queue::{analyze_project_indexed, analyze_project_with_config, RelatedDirection};
+use no_mistakes::queue::{
+    analyze_project_indexed, analyze_project_with_config, CheckFinding, RelatedDirection,
+};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -114,7 +116,7 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
                 format,
                 *include_diagnostics,
             )?;
-            Ok(if report.check.is_empty() {
+            Ok(if report.check.iter().all(CheckFinding::is_advisory) {
                 ExitCode::SUCCESS
             } else {
                 ExitCode::from(1)

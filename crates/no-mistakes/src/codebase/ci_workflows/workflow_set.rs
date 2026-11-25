@@ -13,6 +13,7 @@ use rayon::prelude::*;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 /// A workflow YAML load failure retained for consumer-specific rendering.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,6 +37,9 @@ pub struct ParsedWorkflowDocument {
     pub path: String,
     /// Raw GitHub Actions YAML, parsed exactly once for this request.
     pub value: Result<Value, WorkflowDocumentError>,
+    /// Source for distinguishing plain merge keys from quoted string keys.
+    #[doc(hidden)]
+    pub source: Option<Arc<str>>,
 }
 
 /// All configured workflow documents for one invocation, sorted by path.
@@ -116,7 +120,15 @@ impl ParsedWorkflowSet {
                         message: error.to_string(),
                     })
                     .map(|value| value.as_ref().clone());
-                ParsedWorkflowDocument { path, value }
+                let source = value
+                    .as_ref()
+                    .ok()
+                    .and_then(|_| sources.read_path(&absolute).ok());
+                ParsedWorkflowDocument {
+                    path,
+                    value,
+                    source,
+                }
             })
             .collect::<Vec<_>>();
 

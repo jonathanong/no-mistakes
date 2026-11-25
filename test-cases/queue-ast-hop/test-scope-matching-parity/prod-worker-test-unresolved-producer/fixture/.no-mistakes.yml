@@ -1,0 +1,12 @@
+version: 2
+projects:
+  app:
+    root: .
+    queues:
+      enqueues: ["src/**/*.mts", "tests/**/*.mts"]
+      workers: ["src/**/*.mts", "tests/**/*.mts"]
+tests:
+  vitest:
+    projects:
+      integration:
+        include: ["tests/**/*.test.mts"]
