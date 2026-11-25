@@ -1,3 +1,4 @@
+use super::prepare::check_prepared;
 use super::*;
 use crate::codebase::ci_workflows::ParsedWorkflowSet;
 use std::sync::Arc;

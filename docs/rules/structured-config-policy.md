@@ -199,8 +199,9 @@ still reported as missing. Rule-level custom messages apply to these
 diagnostics.
 
 Structured-data parse errors remain definite findings under every policy.
-Only a source read failure is routed as uncertainty; the rule never treats
-an unavailable document as an absent optional config key.
+Source read failures and YAML merge keys whose source locations could not
+be determined follow `options.unanalyzable`. An unavailable document
+cannot establish that an optional key is absent.
 
 ## Suppression
 
@@ -237,9 +238,10 @@ dropped. The rule reports a merge that cannot be applied at the original
 `<<` key, including keys in flow mappings and anchored mappings that are
 aliased elsewhere. The finding uses `failed to apply YAML merge keys`.
 `options.unanalyzable` does not change that. If the parser cannot match a
-`<<` key to its source location, the rule reports a merge error at the start
-of the document. A quoted `"<<"` key is literal,
-as is a `<<` key in JSON or JSONC.
+`<<` key to its source location, the rule applies the unanalyzable policy
+at the start of the document. Write the merged keys explicitly to restore
+analysis. A `"<<"` key whose source confirms it is quoted is literal, as
+is a `<<` key in JSON or JSONC.
 
 ```yaml
 label: &label plain

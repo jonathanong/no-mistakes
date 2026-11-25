@@ -343,8 +343,9 @@ The topology parser expands plain YAML 1.1 merge keys throughout the
 document before reading triggers, concurrency, jobs, and steps. Quoted
 `"<<"` keys remain literal. A merge that cannot be applied is reported as
 a malformed workflow even when it appears only inside a job or step. A
-`<<` key the parser cannot match to its source location also makes the
-workflow malformed.
+`<<` key the parser cannot match to its source location prevents workflow
+analysis. The rule follows `options.unanalyzable` for that workflow. Write
+the merged keys explicitly so the rule can verify the document.
 
 This expansion is an offline analysis convention. GitHub Actions supports
 anchors and aliases under YAML 1.2. Use an alias for a whole mapping or

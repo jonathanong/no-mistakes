@@ -6,7 +6,12 @@ pub(super) enum KeyLocation {
     Literal,
 }
 
-pub(super) type KeyLocationResult = Result<KeyLocation, (usize, String)>;
+pub(super) enum MergeError {
+    MissingLocation(usize),
+    Invalid { line: usize, message: String },
+}
+
+pub(super) type KeyLocationResult = Result<KeyLocation, MergeError>;
 
 /// Copy YAML 1.1 merge keys into their parent mapping, in place.
 ///
@@ -17,13 +22,13 @@ pub(super) type KeyLocationResult = Result<KeyLocation, (usize, String)>;
 /// not a mapping, or a sequence of mappings, cannot be applied and is returned
 /// as an error instead of being dropped.
 pub(crate) fn expand_merge_keys(value: &mut Value) -> Result<(), String> {
-    expand_located(value, &|_| Ok(KeyLocation::Merge(0))).map_err(|(_, message)| message)
+    expand_located(value, &|_| Ok(KeyLocation::Merge(0))).map_err(|error| error.detail().1)
 }
 
 pub(super) fn expand_located(
     value: &mut Value,
     locate_key: &impl Fn(&str) -> KeyLocationResult,
-) -> Result<(), (usize, String)> {
+) -> Result<(), MergeError> {
     let mut pending = vec![value];
     while let Some(value) = pending.pop() {
         match value {
@@ -46,7 +51,7 @@ pub(super) fn expand_located(
 fn take_merge(
     mapping: &mut Mapping,
     locate_key: &impl Fn(&str) -> KeyLocationResult,
-) -> Result<Option<(Value, usize)>, (usize, String)> {
+) -> Result<Option<(Value, usize)>, MergeError> {
     if !mapping.contains_key("<<") {
         return Ok(None);
     }
@@ -66,14 +71,16 @@ fn merge_sources(
     merge: Value,
     line: usize,
     locate_key: &impl Fn(&str) -> KeyLocationResult,
-) -> Result<(), (usize, String)> {
+) -> Result<(), MergeError> {
     let mut pending = Vec::new();
-    push_merge_sources(merge, &mut pending).map_err(|message| (line, message))?;
+    push_merge_sources(merge, &mut pending)
+        .map_err(|message| MergeError::Invalid { line, message })?;
     // Each source's explicit keys win over its own merge, which is consumed
     // before later sequence sources. No merge source is copied or revisited.
     while let Some(mut source) = pending.pop() {
         if let Some((merge, line)) = take_merge(&mut source, locate_key)? {
-            push_merge_sources(merge, &mut pending).map_err(|message| (line, message))?;
+            push_merge_sources(merge, &mut pending)
+                .map_err(|message| MergeError::Invalid { line, message })?;
         }
         for (key, value) in source {
             mapping.entry(key).or_insert(value);
@@ -105,5 +112,17 @@ fn reject(found: &Value, wanted: &str) -> String {
         Value::Tagged(_) => "unexpected tagged value in merge".to_string(),
         Value::Sequence(_) => format!("expected {wanted} for merging, but found sequence"),
         _ => format!("expected {wanted} for merging, but found scalar"),
+    }
+}
+
+impl MergeError {
+    pub(super) fn detail(self) -> (usize, String) {
+        match self {
+            Self::MissingLocation(line) => (
+                line,
+                "could not match a YAML `<<` key to its source location".to_string(),
+            ),
+            Self::Invalid { line, message } => (line, message),
+        }
     }
 }

@@ -1,4 +1,5 @@
 mod nextjs;
+mod topology;
 use super::*;
 use no_mistakes::codebase::rules::analysis_policy::AnalysisDiagnostics;
 
@@ -172,6 +173,8 @@ pub(super) fn run(
     } else {
         config
     };
+    let config = topology::run(root, config, &prepared, defer_suppression, &mut diagnostics)?;
+    let config = config.as_ref();
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

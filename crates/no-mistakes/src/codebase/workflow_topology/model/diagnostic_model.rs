@@ -15,6 +15,7 @@ pub enum Severity {
 #[serde(rename_all = "kebab-case")]
 pub enum DiagnosticCode {
     MalformedWorkflow,
+    UnlocatedYamlMerge,
     MissingNeedsDependency,
     JobDependencyCycle,
     DuplicateStepId,
@@ -48,6 +49,7 @@ impl DiagnosticCode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::MalformedWorkflow => "malformed-workflow",
+            Self::UnlocatedYamlMerge => "unlocated-yaml-merge",
             Self::MissingNeedsDependency => "missing-needs-dependency",
             Self::JobDependencyCycle => "job-dependency-cycle",
             Self::DuplicateStepId => "duplicate-step-id",

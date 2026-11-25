@@ -119,3 +119,16 @@ fn check_json_snapshot_workflow_policy_valid_nested_merges() {
     )];
     assert_saved_fixture("workflow_policy_valid_nested_merges", &cases);
 }
+
+#[test]
+fn check_json_snapshot_workflow_policy_merge_location_unavailable() {
+    const RULE: &str = "workflow-topology-policy";
+    let cases = ["unavailable", "advise", "ignore"].map(|mode| {
+        (
+            mode,
+            rules_path(RULE, "fixture", "merge-location-unavailable"),
+            rules_path(RULE, "configs", &format!("merge-location-{mode}.yml")),
+        )
+    });
+    assert_saved_fixture("workflow_policy_merge_location_unavailable", &cases);
+}

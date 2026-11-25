@@ -2,7 +2,7 @@ use super::paths::contained_in_root;
 use super::value_assertions::selector::{any_groups, values_at_selector};
 use super::{MatchMode, ValueAssertion, RULE_ID};
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::structured_value::parse_structured_value;
+use crate::codebase::structured_value::parse_structured_value_located;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
@@ -53,8 +53,11 @@ pub(super) fn check_equals_file(
             format!("{rel}: equals-file `{}` is missing", assertion.file),
         )];
     };
-    let other = match parse_structured_value(&other_path, &source) {
+    let other = match parse_structured_value_located(&other_path, &source) {
         Ok(other) => other,
+        Err(error) if error.missing_merge_location => {
+            return vec![super::merge_location_finding(root, &other_path, error)];
+        }
         Err(error) => {
             return vec![finding(
                 &other_rel,

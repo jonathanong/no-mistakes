@@ -89,14 +89,16 @@ pub(super) fn spawn<'a>(
                         "prepared workflow documents are required for {WORKFLOW_TOPOLOGY_POLICY}"
                     )
                 })?;
-                workflow_topology_policy::check_prepared(
+                workflow_topology_policy::diagnostics_prepared(
                     root,
                     config,
                     session,
                     sources,
                     inputs,
                     config_path,
+                    true,
                 )
+                .map(|output| output.findings)
             });
             acc.lock()
                 .expect("mutex poisoned")

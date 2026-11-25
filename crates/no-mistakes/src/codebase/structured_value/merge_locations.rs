@@ -1,6 +1,5 @@
 use super::document_spans::{document_spans, DocumentSpan};
-use super::merge_keys::{expand_located, KeyLocation};
-use super::plain_merge_scan::has_plain_merge_key;
+use super::merge_keys::{expand_located, KeyLocation, MergeError};
 use crate::fx::FxHashMap;
 use granit_parser::{Event, Parser, ScalarStyle};
 use serde_yaml::Value;
@@ -90,7 +89,7 @@ impl<'a> MergeLocations<'a> {
         locations
     }
 
-    pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), (usize, String)> {
+    pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), MergeError> {
         let doc_span = self.doc_spans.get(index).copied();
         let doc_source = doc_span.map_or(self.source, |span| {
             &self.source[span.start_byte..span.end_byte]
@@ -112,18 +111,11 @@ impl<'a> MergeLocations<'a> {
             .unwrap_or(1);
         let locations =
             root.map_or_else(FxHashMap::default, |root| self.key_locations(root, value));
-        let literal_only = !has_plain_merge_key(doc_source);
         expand_located(value, &|key| {
-            if let Some(location) = locations.get(&key.as_ptr()).copied() {
-                return Ok(location);
-            }
-            if literal_only {
-                return Ok(KeyLocation::Literal);
-            }
-            Err((
-                fallback_line,
-                "could not match a YAML `<<` key to its source location".to_string(),
-            ))
+            locations
+                .get(&key.as_ptr())
+                .copied()
+                .ok_or(MergeError::MissingLocation(fallback_line))
         })
     }
 

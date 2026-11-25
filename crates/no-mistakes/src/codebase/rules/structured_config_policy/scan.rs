@@ -58,13 +58,17 @@ pub(super) fn scan_with_state(
             let value =
                 match crate::codebase::structured_value::parse_structured_value_located(&path, &source) {
                     Ok(value) => value,
-                    Err((line, error)) => {
+                    Err(error) if error.missing_merge_location => {
+                        findings.push(super::merge_location_finding(root, &path, error));
+                        continue;
+                    }
+                    Err(error) => {
                         findings.push(RuleFinding {
                             causes: Vec::new(),
                             rule: RULE_ID.to_string(),
                             file: rel.clone(),
-                            line: line.unwrap_or(1),
-                            message: format!("{rel}: {error}"),
+                            line: error.line.unwrap_or(1),
+                            message: format!("{rel}: {}", error.message),
                             import: None,
                             target: None,
                         });

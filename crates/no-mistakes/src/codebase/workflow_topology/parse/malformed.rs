@@ -2,6 +2,14 @@ use super::super::model;
 use super::ParsedWorkflow;
 
 pub(crate) fn malformed_workflow(path: &str, message: &str) -> ParsedWorkflow {
+    unavailable_workflow(path, model::DiagnosticCode::MalformedWorkflow, message)
+}
+
+pub(super) fn unavailable_workflow(
+    path: &str,
+    code: model::DiagnosticCode,
+    message: &str,
+) -> ParsedWorkflow {
     ParsedWorkflow {
         node: model::WorkflowNode {
             id: path.to_string(),
@@ -17,11 +25,7 @@ pub(crate) fn malformed_workflow(path: &str, message: &str) -> ParsedWorkflow {
         },
         jobs: Vec::new(),
         edges: Vec::new(),
-        diagnostics: vec![model::WorkflowTopologyDiagnostic::new(
-            model::DiagnosticCode::MalformedWorkflow,
-            message.to_string(),
-            path,
-        )],
+        diagnostics: vec![model::WorkflowTopologyDiagnostic::new(code, message, path)],
         output_references: Vec::new(),
     }
 }
