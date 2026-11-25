@@ -10,7 +10,10 @@ function readFields(key: string) {
   consume(loadFixture("large-number")[1e12]);
   consume(loadFixture("dynamic")[key]);
   consume(loadFixture("prototype").constructor);
+  consume(loadFixture("computed-proto")["constructor"]);
+  consume(loadFixture("surrogate-computed")["\uD800"]);
   consume(loader.fetch("member").size);
+  other("\uD800");
 
   const local = loadFixture("alias");
   type FixtureType = typeof local;
@@ -25,6 +28,18 @@ function readFields(key: string) {
 
   const { [key]: computed } = loadFixture("computed-binding");
   consume(computed);
+
+  const { constructor: ctor } = loadFixture("destructured-proto");
+  consume(ctor);
+
+  const { "\uD800": surrogateKey } = loadFixture("surrogate-key");
+  consume(surrogateKey);
+
+  const { details: [nestedItem] } = loadFixture("nested-array-pattern");
+  consume(nestedItem);
+
+  const { details: [defaultItem] = [] } = loadFixture("default-array");
+  consume(defaultItem);
 
   const { ...rest } = loadFixture("rest");
   consume(rest);

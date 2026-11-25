@@ -107,7 +107,7 @@ impl<'a> Trace<'_, 'a> {
                     }
                 }
                 if !used && !path.is_empty() {
-                    self.record(path)?;
+                    self.paths.insert(path);
                 }
             }
             BindingPattern::ObjectPattern(pattern) if pattern.rest.is_none() => {

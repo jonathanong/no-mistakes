@@ -58,4 +58,7 @@ fn omits_attribute_paths_for_unreliable_diffs() {
     ] {
         assert_eq!(diff(&base, &fixture(name)), None, "{name}");
     }
+    assert_eq!(diff(&[0xff], &base), None);
+    assert_eq!(diff(&base, &[0xff]), None);
+    assert_eq!(diff(&fixture("invalid.json"), &base), None);
 }
