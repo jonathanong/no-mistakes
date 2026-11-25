@@ -7,6 +7,10 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         rules::github_actions_docker_host_ports::RULE_ID,
         decode::<NoOptions>,
     ),
+    (
+        rules::GITHUB_ACTIONS_NO_INSTA_SNAPSHOT_UPDATES,
+        decode::<NoOptions>,
+    ),
     (rules::GITHUB_ACTIONS_PR_DIFF_RANGE, decode::<NoOptions>),
     (rules::MARKDOWN_MERMAID_VALIDATION, decode::<NoOptions>),
     (rules::NO_MISTAKES_CONFIG, decode::<NoOptions>),

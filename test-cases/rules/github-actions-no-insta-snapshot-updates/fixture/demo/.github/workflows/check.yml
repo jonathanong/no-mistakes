@@ -1,0 +1,9 @@
+name: Tests
+on: [pull_request]
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo test
+        env:
+          INSTA_UPDATE: always

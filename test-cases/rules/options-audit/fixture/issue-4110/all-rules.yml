@@ -31,6 +31,7 @@ rules:
   - {rule: github-actions-job-timeouts, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-local-action-checkout, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-max-inline-script-lines, scope: repository, options: {bogusOption: true}}
+  - {rule: github-actions-no-insta-snapshot-updates, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-no-poll-wait-job, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-pinned-hash, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-pr-diff-range, scope: repository, options: {bogusOption: true}}
@@ -80,6 +81,7 @@ rules:
   - {rule: postgres-conflict-ordering, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-constraint-validate, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-duplicate-function-body, scope: repository, options: {bogusOption: true}}
+  - {rule: postgres-explain-write-rollback, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-explicit-columns, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-finite-text-columns, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-fk-index, scope: repository, options: {bogusOption: true}}

@@ -76,6 +76,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`forbidden-calls`](forbidden-calls.md)                                       | Prevent configured roots from invoking selected functions.                      |
 | [`coverage-producer-assertion-owner`](coverage-producer-assertion-owner.md) | Require configured coverage producers to reach assertion owners. |
 | [`github-actions-env-policy`](github-actions-env-policy.md) | Require or forbid `env:` values at workflow, job and step scope. |
+| [`github-actions-no-insta-snapshot-updates`](github-actions-no-insta-snapshot-updates.md) | Ban Insta modes that accept snapshots in GitHub Actions. |
 | [`github-actions-action-input-policy`](github-actions-action-input-policy.md)     | Require or ban `with:` inputs for each configured action family.            |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-cache-key-policy`](github-actions-cache-key-policy.md)           | Require configured platform fragments and lockfile provenance in actions/cache keys. |
@@ -124,6 +125,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`pnpm-overrides-ban`](pnpm-overrides-ban.md)                                 | Ban pnpm dependency version overrides; keep packageExtensions.                  |
 | [`pnpm-release-age-policy`](pnpm-release-age-policy.md)                       | Keep minimumReleaseAgeExclude aligned with registries and Dependabot cooldown. |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
+| [`postgres-explain-write-rollback`](postgres-explain-write-rollback.md) | Flag executing PostgreSQL write plans that can persist in standalone scripts. |
 | [`postgres-explicit-columns`](postgres-explicit-columns.md)                       | Require explicit column lists instead of `SELECT *` on wide tables.         |
 | [`postgres-bounded-statements`](postgres-bounded-statements.md)                   | Require a LIMIT, a unique-key lookup or an aggregate on statements that can match many rows. |
 | [`postgres-generated-column-predicates`](postgres-generated-column-predicates.md) | Ban predicates and sorts on generated timestamp columns.                     |

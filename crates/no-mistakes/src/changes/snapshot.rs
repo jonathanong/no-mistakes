@@ -34,7 +34,11 @@ impl Snapshot {
         let mut entries = Vec::new();
         let mut reasons = Vec::new();
         let mut link_paths = BTreeSet::new();
-        for entry in WalkBuilder::new(&root).standard_filters(false).build() {
+        for entry in WalkBuilder::new(&root)
+            .standard_filters(false)
+            .filter_entry(|entry| entry.depth() == 0 || entry.file_name() != ".git")
+            .build()
+        {
             let entry = match entry {
                 Ok(entry) => entry,
                 Err(error) => {

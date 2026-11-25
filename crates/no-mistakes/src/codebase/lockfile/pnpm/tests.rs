@@ -340,13 +340,13 @@ fn planning_validation_rejects_invalid_versions_and_sections() {
     ] {
         assert!(
             matches!(
-                validate_for_planning(content),
+                prepare_documents(content).map(|_| ()),
                 Err(PnpmValidationError::UnsupportedSchema)
             ),
             "unexpected validation result for {content:?}"
         );
     }
-    assert!(validate_for_planning("lockfileVersion: 9\npackages: {}\n").is_ok());
+    assert!(prepare_documents("lockfileVersion: 9\npackages: {}\n").is_ok());
 }
 
 #[test]

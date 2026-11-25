@@ -49,6 +49,13 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
             .map(drop)
         },
     ),
+    (
+        rules::postgres_explain_write_rollback::RULE_ID,
+        |rule, _| {
+            rules::postgres_explain_write_rollback::validate_options(&rule.strict_rule_options()?)
+                .map(drop)
+        },
+    ),
     (rules::postgres_explicit_columns::RULE_ID, |rule, _| {
         rules::postgres_explicit_columns::compile_options(&rule.strict_rule_options()?).map(drop)
     }),

@@ -32,6 +32,19 @@ pub(super) fn files(
             .cloned()
             .collect()
         }
+        POSTGRES_EXPLAIN_WRITE_ROLLBACK => match facts {
+            Some(facts) => candidates
+                .iter()
+                .filter(|path| facts.postgres.explain_write_rollback.contains_key(*path))
+                .cloned()
+                .collect(),
+            None => {
+                postgres_explain_write_rollback::required_files(root, config, candidates, sources)?
+                    .iter()
+                    .cloned()
+                    .collect()
+            }
+        },
         REQUIRED_COMPANION_IMPORTS => facts
             .and_then(|facts| {
                 facts
