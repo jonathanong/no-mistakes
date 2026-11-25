@@ -16,3 +16,8 @@ class Registrations {
     suite.describe.serial("method parameter", () => {});
   }
 }
+
+function LegacySuite() {
+  this.runner = makeUnrelatedRunner();
+}
+new LegacySuite().runner.describe.serial("unrelated constructor", () => {});

@@ -550,7 +550,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "playwright-no-serial",
           "file": "tests/let-later.spec.ts",
-          "message": "tests/let-later.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+          "message": "tests/let-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -561,6 +561,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "playwright-no-serial",
           "file": "tests/loop.spec.ts",
           "message": "tests/loop.spec.ts:4: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/member-boundaries.spec.ts",
+          "message": "tests/member-boundaries.spec.ts:4: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -595,7 +600,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "test-no-retries",
           "file": "tests/let-later.spec.ts",
-          "message": "tests/let-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+          "message": "tests/let-later.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
         {
           "consumer": "test-no-retries",
@@ -606,6 +611,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "test-no-retries",
           "file": "tests/loop.spec.ts",
           "message": "tests/loop.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/member-boundaries.spec.ts",
+          "message": "tests/member-boundaries.spec.ts:6: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
         {
           "consumer": "test-no-retries",
