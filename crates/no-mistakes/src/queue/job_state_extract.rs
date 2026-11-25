@@ -1,3 +1,4 @@
+use super::actions::Action;
 use super::stmts::analyze_statements;
 use super::{JobStatePattern, JobStateSite};
 use crate::queue::extract_model::ProducerBinding;
@@ -71,13 +72,14 @@ pub(super) fn record(
     visitor: &QueueVisitor<'_>,
     start: u32,
     binding: ProducerBinding,
-    action_binding: Option<ProducerBinding>,
+    action: Action,
     pattern: JobStatePattern,
     sites: &mut Vec<JobStateSite>,
     seen: &mut HashSet<(usize, JobStatePattern)>,
 ) {
     let line = line_number(visitor.source, start);
     if seen.insert((line, pattern)) {
+        let (action_binding, uncertain_item) = action.into_site();
         sites.push(JobStateSite {
             line,
             binding,
@@ -85,6 +87,7 @@ pub(super) fn record(
             queue_file: None,
             queue_name: None,
             unresolved_receiver: false,
+            uncertain_item,
             pattern,
         });
     }

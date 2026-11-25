@@ -1,0 +1,1 @@
+{ "name": "@example/no-exports", "main": "dist/index.cjs" }

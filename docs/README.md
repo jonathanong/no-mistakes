@@ -48,19 +48,20 @@ online scan is scoped to changed files, a deletion or rename adds an offline
 check across all documentation to find broken links in unchanged pages.
 Changes to the link-check configuration, including Lychee arguments such as
 exclusions and remaps, trigger a full scan. Pushes and manual runs also check
-the full documentation set. The gateway wrapper retries the selected documents using
-the `LYCHEE_GATEWAY_WAIT` schedule and the initial check’s GitHub API credentials
-in [the workflow](../.github/workflows/ci.yml). After those attempts, a fresh report
-containing only HTTP 5xx responses for links to `github.com` is inconclusive:
-CI emits warnings with the affected URLs rather than treating a server error as
-proof of a broken link. The final report remains in the job summary for diagnosis.
+the full documentation set.
+
+The [gateway wrapper](../.github/scripts/lychee-gateway.cjs) preserves the
+Lychee report and warns immediately when it contains the reported GitHub
+HTTP/2 protocol error, every other error is a GitHub HTTP 5xx response or the
+same protocol error, and there are zero timeouts. The warning lists the URLs
+whose validity remains unknown. It uses the existing bounded retry schedule
+for reports containing only retryable HTTP responses. A fresh report with only
+GitHub HTTP 5xx errors also warns once those attempts are exhausted.
 
 The selector tests require the same `yq` v4 executable used on the CI runner.
 
-HTTP 404 and other client errors, failures from other hosts, timeouts, incomplete
-reports (including an unterminated final entry), and checker execution errors
-still fail the gate. A report containing a GitHub server error alongside any such
-failure cannot pass. The wrapper removes
-the previous report before each attempt so a checker crash cannot reuse stale
-results. It does not turn all link failures into accepted status codes or rerun
-CI jobs.
+HTTP 404 and other client errors, persisting failures from other hosts,
+timeouts, incomplete reports, and checker execution errors still fail the
+gate. The wrapper removes the previous report before each existing retry so a
+checker crash cannot reuse stale results. The final report stays in the job
+summary.
