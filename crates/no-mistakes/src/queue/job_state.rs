@@ -1,6 +1,6 @@
 use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::codebase::ts_source::FrozenPathRemapper;
-use crate::config::v2::schema::{JobStateAsRecordConfig, QueuesTopLevelConfig};
+use crate::config::v2::schema::QueuesTopLevelConfig;
 use crate::queue::extract_model::{FileFacts, ProducerBinding};
 use crate::queue::graph_model::{CheckFinding, CheckSeverity};
 use crate::queue::graph_resolution::{local_queues, resolved_binding};
@@ -15,6 +15,8 @@ mod actions;
 mod expr;
 #[path = "job_state_extract.rs"]
 mod extract;
+#[path = "job_state_item.rs"]
+mod item;
 #[path = "job_state_listing.rs"]
 mod listing;
 #[path = "job_state_stmts.rs"]
@@ -38,6 +40,7 @@ pub(crate) struct JobStateSite {
     pub queue_file: Option<PathBuf>,
     pub queue_name: Option<String>,
     pub unresolved_receiver: bool,
+    pub uncertain_item: bool,
     pub pattern: JobStatePattern,
 }
 
@@ -115,13 +118,24 @@ pub(super) fn findings_and_diagnostics(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
+    let policy = facts.values().find_map(|file| {
+        file.job_state_as_record
+            .as_ref()
+            .filter(|_| !file.job_state_sites.is_empty())
+    });
+    let Some(policy) = policy else {
+        return (Vec::new(), Vec::new());
+    };
+    let allow = policy.allow_globset();
     let mut out = Vec::new();
     let mut diags = Vec::new();
     for (path, file) in facts {
-        let Some(policy) = &file.job_state_as_record else {
-            continue;
-        };
-        if file.job_state_sites.is_empty() || is_allowed(root, path, policy) {
+        if file.job_state_as_record.is_none()
+            || file.job_state_sites.is_empty()
+            || allow
+                .as_ref()
+                .is_some_and(|globset| globset.is_match(relative_string(root, path)))
+        {
             continue;
         }
         for site in &file.job_state_sites {
@@ -137,6 +151,16 @@ pub(super) fn findings_and_diagnostics(
                 }
                 continue;
             };
+            if site.uncertain_item {
+                diags.push(Diagnostic {
+                    kind: DiagnosticKind::CheckAbstention,
+                    severity: Severity::Warning,
+                    file: relative_string(root, path),
+                    line: site.line,
+                    message: "job-state-as-record was not judged because the enqueue argument's listing item dependency is not statically known".to_string(),
+                });
+                continue;
+            }
             out.push(CheckFinding {
                 kind: "job-state-as-record".to_string(),
                 file: relative_string(root, path),
@@ -153,12 +177,6 @@ pub(super) fn findings_and_diagnostics(
         }
     }
     (out, diags)
-}
-
-fn is_allowed(root: &Path, path: &Path, policy: &JobStateAsRecordConfig) -> bool {
-    policy
-        .allow_globset()
-        .is_some_and(|globset| globset.is_match(relative_string(root, path)))
 }
 
 fn message(pattern: JobStatePattern) -> &'static str {

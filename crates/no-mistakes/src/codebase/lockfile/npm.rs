@@ -1,6 +1,23 @@
 use super::{ResolutionKind, ResolvedPackage};
-use anyhow::{ensure, Context, Result};
 use serde_json::{Map, Value};
+use std::fmt;
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum NpmValidationError {
+    UnsupportedVersion,
+    Malformed(String),
+}
+
+impl fmt::Display for NpmValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnsupportedVersion => f.write_str("unsupported npm lockfile version"),
+            Self::Malformed(message) => f.write_str(message),
+        }
+    }
+}
+
+impl std::error::Error for NpmValidationError {}
 
 pub fn parse(content: &str) -> Vec<ResolvedPackage> {
     let Ok(root) = serde_json::from_str::<serde_json::Value>(content) else {
@@ -21,35 +38,45 @@ fn parse_root(root: &Value) -> Vec<ResolvedPackage> {
     }
 }
 
-pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>> {
-    let root: Value = serde_json::from_str(content).context("invalid npm lockfile JSON")?;
+pub(crate) fn parse_checked(
+    content: &str,
+) -> std::result::Result<Vec<ResolvedPackage>, NpmValidationError> {
+    let root: Value = serde_json::from_str(content)
+        .map_err(|_| NpmValidationError::Malformed("invalid npm lockfile JSON".into()))?;
     match root.get("lockfileVersion").and_then(Value::as_u64) {
         Some(1) if root.get("dependencies").is_none() => {}
         Some(1) => {
             let dependencies = root["dependencies"]
                 .as_object()
-                .context("invalid npm dependencies")?;
+                .ok_or_else(|| NpmValidationError::Malformed("invalid npm dependencies".into()))?;
             validate_records(dependencies, true)?;
         }
         Some(2 | 3) => {
             let packages = root
                 .get("packages")
                 .and_then(Value::as_object)
-                .context("invalid npm packages")?;
+                .ok_or_else(|| NpmValidationError::Malformed("invalid npm packages".into()))?;
             validate_records(packages, false)?;
         }
-        _ => anyhow::bail!("unsupported npm lockfile version"),
+        _ => return Err(NpmValidationError::UnsupportedVersion),
     }
     Ok(parse_root(&root))
 }
 
-fn validate_records(records: &Map<String, Value>, nested: bool) -> Result<()> {
+fn validate_records(
+    records: &Map<String, Value>,
+    nested: bool,
+) -> std::result::Result<(), NpmValidationError> {
     for (name, record) in records {
-        ensure!(record.is_object(), "invalid npm package record {name:?}");
+        if !record.is_object() {
+            return Err(NpmValidationError::Malformed(format!(
+                "invalid npm package record {name:?}"
+            )));
+        }
         if let Some(dependencies) = record.get("dependencies").filter(|_| nested) {
-            let dependencies = dependencies
-                .as_object()
-                .context("invalid nested npm dependencies")?;
+            let dependencies = dependencies.as_object().ok_or_else(|| {
+                NpmValidationError::Malformed("invalid nested npm dependencies".into())
+            })?;
             validate_records(dependencies, true)?;
         }
     }
