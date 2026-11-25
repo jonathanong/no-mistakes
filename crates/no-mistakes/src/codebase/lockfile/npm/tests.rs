@@ -162,3 +162,15 @@ fn parse_v1_no_integrity_uses_resolved() {
     let pkgs = parse(lock);
     assert_eq!(pkgs[0].fingerprint, "https://example.com/pkg.tgz");
 }
+
+#[test]
+fn parse_checked_returns_typed_validation_errors() {
+    assert_eq!(
+        parse_checked(r#"{"lockfileVersion": 4, "packages": {}}"#),
+        Err(NpmValidationError::UnsupportedVersion)
+    );
+    assert!(matches!(
+        parse_checked(r#"{"lockfileVersion": 3, "packages": {"node_modules/a": "bad"}}"#),
+        Err(NpmValidationError::Malformed(_))
+    ));
+}

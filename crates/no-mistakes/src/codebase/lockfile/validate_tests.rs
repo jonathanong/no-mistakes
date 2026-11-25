@@ -94,6 +94,81 @@ fn validates_all_lockfile_managers_and_empty_parses() {
         "lockfile-yarn-malformed"
     );
     assert_eq!(
+        validate_for_planning(
+            PackageManager::Yarn,
+            "a@^1.0.0:\n  version \"1.0.0\"\nb@^1.0.0:\n  unexpected \"x\"\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Yarn,
+            "a@^1.0.0:\n  version \"1.0.0\"\nnot-a-header\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Yarn,
+            "  version \"1.0.0\"\na@^1.0.0:\n  version \"1.0.0\"\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(PackageManager::Yarn, "\"\":\n  version \"1.0.0\"\n")
+            .unwrap_err()
+            .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Yarn,
+            "__metadata:\n  version: 6\n\"a@npm:^1.0.0\":\n  version: 1.0.0\n\"b@npm:^1.0.0\": \"bad\"\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Yarn,
+            "__metadata:\n  version: 6\n\"a@npm:^1.0.0\":\n  version: 1.0.0\n123:\n  version: 1.0.0\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Yarn,
+            "__metadata: \"bad\"\n\"a@npm:^1.0.0\":\n  version: 1.0.0\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Yarn,
+            "__metadata:\n  version: 6\n\"a@npm:^1.0.0\":\n  version: 1.0.0\n\"b@npm:^1.0.0\":\n  languageName: node\n"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(PackageManager::Yarn, "- __metadata:\n    version: 6\n")
+            .unwrap_err()
+            .kind,
+        "lockfile-yarn-malformed"
+    );
+    assert_eq!(
         validate_for_planning(PackageManager::Bun, "{")
             .unwrap_err()
             .kind,
@@ -103,6 +178,33 @@ fn validates_all_lockfile_managers_and_empty_parses() {
         validate_for_planning(PackageManager::Bun, "{\"packages\": {}}")
             .unwrap_err()
             .kind,
+        "lockfile-bun-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Bun,
+            "{\"packages\":{\"a\":[\"a@1.0.0\",{},\"sha512-x\"],\"b\":\"bad\"}}"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-bun-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Bun,
+            "{\"packages\":{\"a\":[\"a@1.0.0\",{},\"sha512-x\"],\"b\":[]}}"
+        )
+        .unwrap_err()
+        .kind,
+        "lockfile-bun-malformed"
+    );
+    assert_eq!(
+        validate_for_planning(
+            PackageManager::Bun,
+            "{\"packages\":{\"a\":[\"a@1.0.0\",{},\"sha512-x\"],\"\":[\"b@1.0.0\",{}]}}"
+        )
+        .unwrap_err()
+        .kind,
         "lockfile-bun-malformed"
     );
     assert!(validate_for_planning(
