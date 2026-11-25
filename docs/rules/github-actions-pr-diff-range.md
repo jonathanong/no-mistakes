@@ -42,7 +42,43 @@ In a workflow triggered by `merge_group`, it reports a step that reads
 variable matches the full name in `$NAME` or `${NAME}` and is reported on the
 effective `env` entry. Step entries take precedence over job entries, which
 take precedence over workflow entries. A step or job whose `if` mentions
-`github.event_name` is treated as guarded and is not reported.
+`github.event_name` is treated as guarded and is not reported. A single
+expression may join the corresponding pull-request and merge-group base SHAs,
+or the corresponding head SHAs, with `||`. The fallback covers the
+merge-group read. The rule still checks the diff form on pull-request runs.
+
+The rule also recognizes shell `if` / `elif` / `else` / `fi` event-name guards
+comparing a quoted event-name variable (or unquoted inside `[[ ... ]]`) to a
+literal event name such as `pull_request`, `pull_request_target`, or
+`merge_group`. The variable must either be the runner's `GITHUB_EVENT_NAME`
+(when not overridden in `env`) or have an effective `env` value of
+`${{ github.event_name }}`, and no preceding statement in the step may reassign
+it directly, through `command` / `builtin` wrappers, or via `eval` / `source` /
+dynamic commands (so leading commands such as `set -euo pipefail` are allowed). The rule skips
+environment reads in branches that `merge_group` cannot reach — including nested
+`if` blocks such as regex checks inside a guarded branch — and checks reads in
+reachable branches and outside the `if`. Compound tests and other nested control
+flow (`case`, loops, grouped commands, functions) fall outside this recognition.
+
+```yaml
+- env:
+    EVENT_NAME: ${{ github.event_name }}
+    PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+  run: |
+    if [ "$EVENT_NAME" = "pull_request" ]; then
+      base="$PR_BASE_SHA"
+    else
+      base="$MERGE_GROUP_BASE_SHA"
+    fi
+    echo "$base"
+```
+
+The equivalent base-SHA fallback fits in a single environment entry.
+
+```yaml
+BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+```
 
 A range end is recognized when it is the expression itself, optionally behind
 `origin/`, or a `$NAME` / `${NAME}` variable that a workflow, job, or step
