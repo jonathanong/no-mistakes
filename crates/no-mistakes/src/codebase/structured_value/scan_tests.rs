@@ -174,6 +174,12 @@ fn document_spans_track_markers_directives_and_bom() {
     assert_eq!(spans[0].start_line, 1);
     assert_eq!(spans[1].start_line, 5);
     assert_eq!(spans[2].start_line, 10);
+
+    let bom_after_end = "id: one\n...\n\u{feff}%TAG !w! tag:example.invalid,2026:a\n---\nid: two\n";
+    let spans = document_spans(bom_after_end);
+    assert_eq!(spans.len(), 2);
+    assert_eq!(spans[0].start_line, 1);
+    assert_eq!(spans[1].start_line, 3);
 }
 
 #[test]
