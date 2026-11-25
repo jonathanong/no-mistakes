@@ -745,6 +745,12 @@ required. Optional `requiredGlobs` replaces the default list of
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
 
+### Workspace package relative imports
+
+[`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md) uses declared workspace
+package ownership. Enable it with the normal rule scope and select the importing
+files with the shared `include` and `exclude` filters. No rule options are required.
+
 ### Dependabot cooldown
 
 [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md) is opt-in

@@ -107,6 +107,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md)                             | Ban Next.js API route files.                                                    |
 | [`nextjs-no-caching`](nextjs-no-caching.md)                                   | Ban Next.js caching features.                                                   |
 | [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |
+| [`no-cross-package-relative-imports`](no-cross-package-relative-imports.md) | Report relative imports that cross a declared workspace package boundary. |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md)       | Ban empty/comment-only files.                                                   |
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
 | [`no-sparse-checkout`](no-sparse-checkout.md)                                 | Ban sparse Git checkouts in selected CI YAML.                                   |

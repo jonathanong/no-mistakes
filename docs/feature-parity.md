@@ -49,6 +49,10 @@ checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
 floor, explicit PR limit check, exclusion globs, ecosystem exemptions, and
 incomplete-input diagnostics.
 
+[`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) checks recorded
+TS/JS imports against declared workspace ownership through Rust, CLI `check`,
+and async Node `check()` and `analyzeProject()` check reports.
+
 Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
 literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
 produce scoped aggregate-check warnings; see
