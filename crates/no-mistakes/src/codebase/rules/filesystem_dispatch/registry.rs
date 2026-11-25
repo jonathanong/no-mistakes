@@ -52,6 +52,7 @@ macro_rules! filesystem_rules {
             MARKDOWN_EVAL_TESTS => markdown_eval_tests::check_with_files => "",
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files => "",
             PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE => package_json_nested_workspace_coverage::check_with_files => "",
+            PACKAGE_JSON_EXPORT_TARGET_PREFIX => package_json_export_target_prefix::check_with_files => "",
             PACKAGE_JSON_REQUIRED_FIELDS => package_json_required_fields::check_with_files => "",
             PACKAGE_JSON_WORKSPACE_COVERAGE => package_json_workspace_coverage::check_with_files => "",
             PNPM_OVERRIDES_BAN => pnpm_overrides_ban::check_with_files => "",

@@ -108,6 +108,7 @@ pub(crate) struct FileFacts {
     pub producers: Vec<ProducerSite>,
     pub workers: Vec<WorkerSite>,
     pub diagnostics: Vec<(usize, String)>,
+    pub check_abstentions: Vec<(usize, &'static str)>,
     /// `export const NAME = "value"` strings other files can import.
     pub exported_strings: HashMap<String, String>,
     /// Named imports that may be a string constant or a queue binding.

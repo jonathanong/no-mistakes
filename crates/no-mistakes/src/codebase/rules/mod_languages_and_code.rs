@@ -8,6 +8,7 @@ pub mod forbidden_lint_suppressions;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
 pub mod nextjs_redirect_destinations;
+mod no_cross_package_relative_imports;
 pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
 pub mod no_raw_ephemeral_port;

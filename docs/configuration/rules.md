@@ -365,6 +365,10 @@ emits non-failing advice, and `ignore` omits that uncertainty. Invalid YAML,
 unmatched source locations, and unsupported expression shapes remain definite
 findings under every policy.
 
+[`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
+checks selected Node package manifests. The rule is opt-in and uses
+`options.unanalyzable` for manifests that cannot be read or parsed.
+
 [`package-json-required-fields`](../rules/package-json-required-fields.md) uses
 `options.unanalyzable` for selected manifests that cannot be read or parsed
 when a field check is enabled. Definite field violations remain failures under
@@ -752,6 +756,12 @@ required. Optional `requiredGlobs` replaces the default list of
 `**/node_modules/**` and `**/.git/**`. Entries must be nonempty strings,
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
+
+### Workspace package relative imports
+
+[`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md) uses declared workspace
+package ownership. Enable it with the normal rule scope and select the importing
+files with the shared `include` and `exclude` filters. No rule options are required.
 
 ### Dependabot cooldown
 

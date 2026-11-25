@@ -1,0 +1,9 @@
+{
+  "name": "@example/number",
+  "exports": {
+    ".": {
+      "import": 42,
+      "default": "./dist/index.mjs"
+    }
+  }
+}
