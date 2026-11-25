@@ -1,5 +1,6 @@
 //! `lock status`, EX_TEMPFAIL exits, and JSON errors against a lock held by another process.
 #![cfg(unix)]
+use super::cli_invocation::budgeted_check_command;
 use crate::saved_fixture;
 use serde_json::Value;
 use std::fs::File;
@@ -37,6 +38,23 @@ fn hold_lock(home: &Path, fixture: &str) -> File {
     let file = File::options().write(true).open(&lock_file).unwrap();
     file.lock().unwrap();
     file
+}
+
+#[test]
+fn budgeted_check_finishes_while_the_user_lock_is_held() {
+    let home = tempfile::tempdir().unwrap();
+    let _held = hold_lock(home.path(), "lock-holder");
+    let output = budgeted_check_command()
+        .env("HOME", home.path())
+        .env("XDG_CACHE_HOME", home.path())
+        .env("XDG_RUNTIME_DIR", home.path())
+        .output()
+        .expect("check empty fixture while the user lock is held");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[test]
