@@ -289,6 +289,24 @@ fn dependabot_cooldown_policy_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn cross_package_relative_imports_are_documented() {
+    let rule = no_mistakes::codebase::rules::NO_CROSS_PACKAGE_RELATIVE_IMPORTS;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    for path in [
+        "docs/rules/README.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
 fn vitest_default_excludes_is_in_the_public_rule_inventory() {
     let rule = "vitest-default-excludes";
     let root = repo_root();
@@ -464,21 +482,19 @@ fn changes_diff_and_semantic_test_routing_have_public_docs() {
 }
 
 #[test]
-fn swift_darwin_imports_are_in_the_public_rule_inventory() {
-    let rule = no_mistakes::codebase::rules::SWIFT_NO_UNGUARDED_DARWIN_IMPORT;
+fn package_json_export_target_prefix_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::PACKAGE_JSON_EXPORT_TARGET_PREFIX;
     let root = repo_root();
-    assert!(rule_docs_helpers::rule_ids_from_source(&root).contains(rule));
-    let page = format!("{rule}.md");
-    assert!(root.join("docs/rules").join(&page).is_file());
-    for entry in [
+    assert!(rule_ids_from_source(&root).contains(rule));
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    for path in [
         "docs/rules/README.md",
         "docs/cli/check.md",
-        "docs/node-api.md",
         "docs/configuration/rules.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
     ] {
-        assert!(
-            rule_docs_helpers::read(&root.join(entry)).contains(&page),
-            "{entry}"
-        );
+        assert!(read(&root.join(path)).contains(rule), "{path}");
     }
 }

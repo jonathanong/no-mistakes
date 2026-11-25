@@ -15,6 +15,7 @@ pub(super) fn known_rule(rule: &str) -> bool {
             no_single_enqueue_in_loop::RULE_ID,
             REQUIRE_STORYBOOK_STORIES,
             REQUIRED_ENTRYPOINT_REACHABILITY,
+            NO_CROSS_PACKAGE_RELATIVE_IMPORTS,
             SERVER_ROUTE_CLIENT_BOUNDARY,
             TEST_NO_LIVE_REPOSITORY_SCAN,
             TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,

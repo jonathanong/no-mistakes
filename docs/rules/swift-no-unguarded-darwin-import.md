@@ -21,9 +21,10 @@ rules:
 ## What it catches
 
 The rule reports plain and selective `Darwin` imports in selected `.swift`
-files. It points to the `import` keyword when the declaration spans lines,
-follows a semicolon, or has attributes with arguments. Comments and
-import-shaped text in strings and regex literals are ignored.
+files. Other Apple-only modules such as UIKit, AppKit, and Security are
+outside its scope. It points to the `import` keyword when the
+declaration spans lines, follows a semicolon, or has attributes with arguments.
+Comments and import-shaped text in strings and regex literals are ignored.
 
 A direct `canImport(Darwin)` or `os(macOS)`, `os(iOS)`, `os(tvOS)`,
 `os(watchOS)`, or `os(visionOS)` condition proves a guard in its `#if` or

@@ -1,0 +1,23 @@
+version: 2
+projects:
+  dispatch:
+    root: .
+    queues:
+      enqueues: [enqueue.ts, listing.ts]
+      workers: [worker.ts]
+queues:
+  requiredJobOptions: [removeOnFail]
+  unboundedJobRetention:
+    require: [removeOnFail]
+  jobStateAsRecord: true
+  factories:
+    enqueue:
+      - callee: makeEnqueue
+        queueName: opaque
+        job: { arg: 0, property: name }
+        optionsOnReturnedCall: 1
+tests:
+  vitest:
+    projects:
+      queue:
+        include: ["*.test.ts"]

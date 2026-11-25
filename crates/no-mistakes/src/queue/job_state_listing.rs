@@ -1,13 +1,13 @@
-use super::actions::{find_action_in_expr, find_listing_action};
-use super::expr::{
-    call_member, check_state_expr, match_listing, pattern_names, queue_receiver, unwrap_expr,
-};
+use super::actions::{find_action_in_expr, find_action_in_stmts, Action, ActionScope};
+use super::expr::{call_member, check_state_expr, match_listing, queue_receiver, unwrap_expr};
 use super::extract::{record, FnEnv};
+use super::item::ListingItem;
 use super::{JobStatePattern, JobStateSite};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::queue::extract_model::ProducerBinding;
 use crate::queue::extract_visitor::QueueVisitor;
-use oxc_ast::ast::{CallExpression, ConditionalExpression, Expression};
+use crate::queue::object_bindings::collect_names;
+use oxc_ast::ast::{CallExpression, ConditionalExpression, Expression, FormalParameters};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
 
@@ -37,9 +37,10 @@ struct ExprChecker<'c, 'b> {
 impl<'a> Visit<'a> for ExprChecker<'_, '_> {
     fn visit_conditional_expression(&mut self, cond: &ConditionalExpression<'a>) {
         if let Some(binding) = check_state_expr(self.visitor, &cond.test, self.env) {
-            let names: Vec<_> = self.env.job_vars.keys().cloned().collect();
-            let action = find_action_in_expr(self.visitor, &cond.consequent, &names, true)
-                .or_else(|| find_action_in_expr(self.visitor, &cond.alternate, &names, true));
+            let names: Vec<_> = self.env.job_vars.keys().map(String::as_str).collect();
+            let scope = ActionScope::StateGuard(&names);
+            let action = find_action_in_expr(self.visitor, &cond.consequent, scope)
+                .or_else(|| find_action_in_expr(self.visitor, &cond.alternate, scope));
             if let Some(action_binding) = action {
                 record(
                     self.visitor,
@@ -81,7 +82,7 @@ impl<'a> Visit<'a> for ExprChecker<'_, '_> {
                             self.visitor,
                             call.span.start,
                             listing_q,
-                            Some(action_q),
+                            Action::Enqueue(action_q),
                             JobStatePattern::ListingFeedsAction,
                             self.sites,
                             self.seen,
@@ -142,36 +143,40 @@ fn expr_uses_listing(
 fn callback_listing_action(
     visitor: &QueueVisitor<'_>,
     call: &CallExpression<'_>,
-) -> Option<Option<ProducerBinding>> {
+) -> Option<Action> {
     let cb = call.arguments.first()?.as_expression()?;
     match unwrap_ts_wrappers(cb) {
         Expression::ArrowFunctionExpression(arrow) => {
-            let params: Vec<_> = arrow
-                .params
-                .items
-                .iter()
-                .flat_map(|p| pattern_names(&p.pattern))
-                .collect();
+            let names = item_names(&arrow.params);
+            let scope = ActionScope::Listing(ListingItem {
+                names: &names,
+                start: arrow.span.start,
+            });
             if let Some(expr) = arrow.body.as_expression() {
-                return find_action_in_expr(visitor, expr, &params, false);
+                return find_action_in_expr(visitor, expr, scope);
             }
-            crate::ast::arrow_function_body_statements(&arrow.body)?
-                .iter()
-                .find_map(|s| find_listing_action(visitor, s, &params))
+            find_action_in_stmts(
+                visitor,
+                crate::ast::arrow_function_body_statements(&arrow.body)?,
+                scope,
+            )
         }
         Expression::FunctionExpression(func) => {
-            let params: Vec<_> = func
-                .params
-                .items
-                .iter()
-                .flat_map(|p| pattern_names(&p.pattern))
-                .collect();
-            func.body
-                .as_ref()?
-                .statements
-                .iter()
-                .find_map(|s| find_listing_action(visitor, s, &params))
+            let names = item_names(&func.params);
+            let scope = ActionScope::Listing(ListingItem {
+                names: &names,
+                start: func.span.start,
+            });
+            find_action_in_stmts(visitor, &func.body.as_ref()?.statements, scope)
         }
         _ => None,
     }
+}
+
+fn item_names<'a>(params: &FormalParameters<'a>) -> Vec<&'a str> {
+    let mut names = Vec::new();
+    if let Some(item) = params.items.first() {
+        collect_names(&item.pattern, &mut names);
+    }
+    names
 }
