@@ -6,6 +6,7 @@ pub mod postgres_column_requires_trigger;
 pub mod postgres_conflict_ordering;
 pub mod postgres_constraint_validate;
 pub mod postgres_duplicate_function_body;
+pub mod postgres_explain_write_rollback;
 pub mod postgres_explicit_columns;
 mod postgres_findings;
 pub mod postgres_finite_text_columns;

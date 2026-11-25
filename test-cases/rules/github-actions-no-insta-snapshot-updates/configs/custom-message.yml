@@ -1,0 +1,4 @@
+rules:
+  - rule: github-actions-no-insta-snapshot-updates
+    scope: repository
+    message: Custom snapshot update policy message.

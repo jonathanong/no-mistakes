@@ -31,13 +31,10 @@ const macos = {
           file: "crates/no-mistakes/tests/cli_invocation.rs",
           text: "fn lockfile_git_discovery_timeout_does_not_render_partial_output",
         },
-      ],
-    },
-    {
-      selector: ["--bin", "no-mistakes"],
-      args: ["invocation::tests::blocked_check::"],
-      guards: [
-        { file: "crates/no-mistakes/src/main/invocation/tests.rs", text: "mod blocked_check;" },
+        {
+          file: "crates/no-mistakes/tests/cli_invocation.rs",
+          text: "fn millisecond_invocation_budget_stops_blocked_config_loading",
+        },
       ],
     },
   ],
