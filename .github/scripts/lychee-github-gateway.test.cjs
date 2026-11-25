@@ -88,3 +88,68 @@ test(
     assert.doesNotMatch(result.output, /::warning::/);
   },
 );
+
+test("the logged GitHub HTTP/2 errors and GitHub 503s warn immediately", () => {
+  const report = "github-http2-mixed.md";
+  const result = run(report, { LYCHEE_ARGS: "" });
+  assert.equal(result.status, 0);
+  assert.equal(result.count, "");
+  assert.equal(result.report, read(report));
+
+  const [warning, details] = result.output.trim().split("\n");
+  assert.match(warning, /^::warning::/);
+  assert.deepEqual(JSON.parse(details), {
+    inconclusiveGitHubLinks: [
+      { status: 503, url: "https://github.com/example/project/issues/1" },
+      { error: "http2-protocol-error", url: "https://github.com/example/project/pull/2" },
+      { error: "http2-protocol-error", url: "https://github.com/example/project/pull/3" },
+    ],
+  });
+});
+
+test("a GitHub HTTP/2-only report warns without running Lychee again", () => {
+  const report = "github-http2-only.md";
+  const result = run(report, { LYCHEE_ARGS: "--no-progress README.md" });
+  assert.equal(result.status, 0);
+  assert.equal(result.count, "");
+  assert.equal(result.report, read(report));
+  assert.match(result.output, /::warning::/);
+});
+
+for (const report of [
+  "external-http2.md",
+  "github-http2-with-client-error.md",
+  "github-http2-with-timeout.md",
+  "github-http2-truncated.md",
+  "github-other-error.md",
+]) {
+  test(`${report} cannot use the GitHub HTTP/2 exception`, () => {
+    const result = run(report, { LYCHEE_ARGS: "--no-progress README.md" });
+    assert.equal(result.status, 2);
+    assert.equal(result.count, "");
+    assert.doesNotMatch(result.output, /::warning::/);
+  });
+}
+
+for (const [checkerExit, expectedStatus] of [
+  ["2", 0],
+  ["1", 1],
+]) {
+  test(
+    `GitHub HTTP/2 in a report produced by a checker exiting ${checkerExit}`,
+    { skip: process.platform === "win32" },
+    () => {
+      const report = "github-http2-only.md";
+      const result = run("gateway.md", {
+        LYCHEE_ARGS: "--no-progress README.md",
+        LYCHEE_GATEWAY_WAIT: "0,0",
+        LYCHEE_FAKE_EXIT: checkerExit,
+        LYCHEE_FAKE_FAILURE: path.join(saved, report),
+      });
+      assert.equal(result.count, "1");
+      assert.equal(result.report, read(report));
+      assert.equal(result.status, expectedStatus);
+      assert.equal(result.output.includes("::warning::"), expectedStatus === 0);
+    },
+  );
+}
