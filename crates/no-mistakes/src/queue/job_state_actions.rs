@@ -74,26 +74,19 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
     fn visit_arrow_function_expression(&mut self, _arrow: &ArrowFunctionExpression<'a>) {}
 
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
-        if self.found.is_some() {
-            return;
-        }
-        let Some(init) = &decl.init else {
-            return;
-        };
-        self.visit_expression(init);
-        if self.found.is_some() {
-            return;
-        }
-        let names = pattern_names(&decl.id);
-        if let Expression::Identifier(src) = unwrap_expr(init) {
-            if self.job_names.iter().any(|name| name == src.name.as_str()) {
-                self.job_names.extend(names.iter().cloned());
-                self.arg_names.extend(names);
-                return;
+        if let Some(init) = &decl.init {
+            self.visit_expression(init);
+            let names = pattern_names(&decl.id);
+            if let Expression::Identifier(src) = unwrap_expr(init) {
+                if self.job_names.iter().any(|name| name == src.name.as_str()) {
+                    self.job_names.extend(names.iter().cloned());
+                    self.arg_names.extend(names);
+                    return;
+                }
             }
-        }
-        if self.require_arg_ref() && expr_mentions_any(init, &self.arg_names) {
-            self.arg_names.extend(names);
+            if self.require_arg_ref() && expr_mentions_any(init, &self.arg_names) {
+                self.arg_names.extend(names);
+            }
         }
     }
 
@@ -138,9 +131,6 @@ fn arg_mentions_any(arg: &Argument<'_>, names: &[String]) -> bool {
 }
 
 fn expr_mentions_any(expr: &Expression<'_>, names: &[String]) -> bool {
-    if names.is_empty() {
-        return false;
-    }
     struct RefFinder<'a> {
         names: &'a [String],
         found: bool,

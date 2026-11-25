@@ -20,3 +20,10 @@ export const opaque = new Worker("items", wrap(handle));
 export const wrapped = new Worker("widgets", wrap(async () => {
   throw new RateLimitError();
 }));
+
+export function trailingHelper() {
+  return 0;
+}
+
+const extraArgs: [() => Promise<void>] = [handle];
+export const spreadArgs = new Worker("items", ...extraArgs);

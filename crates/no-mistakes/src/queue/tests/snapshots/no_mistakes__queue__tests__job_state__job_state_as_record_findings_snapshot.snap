@@ -7,17 +7,17 @@ expression: snapshot
     "kind": "job-state-as-record",
     "severity": "advisory",
     "file": "edges.ts",
-    "line": 8,
+    "line": 9,
     "queueFile": "queues.ts",
     "queueName": "widgets",
     "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
-    "sourceLine": "if (!completed) return;"
+    "sourceLine": "if (!isDone) return;"
   },
   {
     "kind": "job-state-as-record",
     "severity": "advisory",
     "file": "edges.ts",
-    "line": 16,
+    "line": 19,
     "queueFile": "queues.ts",
     "queueName": "widgets",
     "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
@@ -27,7 +27,7 @@ expression: snapshot
     "kind": "job-state-as-record",
     "severity": "advisory",
     "file": "edges.ts",
-    "line": 23,
+    "line": 28,
     "queueFile": "queues.ts",
     "queueName": "widgets",
     "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
@@ -37,11 +37,31 @@ expression: snapshot
     "kind": "job-state-as-record",
     "severity": "advisory",
     "file": "edges.ts",
-    "line": 28,
+    "line": 33,
     "queueFile": "queues.ts",
     "queueName": "widgets",
     "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
     "sourceLine": "for (const job of await widgets.getFailed(0, 100)) {"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "edges.ts",
+    "line": 37,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+    "sourceLine": "for (const job of await widgets.getFailed(0, 10)) {"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "edges.ts",
+    "line": 45,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+    "sourceLine": "if (await (await widgets.getJob(id))?.isCompleted()) {"
   },
   {
     "kind": "job-state-as-record",

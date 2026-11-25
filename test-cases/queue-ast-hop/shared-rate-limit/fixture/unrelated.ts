@@ -6,6 +6,7 @@ const helper = { RateLimitError };
 
 export const worker = new Worker("widgets", async () => {
   await orders.rateLimit(1000);
+  await ({ async rateLimit(_ms: number) {} }).rateLimit(1000);
   {
     const worker = { async rateLimit(_ms: number) {} };
     await worker.rateLimit(1000);
