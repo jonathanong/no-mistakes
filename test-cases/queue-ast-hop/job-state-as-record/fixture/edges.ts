@@ -60,14 +60,30 @@ export async function recreateInElse(id: string) {
   }
 }
 
-// Reported: callback third parameter (source array) feeding addBulk
+// Reported: callback third parameter (source array) feeding addBulk, function callback, switch, and arrow
 export async function replayViaArrayParam() {
-  (await widgets.getFailed(0, 10)).forEach((_job, _index, all) => {
+  const failed = await widgets.getFailed(0, 10);
+  failed.forEach((_job, _index, all) => {
     void widgets.addBulk(all.map((j) => ({ name: j.name, data: j.data })));
   });
+  failed.forEach(function (job) {
+    void job.retry();
+  });
+  failed.forEach(console.log);
 }
 
-// Accepted: state check on one job does not guard retry on a different job or reassigned alias
+export const switchAndArrow = async (id: string) => {
+  const job = await widgets.getJob(id);
+  switch (await job?.getState()) {
+    case "failed":
+      await job.retry();
+      break;
+  }
+};
+
+export const topExportCheck = widgets.getFailed(0, 1);
+
+// Accepted: state check on one job does not guard retry on a different job or reassigned/scoped alias
 export async function differentJob(firstId: string, secondId: string) {
   const first = await widgets.getJob(firstId);
   const second = await widgets.getJob(secondId);
@@ -79,6 +95,15 @@ export async function differentJob(firstId: string, secondId: string) {
   if (failed) {
     {
       const candidate = first;
+      void candidate;
+    }
+    for (let candidate = first; candidate; ) {
+      break;
+    }
+    for (const candidate of [first]) {
+      void candidate;
+    }
+    for (const candidate in { first }) {
       void candidate;
     }
     const candidate = second;

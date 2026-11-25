@@ -2,8 +2,9 @@ use super::expr::{arg_expr, call_member, pattern_names, unwrap_expr};
 use super::extract::ExtractCtx;
 use crate::queue::extract_model::ProducerBinding;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, BlockStatement, CallExpression, Expression, FormalParameters,
-    Function, IdentifierReference, Statement, VariableDeclarator,
+    ArrowFunctionExpression, BlockStatement, CallExpression, Expression, ForInStatement,
+    ForOfStatement, ForStatement, FormalParameters, Function, IdentifierReference, Statement,
+    VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 
@@ -66,26 +67,29 @@ impl<'a, 'b, 'c> ActionFinder<'a, 'b, 'c> {
         }
     }
 
-    fn allow_remove(&self) -> bool {
-        matches!(self.mode, ActionMode::Guarded)
-    }
-
-    fn require_arg_ref(&self) -> bool {
-        matches!(self.mode, ActionMode::Listing)
+    fn with_scope(&mut self, walk_inner: impl FnOnce(&mut Self)) {
+        let saved_jobs = self.job_names.clone();
+        let saved_args = self.arg_names.clone();
+        walk_inner(self);
+        self.job_names = saved_jobs;
+        self.arg_names = saved_args;
     }
 }
 
 impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
     fn visit_function(&mut self, _func: &Function<'a>, _flags: oxc_syntax::scope::ScopeFlags) {}
-
     fn visit_arrow_function_expression(&mut self, _arrow: &ArrowFunctionExpression<'a>) {}
-
     fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
-        let saved_jobs = self.job_names.clone();
-        let saved_args = self.arg_names.clone();
-        walk::walk_block_statement(self, block);
-        self.job_names = saved_jobs;
-        self.arg_names = saved_args;
+        self.with_scope(|this| walk::walk_block_statement(this, block));
+    }
+    fn visit_for_statement(&mut self, stmt: &ForStatement<'a>) {
+        self.with_scope(|this| walk::walk_for_statement(this, stmt));
+    }
+    fn visit_for_of_statement(&mut self, stmt: &ForOfStatement<'a>) {
+        self.with_scope(|this| walk::walk_for_of_statement(this, stmt));
+    }
+    fn visit_for_in_statement(&mut self, stmt: &ForInStatement<'a>) {
+        self.with_scope(|this| walk::walk_for_in_statement(this, stmt));
     }
 
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
@@ -103,7 +107,7 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
                 return;
             }
         }
-        if self.require_arg_ref() && expr_mentions_any(init, &self.arg_names) {
+        if matches!(self.mode, ActionMode::Listing) && expr_mentions_any(init, &self.arg_names) {
             self.arg_names.extend(names);
         }
     }
@@ -126,8 +130,8 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
             _ => {}
         }
         if let Some((object, method)) = call_member(call) {
-            let job_action = method == "retry" || (self.allow_remove() && method == "remove");
-            if job_action {
+            let allow_remove = matches!(self.mode, ActionMode::Guarded);
+            if method == "retry" || (allow_remove && method == "remove") {
                 if let Expression::Identifier(id) = unwrap_expr(object) {
                     if self.job_names.iter().any(|name| name == id.name.as_str()) {
                         self.found = Some(None);
@@ -135,7 +139,7 @@ impl<'a> Visit<'a> for ActionFinder<'_, '_, '_> {
                     }
                 }
             } else if matches!(method, "add" | "addBulk") {
-                let feeds = !self.require_arg_ref()
+                let feeds = matches!(self.mode, ActionMode::Guarded)
                     || call
                         .arguments
                         .iter()
@@ -176,13 +180,11 @@ fn expr_mentions_any(expr: &Expression<'_>, names: &[String]) -> bool {
                 self.found = true;
             }
         }
-
         fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
             let saved = self.without_params(&arrow.params);
             walk::walk_arrow_function_expression(self, arrow);
             self.names = saved;
         }
-
         fn visit_function(&mut self, func: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
             let saved = self.without_params(&func.params);
             walk::walk_function(self, func, flags);

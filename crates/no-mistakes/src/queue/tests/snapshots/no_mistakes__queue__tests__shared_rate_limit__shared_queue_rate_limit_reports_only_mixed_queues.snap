@@ -127,7 +127,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "workers.ts",
-      "line": 6,
+      "line": 12,
       "queueFile": "queues.ts",
       "queueName": "items",
       "job": null,
@@ -137,7 +137,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "workers.ts",
-      "line": 11,
+      "line": 17,
       "queueFile": "queues.ts",
       "queueName": "items",
       "job": null,
