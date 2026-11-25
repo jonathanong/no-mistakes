@@ -157,6 +157,36 @@ fn vitest_default_excludes_files_option_matches_cli_and_batch() {
     assert_eq!(batched["reports"][0]["result"], native);
 }
 
+#[test]
+fn vitest_default_excludes_spreads_match_node_check_and_batch() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/vitest-default-excludes/fixture/spreads")
+        .canonicalize()
+        .unwrap();
+    let mut options = json!({"root": root, "config": root.join(".no-mistakes.yml")});
+    let report: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(report["rules"].as_array().unwrap().len(), 5);
+
+    crate::ast::begin_parse_count(&root);
+    options["reports"] = json!([{"type": "check"}]);
+    let batched = batch(options);
+    let counts = crate::ast::finish_parse_count(&root);
+    assert_eq!(
+        counts.get(&root.join("excludes.ts")),
+        Some(&1),
+        "{counts:?}"
+    );
+    assert_eq!(
+        counts.get(&root.join("unreferenced.ts")),
+        None,
+        "{counts:?}"
+    );
+    assert_eq!(batched["reports"][0]["result"], report);
+}
+
 fn batch(options: serde_json::Value) -> serde_json::Value {
     serde_json::from_str(
         &crate::napi_api::analyze_project::analyze_project_json_impl(

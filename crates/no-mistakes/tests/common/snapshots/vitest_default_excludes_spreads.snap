@@ -1,0 +1,56 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "spreads": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest-controls.config.ts",
+          "line": 15,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "return { test: { exclude: [\"**/node_modules/**\", ...patterns] } };",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest-controls.config.ts",
+          "line": 9,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "projects: [{ test: { exclude: [\"**/node_modules/**\", ...changed] } }],",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest-imported.config.ts",
+          "line": 6,
+          "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: [\"**/node_modules/**\", ...imported],"
+        },
+        {
+          "file": "vitest-runtime.config.ts",
+          "line": 5,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "export default defineConfig({ test: { exclude: [\"**/node_modules/**\", ...runtimePatterns] } });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 4,
+          "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "export default defineConfig({ test: { exclude: [\"**/node_modules/**\", ...extra] } });"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

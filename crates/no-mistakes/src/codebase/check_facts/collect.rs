@@ -137,6 +137,7 @@ fn collect_check_facts_inner(
         graph_files_complete,
         queue_paths: plan.queue.then(|| plan.queue_paths.clone()),
         ts: ts.map_values(Arc::new),
+        vitest_exclude_imports: Default::default(),
         graph_plan: collected_ts_plan,
         integration_runner_configs,
         playwright_source_files: Arc::new(Vec::new()),

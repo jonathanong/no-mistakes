@@ -63,6 +63,8 @@ pub struct CheckFactMap {
     pub(crate) graph_files_complete: bool,
     pub(crate) queue_paths: Option<super::family_scope::FamilyPathScope>,
     pub(crate) ts: FileIdMap<Arc<CheckFileFacts>>,
+    pub(crate) vitest_exclude_imports:
+        crate::codebase::rules::vitest_default_excludes::ResolvedSpreads,
     pub(crate) call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub(crate) integration_runner_configs: std::collections::BTreeMap<

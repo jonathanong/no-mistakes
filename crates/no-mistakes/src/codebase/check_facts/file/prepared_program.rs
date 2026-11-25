@@ -3,6 +3,7 @@ use super::plan::ts_extract_context;
 use crate::codebase::rules::test_reliability::{
     self, playwright_provenance::FixtureInitializers, Location,
 };
+use crate::codebase::rules::vitest_default_excludes::{self, CollectedExcludes};
 use crate::codebase::ts_source::facts::{self, TsFactPlan, TsFileFacts};
 use oxc_ast::ast::{ModuleDeclaration, Program};
 use oxc_semantic::{SemanticBuilder, SemanticBuilderReturn};
@@ -19,6 +20,7 @@ pub(super) struct PreparedProgramFacts<'a> {
     pub ts: TsFileFacts,
     pub semantic: Option<SemanticBuilderReturn<'a>>,
     pub test_reliability: Vec<Location>,
+    pub vitest_default_excludes: CollectedExcludes,
     pub fixture_initializers: Option<FixtureInitializers>,
 }
 
@@ -39,7 +41,12 @@ pub(super) fn collect<'a>(
                 .is_some_and(ModuleDeclaration::is_export)
         });
     let fixture_has_initializers = fixture_support;
-    let semantic = (reliability_demand.is_some()
+    let vitest = &plan.request.vitest_default_exclude_paths;
+    let selected_vitest = vitest.contains(path);
+    let collect_vitest = selected_vitest
+        || (!vitest.is_empty() && vitest_default_excludes::has_candidate_exports(program));
+    let semantic = (collect_vitest
+        || reliability_demand.is_some()
         || fixture_has_initializers
         || playwright.and_then(|plan| plan.file(path)).is_some())
     .then(|| {
@@ -76,8 +83,23 @@ pub(super) fn collect<'a>(
             )
         })
         .filter(|fixtures| !fixtures.values.is_empty() || !fixtures.wrappers.is_empty());
+    let vitest_default_excludes = if collect_vitest {
+        semantic
+            .as_ref()
+            .map_or_else(CollectedExcludes::default, |semantic| {
+                vitest_default_excludes::collect_prepared(
+                    program,
+                    source,
+                    &semantic.semantic,
+                    selected_vitest,
+                )
+            })
+    } else {
+        CollectedExcludes::default()
+    };
     PreparedProgramFacts {
         ts,
+        vitest_default_excludes,
         semantic,
         test_reliability,
         fixture_initializers,
