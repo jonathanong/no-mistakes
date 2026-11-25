@@ -1,9 +1,22 @@
 use crate::codebase::shell_heredoc::{ascii_document, skip_body, CarriageReturn};
 
-pub(super) fn segments(script: &str) -> Vec<&str> {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Connector {
+    None,
+    And,
+    Or,
+}
+
+pub(super) struct Segment<'a> {
+    pub(super) text: &'a str,
+    pub(super) preceded_by: Connector,
+}
+
+pub(super) fn segments(script: &str) -> Vec<Segment<'_>> {
     let mut found = Vec::new();
     let mut start = 0;
     let mut base = 0;
+    let mut preceded_by = Connector::None;
     let mut chars = script.char_indices().peekable();
     let mut quote = None;
     let mut arithmetic_parens: Option<usize> = None;
@@ -61,7 +74,11 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
                 token_start = false;
             }
             '#' | '\n' if character == '\n' || token_start => {
-                found.push(&script[start..offset]);
+                let text = &script[start..offset];
+                found.push(Segment { text, preceded_by });
+                if text.bytes().any(|b| !b.is_ascii_whitespace()) {
+                    preceded_by = Connector::None;
+                }
                 let body_start = script[offset..]
                     .find('\n')
                     .map_or(script.len(), |newline| offset + newline + 1);
@@ -80,28 +97,53 @@ pub(super) fn segments(script: &str) -> Vec<&str> {
                 token_start = true;
             }
             ';' => {
-                found.push(&script[start..offset]);
+                found.push(Segment {
+                    text: &script[start..offset],
+                    preceded_by,
+                });
+                preceded_by = Connector::None;
                 start = offset + 1;
                 token_start = true;
             }
             '|' if arithmetic_parens.is_none() && !after_gt => {
-                found.push(&script[start..offset]);
-                start = chars
-                    .next_if(|(_, next)| matches!(next, '|' | '&'))
-                    .map_or(offset + 1, |(next, _)| base + next + 1);
+                found.push(Segment {
+                    text: &script[start..offset],
+                    preceded_by,
+                });
+                match chars.next_if(|(_, next)| matches!(next, '|' | '&')) {
+                    Some((next, '|')) => {
+                        preceded_by = Connector::Or;
+                        start = base + next + 1;
+                    }
+                    Some((next, _)) => {
+                        preceded_by = Connector::None;
+                        start = base + next + 1;
+                    }
+                    None => {
+                        preceded_by = Connector::None;
+                        start = offset + 1;
+                    }
+                }
                 token_start = true;
             }
             '&' if arithmetic_parens.is_none()
                 && chars.next_if(|(_, next)| *next == '&').is_some() =>
             {
-                found.push(&script[start..offset]);
+                found.push(Segment {
+                    text: &script[start..offset],
+                    preceded_by,
+                });
+                preceded_by = Connector::And;
                 start = offset + 2;
                 token_start = true;
             }
             _ => token_start = character.is_ascii_whitespace(),
         }
     }
-    found.push(&script[start..]);
+    found.push(Segment {
+        text: &script[start..],
+        preceded_by,
+    });
     found
 }
 

@@ -1,0 +1,44 @@
+name: Shell retry signals and ordering
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retry loop exporting counter with && break
+        run: |
+          for attempt in 1 2 3; do
+            export ATTEMPT=$attempt
+            pnpm test && break
+          done
+      - name: Retry loop exporting counter with || continue
+        run: |
+          for attempt in 1 2 3; do
+            export ATTEMPT=$attempt
+            pnpm test || continue
+          done
+      - name: Retry loop exporting counter with if-then break
+        run: |
+          for attempt in 1 2 3; do
+            export ATTEMPT=$attempt
+            if pnpm test; then
+              break
+            fi
+          done
+      - name: Export loop variable after running tests
+        run: |
+          for attempt in 1 2; do
+            pnpm test
+            export ATTEMPT=$attempt
+          done
+      - name: Change directory after running tests
+        run: |
+          for pkg in a b; do
+            pnpm test
+            cd "$pkg"
+          done
+      - name: Real shard loop with fail-fast break on failure
+        run: |
+          for shard in 1 2; do
+            export SHARD=$shard
+            pnpm test || break
+          done

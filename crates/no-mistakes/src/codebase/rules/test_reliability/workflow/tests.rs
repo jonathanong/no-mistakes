@@ -110,3 +110,22 @@ fn shell_splits_or_and_while_without_variables() {
     let script = "for i in 1 2; do\n  pnpm test:unit || true\ndone\nwhile true; do\n  echo \"try\" && pnpm test:unit\ndone\n";
     assert_eq!(rerun_loops(script, &test_commands()), [Some(1), None]);
 }
+
+#[test]
+fn shell_detects_retry_signals_and_enforces_setup_order() {
+    let source = std::fs::read_to_string(fixture("shell/retry-signals.sh")).unwrap();
+    assert_eq!(
+        rerun_loops(&source, &test_commands()),
+        [
+            Some(2),
+            Some(2),
+            Some(2),
+            Some(2),
+            Some(1),
+            Some(1),
+            Some(1),
+            Some(1),
+            Some(1),
+        ]
+    );
+}

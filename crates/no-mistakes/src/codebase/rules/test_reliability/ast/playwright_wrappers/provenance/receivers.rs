@@ -1,7 +1,7 @@
 use super::Bindings;
 use crate::codebase::rules::test_reliability::playwright_provenance::ImportRef;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Class, ClassElement, Expression, FormalParameter, FormalParameters};
+use oxc_ast::ast::{Class, ClassElement, Expression, FormalParameter, FormalParameters, NewExpression};
 use oxc_ast::AstKind;
 use oxc_semantic::SymbolId;
 use oxc_span::GetSpan;
@@ -106,7 +106,10 @@ impl<'ast> Bindings<'_, 'ast> {
         }
     }
 
-    pub(super) fn receiver_class<'a>(&'a self, object: &'a Expression<'a>) -> Option<&'a Class<'a>> {
+    pub(super) fn receiver_class<'a>(
+        &'a self,
+        object: &'a Expression<'a>,
+    ) -> Option<(&'a Class<'a>, Option<&'a NewExpression<'a>>)> {
         let nodes = self.semantic.nodes();
         let mut current = unwrap_ts_wrappers(object);
         for _ in 0..8 {
@@ -119,29 +122,32 @@ impl<'ast> Bindings<'_, 'ast> {
             current = unwrap_ts_wrappers(init);
         }
         match current {
-            Expression::NewExpression(instance) => match unwrap_ts_wrappers(&instance.callee) {
-                Expression::ClassExpression(class) => Some(class),
-                Expression::Identifier(name) => {
-                    let symbol = self.symbol(name)?;
-                    match nodes.kind(self.semantic.scoping().symbol_declaration(symbol)) {
-                        AstKind::Class(class) => Some(class),
-                        AstKind::VariableDeclarator(decl) => {
-                            let Expression::ClassExpression(class) =
-                                unwrap_ts_wrappers(self.constant_initializer(name)?)
-                            else {
-                                return None;
-                            };
-                            decl.id.is_binding_identifier().then_some(class)
+            Expression::NewExpression(instance) => {
+                let class = match unwrap_ts_wrappers(&instance.callee) {
+                    Expression::ClassExpression(class) => Some(class.as_ref()),
+                    Expression::Identifier(name) => {
+                        let symbol = self.symbol(name)?;
+                        match nodes.kind(self.semantic.scoping().symbol_declaration(symbol)) {
+                            AstKind::Class(class) => Some(class),
+                            AstKind::VariableDeclarator(decl) => {
+                                let Expression::ClassExpression(class) =
+                                    unwrap_ts_wrappers(self.constant_initializer(name)?)
+                                else {
+                                    return None;
+                                };
+                                decl.id.is_binding_identifier().then_some(class.as_ref())
+                            }
+                            _ => None,
                         }
-                        _ => None,
                     }
-                }
-                _ => None,
-            },
+                    _ => None,
+                };
+                class.map(|class| (class, Some(instance.as_ref())))
+            }
             Expression::ThisExpression(this) => {
                 for node in nodes.ancestors(this.node_id.get()) {
                     match node.kind() {
-                        AstKind::Class(class) => return Some(class),
+                        AstKind::Class(class) => return Some((class, None)),
                         AstKind::Function(_) if !matches!(nodes.parent_kind(node.id()), AstKind::MethodDefinition(_)) => return None,
                         _ => {}
                     }
