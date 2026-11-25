@@ -211,6 +211,13 @@ fn malformed_npm_yarn_and_bun_lockfiles_fall_back_with_base() {
             "lockfile-npm-malformed",
         ),
         (
+            "malformed-npm-base.json",
+            "valid-npm-head.json",
+            "package-lock.json",
+            "npm-lock-only.json",
+            "lockfile-npm-malformed",
+        ),
+        (
             "malformed-yarn-base.lock",
             "malformed-yarn-head.lock",
             "yarn.lock",
@@ -318,4 +325,18 @@ fn early_all_env_with_limit_still_falls_back_to_full_suite_for_untraceable_lockf
             "tests/widget.test.ts",
         ]
     );
+
+    let source_limited = plan_vitest(
+        &source.join("head"),
+        &[
+            "--changes",
+            reports.join("source-only.json").to_str().unwrap(),
+            "--environment",
+            "review",
+            "--limit-files",
+            "1",
+        ],
+    );
+    assert_eq!(source_limited["fallback_triggered"], true);
+    assert_eq!(selected_files(&source_limited).len(), 1);
 }
