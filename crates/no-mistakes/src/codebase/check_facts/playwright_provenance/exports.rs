@@ -6,7 +6,9 @@ use crate::edge_index::{CanonicalEdge, EdgeIndex};
 use std::sync::Arc;
 
 mod proof;
+mod uncertain;
 mod wrappers;
+use wrappers::WrapperProof;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(super) struct ExportKey {
@@ -18,6 +20,7 @@ enum Export {
     Playwright(Option<u32>, Vec<(ExportKey, usize)>),
     Local(ExportKey, Option<u32>, Vec<(ExportKey, usize)>),
     Stars(Vec<ExportKey>),
+    Uncertain,
     Unknown,
 }
 
@@ -29,21 +32,12 @@ enum ExportProof {
     Unknown,
 }
 
-#[derive(Clone)]
-pub(super) enum WrapperProof {
-    Direct {
-        param_index: usize,
-        deps: Vec<(ExportKey, usize)>,
-    },
-    Alias(ExportKey),
-    Stars(Vec<ExportKey>),
-    Unknown,
-}
-
 pub(super) struct ExportLookup<'a> {
     resolver: &'a dyn ImportResolution,
     visible: &'a PathSet,
     proof: FxHashMap<ExportKey, ExportProof>,
+    uncertain: FxHashSet<ExportKey>,
+    uncertain_deps: FxHashMap<ExportKey, Vec<ExportKey>>,
     wrappers: FxHashMap<ExportKey, WrapperProof>,
     edges: Vec<CanonicalEdge<ExportKey, EdgeKind>>,
 }
@@ -54,6 +48,8 @@ impl<'a> ExportLookup<'a> {
             resolver,
             visible,
             proof: FxHashMap::default(),
+            uncertain: FxHashSet::default(),
+            uncertain_deps: FxHashMap::default(),
             wrappers: FxHashMap::default(),
             edges: Vec::new(),
         }
@@ -79,6 +75,10 @@ impl<'a> ExportLookup<'a> {
                 (ExportProof::Alias(derived_at, deps), vec![target])
             }
             Export::Stars(targets) => (ExportProof::Stars, targets),
+            Export::Uncertain => {
+                self.uncertain.insert(key.clone());
+                (ExportProof::Unknown, Vec::new())
+            }
             Export::Unknown => (ExportProof::Unknown, Vec::new()),
         };
         let wrapper_proof = self.wrapper_export(facts, &key);
@@ -96,16 +96,18 @@ impl<'a> ExportLookup<'a> {
                 .into_iter()
                 .map(|target| CanonicalEdge::new(key.clone(), target, EdgeKind::SymbolReexport)),
         );
+        self.record_uncertain(next, &key, facts);
         self.proof.insert(key.clone(), proof);
         self.wrappers.insert(key, wrapper_proof);
     }
 
     pub(super) fn local(&self, from: &Path, import: &ImportRef) -> Option<ExportKey> {
         let file = self.resolver.resolve(&import.specifier, from)?;
-        (self.visible.contains(&file) && is_indexable(&file)).then(|| ExportKey {
-            file,
-            name: Arc::clone(&import.name),
-        })
+        (self.visible.contains(&file) && is_indexable(&file) && !uncertain::is_declaration(&file))
+            .then(|| ExportKey {
+                file,
+                name: Arc::clone(&import.name),
+            })
     }
 
     fn imported(
@@ -118,14 +120,15 @@ impl<'a> ExportLookup<'a> {
         if import.is_playwright_test() {
             return Export::Playwright(derived_at, deps);
         }
-        self.local(from, import).map_or(Export::Unknown, |target| {
-            Export::Local(target, derived_at, deps)
-        })
+        self.local(from, import)
+            .map_or(Export::Uncertain, |target| {
+                Export::Local(target, derived_at, deps)
+            })
     }
 
     fn export(&self, facts: Option<&CheckFileFacts>, key: &ExportKey) -> Export {
         let Some(facts) = facts.filter(|file| file.parse_error.is_none() && file.parsed) else {
-            return Export::Unknown;
+            return Export::Uncertain;
         };
         let ts = &facts.ts;
         if let Some(binding) = ts
@@ -147,7 +150,7 @@ impl<'a> ExportLookup<'a> {
                 .and_then(|fixtures| fixtures.values.get(&binding.local))
             {
                 let Some(deps) = self.resolve_wrappers(&key.file, &init.wrappers) else {
-                    return Export::Unknown;
+                    return Export::Uncertain;
                 };
                 return self.imported(&key.file, &init.import, init.derived_at, deps);
             }
@@ -175,11 +178,11 @@ impl<'a> ExportLookup<'a> {
                 return if ts.star_reexport_specifiers.len() == 1 {
                     Export::Playwright(None, Vec::new())
                 } else {
-                    Export::Unknown
+                    Export::Uncertain
                 };
             }
             let Some(target) = self.local(&key.file, &reference) else {
-                return Export::Unknown;
+                return Export::Uncertain;
             };
             stars.push(target);
         }

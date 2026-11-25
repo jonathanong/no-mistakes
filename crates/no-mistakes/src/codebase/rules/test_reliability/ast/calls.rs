@@ -3,10 +3,13 @@ use super::bindings::Runner::{Jest, Playwright, Vitest};
 use super::playwright_bindings::ValueTrace;
 use super::{literal_object, literal_string_is, property, retry_count, Collector, Origin, Shape};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{CallExpression, Expression};
+use oxc_ast::ast::CallExpression;
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use std::sync::Arc;
+
+mod receiver;
+use receiver::receiver_label;
 
 enum TestCall {
     VitestOptions,
@@ -17,6 +20,7 @@ enum TestCall {
 
 struct PendingPlaywright {
     import: Option<ImportRef>,
+    candidates: Vec<ImportRef>,
     binding: Option<Arc<str>>,
     wrappers: Vec<WrapperCall>,
     unresolved_reason: Option<&'static str>,
@@ -34,6 +38,7 @@ impl<'a> Visit<'a> for Collector<'_, '_> {
                 for location in &mut self.locations[start..] {
                     location.origin = origin;
                     location.playwright_import.clone_from(&pending.import);
+                    location.playwright_candidates.clone_from(&pending.candidates);
                     location.playwright_binding.clone_from(&pending.binding);
                     location.playwright_wrappers.clone_from(&pending.wrappers);
                     location.unresolved_reason = pending.unresolved_reason;
@@ -107,14 +112,16 @@ impl Collector<'_, '_> {
                 (!init.import.is_playwright_test() || !init.wrappers.is_empty()).then(|| {
                     PendingPlaywright {
                         import: Some(init.import),
+                        candidates: Vec::new(),
                         binding: receiver_label(receiver),
                         wrappers: init.wrappers,
                         unresolved_reason: None,
                     }
                 })
             }
-            ValueTrace::Unresolved(reason) => Some(PendingPlaywright {
+            ValueTrace::Unresolved(reason, candidates) => Some(PendingPlaywright {
                 import: None,
+                candidates,
                 binding: receiver_label(receiver),
                 wrappers: Vec::new(),
                 unresolved_reason: Some(reason),
@@ -175,20 +182,6 @@ impl Collector<'_, '_> {
                     None,
                 );
             }
-        }
-    }
-}
-
-fn receiver_label(expr: &Expression<'_>) -> Option<Arc<str>> {
-    match unwrap_ts_wrappers(expr) {
-        Expression::Identifier(id) => Some(Arc::from(id.name.as_str())),
-        other => {
-            let member = other.as_member_expression()?;
-            let prop = member.static_property_name()?.as_str()?;
-            let Expression::Identifier(obj) = unwrap_ts_wrappers(member.object()) else {
-                return None;
-            };
-            Some(Arc::from(format!("{}.{prop}", obj.name.as_str())))
         }
     }
 }

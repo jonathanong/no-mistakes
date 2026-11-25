@@ -1,9 +1,9 @@
 use super::super::helpers::{generated, generated_name};
 use super::{and_keys, plain_assignments, plain_value, Key, PlaceholderPositions, RowAccess};
-use crate::codebase::postgres::idents::{ident_key, object_name_identity};
+use crate::codebase::postgres::idents::{ident_key, object_name_identity, unwrap_expr};
 use sqlparser::ast::{
-    ConflictTarget, Insert, ObjectNamePart, OnConflict, OnConflictAction, OnInsert, Query, SetExpr,
-    Spanned, TableObject,
+    ConflictTarget, Expr, Insert, ObjectNamePart, OnConflict, OnConflictAction, OnInsert, Query,
+    SetExpr, Spanned, TableObject,
 };
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -67,7 +67,9 @@ pub(super) fn upsert_keys(
         .iter()
         .map(|row| {
             if row.content.len() != insert.columns.len()
-                || !row.content.iter().all(|value| plain_value(value).is_some())
+                || !row.content.iter().enumerate().all(|(index, value)| {
+                    plain_value(value).is_some() || (index != target_index && is_default(value))
+                })
             {
                 return None;
             }
@@ -85,6 +87,10 @@ pub(super) fn upsert_keys(
         keys,
         unconditional,
     })
+}
+
+fn is_default(value: &Expr) -> bool {
+    matches!(unwrap_expr(value), Expr::Identifier(id) if id.quote_style.is_none() && id.value.eq_ignore_ascii_case("default"))
 }
 
 fn has_overriding_user_value(insert: &Insert, source: &Query, tokens: &[TokenWithSpan]) -> bool {

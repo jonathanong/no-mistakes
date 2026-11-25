@@ -134,8 +134,12 @@ await page.getByTestId("heading").scrollIntoViewIfNeeded();
   into the report message. It defaults to `""`, which uses a generic hint
   instead.
 - `sentinelLocatorNames` lists exact identifier names reserved for pagination
-  sentinel locators in the configured files.
-- `sentinelTestIds` lists exact IDs in direct `getByTestId(...)` receivers.
+  sentinel locators in the configured files. The name matches globals,
+  imported or destructured bindings, and local bindings initialized by a call
+  expression (a locator builder or a factory helper); same-named object
+  literals and shadowing parameters stay clean.
+- `sentinelTestIds` lists exact IDs in `getByTestId(...)` or in a single
+  `[data-testid="..."]` selector passed to `locator(...)`.
   Use a string literal or a template literal without substitutions. Both
   sentinel lists default to empty.
 
@@ -150,10 +154,11 @@ request fires. Start the request wait before scrolling, as in the allowed
 For raw scrolls and cursor waits, a string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A destructured `window` member counts only when that property is `scroll`, `scrollBy`, or `scrollTo`. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name. A parameter named `waitForRequest` or `waitForResponse`, including a single-write alias of that parameter, does not establish a Playwright cursor wait.
 
 Sentinel checks run on Playwright paths and files that import
-`@playwright/test`. They match the receiver as written. For a locator stored
-in a variable, configure the variable name. Choose names that are reserved
-for sentinels, since the rule uses the name as the configuration's assertion
-about the locator.
+`@playwright/test`. They follow single-write aliases and the `first()`,
+`last()`, `nth()`, and `filter()` refinements. A shadowing parameter or a
+same-named object does not inherit the sentinel designation. Locator
+descendant lookups and helper return values require a separate check. For
+other CSS selectors or custom test ID attributes, use a named sentinel binding.
 
 Another file's re-export is not visible here.
 
