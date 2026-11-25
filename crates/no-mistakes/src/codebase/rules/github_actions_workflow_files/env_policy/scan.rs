@@ -63,8 +63,26 @@ pub(super) fn check_parsed(
         policy,
     };
     let mut out = Out::default();
+    let mut visit = |owner: &Mapping, path: &[Seg], scope: &str| {
+        judge(&ctx, owner, path, scope, &mut out);
+    };
+    visit_workflow_scopes(value, &mut visit);
+    if let Some(runs) = value.get("runs").and_then(Value::as_mapping) {
+        if runs.get("using").and_then(Value::as_str) == Some("composite") {
+            let steps = runs.get("steps").and_then(Value::as_sequence);
+            let at = [Seg::Key("runs".into()), Seg::Key("steps".into())];
+            visit_step_scopes(steps, &at, "composite action", &mut visit);
+        }
+    }
+    (out.findings, out.undecidable)
+}
+
+pub(in crate::codebase::rules) fn visit_workflow_scopes(
+    value: &Value,
+    visit: &mut impl FnMut(&Mapping, &[Seg], &str),
+) {
     if let Some(top) = value.as_mapping() {
-        judge(&ctx, top, &[], "workflow", &mut out);
+        visit(top, &[], "workflow");
     }
     if let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) {
         for (key, job) in jobs {
@@ -73,28 +91,19 @@ pub(super) fn check_parsed(
             };
             let base = [Seg::Key("jobs".into()), Seg::Key(id.into())];
             let owner = format!("job \"{id}\"");
-            judge(&ctx, job, &base, &owner, &mut out);
+            visit(job, &base, &owner);
             let steps = job.get("steps").and_then(Value::as_sequence);
             let at = [base[0].clone(), base[1].clone(), Seg::Key("steps".into())];
-            judge_steps(&ctx, steps, &at, &owner, &mut out);
+            visit_step_scopes(steps, &at, &owner, visit);
         }
     }
-    if let Some(runs) = value.get("runs").and_then(Value::as_mapping) {
-        if runs.get("using").and_then(Value::as_str) == Some("composite") {
-            let steps = runs.get("steps").and_then(Value::as_sequence);
-            let at = [Seg::Key("runs".into()), Seg::Key("steps".into())];
-            judge_steps(&ctx, steps, &at, "composite action", &mut out);
-        }
-    }
-    (out.findings, out.undecidable)
 }
 
-fn judge_steps(
-    ctx: &Ctx<'_>,
+fn visit_step_scopes(
     steps: Option<&Vec<Value>>,
     path: &[Seg],
     owner: &str,
-    out: &mut Out,
+    visit: &mut impl FnMut(&Mapping, &[Seg], &str),
 ) {
     for (index, step) in steps.into_iter().flatten().enumerate() {
         let Some(step) = step.as_mapping() else {
@@ -102,7 +111,7 @@ fn judge_steps(
         };
         let mut at = path.to_vec();
         at.push(Seg::Idx(index));
-        judge(ctx, step, &at, &format!("{owner} step {}", index + 1), out);
+        visit(step, &at, &format!("{owner} step {}", index + 1));
     }
 }
 

@@ -1,0 +1,124 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "demo": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to `always`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: always",
+          "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off-by-default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scopes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 12,
+          "message": "job \"unit\" step 1 sets `INSTA_UPDATE` to `1`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: \"1\"",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 15,
+          "message": "job \"unit\" step 2 sets `INSTA_UPDATE` to `unseen`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: unseen",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 21,
+          "message": "job \"fixtures\" step 1 sets `INSTA_UPDATE` to `always`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: always",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 4,
+          "message": "workflow sets `INSTA_UPDATE` to `force`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: force",
+          "target": "INSTA_UPDATE"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "job \"unit\" sets `INSTA_UPDATE` to `1`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "env: { \"INSTA_UPDATE\": 1 }",
+          "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 16,
+          "message": "job \"other\" sets `INSTA_UPDATE` to `1`, which can accept snapshots during CI. Set `INSTA_UPDATE` to `\"no\"` in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "INSTA_UPDATE: \"1\"",
+          "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

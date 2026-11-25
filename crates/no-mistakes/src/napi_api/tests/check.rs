@@ -7,6 +7,8 @@ mod check_partial;
 #[path = "check_job_permissions.rs"]
 mod check_job_permissions;
 
+#[path = "check_insta_snapshot_updates.rs"]
+mod check_insta_snapshot_updates;
 #[path = "check_test_reliability.rs"]
 mod check_test_reliability;
 #[path = "check_test_state.rs"]
