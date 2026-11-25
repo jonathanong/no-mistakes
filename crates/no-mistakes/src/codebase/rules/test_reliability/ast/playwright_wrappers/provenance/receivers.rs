@@ -132,23 +132,19 @@ impl<'ast> Bindings<'_, 'ast> {
         object: &Expression<'_>,
         property: &str,
     ) -> Option<ImportRef> {
-        let Expression::Identifier(identifier) = unwrap_ts_wrappers(object) else {
-            return None;
-        };
-        let symbol = self.symbol(identifier)?;
-        if let Some(import) = self.import_origin(symbol, Some(property)) {
-            return Some(import);
-        }
-        let mut object = self.constant_initializer(identifier)?;
-        for _ in 1..8 {
-            let Expression::Identifier(identifier) = unwrap_ts_wrappers(object) else {
-                return None;
+        let mut current = unwrap_ts_wrappers(object);
+        for _ in 0..8 {
+            let Expression::Identifier(identifier) = current else {
+                break;
             };
             let symbol = self.symbol(identifier)?;
             if let Some(import) = self.import_origin(symbol, Some(property)) {
                 return Some(import);
             }
-            object = self.constant_initializer(identifier)?;
+            let Some(init) = self.constant_initializer(identifier) else {
+                break;
+            };
+            current = unwrap_ts_wrappers(init);
         }
         None
     }
