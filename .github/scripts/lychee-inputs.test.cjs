@@ -26,7 +26,7 @@ function selectedInputs(directory, event, extraArgs = []) {
     .filter(Boolean);
 }
 
-test("PR link sources come from the merge checkout's changes", (context) => {
+function gitFixture(context) {
   const directory = mkdtempSync(path.join(tmpdir(), "lychee-inputs-"));
   context.after(() => rmSync(directory, { recursive: true, force: true }));
   cpSync(fixture, directory, { recursive: true });
@@ -48,6 +48,11 @@ test("PR link sources come from the merge checkout's changes", (context) => {
     );
 
   git("init", "-b", "main");
+  return { directory, git };
+}
+
+test("PR link sources come from the merge checkout's changes", (context) => {
+  const { directory, git } = gitFixture(context);
   git("add", "docs/unchanged.md", "docs/target.md", "docs/linker.md");
   git("commit", "-m", "Base documentation");
   git("switch", "-c", "feature");
@@ -98,6 +103,25 @@ test("PR link sources come from the merge checkout's changes", (context) => {
   assert.deepEqual(selectedInputs(directory, "pull_request"), fullPatterns);
   assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), []);
 });
+
+for (const [patch, expected] of [
+  ["unrelated-workflow.patch", []],
+  ["lychee-args.patch", fullPatterns],
+  ["lychee-step-args.patch", fullPatterns],
+]) {
+  test(`PR link scope for ${patch}`, (context) => {
+    const { directory, git } = gitFixture(context);
+    git("add", ".github/workflows/ci.yml", "docs/unchanged.md");
+    git("commit", "-m", "Base documentation workflow");
+    git("switch", "-c", "feature");
+    git("apply", "--index", patch);
+    git("commit", "-m", "Edit documentation workflow");
+    git("switch", "main");
+    git("merge", "--no-ff", "feature");
+    assert.deepEqual(selectedInputs(directory, "pull_request"), expected);
+    assert.deepEqual(selectedInputs(directory, "pull_request", ["--offline"]), []);
+  });
+}
 
 test("pushes and manual runs use the full documentation patterns", () => {
   for (const event of ["push", "workflow_dispatch"]) {
