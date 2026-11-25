@@ -1043,6 +1043,11 @@ same outcome as CLI `check`. Configure it in the YAML selected by `config`.
 Policy violations use `RuleFinding`, and unreadable or malformed input uses
 `CheckReport.incomplete` (`CheckFailure[]`).
 
+The opt-in [`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) runs in
+async `check()` and `analyzeProject()` check reports. Select the rule through
+the YAML passed to `config`. Reports use the existing `RuleFinding` fields
+for the importing file, line, specifier, and resolved target.
+
 The configured [`pnpm-release-age-policy`](rules/pnpm-release-age-policy.md)
 rule runs through async `check()` and `analyzeProject()` check reports.
 `PnpmReleaseAgePolicyOptions` describes the rule options, including

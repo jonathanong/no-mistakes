@@ -38,6 +38,7 @@ pub use super::markdown_structure_budget::RULE_ID as MARKDOWN_STRUCTURE_BUDGET;
 pub use super::nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use super::nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
 pub use super::nextjs_redirect_destinations::RULE_ID as NEXTJS_REDIRECT_DESTINATIONS;
+pub use super::no_cross_package_relative_imports::RULE_ID as NO_CROSS_PACKAGE_RELATIVE_IMPORTS;
 pub use super::no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_ONLY_FILES;
 pub use super::no_git_identity_mutation::RULE_ID as NO_GIT_IDENTITY_MUTATION;
 pub use super::no_mistakes_config::RULE_ID as NO_MISTAKES_CONFIG;

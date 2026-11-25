@@ -350,6 +350,11 @@ when both exist. Configure PR limits, exclusion globs, and ecosystem exemptions
 as needed. Exempt ecosystems skip every check, including the PR limit.
 Unreadable or malformed input appears in the JSON `incomplete` list.
 
+Enable [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md)
+to report relative imports whose resolved targets cross declared workspace
+package boundaries. Select the importing files with the rule's scope and path
+filters.
+
 Enable [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) for
 scripts targeting Bash before 4.4 and
 [`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md) for zsh scripts.
