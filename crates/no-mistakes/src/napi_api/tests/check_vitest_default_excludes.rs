@@ -168,7 +168,7 @@ fn vitest_default_excludes_spreads_match_node_check_and_batch() {
         &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
     )
     .unwrap();
-    assert_eq!(report["rules"].as_array().unwrap().len(), 5);
+    assert_eq!(report["rules"].as_array().unwrap().len(), 6);
 
     crate::ast::begin_parse_count(&root);
     options["reports"] = json!([{"type": "check"}]);
@@ -182,6 +182,11 @@ fn vitest_default_excludes_spreads_match_node_check_and_batch() {
     assert_eq!(
         counts.get(&root.join("unreferenced.ts")),
         None,
+        "{counts:?}"
+    );
+    assert_eq!(
+        counts.get(&root.join("vitest-shared.config.ts")),
+        Some(&1),
         "{counts:?}"
     );
     assert_eq!(batched["reports"][0]["result"], report);

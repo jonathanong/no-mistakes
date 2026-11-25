@@ -29,7 +29,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "vitest-imported.config.ts",
-          "line": 6,
+          "line": 11,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [\"**/node_modules/**\", ...changedPatterns] } },",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest-imported.config.ts",
+          "line": 7,
           "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
           "rule": "vitest-default-excludes",
           "sourceLine": "exclude: [\"**/node_modules/**\", ...imported],"
