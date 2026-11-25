@@ -18,10 +18,19 @@ test(
     assert.ok(pending instanceof Promise);
     const report = await pending;
     assert.deepEqual(
-      report.rules.map(({ rule, file, line }) => [rule, file, line]),
+      report.rules.map(({ rule, file, line, target }) => [rule, file, line, target ?? null]),
       [
-        [rule, "policies/receipt.tf", 4],
-        [rule, "policies/receipt.tf", 10],
+        [rule, "policies/accepted.tf", 12, "unanalyzable"],
+        [rule, "policies/accepted.tf", 18, "unanalyzable"],
+        [rule, "policies/accepted.tf", 22, "unanalyzable"],
+        [rule, "policies/accepted.tf", 32, "unanalyzable"],
+        [rule, "policies/accepted.tf", 62, "unanalyzable"],
+        [rule, "policies/accepted.tf", 75, "unanalyzable"],
+        [rule, "policies/accepted.tf", 79, "unanalyzable"],
+        [rule, "policies/example.tf.json", 1, "unanalyzable"],
+        [rule, "policies/receipt.tf", 4, null],
+        [rule, "policies/receipt.tf", 10, null],
+        [rule, "policies/receipt.tf", 19, null],
       ],
     );
     assert.equal(report.suppressed.length, 3);

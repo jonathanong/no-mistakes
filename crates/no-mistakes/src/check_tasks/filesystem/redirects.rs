@@ -149,6 +149,10 @@ pub(super) fn run(
         super::manifests::run(root, config, files, &prepared.sources, defer_suppression)?;
     diagnostics.append(manifest_diagnostics);
     let config = config.as_ref();
+    let (config, terraform_diagnostics) =
+        super::terraform::run(root, config, files, &prepared, defer_suppression)?;
+    diagnostics.append(terraform_diagnostics);
+    let config = config.as_ref();
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

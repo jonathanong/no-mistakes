@@ -9,34 +9,55 @@ needs it where reviewers can see the scope of the grant.
 
 ## Options and defaults
 
-The rule is off until configured. It has no rule-specific options. Use standard
-`projects` or `scope`, and `include` and `exclude`, to select Terraform or
-OpenTofu files that use the AWS provider's `aws_iam_policy_document` data source.
+The rule is off until configured. It supports the shared `options.unanalyzable`
+policy (`report` by default, `advise`, or `ignore`). Use standard `projects` or
+`scope`, and `include` and `exclude`, to select Terraform or OpenTofu files
+that declare AWS IAM policies.
 
 ```yaml
 rules:
   - rule: terraform-iam-no-undocumented-wildcards
     scope: repository
     include: ["infra/policies/**/*.tf"]
+    options:
+      unanalyzable: report
 ```
 
 ## What it catches
 
-The rule parses selected native `.tf` files and visits direct `statement`
-blocks in `data "aws_iam_policy_document"` declarations. It reports a
-`resources` attribute when a literal array entry contains a wildcard (`*`
-or `?`) and the effect is explicitly `Allow` or defaults to `Allow`. It
-reports once per attribute, even when several entries contain wildcards.
-AWS policy variable expressions such as `&{*}` can denote literal characters
-and do not count as wildcards.
+The rule parses selected `.tf` files and inspects `statement` blocks in
+`data "aws_iam_policy_document"` declarations. It reports a `resources`
+attribute as a definite finding when the effect is explicitly `Allow` or
+defaults to `Allow` and any literal array entry—or any literal segment of an
+interpolated string such as `"arn:aws:s3:::${var.bucket}/*"`—contains a
+wildcard (`*` or `?`). It reports once per attribute, even when several
+entries contain wildcards. AWS policy variable expressions such as `&{*}` or
+`$${*}` denote literal characters and do not count as wildcards.
 [AWS IAM policy variables](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_variables.html#policy-vars-specialchars)
 
-The check covers source declarations. It skips Deny statements, dynamic
-`statement` blocks, computed effects and resource values, `not_resources`,
-JSON policies, and policies loaded or merged from other documents.
-It does not run Terraform or evaluate the effective deployed policy.
-Unreadable or malformed selected files appear in `incomplete`. Other files
-continue to produce findings.
+Explicit `Deny` statements and `not_resources` attributes do not trigger
+findings. Any IAM policy expression or shape the rule cannot statically prove
+clean is routed through the `unanalyzable` policy (`target: "unanalyzable"`)
+rather than passing silently:
+
+- Non-literal `effect` (such as `var.effect`) or non-list `resources` (such as
+  `var.resources`)
+- Non-literal entries in `resources = [...]` whose literal segments have no
+  wildcard (such as `"arn:aws:s3:::example.invalid/receipts/${var.file}"` or
+  `var.arn`)
+- `dynamic "statement"` blocks and merged policy attributes
+  (`source_policy_documents`, `override_policy_documents`, `source_json`,
+  `override_json`)
+- IAM policy resources (`aws_iam_policy`, `aws_iam_role_policy`,
+  `aws_iam_user_policy`, `aws_iam_group_policy`, and `aws_iam_role`
+  `inline_policy`) whose `policy` attribute is not a reference to a
+  `data "aws_iam_policy_document"` declared in the same file (for example
+  `jsonencode(...)` or an external data source)
+- Selected `.tf.json` files
+
+The check does not run Terraform or evaluate the effective deployed policy.
+Unreadable or malformed selected `.tf` files appear in `incomplete`. Other
+files continue to produce findings.
 
 ## Valid example
 

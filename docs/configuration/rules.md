@@ -748,8 +748,8 @@ duplicates are deduplicated, and an empty array disables the check. A spread of
 ### Terraform IAM wildcard resources
 
 [`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md) is opt-in.
-Select native `.tf` files with the standard rule scope and path filters.
-The rule needs no `options` block.
+Select Terraform files with the standard rule scope and path filters.
+It supports the shared `options.unanalyzable` policy (`report` by default, `advise`, or `ignore`).
 
 ### Dependabot cooldown
 

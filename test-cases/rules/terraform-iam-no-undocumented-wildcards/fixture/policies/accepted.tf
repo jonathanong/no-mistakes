@@ -51,3 +51,34 @@ locals {
   }
   EOT
 }
+
+resource "aws_iam_policy" "local_doc" {
+  name   = "local-doc"
+  policy = data.aws_iam_policy_document.scoped.json
+}
+
+resource "aws_iam_policy" "json_inline" {
+  name = "json-inline"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject"]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "external_doc" {
+  name   = "external-doc"
+  role   = "example"
+  policy = data.aws_iam_policy_document.shared.json
+}
+
+data "aws_iam_policy_document" "merged" {
+  source_policy_documents = [var.base_policy]
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["arn:aws:s3:::example.invalid/receipts/current.json"]
+  }
+}
