@@ -98,3 +98,20 @@ fn github_actions_no_insta_snapshot_updates_is_in_the_public_rule_inventory() {
         assert!(body.contains(phrase), "missing {phrase}");
     }
 }
+
+#[test]
+fn swift_darwin_imports_are_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::SWIFT_NO_UNGUARDED_DARWIN_IMPORT;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let page = format!("{rule}.md");
+    assert!(root.join("docs/rules").join(&page).is_file());
+    for entry in [
+        "docs/rules/README.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/configuration/rules.md",
+    ] {
+        assert!(read(&root.join(entry)).contains(&page), "{entry}");
+    }
+}

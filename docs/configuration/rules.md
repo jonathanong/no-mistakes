@@ -302,6 +302,10 @@ require a companion rule.
 also supports `low`: it checks literal HTML IDs and routes other ID expressions
 through the selected unanalyzable policy. This remains independent of
 `tests.playwright.selectors.htmlIds`, which controls coverage analysis.
+Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
+rule on portable Swift test sources. Select those files with common
+`include` and `exclude` filters.
+
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported
 configuration objects without resolving constants or configuration wrappers.
