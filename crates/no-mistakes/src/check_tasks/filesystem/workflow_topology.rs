@@ -30,7 +30,8 @@ pub(super) fn run<'a>(
         )
     });
     if let Some(session) = prepared.session {
-        if let Some(chunk) = session.capture_check_result(rules::WORKFLOW_TOPOLOGY_POLICY, result)?
+        if let Some(chunk) =
+            session.capture_check_result(rules::WORKFLOW_TOPOLOGY_POLICY, result)?
         {
             output.append(chunk);
         }
