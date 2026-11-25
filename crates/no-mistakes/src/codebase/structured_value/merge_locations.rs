@@ -1,5 +1,6 @@
 use super::document_spans::{document_spans, DocumentSpan};
-use super::merge_keys::{expand_located, KeyLocation, MergeError};
+use super::merge_keys::{expand_located, KeyLocation};
+use super::plain_merge_scan::has_plain_merge_key;
 use crate::fx::FxHashMap;
 use granit_parser::{Event, Parser, ScalarStyle};
 use serde_yaml::Value;
@@ -89,7 +90,7 @@ impl<'a> MergeLocations<'a> {
         locations
     }
 
-    pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), MergeError> {
+    pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), (usize, String)> {
         let doc_span = self.doc_spans.get(index).copied();
         let doc_source = doc_span.map_or(self.source, |span| {
             &self.source[span.start_byte..span.end_byte]
@@ -109,14 +110,20 @@ impl<'a> MergeLocations<'a> {
             .map(|root| self.nodes[root].line)
             .or_else(|| doc_span.map(|span| span.start_line))
             .unwrap_or(1);
-        let locations = root
-            .and_then(|root| self.key_locations(root, value))
-            .ok_or(MergeError::MissingLocation(fallback_line))?;
+        let locations =
+            root.map_or_else(FxHashMap::default, |root| self.key_locations(root, value));
+        let literal_only = !has_plain_merge_key(doc_source);
         expand_located(value, &|key| {
-            locations
-                .get(&key.as_ptr())
-                .copied()
-                .ok_or(MergeError::LocationChanged(fallback_line))
+            if let Some(location) = locations.get(&key.as_ptr()).copied() {
+                return Ok(location);
+            }
+            if literal_only {
+                return Ok(KeyLocation::Literal);
+            }
+            Err((
+                fallback_line,
+                "could not match a YAML `<<` key to its source location".to_string(),
+            ))
         })
     }
 
@@ -135,11 +142,7 @@ impl<'a> MergeLocations<'a> {
 
     // Expansion moves YAML keys in place. A lost string identity is an error
     // because only a key matched to a literal source node can be left intact.
-    fn key_locations(
-        &self,
-        root: usize,
-        value: &Value,
-    ) -> Option<FxHashMap<*const u8, KeyLocation>> {
+    fn key_locations(&self, root: usize, value: &Value) -> FxHashMap<*const u8, KeyLocation> {
         let mut lines = FxHashMap::default();
         let mut pending = vec![(root, value)];
         while let Some((id, value)) = pending.pop() {
@@ -155,7 +158,9 @@ impl<'a> MergeLocations<'a> {
                     let (marks, _) = children.as_chunks::<2>();
                     for ((key, value), &[key_mark, value_mark]) in mapping.iter().zip(marks) {
                         if let Some(key) = key.as_str().filter(|key| *key == "<<") {
-                            lines.insert(key.as_ptr(), self.key_location(key_mark)?);
+                            if let Some(location) = self.key_location(key_mark) {
+                                lines.insert(key.as_ptr(), location);
+                            }
                         }
                         pending.push((value_mark, value));
                     }
@@ -165,12 +170,9 @@ impl<'a> MergeLocations<'a> {
                 {
                     pending.extend(children.iter().copied().zip(items));
                 }
-                (_, Value::Mapping(_) | Value::Sequence(_)) if super::contains_merge(value) => {
-                    return None;
-                }
                 _ => {}
             }
         }
-        Some(lines)
+        lines
     }
 }

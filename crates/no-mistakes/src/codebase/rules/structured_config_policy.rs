@@ -7,7 +7,6 @@ use std::path::{Path, PathBuf};
 mod ancestor_override_subset;
 mod equals_file;
 mod paths;
-mod partial;
 mod scan;
 mod value_assertions;
 mod when;
@@ -145,27 +144,3 @@ mod plugins_tests;
 mod selector_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-
-fn merge_location_finding(
-    root: &std::path::Path,
-    path: &std::path::Path,
-    error: crate::codebase::structured_value::StructuredValueError,
-) -> super::RuleFinding {
-    let file = crate::codebase::ts_source::relative_slash_path(root, path);
-    let detail = error.message;
-    super::RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: file.clone(),
-        line: error.line.unwrap_or(1),
-        message: format!("{file}: {detail}. Write the merged keys explicitly so the policy can check them."),
-        import: None,
-        target: Some("unanalyzable".to_string()),
-        causes: vec![super::FindingCause {
-            kind: "unlocated-yaml-merge",
-            file,
-            line: error.line,
-            callee: None,
-            detail,
-        }],
-    }
-}

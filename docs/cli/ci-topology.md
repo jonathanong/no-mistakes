@@ -28,9 +28,6 @@ diagnostic is printed to stderr as `[<code>] <workflow>(<space><job>)?: <message
 and the command exits `1`. Output is only printed once the (possibly
 `--workflow`-filtered) graph is clean.
 
-A YAML `<<` key whose source location cannot be determined produces
-`unlocated-yaml-merge`. Write the merged keys explicitly to restore analysis.
-
 ## Model
 
 - **Workflows** carry their triggers, `jobIds`, `env` declarations, static

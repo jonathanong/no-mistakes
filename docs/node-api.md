@@ -31,11 +31,6 @@ Explicit integration-policy includes/excludes narrow test discovery while
 retaining imported helper summaries and parse diagnostics. This preparation
 change adds no invocation option, runtime export, or report field.
 
-`ciTopology()` reports `unlocated-yaml-merge` when a YAML merge key cannot
-be matched to its location in the source. The configured workflow and
-structured config checks apply their unanalyzable policy in
-`check()`. [CLI diagnostic](cli/ci-topology.md#exit-behavior)
-
 Configured `workflow-topology-policy.options.forbiddenActivityTypes` runs through
 async `check({ root, config })` and `analyzeProject()` check reports with the same
 exact matching, event filtering, `types` key locations, custom messages, and

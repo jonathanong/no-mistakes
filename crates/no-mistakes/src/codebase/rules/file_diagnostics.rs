@@ -35,9 +35,7 @@ pub(crate) fn application(
         });
     }
     route_application(config, rule, findings, |finding| match uncertainty {
-        InputUncertainty::Read => {
-            !finding.causes.is_empty() || sources.read_path(&root.join(&finding.file)).is_err()
-        }
+        InputUncertainty::Read => sources.read_path(&root.join(&finding.file)).is_err(),
         InputUncertainty::ReadOrParse => true,
     })
 }

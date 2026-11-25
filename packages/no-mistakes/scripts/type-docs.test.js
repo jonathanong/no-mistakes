@@ -70,11 +70,11 @@ test("suppression accounting declares the directive source file", () => {
   assert.match(declarations, /interface SuppressedFinding[\s\S]*sourceFile: string;/);
 });
 
-test("check findings declare structured uncertainty causes", () => {
+test("coverage owner findings expose structured uncertainty causes", () => {
   const declarations = readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8");
   assert.match(declarations, /causes\?: FindingCause\[\];/);
   assert.match(
     declarations,
-    /interface FindingCause[\s\S]*kind: "unresolved-dispatch" \| "traversal-limit" \| "unmodeled-generator" \| "unlocated-yaml-merge";[\s\S]*detail: string;/,
+    /interface FindingCause[\s\S]*kind: "unresolved-dispatch" \| "traversal-limit" \| "unmodeled-generator";[\s\S]*detail: string;/,
   );
 });

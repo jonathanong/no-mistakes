@@ -113,21 +113,3 @@ fn directive_lines_are_the_event_key_for_mapping_and_sequence_forms() {
     assert_eq!(lines_in(&found, "suppressed-mapping.yml"), vec![4]);
     assert_eq!(lines_in(&found, "suppressed-scalar.yml"), vec![2]);
 }
-
-#[test]
-fn prepared_workflow_diagnostics_apply_suppression_when_requested() {
-    let root = super::fixture("forbidden-events");
-    let config = super::config("forbiddenEvents: [pull_request_target]");
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    let sources = snapshot.source_store_for(&root);
-    let files = snapshot.paths_for(&root);
-    let inputs = super::super::prepare::from_files(&root, &config, &files, &sources);
-    let diagnostics = |defer| super::super::diagnostics_prepared(
-        &root, &config, None, &sources, &inputs, None, defer,
-    ).unwrap();
-    let deferred = diagnostics(true);
-    let immediate = diagnostics(false);
-    assert!(deferred.findings.iter().any(|row| row.file.contains("suppressed-")));
-    assert!(immediate.findings.iter().all(|row| !row.file.contains("suppressed-")));
-    assert_eq!(lines_in(&immediate.findings, "scalar.yml"), vec![2]);
-}

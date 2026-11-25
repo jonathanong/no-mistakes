@@ -174,16 +174,14 @@ fn nested_merges_supply_job_and_step_metadata_without_consuming_quoted_keys() {
 }
 
 #[test]
-fn unlocated_merge_reports_unavailable_even_for_possibly_quoted_keys() {
+fn unlocated_merge_reports_malformed_while_quoted_literal_keeps_graph() {
     let quoted_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
         .join("merge-location-unavailable-quoted");
     let quoted = load_workflow_topology(&quoted_root, &CiConfig::default(), &[]);
-    assert_eq!(quoted.diagnostics.len(), 1);
-    assert!(quoted.jobs.is_empty());
-    assert_eq!(
-        quoted.diagnostics[0].code,
-        super::super::model::DiagnosticCode::UnlocatedYamlMerge
-    );
+    assert!(quoted.diagnostics.is_empty(), "{:?}", quoted.diagnostics);
+    assert_eq!(quoted.jobs.len(), 1);
+    let quoted_job = serde_json::to_value(&quoted.jobs[0]).unwrap();
+    assert_eq!(quoted_job["env"]["<<"], "keep");
 
     let plain_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
         .join("merge-location-unavailable");
@@ -196,28 +194,4 @@ fn unlocated_merge_reports_unavailable_even_for_possibly_quoted_keys() {
         "{}",
         plain.diagnostics[0].message
     );
-}
-
-#[test]
-fn an_unlocated_merge_can_leave_workflow_callability_known_or_unknown() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &crate::test_support::rule_fixture_root("workflow-topology-policy")
-            .join("merge-location-calls"),
-    );
-    let topology = load_workflow_topology(&root, &CiConfig::default(), &[]);
-    let workflow = |suffix: &str| {
-        topology
-            .workflows
-            .iter()
-            .find(|row| row.path.ends_with(suffix))
-            .unwrap()
-    };
-    assert!(workflow("/partial-callee.yml").callable);
-    assert!(workflow("/partial-callee.yml").workflow_call.is_some());
-    assert!(!workflow("/unknown-callee.yml").callable);
-    assert_eq!(topology.diagnostics.len(), 3, "{:?}", topology.diagnostics);
-    assert!(topology
-        .diagnostics
-        .iter()
-        .all(|row| row.code == super::super::model::DiagnosticCode::UnlocatedYamlMerge));
 }

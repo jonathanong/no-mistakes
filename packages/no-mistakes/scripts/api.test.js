@@ -541,11 +541,6 @@ test("queue wait finding kinds are public without narrowing other queue findings
   );
 });
 
-test("YAML merge uncertainty is declared in topology reports", () => {
-  const topology = readFileSync(join(packageRoot, "workflow-topology-types.d.ts"), "utf8");
-  assert.match(topology, /\| "unlocated-yaml-merge"/);
-});
-
 test("workflow topology policy exports the reusable workflow lock option", () => {
   const declarations = readFileSync(
     join(packageRoot, "workflow-topology-policy-types.d.ts"),

@@ -1,4 +1,3 @@
-use super::prepare::check_prepared;
 use super::*;
 use crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs;
 use crate::codebase::ts_source::VisiblePathSnapshot;
@@ -12,7 +11,7 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
-fn run(name: &str, file: &str) -> anyhow::Result<Vec<RuleFinding>> {
+fn run(name: &str, file: &str) -> Result<Vec<RuleFinding>> {
     let root = fixture(name);
     let path = root.join(file);
     let config = crate::config::v2::load_v2_config(&root, Some(&path))?;

@@ -76,17 +76,5 @@ pub(super) fn check_with_files_and_sources(
     let inputs = from_files(root, config, all_files, sources);
     let config_path =
         crate::config::v2::effective_v2_config_path_from_visible(root, None, all_files)?;
-    check_prepared(root, config, None, sources, &inputs, config_path.as_deref())
-}
-
-pub(super) fn check_prepared(
-    root: &Path,
-    config: &NoMistakesConfig,
-    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
-    sources: &SourceStore,
-    inputs: &PreparedWorkflowTopologyInputs,
-    config_path: Option<&Path>,
-) -> anyhow::Result<Vec<super::RuleFinding>> {
-    super::diagnostics_prepared(root, config, session, sources, inputs, config_path, true)
-        .map(|output| output.findings)
+    super::check_prepared(root, config, None, sources, &inputs, config_path.as_deref())
 }

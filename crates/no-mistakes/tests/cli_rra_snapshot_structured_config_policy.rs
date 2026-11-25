@@ -158,23 +158,12 @@ fn structured_config_policy_json_matches_snapshot() {
 
 #[test]
 fn check_json_snapshot_structured_config_merge_location_unavailable() {
-    let cases = [
-        "unavailable",
-        "advise",
-        "ignore",
-        "equals",
-        "ancestor",
-        "definite-advise",
-        "definite-ignore",
-        "primary-ignore",
-        "secondary-ignore",
-    ]
-    .map(|mode| {
-        (
-            mode,
+    assert_saved_fixture(
+        "structured_config_merge_location_unavailable",
+        &[(
+            "unavailable_location",
             root("merge-location-unavailable"),
-            cfg(&format!("merge-location-{mode}.yml")),
-        )
-    });
-    assert_saved_fixture("structured_config_merge_location_unavailable", &cases);
+            cfg("merge-location-unavailable.yml"),
+        )],
+    );
 }

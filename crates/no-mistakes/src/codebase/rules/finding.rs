@@ -17,7 +17,7 @@ pub struct RuleFinding {
 }
 
 /// One uncertainty cause behind a finding: `kind` is `unresolved-dispatch`,
-/// `traversal-limit`, `unmodeled-generator`, or `unlocated-yaml-merge`.
+/// `traversal-limit`, or `unmodeled-generator`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FindingCause {

@@ -39,10 +39,7 @@ pub fn parse_workflow_value(value: &Value, path: &str, source: Option<&str>) -> 
 
     let value = match expand_yaml_mapping_if_merged(value, source) {
         Ok(value) => value,
-        Err(error) if error.missing_merge_location => {
-            return malformed::unlocated_workflow(path, &error.message, value);
-        }
-        Err(error) => return malformed_workflow(path, &error.message),
+        Err(message) => return malformed_workflow(path, &message),
     };
     let on = value.get("on");
     let triggers = workflow_values::parse_triggers(on);

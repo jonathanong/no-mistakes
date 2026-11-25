@@ -67,7 +67,6 @@ pub(super) fn requires_unbound_global(code: DiagnosticCode) -> bool {
     matches!(
         code,
         DiagnosticCode::MalformedWorkflow
-            | DiagnosticCode::UnlocatedYamlMerge
             | DiagnosticCode::DuplicateWorkflowName
             | DiagnosticCode::MissingNeedsDependency
             | DiagnosticCode::MissingLocalWorkflow

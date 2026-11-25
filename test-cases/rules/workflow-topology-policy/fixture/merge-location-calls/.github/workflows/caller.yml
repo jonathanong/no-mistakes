@@ -1,9 +1,0 @@
-name: complete caller
-on: push
-jobs:
-  known:
-    uses: ./.github/workflows/callee.yml
-  explicit:
-    uses: ./.github/workflows/partial-callee.yml
-  unknown:
-    uses: ./.github/workflows/unknown-callee.yml

@@ -2,10 +2,6 @@ use super::super::model;
 use super::ParsedWorkflow;
 
 pub(crate) fn malformed_workflow(path: &str, message: &str) -> ParsedWorkflow {
-    unavailable_workflow(path, model::DiagnosticCode::MalformedWorkflow, message)
-}
-
-fn unavailable_workflow(path: &str, code: model::DiagnosticCode, message: &str) -> ParsedWorkflow {
     ParsedWorkflow {
         node: model::WorkflowNode {
             id: path.to_string(),
@@ -21,32 +17,15 @@ fn unavailable_workflow(path: &str, code: model::DiagnosticCode, message: &str) 
         },
         jobs: Vec::new(),
         edges: Vec::new(),
-        diagnostics: vec![model::WorkflowTopologyDiagnostic::new(code, message, path)],
+        diagnostics: vec![model::WorkflowTopologyDiagnostic::new(
+            model::DiagnosticCode::MalformedWorkflow,
+            message.to_string(),
+            path,
+        )],
         output_references: Vec::new(),
     }
 }
 
 pub(super) fn workflow_basename(path: &str) -> String {
     path.rsplit('/').next().unwrap_or(path).to_string()
-}
-
-pub(super) fn unlocated_workflow(
-    path: &str,
-    message: &str,
-    value: &serde_yaml::Value,
-) -> ParsedWorkflow {
-    let mut workflow =
-        unavailable_workflow(path, model::DiagnosticCode::UnlocatedYamlMerge, message);
-    let on = value.get("on");
-    workflow.node.triggers = super::workflow_values::parse_triggers(on);
-    let contract = super::workflow_values::parse_workflow_call(on);
-    workflow.node.callable = contract.is_some();
-    if on.is_none_or(|value| !crate::codebase::structured_value::contains_merge(value)) {
-        workflow.node.workflow_call = contract;
-    }
-    workflow
-        .node
-        .triggers
-        .retain(|trigger| trigger.event != "<<");
-    workflow
 }

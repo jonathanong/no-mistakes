@@ -24,11 +24,6 @@ pub fn diagnose_calls(
     edges: &[model::WorkflowTopologyEdge],
     diagnostics: &mut Vec<model::WorkflowTopologyDiagnostic>,
 ) {
-    let unavailable: HashSet<_> = diagnostics
-        .iter()
-        .filter(|diagnostic| diagnostic.code == model::DiagnosticCode::UnlocatedYamlMerge)
-        .map(|diagnostic| diagnostic.workflow_path.clone())
-        .collect();
     for edge in edges {
         let model::WorkflowTopologyEdge::Calls(call) = edge else {
             continue;
@@ -46,7 +41,7 @@ pub fn diagnose_calls(
                 )
                 .with_job(&call.from),
             ),
-            Some(callee) if !callee.callable && !unavailable.contains(to) => diagnostics.push(
+            Some(callee) if !callee.callable => diagnostics.push(
                 model::WorkflowTopologyDiagnostic::new(
                     model::DiagnosticCode::NonCallableWorkflow,
                     format!(

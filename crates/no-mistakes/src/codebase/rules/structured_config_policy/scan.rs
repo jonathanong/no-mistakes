@@ -1,9 +1,8 @@
 use super::ancestor_override_subset::{check_ancestor_override_subset, ParsedAncestorCache};
 use super::equals_file::check_equals_file;
-use super::partial;
 use super::paths::CanonicalInventory;
 use super::when::policy_applies;
-use super::{assert_value, AssertionKind, Options, RULE_ID};
+use super::{assert_value, value_at_key, AssertionKind, Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
@@ -56,35 +55,27 @@ pub(super) fn scan_with_state(
                         continue;
                     }
                 };
-            let (value, partial) =
+            let value =
                 match crate::codebase::structured_value::parse_structured_value_located(&path, &source) {
-                    Ok(value) => (value, false),
-                    Err(mut error) if error.missing_merge_location => {
-                        let partial = error.partial.take();
-                        findings.push(super::merge_location_finding(root, &path, error));
-                        let Some(value) = partial else { continue };
-                        (*value, true)
-                    }
-                    Err(error) => {
+                    Ok(value) => value,
+                    Err((line, error)) => {
                         findings.push(RuleFinding {
                             causes: Vec::new(),
                             rule: RULE_ID.to_string(),
                             file: rel.clone(),
-                            line: error.line.unwrap_or(1),
-                            message: format!("{rel}: {}", error.message),
+                            line: line.unwrap_or(1),
+                            message: format!("{rel}: {error}"),
                             import: None,
                             target: None,
                         });
                         continue;
                     }
                 };
-            if !policy_applies(&value, &policy.when)
-                || (partial && !partial::conditions_known(&value, &policy.when))
-            {
+            if !policy_applies(&value, &policy.when) {
                 continue;
             }
             for key in &policy.required_keys {
-                if partial::key(&value, key, partial) == Some(None) {
+                if value_at_key(&value, key).is_none() {
                     findings.push(RuleFinding {
                         causes: Vec::new(),
                         rule: RULE_ID.to_string(),
@@ -97,7 +88,7 @@ pub(super) fn scan_with_state(
                 }
             }
             for key in &policy.banned_keys {
-                if partial::key(&value, key, partial).flatten().is_some() {
+                if value_at_key(&value, key).is_some() {
                     findings.push(RuleFinding {
                         causes: Vec::new(),
                         rule: RULE_ID.to_string(),
@@ -110,15 +101,6 @@ pub(super) fn scan_with_state(
                 }
             }
             for assertion in &policy.value_assertions {
-                if partial && assertion.kind == Some(AssertionKind::AncestorOverrideSubset) {
-                    findings.extend(super::ancestor_override_subset::validate_partial_extends(
-                        &value, &rel, assertion,
-                    ));
-                    continue;
-                }
-                if partial && !partial::assertion_known(&value, assertion) {
-                    continue;
-                }
                 match assertion.kind {
                     Some(AssertionKind::EqualsFile) => {
                         findings.extend(check_equals_file(root, &rel, sources, &value, assertion));

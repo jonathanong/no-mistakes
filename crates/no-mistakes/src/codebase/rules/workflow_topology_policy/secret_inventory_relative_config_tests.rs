@@ -14,7 +14,7 @@ fn unused_declarations_resolve_a_relative_config_path_against_root() {
     let inputs =
         PreparedWorkflowTopologyInputs::for_config(&root, &config, &snapshot, &sources).unwrap();
 
-    let findings = super::super::prepare::check_prepared(
+    let findings = super::super::check_prepared(
         &root,
         &config,
         None,
@@ -43,7 +43,7 @@ fn split_inventory_reports_unused_secrets_on_the_authored_fragment() {
     let sources = snapshot.source_store_for(&root);
     let inputs =
         PreparedWorkflowTopologyInputs::for_config(&root, &config, &snapshot, &sources).unwrap();
-    let findings = super::super::prepare::check_prepared(
+    let findings = super::super::check_prepared(
         &root,
         &config,
         None,

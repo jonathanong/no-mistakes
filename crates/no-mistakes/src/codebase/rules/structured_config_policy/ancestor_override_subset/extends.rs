@@ -176,7 +176,31 @@ impl Walk<'_> {
         });
     }
 
-
+    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Arc<Value>> {
+        let Some(source) = super::super::super::read_language_source(self.sources, resolved) else {
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset `{spec}` is missing",
+                    self.nested_rel
+                ),
+            ));
+            return None;
+        };
+        match self.parsed_ancestors.parse(resolved, &source) {
+            Ok(value) => Some(value),
+            Err(error) => {
+                let ancestor_rel = relative_slash_path(self.root, resolved);
+                self.findings.push(finding(
+                    &ancestor_rel,
+                    self.assertion,
+                    format!("{ancestor_rel}: {error}"),
+                ));
+                None
+            }
+        }
+    }
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]

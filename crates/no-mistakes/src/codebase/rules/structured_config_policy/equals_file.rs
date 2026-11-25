@@ -2,7 +2,7 @@ use super::paths::contained_in_root;
 use super::value_assertions::selector::{any_groups, values_at_selector};
 use super::{MatchMode, ValueAssertion, RULE_ID};
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::structured_value::parse_structured_value_located;
+use crate::codebase::structured_value::parse_structured_value;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
@@ -53,17 +53,8 @@ pub(super) fn check_equals_file(
             format!("{rel}: equals-file `{}` is missing", assertion.file),
         )];
     };
-    let mut findings = Vec::new();
-    let other = match parse_structured_value_located(&other_path, &source) {
+    let other = match parse_structured_value(&other_path, &source) {
         Ok(other) => other,
-        Err(mut error) if error.missing_merge_location => {
-            let available = error.partial.take().filter(|partial| {
-                super::partial::selection_known(partial, from_key)
-            });
-            findings.push(super::merge_location_finding(root, &other_path, error));
-            let Some(available) = available else { return findings };
-            *available
-        }
         Err(error) => {
             return vec![finding(
                 &other_rel,
@@ -73,9 +64,9 @@ pub(super) fn check_equals_file(
         }
     };
     if values_match(value, &other, assertion, from_key) {
-        return findings;
+        return Vec::new();
     }
-    findings.push(finding(
+    vec![finding(
         rel,
         assertion,
         assertion.message.clone().unwrap_or_else(|| {
@@ -84,8 +75,7 @@ pub(super) fn check_equals_file(
                 assertion.key, from_key, assertion.file
             )
         }),
-    ));
-    findings
+    )]
 }
 
 fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_key: &str) -> bool {

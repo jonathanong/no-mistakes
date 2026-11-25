@@ -139,7 +139,7 @@ export interface RuleFinding {
 
 /** One uncertainty cause behind a `coverage-producer-assertion-owner` finding. */
 export interface FindingCause {
-  kind: "unresolved-dispatch" | "traversal-limit" | "unmodeled-generator" | "unlocated-yaml-merge";
+  kind: "unresolved-dispatch" | "traversal-limit" | "unmodeled-generator";
   /** Repository-relative call site, or the last module for a traversal limit. */
   file: string;
   line?: number;

@@ -1,3 +1,0 @@
-extends: ./long-tag.yml
-runtime:
-  legacy: false

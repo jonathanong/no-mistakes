@@ -3,7 +3,6 @@ rules:
   - rule: workflow-topology-policy
     scope: repository
     options:
-      requiredJobs: [".github/workflows/long-tag.yml#verify"]
       forbiddenEvents:
         - pull_request_target
       unlockedWorkflowReasons:
