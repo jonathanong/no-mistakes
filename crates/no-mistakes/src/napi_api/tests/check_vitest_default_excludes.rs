@@ -179,6 +179,7 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
         ("action-input-dynamic-uses.yml", 2),
         ("action-input-empty-actions-bad-include.yml", 1),
         ("action-input-no-files-bad-include.yml", 1),
+        ("action-input-require-ban-conflict.yml", 2),
         ("duplicate-apps.yml", 2),
         ("vitest.yml", 1),
         ("multiple.yml", 11),
@@ -244,7 +245,16 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
     .expect_err("fragment invalid rule must reject analyzeProject");
     assert_eq!(native_frag.reason, cli_frag);
     assert_eq!(batched_frag.reason, cli_frag);
-    assert!(cli_frag.starts_with(".no-mistakes.yml: "), "{cli_frag}");
+    let frag_lines: Vec<_> = cli_frag.lines().collect();
+    assert_eq!(frag_lines.len(), 2, "{cli_frag}");
+    assert!(
+        frag_lines[0].starts_with(".no-mistakes/rules/cache.yml: "),
+        "{cli_frag}"
+    );
+    assert!(
+        frag_lines[1].starts_with(".no-mistakes/rules/vitest.yml: "),
+        "{cli_frag}"
+    );
 
     let bad_tsconfig = root.join("bad-tsconfig.json");
     let cache_cfg = root.join("cache.yml");
@@ -274,5 +284,23 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
     )
     .expect_err("batched invalid cache.yml must fail before bad tsconfig");
     assert_eq!(batched_ts.reason, cli_ts);
+    let mixed_ts = crate::napi_api::analyze_project::analyze_project_json_impl(
+        crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "config": cache_cfg,
+                "tsconfig": bad_tsconfig,
+                "reports": [
+                    {"type": "callSites", "file": "factory.ts", "exportName": "createConfig"},
+                    {"type": "check"},
+                ],
+            })
+            .to_string(),
+        ),
+    )
+    .expect_err(
+        "mixed callSites+check batch must fail on invalid rule options before bad tsconfig",
+    );
+    assert_eq!(mixed_ts.reason, cli_ts);
     assert!(cli_ts.contains("options.forbiddenPaths"), "{cli_ts}");
 }

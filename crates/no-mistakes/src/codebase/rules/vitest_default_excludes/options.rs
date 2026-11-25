@@ -46,18 +46,24 @@ pub(super) struct Application<'a> {
 
 pub(crate) fn collect_config_errors(
     root: &Path,
+    config_path: Option<&Path>,
     config: &NoMistakesConfig,
     errors: &mut Vec<String>,
 ) {
-    let rules = config.rule_applications(RULE_ID);
-    if rules.is_empty() {
-        return;
-    }
     let root = normalize_path(root);
-    for rule in rules {
+    for (index, rule) in
+        crate::codebase::rules::validate_options::indexed_rule_applications(config, RULE_ID)
+    {
         let mut app_errors = BTreeSet::new();
         collect_application_errors(&root, config, rule, &mut app_errors);
-        errors.extend(app_errors);
+        crate::codebase::rules::validate_options::push_application_errors(
+            &root,
+            config,
+            index,
+            config_path,
+            app_errors,
+            errors,
+        );
     }
 }
 
@@ -72,11 +78,7 @@ pub(super) fn applications<'a>(
     }
     let root = normalize_path(root);
     let mut errors = Vec::new();
-    for rule in &rules {
-        let mut app_errors = BTreeSet::new();
-        collect_application_errors(&root, config, rule, &mut app_errors);
-        errors.extend(app_errors);
-    }
+    collect_config_errors(&root, None, config, &mut errors);
     finish(errors)?;
     let normalized_files: Vec<PathBuf> = files
         .iter()

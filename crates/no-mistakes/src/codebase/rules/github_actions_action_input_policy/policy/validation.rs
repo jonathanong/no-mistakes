@@ -41,7 +41,6 @@ pub(super) fn merge_action(
                 key,
                 format_args!("an input key absent from require for action `{name}`"),
             ));
-            continue;
         }
         if !family.ban.iter().any(|existing| existing == key) {
             family.ban.push(key.to_string());
@@ -73,9 +72,6 @@ pub(super) fn merge_action(
             ));
             continue;
         };
-        if banned {
-            continue;
-        }
         if let Some(existing) = family.require.get(key) {
             if existing != &text {
                 errors.insert(invalid(

@@ -252,7 +252,7 @@ rules:
     )
     .unwrap();
     let mut errors = Vec::new();
-    super::collect_config_errors(std::path::Path::new("/repo"), &config, &mut errors);
+    super::collect_config_errors(std::path::Path::new("/repo"), None, &config, &mut errors);
     let joined = errors.join("\n");
     assert!(joined.contains("[unclosed"), "{joined}");
     assert!(joined.contains("options.caches"), "{joined}");

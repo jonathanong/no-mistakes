@@ -54,10 +54,11 @@ pub(crate) fn check_with_files(
 
 pub(crate) fn collect_config_errors(
     root: &Path,
+    config_path: Option<&Path>,
     config: &NoMistakesConfig,
     errors: &mut Vec<String>,
 ) {
-    for rule in config.rule_applications(RULE_ID) {
+    for (index, rule) in super::validate_options::indexed_rule_applications(config, RULE_ID) {
         let mut app_errors = std::collections::BTreeSet::new();
         if let Err(error) = super::path_filter::RulePathFilter::new(root, config, rule) {
             app_errors.insert(format!("{error:#}"));
@@ -80,7 +81,14 @@ pub(crate) fn collect_config_errors(
                 app_errors.insert(format!("{error:#}"));
             }
         }
-        errors.extend(app_errors);
+        super::validate_options::push_application_errors(
+            root,
+            config,
+            index,
+            config_path,
+            app_errors,
+            errors,
+        );
     }
 }
 
@@ -92,7 +100,7 @@ pub(crate) fn check_with_files_and_sources(
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let mut errors = Vec::new();
-    collect_config_errors(root, config, &mut errors);
+    collect_config_errors(root, None, config, &mut errors);
     super::validate_options::finish(errors)?;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {

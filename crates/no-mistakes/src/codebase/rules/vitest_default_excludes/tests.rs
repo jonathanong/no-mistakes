@@ -137,7 +137,7 @@ rules:
     )
     .unwrap();
     let mut errors = Vec::new();
-    collect_config_errors(&root, &bad_filter, &mut errors);
+    collect_config_errors(&root, None, &bad_filter, &mut errors);
     let joined = errors.join("\n");
     assert!(joined.contains("[unclosed"), "{joined}");
     assert!(check_with_files(&root, &bad_filter, &[]).is_err());
