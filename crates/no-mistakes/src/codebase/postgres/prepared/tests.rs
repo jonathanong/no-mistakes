@@ -266,7 +266,11 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
     assert_eq!(facts.schema(&shared).unwrap().path, shared);
 
     assert_eq!(
-        facts.explain_write_rollback(&explain_only).unwrap().writes.len(),
+        facts
+            .explain_write_rollback(&explain_only)
+            .unwrap()
+            .writes
+            .len(),
         3
     );
     assert!(facts.statements(&explain_only, None).is_err());
