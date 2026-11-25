@@ -17,7 +17,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Swift
 
 - MUST NOT publish UI state outside the isolation required by the UI framework. Preserve main-actor isolation where SwiftUI requires it.
-- MUST NOT leave Darwin-only tests ungated (`#if canImport(Darwin)`).
+- MUST NOT leave Darwin-only tests ungated (`#if canImport(Darwin)`). The opt-in `swift-no-unguarded-darwin-import` check flags unconditional Darwin imports in portable test paths.
 - MUST NOT omit the keychain access group when sandbox entitlements are on.
 - SHOULD NOT call `print()` in shipped code; use a logger.
 

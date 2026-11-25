@@ -1,5 +1,6 @@
 use super::text::norm_path;
 use super::RULE_ID;
+use crate::codebase::rules::validate_options::{finish, format_invalid_option};
 use anyhow::Result;
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -39,59 +40,87 @@ impl Default for Options {
 }
 
 pub(super) fn validate(options: &Options) -> Result<()> {
-    anyhow::ensure!(
-        !options.caches.is_empty() || !options.forbidden_paths.is_empty(),
-        "{RULE_ID} caches must list at least one cache unless forbiddenPaths is configured"
-    );
+    let mut errors = BTreeSet::new();
+    collect_errors(options, &mut errors);
+    finish(errors.into_iter().collect())
+}
+
+pub(super) fn collect_errors(options: &Options, errors: &mut BTreeSet<String>) {
+    if options.caches.is_empty() && options.forbidden_paths.is_empty() {
+        errors.insert(invalid(
+            "caches",
+            &options.caches,
+            "a non-empty list of caches when forbiddenPaths is empty",
+        ));
+    }
     if let Some(message) = options.forbidden_paths_message.as_deref() {
-        anyhow::ensure!(
-            !message.trim().is_empty(),
-            "{RULE_ID} forbiddenPathsMessage must not be empty"
-        );
+        if message.trim().is_empty() {
+            errors.insert(invalid(
+                "forbiddenPathsMessage",
+                message,
+                "a non-empty message",
+            ));
+        }
     }
     let mut seen = BTreeSet::new();
     for cache in &options.caches {
         let path = norm_path(&cache.path);
-        anyhow::ensure!(
-            !path.is_empty(),
-            "{RULE_ID} caches.path must be a non-empty path"
-        );
-        anyhow::ensure!(
-            seen.insert(path.clone()),
-            "{RULE_ID} caches.path `{path}` is listed more than once"
-        );
-        anyhow::ensure!(
-            !norm_path(&cache.lockfile).is_empty(),
-            "{RULE_ID} caches.lockfile must be a non-empty path"
-        );
-        anyhow::ensure!(
-            !cache.key_parts.is_empty(),
-            "{RULE_ID} caches.keyParts must list at least one expression fragment"
-        );
-        for part in &cache.key_parts {
-            anyhow::ensure!(
-                valid_fragment(part.trim()),
-                "{RULE_ID} caches.keyParts entries must be dotted context fragments such as runner.os"
-            );
+        if path.is_empty() {
+            errors.insert(invalid("caches[].path", &cache.path, "a non-empty path"));
+        } else if !seen.insert(path) {
+            errors.insert(invalid(
+                "caches[].path",
+                &cache.path,
+                "a unique cache path",
+            ));
+        }
+        if norm_path(&cache.lockfile).is_empty() {
+            errors.insert(invalid(
+                "caches[].lockfile",
+                &cache.lockfile,
+                "a non-empty path",
+            ));
+        }
+        if cache.key_parts.is_empty() {
+            errors.insert(invalid(
+                "caches[].keyParts",
+                &cache.key_parts,
+                "at least one dotted context fragment",
+            ));
+        } else {
+            for part in &cache.key_parts {
+                if !valid_fragment(part.trim()) {
+                    errors.insert(invalid(
+                        "caches[].keyParts",
+                        part,
+                        "a dotted context fragment such as runner.os",
+                    ));
+                }
+            }
         }
     }
     let mut forbidden = BTreeSet::new();
     for raw in &options.forbidden_paths {
         let path = norm_path(raw);
-        anyhow::ensure!(
-            !path.is_empty(),
-            "{RULE_ID} forbiddenPaths entries must be non-empty paths"
-        );
-        anyhow::ensure!(
-            forbidden.insert(path.clone()),
-            "{RULE_ID} forbiddenPaths `{path}` is listed more than once"
-        );
-        anyhow::ensure!(
-            !seen.contains(&path),
-            "{RULE_ID} path `{path}` cannot appear in both caches and forbiddenPaths"
-        );
+        if path.is_empty() {
+            errors.insert(invalid("forbiddenPaths", raw, "a non-empty path"));
+            continue;
+        }
+        if !forbidden.insert(path.clone()) {
+            errors.insert(invalid("forbiddenPaths", raw, "a unique forbidden path"));
+        }
+        if seen.contains(&path) {
+            errors.insert(invalid(
+                "forbiddenPaths",
+                raw,
+                "a path absent from options.caches[].path",
+            ));
+        }
     }
-    Ok(())
+}
+
+fn invalid(option: &str, value: impl std::fmt::Debug, allowed: &str) -> String {
+    format_invalid_option(RULE_ID, option, value, allowed)
 }
 
 fn valid_fragment(part: &str) -> bool {

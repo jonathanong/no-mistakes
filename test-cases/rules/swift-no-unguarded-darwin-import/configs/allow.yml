@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: swift-no-unguarded-darwin-import
+    scope: repository
+    include: ["Tests/**"]
+    options:
+      allow: ["Tests/ClockTests.swift"]
+      message: "Keep this target portable."

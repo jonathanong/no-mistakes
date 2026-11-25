@@ -165,3 +165,12 @@ compare settings across projects. [`vitest-project-policy`](vitest-project-polic
 
 Use project mapping to check that each Vitest test belongs to exactly one
 configured project. [`vitest-project-mapping`](vitest-project-mapping.md)
+
+## Invalid options
+
+An invalid option such as an empty `files` glob is a configuration error:
+`check` validates options before any analysis runs, exits with status 2 and
+empty stdout, and prints semantic option diagnostics sorted to stderr (naming
+the config file, rule, option path, rejected value, and constraint). No partial
+report or `incomplete` entry is emitted, and the async Node API rejects with the
+same message.

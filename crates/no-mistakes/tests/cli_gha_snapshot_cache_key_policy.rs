@@ -92,16 +92,16 @@ fn empty_cache_list_is_rejected() {
         .arg(rules_path(RULE, "fixture", "policy"))
         .arg("--config")
         .arg(rules_path(RULE, "configs", "invalid.yml"))
+        .args(["--format", "json"])
         .output()
         .unwrap();
-    assert!(!output.status.success());
-    let text = format!(
-        "{}{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
-    );
+    assert_eq!(output.status.code(), Some(2));
     assert!(
-        text.contains("caches must list at least one cache"),
-        "{text}"
+        output.stdout.is_empty(),
+        "stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
     );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains(RULE), "{stderr}");
+    assert!(stderr.contains("options.caches"), "{stderr}");
 }

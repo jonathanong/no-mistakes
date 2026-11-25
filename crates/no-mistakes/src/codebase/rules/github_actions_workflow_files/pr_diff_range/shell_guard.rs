@@ -4,7 +4,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Range;
 
 mod branch;
+mod control;
 mod eval;
+mod mutations;
+mod scan;
+
+use control::{drop_leading_bangs, drop_leading_word, keyword, unsupported_control, update_double_bracket};
 
 pub(super) fn excluded_on_merge_group(
     script: &str,
@@ -21,10 +26,20 @@ pub(super) fn excluded_on_merge_group(
         return Vec::new();
     }
     let positions: Vec<_> = script.char_indices().map(|(index, _)| index).collect();
+    let heredocs: Vec<_> = parsed
+        .heredoc_ranges
+        .iter()
+        .map(|range| {
+            let start = positions.get(range.start).copied().unwrap_or(script.len());
+            let end = positions.get(range.end).copied().unwrap_or(script.len());
+            start..end
+        })
+        .collect();
     let mut scan = GuardScan {
         script,
         commands: &parsed.commands,
         positions: &positions,
+        heredocs,
         env,
         mutated_vars: BTreeSet::new(),
         mutated_all: false,
@@ -49,6 +64,7 @@ pub(super) struct GuardScan<'a> {
     pub(super) script: &'a str,
     pub(super) commands: &'a [Command],
     pub(super) positions: &'a [usize],
+    pub(super) heredocs: Vec<Range<usize>>,
     pub(super) env: &'a BTreeMap<String, String>,
     pub(super) mutated_vars: BTreeSet<String>,
     pub(super) mutated_all: bool,
@@ -62,6 +78,15 @@ pub(super) struct BranchState {
 
 impl<'a> GuardScan<'a> {
     fn run(&mut self) {
+        if self.commands.first().is_some_and(|first| {
+            scan::has_arithmetic_in_range(
+                self.script,
+                0..self.positions[first.anchor],
+                &self.heredocs,
+            )
+        }) {
+            return;
+        }
         let mut in_double_bracket = false;
         let mut idx = 0;
         while idx < self.commands.len() {
@@ -74,10 +99,11 @@ impl<'a> GuardScan<'a> {
                 continue;
             }
             update_double_bracket(&self.commands[idx].words, &mut in_double_bracket);
-            if unsupported_control(slice, in_double_bracket) {
+            if unsupported_control(slice, in_double_bracket) || self.has_arithmetic_at(idx) {
                 break;
             }
-            eval::record_mutations(
+            mutations::record_mutations(
+                slice,
                 &self.commands[idx].words,
                 &mut self.mutated_vars,
                 &mut self.mutated_all,
@@ -86,13 +112,21 @@ impl<'a> GuardScan<'a> {
         }
     }
 
-    pub(super) fn slice(&self, idx: usize) -> &'a str {
+    pub(super) fn slice_range(&self, idx: usize) -> Range<usize> {
         let start = self.positions[self.commands[idx].anchor];
         let end = self
             .commands
             .get(idx + 1)
             .map_or(self.script.len(), |next| self.positions[next.anchor]);
-        self.script[start..end].trim_start()
+        start..end
+    }
+
+    pub(super) fn slice(&self, idx: usize) -> &'a str {
+        self.script[self.slice_range(idx)].trim_start()
+    }
+
+    pub(super) fn has_arithmetic_at(&self, idx: usize) -> bool {
+        scan::has_arithmetic_in_range(self.script, self.slice_range(idx), &self.heredocs)
     }
 
     pub(super) fn consume_nested(
@@ -105,6 +139,7 @@ impl<'a> GuardScan<'a> {
         let (slice, words) = match keyword(slice) {
             "then" => (slice[4..].trim_start(), drop_leading_word(words, "then")),
             "else" => (slice[4..].trim_start(), drop_leading_word(words, "else")),
+            "elif" if state.depth > 0 => (slice[4..].trim_start(), drop_leading_word(words, "elif")),
             _ => (slice, words),
         };
         self.consume_body(slice, words, record, state)
@@ -112,71 +147,48 @@ impl<'a> GuardScan<'a> {
 
     pub(super) fn consume_body(
         &mut self,
-        slice: &str,
-        words: &[Word],
+        mut slice: &str,
+        mut words: &[Word],
         record: bool,
         state: &mut BranchState,
     ) -> bool {
         let was_in_bracket = state.in_double_bracket;
         update_double_bracket(words, &mut state.in_double_bracket);
-        let trimmed = slice
-            .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
-        let ok = match keyword(trimmed) {
-            "if" => {
-                state.depth += 1;
-                true
+        loop {
+            let trimmed = slice
+                .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
+            match keyword(trimmed) {
+                "if" => {
+                    state.depth += 1;
+                    slice = trimmed[2..].trim_start();
+                    words = drop_leading_word(drop_leading_bangs(words), "if");
+                }
+                "fi" if state.depth > 0 => {
+                    state.depth -= 1;
+                    slice = trimmed[2..].trim_start();
+                    words = drop_leading_word(drop_leading_bangs(words), "fi");
+                    if words.is_empty() {
+                        if record && scan::has_complex_expansion(slice) {
+                            self.mutated_all = true;
+                        }
+                        return true;
+                    }
+                }
+                _ => {
+                    if unsupported_control(trimmed, was_in_bracket) {
+                        return false;
+                    }
+                    if record {
+                        mutations::record_mutations(
+                            slice,
+                            words,
+                            &mut self.mutated_vars,
+                            &mut self.mutated_all,
+                        );
+                    }
+                    return true;
+                }
             }
-            "fi" if state.depth > 0 => {
-                state.depth -= 1;
-                true
-            }
-            "elif" if state.depth > 0 => true,
-            _ => !unsupported_control(trimmed, was_in_bracket),
-        };
-        if ok && record {
-            eval::record_mutations(words, &mut self.mutated_vars, &mut self.mutated_all);
-        }
-        ok
-    }
-}
-
-pub(super) fn drop_leading_word<'a>(words: &'a [Word], kw: &str) -> &'a [Word] {
-    &words[usize::from(words.first().is_some_and(|word| word.text == kw))..]
-}
-
-pub(super) fn keyword(source: &str) -> &str {
-    source
-        .split(|ch: char| ch.is_whitespace() || matches!(ch, ';' | '|' | '&'))
-        .next()
-        .unwrap_or_default()
-}
-
-fn update_double_bracket(words: &[Word], in_double_bracket: &mut bool) {
-    for word in words {
-        if word.text == "[[" {
-            *in_double_bracket = true;
-        } else if word.text == "]]" {
-            *in_double_bracket = false;
         }
     }
-}
-
-fn unsupported_control(source: &str, in_double_bracket: bool) -> bool {
-    let source = source
-        .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
-    let word = keyword(source);
-    (!in_double_bracket && source.starts_with(['(', '{']))
-        || matches!(
-            word,
-            "if" | "elif"
-                | "else"
-                | "fi"
-                | "case"
-                | "while"
-                | "until"
-                | "for"
-                | "select"
-                | "function"
-        )
-        || word.ends_with("()")
 }
