@@ -37,9 +37,41 @@ mod selectors;
 mod standard;
 mod workflow;
 
+mod postgres_sql;
+
+#[derive(Default, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct NoOptions {}
+
+pub(super) struct ValidationContext<'a> {
+    root: &'a Path,
+    config: &'a NoMistakesConfig,
+}
+
+type Validate = fn(&RuleDef, &ValidationContext<'_>) -> Result<()>;
+type RuleValidator = (&'static str, Validate);
+
+fn decode<T: for<'de> serde::Deserialize<'de> + Default>(
+    rule: &RuleDef,
+    _context: &ValidationContext<'_>,
+) -> Result<()> {
+    rule.strict_rule_options::<T>().map(drop)
+}
+
+const VALIDATORS: &[&[RuleValidator]] = &[
+    postgres::VALIDATORS,
+    postgres_compiled::VALIDATORS,
+    postgres_sql::VALIDATORS,
+    compiled::VALIDATORS,
+    compiled_misc::VALIDATORS,
+    selectors::VALIDATORS,
+    workflow::VALIDATORS,
+    standard::VALIDATORS,
+];
+
 pub(crate) fn validate_rule_options(
     root: &Path,
-    config_path: Option<&Path>,
+    config_path: &Path,
     config: &NoMistakesConfig,
     location: &dyn Fn(&ConfigPath) -> Option<(std::path::PathBuf, usize)>,
 ) -> Result<()> {
@@ -64,15 +96,9 @@ pub(crate) fn validate_rule_options(
                 key.pop();
                 source = location(&key);
             }
-            if let Some((path, line)) = source {
-                let display = display_config_path(root, Some(&path))
-                    .unwrap_or_else(|| path.display().to_string());
-                format!("{display}:{line}: {message}")
-            } else if let Some(prefix) = display_config_path(root, config_path) {
-                format!("{prefix}:1: {message}")
-            } else {
-                message
-            }
+            let (path, line) = source.unwrap_or_else(|| (config_path.to_path_buf(), 1));
+            let display = display_config_path(root, &path);
+            format!("{display}:{line}: {message}")
         };
         match config
             .requested_rule_analysis(rule)
@@ -119,15 +145,12 @@ fn application_errors(
             super::vitest_default_excludes::collect_application_errors(root, config, rule)
         }
         _ => {
-            if !postgres::postgres(rule)?
-                && !postgres_compiled::postgres_compiled(rule)?
-                && !compiled::compiled(rule)?
-                && !compiled_misc::compiled_misc(rule, config, root)?
-                && !selectors::validate(rule, root)?
-                && !workflow::workflow(rule)?
-            {
-                standard::standard(rule)?;
-            }
+            let validate = VALIDATORS
+                .iter()
+                .flat_map(|group| group.iter())
+                .find_map(|(id, validate)| (*id == rule.rule).then_some(*validate))
+                .unwrap_or(decode::<NoOptions>);
+            validate(rule, &ValidationContext { root, config })?;
             crate::codebase::postgres::validate_embedded_sql_rule_options(rule)?;
             if rule.options.get("reportUnmatchedExecutorNames").is_some() {
                 rule.try_rule_options::<super::postgres_unmatched_executors::Options>()?;

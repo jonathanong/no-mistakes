@@ -2,21 +2,16 @@ use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::Path;
 
-pub(super) fn display_config_path(root: &Path, config_path: Option<&Path>) -> Option<String> {
-    let path = config_path?;
-    let normalized_root = normalize_path(root);
-    let normalized_path = normalize_path(path);
-    if normalized_path.starts_with(&normalized_root) {
-        let rel = relative_slash_path(&normalized_root, &normalized_path);
-        return (!rel.is_empty()).then_some(rel);
+pub(super) fn display_config_path(root: &Path, path: &Path) -> String {
+    let root = normalize_path(root);
+    let path = normalize_path(path);
+    if path.starts_with(&root) {
+        return relative_slash_path(&root, &path);
     }
-    if let Ok(cwd) = std::env::current_dir() {
-        if let Some(rel) = relative_between(&normalize_path(&cwd), &normalized_path) {
-            return Some(rel);
-        }
-    }
-    let rel = relative_slash_path(&normalized_root, &normalized_path);
-    (!rel.is_empty()).then_some(rel)
+    std::env::current_dir()
+        .ok()
+        .and_then(|cwd| relative_between(&normalize_path(&cwd), &path))
+        .unwrap_or_else(|| relative_slash_path(&root, &path))
 }
 
 fn relative_between(base: &Path, target: &Path) -> Option<String> {

@@ -15,7 +15,7 @@ pub(super) fn validate<'a>(
         .into_iter()
         .map(|(path, source)| (path, (source, OnceCell::new())))
         .collect();
-    crate::codebase::rules::validate_rule_options(root, Some(path), config, &|key| {
+    crate::codebase::rules::validate_rule_options(root, path, config, &|key| {
         let (file, local) = config
             .config_provenance
             .origin(key)

@@ -1,7 +1,7 @@
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use globset::{GlobBuilder, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -118,7 +118,8 @@ pub(in crate::codebase::rules) fn compile_options(
         .add(
             GlobBuilder::new(&opts.glob)
                 .literal_separator(true)
-                .build()?,
+                .build()
+                .context("options.glob")?,
         )
         .build()?;
     Ok(Some(glob_set))

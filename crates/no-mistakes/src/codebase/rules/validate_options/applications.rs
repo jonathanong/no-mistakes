@@ -27,7 +27,7 @@ pub(crate) fn push_application_errors(
         .origin(&key)
         .map(|(path, _)| path)
         .or(fallback);
-    let prefix = display_config_path(root, source);
+    let prefix = source.map(|file| display_config_path(root, file));
     for message in app_errors {
         match &prefix {
             Some(rel) => out.push(format!("{rel}: {message}")),

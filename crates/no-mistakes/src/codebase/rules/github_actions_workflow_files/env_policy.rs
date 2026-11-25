@@ -1,7 +1,7 @@
 use super::RuleFinding;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_yaml::Value;
@@ -44,6 +44,8 @@ pub(crate) fn scalar_text(value: &Value) -> Option<String> {
 }
 
 pub(in crate::codebase::rules) fn compile(opts: &Options) -> Result<Policy> {
+    crate::codebase::rules::file_matching::compile_globs(opts.include.iter().map(String::as_str))
+        .context("options.include")?;
     let mut required = BTreeMap::new();
     for (name, value) in &opts.required {
         let Some(text) = scalar_text(value) else {

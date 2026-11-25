@@ -16,28 +16,25 @@ impl RuleDef {
     /// disables a configured rule. The original [`Self::rule_options`] API
     /// intentionally remains infallible for existing programmatic callers.
     pub fn try_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self) -> Result<T> {
+        self.validate_common_options()?;
         self.decode_rule_options(false)
     }
 
     pub(crate) fn strict_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(
         &self,
     ) -> Result<T> {
-        self.decode_rule_options(true)
+        let parsed = self.decode_rule_options(true)?;
+        self.validate_common_options()?;
+        Ok(parsed)
     }
 
     fn decode_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(
         &self,
         strict: bool,
     ) -> Result<T> {
-        if !strict {
-            self.validate_common_options()?;
-        }
         if matches!(&self.options, serde_yaml::Value::Null)
             || matches!(&self.options, serde_yaml::Value::Mapping(options) if options.is_empty())
         {
-            if strict {
-                self.validate_common_options()?;
-            }
             return Ok(T::default());
         }
         let mut options = self.options.clone();
@@ -50,9 +47,6 @@ impl RuleDef {
             }
         }
         if matches!(&options, serde_yaml::Value::Mapping(options) if options.is_empty()) {
-            if strict {
-                self.validate_common_options()?;
-            }
             return Ok(T::default());
         }
         let unknown = std::cell::RefCell::new(None);
@@ -67,12 +61,7 @@ impl RuleDef {
         } else {
             serde_path_to_error::deserialize(options.into_deserializer())
         };
-        let options = result
-            .map_err(|error| OptionLocation::from_error(self, error, unknown.into_inner()))?;
-        if strict {
-            self.validate_common_options()?;
-        }
-        Ok(options)
+        result.map_err(|error| OptionLocation::from_error(self, error, unknown.into_inner()))
     }
 
     fn validate_common_options(&self) -> Result<()> {

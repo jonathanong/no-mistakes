@@ -32,6 +32,11 @@ fn invalid_rule_configuration_aborts_before_analysis() {
             root.clone(),
             root.join("invalid-values.yml"),
         ),
+        (
+            "semantic-errors",
+            root.clone(),
+            root.join("semantic-errors.yml"),
+        ),
         ("fragment", root.join("fragment"), PathBuf::new()),
     ];
     let result = assert_saved_fixture_report("invalid_rule_configuration", &cases, &[], &[]);

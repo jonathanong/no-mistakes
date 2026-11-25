@@ -76,6 +76,10 @@ pub(super) struct CompiledForbiddenPattern {
 }
 
 pub(in crate::codebase::rules) fn compile(options: Options) -> Result<CompiledOptions> {
+    crate::codebase::rules::file_matching::compile_globs(
+        options.include.iter().map(String::as_str),
+    )
+    .context("options.include")?;
     let mut commands = Vec::with_capacity(options.commands.len());
     for (index, entry) in options.commands.into_iter().enumerate() {
         commands.push(compile_policy(entry, index)?);
