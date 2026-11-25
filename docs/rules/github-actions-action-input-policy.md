@@ -251,3 +251,13 @@ checks the keys of composite steps this rule also reads.
 ## Invalid UTF-8
 
 Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.
+
+## Invalid options
+
+An invalid action option is a configuration error: `check` validates options
+before any analysis runs, exits with status 2 and empty stdout, and prints
+semantic option diagnostics sorted to stderr (naming the config file, rule,
+option path, rejected value, and constraint). No partial report or `incomplete`
+entry is emitted, and the async Node API rejects with the same message. When
+`allowedInputs` is set, its keys are the accepted names for `require` and
+`requiredPresent`.

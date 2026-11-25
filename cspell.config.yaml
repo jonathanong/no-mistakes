@@ -15,6 +15,9 @@ ignorePaths:
 words:
   - nullglob
   - elif
+  - esac
+  - shopt
+  - coproc
   - mapfile
   - readarray
   - zshparam

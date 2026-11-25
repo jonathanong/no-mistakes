@@ -1,0 +1,12 @@
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      actions:
+        - uses: example/publish-widget
+          allowedInputs:
+            - name
+          ban:
+            - format
+          require:
+            format: json

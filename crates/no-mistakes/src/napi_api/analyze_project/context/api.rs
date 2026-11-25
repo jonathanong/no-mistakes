@@ -78,10 +78,14 @@ impl AnalyzeProjectContext {
                             .map(|path| path.display().to_string())
                     })
                     .flatten(),
-                config: effective
-                    .config
-                    .as_ref()
-                    .map(|path| path.display().to_string()),
+                config: (!effective.automatic_config)
+                    .then(|| {
+                        effective
+                            .config
+                            .as_ref()
+                            .map(|path| path.display().to_string())
+                    })
+                    .flatten(),
                 filters: options.filters.clone(),
                 reports,
             };
