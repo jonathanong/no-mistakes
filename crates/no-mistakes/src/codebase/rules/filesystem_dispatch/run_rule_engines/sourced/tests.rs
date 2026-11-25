@@ -20,9 +20,9 @@ fn sourced_dispatch_reports_config_workflow_and_empty_file_findings() {
         (
             GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS,
             "",
-            "../configs/default.yml",
-            ".github/workflows/required.yml",
-            vec![4],
+            "../configs/aliased.yml",
+            ".github/workflows/aliased.yml",
+            vec![5],
         ),
         (
             NO_EMPTY_OR_COMMENTS_ONLY_FILES,
