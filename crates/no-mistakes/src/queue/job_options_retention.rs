@@ -98,20 +98,17 @@ pub(super) fn judge_site(
             }
         }
     }
-    let finding =
-        (!unresolved && !(explicit_unbounded.is_empty() && unset.is_empty())).then(|| {
-            RetentionNote {
-                path: path.to_path_buf(),
-                finding: JobOptionFinding {
-                    kind: "unbounded-job-retention".to_string(),
-                    line: site.line,
-                    queue_file: site.queue_file.clone(),
-                    queue_name: site.queue_name.clone(),
-                    job: site.job.clone(),
-                    message: format_producer_message(&explicit_unbounded, &unset),
-                },
-            }
-        });
+    let finding = (!(explicit_unbounded.is_empty() && unset.is_empty())).then(|| RetentionNote {
+        path: path.to_path_buf(),
+        finding: JobOptionFinding {
+            kind: "unbounded-job-retention".to_string(),
+            line: site.line,
+            queue_file: site.queue_file.clone(),
+            queue_name: site.queue_name.clone(),
+            job: site.job.clone(),
+            message: format_producer_message(&explicit_unbounded, &unset),
+        },
+    });
     SiteJudgment {
         finding,
         abstentions: [

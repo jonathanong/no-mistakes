@@ -28,6 +28,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "queueFile": "enqueue.ts",
           "queueName": "receipts",
           "sourceLine": "await queue.add(\"unbounded\", {}, { removeOnFail: false });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "unbounded-dynamic-queue",
+          "kind": "unbounded-job-retention",
+          "line": 27,
+          "message": "unbounded job retention: removeOnComplete kept without a bound",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await dynamicQueue.add(\"unbounded-dynamic-queue\", {}, { removeOnComplete: false, removeOnFail: 100 });"
         }
       ],
       "react": [],

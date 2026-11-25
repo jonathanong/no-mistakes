@@ -24,6 +24,7 @@ await dynamicQueue.add("dynamic-queue", {}, { removeOnComplete: true, removeOnFa
 await dynamicQueue.add("bounded-dynamic-queue", {}, { removeOnComplete: true, removeOnFail: 10 });
 
 await dynamicQueue.add("dynamic-defaults", {}, { removeOnFail: 10 });
+await dynamicQueue.add("unbounded-dynamic-queue", {}, { removeOnComplete: false, removeOnFail: 100 });
 
 declare const collector: { add(name: string, data: object, options: object): void };
 collector.add("unrelated", {}, { removeOnFail: dynamicRetention });

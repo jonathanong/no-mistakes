@@ -442,7 +442,7 @@ fn queue_retention_call_site_abstentions_check_json_snapshot() {
         })
         .collect();
     jobs.sort_unstable();
-    assert_eq!(jobs, ["mixed", "unbounded"]);
+    assert_eq!(jobs, ["mixed", "unbounded", "unbounded-dynamic-queue"]);
 
     let warnings = report["warnings"].as_array().unwrap();
     assert_eq!(warnings.len(), 6, "{warnings:?}");
