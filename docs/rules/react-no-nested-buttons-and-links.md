@@ -60,11 +60,20 @@ elements. Use the surrounding layout for row styling.
 
 ## Suppression
 
-Place `no-mistakes-disable-next-line react-no-nested-buttons-and-links`
-immediately above the inner element or use `no-mistakes-disable-line` on that
-line. Use `no-mistakes-disable-file react-no-nested-buttons-and-links` for a
-whole-file exception. Use JavaScript line comments for line and next-line
-directives on the same line as, or immediately above, the reported opening tag.
+Use `no-mistakes-disable-line` on the line of the inner opening tag or
+`no-mistakes-disable-next-line` one line above it when JavaScript permits a
+`//` comment in that position.
+
+```tsx
+export const nextLine = (
+  // no-mistakes-disable-next-line react-no-nested-buttons-and-links -- legacy UI
+  <a href="/items"><button type="button">Save</button></a>
+);
+```
+
+A `//` line inside JSX children renders as page text. When the opening tag
+has no suitable JavaScript comment position, restructure the markup or use
+`no-mistakes-disable-file react-no-nested-buttons-and-links`.
 
 ## Limits
 
