@@ -19,6 +19,7 @@ pub struct ObjectBinding<'a> {
     pub visible_from: u32,
     pub resolve_at: u32,
     pub init: Option<&'a Expression<'a>>,
+    pub destructuring: Option<(&'a BindingPattern<'a>, &'a Expression<'a>)>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -101,6 +102,7 @@ impl<'a> Collector<'a> {
             visible_from,
             resolve_at: visible_from,
             init: None,
+            destructuring: None,
         });
     }
 

@@ -1,6 +1,7 @@
-use super::actions::{find_action_in_expr, find_action_in_stmt, ActionScope};
+use super::actions::{find_action_in_expr, find_action_in_stmts, Action, ActionScope};
 use super::expr::{call_member, check_state_expr, match_listing, queue_receiver, unwrap_expr};
 use super::extract::{record, FnEnv};
+use super::item::ListingItem;
 use super::{JobStatePattern, JobStateSite};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::queue::extract_model::ProducerBinding;
@@ -81,7 +82,7 @@ impl<'a> Visit<'a> for ExprChecker<'_, '_> {
                             self.visitor,
                             call.span.start,
                             listing_q,
-                            Some(action_q),
+                            Action::Enqueue(action_q),
                             JobStatePattern::ListingFeedsAction,
                             self.sites,
                             self.seen,
@@ -142,33 +143,31 @@ fn expr_uses_listing(
 fn callback_listing_action(
     visitor: &QueueVisitor<'_>,
     call: &CallExpression<'_>,
-) -> Option<Option<ProducerBinding>> {
+) -> Option<Action> {
     let cb = call.arguments.first()?.as_expression()?;
     match unwrap_ts_wrappers(cb) {
         Expression::ArrowFunctionExpression(arrow) => {
             let names = item_names(&arrow.params);
-            let scope = ActionScope::Listing {
+            let scope = ActionScope::Listing(ListingItem {
                 names: &names,
                 start: arrow.span.start,
-            };
+            });
             if let Some(expr) = arrow.body.as_expression() {
                 return find_action_in_expr(visitor, expr, scope);
             }
-            crate::ast::arrow_function_body_statements(&arrow.body)?
-                .iter()
-                .find_map(|s| find_action_in_stmt(visitor, s, scope))
+            find_action_in_stmts(
+                visitor,
+                crate::ast::arrow_function_body_statements(&arrow.body)?,
+                scope,
+            )
         }
         Expression::FunctionExpression(func) => {
             let names = item_names(&func.params);
-            let scope = ActionScope::Listing {
+            let scope = ActionScope::Listing(ListingItem {
                 names: &names,
                 start: func.span.start,
-            };
-            func.body
-                .as_ref()?
-                .statements
-                .iter()
-                .find_map(|s| find_action_in_stmt(visitor, s, scope))
+            });
+            find_action_in_stmts(visitor, &func.body.as_ref()?.statements, scope)
         }
         _ => None,
     }

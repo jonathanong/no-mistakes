@@ -282,6 +282,28 @@ fn queue_retention_and_listing_followups_check_json_snapshot() {
     }));
 
     let advisories = report["advisories"].as_array().unwrap();
-    assert_eq!(advisories.len(), 3, "{advisories:?}");
+    let lines: Vec<_> = advisories
+        .iter()
+        .map(|row| row["line"].as_u64().unwrap())
+        .collect();
+    assert_eq!(lines, [23, 29, 35, 52, 66, 72, 76]);
     assert!(advisories.iter().all(|row| row["file"] == "listing.ts"));
+
+    let warnings = report["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 5, "{warnings:?}");
+    for (location, rule) in [
+        ("enqueue.ts:8", "unbounded-job-retention"),
+        ("enqueue.ts:13", "unbounded-job-retention"),
+        ("listing.ts:45", "job-state-as-record"),
+        ("listing.ts:59", "job-state-as-record"),
+        ("listing.ts:91", "job-state-as-record"),
+    ] {
+        assert!(
+            warnings.iter().any(|warning| {
+                let warning = warning.as_str().unwrap();
+                warning.contains(location) && warning.contains(&format!("{rule} was not judged"))
+            }),
+            "{location}: {warnings:?}"
+        );
+    }
 }

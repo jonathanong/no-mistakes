@@ -3,6 +3,7 @@ use super::expr::{
     check_state_expr, is_early_exit, match_get_job, match_listing, match_state_call, pattern_names,
 };
 use super::extract::{record, FnEnv};
+use super::item::ListingItem;
 use super::listing::{check_expr_for_actions, listing_binding};
 use super::{JobStatePattern, JobStateSite};
 use crate::queue::extract_visitor::QueueVisitor;
@@ -130,10 +131,10 @@ impl StmtCtx<'_, '_> {
     fn handle_for_of(&mut self, for_of: &ForOfStatement<'_>) {
         if let Some(binding) = listing_binding(self.visitor, &for_of.right, self.env) {
             let loop_vars = for_of_names(&for_of.left);
-            let scope = ActionScope::Listing {
+            let scope = ActionScope::Listing(ListingItem {
                 names: &loop_vars,
                 start: for_of.body.span().start,
-            };
+            });
             if let Some(action) = find_action_in_stmt(self.visitor, &for_of.body, scope) {
                 record(
                     self.visitor,

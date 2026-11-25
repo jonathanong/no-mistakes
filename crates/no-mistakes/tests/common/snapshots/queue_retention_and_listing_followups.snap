@@ -26,6 +26,34 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
           "rule": "queues-check",
           "sourceLine": "for (const job of await tracked.getFailed(0, 10)) {"
+        },
+        {
+          "file": "listing.ts",
+          "line": 52,
+          "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "for (const job of await tracked.getFailed(0, 10)) {"
+        },
+        {
+          "file": "listing.ts",
+          "line": 66,
+          "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "for (const { data: job } of await tracked.getFailed(0, 10)) {"
+        },
+        {
+          "file": "listing.ts",
+          "line": 72,
+          "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "(await tracked.getFailed(0, 10)).forEach(({ data: job } = { data: fallback }) => job.retry());"
+        },
+        {
+          "file": "listing.ts",
+          "line": 76,
+          "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "(await tracked.getFailed(0, 10)).forEach((job) => {"
         }
       ],
       "codebase": [],
@@ -54,7 +82,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "react": [],
       "rules": [],
-      "warnings": []
+      "warnings": [
+        "queues-check: enqueue.ts:13 unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known",
+        "queues-check: enqueue.ts:8 unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known",
+        "queues-check: listing.ts:45 job-state-as-record was not judged because the enqueue argument's listing item dependency is not statically known",
+        "queues-check: listing.ts:59 job-state-as-record was not judged because the enqueue argument's listing item dependency is not statically known",
+        "queues-check: listing.ts:91 job-state-as-record was not judged because the enqueue argument's listing item dependency is not statically known"
+      ]
     }
   }
 }

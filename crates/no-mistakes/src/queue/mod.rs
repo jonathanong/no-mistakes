@@ -41,8 +41,8 @@ pub use graph::{
     analyze_project_with_prepared_facts_indexed_and_catalog_and_session, RelatedDirection,
 };
 pub use graph_model::{
-    format_aggregate_warning, format_diagnostic, CheckFinding, CheckReport, CheckSeverity,
-    PreparedProjectReport, ProjectReport,
+    format_aggregate_warning, format_diagnostic, is_check_warning, CheckFinding, CheckReport,
+    CheckSeverity, PreparedProjectReport, ProjectReport,
 };
 pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};
