@@ -7,23 +7,21 @@ impl ExportLookup<'_> {
         key: &ExportKey,
         facts: Option<&CheckFileFacts>,
     ) {
-        let Some(file) = facts else {
-            return;
-        };
-        let binding = file
-            .ts
-            .exported_bindings
-            .iter()
-            .find(|binding| binding.exported == key.name.as_ref());
-        if binding.is_some_and(|binding| binding.specifier.is_some()) {
-            return;
-        }
-        let local_name = binding.map_or(key.name.as_ref(), |binding| binding.local.as_str());
-        let Some(refs) = file
-            .fixture_initializers
-            .as_ref()
-            .and_then(|fixtures| fixtures.uncertain.get(local_name))
-        else {
+        let Some(refs) = facts.and_then(|file| {
+            let binding = file
+                .ts
+                .exported_bindings
+                .iter()
+                .find(|binding| binding.exported == key.name.as_ref());
+            if binding.is_some_and(|binding| binding.specifier.is_some()) {
+                return None;
+            }
+            let local_name = binding.map_or(key.name.as_ref(), |binding| binding.local.as_str());
+            file.fixture_initializers
+                .as_ref()?
+                .uncertain
+                .get(local_name)
+        }) else {
             return;
         };
         if refs.iter().any(ImportRef::is_playwright_test) {
@@ -46,16 +44,8 @@ impl ExportLookup<'_> {
         root: &ExportKey,
     ) -> bool {
         let mut seen = FxHashSet::default();
-        self.reaches_uncertain_inner(relationships, root, &mut seen)
-    }
-
-    fn reaches_uncertain_inner(
-        &self,
-        relationships: &EdgeIndex<ExportKey, EdgeKind>,
-        root: &ExportKey,
-        seen: &mut FxHashSet<ExportKey>,
-    ) -> bool {
-        for key in self.reachable_exports(relationships, root) {
+        let mut stack = vec![root.clone()];
+        while let Some(key) = stack.pop() {
             if !seen.insert(key.clone()) {
                 continue;
             }
@@ -63,12 +53,16 @@ impl ExportLookup<'_> {
                 return true;
             }
             if let Some(deps) = self.uncertain_deps.get(&key) {
-                if deps.iter().any(|dep| {
-                    self.proves_playwright(relationships, dep)
-                        || self.reaches_uncertain_inner(relationships, dep, seen)
-                }) {
+                if deps
+                    .iter()
+                    .any(|dep| self.proves_playwright(relationships, dep))
+                {
                     return true;
                 }
+                stack.extend(deps.iter().cloned());
+            }
+            if let Some(neighbors) = relationships.forward().get(&key) {
+                stack.extend(neighbors.iter().map(|(target, _)| target.clone()));
             }
         }
         false

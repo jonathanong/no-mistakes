@@ -15,3 +15,7 @@ const ExprSuite = class {
 
 const exprInstance = new ExprSuite();
 exprInstance.other.describe.serial("unrelated expr field", () => {});
+
+new (class {
+  runner = base;
+})().runner.describe.serial("inline class expr", () => {});
