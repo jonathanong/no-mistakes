@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      allowlist:
+        - path: tests/external.test.ts
+          reason: "   "

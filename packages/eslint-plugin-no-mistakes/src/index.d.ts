@@ -20,6 +20,13 @@ declare namespace plugin {
     banOverrides?: boolean;
   }
 
+  export interface PlaywrightNoRawScrollPaginationOptions {
+    cursorParams?: string[];
+    scrollHelper?: string;
+    sentinelLocatorNames?: string[];
+    sentinelTestIds?: string[];
+  }
+
   export interface TestNoWallTimeAssertionsOptions {
     allowedPaths?: string[];
   }

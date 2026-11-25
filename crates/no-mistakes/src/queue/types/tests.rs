@@ -1,4 +1,7 @@
-use super::{Diagnostic, EdgeKind, Severity};
+use super::{Diagnostic, DiagnosticKind, EdgeKind, Severity};
+use crate::queue::{
+    is_worker_rate_limit_unresolved_diagnostic, WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE,
+};
 
 #[test]
 fn queue_edge_kind_display_matches_serialized_kebab_names() {
@@ -27,6 +30,7 @@ fn queue_diagnostic_severity_and_formatters_match_serialized_names() {
         serde_json::json!("error")
     );
     let warning = Diagnostic {
+        kind: DiagnosticKind::WorkerRateLimitUnresolved,
         severity: Severity::Warning,
         file: "worker.ts".to_string(),
         line: 4,
@@ -40,4 +44,20 @@ fn queue_diagnostic_severity_and_formatters_match_serialized_names() {
         crate::queue::format_aggregate_warning(&warning),
         "queues-check: worker.ts:4 unjudged"
     );
+}
+
+#[test]
+fn worker_rate_limit_warning_selection_uses_kind_independently_of_message() {
+    let mut diagnostic = Diagnostic {
+        kind: DiagnosticKind::WorkerRateLimitUnresolved,
+        severity: Severity::Warning,
+        file: "worker.ts".to_string(),
+        line: 4,
+        message: "The worker binding could not be resolved.".to_string(),
+    };
+    assert!(is_worker_rate_limit_unresolved_diagnostic(&diagnostic));
+
+    diagnostic.kind = DiagnosticKind::AnalysisNote;
+    diagnostic.message = WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE.to_string();
+    assert!(!is_worker_rate_limit_unresolved_diagnostic(&diagnostic));
 }

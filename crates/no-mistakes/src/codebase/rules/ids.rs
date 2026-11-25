@@ -115,6 +115,7 @@ pub use super::test_fixture_size_cap::RULE_ID as TEST_FIXTURE_SIZE_CAP;
 pub use super::test_no_dependency_pins::RULE_ID as TEST_NO_DEPENDENCY_PINS;
 pub use super::test_no_live_repository_scan::RULE_ID as TEST_NO_LIVE_REPOSITORY_SCAN;
 pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
+pub use super::test_reliability::{PLAYWRIGHT_NO_SERIAL, TEST_NO_RETRIES};
 pub use super::tsconfig_alias_folder_mapping::RULE_ID as TSCONFIG_ALIAS_FOLDER_MAPPING;
 pub use super::tsconfig_file_coverage::RULE_ID as TSCONFIG_FILE_COVERAGE;
 pub use super::tsconfig_gate_coverage::RULE_ID as TSCONFIG_GATE_COVERAGE;

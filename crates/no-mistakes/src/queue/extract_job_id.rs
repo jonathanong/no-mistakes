@@ -7,7 +7,7 @@ use oxc_syntax::symbol::SymbolId;
 mod message;
 #[path = "extract_job_id_reader.rs"]
 mod reader;
-use reader::{Evidence, Reader};
+use reader::{Evidence, JobLabel, Reader};
 
 const KIND: &str = "invalid-job-id";
 
@@ -61,14 +61,14 @@ fn queue_receiver(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> Option<R
 pub(super) fn note_factory_options(
     visitor: &mut QueueVisitor<'_>,
     receiver: &Expression<'_>,
-    job: Option<String>,
+    job: Option<&Expression<'_>>,
     options: &Expression<'_>,
 ) {
     let Some(receiver) = queue_receiver(visitor, receiver) else {
         return;
     };
     let mut reader = Reader::new(visitor);
-    reader.options(job, options);
+    reader.options(job.and_then(|expr| JobLabel::read(visitor, expr)), options);
     let evidence = reader.evidence;
     publish(visitor, receiver, evidence);
 }
@@ -116,7 +116,8 @@ pub(super) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_
             let job = call
                 .arguments
                 .first()
-                .and_then(|arg| visitor.literal_arg(arg));
+                .and_then(Argument::as_expression)
+                .and_then(|expr| JobLabel::read(visitor, expr));
             if let Some(expr) = call.arguments.get(2).and_then(Argument::as_expression) {
                 reader.options(job, expr);
             }
