@@ -20,9 +20,10 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         ..
     } = request;
     if rule_id == TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS {
-        return terraform_iam_no_undocumented_wildcards::check_prepared(
-            root, config, files, sources, session,
-        );
+        return terraform_iam_no_undocumented_wildcards::diagnostics_prepared(
+            root, config, files, sources, session, true,
+        )
+        .map(|diagnostics| diagnostics.findings);
     }
     if rule_id == VITEST_DEFAULT_EXCLUDES {
         return vitest_default_excludes::check_prepared(

@@ -74,16 +74,15 @@ fn scan_policy_document(block: &Block, hits: &mut Vec<ScanHit>) {
 }
 
 fn scan_policy_resource(block: &Block, local_docs: &FxHashSet<&str>, hits: &mut Vec<ScanHit>) {
-    let [res_type, _] = block.labels.as_slice() else {
-        return;
-    };
-    match res_type.as_str() {
-        "aws_iam_policy"
-        | "aws_iam_role_policy"
-        | "aws_iam_user_policy"
-        | "aws_iam_group_policy" => check_policy_attr(&block.body, local_docs, hits),
-        "aws_iam_role" => scan_role_inline_policies(&block.body, local_docs, hits),
-        _ => {}
+    if let [res_type, _] = block.labels.as_slice() {
+        match res_type.as_str() {
+            "aws_iam_policy"
+            | "aws_iam_role_policy"
+            | "aws_iam_user_policy"
+            | "aws_iam_group_policy" => check_policy_attr(&block.body, local_docs, hits),
+            "aws_iam_role" => scan_role_inline_policies(&block.body, local_docs, hits),
+            _ => {}
+        }
     }
 }
 

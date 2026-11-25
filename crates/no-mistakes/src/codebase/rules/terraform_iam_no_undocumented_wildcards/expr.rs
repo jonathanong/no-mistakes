@@ -90,19 +90,19 @@ pub(super) fn is_local_policy_doc_ref(expr: &Expression, local_docs: &FxHashSet<
     if root.as_str() != "data" {
         return false;
     }
-    let attrs: Vec<&str> = traversal
-        .operators
-        .iter()
-        .filter_map(|op| match op.value() {
-            TraversalOperator::GetAttr(ident) => Some(ident.as_str()),
-            _ => None,
-        })
-        .collect();
-    attrs.len() == traversal.operators.len()
-        && matches!(
-            attrs.as_slice(),
-            ["aws_iam_policy_document", name, "json" | "minified_json"] if local_docs.contains(name)
-        )
+    let [a, b, c] = traversal.operators.as_slice() else {
+        return false;
+    };
+    matches!(
+        (a.value(), b.value(), c.value()),
+        (
+            TraversalOperator::GetAttr(kind),
+            TraversalOperator::GetAttr(name),
+            TraversalOperator::GetAttr(attr),
+        ) if kind.as_str() == "aws_iam_policy_document"
+            && matches!(attr.as_str(), "json" | "minified_json")
+            && local_docs.contains(name.as_str())
+    )
 }
 
 pub(super) fn has_wildcard(mut value: &str) -> bool {

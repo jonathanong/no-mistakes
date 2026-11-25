@@ -31,16 +31,6 @@ pub(super) fn check_with_files(
     })
 }
 
-pub(super) fn check_prepared(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &SourceStore,
-    session: Option<&AnalysisSession>,
-) -> Result<Vec<RuleFinding>> {
-    diagnostics_prepared(root, config, files, sources, session, true).map(|d| d.findings)
-}
-
 #[doc(hidden)]
 pub fn diagnostics_prepared(
     root: &Path,

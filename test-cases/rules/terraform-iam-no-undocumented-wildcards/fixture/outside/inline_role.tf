@@ -1,3 +1,18 @@
+data "aws_iam_policy_document" "edge_cases" {
+  statement "labeled" {
+    actions   = ["s3:GetObject"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = ["s3:GetObject"]
+    resources = [<<-EOT
+      arn:aws:s3:::example.invalid/receipts/clean.json
+    EOT
+    ]
+  }
+}
+
 resource "aws_iam_role" "worker" {
   name = "worker"
 
@@ -20,6 +35,18 @@ resource "aws_iam_role" "worker" {
       policy = inline_policy.value
     }
   }
+}
+
+resource "aws_iam_role_policy" "var_policy" {
+  name   = "var-policy"
+  role   = "worker"
+  policy = var.policy_json
+}
+
+resource "aws_iam_role_policy" "indexed_doc" {
+  name   = "indexed-doc"
+  role   = "worker"
+  policy = data.aws_iam_policy_document.edge_cases[0].json
 }
 
 resource "aws_s3_bucket" "unrelated" {
