@@ -20,6 +20,16 @@ declare namespace plugin {
     banOverrides?: boolean;
   }
 
+  export type PlaywrightNoBrowserNewPageUnanalyzable = "finding" | "ignore";
+
+  export interface PlaywrightNoBrowserNewPageOptions {
+    fixtureName?: string;
+    browserFixtureName?: string;
+    registrationPackages?: string[];
+    unanalyzable?: PlaywrightNoBrowserNewPageUnanalyzable;
+    message?: string;
+  }
+
   export interface PlaywrightNoRawScrollPaginationOptions {
     cursorParams?: string[];
     scrollHelper?: string;

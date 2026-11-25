@@ -183,6 +183,20 @@ files (empty `checkedPathPatterns` checks every file).
 `selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
 `pattern?: string` (default `^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`).
 
+### `playwright-no-browser-new-page`
+
+Opt-in. Not enabled by `configs.recommended` or `configs.strict`.
+`fixtureName?: string` defaults to `"page"` and names the shared page fixture
+recommended in diagnostics. `browserFixtureName?: string` defaults to
+`"browser"`. `registrationPackages?: string[]` defaults to `[]` and admits
+additional modules exporting Playwright `test` and `mergeTests`.
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"` so uncertain
+fixture, browser, or callback shapes report instead of silently passing.
+`message?: string` customizes definite `browser.newPage()` diagnostics. The
+plugin exports `PlaywrightNoBrowserNewPageOptions` and
+`PlaywrightNoBrowserNewPageUnanalyzable`. See
+[the rule reference](eslint-rules/playwright-no-browser-new-page.md).
+
 ### `playwright-no-hoisted-unique-token`
 
 `tokenFactories: string[]`; no default — the rule is inert until configured.
