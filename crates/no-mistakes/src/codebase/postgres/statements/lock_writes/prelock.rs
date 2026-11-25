@@ -10,13 +10,15 @@ use sqlparser::ast::{
 mod expressions;
 mod upsert;
 use expressions::{plain_assignments, plain_value};
-pub(super) fn collect(
+pub(super) fn collect<const ADVANCED: bool>(
     statement: &Statement,
     out: &mut LockWriteFacts,
     positions: PlaceholderPositions<'_>,
+    redundant_prelocks: bool,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
 ) {
     match statement {
-        Statement::Query(query) => {
+        Statement::Query(query) if redundant_prelocks => {
             out.prelock_attempt = query
                 .locks
                 .iter()
@@ -25,16 +27,21 @@ pub(super) fn collect(
                 out.prelock = locked_key(query, positions);
             }
         }
-        Statement::Update(update) => {
+        Statement::Update(update) if redundant_prelocks => {
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
-        Statement::Insert(insert) => {
-            if let Some(keys) = upsert::upsert_keys(insert, positions) {
-                if keys.len() == 1 {
-                    out.conditional_write_keys = keys;
-                    out.conditional_write_unique = true;
-                } else {
-                    out.multi_row_upsert_keys = Some(keys.into_boxed_slice());
+        Statement::Insert(insert) if ADVANCED => {
+            if let Some(upsert) = upsert::upsert_keys(insert, positions, tokens) {
+                if redundant_prelocks {
+                    if upsert.keys.len() == 1 {
+                        out.conditional_write_keys = upsert.keys.clone();
+                        out.conditional_write_unique = true;
+                    } else {
+                        out.multi_row_upsert_keys = Some(upsert.keys.clone().into_boxed_slice());
+                    }
+                }
+                if upsert.unconditional {
+                    out.upsert_write_keys.extend(upsert.keys);
                 }
             }
         }
@@ -134,6 +141,7 @@ impl Key {
             recovered_key: None,
             key_identity_unproven: false,
             has_predicate: true,
+            only: false,
         }
     }
 }
