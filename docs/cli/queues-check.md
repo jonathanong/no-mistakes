@@ -182,8 +182,10 @@ computed key that may overwrite `priority` or `opts`, a non-integer, a negative
 number, a `let` or `var` binding, an imported number, and any other dynamic
 expression. Language queue producers lack static priority evidence. A flow
 root with a known queue name joins direct producers when that queue has one
-definition file. Multiple definition files for that name make the check
-abstain. Flow `children` are outside this check. An unresolved queue is not
+definition file in the shared queue scope. Definitions in configured test
+files count only when `queues.includeTests` includes them. Multiple in-scope
+definition files for that name make the check abstain and emit a not-judged
+warning at the flow enqueue. Flow `children` are outside this check. An unresolved queue is not
 grouped with a resolved one. Give every producer on the queue priority 0, or give every producer a
 priority greater than 0.
 

@@ -81,7 +81,9 @@ export, or an unrelated imported object with a `.describe.configure` method),
 the rule never drops it silently: it records an `incomplete` entry naming the
 file, line, and binding rather than a finding. Add the export to
 `options.fixtures` if it is a Playwright fixture, or exclude/suppress the file
-if it is not. Computed configuration, omitted options, and CLI worker flags
+if it is not. A factory with an unverified return branch remains
+unanalyzable through imports and re-exports.
+Computed configuration, omitted options, and CLI worker flags
 need separate review. An unreadable or malformed selected test or config also
 appears in the JSON `incomplete` list.
 

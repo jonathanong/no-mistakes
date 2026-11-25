@@ -17,10 +17,11 @@ pub(super) enum ValueTrace {
 }
 
 impl ValueTrace {
-    pub(super) fn into_resolved(self) -> Option<FixtureInitializer> {
+    fn into_export(self) -> Option<Result<FixtureInitializer, &'static str>> {
         match self {
-            Self::Resolved(init) => Some(init),
-            Self::Unresolved(_) | Self::None => None,
+            Self::Resolved(init) => Some(Ok(init)),
+            Self::Unresolved(reason) => Some(Err(reason)),
+            Self::None => None,
         }
     }
 }
@@ -49,8 +50,8 @@ pub(crate) fn fixture_initializers<'a>(
                 .filter(|declaration| declaration.id.is_binding_identifier())
                 .and_then(|declaration| declaration.init.as_ref())
             {
-                if let Some(import) = bindings.playwright_value_origin(initializer).into_resolved() {
-                    result.values.insert(export.local.clone(), import);
+                if let Some(origin) = bindings.playwright_value_origin(initializer).into_export() {
+                    result.values.insert(export.local.clone(), origin);
                     continue;
                 }
             }
@@ -58,7 +59,7 @@ pub(crate) fn fixture_initializers<'a>(
         let mut visited = FxHashSet::default();
         if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
             result.wrappers.insert(export.local.clone(), summary);
-        } else if let Some(origin) = bindings.factory_return_origin(symbol, 0).into_resolved() {
+        } else if let Some(origin) = bindings.factory_return_origin(symbol, 0).into_export() {
             result.values.insert(export.local.clone(), origin);
         }
     }

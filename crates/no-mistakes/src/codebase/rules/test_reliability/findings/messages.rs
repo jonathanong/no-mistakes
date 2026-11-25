@@ -9,15 +9,18 @@ pub(super) fn unresolved_binding_message(relative: &str, id: &str, location: &Lo
         .playwright_binding
         .as_deref()
         .unwrap_or("test");
-    if let Some(reason) = location.unresolved_reason {
+    if let Some((module, export)) = location.resolved_playwright_exports.first() {
+        let reason = location
+            .unresolved_reason
+            .map_or_else(String::new, |reason| format!(" ({reason})"));
         return format!(
-            "{relative}:{}: cannot verify whether `{binding}` is Playwright's `test` ({reason}); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line {id}`",
+            r#"{relative}:{}: cannot verify whether imported binding `{binding}` (from `{module}` export `{export}`) is Playwright's `test`{reason}; if it is a Playwright fixture, add `{{ module: "{module}", export: "{export}" }}` to `{id}` `options.fixtures`"#,
             location.line
         );
     }
-    if let Some((module, export)) = location.resolved_playwright_exports.first() {
+    if let Some(reason) = location.unresolved_reason {
         return format!(
-            "{relative}:{}: cannot verify whether imported binding `{binding}` (from `{module}` export `{export}`) is Playwright's `test`; if it is a Playwright fixture, add `{{ module: \"{module}\", export: \"{export}\" }}` to `{id}` `options.fixtures`",
+            "{relative}:{}: cannot verify whether `{binding}` is Playwright's `test` ({reason}); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line {id}`",
             location.line
         );
     }

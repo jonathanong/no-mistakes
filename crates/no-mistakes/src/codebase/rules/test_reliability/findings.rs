@@ -48,9 +48,13 @@ pub(super) fn source_findings(
         {
             continue;
         }
-        let Some((target, message)) = finding_details(location, id, ctx.max_retries) else {
+        let detail = finding_details(location, id, ctx.max_retries);
+        let uncertain_retry = location.unresolved_reason.is_some()
+            && id == TEST_NO_RETRIES
+            && matches!(location.shape, Shape::Retry(..));
+        if detail.is_none() && !uncertain_retry {
             continue;
-        };
+        }
         let configured = location
             .resolved_playwright_exports
             .iter()
@@ -58,15 +62,17 @@ pub(super) fn source_findings(
         if (location.playwright_import.is_none() && location.unresolved_reason.is_none())
             || configured
         {
-            findings.push(RuleFinding {
-                rule: id.into(),
-                file: relative.into(),
-                line: location.line,
-                message,
-                import: None,
-                target: Some(target.into()),
-                causes: Vec::new(),
-            });
+            if let Some((target, message)) = detail {
+                findings.push(RuleFinding {
+                    rule: id.into(),
+                    file: relative.into(),
+                    line: location.line,
+                    message,
+                    import: None,
+                    target: Some(target.into()),
+                    causes: Vec::new(),
+                });
+            }
             continue;
         }
         let unresolved = unresolved_binding_message(relative, id, location);

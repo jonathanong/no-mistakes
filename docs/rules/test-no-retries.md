@@ -110,7 +110,10 @@ an opaque wrapper, an ambiguous or cyclic export, or an unrelated imported
 object with a `.describe.configure` method), the rule never drops it silently:
 it records an `incomplete` entry naming the file, line, and binding. Add the
 export to `options.fixtures` if it is a Playwright fixture, or exclude/suppress
-the file if it is not. Bind the rule application to a Vitest project with
+the file if it is not. A factory with an unverified return branch remains
+unanalyzable through imports and re-exports, even when the retry count
+is within the configured cap.
+Bind the rule application to a Vitest project with
 `rules[].tests.vitest` to check global Vitest calls. Workflow discovery uses
 `ci.workflowDirs`. An unreadable or malformed input also appears in the JSON
 `incomplete` list.

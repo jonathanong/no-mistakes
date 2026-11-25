@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 mod proof;
 mod wrappers;
+pub(super) use proof::FixtureProof;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(super) struct ExportKey {
@@ -18,7 +19,7 @@ enum Export {
     Playwright(Option<u32>, Vec<(ExportKey, usize)>),
     Local(ExportKey, Option<u32>, Vec<(ExportKey, usize)>),
     Stars(Vec<ExportKey>),
-    Unknown,
+    Unknown(Option<&'static str>),
 }
 
 #[derive(Clone)]
@@ -26,7 +27,7 @@ enum ExportProof {
     Playwright(Option<u32>, Vec<(ExportKey, usize)>),
     Alias(Option<u32>, Vec<(ExportKey, usize)>),
     Stars,
-    Unknown,
+    Unknown(Option<&'static str>),
 }
 
 #[derive(Clone)]
@@ -79,7 +80,7 @@ impl<'a> ExportLookup<'a> {
                 (ExportProof::Alias(derived_at, deps), vec![target])
             }
             Export::Stars(targets) => (ExportProof::Stars, targets),
-            Export::Unknown => (ExportProof::Unknown, Vec::new()),
+            Export::Unknown(reason) => (ExportProof::Unknown(reason), Vec::new()),
         };
         let wrapper_proof = self.wrapper_export(facts, &key);
         match &wrapper_proof {
@@ -118,14 +119,15 @@ impl<'a> ExportLookup<'a> {
         if import.is_playwright_test() {
             return Export::Playwright(derived_at, deps);
         }
-        self.local(from, import).map_or(Export::Unknown, |target| {
-            Export::Local(target, derived_at, deps)
-        })
+        self.local(from, import)
+            .map_or(Export::Unknown(None), |target| {
+                Export::Local(target, derived_at, deps)
+            })
     }
 
     fn export(&self, facts: Option<&CheckFileFacts>, key: &ExportKey) -> Export {
         let Some(facts) = facts.filter(|file| file.parse_error.is_none() && file.parsed) else {
-            return Export::Unknown;
+            return Export::Unknown(None);
         };
         let ts = &facts.ts;
         if let Some(binding) = ts
@@ -146,8 +148,12 @@ impl<'a> ExportLookup<'a> {
                 .as_ref()
                 .and_then(|fixtures| fixtures.values.get(&binding.local))
             {
+                let init = match init {
+                    Ok(init) => init,
+                    Err(reason) => return Export::Unknown(Some(reason)),
+                };
                 let Some(deps) = self.resolve_wrappers(&key.file, &init.wrappers) else {
-                    return Export::Unknown;
+                    return Export::Unknown(None);
                 };
                 return self.imported(&key.file, &init.import, init.derived_at, deps);
             }
@@ -163,7 +169,7 @@ impl<'a> ExportLookup<'a> {
                     Vec::new(),
                 );
             }
-            return Export::Unknown;
+            return Export::Unknown(None);
         }
         if key.name.as_ref() == "default" {
             return Export::Stars(Vec::new());
@@ -175,11 +181,11 @@ impl<'a> ExportLookup<'a> {
                 return if ts.star_reexport_specifiers.len() == 1 {
                     Export::Playwright(None, Vec::new())
                 } else {
-                    Export::Unknown
+                    Export::Unknown(None)
                 };
             }
             let Some(target) = self.local(&key.file, &reference) else {
-                return Export::Unknown;
+                return Export::Unknown(None);
             };
             stars.push(target);
         }

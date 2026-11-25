@@ -93,3 +93,26 @@ fn test_reliability_rejects_invalid_scope_globs() {
         assert!(error.contains(diagnostic), "{name}: {error}");
     }
 }
+
+#[test]
+fn uncertain_playwright_factory_check_json_snapshot() {
+    let root = rules_path("test-no-retries", "fixture", "uncertain-factory");
+    let reports = super::check_json_snapshot::assert_saved_fixture_report(
+        "uncertain_playwright_factory",
+        &[("uncertain", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["uncertain"]["report"];
+    assert_eq!(reports["uncertain"]["exitCode"], 1);
+    assert!(report["rules"].as_array().unwrap().is_empty());
+    let incomplete = report["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 2);
+    assert!(incomplete.iter().all(|entry| {
+        entry["consumer"] == "test-no-retries"
+            && entry["message"]
+                .as_str()
+                .unwrap()
+                .contains("local factory has an unverified return branch")
+    }));
+}

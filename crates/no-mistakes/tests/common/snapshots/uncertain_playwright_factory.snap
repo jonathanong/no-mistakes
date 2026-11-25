@@ -1,0 +1,29 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "uncertain": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/retries.spec.mts",
+          "message": "tests/retries.spec.mts:11: cannot verify whether `wrapped` is Playwright's `test` (local factory has an unverified return branch); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/retries.spec.mts",
+          "message": "tests/retries.spec.mts:5: cannot verify whether imported binding `maybe` (from `helpers/index.mts` export `makeTest`) is Playwright's `test` (local factory has an unverified return branch); if it is a Playwright fixture, add `{ module: \"helpers/index.mts\", export: \"makeTest\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

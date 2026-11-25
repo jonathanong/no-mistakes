@@ -69,11 +69,15 @@ impl<'ast> Bindings<'_, 'ast> {
         let mut import = None;
         let mut wrappers = Vec::new();
         let mut derived_at = None;
+        let mut untraced = false;
         for expr in returns {
             let branch = match self.playwright_value_origin_depth(expr, depth + 1) {
                 ValueTrace::Resolved(init) => init,
                 ValueTrace::Unresolved(reason) => return ValueTrace::Unresolved(reason),
-                ValueTrace::None => return ValueTrace::None,
+                ValueTrace::None => {
+                    untraced = true;
+                    continue;
+                }
             };
             if import.as_ref().is_some_and(|prev| prev != &branch.import) {
                 return ValueTrace::Unresolved(
@@ -83,6 +87,9 @@ impl<'ast> Bindings<'_, 'ast> {
             import = Some(branch.import);
             extend_unique(&mut wrappers, branch.wrappers);
             derived_at = derived_at.or(branch.derived_at);
+        }
+        if untraced && import.is_some() {
+            return ValueTrace::Unresolved("local factory has an unverified return branch");
         }
         import.map_or(ValueTrace::None, |import| {
             ValueTrace::Resolved(FixtureInitializer {

@@ -1036,7 +1036,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "playwright-no-serial",
           "file": "tests/factory.spec.mts",
-          "message": "tests/factory.spec.mts:10: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `playwright-no-serial` `options.fixtures`"
+          "message": "tests/factory.spec.mts:10: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `playwright-no-serial` `options.fixtures`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -1046,7 +1046,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "playwright-no-serial",
           "file": "tests/opaque.spec.mts",
-          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
         },
         {
           "consumer": "playwright-no-serial",
@@ -1076,7 +1076,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "test-no-retries",
           "file": "tests/factory.spec.mts",
-          "message": "tests/factory.spec.mts:11: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `test-no-retries` `options.fixtures`"
+          "message": "tests/factory.spec.mts:11: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `test-no-retries` `options.fixtures`"
         },
         {
           "consumer": "test-no-retries",
@@ -1086,7 +1086,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "test-no-retries",
           "file": "tests/opaque.spec.mts",
-          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
         },
         {
           "consumer": "test-no-retries",
