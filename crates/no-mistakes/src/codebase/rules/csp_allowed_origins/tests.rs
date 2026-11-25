@@ -77,7 +77,7 @@ fn parses_and_matches_exact_wildcard_scheme_and_fallback_sources() {
 
 #[test]
 fn handles_child_src_fallback_text_comments_and_missing_directives() {
-    let headers = "# comment\n// js comment\n\"child-src https://frames.example.com; script-src-elem http: https://js.example.com; style-src-elem https://css.example.com\"\n";
+    let headers = "# comment\n// js comment\n\"child-src https://frames.example.com; ; report-uri /r; script-src-elem http: data: ftp://bad.example.com bareword , https://js.example.com; style-src-elem https://css.example.com\"\n\"unclosed\ndefault-src 'self'\n";
     let policy = CspPolicy::parse_from_text(headers);
     assert!(policy.allows(
         CspDirective::Frame,
@@ -157,5 +157,36 @@ fn reports_invalid_options_and_unreadable_csp_files() {
     )
     .unwrap()
     .0;
-    assert!(check_with_files(&report_root, &default_off, &[]).unwrap().is_empty());
+    assert!(check_with_files(&report_root, &default_off, &[])
+        .unwrap()
+        .is_empty());
+
+    let enabled = crate::config::v2::load_v2_config_with_path(
+        &report_root,
+        Some(&report_root.join(".no-mistakes.yml")),
+    )
+    .unwrap()
+    .0;
+    let files = vec![
+        report_root.join("src/csp.ts"),
+        report_root.join("src/violations.tsx"),
+        report_root.join("src/valid.tsx"),
+    ];
+    let findings = check_with_files(&report_root, &enabled, &files).unwrap();
+    assert_eq!(findings.len(), 7);
+
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    assert!(super::check_prepared(&report_root, &enabled, &files, None, &sources, None).is_err());
+
+    let mut plan_a = crate::codebase::check_facts::CheckFactPlan::default();
+    let plan_b = crate::codebase::check_facts::CheckFactPlan {
+        csp_allowed_origins_paths: std::sync::Arc::new(
+            [report_root.join("src/valid.tsx")].into_iter().collect(),
+        ),
+        ..Default::default()
+    };
+    plan_a.include(plan_b);
+    assert!(plan_a
+        .csp_allowed_origins_paths
+        .contains(&report_root.join("src/valid.tsx")));
 }
