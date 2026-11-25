@@ -210,9 +210,13 @@
   {
     "file": "packages/no-mistakes/scripts/shell-compatibility-api.test.js",
     "name": "compiled synthetic case 26 (0)"
-   },
+  },
   {
     "file": "packages/no-mistakes/scripts/required-pr-path-filters-api.test.js",
     "name": "compiled synthetic case 27 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/changes-api.test.js",
+    "name": "compiled synthetic case 28 (0)"
   }
 ]

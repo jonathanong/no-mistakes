@@ -44,7 +44,7 @@ impl<'a> Rules<'a> {
             if name.is_empty()
                 || matches!(
                     name.as_str(),
-                    "schemaVersion" | "complete" | "unclassified" | "reasons"
+                    "schemaVersion" | "complete" | "unclassified" | "changedFiles" | "reasons"
                 )
             {
                 bail!("invalid changes category name {name:?}");
