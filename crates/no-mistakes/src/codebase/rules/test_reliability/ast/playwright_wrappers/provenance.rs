@@ -5,9 +5,10 @@ use crate::codebase::rules::test_reliability::playwright_provenance::ImportRef;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{
-    CallExpression, ComputedMemberExpression, Expression, FunctionBody, IdentifierReference,
+    CallExpression, Class, ComputedMemberExpression, Expression, FunctionBody, IdentifierReference,
     StaticMemberExpression,
 };
+use oxc_ast::AstKind;
 use oxc_ast_visit::Visit;
 
 mod receivers;
@@ -102,12 +103,13 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
             self.record(import);
             return;
         }
-        if let Some(class) = self.bindings.class_declaration(symbol) {
-            for value in receivers::class_field_values(class, None) {
-                if self.visited_fields.insert(value.span()) {
-                    self.visit_expression(value);
-                }
-            }
+        if let AstKind::Class(class) = self
+            .bindings
+            .semantic
+            .nodes()
+            .kind(self.bindings.semantic.scoping().symbol_declaration(symbol))
+        {
+            self.visit_class_members(class, None);
             return;
         }
         if let Some(init) = self.bindings.any_var_initializer(symbol) {
@@ -144,11 +146,7 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
             {
                 self.visit_arguments(&instance.arguments);
             }
-            for value in receivers::class_field_values(class, property) {
-                if self.visited_fields.insert(value.span()) {
-                    self.visit_expression(value);
-                }
-            }
+            self.visit_class_members(class, property);
             return;
         }
         if let Expression::Identifier(identifier) = object {
@@ -158,6 +156,20 @@ impl<'a, 'scope, 'ast> ProvenanceFinder<'a, 'scope, 'ast> {
             }
         }
         self.visit_expression(object);
+    }
+
+    fn visit_class_members(&mut self, class: &Class<'_>, property: Option<&str>) {
+        for member in receivers::class_members(class, property) {
+            match member {
+                receivers::ClassMember::Expr(v) if self.visited_fields.insert(v.span()) => {
+                    self.visit_expression(v);
+                }
+                receivers::ClassMember::Body(b) if self.visited_fields.insert(b.span()) => {
+                    self.visit_function_body(b);
+                }
+                _ => {}
+            }
+        }
     }
 }
 

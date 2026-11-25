@@ -112,3 +112,27 @@ done
 for suite in unit integration; do
   pnpm test:unit | grep "$suite"
 done
+for attempt in 1 2; do
+  export ATTEMPT=$attempt
+  if
+    pnpm test:unit
+  then
+    break
+  fi
+done
+for attempt in 1 2; do
+  export ATTEMPT=$attempt
+  if ! pnpm test:unit; then
+    echo failed
+  else
+    break
+  fi
+done
+for attempt in 1 2; do
+  export ATTEMPT=$attempt
+  if pnpm test:unit; then
+    echo ok
+  else
+    continue
+  fi
+done

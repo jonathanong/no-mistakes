@@ -11,6 +11,7 @@ enum TestSignal {
     None,
     Direct,
     Negated,
+    IfCond,
     IfDirectCond,
     IfNegatedCond,
     IfDirectThen,
@@ -110,35 +111,36 @@ fn process_body_segment(
     let Some(last) = loops.last_mut().filter(|frame| frame.in_body) else {
         return;
     };
-    let mut in_if_cond = false;
     loop {
         match words.first().map(String::as_str) {
-            Some("if" | "elif") => {
-                last.test_signal = TestSignal::None;
-                in_if_cond = true;
-                words = &words[1..];
-            }
+            Some("if" | "elif") => last.test_signal = TestSignal::IfCond,
             Some("then") => {
                 last.test_signal = match last.test_signal {
                     TestSignal::IfDirectCond => TestSignal::IfDirectThen,
                     TestSignal::IfNegatedCond => TestSignal::IfNegatedThen,
                     _ => TestSignal::None,
                 };
-                words = &words[1..];
             }
-            Some("else" | "fi") => {
-                last.test_signal = TestSignal::None;
-                words = &words[1..];
+            Some("else") => {
+                last.test_signal = match last.test_signal {
+                    TestSignal::IfDirectThen => TestSignal::IfNegatedThen,
+                    TestSignal::IfNegatedThen => TestSignal::IfDirectThen,
+                    _ => TestSignal::None,
+                };
             }
+            Some("fi") => last.test_signal = TestSignal::None,
             _ => break,
         }
+        words = &words[1..];
     }
     let Some(first) = words.first().map(String::as_str) else {
         return;
     };
-    if !in_if_cond {
-        update_retry_signal(last, preceded_by, first);
-    }
+    update_retry_signal(last, preceded_by, first);
+    let in_if_cond = matches!(
+        last.test_signal,
+        TestSignal::IfCond | TestSignal::IfDirectCond | TestSignal::IfNegatedCond
+    );
     if let Some(negated) = matching_command(words, commands) {
         last.matched_test = true;
         last.test_signal = match (in_if_cond, negated) {
@@ -182,10 +184,8 @@ fn update_retry_signal(frame: &mut Loop, preceded_by: Connector, first: &str) {
         },
         TestSignal::IfDirectThen if first == "break" => frame.retry_signal = true,
         TestSignal::IfNegatedThen if first == "continue" => frame.retry_signal = true,
-        TestSignal::IfDirectCond | TestSignal::IfNegatedCond
-            if preceded_by != Connector::And =>
-        {
-            frame.test_signal = TestSignal::None;
+        TestSignal::IfDirectCond | TestSignal::IfNegatedCond if preceded_by != Connector::And => {
+            frame.test_signal = TestSignal::IfCond;
         }
         _ => {}
     }

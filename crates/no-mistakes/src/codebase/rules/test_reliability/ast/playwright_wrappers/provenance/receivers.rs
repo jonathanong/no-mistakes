@@ -1,7 +1,10 @@
 use super::Bindings;
 use crate::codebase::rules::test_reliability::playwright_provenance::ImportRef;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Class, ClassElement, Expression, FormalParameter, FormalParameters, NewExpression};
+use oxc_ast::ast::{
+    Class, ClassElement, Expression, FormalParameter, FormalParameters, FunctionBody,
+    MethodDefinitionKind, NewExpression,
+};
 use oxc_ast::AstKind;
 use oxc_semantic::SymbolId;
 use oxc_span::GetSpan;
@@ -95,17 +98,6 @@ impl<'ast> Bindings<'_, 'ast> {
         }).collect()
     }
 
-    pub(super) fn class_declaration(&self, symbol: SymbolId) -> Option<&'ast Class<'ast>> {
-        match self
-            .semantic
-            .nodes()
-            .kind(self.semantic.scoping().symbol_declaration(symbol))
-        {
-            AstKind::Class(class) => Some(class),
-            _ => None,
-        }
-    }
-
     pub(super) fn receiver_class<'a>(
         &'a self,
         object: &'a Expression<'a>,
@@ -180,20 +172,28 @@ impl<'ast> Bindings<'_, 'ast> {
     }
 }
 
-pub(super) fn class_field_values<'ast, 'name>(
+pub(super) enum ClassMember<'ast> {
+    Expr(&'ast Expression<'ast>),
+    Body(&'ast FunctionBody<'ast>),
+}
+
+pub(super) fn class_members<'ast, 'name>(
     class: &'ast Class<'ast>,
     property: Option<&'name str>,
-) -> impl Iterator<Item = &'ast Expression<'ast>> + use<'ast, 'name> {
-    class.body.body.iter().filter_map(move |element| {
-        let ClassElement::PropertyDefinition(field) = element else {
-            return None;
-        };
-        let matches = match property {
-            Some(property) => field.key.static_name().is_some_and(|name| name == property),
-            None => true,
-        };
-        (!field.r#static && matches)
-            .then_some(field.value.as_ref())
-            .flatten()
+) -> impl Iterator<Item = ClassMember<'ast>> + use<'ast, 'name> {
+    class.body.body.iter().filter_map(move |el| match el {
+        ClassElement::PropertyDefinition(f)
+            if !f.r#static && property.is_none_or(|p| f.key.static_name().is_some_and(|n| n == p)) =>
+        {
+            f.value.as_ref().map(ClassMember::Expr)
+        }
+        ClassElement::MethodDefinition(m)
+            if !m.r#static
+                && m.kind == MethodDefinitionKind::Get
+                && property.is_none_or(|p| m.key.static_name().is_some_and(|n| n == p)) =>
+        {
+            m.value.body.as_deref().map(ClassMember::Body)
+        }
+        _ => None,
     })
 }
