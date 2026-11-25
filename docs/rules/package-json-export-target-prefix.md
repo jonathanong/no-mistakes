@@ -12,6 +12,7 @@ site in the repository.
 In selected `package.json` files, direct string targets and string leaves in
 subpath and conditional `exports` mappings must start with `./`. Findings
 identify the authored key and carry a JSON Pointer in the `target` field.
+Boolean and numeric targets at those same positions also produce findings.
 A `null` target explicitly blocks an export. Fallback arrays are outside this
 check because Node can skip invalid alternatives. Build output, file inclusion
 in the package archive, and the rest of Node's resolution rules are outside
@@ -63,12 +64,14 @@ rules:
 ## Fix
 
 Use a path relative to the package root. Change `dist/index.mjs` to
-`./dist/index.mjs`.
+`./dist/index.mjs`. Replace a boolean or number with a package-relative string
+or use `null` to block the export.
 
 ## Analysis
 
 The rule uses the shared `options.unanalyzable` policy for selected manifests
-that cannot be read or parsed. The default `report` is blocking. `advise`
+that cannot be read or parsed, or whose top-level JSON value is outside the
+manifest object format. The default `report` is blocking. `advise`
 returns an advisory and `ignore` omits the diagnostic. The rule runs at
 `max` effort. A requested `low` emits the standard fallback warning.
 

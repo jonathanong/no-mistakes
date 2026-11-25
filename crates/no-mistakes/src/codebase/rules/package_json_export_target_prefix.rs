@@ -67,6 +67,14 @@ fn check_manifest(root: &Path, path: &Path, sources: &SourceStore) -> Vec<RuleFi
             ))];
         }
     };
+    let Some(manifest) = manifest.as_object() else {
+        return vec![finding(
+            &file,
+            1,
+            "unanalyzable".into(),
+            format!("{file}: cannot verify package export targets. Replace the top-level JSON value with a package manifest object."),
+        )];
+    };
     let Some(exports) = manifest.get("exports") else {
         return Vec::new();
     };
@@ -83,27 +91,42 @@ fn check_manifest(root: &Path, path: &Path, sources: &SourceStore) -> Vec<RuleFi
     let locations = sources.config_locations(path);
     invalid
         .into_iter()
-        .map(|(location, pointer)| {
+        .map(|(location, pointer, defect)| {
             let line = locations
                 .as_ref()
                 .and_then(|locations| locations.line(&location))
                 .unwrap_or(1);
-            let message = format!(
-                "{file}:{line}: Node.js requires the target at {pointer} to start with \"./\". Use a path relative to the package root."
-            );
+            let message = match defect {
+                TargetDefect::Prefix => format!(
+                    "{file}:{line}: Node.js requires the target at {pointer} to start with \"./\". Use a path relative to the package root."
+                ),
+                TargetDefect::Type => format!(
+                    "{file}:{line}: Node.js does not accept a boolean or number at {pointer}. Use a package-relative string or null to block the export."
+                ),
+            };
             finding(&file, line, pointer, message)
         })
         .collect()
+}
+
+enum TargetDefect {
+    Prefix,
+    Type,
 }
 
 fn collect_invalid_targets(
     target: &Value,
     location: ConfigPath,
     pointer: String,
-    invalid: &mut Vec<(ConfigPath, String)>,
+    invalid: &mut Vec<(ConfigPath, String, TargetDefect)>,
 ) {
     match target {
-        Value::String(value) if !value.starts_with("./") => invalid.push((location, pointer)),
+        Value::String(value) if !value.starts_with("./") => {
+            invalid.push((location, pointer, TargetDefect::Prefix));
+        }
+        Value::Bool(_) | Value::Number(_) => {
+            invalid.push((location, pointer, TargetDefect::Type));
+        }
         Value::Object(entries) => {
             for (key, value) in entries {
                 let escaped = key.replace('~', "~0").replace('/', "~1");
@@ -115,7 +138,7 @@ fn collect_invalid_targets(
                 );
             }
         }
-        _ => {}
+        Value::String(_) | Value::Null | Value::Array(_) => {}
     }
 }
 

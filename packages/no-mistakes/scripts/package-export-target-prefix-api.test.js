@@ -15,12 +15,20 @@ test(
     assert.ok(pending instanceof Promise);
     const report = await pending;
     assert.deepEqual(
-      report.rules.map(({ target }) => target),
-      ["/exports", "/exports/./import"],
+      report.rules.map(({ file, target }) => [file, target]),
+      [
+        ["packages/names/package.json", "/exports"],
+        ["packages/prepare/package.json", "/exports/./import"],
+        ["packages/review-boolean/package.json", "/exports"],
+        ["packages/review-number/package.json", "/exports/./import"],
+      ],
     );
     assert.deepEqual(
-      report.advisories.map(({ target }) => target),
-      ["unanalyzable"],
+      report.advisories.map(({ file, target }) => [file, target]),
+      [
+        ["packages/malformed/package.json", "unanalyzable"],
+        ["packages/review-root/package.json", "unanalyzable"],
+      ],
     );
     const batch = await analyzeProject({ ...options, reports: [{ type: "check" }] });
     assert.deepEqual(batch.reports[0].result, report);
