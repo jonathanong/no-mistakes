@@ -29,12 +29,23 @@ pub(super) fn project(
     let pending = spec_files()
         .filter_map(|path| Some((path, facts.get(path)?)))
         .flat_map(|(path, file)| {
-            file.test_reliability.iter().filter_map(|location| {
-                Some((
-                    path.clone(),
-                    location.playwright_import.as_ref()?.clone(),
-                    location.playwright_wrappers.clone(),
-                ))
+            file.test_reliability.iter().flat_map(|location| {
+                location
+                    .playwright_import
+                    .iter()
+                    .map(|import| {
+                        (
+                            path.clone(),
+                            import.clone(),
+                            location.playwright_wrappers.clone(),
+                        )
+                    })
+                    .chain(
+                        location
+                            .playwright_candidates
+                            .iter()
+                            .map(|import| (path.clone(), import.clone(), Vec::new())),
+                    )
             })
         })
         .collect::<FxHashSet<_>>();
@@ -154,6 +165,20 @@ pub(super) fn project(
             continue;
         };
         for location in &mut file.test_reliability {
+            location.playwright_candidates.retain(|import| {
+                let key = (path.clone(), import.clone(), Vec::new());
+                if let Some(exports) = resolved_map.get(&key) {
+                    location
+                        .resolved_playwright_exports
+                        .extend(exports.iter().cloned());
+                }
+                verified.contains(&key)
+                    || lookup
+                        .local(path, import)
+                        .is_none_or(|export| lookup.reaches_uncertain(&relationships, &export))
+            });
+            location.resolved_playwright_exports.sort();
+            location.resolved_playwright_exports.dedup();
             let Some(import) = location.playwright_import.clone() else {
                 continue;
             };

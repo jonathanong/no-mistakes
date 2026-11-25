@@ -1,4 +1,4 @@
-<!-- cspell:ignore Wandalen wretry -->
+<!-- cspell:ignore Wandalen wretry pushd -->
 
 # `test-no-retries`
 
@@ -51,9 +51,13 @@ and two attempts respectively. [nick-fields/retry inputs](https://github.com/nic
 
 For a `for` loop over a literal list, the rule subtracts the initial run from
 the number of iterations. An unverified loop bound produces a finding. A `for`
-loop or `while`/`until read` loop that passes its loop variable to the test
-command—either as an argument or in a leading `NAME=value` environment
-assignment—can run different test cases and is outside this check.
+loop or `while`/`until read` loop that expands its iteration variable in
+the test command—or in a command piped into it, or a directory change
+(`cd`/`pushd`) or `export` before it—can run different test inputs, unless the
+test command is followed by retry control flow (`&& break`, `|| continue`,
+`if <test>; then break`, or their negated forms). A loop that only logs its
+iteration variable, updates `cd` or `export` only after the test command, or
+leaves its iteration variable unused still counts as a retry.
 
 ## Valid example
 
@@ -110,7 +114,10 @@ an opaque wrapper, an ambiguous or cyclic export, or an unrelated imported
 object with a `.describe.configure` method), the rule never drops it silently:
 it records an `incomplete` entry naming the file, line, and binding. Add the
 export to `options.fixtures` if it is a Playwright fixture, or exclude/suppress
-the file if it is not. Bind the rule application to a Vitest project with
+the file if it is not. When provenance survives through a receiver that cannot
+be fully traced, such as a later assignment or a mixed factory return, the
+rule records `incomplete` too. See [Playwright receiver limits](playwright-no-serial.md#limits).
+Bind the rule application to a Vitest project with
 `rules[].tests.vitest` to check global Vitest calls. Workflow discovery uses
 `ci.workflowDirs`. An unreadable or malformed input also appears in the JSON
 `incomplete` list.

@@ -43,5 +43,6 @@ pub(crate) struct FixtureInitializer {
 #[derive(Default)]
 pub(crate) struct FixtureInitializers {
     pub(crate) values: FxHashMap<String, FixtureInitializer>,
+    pub(crate) uncertain: FxHashMap<String, Vec<ImportRef>>,
     pub(crate) wrappers: FxHashMap<String, WrapperSummary>,
 }

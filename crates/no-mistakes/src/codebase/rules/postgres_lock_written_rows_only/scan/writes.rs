@@ -39,17 +39,26 @@ impl<'a> Writes<'a> {
         relation: &str,
         lock: &RowAccess,
         call: &EmbeddedSqlCall,
-    ) -> bool {
-        lock.only
-            && self
-                .upserts
-                .get(&transaction)
-                .and_then(|relations| relations.get(relation))
-                .is_some_and(|writes| {
-                    writes.iter().any(|(write, write_call)| {
-                        compare_keys(lock, call, write, write_call) == Some(true)
-                    })
-                })
+    ) -> Option<bool> {
+        let candidates = self
+            .upserts
+            .get(&transaction)
+            .and_then(|relations| relations.get(relation))
+            .filter(|_| lock.has_predicate);
+        let mut unknown = false;
+        for (write, write_call) in candidates.into_iter().flatten() {
+            if lock.key.as_ref().zip(write.key.as_ref()).is_some_and(
+                |((lock_column, _), (write_column, _))| lock_column != write_column,
+            ) {
+                continue;
+            }
+            match compare_keys(lock, call, write, write_call) {
+                Some(true) => return Some(true),
+                Some(false) => {}
+                None => unknown = true,
+            }
+        }
+        (!unknown).then_some(false)
     }
 
     fn insert_write(&mut self, transaction: u32, write: &'a RowAccess, call: &'a EmbeddedSqlCall) {
