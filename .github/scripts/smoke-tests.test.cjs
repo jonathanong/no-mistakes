@@ -65,14 +65,14 @@ test("the listed CLI and N-API fixtures are saved in the repository", () => {
 });
 
 test("a Cargo filter that runs zero tests fails the smoke run", () => {
-  const [, blockedCheck] = cargoCommands("macos");
+  const [invocation] = cargoCommands("macos");
   for (const output of ["running 0 tests\n\ntest result: ok. 0 passed\n", ""]) {
-    assert.throws(() => assertCargoTestsRan(blockedCheck, output), /ran zero tests/);
+    assert.throws(() => assertCargoTestsRan(invocation, output), /ran zero tests/);
   }
   assert.doesNotThrow(() =>
-    assertCargoTestsRan(blockedCheck, "running 0 tests\r\nrunning 3 tests\r\n"),
+    assertCargoTestsRan(invocation, "running 0 tests\r\nrunning 3 tests\r\n"),
   );
-  assert.doesNotThrow(() => assertCargoTestsRan(blockedCheck, "running 1 test\n"));
+  assert.doesNotThrow(() => assertCargoTestsRan(invocation, "running 1 test\n"));
 });
 
 test("CLI smoke requires the expected finding and the findings exit status", () => {
@@ -134,9 +134,20 @@ test("the Windows smoke job runs on pull requests and drives the checked-in list
   assert.doesNotMatch(body, /pull_request_target|secrets\./);
 });
 
-test("the macOS smoke Rust tests compile with the profile the main test-harness cache holds", () => {
-  const { commands } = require("./native-rust-tests.cjs");
+test("macOS smoke builds only the small invocation harness with the main cache profile", () => {
+  const { commands, targets } = require("./native-rust-tests.cjs");
   const cached = commands("build", "macOS")[0];
+  assert.deepEqual(
+    platforms.macos.rust.map(({ selector }) => selector),
+    [["--test", "macos_invocation"]],
+  );
+  assert.ok(
+    targets("macOS").some(
+      ({ selector, cases }) =>
+        selector.includes("--bin") &&
+        cases.some((filters) => filters.includes("invocation::tests::blocked_check::")),
+    ),
+  );
   const [smoke] = cargoCommands("macos");
   const profile = (args) => args.slice(0, args.indexOf("--locked"));
   assert.deepEqual(profile(smoke), profile(cached));

@@ -46,5 +46,29 @@
     "ref": "refs/heads/main",
     "created_at": "2026-11-01T00:00:00Z",
     "last_accessed_at": "2026-11-07T00:00:00Z"
+  },
+  {
+    "id": 77,
+    "key": "native-test-harness-workspace-v2-aarch64-apple-darwin-older",
+    "size_in_bytes": 1073741824,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-13T00:00:00Z"
+  },
+  {
+    "id": 78,
+    "key": "native-test-harness-workspace-v2-aarch64-apple-darwin-current",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-02T00:00:00Z",
+    "last_accessed_at": "2026-11-08T00:00:00Z"
+  },
+  {
+    "id": 79,
+    "key": "native-test-harness-workspace-v2-x86_64-pc-windows-msvc-current",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-11T12:00:00Z"
   }
 ]
