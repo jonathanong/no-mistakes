@@ -113,5 +113,5 @@ fn operand(expr: &Expr, array: bool, depth: usize) -> bool {
     }
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2, nm_shard_postgres_source)))]
 mod tests;
