@@ -32,6 +32,16 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
             sources,
         );
     }
+    if rule_id == POSTGRES_EXPLAIN_WRITE_ROLLBACK {
+        return match facts {
+            Some(facts) => postgres_explain_write_rollback::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_explain_write_rollback::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        };
+    }
     if let Some(out) = postgres::run(rule_id, root, config, files, sources, facts) {
         return out;
     }

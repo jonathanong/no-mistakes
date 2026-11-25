@@ -1,0 +1,168 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "autocommit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "benchmarks/update.sql",
+          "line": 1,
+          "message": "benchmarks/update.sql:1:1: EXPLAIN ANALYZE executes UPDATE with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;",
+          "target": "UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "benchmarks/file-suppressed.sql",
+          "line": 1,
+          "message": "directive names disabled or out-of-scope rule `postgres-explain-write-rollback`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-explain-write-rollback: isolated sandbox",
+          "target": "postgres-explain-write-rollback"
+        },
+        {
+          "file": "benchmarks/suppressions.sql",
+          "line": 1,
+          "message": "directive names disabled or out-of-scope rule `postgres-explain-write-rollback`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-explain-write-rollback: isolated sandbox",
+          "target": "postgres-explain-write-rollback"
+        },
+        {
+          "file": "benchmarks/suppressions.sql",
+          "line": 3,
+          "message": "directive names disabled or out-of-scope rule `postgres-explain-write-rollback`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42; -- no-mistakes-disable-line postgres-explain-write-rollback: isolated sandbox",
+          "target": "postgres-explain-write-rollback"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_rule": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "transactions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "benchmarks/session-characteristics.sql",
+          "line": 2,
+          "message": "benchmarks/session-characteristics.sql:2:1: EXPLAIN ANALYZE executes DELETE with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 43;",
+          "target": "DELETE"
+        },
+        {
+          "file": "benchmarks/suppressions.sql",
+          "line": 4,
+          "message": "benchmarks/suppressions.sql:4:1: EXPLAIN ANALYZE executes INSERT with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE INSERT INTO sample_jobs (id) VALUES (42);",
+          "target": "INSERT"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 1,
+          "message": "benchmarks/transactions.sql:1:1: EXPLAIN ANALYZE executes UPDATE with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;",
+          "target": "UPDATE"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 11,
+          "message": "benchmarks/transactions.sql:11:1: EXPLAIN ANALYZE executes MERGE inside a transaction that commits. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE MERGE INTO sample_jobs AS j",
+          "target": "MERGE"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 2,
+          "message": "benchmarks/transactions.sql:2:1: EXPLAIN ANALYZE executes INSERT with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN (ANALYZE TRUE) INSERT INTO sample_jobs (id) VALUES (42) ON CONFLICT (id) DO NOTHING;",
+          "target": "INSERT"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 23,
+          "message": "benchmarks/transactions.sql:23:1: EXPLAIN ANALYZE executes UPDATE inside a transaction that commits. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;",
+          "target": "UPDATE"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 57,
+          "message": "benchmarks/transactions.sql:57:1: EXPLAIN ANALYZE executes UPDATE with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN",
+          "target": "UPDATE"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 59,
+          "message": "benchmarks/transactions.sql:59:1: EXPLAIN ANALYZE executes DELETE with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42; EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 43;",
+          "target": "DELETE"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 59,
+          "message": "benchmarks/transactions.sql:59:56: EXPLAIN ANALYZE executes DELETE with autocommit enabled. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42; EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 43;",
+          "target": "DELETE"
+        },
+        {
+          "file": "benchmarks/transactions.sql",
+          "line": 7,
+          "message": "benchmarks/transactions.sql:7:1: EXPLAIN ANALYZE executes DELETE inside a transaction that commits. Run this write plan inside a transaction ending with ROLLBACK, or remove ANALYZE to inspect the plan without executing the write.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42;",
+          "target": "DELETE"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

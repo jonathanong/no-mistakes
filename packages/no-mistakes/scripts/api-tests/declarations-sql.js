@@ -161,3 +161,18 @@ test("structured trigger events and cast types remain named public contracts", (
     /kind: "cast"; castKind: string; dataType: string; dataTypeFacts: PostgresSqlType/,
   );
 });
+
+test("EXPLAIN write rollback exports the required standalone SQL scope", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "postgres-explain-write-rollback-types.d.ts"),
+    "utf8",
+  );
+  assert.match(
+    declaration,
+    /export interface PostgresExplainWriteRollbackOptions \{\s*(?:\/\*\*.*?\*\/\s*)?sqlInclude: string\[\];/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/postgres-explain-write-rollback-types";/,
+  );
+});

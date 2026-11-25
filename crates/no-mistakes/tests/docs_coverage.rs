@@ -462,3 +462,24 @@ fn changes_diff_and_semantic_test_routing_have_public_docs() {
     assert!(read(&root.join("packages/no-mistakes/changes-types.d.ts"))
         .contains("export interface ChangesDiffOptions"));
 }
+
+#[test]
+fn postgres_explain_write_rollback_docs_are_reachable_from_check_surfaces() {
+    let root = repo_root();
+    for (page, link) in [
+        (
+            "docs/cli/check.md",
+            "../rules/postgres-explain-write-rollback.md",
+        ),
+        (
+            "docs/node-api.md",
+            "rules/postgres-explain-write-rollback.md",
+        ),
+        ("docs/rules/README.md", "postgres-explain-write-rollback.md"),
+    ] {
+        assert!(
+            read(&root.join(page)).contains(&format!("]({link})")),
+            "{page}"
+        );
+    }
+}
