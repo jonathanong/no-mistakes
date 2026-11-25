@@ -35,7 +35,7 @@ pub(in crate::codebase::rules) fn parse(script: &str) -> Parse {
     parse_ordered(script, false, false)
 }
 
-pub(super) fn parse_ordered(script: &str, strict: bool, collect_skips: bool) -> Parse {
+pub(in crate::codebase::rules) fn parse_ordered(script: &str, strict: bool, collect_skips: bool) -> Parse {
     scan::run(script, strict, collect_skips)
 }
 

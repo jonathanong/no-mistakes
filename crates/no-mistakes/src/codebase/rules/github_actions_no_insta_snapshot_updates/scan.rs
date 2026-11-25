@@ -34,6 +34,15 @@ pub(super) fn check_workflow(
             visit_workflow_scopes(&yaml, &mut |event| match event {
                 ScopeEvent::Mapping { owner, path, scope } => {
                     check_scope(&relative, locations.as_ref(), owner, path, scope, &mut findings);
+                    super::run::check(
+                        &relative,
+                        locations.as_ref(),
+                        &yaml,
+                        owner,
+                        path,
+                        scope,
+                        &mut findings,
+                    );
                 }
                 ScopeEvent::Unanalyzable {
                     path, description, ..
@@ -138,7 +147,7 @@ fn check_scope(
     }
 }
 
-fn finding(relative: &str, line: usize, target: &str, message: String) -> RuleFinding {
+pub(super) fn finding(relative: &str, line: usize, target: &str, message: String) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.into(),
         file: relative.into(),

@@ -1,0 +1,37 @@
+name: Snapshot tests
+on: [pull_request]
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo insta test "$FLAGS"
+      - run: cargo insta test '
+      - run: ${{ vars.SNAPSHOT_COMMAND }}
+      - run: ["cargo", "insta"]
+      - run: cargo insta accept
+        shell: pwsh
+      - run: bash -c "$SNAPSHOT_COMMAND"
+      - run: cargo "$SUBCOMMAND"
+      - run: cargo +$TOOLCHAIN insta test
+      - run: cargo insta "$SUBCOMMAND"
+      - run: (cargo insta accept)
+      - run: (cargo insta test --accept)
+      - run: |
+          cat <<'SCRIPT'
+          cargo insta accept
+      - run: echo "$(cargo insta accept"
+      - run: 'eval "$SNAPSHOT_COMMAND"'
+      - run: echo "$(echo "$(echo "$(echo "$(echo "$(echo ready)")")")")"
+  windows:
+    runs-on: windows-latest
+    steps:
+      - run: cargo insta test
+      - run: cargo insta accept
+        shell: bash
+  custom:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: python
+    steps:
+      - run: print("cargo insta accept")

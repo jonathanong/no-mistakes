@@ -8,6 +8,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod run;
 mod scan;
 
 pub const RULE_ID: &str = "github-actions-no-insta-snapshot-updates";
