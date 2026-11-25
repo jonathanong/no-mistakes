@@ -244,3 +244,101 @@ fn environment_reads_point_at_the_env_entry() {
     let found = check_source(WF, &yaml);
     assert_eq!(found.iter().map(|hit| hit.line).collect::<Vec<_>>(), [5]);
 }
+
+#[test]
+fn shell_guard_anchors_keywords_after_heredoc_bodies() {
+    let yaml = |run: &str| {
+        format!(
+            "on: [pull_request, merge_group]\njobs:\n  a:\n    env:\n      EVENT_NAME: ${{{{ github.event_name }}}}\n      PR_BASE_SHA: {BASE}\n    steps:\n      - run: |\n{run}"
+        )
+    };
+    let only_in_then = concat!(
+        "          if [ \"$EVENT_NAME\" = \"pull_request\" ]; then\n",
+        "            cat <<EOF\n",
+        "          $PR_BASE_SHA\n",
+        "          EOF\n",
+        "          fi\n",
+    );
+    assert_eq!(count(&yaml(only_in_then)), 0);
+    let after_fi = format!("{only_in_then}          git diff \"$PR_BASE_SHA\" HEAD\n");
+    assert_eq!(count(&yaml(&after_fi)), 1);
+}
+
+#[test]
+fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
+    let with_env = |run: &str| {
+        format!(
+            "on: [pull_request, merge_group]\njobs:\n  a:\n    env:\n      EVENT_NAME: ${{{{ github.event_name }}}}\n      PR_BASE_SHA: {BASE}\n      MERGE_GROUP_BASE_SHA: ${{{{ github.event.merge_group.base_sha }}}}\n    steps:\n      - run: |\n{run}"
+        )
+    };
+    // Reassignments before the guard invalidate the event-name comparison.
+    for mutation in [
+        "          EVENT_NAME=pull_request\n",
+        "          export EVENT_NAME=pull_request\n",
+        "          declare -x EVENT_NAME=pull_request\n",
+        "          unset EVENT_NAME\n",
+        "          read -r EVENT_NAME <<< pull_request\n",
+        "          printf -v EVENT_NAME pull_request\n",
+        "          eval 'EVENT_NAME=pull_request'\n",
+        "          source ./env.sh\n",
+        "          command export EVENT_NAME=pull_request\n",
+        "          command -p -- unset EVENT_NAME\n",
+        "          command eval 'EVENT_NAME=pull_request'\n",
+        "          builtin declare -x EVENT_NAME=pull_request\n",
+        "          command \"$RUNNER_CMD\"\n",
+    ] {
+        let script = format!(
+            "{mutation}          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
+        );
+        assert_eq!(count(&with_env(&script)), 1, "{mutation}");
+    }
+    // Non-bracket tests, positional variables, unknown operators, glob patterns, unterminated
+    // quotes, and unsupported nested control flow in then/else/condition/nested-if all bail out.
+    for unguarded in [
+        "          if test \"$EVENT_NAME\" = pull_request x; then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [ \"$1\" = pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [ \"$EVENT_NAME\" -eq pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [[ \"$EVENT_NAME\" == merge_* ]]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then echo \"$PR_BASE_SHA\" \"unterminated\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then (echo \"$PR_BASE_SHA\"); fi\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ] || (true); then base=\"$PR_BASE_SHA\"; fi\n",
+        "          if [ \"$EVENT_NAME\" = pull_request ]; then if :; then (echo \"$PR_BASE_SHA\"); fi; fi\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then echo ok; else (echo \"$PR_BASE_SHA\"); fi\n",
+        "          for x in 1; do echo \"$x\"; done\n          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n",
+    ] {
+        assert_eq!(count(&with_env(unguarded)), 1, "{unguarded}");
+    }
+    // Multiple guarded ifs, != non-merge_group, nested if/elif/fi, and elif after an already-taken
+    // merge_group branch stay quiet.
+    let multi = concat!(
+        "          set -euo pipefail\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n",
+        "            base=\"$MERGE_GROUP_BASE_SHA\"\n",
+        "          elif [ \"$EVENT_NAME\" = pull_request ]; then\n",
+        "            base=\"$PR_BASE_SHA\"\n",
+        "          else\n",
+        "            base=\"$PR_BASE_SHA\"\n",
+        "          fi\n",
+        "          if [ \"$EVENT_NAME\" != pull_request ]; then\n",
+        "            echo \"$MERGE_GROUP_BASE_SHA\"\n",
+        "          else\n",
+        "            if [ -n \"$PR_BASE_SHA\" ]; then\n",
+        "              echo \"$PR_BASE_SHA\"\n",
+        "            elif :; then\n",
+        "              echo \"$PR_BASE_SHA\"\n",
+        "            fi\n",
+        "          fi\n",
+        "          if [ \"$EVENT_NAME\" != merge_group ]; then\n",
+        "            echo \"$PR_BASE_SHA\"\n",
+        "          fi\n",
+    );
+    assert_eq!(count(&with_env(multi)), 0);
+    // Semicolon-separated `if` without intervening whitespace is still recognized.
+    assert_eq!(
+        count(&with_env(
+            "          set -e;if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
+        )),
+        0
+    );
+}

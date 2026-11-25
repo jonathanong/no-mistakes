@@ -3,11 +3,6 @@ use crate::codebase::postgres::lock_inventory::tokens::Segments;
 mod advisory;
 mod cte_delete;
 mod ddl;
-pub(crate) use {
-    cte_delete::CteWriteLink,
-    ddl::DdlEvent,
-    sequences::{SequenceMode, ShareStatement},
-};
 mod helpers;
 mod prelock;
 mod row_locks;
@@ -16,16 +11,22 @@ mod sequences;
 mod settings;
 mod trigger_writes;
 use super::value::PlaceholderPositions;
-pub(crate) use advisory::AdvisoryKey;
 use sqlparser::ast::{BinaryOperator, Expr, Query, Statement, TableFactor, Visit, Visitor};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{ControlFlow, Range};
+pub(crate) use {
+    advisory::AdvisoryKey,
+    cte_delete::CteWriteLink,
+    ddl::DdlEvent,
+    sequences::{SequenceMode, ShareStatement},
+};
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LockWriteFacts {
     pub ddl_events: Vec<DdlEvent>,
     pub ddl_recovery_complete: bool,
     pub locks: Vec<RowAccess>,
     pub writes: Vec<RowAccess>,
+    pub upsert_write_keys: Vec<RowAccess>,
     pub trigger_writes: Vec<crate::codebase::postgres::CatalogTriggerWrite>,
     pub table_locks: Vec<Option<String>>,
     pub transaction_boundary: bool,
@@ -48,18 +49,19 @@ pub(crate) struct RowAccess {
     pub recovered_key: Option<(String, (u32, u32))>,
     pub key_identity_unproven: bool,
     pub has_predicate: bool,
+    pub only: bool,
 }
 pub(super) fn collect<const ADVANCED: bool>(
     statements: &[Statement],
     positions: PlaceholderPositions<'_>,
     redundant_prelocks: bool,
     modes: Option<&Segments<'_>>,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
 ) -> LockWriteFacts {
     let mut out = LockWriteFacts::default();
-    if let (true, [statement]) = (redundant_prelocks, statements) {
-        prelock::collect(statement, &mut out, positions);
-    }
+    let redundant_prelocks = redundant_prelocks && statements.len() == 1;
     for statement in statements {
+        prelock::collect::<ADVANCED>(statement, &mut out, positions, redundant_prelocks, tokens);
         if matches!(statement, Statement::Prepare { .. }) {
             continue;
         }
@@ -69,11 +71,7 @@ pub(super) fn collect<const ADVANCED: bool>(
             if ADVANCED {
                 ddl::collect(statement, positions, &mut out);
             }
-            let (first_lock, first_write) = if ADVANCED {
-                (out.locks.len(), out.writes.len())
-            } else {
-                (0, 0)
-            };
+            let (first_lock, first_write) = (out.locks.len(), out.writes.len());
             let mut sequence = modes.map(sequences::Pending::new);
             let _ = statement.visit(&mut Collector::<ADVANCED> {
                 out: &mut out,

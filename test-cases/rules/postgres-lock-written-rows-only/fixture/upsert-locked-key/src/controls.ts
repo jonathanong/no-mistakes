@@ -1,0 +1,104 @@
+import { beginTransaction } from "@example/db";
+
+export async function differentKey() {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = 1 FOR UPDATE`);
+  await query(`INSERT INTO jobs (id, state) VALUES (2, 'done'), (3, 'queued')
+    ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`);
+}
+
+export async function differentArbiter(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (state) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
+
+export async function doNothing(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`INSERT INTO jobs (id, state) VALUES ($1, 'done') ON CONFLICT (id) DO NOTHING`, [id]);
+}
+
+export async function doUpdateWhere(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state WHERE jobs.state = 'queued'`,
+    [id],
+  );
+}
+
+export async function differentTable(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO job_audit (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
+
+export async function overridingUserValue() {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = 1 FOR UPDATE`);
+  await query(
+    `INSERT INTO jobs (id, state) OVERRIDING USER VALUE VALUES (1, 'done')
+    ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`,
+  );
+}
+
+export async function withoutOnly(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
+
+export async function conflictTargetWhere(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id) WHERE state = 'queued' DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
+
+export async function twoLocksMixed(id: number, otherId: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [otherId]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
+
+export async function mixedConflictTarget(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id, (lower(state))) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
+
+export async function operatorClassConflictTarget(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);
+  await query(
+    `INSERT INTO jobs (id, state) VALUES ($1, 'done')
+    ON CONFLICT (id int4_ops) DO UPDATE SET state = EXCLUDED.state`,
+    [id],
+  );
+}
