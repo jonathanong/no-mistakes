@@ -42,7 +42,7 @@ impl Default for Options {
 pub(super) fn validate(options: &Options) -> Result<()> {
     let mut errors = BTreeSet::new();
     collect_errors(options, &mut errors);
-    finish(errors)
+    finish(errors.into_iter().collect())
 }
 
 pub(super) fn collect_errors(options: &Options, errors: &mut BTreeSet<String>) {

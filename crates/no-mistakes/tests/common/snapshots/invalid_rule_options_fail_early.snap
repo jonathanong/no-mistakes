@@ -5,21 +5,41 @@ source: crates/no-mistakes/tests/cli_rule_options_audit.rs
   "action-input": {
     "exitCode": 2,
     "stdout": "",
-    "stderr": "error: Rule `github-actions-action-input-policy` has invalid value \"format\" for `options.actions[].require`. Expected an input key in allowedInputs [\"name\"] for action `example/publish-widget`.\n"
+    "stderr": "error: action-input.yml: Rule `github-actions-action-input-policy` has invalid value \"format\" for `options.actions[].require`. Expected an input key in allowedInputs [\"name\"] for action `example/publish-widget`.\n"
+  },
+  "action-input-dynamic-uses": {
+    "exitCode": 2,
+    "stdout": "",
+    "stderr": "error: action-input-dynamic-uses.yml: Rule `github-actions-action-input-policy` has invalid value \"${{ matrix.widget }}\" for `options.actions[].uses`. Expected a concrete action family.\naction-input-dynamic-uses.yml: Rule `github-actions-action-input-policy` has invalid value \"format\" for `options.actions[].require`. Expected an input key in allowedInputs [\"name\"] for action `${{ matrix.widget }}`.\n"
+  },
+  "action-input-empty-actions-bad-include": {
+    "exitCode": 2,
+    "stdout": "",
+    "stderr": "error: action-input-empty-actions-bad-include.yml: Rule `github-actions-action-input-policy` has invalid value \"[unclosed\" for `options.include`. Expected a valid glob (error parsing glob '[unclosed': unclosed character class; missing ']').\n"
+  },
+  "action-input-no-files-bad-include": {
+    "exitCode": 2,
+    "stdout": "",
+    "stderr": "error: action-input-no-files-bad-include.yml: Rule `github-actions-action-input-policy` has invalid value \"[unclosed\" for `options.include`. Expected a valid glob (error parsing glob '[unclosed': unclosed character class; missing ']').\n"
   },
   "cache": {
     "exitCode": 2,
     "stdout": "",
-    "stderr": "error: Rule `github-actions-cache-key-policy` has invalid value \".cache/widgets\" for `options.forbiddenPaths`. Expected a path absent from options.caches[].path.\n"
+    "stderr": "error: cache.yml: Rule `github-actions-cache-key-policy` has invalid value \".cache/widgets\" for `options.forbiddenPaths`. Expected a path absent from options.caches[].path.\n"
+  },
+  "duplicate-apps": {
+    "exitCode": 2,
+    "stdout": "",
+    "stderr": "error: duplicate-apps.yml: Rule `vitest-default-excludes` has invalid value \"\" for `options.files`. Expected a valid non-empty glob.\nduplicate-apps.yml: Rule `vitest-default-excludes` has invalid value \"\" for `options.files`. Expected a valid non-empty glob.\n"
   },
   "multiple": {
     "exitCode": 2,
     "stdout": "",
-    "stderr": "error: Rule `github-actions-action-input-policy` has invalid value \"${{ matrix.widget }}\" for `options.actions[].uses`. Expected a concrete action family.\nRule `github-actions-action-input-policy` has invalid value \"format\" for `options.actions[].require`. Expected an input key in allowedInputs [\"name\"] for action `example/publish-widget`.\nRule `github-actions-action-input-policy` has invalid value \"name\" for `options.actions[].ban`. Expected an input key outside allowedInputs [\"name\"] for action `example/publish-widget`.\nRule `github-actions-cache-key-policy` has invalid value \"   \" for `options.forbiddenPathsMessage`. Expected a non-empty message.\nRule `github-actions-cache-key-policy` has invalid value \"\" for `options.caches[].lockfile`. Expected a non-empty path.\nRule `github-actions-cache-key-policy` has invalid value \".cache/widgets\" for `options.forbiddenPaths`. Expected a path absent from options.caches[].path.\nRule `github-actions-cache-key-policy` has invalid value \"os\" for `options.caches[].keyParts`. Expected a dotted context fragment such as runner.os.\nRule `vitest-default-excludes` has invalid value \"   \" for `options.config`. Expected an explicit non-empty Vitest config file path.\nRule `vitest-default-excludes` has invalid value \"\" for `options.files`. Expected a valid non-empty glob.\nRule `vitest-default-excludes` has invalid value \"\" for `options.requiredGlobs`. Expected a non-empty glob string.\nRule `vitest-default-excludes` has invalid value \"[unclosed\" for `options.files`. Expected a valid non-empty glob (invalid glob: error parsing glob '[unclosed': unclosed character class; missing ']').\n"
+    "stderr": "error: multiple.yml: Rule `github-actions-action-input-policy` has invalid value \"${{ matrix.widget }}\" for `options.actions[].uses`. Expected a concrete action family.\nmultiple.yml: Rule `github-actions-action-input-policy` has invalid value \"format\" for `options.actions[].require`. Expected an input key in allowedInputs [\"name\"] for action `example/publish-widget`.\nmultiple.yml: Rule `github-actions-action-input-policy` has invalid value \"name\" for `options.actions[].ban`. Expected an input key outside allowedInputs [\"name\"] for action `example/publish-widget`.\nmultiple.yml: Rule `github-actions-cache-key-policy` has invalid value \"   \" for `options.forbiddenPathsMessage`. Expected a non-empty message.\nmultiple.yml: Rule `github-actions-cache-key-policy` has invalid value \"\" for `options.caches[].lockfile`. Expected a non-empty path.\nmultiple.yml: Rule `github-actions-cache-key-policy` has invalid value \".cache/widgets\" for `options.forbiddenPaths`. Expected a path absent from options.caches[].path.\nmultiple.yml: Rule `github-actions-cache-key-policy` has invalid value \"os\" for `options.caches[].keyParts`. Expected a dotted context fragment such as runner.os.\nmultiple.yml: Rule `vitest-default-excludes` has invalid value \"   \" for `options.config`. Expected an explicit non-empty Vitest config file path.\nmultiple.yml: Rule `vitest-default-excludes` has invalid value \"\" for `options.files`. Expected a valid non-empty glob.\nmultiple.yml: Rule `vitest-default-excludes` has invalid value \"\" for `options.requiredGlobs`. Expected a non-empty glob string.\nmultiple.yml: Rule `vitest-default-excludes` has invalid value \"[unclosed\" for `options.files`. Expected a valid non-empty glob (invalid glob: error parsing glob '[unclosed': unclosed character class; missing ']').\n"
   },
   "vitest": {
     "exitCode": 2,
     "stdout": "",
-    "stderr": "error: Rule `vitest-default-excludes` has invalid value \"\" for `options.files`. Expected a valid non-empty glob.\n"
+    "stderr": "error: vitest.yml: Rule `vitest-default-excludes` has invalid value \"\" for `options.files`. Expected a valid non-empty glob.\n"
   }
 }

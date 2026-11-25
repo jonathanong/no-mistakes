@@ -49,7 +49,7 @@ pub(super) enum InputFault {
 pub(super) fn compile(opts: Options) -> Result<Compiled> {
     let mut errors = BTreeSet::new();
     let compiled = compile_with_errors(opts, &mut errors);
-    finish(errors)?;
+    finish(errors.into_iter().collect())?;
     Ok(compiled)
 }
 
@@ -61,6 +61,16 @@ fn compile_with_errors(opts: Options, errors: &mut BTreeSet<String>) -> Compiled
     let mut families: BTreeMap<String, Family> = BTreeMap::new();
     for action in opts.actions {
         let Some(name) = validation::concrete_family(&action, errors) else {
+            let mut scratch = Family {
+                name: action.uses.clone(),
+                require: BTreeMap::new(),
+                ban: Vec::new(),
+                allowed: None,
+                require_present: Vec::new(),
+            };
+            validation::merge_action(&mut scratch, &action, errors);
+            extra::merge(&mut scratch, &action);
+            extra::validate(&scratch, errors);
             continue;
         };
         let family = families.entry(name.clone()).or_insert_with(|| Family {

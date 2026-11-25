@@ -170,10 +170,16 @@ fn batch(options: serde_json::Value) -> serde_json::Value {
 #[test]
 fn invalid_rule_options_reject_with_cli_and_batch_parity() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/options-audit/fixture/issue-3958");
+        .join("../../test-cases/rules/options-audit/fixture/issue-3958")
+        .canonicalize()
+        .unwrap();
     for (config_name, expected_lines) in [
         ("cache.yml", 1usize),
         ("action-input.yml", 1),
+        ("action-input-dynamic-uses.yml", 2),
+        ("action-input-empty-actions-bad-include.yml", 1),
+        ("action-input-no-files-bad-include.yml", 1),
+        ("duplicate-apps.yml", 2),
         ("vitest.yml", 1),
         ("multiple.yml", 11),
     ] {
@@ -210,4 +216,63 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
         sorted.sort();
         assert_eq!(lines, sorted, "{config_name}: {cli_message}");
     }
+
+    let fragment_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/options-audit/fixture/issue-3958-fragment");
+    let cli_frag = format!(
+        "{:#}",
+        crate::check_runner::run_all_with_options(
+            fragment_root.clone(),
+            None,
+            None,
+            false,
+            false,
+            crate::check_runner::AnalysisOptions::default(),
+        )
+        .err()
+        .expect("fragment invalid rule must fail CLI")
+    );
+    let native_frag = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({"root": fragment_root}).to_string(),
+    ))
+    .expect_err("fragment invalid rule must reject async check");
+    let batched_frag = crate::napi_api::analyze_project::analyze_project_json_impl(
+        crate::napi_api::options::test_json_arg(
+            json!({"root": fragment_root, "reports": [{"type": "check"}]}).to_string(),
+        ),
+    )
+    .expect_err("fragment invalid rule must reject analyzeProject");
+    assert_eq!(native_frag.reason, cli_frag);
+    assert_eq!(batched_frag.reason, cli_frag);
+    assert!(cli_frag.starts_with(".no-mistakes.yml: "), "{cli_frag}");
+
+    let bad_tsconfig = root.join("bad-tsconfig.json");
+    let cache_cfg = root.join("cache.yml");
+    let cli_ts = format!(
+        "{:#}",
+        crate::check_runner::run_all_with_options(
+            root.clone(),
+            Some(cache_cfg.clone()),
+            Some(bad_tsconfig.clone()),
+            false,
+            false,
+            crate::check_runner::AnalysisOptions::default(),
+        )
+        .err()
+        .expect("invalid cache.yml must fail before bad tsconfig")
+    );
+    let batched_ts = crate::napi_api::analyze_project::analyze_project_json_impl(
+        crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "config": cache_cfg,
+                "tsconfig": bad_tsconfig,
+                "reports": [{"type": "check"}],
+            })
+            .to_string(),
+        ),
+    )
+    .expect_err("batched invalid cache.yml must fail before bad tsconfig");
+    assert_eq!(batched_ts.reason, cli_ts);
+    assert!(cli_ts.contains("options.forbiddenPaths"), "{cli_ts}");
 }

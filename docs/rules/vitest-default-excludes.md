@@ -170,7 +170,7 @@ configured project. [`vitest-project-mapping`](vitest-project-mapping.md)
 
 An invalid option such as an empty `files` glob is a configuration error:
 `check` validates options before any analysis runs, exits with status 2 and
-empty stdout, and prints all invalid option diagnostics sorted to stderr (naming
-the rule, option path, rejected value, and constraint). No partial report or
-`incomplete` entry is emitted, and the async Node API rejects with the same
-message.
+empty stdout, and prints semantic option diagnostics sorted to stderr (naming
+the config file, rule, option path, rejected value, and constraint). No partial
+report or `incomplete` entry is emitted, and the async Node API rejects with the
+same message.

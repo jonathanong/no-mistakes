@@ -132,13 +132,15 @@ rules:
     include: ["[unclosed"]
     options:
       config: vitest.config.ts
+      requiredGlobs: []
 "#,
     )
     .unwrap();
-    let mut errors = BTreeSet::new();
+    let mut errors = Vec::new();
     collect_config_errors(&root, &bad_filter, &mut errors);
-    let joined = errors.into_iter().collect::<Vec<_>>().join("\n");
+    let joined = errors.join("\n");
     assert!(joined.contains("[unclosed"), "{joined}");
+    assert!(check_with_files(&root, &bad_filter, &[]).is_err());
 }
 
 #[test]

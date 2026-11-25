@@ -79,11 +79,13 @@ The cache-key policy (`github-actions-cache-key-policy`), action input policy
 (`github-actions-action-input-policy`), and Vitest default exclusion rule
 (`vitest-default-excludes`) treat invalid option values as configuration errors.
 `check` validates their options before any analysis runs, aborts with exit
-status 2 and empty stdout, and writes the diagnostic to stderr naming the rule,
-option path, rejected value, and accepted values or constraint. When several
-options are invalid, all errors are sorted and printed in one run; no partial
-report or `incomplete` entry is emitted. Async Node `check()` and
-`analyzeProject()` check reports reject with the same error message.
+status 2 and empty stdout, and writes the diagnostic to stderr naming the config
+file, rule, option path, rejected value, and accepted values or constraint.
+Semantic option errors across enabled applications are sorted and printed in one
+run (a YAML schema or type error stops deserialization of that application's
+`options` object while other applications are still checked); no partial report
+or `incomplete` entry is emitted. Async Node `check()` and `analyzeProject()`
+check reports reject with the same error message.
 
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds

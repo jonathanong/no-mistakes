@@ -255,9 +255,9 @@ Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byt
 ## Invalid options
 
 An invalid action option is a configuration error: `check` validates options
-before any analysis runs, exits with status 2 and empty stdout, and prints all
-invalid option diagnostics sorted to stderr (naming the rule, option path,
-rejected value, and constraint). No partial report or `incomplete` entry is
-emitted, and the async Node API rejects with the same message. When
+before any analysis runs, exits with status 2 and empty stdout, and prints
+semantic option diagnostics sorted to stderr (naming the config file, rule,
+option path, rejected value, and constraint). No partial report or `incomplete`
+entry is emitted, and the async Node API rejects with the same message. When
 `allowedInputs` is set, its keys are the accepted names for `require` and
 `requiredPresent`.

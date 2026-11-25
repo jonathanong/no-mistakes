@@ -251,9 +251,9 @@ rules:
 "#,
     )
     .unwrap();
-    let mut errors = std::collections::BTreeSet::new();
+    let mut errors = Vec::new();
     super::collect_config_errors(std::path::Path::new("/repo"), &config, &mut errors);
-    let joined = errors.into_iter().collect::<Vec<_>>().join("\n");
+    let joined = errors.join("\n");
     assert!(joined.contains("[unclosed"), "{joined}");
     assert!(joined.contains("options.caches"), "{joined}");
 }

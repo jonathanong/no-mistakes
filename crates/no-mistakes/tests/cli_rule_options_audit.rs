@@ -200,7 +200,11 @@ fn invalid_rule_options_fail_early_with_exit_2_and_empty_stdout() {
     let mut diagnostics = serde_json::Map::new();
     for name in [
         "action-input.yml",
+        "action-input-dynamic-uses.yml",
+        "action-input-empty-actions-bad-include.yml",
+        "action-input-no-files-bad-include.yml",
         "cache.yml",
+        "duplicate-apps.yml",
         "multiple.yml",
         "vitest.yml",
     ] {

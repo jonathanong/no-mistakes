@@ -47,7 +47,7 @@ pub(super) struct Application<'a> {
 pub(crate) fn collect_config_errors(
     root: &Path,
     config: &NoMistakesConfig,
-    errors: &mut BTreeSet<String>,
+    errors: &mut Vec<String>,
 ) {
     let rules = config.rule_applications(RULE_ID);
     if rules.is_empty() {
@@ -55,7 +55,9 @@ pub(crate) fn collect_config_errors(
     }
     let root = normalize_path(root);
     for rule in rules {
-        collect_application_errors(&root, config, rule, errors);
+        let mut app_errors = BTreeSet::new();
+        collect_application_errors(&root, config, rule, &mut app_errors);
+        errors.extend(app_errors);
     }
 }
 
@@ -69,9 +71,11 @@ pub(super) fn applications<'a>(
         return Ok(Vec::new());
     }
     let root = normalize_path(root);
-    let mut errors = BTreeSet::new();
+    let mut errors = Vec::new();
     for rule in &rules {
-        collect_application_errors(&root, config, rule, &mut errors);
+        let mut app_errors = BTreeSet::new();
+        collect_application_errors(&root, config, rule, &mut app_errors);
+        errors.extend(app_errors);
     }
     finish(errors)?;
     let normalized_files: Vec<PathBuf> = files
