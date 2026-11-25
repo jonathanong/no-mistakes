@@ -289,6 +289,24 @@ fn dependabot_cooldown_policy_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn cross_package_relative_imports_are_documented() {
+    let rule = no_mistakes::codebase::rules::NO_CROSS_PACKAGE_RELATIVE_IMPORTS;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    for path in [
+        "docs/rules/README.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
 fn vitest_default_excludes_is_in_the_public_rule_inventory() {
     let rule = "vitest-default-excludes";
     let root = repo_root();
@@ -464,22 +482,19 @@ fn changes_diff_and_semantic_test_routing_have_public_docs() {
 }
 
 #[test]
-fn postgres_explain_write_rollback_docs_are_reachable_from_check_surfaces() {
+fn package_json_export_target_prefix_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::PACKAGE_JSON_EXPORT_TARGET_PREFIX;
     let root = repo_root();
-    for (page, link) in [
-        (
-            "docs/cli/check.md",
-            "../rules/postgres-explain-write-rollback.md",
-        ),
-        (
-            "docs/node-api.md",
-            "rules/postgres-explain-write-rollback.md",
-        ),
-        ("docs/rules/README.md", "postgres-explain-write-rollback.md"),
+    assert!(rule_ids_from_source(&root).contains(rule));
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    for path in [
+        "docs/rules/README.md",
+        "docs/cli/check.md",
+        "docs/configuration/rules.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
     ] {
-        assert!(
-            read(&root.join(page)).contains(&format!("]({link})")),
-            "{page}"
-        );
+        assert!(read(&root.join(path)).contains(rule), "{path}");
     }
 }

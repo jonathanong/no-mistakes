@@ -19,6 +19,8 @@ mod cli_pkgcfg_snapshot_forbidden_dependencies;
 mod cli_pkgcfg_snapshot_forbidden_lint_suppressions;
 #[path = "cli_pkgcfg_snapshot_forbidden_workspace_closure.rs"]
 mod cli_pkgcfg_snapshot_forbidden_workspace_closure;
+#[path = "cli_pkgcfg_snapshot_package_json_export_target_prefix.rs"]
+mod cli_pkgcfg_snapshot_package_json_export_target_prefix;
 #[path = "cli_pkgcfg_snapshot_package_json_nested_workspace_coverage.rs"]
 mod cli_pkgcfg_snapshot_package_json_nested_workspace_coverage;
 #[path = "cli_pkgcfg_snapshot_package_json_registry_only.rs"]

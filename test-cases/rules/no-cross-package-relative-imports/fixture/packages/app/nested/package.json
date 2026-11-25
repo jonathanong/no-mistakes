@@ -1,0 +1,5 @@
+{
+  "name": "@sample/nested",
+  "type": "module",
+  "exports": "./entry.mts"
+}

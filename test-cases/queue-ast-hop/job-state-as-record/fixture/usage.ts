@@ -31,7 +31,7 @@ export async function requeueAfterGuard(id: string) {
 // Reported: getFailed feeding add()
 export async function replayFailed() {
   for (const job of await widgets.getFailed(0, 100)) {
-    await widgets.add(job.name, job.data);
+    await widgets.add("build", { data: job.data, name: job.name });
   }
 }
 
@@ -107,4 +107,16 @@ export async function inspectInTrySwitch(id: string) {
   } finally {
     // no-op
   }
+}
+
+export async function unrelatedListingAlias() {
+  for (const job of await widgets.getFailed(0, 10)) {
+    const source = { data: {} };
+    const payload = source.data;
+    await widgets.add("build", { first: payload, second: payload });
+  }
+}
+
+export async function listingWithoutCallbackParameter() {
+  (await widgets.getFailed(0, 10)).forEach(() => widgets.add("build", {}));
 }
