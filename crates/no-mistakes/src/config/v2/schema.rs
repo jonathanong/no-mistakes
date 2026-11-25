@@ -114,10 +114,10 @@ pub(crate) mod queues_job_state;
 #[path = "schema/queues_retention.rs"]
 pub(crate) mod queues_retention;
 #[path = "schema/queues_top.rs"]
-mod queues_top;
+pub(crate) mod queues_top;
 pub use queues_job_state::JobStateAsRecordConfig;
 pub use queues_retention::{JobRetentionKey, UnboundedJobRetentionConfig};
-pub use queues_top::QueuesTopLevelConfig;
+pub use queues_top::{QueueIncludeTestsConfig, QueuesTopLevelConfig};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]

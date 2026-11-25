@@ -533,6 +533,9 @@ describe its YAML shape.
 `advisories` in `check()` / `analyzeProject()`). Exported types
 `QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
 `QueueCheckSeverity` describe its configuration and finding severity.
+`queues.includeTests` explicitly opts configured test files back into the
+shared queue scope across every queue check; exported type
+`QueueIncludeTestsConfig` describes its YAML shape.
 
 ## Queue factory configuration types
 

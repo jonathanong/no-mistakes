@@ -3,6 +3,7 @@ use crate::queue::extract_helpers::is_queue_package;
 use crate::queue::extract_model::{ExportedWorkerBinding, WorkerRateLimitTarget};
 use crate::queue::graph_model::{CheckFinding, InternalWorker};
 use crate::queue::source::relative_string;
+use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -25,6 +26,7 @@ pub(super) fn findings(
     root: &Path,
     workers: &[InternalWorker],
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
     if facts
         .values()
@@ -36,6 +38,9 @@ pub(super) fn findings(
     let mut checks = Vec::new();
     let mut diagnostics = Vec::new();
     for (path, file) in facts {
+        if test_scope.is_match(root, path) {
+            continue;
+        }
         for site in &file.worker_rate_limits {
             match &site.target {
                 WorkerRateLimitTarget::LocalWorker(worker_index) => {

@@ -112,7 +112,12 @@ fn cycle_edges_skip_a_missing_worker_and_an_unresolved_worker_queue() {
         queue: None,
         reachable_files: Default::default(),
     }];
-    let findings = super::super::cycles::queue_cycles(&root, &producers, &workers);
+    let findings = super::super::cycles::queue_cycles(
+        &root,
+        &producers,
+        &workers,
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
     assert!(
         findings.is_empty(),
         "an enqueue is not a cycle edge without its worker queue: {findings:?}"
