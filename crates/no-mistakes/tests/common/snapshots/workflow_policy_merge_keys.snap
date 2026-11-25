@@ -10,12 +10,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/job-only.yml",
+          "message": "Cannot verify reusable workflow concurrency: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar). Repair the workflow YAML and run the check again."
+        },
+        {
+          "consumer": "workflow-topology-policy",
           "file": ".github/workflows/multi-document.yml",
           "message": "Cannot verify reusable workflow concurrency: deserializing from YAML containing more than one document is not supported. Repair the workflow YAML and run the check again."
         },
         {
           "consumer": "workflow-topology-policy",
           "file": ".github/workflows/scalar-merge.yml",
+          "message": "Cannot verify reusable workflow concurrency: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar). Repair the workflow YAML and run the check again."
+        },
+        {
+          "consumer": "workflow-topology-policy",
+          "file": ".github/workflows/step-only.yml",
           "message": "Cannot verify reusable workflow concurrency: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar). Repair the workflow YAML and run the check again."
         }
       ],

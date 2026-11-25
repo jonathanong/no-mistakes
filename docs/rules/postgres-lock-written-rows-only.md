@@ -18,7 +18,7 @@ check already acquires the required parent KEY SHARE lock.
 
 | Check id | Behavior | Rewrite |
 | --- | --- | --- |
-| `row-lock-unwritten-relation` | `FOR UPDATE`, `FOR NO KEY UPDATE`, `FOR SHARE`, or `FOR KEY SHARE` on a relation the same transaction never updates or deletes; provable keys must match too. | Lock the written row, or rely on the foreign-key check. |
+| `row-lock-unwritten-relation` | `FOR UPDATE`, `FOR NO KEY UPDATE`, `FOR SHARE`, or `FOR KEY SHARE` on a relation or provable key the same transaction never writes. | Lock the written row, or rely on the foreign-key check. |
 | `table-lock` | `LOCK TABLE` in any mode without a proven later DDL purpose in the same transaction. | Use a bounded row lock, or make the DDL ordering explicit. |
 | `constant-advisory-lock` | Literal or constant keys (including builtin `hashtext` / `hashtextextended` of constants) to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
 | `row-lock-outside-transaction` | A row lock on a known non-transaction executor, unless the same SQL statement writes the locked relation. | Move the lock and write into one transaction. |
@@ -73,7 +73,7 @@ WITH parent AS MATERIALIZED (
 INSERT INTO order_events (order_id) SELECT id FROM parent;
 ```
 
-If the same known transaction does not update or delete `orders`,
+If the same known transaction does not write the locked row in `orders`,
 `row-lock-unwritten-relation` reports the lock. A later write to `orders` in
 that transaction satisfies the check only when it writes the locked row with a
 matching provable key. CTE names do not establish a base relation identity.
@@ -173,6 +173,32 @@ export async function updateChild(childId: string, name: string) {
 ```
 
 The same relation and key are locked and updated within one transaction.
+An unconditional `INSERT INTO table (columns...) VALUES (...) ON CONFLICT (column) DO UPDATE SET ...`
+in that transaction can also satisfy a `FROM ONLY` row lock when all of the
+following hold:
+
+- The lock uses `FROM ONLY` on the same relation, column, and key value (locks
+  without `ONLY` also lock inheritance child tables, which `INSERT` never writes).
+- The `ON CONFLICT` clause targets a single plain column (no expressions,
+  operator classes, or `COLLATE` clauses) with no target `WHERE` predicate, and
+  `DO UPDATE` has no `WHERE` clause.
+- The `INSERT` has no `OVERRIDING USER VALUE`, and its `VALUES` query has no
+  `WITH`, `LIMIT`, or `FETCH` clause.
+- Every expression in every `VALUES` row is a plain literal (number,
+  single-quoted string, or boolean) or a bind placeholder (`$n`), and every
+  `DO UPDATE SET` right-hand side is an identifier, qualified identifier (such
+  as `EXCLUDED.state`), or plain literal/placeholder value.
+
+This applies to both single-row and multi-row `VALUES`, independently of the
+redundancy advisory or any `triggerMaintainedColumns` configuration. Missing
+`ONLY` on the lock, `OVERRIDING USER VALUE`, `ON CONFLICT (column) WHERE ...`,
+conditional `DO UPDATE ... WHERE ...`, `ON CONFLICT DO NOTHING`, composite,
+expression, or operator-class conflict targets, non-plain `VALUES` or `SET`
+expressions, different tables, different conflict columns, and different key
+values leave the finding in place. As with direct `UPDATE` and `DELETE`
+statements, `BEFORE INSERT` triggers that return `NULL` or rewrite `NEW`
+columns (such as `NEW.id`) are not modelled.
+
 A top-level helper with a straight-line body of static executor calls can accept
 an executor parameter. Each invocation through a known transaction substitutes
 its immutable argument bindings before comparing the helper's locked relations
@@ -211,7 +237,7 @@ shadowed or mutated helpers, and bodies with other control flow. Named imported
 helpers and re-exports use the same summaries through the prepared module resolver. Unresolved imports retain the unanalyzable policy.
 
 `FOR UPDATE OF n, t, r, d` resolves every explicit alias to its base relation.
-Each relation must have a matching update or delete in the same transaction;
+Each relation must have a matching write in the same transaction;
 writing only two of four locked relations leaves findings for the other two.
 An unknown alias follows the unanalyzable policy.
 

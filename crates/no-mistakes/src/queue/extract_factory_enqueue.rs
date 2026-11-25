@@ -94,18 +94,11 @@ pub(super) fn note_worker(
     name_index: usize,
     processor_index: usize,
 ) {
-    let queue_name = call
+    let (queue_name, queue_name_import) = call
         .arguments
         .get(name_index)
-        .and_then(|arg| visitor.literal_arg(arg));
-    let queue_name_import = if queue_name.is_none() {
-        call.arguments
-            .get(name_index)
-            .and_then(identifier_arg)
-            .filter(|name| visitor.facts.string_imports.contains_key(name))
-    } else {
-        None
-    };
+        .map(|arg| visitor.resolve_queue_name_arg(arg))
+        .unwrap_or((None, None));
     visitor.facts.workers.push(WorkerSite {
         file: visitor.path.to_path_buf(),
         line: line_number(visitor.source, call.span.start),

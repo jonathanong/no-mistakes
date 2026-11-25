@@ -161,10 +161,22 @@ immutable `const` binding, including another immutable `const` alias. Without
 this setting, existing enqueue roles continue to record the factory call.
 
 For fixed queues, `makeFixedEnqueue(JOB_DEF)` selects `JOB_DEF.name` from a
-local or imported `const` object literal. Named re-exports use the prepared
-module resolver. The bulk wrapper's build callback does not supply a job name;
-only the configured selector does. Resolution stays within the configured
-file universe and uses the same producer/worker graph as `queues edges`.
+local or imported `const` object literal. Named re-exports, imported queue
+constants (including `new Queue(QUEUE_NAME)` and `new Worker(QUEUE_NAME, ...)`),
+and workspace package specifiers—including `package.json` `exports` wildcards
+such as `"./*": "./*.mts"`—use the prepared module and workspace resolver,
+with or without `--tsconfig`. When a fixed-`queueName` queue has no matching
+`new Queue` or configured queue factory declaration, its queue node uses the
+deterministic virtual anchor `queue:<name>` (for example, `queue:mail#welcome`)
+instead of anchoring on an arbitrary caller file. The bulk wrapper's build
+callback does not supply a job name; only the configured selector does.
+Resolution stays within the configured file universe and uses the same
+producer/worker graph as `queues edges`. Files matched by configured `tests.*`
+scopes are excluded from `unmatched-producer`, `unmatched-worker`, and
+production `queues edges` by default (with no hardcoded filename conventions);
+same-file raw `new Worker(<queueName>, ...)` and configured worker factories
+match producers on that queue name. See
+[`queues check`](../cli/queues-check.md#producer-and-worker-matching).
 
 Property selection requires a direct, static object property. Unresolved
 values, spread objects, computed properties, non-const bindings, and mutated
@@ -217,6 +229,48 @@ queues:
     items: [priority]
     orders: []
 ```
+
+## Unbounded job retention
+
+`queues.unboundedJobRetention` is opt-in and disabled by default. Set it to
+`true` to require bounded `removeOnComplete` and `removeOnFail` on every
+resolved producer and queue `defaultJobOptions`, or pass an object to select
+keys and exempt file paths:
+
+```yaml
+queues:
+  unboundedJobRetention:
+    require: [removeOnComplete, removeOnFail]
+    allowPaths: ["scripts/**"]
+```
+
+- `require` selects which of `removeOnComplete` and `removeOnFail` are checked
+  (defaults to both when enabled).
+- `allowPaths` lists relative glob patterns whose files are skipped by the
+  retention check.
+
+JavaScript callers can name this configuration shape with the exported
+`QueueJobRetentionKey`, `QueueUnboundedJobRetentionOptions`, and
+`QueueUnboundedJobRetentionConfig` types.
+See [`queues check`](../cli/queues-check.md#unbounded-job-retention).
+
+## Queue job state as record of work
+
+`queues.jobStateAsRecord` is opt-in and disabled by default. Set it to `true`
+or pass `allowPaths` to emit advisory `job-state-as-record` findings when code
+uses queue job state or failed/completed job listings to drive retries or
+re-enqueues:
+
+```yaml
+queues:
+  jobStateAsRecord:
+    allowPaths: ["apps/admin/**"]
+```
+
+JavaScript callers can name this configuration shape with the exported
+`QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
+`QueueCheckSeverity` types.
+See [`queues check`](../cli/queues-check.md#queue-job-state-as-record-of-work).
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.

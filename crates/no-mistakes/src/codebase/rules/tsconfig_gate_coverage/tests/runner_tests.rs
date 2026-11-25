@@ -8,6 +8,7 @@ fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
     .unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/runners-and-shells.yml".into(),
             value: Ok(workflow),
         }],
@@ -35,6 +36,7 @@ fn ci_scanner_only_credits_implicit_shells_on_known_posix_runners() {
     .unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/runner-posix.yml".into(),
             value: Ok(workflow),
         }],
@@ -64,6 +66,7 @@ fn ci_scanner_distinguishes_truthy_object_matrix_values_from_missing_properties(
     .unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/object-matrix.yml".into(),
             value: Ok(workflow),
         }],
@@ -101,6 +104,7 @@ jobs:
     .unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/step-timeout.yml".into(),
             value: Ok(workflow),
         }],
@@ -124,6 +128,7 @@ fn ci_scanner_resolves_literal_shell_expressions_without_guessing_dynamic_shells
     .unwrap();
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
+            source: None,
             path: ".github/workflows/shell-expressions.yml".into(),
             value: Ok(workflow),
         }],

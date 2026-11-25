@@ -1,0 +1,75 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default-on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueue.ts",
+          "job": "build",
+          "kind": "unbounded-job-retention",
+          "line": 8,
+          "message": "unbounded job retention: removeOnFail unset",
+          "queueFile": "enqueue.ts",
+          "queueName": "widgets",
+          "sourceLine": "await widgets.add(\"build\", {});"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "explicit-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "explicit-on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueue.ts",
+          "job": "build",
+          "kind": "unbounded-job-retention",
+          "line": 8,
+          "message": "unbounded job retention: removeOnFail unset",
+          "queueFile": "enqueue.ts",
+          "queueName": "widgets",
+          "sourceLine": "await widgets.add(\"build\", {});"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

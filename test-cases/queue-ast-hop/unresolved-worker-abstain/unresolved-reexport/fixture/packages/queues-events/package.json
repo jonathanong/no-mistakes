@@ -1,0 +1,7 @@
+{
+  "name": "@acme/queues-events",
+  "private": true,
+  "exports": {
+    "./*": "./*.mts"
+  }
+}
