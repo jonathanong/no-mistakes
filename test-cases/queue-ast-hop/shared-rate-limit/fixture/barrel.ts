@@ -1,4 +1,5 @@
 import {
+  type Job,
   RateLimitError as ImportedRateLimit,
   Worker as ImportedWorker,
 } from "./barrel-inner";
@@ -10,7 +11,7 @@ export {
   InnerPause as RenamedPause,
   Worker,
 } from "./barrel-inner";
-export { ImportedRateLimit as LocalReexport, queueMod as ReexportedNs };
+export { ImportedRateLimit as LocalReexport, queueMod as ReexportedNs, type Job };
 export const ConstAlias = ImportedRateLimit;
 export const MemberAlias = ImportedWorker.RateLimitError;
 export const NsMemberAlias = queueMod.RateLimitError;

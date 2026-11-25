@@ -1,4 +1,4 @@
-import { Worker } from "bullmq";
+import { Queue, Worker } from "bullmq";
 import DefaultRateLimit, {
   ConstAlias,
   LocalReexport,
@@ -31,21 +31,29 @@ import {
   RateLimitError as OpaqueRateLimitError,
   SpreadHelper,
 } from "./opaque-barrel";
+import { RateLimitError as StarOpaqueRateLimitError } from "./star-opaque-barrel";
+import { RateLimitError as MissingExportRateLimitError } from "./empty-barrel";
 import { RateLimitError as CyclicRateLimitError } from "./cycle-barrel";
 import { NotFoundError } from "http-errors";
 import { RateLimitError as UnknownPkgError } from "unknown-rate-limit-pkg";
 
+declare function getDynamicBase(): new () => Error;
 declare const ambientHelper: { RateLimitError(): Error };
-declare const GlobalUnknown: { RateLimitError(): Error };
-declare const GlobalNs: { Worker: { RateLimitError(): Error } };
+declare const localNsObj: { Worker: { RateLimitError(): Error } };
 
 class LocalBareError {}
 class LocalSubError extends LocalBareError {}
 const LocalExprClass = class extends LocalBareError {};
+const LocalDynamicClass = class extends getDynamicBase() {};
 const LocalAliasError = RateLimitError;
 const LocalFnHelper = { RateLimitError: () => new Error("local") };
+const LocalClassPropHelper = { RateLimitError: class {} };
 const LocalEmptyHelper = {};
 const LocalSpreadHelper = { ...ambientHelper };
+const LocalComputedHelper = { [Symbol.toStringTag]: 1 };
+const LocalOpaquePropHelper = { RateLimitError: getDynamicBase() };
+const { ignored } = { ignored: 1 };
+void ignored;
 
 export const barrelWorker = new Worker("widgets", async () => {
   if (Math.random()) throw new RateLimitError();
@@ -76,10 +84,18 @@ export const customAndUnrelatedWorker = new Worker("widgets", async () => {
   if (Math.random()) throw new StarCustomRateLimitError();
   if (Math.random()) throw DefaultCustomFn();
   if (Math.random()) throw new QueueFromBarrel("q");
+  if (Math.random()) throw new Queue("q");
+  if (Math.random()) throw (Queue as unknown as { RateLimitError(): Error }).RateLimitError();
+  if (Math.random()) throw (Queue as unknown as { Worker: { RateLimitError(): Error } }).Worker.RateLimitError();
+  if (Math.random()) throw (ReexportedNs as unknown as new () => Error)();
+  if (Math.random()) throw (MemberAlias as unknown as { RateLimitError(): Error }).RateLimitError();
   if (Math.random()) throw new LocalSubError();
   if (Math.random()) throw new LocalExprClass();
+  if (Math.random()) throw (LocalBareError as unknown as { RateLimitError(): Error }).RateLimitError();
   if (Math.random()) throw LocalFnHelper.RateLimitError();
+  if (Math.random()) throw new LocalClassPropHelper.RateLimitError();
   if (Math.random()) throw (LocalEmptyHelper as { RateLimitError(): Error }).RateLimitError();
+  if (Math.random()) throw new LocalDynamicClass();
   throw new NotFoundError();
 });
 
@@ -88,11 +104,16 @@ export const untraceableWorker = new Worker("items", async () => {
   if (Math.random()) throw new ExternalReexport();
   if (Math.random()) throw new UnknownPkgError();
   if (Math.random()) throw new CyclicRateLimitError();
+  if (Math.random()) throw new StarOpaqueRateLimitError();
+  if (Math.random()) throw new MissingExportRateLimitError();
   if (Math.random()) throw SpreadHelper.RateLimitError();
   if (Math.random()) throw ComputedHelper.RateLimitError();
   if (Math.random()) throw OpaquePropHelper.RateLimitError();
   if (Math.random()) throw LocalSpreadHelper.RateLimitError();
-  if (Math.random()) throw GlobalUnknown.RateLimitError();
-  if (Math.random()) throw GlobalNs.Worker.RateLimitError();
+  if (Math.random()) throw (LocalComputedHelper as unknown as { RateLimitError(): Error }).RateLimitError();
+  if (Math.random()) throw new LocalOpaquePropHelper.RateLimitError();
+  if (Math.random()) throw localNsObj.Worker.RateLimitError();
+  if (Math.random()) throw UndeclaredGlobal.RateLimitError();
+  if (Math.random()) throw UndeclaredNs.Worker.RateLimitError();
   throw ambientHelper.RateLimitError();
 });

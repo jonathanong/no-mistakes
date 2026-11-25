@@ -7,7 +7,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 51,
+      "line": 59,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -17,7 +17,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 52,
+      "line": 60,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -27,7 +27,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 53,
+      "line": 61,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -37,7 +37,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 54,
+      "line": 62,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -47,7 +47,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 55,
+      "line": 63,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -57,7 +57,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 56,
+      "line": 64,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -67,7 +67,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 57,
+      "line": 65,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -77,7 +77,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 58,
+      "line": 66,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -87,7 +87,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 59,
+      "line": 67,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -97,7 +97,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 60,
+      "line": 68,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -107,7 +107,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 61,
+      "line": 69,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -117,7 +117,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 62,
+      "line": 70,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -127,7 +127,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 63,
+      "line": 71,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -137,7 +137,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 64,
+      "line": 72,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -147,7 +147,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 65,
+      "line": 73,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -157,7 +157,7 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
     {
       "kind": "shared-queue-rate-limit",
       "file": "barrel-errors.ts",
-      "line": 66,
+      "line": 74,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": null,
@@ -318,78 +318,120 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
   "diagnostics": [
     {
       "severity": "warning",
+      "file": "ambient-error.ts",
+      "line": 4,
+      "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+      "sourceLine": "throw new RateLimitError();"
+    },
+    {
+      "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 87,
+      "line": 103,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw new OpaqueRateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 88,
+      "line": 104,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw new ExternalReexport();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 89,
+      "line": 105,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw new UnknownPkgError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 90,
+      "line": 106,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw new CyclicRateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 91,
+      "line": 107,
+      "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+      "sourceLine": "if (Math.random()) throw new StarOpaqueRateLimitError();"
+    },
+    {
+      "severity": "warning",
+      "file": "barrel-errors.ts",
+      "line": 108,
+      "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+      "sourceLine": "if (Math.random()) throw new MissingExportRateLimitError();"
+    },
+    {
+      "severity": "warning",
+      "file": "barrel-errors.ts",
+      "line": 109,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw SpreadHelper.RateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 92,
+      "line": 110,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw ComputedHelper.RateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 93,
+      "line": 111,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw OpaquePropHelper.RateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 94,
+      "line": 112,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "if (Math.random()) throw LocalSpreadHelper.RateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 95,
+      "line": 113,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
-      "sourceLine": "if (Math.random()) throw GlobalUnknown.RateLimitError();"
+      "sourceLine": "if (Math.random()) throw (LocalComputedHelper as unknown as { RateLimitError(): Error }).RateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 96,
+      "line": 114,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
-      "sourceLine": "if (Math.random()) throw GlobalNs.Worker.RateLimitError();"
+      "sourceLine": "if (Math.random()) throw new LocalOpaquePropHelper.RateLimitError();"
     },
     {
       "severity": "warning",
       "file": "barrel-errors.ts",
-      "line": 97,
+      "line": 115,
+      "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+      "sourceLine": "if (Math.random()) throw localNsObj.Worker.RateLimitError();"
+    },
+    {
+      "severity": "warning",
+      "file": "barrel-errors.ts",
+      "line": 116,
+      "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+      "sourceLine": "if (Math.random()) throw UndeclaredGlobal.RateLimitError();"
+    },
+    {
+      "severity": "warning",
+      "file": "barrel-errors.ts",
+      "line": 117,
+      "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+      "sourceLine": "if (Math.random()) throw UndeclaredNs.Worker.RateLimitError();"
+    },
+    {
+      "severity": "warning",
+      "file": "barrel-errors.ts",
+      "line": 118,
       "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
       "sourceLine": "throw ambientHelper.RateLimitError();"
     },
@@ -420,6 +462,13 @@ expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diag
       "line": 5,
       "message": "the worker queue did not resolve, so this rate limit was not judged",
       "sourceLine": "throw new RateLimitError();"
+    },
+    {
+      "severity": "warning",
+      "file": "unresolved.ts",
+      "line": 11,
+      "message": "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+      "sourceLine": "throw UndeclaredQueueError.RateLimitError();"
     }
   ]
 }
