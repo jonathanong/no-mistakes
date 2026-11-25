@@ -1,6 +1,7 @@
 use super::diff::{ranges, Form, Range};
 use super::env_read;
-use super::exprs::{extract, End};
+use super::exprs::{extract, unguarded_pull_request_read, End, PULL_REQUEST_READ};
+use super::shell_guard;
 use super::yaml_shapes::{env_of, events, get, guards};
 use super::RULE_ID;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
@@ -12,8 +13,6 @@ use crate::codebase::rules::RuleFinding;
 use serde_yaml::Value;
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
-
-const PULL_REQUEST_READ: &str = "github.event.pull_request.";
 
 struct Step<'a> {
     rel: &'a str,
@@ -164,15 +163,17 @@ enum Read {
 }
 
 fn pull_request_read(step: &Step) -> Option<Read> {
-    if let Some(index) = step
-        .script
-        .lines()
-        .position(|line| line.contains(PULL_REQUEST_READ))
-    {
-        return Some(Read::Script(index + 1));
+    if let Some(index) = unguarded_pull_request_read(step.script) {
+        return Some(Read::Script(1 + step.script[..index].bytes().filter(|&b| b == b'\n').count()));
     }
+    let guard = OnceCell::new();
     let (name, _) = step.env.iter().find(|(name, value)| {
-        value.contains(PULL_REQUEST_READ) && env_read::references(step.script, name)
+        unguarded_pull_request_read(value).is_some()
+            && shell_guard::references_outside(
+                step.script,
+                name,
+                guard.get_or_init(|| shell_guard::excluded_on_merge_group(step.script, &step.env)),
+            )
     })?;
     let line = step
         .document
