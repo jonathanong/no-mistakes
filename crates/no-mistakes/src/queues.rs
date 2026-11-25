@@ -2,7 +2,8 @@ use super::common_graph_args::GraphCommandArgs;
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use no_mistakes::cli::{resolve_root, root_scoped_edge_depth, Format};
-use no_mistakes::queue::{analyze_project, analyze_project_indexed, RelatedDirection};
+use no_mistakes::queue::{analyze_project_indexed, analyze_project_with_config, RelatedDirection};
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 mod render;
@@ -33,7 +34,10 @@ pub(crate) enum QueuesCommand {
     },
     /// Check producers, workers, cycles, waits, and mixed priorities.
     Check {
-        /// Include queue analysis diagnostics alongside findings in structured output.
+        /// Path to the no-mistakes configuration file, relative to the project root.
+        #[arg(long)]
+        config: Option<PathBuf>,
+        /// Include all queue analysis diagnostics on stderr and in supported output formats.
         #[arg(long)]
         include_diagnostics: bool,
     },
@@ -92,10 +96,16 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
             Ok(ExitCode::SUCCESS)
         }
         QueuesCommand::Check {
+            config,
             include_diagnostics,
         } => {
             let report = trace_queue_analysis(|| {
-                analyze_project(&root, args.common.tsconfig.as_deref(), &args.common.filters)
+                analyze_project_with_config(
+                    &root,
+                    args.common.tsconfig.as_deref(),
+                    config.as_deref(),
+                    &args.common.filters,
+                )
             })?;
             render::print_diagnostics_stderr(&report.diagnostics, *include_diagnostics);
             render::print_check(

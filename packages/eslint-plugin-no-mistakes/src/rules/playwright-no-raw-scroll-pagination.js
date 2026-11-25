@@ -146,12 +146,29 @@ function mentionsCursorParam(node, cursorParams) {
   return accessorArgs.some((value) => cursorParams.includes(value));
 }
 
+function isSentinelScrollCall(node, locatorNames, testIds) {
+  const callee = node.callee;
+  if (memberName(callee) !== "scrollIntoViewIfNeeded") return false;
+
+  let receiver = callee.object;
+  while (receiver.type === "ChainExpression") receiver = receiver.expression;
+  if (receiver.type === "Identifier") return locatorNames.has(receiver.name);
+  if (receiver.type !== "CallExpression" || memberName(receiver.callee) !== "getByTestId") {
+    return false;
+  }
+
+  const id = receiver.arguments[0];
+  if (id?.type === "TemplateLiteral" && id.expressions.length === 0) {
+    return testIds.has(id.quasis[0].value.cooked);
+  }
+  return id?.type === "Literal" && testIds.has(id.value);
+}
+
 module.exports = rule(
   {
     type: "problem",
     docs: {
-      description:
-        "disallow driving cursor-paginated infinite scroll with a raw window.scrollTo/scroll/scrollBy",
+      description: "disallow one-shot scroll calls that can miss infinite-scroll pagination",
       recommended: false,
     },
     schema: [
@@ -160,10 +177,14 @@ module.exports = rule(
         properties: {
           cursorParams: { type: "array", items: { type: "string" } },
           scrollHelper: { type: "string" },
+          sentinelLocatorNames: { type: "array", items: { type: "string" } },
+          sentinelTestIds: { type: "array", items: { type: "string" } },
         },
       },
     ],
     messages: {
+      sentinelScroll:
+        "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible.{{helperHint}}",
       rawScroll:
         "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout.{{helperHint}}",
     },
@@ -172,6 +193,9 @@ module.exports = rule(
     let isPlaywrightFile = isPlaywrightPath(context.filename);
     const options = context.options?.[0] ?? {};
     const cursorParams = options.cursorParams ?? ["after", "cursor"];
+    const sentinelLocatorNames = new Set(options.sentinelLocatorNames);
+    const sentinelTestIds = new Set(options.sentinelTestIds);
+    const checkSentinels = sentinelLocatorNames.size > 0 || sentinelTestIds.size > 0;
     const scrollHelper = options.scrollHelper ?? "";
     const helperHint = scrollHelper
       ? ` Use ${scrollHelper}, which scrolls repeatedly until the request fires, instead.`
@@ -179,6 +203,7 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, "playwright-no-raw-scroll-pagination");
     let hasCursorWait = false;
     const scrollCandidates = [];
+    const sentinelCandidates = [];
 
     return {
       ImportDeclaration(node) {
@@ -190,9 +215,17 @@ module.exports = rule(
           hasCursorWait = true;
         }
         if (isRawScrollCall(node, context)) scrollCandidates.push(node);
+        if (checkSentinels && isSentinelScrollCall(node, sentinelLocatorNames, sentinelTestIds)) {
+          sentinelCandidates.push(node);
+        }
       },
       "Program:exit"() {
-        if (!isPlaywrightFile || !hasCursorWait) return;
+        if (!isPlaywrightFile) return;
+        for (const node of sentinelCandidates) {
+          if (suppressed(node)) continue;
+          context.report({ node, messageId: "sentinelScroll", data: { helperHint } });
+        }
+        if (!hasCursorWait) return;
         for (const node of scrollCandidates) {
           if (suppressed(node)) continue;
           context.report({ node, messageId: "rawScroll", data: { helperHint } });

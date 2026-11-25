@@ -21,8 +21,23 @@ pub(crate) fn collect_prepared_runner_facts(
 ) {
     let (plan, graph_plan) = plans;
     let (files, graph_only_files) = file_scope;
-    let (runner_files, _) = split_runner_config_files(files, plan);
+    let (mut runner_files, _) = split_runner_config_files(files, plan);
     let (runner_graph_files, _) = split_runner_config_files(graph_only_files, plan);
+    if let Some(runner) = &plan.integration_runner_configs {
+        let known = runner_files
+            .iter()
+            .chain(&runner_graph_files)
+            .collect::<std::collections::BTreeSet<_>>();
+        let extra = plan
+            .test_reliability_paths
+            .keys()
+            .filter(|path| {
+                runner.contains(path) && !known.contains(path) && !precollected.contains_key(path)
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        runner_files.extend(extra);
+    }
     let collect = || {
         let mut facts = super::collect::collect_fact_map_sequential_with_sources(
             session,

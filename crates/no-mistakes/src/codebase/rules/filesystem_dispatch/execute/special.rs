@@ -21,6 +21,7 @@ pub(super) fn spawn<'a>(
         markdown_facts,
         acc,
     } = *inputs;
+    spawn_test_reliability(scope, inputs, session);
     markdown_dispatch::spawn(
         scope,
         root,
@@ -131,6 +132,38 @@ pub(super) fn spawn<'a>(
             acc.lock()
                 .expect("mutex poisoned")
                 .push((TSCONFIG_GATE_COVERAGE, result));
+        });
+    }
+}
+
+fn spawn_test_reliability<'a>(
+    scope: &rayon::Scope<'a>,
+    inputs: &'a RuleRunInputs<'a>,
+    session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
+) {
+    for id in [TEST_NO_RETRIES, PLAYWRIGHT_NO_SERIAL] {
+        if !rule_enabled(inputs.config, id) {
+            continue;
+        }
+        scope.spawn(move |_| {
+            let result = super::trace_rule(inputs.sources, id, || {
+                test_reliability::check_prepared(
+                    id,
+                    inputs.config,
+                    test_reliability::Inputs {
+                        root: inputs.root,
+                        files: inputs.candidates.candidates(id),
+                        sources: inputs.sources,
+                        facts: inputs.facts,
+                        session,
+                    },
+                )
+            });
+            inputs
+                .acc
+                .lock()
+                .expect("mutex poisoned")
+                .push((id, result));
         });
     }
 }

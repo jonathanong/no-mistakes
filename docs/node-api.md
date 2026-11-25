@@ -455,7 +455,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check`                                    | `check(options)` (including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
+| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `vitest-default-excludes`, and `vitest-project-policy` |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -488,6 +488,7 @@ remain failures. See
 `queueCheck()` also reports `worker-rate-limit-per-process` when `.rateLimit()` is called on a binding that resolves to a `Worker`, a `Worker` subclass, or a configured worker factory, and abstains with a diagnostic on `QueueReport.diagnostics` only when an unresolved receiver's binding originates from a queue module or worker construction. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`.
 Pass `{ includeDiagnostics: true }` to `queueCheck()` (or `{ type: "queueCheck", includeDiagnostics: true }` in `analyzeProject()`, typed by `QueueCheckOptions` and `BatchedQueueCheckOptions`) to receive a `QueueCheckReport` (`{ findings, diagnostics }`) instead of the default bare `QueueCheckFinding[]` array.
 Aggregate `check()` also surfaces unresolved `worker-rate-limit-per-process` receiver diagnostics in `CheckReport.warnings` without turning a clean run into a failure.
+Source directives for `queues-check` suppress these warnings in aggregate `check()` and batched `check` queries. Set `includeSuppressed: true` to see matching warnings in the suppression ledger.
 Import the exported `QueueRateLimitFindingKind` type for the rate-limit-specific values `"shared-queue-rate-limit" | "worker-rate-limit-per-process"`.
 `queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
 Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
@@ -508,10 +509,11 @@ queue mixes priority 0 and a priority greater than 0. See
 [queues check](cli/queues-check.md).
 Declaration findings carry fix guidance in `message`;
 no separate JSON field is added.
-`queues.requiredJobOptions` is discovered
-configuration, not an inline `queueCheck()` option. A `missing-job-option`
-finding lists the absent keys in `message`. Abstained calls are omitted from
-the findings array; their warnings stay on the queue report diagnostics.
+Call `queueCheck({ root, config })` to select a configuration file by absolute
+path or by path relative to `root`. In `analyzeProject()` set `config` on the
+request for all queue reports. Set `queues.requiredJobOptions` in that file.
+A `missing-job-option` finding lists the absent keys in `message`. Abstentions
+appear in the queue report diagnostics.
 
 ## Queue factory configuration types
 
@@ -546,7 +548,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
+| `check` | `check(options)` uses `checkJson` for configured rules, including `playwright-no-serial` and `test-no-retries`. Reports may include `CheckReport.incomplete` (`CheckFailure[]`) and `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`). |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
@@ -1064,6 +1066,20 @@ report dynamic projects as incomplete. Selected config/helper sources that canno
 be read or parsed, and unresolved effective-policy values, are returned as
 `CheckReport.incomplete` (`CheckFailure[]`). Application include/exclude filters
 and source suppressions apply to declaration diagnostics.
+
+### Test reliability rules
+
+[`test-no-retries`](rules/test-no-retries.md) and
+[`playwright-no-serial`](rules/playwright-no-serial.md) run through asynchronous
+`check()` and batched `analyzeProject()` check queries using the existing
+`checkJson` binding. Import `TestNoRetriesOptions`, `PlaywrightNoSerialOptions`,
+`PlaywrightFixtureExport`, and `TestReliabilityAllowlistEntry` from
+`no-mistakes` to type rule options. `TestNoRetriesOptions.files` selects
+Playwright config factory modules by repository-relative glob, and `fixtures`
+on both option interfaces names repository `{ module, export }` entries treated
+as Playwright's `test`. Unresolved imported fixture bindings are returned in
+`CheckReport.incomplete`.
+Both rules return standard `RuleFinding` entries.
 
 PostgreSQL executor options accept `extraExecutorNames` in the asynchronous
 Node APIs, including `extractExecutedPostgresSql`. Each also accepts

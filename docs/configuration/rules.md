@@ -795,6 +795,19 @@ expressions without resolving constants. Declared-only policies never report
 dynamic projects as incomplete. Effective policies still report unresolved
 values as incomplete. Config is never executed.
 
+### Test retries and serial execution
+
+[`test-no-retries`](../rules/test-no-retries.md) caps literal retries in Vitest,
+Playwright, Jest, and supported GitHub Actions steps. Set `options.maxRetries`
+to set the cap, `options.testCommands` to identify test command prefixes in
+workflow scripts, and `options.files` to select Playwright config factory
+modules. [`playwright-no-serial`](../rules/playwright-no-serial.md)
+checks literal Playwright settings that force serial execution. Each rule
+accepts `options.fixtures` entries (`{ module, export }`) naming repository
+exports treated as Playwright's `test` when a wrapper cannot be followed
+statically, and `options.allowlist` entries with a `path` glob or a `project`
+name and a required `reason`.
+
 ### PostgreSQL executor selection
 
 For every PostgreSQL rule accepting `executorNames`, that option **replaces**

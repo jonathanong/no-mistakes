@@ -1,0 +1,7 @@
+rules:
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      allowlist:
+        - path: /external/*.spec.ts
+          reason: A runner outside this repository owns these tests

@@ -1,0 +1,5 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+  - rule: playwright-no-serial
+    scope: repository

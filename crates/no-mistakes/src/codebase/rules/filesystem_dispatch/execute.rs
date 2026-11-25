@@ -74,6 +74,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     let owned_facts = if facts.is_none()
         && (rule_enabled(config, FORBIDDEN_LINT_SUPPRESSIONS)
             || rule_enabled(config, VITEST_DEFAULT_EXCLUDES)
+            || super::test_reliability::configured(config)
             || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
             || rule_enabled(config, REQUIRED_COMPANION_IMPORTS)
             || crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
@@ -194,7 +195,6 @@ fn run_prepared_filesystem_rules(
     finalize::findings(&mut findings);
     Ok(findings)
 }
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "execute/tests.rs"]
 mod tests;

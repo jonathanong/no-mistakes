@@ -1,4 +1,5 @@
 use super::*;
+use crate::queue::object_bindings::test_hook::take_program_visits;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -19,9 +20,10 @@ fn object_bindings_share_the_processor_pass_and_index_only_on_lookup() {
         let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
         assert!(parsed.diagnostics.is_empty(), "{file}");
         let roles = Default::default();
+        take_program_visits();
         let visitor =
             extract_queue_facts(&path, &source, &parsed.program, &[], &roles, false, None);
-        assert_eq!(visitor.object_bindings.program_visits, visits, "{file}");
+        assert_eq!(take_program_visits(), visits, "{file}");
         assert_eq!(visitor.object_bindings.was_indexed(), indexed, "{file}");
     }
 }
@@ -34,10 +36,11 @@ fn object_binding_lookups_reuse_the_named_group() {
     let source = std::fs::read_to_string(path).unwrap();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
     assert!(parsed.diagnostics.is_empty());
+    take_program_visits();
     let index = super::super::extract_factory::queue_index(&parsed.program, &Default::default());
     let bindings = index.object_bindings;
     assert!(!bindings.was_indexed());
-    assert_eq!(bindings.program_visits, 1);
+    assert_eq!(take_program_visits(), 1);
 
     let options = bindings.named("options");
     assert_eq!(options.len(), 4);
@@ -57,10 +60,11 @@ fn forward_scheduler_bindings_and_worker_processors_are_prepared_together() {
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
     assert!(parsed.diagnostics.is_empty());
     let roles = Default::default();
+    take_program_visits();
     let visitor = extract_queue_facts(&path, &source, &parsed.program, &[], &roles, false, None);
     assert_eq!(visitor.facts.workers.len(), 1);
     assert_eq!(visitor.facts.workers[0].jobs, ["pack"]);
-    assert_eq!(visitor.object_bindings.program_visits, 1);
+    assert_eq!(take_program_visits(), 1);
     assert_eq!(
         visitor
             .facts
