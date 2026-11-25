@@ -108,10 +108,10 @@ pub(super) fn has_wildcard(mut value: &str) -> bool {
             return true;
         }
         if let Some(variable) = tail.strip_prefix("${").or_else(|| tail.strip_prefix("&{")) {
-            value = match variable.split_once('}') {
-                Some((_, rest)) => rest,
-                None => variable,
+            let Some((_, rest)) = variable.split_once('}') else {
+                return variable.contains(['*', '?']);
             };
+            value = rest;
         } else {
             value = &tail[1..];
         }
