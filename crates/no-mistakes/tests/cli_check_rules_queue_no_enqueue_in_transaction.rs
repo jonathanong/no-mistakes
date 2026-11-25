@@ -352,7 +352,12 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
     uncertain.dedup();
     assert_eq!(
         uncertain,
-        ["src/conditional.ts", "src/escape.ts", "src/unresolved.ts"]
+        [
+            "src/conditional.ts",
+            "src/edges.ts",
+            "src/escape.ts",
+            "src/unresolved.ts"
+        ]
     );
 
     let mixed = &reports["mixed_advise"];

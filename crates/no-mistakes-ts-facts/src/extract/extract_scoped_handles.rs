@@ -111,7 +111,7 @@ impl ImportCollector {
             else {
                 continue;
             };
-            if call.span.start >= handle.after_begin && !call.optional && handle.close.is_none() {
+            if call.span.start >= handle.after_begin && handle.close.is_none() {
                 handle.close = Some((call.span.start, call.span.end));
             }
         }

@@ -12,6 +12,8 @@ fn queue_transaction_options_reject_incomplete_or_conflicting_contracts() {
         ("duplicate-begin", "more than once"),
         ("overlapping", "more than once"),
         ("blank", "non-empty module and export"),
+        ("blank-callback", "non-empty module and export"),
+        ("blank-begin", "non-empty module and export"),
     ] {
         let error = cases[name]
             .targets()

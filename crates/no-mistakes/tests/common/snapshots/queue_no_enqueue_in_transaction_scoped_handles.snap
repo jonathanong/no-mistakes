@@ -43,6 +43,69 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 18,
+          "message": "ambiguous call target may invoke a configured transaction; call the imported transaction directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const pending = await (maybeBegin ?? database.beginTransaction)();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 27,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (maybeEnqueue ?? enqueue)({ receiptId: label });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 12,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "var mutable = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 14,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const idle = 0, grouped = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 16,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const optional = await database.beginTransaction?.();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 37,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 41,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const shared = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/escape.ts",
           "import": "beginTransaction",
           "line": 4,
@@ -138,6 +201,69 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 18,
+          "message": "ambiguous call target may invoke a configured transaction; call the imported transaction directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const pending = await (maybeBegin ?? database.beginTransaction)();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 27,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (maybeEnqueue ?? enqueue)({ receiptId: label });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 12,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "var mutable = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 14,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const idle = 0, grouped = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 16,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const optional = await database.beginTransaction?.();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 37,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 41,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const shared = await database.beginTransaction();",
           "target": "unanalyzable"
         },
         {
