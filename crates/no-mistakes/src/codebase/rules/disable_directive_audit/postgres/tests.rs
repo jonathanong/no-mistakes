@@ -117,8 +117,10 @@ fn unparsed_file_does_not_emit_unused_disable_directive() {
     .unwrap();
     let prepared = PreparedDisableDirectives::prepare(&root, &config, &files, &sources).unwrap();
     let mut facts = CheckFactMap::default();
-    let mut unparsed = CheckFileFacts::default();
-    unparsed.parse_error = Some("parsing a-disabled.tsx: Unexpected token".into());
+    let unparsed = CheckFileFacts {
+        parse_error: Some("parsing a-disabled.tsx: Unexpected token".into()),
+        ..Default::default()
+    };
     facts.ts.insert(path, Arc::new(unparsed));
     let findings = prepared
         .findings_with_postgres(&config, &files, &sources, &facts, &[])
