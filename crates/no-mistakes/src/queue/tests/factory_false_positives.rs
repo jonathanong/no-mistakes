@@ -110,6 +110,7 @@ fn cycle_edges_skip_a_missing_worker_and_an_unresolved_worker_queue() {
             wildcard: false,
         },
         queue: None,
+        reachable_files: Default::default(),
     }];
     let findings = super::super::cycles::queue_cycles(&root, &producers, &workers);
     assert!(

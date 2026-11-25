@@ -1,4 +1,5 @@
-use super::{CheckTask, CompletedDomainChecks, DomainResults};
+use super::{CompletedDomainChecks, DomainResults};
+use crate::check_tasks::CheckTask;
 use no_mistakes::codebase::analysis_session::AnalysisSession;
 use no_mistakes::codebase::check_outcome::CheckFailure;
 use std::time::Duration;

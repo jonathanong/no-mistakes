@@ -133,5 +133,6 @@ fn unresolved() -> RowAccess {
         recovered_key: None,
         key_identity_unproven: false,
         has_predicate: false,
+        only: false,
     }
 }

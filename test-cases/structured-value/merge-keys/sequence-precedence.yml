@@ -1,0 +1,4 @@
+base: &base {color: green, size: large}
+first: &first {<<: *base, size: small}
+second: &second {color: blue, size: medium, tier: basic}
+result: {<<: [*first, *second]}

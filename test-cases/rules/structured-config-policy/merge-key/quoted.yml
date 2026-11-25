@@ -1,0 +1,8 @@
+defaults: &example
+  enabled: true
+runtime:
+  <<: *example
+  options: { "<<": 7, '<< literal': "ordinary value" }
+merge-key: &merge-key <<
+extra:
+  *merge-key : *example

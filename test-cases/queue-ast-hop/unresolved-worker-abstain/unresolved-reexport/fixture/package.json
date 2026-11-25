@@ -1,0 +1,8 @@
+{
+  "name": "acme-unresolved-worker-reexport",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}
