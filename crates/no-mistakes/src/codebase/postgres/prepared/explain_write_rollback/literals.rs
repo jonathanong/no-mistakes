@@ -29,13 +29,13 @@ pub(super) fn direct_write_kind(statement: &Statement) -> Option<&'static str> {
 }
 
 pub(super) fn three_arg_exprs(args: &FunctionArguments) -> Option<(&Expr, &Expr, &Expr)> {
-    let FunctionArguments::List(arguments) = args else {
-        return None;
-    };
-    let [a, b, c] = arguments.args.as_slice() else {
-        return None;
-    };
-    Some((arg_expr(a)?, arg_expr(b)?, arg_expr(c)?))
+    match args {
+        FunctionArguments::List(arguments) => match arguments.args.as_slice() {
+            [a, b, c] => Some((arg_expr(a)?, arg_expr(b)?, arg_expr(c)?)),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 
 fn arg_expr(arg: &FunctionArg) -> Option<&Expr> {

@@ -10,8 +10,10 @@ EXPLAIN ANALYZE UPDATE sample_jobs SET status = 'ready' WHERE id = 42;
 COMMIT;
 
 SET TIME ZONE 'UTC';
+SET custom.flag = 'on';
 SET LOCAL default_transaction_read_only = on;
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+SELECT 1, now();
 SELECT set_config('transaction_read_only', 'on', true) AS ignored_outside_tx;
 SELECT (set_config('default_transaction_read_only', 'on', false)) LIMIT 1;
 VALUES (1);

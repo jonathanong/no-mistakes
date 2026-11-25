@@ -80,17 +80,6 @@ pub(crate) fn check_with_files_and_sources(
         .map(|diagnostics| diagnostics.findings)
 }
 
-pub(crate) fn check_with_files_sources_and_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: &CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    diagnostics_with_files_sources_and_facts(root, config, files, sources, Some(facts), false)
-        .map(|diagnostics| diagnostics.findings)
-}
-
 #[doc(hidden)]
 pub fn diagnostics_with_files_sources_and_facts(
     root: &Path,

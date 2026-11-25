@@ -84,7 +84,8 @@ fn unknown_savepoints_and_dynamic_read_only_settings_report_unanalyzable() {
         .iter()
         .map(|item| item.location.line)
         .collect();
-    assert_eq!(lines, [2, 3, 6, 7, 8, 9, 10]);
+    assert_eq!(lines, [2, 3, 6, 7, 8, 9, 10, 11, 12, 13]);
+    assert!(format!("{file:?}").contains("UnanalyzablePlan"));
 }
 
 #[test]
@@ -100,6 +101,7 @@ fn quoted_savepoints_local_set_and_filtered_queries_keep_write_tracking_sound() 
         .iter()
         .map(|plan| (plan.kind, plan.location.line, plan.autocommit))
         .collect();
-    assert_eq!(writes, [("UPDATE", 9, false), ("DELETE", 20, true)]);
+    assert_eq!(writes, [("UPDATE", 9, false), ("DELETE", 22, true)]);
     assert!(file.unanalyzable.is_empty());
+    assert!(format!("{file:?}").contains("WritePlan"));
 }
