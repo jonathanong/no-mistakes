@@ -176,4 +176,6 @@ fn yaml_number(number: serde_json::Number) -> Value {
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod scan_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
