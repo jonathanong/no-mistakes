@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-workflow-script-paths
+    scope: repository
+    options:
+      scriptDirs:
+        - scripts
+      unanalyzable: report

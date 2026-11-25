@@ -66,3 +66,32 @@ fn allowances_for_unselected_workflows_are_not_stale() {
     );
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn action_caps_validate_invalid_options() {
+    let root = fixture("pass");
+    let files = [root.join(".github/workflows/ci.yml")];
+    for options in [
+        "actionCaps: [{uses: '', maxMinutes: 5}]",
+        "actionCaps: [{uses: '${{ inputs.action }}', maxMinutes: 5}]",
+        "actionCaps: [{uses: 'actions/setup-node', maxMinutes: 0}]",
+        "actionCaps: [{uses: 'actions/setup-node', maxMinutes: 361}]",
+        "actionCaps: [{uses: 'Actions/Setup-Node@v4', maxMinutes: 5}, {uses: 'actions/setup-node@v5', maxMinutes: 3}]",
+        "onlyConfiguredActions: true",
+        "unknownField: 1",
+    ] {
+        let config = NoMistakesConfig {
+            rules: vec![RuleDef {
+                rule: RULE_ID.into(),
+                scope: Some(RuleScope::Repository),
+                options: serde_yaml::from_str(options).unwrap(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        assert!(
+            check_with_files(&root, &config, &files).is_err(),
+            "expected config error for `{options}`"
+        );
+    }
+}

@@ -1,0 +1,21 @@
+name: CI
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "scripts/**"
+      - "tools/ci/**"
+  push:
+    branches:
+      - main
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          ./scripts/check.sh
+          node scripts/verify.mjs --strict
+          pnpm exec tsx tools/ci/lint.ts
+          echo scripts/not-executed.sh
+      - uses: ./.github/actions/run-checks

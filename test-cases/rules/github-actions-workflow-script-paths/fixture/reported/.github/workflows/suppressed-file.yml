@@ -1,0 +1,11 @@
+# no-mistakes-disable-file github-actions-workflow-script-paths
+name: Suppressed
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/suppressed.sh

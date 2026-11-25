@@ -1,0 +1,10 @@
+name: Ignored
+on:
+  pull_request:
+    paths-ignore:
+      - "scripts/**"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: bash scripts/ignored.sh

@@ -27,6 +27,19 @@ The optional `maxMinutes` must be positive. Each `allow` entry accepts `step`,
 
 `include` replaces the default workflow globs. `maxMinutes` sets an optional
 cap below GitHub's 360-minute maximum. The effective cap never exceeds 360.
+`actionCaps` sets per-action-family timeout caps (`{ uses, maxMinutes }`,
+`1..=360`) that tighten the cap for matching workflow `uses:` steps (for
+example setup actions such as `actions/checkout`, `actions/setup-node`,
+`pnpm/action-setup`, or `./.github/actions/setup-pnpm`). Action names match
+after stripping `@ref` and trailing slashes, case-insensitively for remote
+`owner/repo` actions and verbatim for local `./...` paths. Duplicate families,
+dynamic `uses` expressions, or out-of-range caps fail at configuration load.
+`onlyConfiguredActions` defaults to `false`; set it to `true` (with a non-empty
+`actionCaps`) to require timeouts only on steps matching `actionCaps`. When
+`actionCaps` is configured and a workflow step has a dynamic `uses:` value
+(`${{ ... }}`) whose timeout is missing or exceeds the strictest configured
+action cap, the rule reports an `unanalyzable` diagnostic governed by
+`options.unanalyzable` (default `advise`).
 `allow` accepts a reasoned exception for a specific step, identified as
 `path#jobId#stepId`. For a step without `id`, use its 1-based position in the
 job's `steps` array, such as `path#jobId#2`. An allow entry permits an absent or
@@ -111,7 +124,12 @@ Each uses its own timeout policy and source locations.
 
 Invalid YAML produces an ordinary finding. The rule skips unreadable files,
 non-mapping jobs, non-sequence step lists, and non-mapping step entries.
-This rule does not use `options.unanalyzable`. [Workflow and job scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_step_timeouts/scan.rs#L14-L66) and [step scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_step_timeouts/steps.rs#L39-L44).
+[Workflow and job scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_step_timeouts/scan.rs#L14-L66) and [step scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_step_timeouts/steps.rs#L39-L44).
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean.
+
+- When `actionCaps` is configured, a workflow step whose `uses:` contains `${{ }}` (or is non-string) cannot be matched statically to an action family; unless its literal `timeout-minutes` is already within the strictest configured action cap (or covered by an `allow` entry), it emits a diagnostic governed by `options.unanalyzable` (default `advise`).
+- Without `actionCaps`, literal `timeout-minutes` values on parsed steps are judged directly and nothing is routed through `options.unanalyzable`.
 
 ## Suppression
 

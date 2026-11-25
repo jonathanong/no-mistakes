@@ -1,0 +1,10 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      onlyConfiguredActions: true
+      actionCaps:
+        - uses: actions/setup-node
+          maxMinutes: 5
+        - uses: ./.github/actions/setup-pnpm
+          maxMinutes: 5

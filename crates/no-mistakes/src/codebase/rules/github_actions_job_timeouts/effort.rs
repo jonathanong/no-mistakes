@@ -11,10 +11,22 @@ pub(crate) fn partner_scope(_: &RuleDef, partner: &RuleDef) -> bool {
                 options.keys().all(|key| {
                     matches!(
                         key.as_str(),
-                        Some("include" | "maxMinutes" | "allow" | "effort" | "unanalyzable")
+                        Some(
+                            "include"
+                                | "maxMinutes"
+                                | "allow"
+                                | "actionCaps"
+                                | "onlyConfiguredActions"
+                                | "effort"
+                                | "unanalyzable"
+                        )
                     )
                 })
             }))
+        && partner
+            .options
+            .get("onlyConfiguredActions")
+            .is_none_or(|only| only.as_bool() == Some(false))
         && partner
             .options
             .get("allow")

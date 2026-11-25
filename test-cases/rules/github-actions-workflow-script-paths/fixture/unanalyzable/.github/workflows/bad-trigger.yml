@@ -1,0 +1,10 @@
+name: Bad Trigger
+on:
+  pull_request:
+    paths:
+      - "${{ inputs.glob }}"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/check.sh

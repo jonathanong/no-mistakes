@@ -364,6 +364,16 @@ argument patterns on configured commands inside workflow and composite-action
 `run` scripts. Unparsable commands (`eval`, dynamic command names, or
 unterminated shell syntax) abstain with an advisory diagnostic by default.
 
+Enable [`github-actions-workflow-script-paths`](../rules/github-actions-workflow-script-paths.md)
+with `options.scriptDirs` to ensure repository scripts executed by a
+path-filtered workflow (directly or through a local composite action) fall
+inside that workflow's `paths` / `paths-ignore` filters. Unprovable triggers or
+dynamic script invocations abstain with an advisory diagnostic by default.
+
+Configure `options.actionCaps` (and optional `options.onlyConfiguredActions`) on
+[`github-actions-step-timeouts`](../rules/github-actions-step-timeouts.md) to
+enforce tighter per-action step timeout caps on setup actions.
+
 Enable [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md)
 with `options.minimumDays` to require a cooldown on every applicable entry in
 `.github/dependabot.yml` and `.github/dependabot.yaml`; both files are checked

@@ -1080,6 +1080,20 @@ outcome as CLI `check`. Exported `GithubActionsRunCommandPolicyOptions`,
 its YAML options. Policy violations appear in `CheckReport.rules` and abstained
 unparsable-command diagnostics appear in `CheckReport.advisories` by default.
 
+The opt-in [`github-actions-workflow-script-paths`](rules/github-actions-workflow-script-paths.md)
+runs through async `check()` and `analyzeProject()` check reports with the same
+outcome as CLI `check`. Exported `GithubActionsWorkflowScriptPathsOptions` and
+`GithubActionsPathFilterEvent` describe its YAML options (`scriptDirs`,
+`include`, `events`, and `unanalyzable`). Uncovered script invocations appear
+in `CheckReport.rules` and unprovable trigger or script diagnostics appear in
+`CheckReport.advisories` by default.
+
+[`github-actions-step-timeouts`](rules/github-actions-step-timeouts.md) exports
+`GithubActionsStepTimeoutsOptions`, `GithubActionsStepTimeoutsActionCap`, and
+`GithubActionsStepTimeoutsAllowEntry`, including per-action `actionCaps` and
+`onlyConfiguredActions`. Dynamic `uses:` steps that cannot be proved within the
+strictest configured action cap appear in `CheckReport.advisories` by default.
+
 The opt-in [`github-actions-no-poll-wait-job`](rules/github-actions-no-poll-wait-job.md)
 runs through async `check()` and `analyzeProject()` check reports with the same
 outcome as CLI `check`. Exported `GithubActionsNoPollWaitJobOptions` describes

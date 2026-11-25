@@ -57,6 +57,7 @@ pub(in crate::codebase::rules) mod dependabot_cooldown_policy;
 mod entrypoints;
 mod execute;
 pub mod github_actions_run_command_policy;
+pub mod github_actions_workflow_script_paths;
 mod inventory;
 mod markdown_dispatch;
 mod metadata;
@@ -135,6 +136,8 @@ pub(super) const GITHUB_ACTIONS_NO_INSTA_SNAPSHOT_UPDATES: &str =
 pub(super) const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 pub(super) const GITHUB_ACTIONS_RUN_COMMAND_POLICY: &str =
     github_actions_run_command_policy::RULE_ID;
+pub(super) const GITHUB_ACTIONS_WORKFLOW_SCRIPT_PATHS: &str =
+    github_actions_workflow_script_paths::RULE_ID;
 pub(super) const GITHUB_ACTIONS_SCRIPT_EXPRESSIONS: &str =
     github_actions_script_expressions::RULE_ID;
 pub(super) const GITHUB_ACTIONS_CHECKOUT_CREDENTIALS: &str =

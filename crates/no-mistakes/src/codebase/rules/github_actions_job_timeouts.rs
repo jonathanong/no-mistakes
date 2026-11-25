@@ -62,7 +62,7 @@ pub(crate) fn check_with_files_and_sources(
     check_with_files_and_sources_deferred(root, config, all_files, sources, false)
 }
 
-pub(crate) fn check_with_files_and_sources_deferred(
+pub fn check_with_files_and_sources_deferred(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],

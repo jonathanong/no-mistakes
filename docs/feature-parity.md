@@ -50,6 +50,14 @@ checks workflow and composite-action `run` scripts in Rust, CLI `check`, async
 Node `check()`, and `analyzeProject()` check reports, sharing the same script
 parser, argument policies, abstention advisories, and suppression handling.
 
+The opt-in [`github-actions-workflow-script-paths`](rules/github-actions-workflow-script-paths.md)
+checks that repository scripts run by path-filtered workflows (directly or via
+local composite actions) fall inside each workflow's `paths` / `paths-ignore`
+filters across Rust, CLI `check`, async Node `check()`, and `analyzeProject()`
+check reports. [`github-actions-step-timeouts`](rules/github-actions-step-timeouts.md)
+also supports per-action `actionCaps` and `onlyConfiguredActions` across all of
+those entry points.
+
 The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
 checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
 `analyzeProject()` check reports. These entry points share the same cooldown

@@ -521,6 +521,22 @@ dynamic command names, dynamic `sh -c`, or unterminated shell syntax) abstain
 with a diagnostic governed by `options.unanalyzable` (default `advise`). See
 the [run command policy](../rules/github-actions-run-command-policy.md#options-and-defaults).
 
+For [`github-actions-workflow-script-paths`](../rules/github-actions-workflow-script-paths.md),
+`options.scriptDirs` defaults to `[]` (opt-in, reports nothing until configured)
+and lists literal repository-relative script directories. Every repository script
+invoked in a path-filtered workflow's `run` steps or local composite actions must
+fall inside every checked `on.<event>.paths` / `on.<event>.paths-ignore` filter
+(`options.events` defaults to `push`, `pull_request`, and `pull_request_target`).
+Unprovable triggers, dynamic commands or script paths, and unreadable composite
+actions route through `options.unanalyzable` (default `advise`).
+
+For [`github-actions-step-timeouts`](../rules/github-actions-step-timeouts.md),
+optional `options.actionCaps` sets per-action-family `maxMinutes` caps (for
+example setup actions) and optional `options.onlyConfiguredActions` (default
+`false`) limits enforcement to matching action families. Dynamic `uses:` steps
+that cannot be proved within the strictest action cap route through
+`options.unanalyzable` (default `advise`).
+
 For [`github-actions-action-input-policy`](../rules/github-actions-action-input-policy.md),
 `options.actions` defaults to `[]`, which reports nothing until a repository
 lists action families. Each `uses` value is the family; a ref after `@` is

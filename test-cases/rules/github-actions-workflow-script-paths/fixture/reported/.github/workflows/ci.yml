@@ -1,0 +1,22 @@
+name: CI
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+  push:
+    paths:
+      - "apps/**"
+      - "scripts/covered.sh"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          ./scripts/covered.sh
+          node scripts/missing.mjs --strict
+          pnpm exec tsx tools/ci/audit.ts
+          # no-mistakes-disable-next-line github-actions-workflow-script-paths
+          bash scripts/suppressed-next.sh
+          bash scripts/suppressed-line.sh # no-mistakes-disable-line github-actions-workflow-script-paths
+      - uses: ./.github/actions/run-checks

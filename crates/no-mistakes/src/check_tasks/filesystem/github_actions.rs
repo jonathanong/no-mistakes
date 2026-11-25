@@ -64,10 +64,41 @@ const CHECKS: &[(&str, WorkflowCheck)] = &[
         rules::github_actions_run_command_policy::diagnostics_with_files_and_sources,
     ),
     (
+        rules::github_actions_workflow_script_paths::RULE_ID,
+        rules::github_actions_workflow_script_paths::diagnostics_with_files_and_sources,
+    ),
+    (
+        rules::github_actions_step_timeouts::RULE_ID,
+        rules::github_actions_step_timeouts::diagnostics_with_files_and_sources,
+    ),
+    (
+        rules::github_actions_job_timeouts::RULE_ID,
+        job_timeouts_diagnostics,
+    ),
+    (
         rules::github_actions_pr_diff_range::RULE_ID,
         rules::github_actions_pr_diff_range::diagnostics_with_files_and_sources,
     ),
 ];
+
+fn job_timeouts_diagnostics(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    Ok(AnalysisDiagnostics {
+        findings: rules::github_actions_job_timeouts::check_with_files_and_sources_deferred(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        )?,
+        ..AnalysisDiagnostics::default()
+    })
+}
 
 pub(super) fn run<'a>(
     root: &Path,
