@@ -1974,15 +1974,7 @@ jobs:
           - os: macos-15
             target: aarch64-apple-darwin
             shard: 1
-            total: 3
-          - os: macos-15
-            target: aarch64-apple-darwin
-            shard: 2
-            total: 3
-          - os: macos-15
-            target: aarch64-apple-darwin
-            shard: 3
-            total: 3
+            total: 1
 
     steps:
       - name: Exclude workspace from Microsoft Defender
@@ -2046,7 +2038,7 @@ jobs:
           path: target/native-test-artifacts
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 9
+        timeout-minutes: 15
         shell: bash
         run: node .github/scripts/native-test-archive.cjs run ${{ matrix.shard }} ${{ matrix.total }}
       - name: Retain native Rust case execution inventory
@@ -2230,11 +2222,7 @@ jobs:
           - os: macos-15
             target: aarch64-apple-darwin
             shard: 1
-            total: 2
-          - os: macos-15
-            target: aarch64-apple-darwin
-            shard: 2
-            total: 2
+            total: 1
 
     steps:
       - name: Exclude workspace from Microsoft Defender

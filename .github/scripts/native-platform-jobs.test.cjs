@@ -12,10 +12,15 @@ const nativeSteps = (name) =>
     .trim();
 const families = ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"];
 
-test("each platform retains identical native steps without sharing a producer barrier", () => {
+test("each platform retains equivalent native steps without sharing a producer barrier", () => {
   for (const name of families) {
     const windows = nativeSteps(name);
-    const macos = nativeSteps(`${name}-macos`);
+    let macos = nativeSteps(`${name}-macos`);
+    if (name === "native-rust-tests") {
+      const deadline = "- name: Run platform-specific Rust tests\n        timeout-minutes: ";
+      assert.ok(macos.includes(`${deadline}15\n`));
+      macos = macos.replace(`${deadline}15\n`, `${deadline}9\n`);
+    }
     assert.equal(
       windows,
       macos
@@ -45,10 +50,10 @@ test("each platform retains identical native steps without sharing a producer ba
   }
 });
 
-test("native platform jobs retain complete six-shard Windows and macOS partitions", () => {
+test("native jobs keep six Windows shards and one macOS job per test suite", () => {
   for (const [name, macosCount] of [
-    ["native-rust-tests", 3],
-    ["native-api-tests", 2],
+    ["native-rust-tests", 1],
+    ["native-api-tests", 1],
   ]) {
     for (const [suffix, count] of [
       ["", 6],
