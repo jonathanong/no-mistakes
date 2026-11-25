@@ -72,6 +72,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.invalidate_live_builders();
             }
         }
+        let shared_guard = self.begin_shared_capture(module_id, env);
         let facts = &files[path].facts;
         self.steps(&facts.roots, path, &mut env, 16, true);
         // A dependency's top-level opaque effect may mutate a builder owned
@@ -110,6 +111,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         self.record_alternative_module_initial(path, env);
+        if let Some(guard) = shared_guard {
+            self.finish_shared_capture(module_id, env, guard);
+        }
         if let Some(expected_deps) = self.modules.capture_on_init.remove(&module_id) {
             let deps_unchanged = expected_deps.iter().all(|(dep_env, expected)| {
                 self.scopes

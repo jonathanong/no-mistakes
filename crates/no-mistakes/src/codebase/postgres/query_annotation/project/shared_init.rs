@@ -1,8 +1,9 @@
-use super::super::evaluate::module_cache::shared::{CachedModule, SharedInit};
-use super::{evaluator, File};
+use super::super::evaluate::module_cache::shared::SharedInit;
+use super::File;
 use crate::codebase::check_facts::sql_source_prerequisites::FailedSqlSources;
 use crate::diagnostics::{InvocationObserver, TimingKind};
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
+use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -14,8 +15,7 @@ pub(super) enum SharedInitStatus {
     Enabled {
         shared: Arc<SharedInit>,
         candidates: usize,
-        cached: usize,
-        misses: usize,
+        seed_root: Option<usize>,
     },
     Disabled {
         reason: &'static str,
@@ -26,6 +26,13 @@ impl SharedInitStatus {
     pub(super) fn shared(&self) -> Option<Arc<SharedInit>> {
         match self {
             Self::Enabled { shared, .. } => Some(Arc::clone(shared)),
+            Self::Disabled { .. } => None,
+        }
+    }
+
+    pub(super) fn seed_root(&self) -> Option<usize> {
+        match self {
+            Self::Enabled { seed_root, .. } => *seed_root,
             Self::Disabled { .. } => None,
         }
     }
@@ -66,65 +73,57 @@ pub(super) fn build(
     }
     let total_candidates = graph.order.len();
     let run_build = || {
-        let mut shared = Arc::new(SharedInit {
-            untrusted_array_intrinsics,
-            modules: FxHashMap::default(),
-        });
+        let mut eligible = FxHashSet::default();
         let mut uncacheable = graph.cyclic;
-        for id in graph.order {
-            if uncacheable.contains(&id) {
+        for id in &graph.order {
+            if uncacheable.contains(id) {
                 continue;
             }
-            let target = ids.path(id);
+            let target = ids.path(*id);
             let Some(file) = files.get(target) else {
-                uncacheable.insert(id);
+                uncacheable.insert(*id);
                 continue;
             };
             if !executor_scan::is_statically_pure_top_level(file, target, resolve) {
-                uncacheable.insert(id);
+                uncacheable.insert(*id);
                 continue;
             }
-            let deps = graph.direct_deps.get(&id).cloned().unwrap_or_default();
-            if deps.iter().any(|dep| !shared.modules.contains_key(dep)) {
-                uncacheable.insert(id);
-                continue;
-            }
-            let mut eval = evaluator::new(files, resolve, untrusted_array_intrinsics);
-            eval.modules.shared = Some(Arc::clone(&shared));
-            let mut dep_refs = Vec::new();
-            for &dep in &deps {
-                let dep_path = ids.path(dep);
-                let dep_cached = Arc::clone(&shared.modules[&dep]);
-                eval.install_cached_module(dep_path, dep, &dep_cached, Some(&mut dep_refs));
-            }
-            let prefix = eval.scopes.len();
-            let dep_module_count = eval.modules.len();
-            let prefix_scopes = eval.scopes.clone();
-            eval.module_environment(target);
-            eval.prune_snapshot_state();
-            if eval.is_pure_shared_module(
-                &prefix_scopes,
-                dep_module_count,
-                untrusted_array_intrinsics,
-            ) {
-                let own_scopes = eval.scopes.split_off(prefix);
-                drop(eval);
-                Arc::make_mut(&mut shared).modules.insert(
-                    id,
-                    Arc::new(CachedModule {
-                        deps,
-                        dep_refs,
-                        dep_scopes: prefix_scopes,
-                        own_scopes,
-                    }),
-                );
+            let deps_ok = graph
+                .direct_deps
+                .get(id)
+                .is_none_or(|deps| deps.iter().all(|dep| eligible.contains(dep)));
+            if deps_ok {
+                eligible.insert(*id);
             } else {
-                uncacheable.insert(id);
+                uncacheable.insert(*id);
             }
         }
-        shared
+        let seed_root = if eligible.is_empty() {
+            None
+        } else {
+            graph
+                .root_reachable
+                .iter()
+                .enumerate()
+                .map(|(index, reachable)| {
+                    (
+                        index,
+                        reachable.iter().filter(|id| eligible.contains(id)).count(),
+                    )
+                })
+                .filter(|(_, count)| *count > 0)
+                .max_by(|(i1, c1), (i2, c2)| c1.cmp(c2).then_with(|| i2.cmp(i1)))
+                .map(|(index, _)| index)
+        };
+        let shared = Arc::new(SharedInit {
+            untrusted_array_intrinsics,
+            eligible,
+            direct_deps: graph.direct_deps,
+            entries: DashMap::new(),
+        });
+        (shared, seed_root)
     };
-    let shared = match observer {
+    let (shared, seed_root) = match observer {
         Some(obs) => obs.trace(
             "postgres.annotation.shared_init.build",
             TimingKind::Parallel,
@@ -132,13 +131,10 @@ pub(super) fn build(
         ),
         None => run_build(),
     };
-    let cached = shared.modules.len();
-    let misses = total_candidates.saturating_sub(cached);
     SharedInitStatus::Enabled {
         shared,
         candidates: total_candidates,
-        cached,
-        misses,
+        seed_root,
     }
 }
 
@@ -167,18 +163,17 @@ pub(super) fn record(
             ));
         }
         SharedInitStatus::Enabled {
-            candidates,
-            cached,
-            misses,
-            ..
+            shared, candidates, ..
         } => {
+            let cached = shared.cached_count();
+            let misses = candidates.saturating_sub(cached);
             observer.increment("postgres.annotation.shared_init.disabled", 0);
             observer.increment("postgres.annotation.shared_init.cache_hits", 0);
             observer.increment(
                 "postgres.annotation.shared_init.cache_misses",
-                *misses as u64,
+                misses as u64,
             );
-            observer.increment("postgres.annotation.shared_init.builds", *cached as u64);
+            observer.increment("postgres.annotation.shared_init.builds", cached as u64);
             observer.record_note(format!(
                 "postgres.annotation.shared_init.profile[{profile_index}]: enabled (candidates={candidates}, cached={cached}, roots={roots_len})"
             ));

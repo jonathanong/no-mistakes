@@ -1,10 +1,15 @@
 use super::super::evaluate::{
-    module_cache::source_dependencies::SourceDependencies, ExecutionEvents,
+    module_cache::{shared::SharedInit, source_dependencies::SourceDependencies},
+    ExecutionEvents, File,
 };
 use super::{evaluator, merge, prepare::Profile, shared_init};
+use crate::codebase::check_facts::sql_source_prerequisites::FailedSqlSources;
 use crate::codebase::postgres::EmbeddedSqlOptions;
+use crate::diagnostics::InvocationObserver;
+use crate::fx::FxHashMap;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(super) struct ProfileProjection {
     pub options: EmbeddedSqlOptions,
@@ -33,10 +38,11 @@ pub(super) fn evaluate(
                 let Profile {
                     options,
                     files,
-                    roots,
+                    mut roots,
                     untrusted_array_intrinsics,
                     failed_sources,
                 } = profile;
+                let roots_len = roots.len();
                 let shared_status = shared_init::build(
                     &files,
                     &roots,
@@ -45,29 +51,53 @@ pub(super) fn evaluate(
                     &failed_sources,
                     observer.as_deref(),
                 );
-                if let Some(observer) = &observer {
-                    shared_init::record(observer, profile_index, roots.len(), &shared_status);
-                }
                 let shared = shared_status.shared();
-                let mut per_file = root_tasks(roots)
-                    .map(|path| {
-                        let events = crate::diagnostics::with_observer(observer.clone(), || {
-                            let mut evaluator =
-                                evaluator::new(&files, resolve, untrusted_array_intrinsics);
-                            evaluator.modules.shared = shared.clone();
-                            evaluator.modules.sources =
-                                SourceDependencies::new(std::sync::Arc::clone(&failed_sources));
-                            super::super::progress::trace(
-                                "postgres.annotation.root",
-                                &path,
-                                None,
-                                || evaluator.run(&path),
+                let mut per_file = Vec::with_capacity(roots_len);
+                if let Some(seed_index) = shared_status.seed_root() {
+                    let seed_path = roots.remove(seed_index);
+                    let events = run_root(
+                        &files,
+                        resolve,
+                        untrusted_array_intrinsics,
+                        &shared,
+                        &failed_sources,
+                        &observer,
+                        &seed_path,
+                    );
+                    per_file.push((seed_path, events));
+                    if let Some(shared_cache) = &shared {
+                        if !roots.is_empty()
+                            && shared_cache.entries.len() < shared_cache.eligible.len()
+                        {
+                            let next_seed = roots.remove(0);
+                            let events = run_root(
+                                &files,
+                                resolve,
+                                untrusted_array_intrinsics,
+                                &shared,
+                                &failed_sources,
+                                &observer,
+                                &next_seed,
                             );
-                            (evaluator.events, evaluator.modules.sources.failures())
-                        });
-                        (path, events)
-                    })
-                    .collect::<Vec<_>>();
+                            per_file.push((next_seed, events));
+                        }
+                    }
+                }
+                per_file.par_extend(root_tasks(roots).map(|path| {
+                    let events = run_root(
+                        &files,
+                        resolve,
+                        untrusted_array_intrinsics,
+                        &shared,
+                        &failed_sources,
+                        &observer,
+                        &path,
+                    );
+                    (path, events)
+                }));
+                if let Some(observer) = &observer {
+                    shared_init::record(observer, profile_index, roots_len, &shared_status);
+                }
                 // Values retain their own data; rendering needs no module catalog.
                 drop(files);
                 per_file.sort_by(|left, right| left.0.cmp(&right.0));
@@ -102,6 +132,26 @@ pub(super) fn evaluate(
             })
         })
         .collect()
+}
+
+fn run_root(
+    files: &FxHashMap<PathBuf, File<'_>>,
+    resolve: &(impl Fn(&str, &Path) -> Option<PathBuf> + Sync),
+    untrusted_array_intrinsics: bool,
+    shared: &Option<Arc<SharedInit>>,
+    failed_sources: &Arc<FailedSqlSources>,
+    observer: &Option<Arc<InvocationObserver>>,
+    path: &Path,
+) -> (ExecutionEvents, FailedSqlSources) {
+    crate::diagnostics::with_observer(observer.clone(), || {
+        let mut evaluator = evaluator::new(files, resolve, untrusted_array_intrinsics);
+        evaluator.modules.shared = shared.clone();
+        evaluator.modules.sources = SourceDependencies::new(Arc::clone(failed_sources));
+        super::super::progress::trace("postgres.annotation.root", path, None, || {
+            evaluator.run(path)
+        });
+        (evaluator.events, evaluator.modules.sources.failures())
+    })
 }
 
 // One root can initialize a large import graph; keep its siblings stealable

@@ -1,7 +1,7 @@
 use super::{candidates, executor_scan};
 use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
 use crate::codebase::postgres::query_annotation::evaluate::module_cache::shared::{
-    CachedModule, SharedInit,
+    CachedModule, SharedEntry, SharedInit,
 };
 use crate::codebase::postgres::query_annotation::evaluate::{File, Scope, Value};
 use crate::codebase::postgres::query_annotation::module_ids::ModuleIds;
@@ -186,19 +186,21 @@ fn try_install_shared_module_rejects_flag_mismatch_and_mutated_dep() {
     let mut dep_vals = FxHashMap::default();
     dep_vals.insert("x".into(), Value::Number(1));
     let dep_scope = Scope::from(dep_vals);
-    let mut modules = FxHashMap::default();
-    modules.insert(
+    let entries = dashmap::DashMap::new();
+    entries.insert(
         ids.id(&target),
-        Arc::new(CachedModule {
+        SharedEntry::Pure(Arc::new(CachedModule {
             deps: vec![ids.id(&dep)],
             dep_refs: vec![(ids.id(&dep), 0)],
             dep_scopes: vec![dep_scope],
             own_scopes: vec![Scope::default()],
-        }),
+        })),
     );
     let shared = Arc::new(SharedInit {
         untrusted_array_intrinsics: false,
-        modules,
+        eligible: FxHashSet::default(),
+        direct_deps: FxHashMap::default(),
+        entries,
     });
     let resolve = |_: &str, _: &std::path::Path| None;
     let mut eval = evaluator::new(&files, resolve, true);
@@ -273,11 +275,12 @@ fn build_handles_missing_module_ids_cyclic_candidates_and_non_verbose_notes() {
     assert!(matches!(
         status,
         super::SharedInitStatus::Enabled {
-            cached: 0,
-            misses: 2,
+            candidates: 2,
+            seed_root: None,
             ..
         }
     ));
+    assert_eq!(status.shared().unwrap().cached_count(), 0);
     let quiet = crate::diagnostics::InvocationObserver::new(false);
     quiet.record_note("ignored".into());
     super::record(&quiet, 0, 2, &status);

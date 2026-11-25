@@ -28,6 +28,32 @@ pub(in crate::codebase::postgres::query_annotation) fn remap_captured_scope(
     }))
 }
 
+pub(super) fn remap_scope_strict(
+    scope: &Scope,
+    remap: &FxHashMap<Environment, Environment>,
+) -> Option<Scope> {
+    if !scope.values().all(|value| envs_in_map(value, remap)) {
+        return None;
+    }
+    Some(remap_scope_with(scope, &|env| {
+        remap.get(&env).copied().unwrap_or(env)
+    }))
+}
+
+fn envs_in_map(value: &Value, remap: &FxHashMap<Environment, Environment>) -> bool {
+    match value {
+        Value::Function(_, _, env) => remap.contains_key(env),
+        Value::Promise(inner) | Value::Evaluated(inner, _) => envs_in_map(inner, remap),
+        Value::Aggregate(items)
+        | Value::References(items)
+        | Value::Object(items)
+        | Value::Record(items, _)
+        | Value::Joined(items)
+        | Value::Possible(items) => items.iter().all(|item| envs_in_map(item, remap)),
+        _ => true,
+    }
+}
+
 fn remap_scope_with(scope: &Scope, remap: &impl Fn(Environment) -> Environment) -> Scope {
     if !scope.values().any(|value| needs_remap(value, remap)) {
         return scope.clone();

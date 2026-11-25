@@ -8,6 +8,7 @@ pub(super) struct CandidateGraph {
     pub(super) order: Vec<ModuleId>,
     pub(super) direct_deps: FxHashMap<ModuleId, Vec<ModuleId>>,
     pub(super) cyclic: FxHashSet<ModuleId>,
+    pub(super) root_reachable: Vec<FxHashSet<ModuleId>>,
 }
 
 /// Discover modules statically reachable from at least two roots in O(|V|+|E|)
@@ -20,29 +21,27 @@ pub(super) fn discover(
 ) -> CandidateGraph {
     let mut direct_deps: FxHashMap<ModuleId, Vec<ModuleId>> = FxHashMap::default();
     let mut reach_count: FxHashMap<ModuleId, u8> = FxHashMap::default();
-    let mut seen_in_root = FxHashSet::default();
+    let mut root_reachable: Vec<FxHashSet<ModuleId>> = Vec::with_capacity(roots.len());
     let mut stack = Vec::new();
 
     for root in roots {
-        seen_in_root.clear();
+        let mut seen_in_root = FxHashSet::default();
         let root_id = ids.id(root);
         seen_in_root.insert(root_id);
         stack.push(root_id);
         while let Some(id) = stack.pop() {
             let count = reach_count.entry(id).or_insert(0);
-            if *count >= 2 {
-                continue;
-            }
-            *count += 1;
+            *count = count.saturating_add(1).min(2);
             let deps = direct_deps
                 .entry(id)
                 .or_insert_with(|| static_deps(files, ids, id, resolve));
             for &dep in deps.iter() {
-                if seen_in_root.insert(dep) && reach_count.get(&dep).copied().unwrap_or(0) < 2 {
+                if seen_in_root.insert(dep) {
                     stack.push(dep);
                 }
             }
         }
+        root_reachable.push(seen_in_root);
     }
 
     let mut shared_ids = reach_count
@@ -62,6 +61,7 @@ pub(super) fn discover(
         order,
         direct_deps,
         cyclic,
+        root_reachable,
     }
 }
 

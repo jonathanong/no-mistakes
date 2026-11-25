@@ -98,7 +98,7 @@ fn shared_roots_default_config_reuses_pure_imports_and_keeps_impure_isolated() {
     assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
     assert_eq!(work["postgres.annotation.shared_init.builds"], 4);
     assert!(
-        work["postgres.annotation.shared_init.cache_hits"] >= 64,
+        work["postgres.annotation.shared_init.cache_hits"] >= 56,
         "{work:?}"
     );
     assert!(
@@ -173,6 +173,24 @@ fn enabled_shared_init_with_impure_candidate_never_adds_initializations() {
     assert_eq!(
         work["postgres.annotation.module_initializations"], 4,
         "2 roots + 2 root loads of impure candidate must not add a throwaway build init: {work:?}"
+    );
+}
+
+#[test]
+fn enabled_shared_init_with_statically_pure_dynamically_impure_module_matches_main() {
+    let (report, diagnostics) =
+        observed_check(&fixture("helper-tracing-shared-init-dynamic-impure"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.roots_after_scoping"], 2);
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.builds"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.cache_hits"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.cache_misses"], 1);
+    assert_eq!(
+        work["postgres.annotation.module_initializations"], 4,
+        "statically pure but dynamically impure candidate must initialize once per root (matching main), never +1: {work:?}"
     );
 }
 

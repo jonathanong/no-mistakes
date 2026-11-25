@@ -1,9 +1,11 @@
 use super::super::{Environment, Evaluator, Scope};
 use crate::codebase::postgres::query_annotation::module_ids::ModuleId;
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
+use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod capture;
 pub(in crate::codebase::postgres::query_annotation) mod remap;
 use remap::remap_scope;
 
@@ -15,11 +17,27 @@ pub(in crate::codebase::postgres::query_annotation) struct CachedModule {
     pub(in crate::codebase::postgres::query_annotation) own_scopes: Vec<Scope>,
 }
 
-#[derive(Clone, Default)]
+pub(in crate::codebase::postgres::query_annotation) enum SharedEntry {
+    Pure(Arc<CachedModule>),
+    Impure,
+}
+
+#[derive(Default)]
 pub(in crate::codebase::postgres::query_annotation) struct SharedInit {
     pub(in crate::codebase::postgres::query_annotation) untrusted_array_intrinsics: bool,
-    pub(in crate::codebase::postgres::query_annotation) modules:
-        FxHashMap<ModuleId, Arc<CachedModule>>,
+    pub(in crate::codebase::postgres::query_annotation) eligible: FxHashSet<ModuleId>,
+    pub(in crate::codebase::postgres::query_annotation) direct_deps:
+        FxHashMap<ModuleId, Vec<ModuleId>>,
+    pub(in crate::codebase::postgres::query_annotation) entries: DashMap<ModuleId, SharedEntry>,
+}
+
+impl SharedInit {
+    pub(in crate::codebase::postgres::query_annotation) fn cached_count(&self) -> usize {
+        self.entries
+            .iter()
+            .filter(|entry| matches!(entry.value(), SharedEntry::Pure(_)))
+            .count()
+    }
 }
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -32,11 +50,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if shared.untrusted_array_intrinsics != self.untrusted_array_intrinsics {
             return None;
         }
-        let cached = shared.modules.get(&module_id)?.clone();
+        let cached = {
+            let entry = shared.entries.get(&module_id)?;
+            let SharedEntry::Pure(cached) = entry.value() else {
+                return None;
+            };
+            Arc::clone(cached)
+        };
         if !self.deps_match_cached(&cached) {
             return None;
         }
-        Some(self.install_cached_module(path, module_id, &cached, None))
+        Some(self.install_cached_module(path, module_id, &cached))
     }
 
     fn deps_match_cached(&self, cached: &CachedModule) -> bool {
@@ -66,12 +90,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         true
     }
 
-    pub(in crate::codebase::postgres::query_annotation) fn install_cached_module(
+    fn install_cached_module(
         &mut self,
         path: &Path,
         module_id: ModuleId,
         cached: &CachedModule,
-        mut dep_log: Option<&mut Vec<(ModuleId, usize)>>,
     ) -> Environment {
         if let Some(env) = self.modules.get(&module_id) {
             return *env;
@@ -83,10 +106,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .modules
                     .shared
                     .as_ref()
-                    .and_then(|shared| shared.modules.get(&dep_id))
-                    .cloned()
+                    .and_then(|shared| {
+                        let entry = shared.entries.get(&dep_id)?;
+                        match entry.value() {
+                            SharedEntry::Pure(cached) => Some(Arc::clone(cached)),
+                            SharedEntry::Impure => None,
+                        }
+                    })
                     .expect("cached module dependency must exist in SharedInit");
-                self.install_cached_module(&dep_path, dep_id, &dep_cached, dep_log.as_deref_mut());
+                self.install_cached_module(&dep_path, dep_id, &dep_cached);
             }
         }
         let mut remap = Vec::with_capacity(cached.dep_refs.len() + cached.own_scopes.len());
@@ -98,53 +126,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for offset in 0..cached.own_scopes.len() {
             remap.push(base + offset);
         }
-        for (slot, scope) in cached.own_scopes.iter().enumerate() {
+        for scope in &cached.own_scopes {
             self.scopes.push(remap_scope(scope, &remap));
-            if let Some(log) = dep_log.as_deref_mut() {
-                log.push((module_id, slot));
-            }
         }
         self.modules.insert(module_id, base);
         self.record_alternative_module_initial(path, base);
-        if dep_log.is_none() {
-            if let Some(observer) = crate::diagnostics::current() {
-                observer.increment("postgres.annotation.shared_init.cache_hits", 1);
-            }
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.shared_init.cache_hits", 1);
         }
         base
-    }
-
-    pub(in crate::codebase::postgres::query_annotation) fn is_pure_shared_module(
-        &self,
-        prefix_scopes: &[Scope],
-        dep_module_count: usize,
-        initial_untrusted_array_intrinsics: bool,
-    ) -> bool {
-        let prefix = prefix_scopes.len();
-        self.event_log.is_empty()
-            && self.untrusted_array_intrinsics == initial_untrusted_array_intrinsics
-            && self.modules.len() == dep_module_count + 1
-            && self.scopes.len() > prefix
-            && self.scopes[prefix..]
-                .iter()
-                .all(|scope| !scope.contains_reference())
-            && self.scopes[..prefix]
-                .iter()
-                .zip(prefix_scopes)
-                .all(|(current, base)| current.same_bindings(base))
-            && self.invalidated_builders.is_empty()
-            && self.builder_updates.is_empty()
-            && self.deleted_argument_slots.is_empty()
-            && self.definite_deleted_argument_slots.is_empty()
-            && self.disconnected_argument_slots.is_empty()
-            && self.recreated_argument_slots.is_empty()
-            && self.mapped_arguments.is_empty()
-            && self.fresh_mapped_parameters.is_empty()
-            && self.argument_objects.is_empty()
-            && self.argument_extra_slots.is_empty()
-            && self.captured_bindings.is_empty()
-            && self.captured_binding_readers.is_empty()
-            && self.mapped_argument_owners.is_empty()
-            && self.mapped_parameter_indices.is_empty()
     }
 }

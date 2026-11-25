@@ -75,7 +75,7 @@ fn configured_excluded_dependency_preserves_each_root_context() {
     );
     assert_eq!(
         diagnostics.work["postgres.annotation.shared_init.cache_hits"],
-        2
+        1
     );
     assert_eq!(diagnostics.work["postgres.annotation.module"], 3);
 }
@@ -94,7 +94,7 @@ fn excluded_scalar_preparation_preserves_many_root_contexts() {
     );
     assert_eq!(
         diagnostics.work["postgres.annotation.shared_init.cache_hits"],
-        32
+        31
     );
     assert_eq!(diagnostics.work["postgres.annotation.module"], 33);
 }

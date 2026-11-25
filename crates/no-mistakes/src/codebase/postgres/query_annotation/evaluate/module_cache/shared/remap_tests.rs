@@ -1,4 +1,4 @@
-use super::{remap_captured_scope, remap_scope};
+use super::{remap_captured_scope, remap_scope, remap_scope_strict};
 use crate::codebase::postgres::query_annotation::evaluate::{value::Values, Scope, Value};
 use crate::codebase::postgres::query_annotation::Function;
 use crate::fx::FxHashMap;
@@ -100,4 +100,13 @@ fn remap_captured_scope_remaps_own_env_keeps_prefix_and_rejects_foreign() {
     let mut foreign = FxHashMap::default();
     foreign.insert("leaked".into(), Value::Promise(Box::new(dummy_fn(9))));
     assert!(remap_captured_scope(&Scope::from(foreign), 5, 2, 2).is_none());
+
+    let mut strict_map = FxHashMap::default();
+    strict_map.insert(5, 0);
+    strict_map.insert(1, 1);
+    let strict = remap_scope_strict(&scope, &strict_map).expect("all envs mapped");
+    assert!(strict["own"] == dummy_fn(0));
+    assert!(strict["prefix"] == dummy_fn(1));
+    strict_map.remove(&1);
+    assert!(remap_scope_strict(&scope, &strict_map).is_none());
 }
