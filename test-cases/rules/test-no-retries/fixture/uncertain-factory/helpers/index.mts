@@ -1,1 +1,1 @@
-export { makeTest, makeProvenTest } from "./factory.mjs";
+export { makeTest, makeProvenTest, wrapTest } from "./factory.mjs";

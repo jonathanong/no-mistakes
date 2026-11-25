@@ -42,6 +42,7 @@ pub(crate) fn fixture_initializers<'a>(
         else {
             continue;
         };
+        let mut unresolved_initializer = None;
         if scope.symbol_flags(symbol).is_const_variable() {
             if let Some(initializer) = semantic
                 .nodes()
@@ -50,16 +51,22 @@ pub(crate) fn fixture_initializers<'a>(
                 .filter(|declaration| declaration.id.is_binding_identifier())
                 .and_then(|declaration| declaration.init.as_ref())
             {
-                if let Some(origin) = bindings.playwright_value_origin(initializer).into_export() {
-                    result.values.insert(export.local.clone(), origin);
-                    continue;
+                match bindings.playwright_value_origin(initializer) {
+                    ValueTrace::Resolved(init) => {
+                        result.values.insert(export.local.clone(), Ok(init));
+                        continue;
+                    }
+                    ValueTrace::Unresolved(reason) => unresolved_initializer = Some(Err(reason)),
+                    ValueTrace::None => {}
                 }
             }
         }
         let mut visited = FxHashSet::default();
         if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
             result.wrappers.insert(export.local.clone(), summary);
-        } else if let Some(origin) = bindings.factory_return_origin(symbol, 0).into_export() {
+        } else if let Some(origin) = unresolved_initializer
+            .or_else(|| bindings.factory_return_origin(symbol, 0).into_export())
+        {
             result.values.insert(export.local.clone(), origin);
         }
     }

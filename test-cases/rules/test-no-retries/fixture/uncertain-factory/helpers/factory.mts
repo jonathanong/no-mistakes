@@ -11,3 +11,8 @@ export function makeTest(_fixture?: typeof base) {
 export function makeProvenTest() {
   return base.extend({});
 }
+
+export const wrapTest = (fixture: typeof base) => {
+  void base;
+  return fixture.extend({});
+};
