@@ -169,11 +169,11 @@ fn pull_request_read(step: &Step) -> Option<Read> {
     let guard = OnceCell::new();
     let (name, _) = step.env.iter().find(|(name, value)| {
         unguarded_pull_request_read(value).is_some()
-            && match guard.get_or_init(|| shell_guard::excluded_on_merge_group(step.script, &step.env)) {
-                Some(span) => env_read::references(&step.script[..span.start], name)
-                    || env_read::references(&step.script[span.end..], name),
-                None => env_read::references(step.script, name),
-            }
+            && shell_guard::references_outside(
+                step.script,
+                name,
+                guard.get_or_init(|| shell_guard::excluded_on_merge_group(step.script, &step.env)),
+            )
     })?;
     let line = step
         .document

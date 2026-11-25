@@ -107,14 +107,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/shell-guards.yml",
           "line": 8,
-          "message": ".github/workflows/shell-guards.yml:8: job `compare` step 11 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
-          "rule": "github-actions-pr-diff-range",
-          "sourceLine": "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
-          "target": "compare"
-        },
-        {
-          "file": ".github/workflows/shell-guards.yml",
-          "line": 8,
           "message": ".github/workflows/shell-guards.yml:8: job `compare` step 12 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
           "rule": "github-actions-pr-diff-range",
           "sourceLine": "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
@@ -171,7 +163,39 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/shell-guards.yml",
           "line": 8,
+          "message": ".github/workflows/shell-guards.yml:8: job `compare` step 19 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
+          "target": "compare"
+        },
+        {
+          "file": ".github/workflows/shell-guards.yml",
+          "line": 8,
           "message": ".github/workflows/shell-guards.yml:8: job `compare` step 2 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
+          "target": "compare"
+        },
+        {
+          "file": ".github/workflows/shell-guards.yml",
+          "line": 8,
+          "message": ".github/workflows/shell-guards.yml:8: job `compare` step 20 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
+          "target": "compare"
+        },
+        {
+          "file": ".github/workflows/shell-guards.yml",
+          "line": 8,
+          "message": ".github/workflows/shell-guards.yml:8: job `compare` step 21 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
+          "target": "compare"
+        },
+        {
+          "file": ".github/workflows/shell-guards.yml",
+          "line": 8,
+          "message": ".github/workflows/shell-guards.yml:8: job `compare` step 22 reads `github.event.pull_request.*` in a workflow triggered by `merge_group`, where that object is empty. Use `github.event.merge_group.base_sha` and `github.event.merge_group.head_sha`, or `git diff HEAD^1 HEAD`, or guard the step with `github.event_name`.",
           "rule": "github-actions-pr-diff-range",
           "sourceLine": "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
           "target": "compare"
@@ -290,6 +314,66 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "read-through-env"
         }
       ],
+      "warnings": []
+    }
+  },
+  "shell-guard-chain": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shell-guard-elif": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shell-guard-preamble": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shell-guard-regex": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shell-guard-runner-event": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },

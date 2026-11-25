@@ -263,3 +263,62 @@ fn shell_guard_anchors_keywords_after_heredoc_bodies() {
     let after_fi = format!("{only_in_then}          git diff \"$PR_BASE_SHA\" HEAD\n");
     assert_eq!(count(&yaml(&after_fi)), 1);
 }
+
+#[test]
+fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
+    let with_env = |run: &str| {
+        format!(
+            "on: [pull_request, merge_group]\njobs:\n  a:\n    env:\n      EVENT_NAME: ${{{{ github.event_name }}}}\n      PR_BASE_SHA: {BASE}\n      MERGE_GROUP_BASE_SHA: ${{{{ github.event.merge_group.base_sha }}}}\n    steps:\n      - run: |\n{run}"
+        )
+    };
+    // Reassignments before the guard invalidate the event-name comparison.
+    for mutation in [
+        "          EVENT_NAME=pull_request\n",
+        "          export EVENT_NAME=pull_request\n",
+        "          unset EVENT_NAME\n",
+        "          read -r EVENT_NAME <<< pull_request\n",
+        "          printf -v EVENT_NAME pull_request\n",
+        "          eval 'EVENT_NAME=pull_request'\n",
+        "          source ./env.sh\n",
+    ] {
+        let script = format!(
+            "{mutation}          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
+        );
+        assert_eq!(count(&with_env(&script)), 1, "{mutation}");
+    }
+    // Glob patterns in [[ == ... ]] are rejected conservatively.
+    assert_eq!(
+        count(&with_env(
+            "          if [[ \"$EVENT_NAME\" == merge_* ]]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
+        )),
+        1
+    );
+    // Unclosed if, unterminated quotes, and unsupported loops before if do not exclude.
+    assert_eq!(
+        count(&with_env(
+            "          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"\n"
+        )),
+        1
+    );
+    assert_eq!(
+        count(&with_env(
+            "          for x in 1; do echo \"$x\"; done\n          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; fi\n"
+        )),
+        1
+    );
+    // Multiple guarded ifs and elif after an already-taken merge_group branch stay quiet.
+    let multi = concat!(
+        "          set -euo pipefail\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n",
+        "            base=\"$MERGE_GROUP_BASE_SHA\"\n",
+        "          elif [ \"$EVENT_NAME\" = pull_request ]; then\n",
+        "            base=\"$PR_BASE_SHA\"\n",
+        "          else\n",
+        "            base=\"$PR_BASE_SHA\"\n",
+        "          fi\n",
+        "          if [ \"$EVENT_NAME\" != merge_group ]; then\n",
+        "            echo \"$PR_BASE_SHA\"\n",
+        "          fi\n",
+    );
+    assert_eq!(count(&with_env(multi)), 0);
+}

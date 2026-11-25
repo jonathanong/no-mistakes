@@ -95,3 +95,38 @@ jobs:
           EOF
           fi
           git diff "$PR_BASE_SHA" HEAD
+      - run: |
+          EVENT_NAME=pull_request
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - env:
+          GITHUB_EVENT_NAME: pull_request
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          set -euo pipefail
+          echo "$PR_BASE_SHA"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            case "$PR_BASE_SHA" in
+              *) base="$PR_BASE_SHA" ;;
+            esac
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"

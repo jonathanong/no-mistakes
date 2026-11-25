@@ -47,12 +47,17 @@ expression may join the corresponding pull-request and merge-group base SHAs,
 or the corresponding head SHAs, with `||`. The fallback covers the
 merge-group read. The rule still checks the diff form on pull-request runs.
 
-The rule also recognizes a shell step that starts with a simple `if` comparing
-a quoted event-name variable to `pull_request`, `pull_request_target`, or
-`merge_group`. The variable's effective `env` value must be
-`${{ github.event_name }}`. The rule skips environment reads in the branch
-that `merge_group` cannot reach and checks reads in the rest of the script.
-Compound tests and nested control flow fall outside this recognition.
+The rule also recognizes shell `if` / `elif` / `else` / `fi` event-name guards
+comparing a quoted event-name variable (or unquoted inside `[[ ... ]]`) to a
+literal event name such as `pull_request`, `pull_request_target`, or
+`merge_group`. The variable must either be the runner's `GITHUB_EVENT_NAME`
+(when not overridden in `env`) or have an effective `env` value of
+`${{ github.event_name }}`, and no preceding statement in the step may reassign
+it (so leading commands such as `set -euo pipefail` are allowed). The rule skips
+environment reads in branches that `merge_group` cannot reach — including nested
+`if` blocks such as regex checks inside a guarded branch — and checks reads in
+reachable branches and outside the `if`. Compound tests and other nested control
+flow (`case`, loops, grouped commands, functions) fall outside this recognition.
 
 ```yaml
 - env:

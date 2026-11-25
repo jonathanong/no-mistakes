@@ -10,6 +10,11 @@ fn github_actions_pr_diff_range_json_matches_snapshot() {
         "suppression",
         "env-and-heredoc",
         "event-fallbacks",
+        "shell-guard-elif",
+        "shell-guard-preamble",
+        "shell-guard-runner-event",
+        "shell-guard-chain",
+        "shell-guard-regex",
     ]
     .into_iter()
     .map(|name| {
