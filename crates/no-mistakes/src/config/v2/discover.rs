@@ -131,24 +131,17 @@ pub(crate) fn effective_v2_config_path_from_visible(
 }
 
 fn parse_v2_config(root: &Path, source: &str, path: &Path) -> Result<NoMistakesConfig> {
-    let config = parse_single_quiet(root, source, path)?;
+    let config = parse_v2_config_quiet(root, source, path)?;
     emit_v2_deprecation_warnings(&config, path);
     Ok(config)
 }
 
 /// Parse and validate v2 config without emitting compatibility warnings.
-/// Historical config comparisons use this so one request does not print a
-/// warning for a revision that is not its active configuration.
-#[cfg(all(test, any(nm_shard_all, nm_shard_1, nm_shard_2)))]
-pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
-    parse_single_quiet(
-        path.parent().unwrap_or_else(|| Path::new(".")),
-        source,
-        path,
-    )
-}
-
-fn parse_single_quiet(root: &Path, source: &str, path: &Path) -> Result<NoMistakesConfig> {
+pub(crate) fn parse_v2_config_quiet(
+    root: &Path,
+    source: &str,
+    path: &Path,
+) -> Result<NoMistakesConfig> {
     json_relation_map_keys::validate(source, path)?;
     rule_keys::validate(source, path)?;
     let mut config = parse_config::<NoMistakesConfig>(source, path)?;

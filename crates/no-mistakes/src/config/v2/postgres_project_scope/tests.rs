@@ -7,7 +7,7 @@ mod edges;
 mod executor_names;
 
 pub(super) fn parse(yaml: &str) -> anyhow::Result<NoMistakesConfig> {
-    parse_v2_config_quiet(yaml, Path::new(".no-mistakes.yml"))
+    parse_v2_config_quiet(Path::new("."), yaml, Path::new(".no-mistakes.yml"))
 }
 
 fn strings(config: &NoMistakesConfig, index: usize, key: &str) -> Vec<String> {

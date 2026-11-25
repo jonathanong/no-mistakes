@@ -270,6 +270,7 @@ checks:
 #[test]
 fn always_checks_require_whole_project_commands_without_globs() {
     let missing_command = super::discover::parse_v2_config_quiet(
+        Path::new("."),
         "checks:\n  commands:\n    - name: invalid\n      always: true\n      fileArgs: none\n",
         Path::new("invalid.yml"),
     )
@@ -279,6 +280,7 @@ fn always_checks_require_whole_project_commands_without_globs() {
         .contains("checks.commands[0].command must start with a non-blank executable token"));
 
     let blank_executable = super::discover::parse_v2_config_quiet(
+        Path::new("."),
         "checks:\n  commands:\n    - name: invalid\n      command: [' ']\n",
         Path::new("invalid.yml"),
     )
@@ -288,6 +290,7 @@ fn always_checks_require_whole_project_commands_without_globs() {
         .contains("checks.commands[0].command must start with a non-blank executable token"));
 
     let invalid_file_args = super::discover::parse_v2_config_quiet(
+        Path::new("."),
         "checks:\n  commands:\n    - name: invalid\n      always: true\n      command: [echo, always]\n",
         Path::new("invalid.yml"),
     )
@@ -297,6 +300,7 @@ fn always_checks_require_whole_project_commands_without_globs() {
         .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; set fileArgs: none"));
 
     let invalid_globs = super::discover::parse_v2_config_quiet(
+        Path::new("."),
         "checks:\n  commands:\n    - name: invalid\n      always: true\n      include: [\"src/**/*.ts\"]\n      command: [echo, always]\n      fileArgs: none\n",
         Path::new("invalid.yml"),
     )
@@ -306,6 +310,7 @@ fn always_checks_require_whole_project_commands_without_globs() {
         .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; remove include and exclude"));
 
     let invalid_exclude = super::discover::parse_v2_config_quiet(
+        Path::new("."),
         "checks:\n  commands:\n    - name: invalid\n      always: true\n      exclude: [\"generated/**\"]\n      command: [echo, always]\n      fileArgs: none\n",
         Path::new("invalid.yml"),
     )

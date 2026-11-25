@@ -85,7 +85,7 @@ pub(crate) fn parse_sources_quiet(
     documents: &[ConfigDocument],
 ) -> Result<NoMistakesConfig> {
     if documents.len() == 1 && documents[0].section.is_none() {
-        return super::parse_single_quiet(root, &documents[0].source, &documents[0].path);
+        return super::parse_v2_config_quiet(root, &documents[0].source, &documents[0].path);
     }
     let (merged, provenance, deprecated) = merge_documents(root, documents)?;
     let mut config: NoMistakesConfig =
