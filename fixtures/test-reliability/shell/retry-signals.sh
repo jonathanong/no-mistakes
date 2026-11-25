@@ -58,3 +58,31 @@ for attempt in 1 2; do
   pnpm test:unit || # failed
     continue
 done
+printf '%s\n' unit |& while read -r suite; do
+  pnpm test:unit "$suite"
+done
+while FOO=1; do
+  BAR=2
+  pnpm test:unit
+done
+while read -r suite < suites; do
+  pnpm test:unit "$suite"
+done
+for outer in a b; do
+  for inner in 1 2; do
+    if true; then
+      pnpm test:unit
+    fi
+  done
+done
+for shard in 1 2; do
+  export SHARD=$shard
+  ! pnpm test:unit
+  echo done
+done
+for shard in 1 2; do
+  export SHARD=$shard
+  if pnpm test:unit || false; then
+    echo ok
+  fi
+done

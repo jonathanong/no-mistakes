@@ -34,9 +34,7 @@ pub(super) fn rerun_loops(script: &str, commands: &[Vec<String>]) -> Vec<Option<
     let mut found = Vec::new();
     for segment in lexer::segments(script) {
         let Some(words) = split_quoted_words(segment.text, Whitespace::Ascii) else {
-            if let Some(frame) = loops.last_mut() {
-                frame.test_signal = TestSignal::None;
-            }
+            reset_signal(&mut loops);
             continue;
         };
         let mut words = words.as_slice();
@@ -45,9 +43,7 @@ pub(super) fn rerun_loops(script: &str, commands: &[Vec<String>]) -> Vec<Option<
         };
         match first {
             "for" => {
-                if let Some(frame) = loops.last_mut() {
-                    frame.test_signal = TestSignal::None;
-                }
+                reset_signal(&mut loops);
                 let (variable, retries) = for_limit(words);
                 loops.push(Loop {
                     retries,
@@ -57,9 +53,7 @@ pub(super) fn rerun_loops(script: &str, commands: &[Vec<String>]) -> Vec<Option<
                 continue;
             }
             "while" | "until" => {
-                if let Some(frame) = loops.last_mut() {
-                    frame.test_signal = TestSignal::None;
-                }
+                reset_signal(&mut loops);
                 loops.push(Loop {
                     variables: read_variables(&words[1..]),
                     matched_test: matching_command(&words[1..], commands).is_some(),
@@ -184,5 +178,11 @@ fn update_retry_signal(frame: &mut Loop, preceded_by: Connector, first: &str) {
             frame.test_signal = TestSignal::None;
         }
         _ => {}
+    }
+}
+
+fn reset_signal(loops: &mut [Loop]) {
+    if let Some(frame) = loops.last_mut() {
+        frame.test_signal = TestSignal::None;
     }
 }
