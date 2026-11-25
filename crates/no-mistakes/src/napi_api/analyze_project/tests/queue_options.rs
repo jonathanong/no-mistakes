@@ -121,3 +121,37 @@ fn queue_job_state_as_record_uses_the_selected_config_in_prepared_reports() {
         }
     }
 }
+
+#[test]
+fn queue_shared_test_scope_respects_include_tests_in_prepared_reports() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-shared-test-scope");
+    for (config, expected_retention, expected_advisories) in [
+        (None, 1usize, 1usize),
+        (Some(root.join("include-test-file.yml")), 2usize, 2usize),
+    ] {
+        let mut request = json!({
+            "root": root,
+            "reports": [{ "type": "queueCheck" }, { "type": "check" }]
+        });
+        if let Some(config) = config {
+            request["config"] = json!(config);
+        }
+        let output =
+            analyze_project_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
+                .unwrap();
+        let output: Value = serde_json::from_str(&output).unwrap();
+        let queue_check = output["reports"][0]["result"].as_array().unwrap();
+        let aggregate_queues = output["reports"][1]["result"]["queues"].as_array().unwrap();
+        let advisories = output["reports"][1]["result"]["advisories"]
+            .as_array()
+            .unwrap();
+        assert_eq!(aggregate_queues.len(), expected_retention, "{output}");
+        assert_eq!(advisories.len(), expected_advisories, "{output}");
+        assert_eq!(
+            queue_check.len(),
+            expected_retention + expected_advisories,
+            "{output}"
+        );
+    }
+}
