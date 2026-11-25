@@ -2401,9 +2401,9 @@ jobs:
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # Same key and paths as native-test-build-macos, which main saves. The
-      # Rust tests run before the crate-type rewrite below so the restored
-      # test units stay valid. PRs restore only; they never save.
+      # Main's test harness cache is preferred. If retention or eviction leaves
+      # it unavailable, the compatible runtime workspace can supply dependencies
+      # while Cargo builds the test units. Rust tests precede the crate-type rewrite.
       - name: Restore native test harness artifacts built on main
         id: native-test-harness-cache
         if: ${{ env.COLD_BUILD != 'true' }}
@@ -2414,6 +2414,7 @@ jobs:
           restore-keys: |
             native-test-harness-workspace-v2-aarch64-apple-darwin-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
             native-test-harness-workspace-v2-aarch64-apple-darwin-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            native-runtime-workspace-v2-aarch64-apple-darwin-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
           path: |
             target/debug
             target/.rustc_info.json

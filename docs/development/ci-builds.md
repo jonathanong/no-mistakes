@@ -68,15 +68,16 @@ The current validation graph is organized as follows:
   listed Cargo target runs zero tests. The job runs for every pull
   request whose Rust scope is not independent (`rust-pr-scope.cjs`); there is
   no separate macOS path filter.
-  The smoke job does not compile its Rust tests from scratch. Before running
-  them it restores the `native-test-harness-workspace-v2-aarch64-apple-darwin`
+  Before compiling the Rust tests, smoke first tries to restore the
+  `native-test-harness-workspace-v2-aarch64-apple-darwin`
   `target/debug` snapshot that `native-test-build-macos` saves on `main`
-  (same key, restore keys and paths; PRs restore and never save), and
-  `smoke.cjs` uses the same `profileArgs` cargo profile, so only the changed
-  crates and the two smoke harnesses rebuild. The tests run before the
-  runtime build because that build rewrites the `no-mistakes` crate-type,
-  which invalidates restored test units. Before this, the job restored no
-  `target/`, spent 14m27s compiling on one run and hit the 15 minute step
+  (same primary key, harness restore prefixes and paths). PRs only restore.
+  `smoke.cjs` uses the same `profileArgs` Cargo profile. If the harness cache
+  misses, smoke falls back to the compatible macOS runtime workspace from
+  `main` for compiled dependencies and still builds the selected harnesses.
+  The tests run before the runtime build, which rewrites the `no-mistakes`
+  crate-type and invalidates restored test units. Before this, the job restored
+  no `target/`, spent 14m27s compiling on one run and hit the 15 minute step
   timeout; `cache-topology.test.cjs` and `smoke-tests.test.cjs` guard the
   shared key and profile. The timeout was not raised.
   Restoring `target/debug` does not avoid recompiling the changed
@@ -231,11 +232,13 @@ main-push run of Test CI or Benchmarks finishes. A run can save caches before a
 later job fails, so cleanup also runs after unsuccessful completions.
 
 After deduplication it evicts least-recently-accessed main workspace snapshots
-until the inventory fits an 8 GiB budget. These build caches can be recreated;
-open PRs, unknown families, release dependencies, and active benchmark handoffs
-remain protected. If protected entries alone exceed the budget, cleanup reports
-the remaining excess rather than deleting them. Individual uploads can briefly
-precede their cleanup jobs; the policy does not reserve quota atomically.
+until the inventory fits an 8 GiB budget. Budget eviction skips the newest
+main macOS test harness snapshot so pull request smoke jobs can restore it.
+Deduplication still removes superseded harness snapshots. Open PRs, unknown
+families, release dependencies, and active benchmark handoffs also remain
+protected. If protected entries alone exceed the budget, cleanup reports the
+remaining excess. Individual uploads can briefly precede their cleanup jobs,
+so the policy does not reserve quota atomically.
 
 A later main release repopulated the inventory to 10.480 GiB. Retiring its nine
 accumulated v1 workspaces and ten duplicate pnpm snapshots projects to 2.704 GiB
