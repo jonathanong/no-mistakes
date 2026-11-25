@@ -15,139 +15,6 @@ use no_mistakes::codebase::workspaces::WorkspaceMap;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn dotnet_dependency_seed_candidates(
-    root: &Path,
-    artifacts: &[crate::tests::dotnet_dependency_changes::DotnetDependencyArtifact],
-    facts: Option<&no_mistakes::codebase::dotnet::DotnetFactMap>,
-    visible_paths: &[PathBuf],
-    graph: &DepGraph,
-    all_test_set: &HashSet<PathBuf>,
-) -> Vec<SelectedTest> {
-    let mut result = Vec::new();
-    for artifact in artifacts {
-        let seeds = match artifact.kind {
-            crate::tests::dotnet_dependency_changes::DotnetArtifactKind::CentralPackages => facts
-                .map(|facts| {
-                    central_package_seed_roots(
-                        root,
-                        &artifact.path,
-                        &artifact.changed_dependencies,
-                        facts,
-                        visible_paths,
-                        Some(graph),
-                    )
-                })
-                .unwrap_or_default(),
-            crate::tests::dotnet_dependency_changes::DotnetArtifactKind::Project => {
-                artifact.owning_project.clone().into_iter().collect()
-            }
-            crate::tests::dotnet_dependency_changes::DotnetArtifactKind::Lockfile => facts
-                .map(|facts| lockfile_seed_roots(artifact, facts))
-                .unwrap_or_default(),
-        };
-        for seed in seeds {
-            let (tests, parents) =
-                bfs_path_find_set(graph, &NodeId::file(seed.clone()), all_test_set);
-            for (node, edges) in tests {
-                let NodeId::File(test) = node else { continue };
-                let mut path = vec![slash_node_name(&NodeId::file(test.clone()), root)];
-                let mut current = NodeId::file(test.clone());
-                while let Some((parent, _)) = parents.get(&current) {
-                    path.push(slash_node_name(parent, root));
-                    current = parent.clone()
-                }
-                path.reverse();
-                result.push(SelectedTest {
-                    test_file: relative_path(root, &test),
-                    confidence: path_confidence(&edges),
-                    targets: Vec::new(),
-                    reasons: vec![ImpactReason {
-                        changed_file: relative_path(root, &artifact.path),
-                        path,
-                        via: edges
-                            .iter()
-                            .map(|edge| impact_reason_label(*edge).to_string())
-                            .collect(),
-                        via_details: via_details_from_edges(&edges),
-                    }],
-                });
-            }
-        }
-    }
-    result
-}
-
-fn lockfile_seed_roots(
-    artifact: &crate::tests::dotnet_dependency_changes::DotnetDependencyArtifact,
-    facts: &no_mistakes::codebase::dotnet::DotnetFactMap,
-) -> Vec<PathBuf> {
-    let Some(owner) = artifact.owning_project.as_ref() else {
-        return Vec::new();
-    };
-    facts
-        .projects
-        .values()
-        .filter(|project| project.project_dir == *owner)
-        .map(|project| project.project_path.clone())
-        .collect()
-}
-
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-#[path = "lockfile_seeds_dotnet_semantic_seed_tests.rs"]
-mod dotnet_semantic_seed_tests;
-
-pub(super) fn central_package_seed_roots(
-    root: &Path,
-    props: &Path,
-    packages: &std::collections::BTreeSet<String>,
-    facts: &no_mistakes::codebase::dotnet::DotnetFactMap,
-    visible_paths: &[PathBuf],
-    graph: Option<&DepGraph>,
-) -> Vec<PathBuf> {
-    facts
-        .projects
-        .values()
-        .filter(|project| {
-            project.package_references.iter().any(|reference| {
-                packages
-                    .iter()
-                    .any(|package| reference.eq_ignore_ascii_case(package))
-            }) && nearest_central_props(root, &project.project_dir, visible_paths)
-                .is_some_and(|nearest| central_import_chain_contains(&nearest, props, graph))
-        })
-        .map(|project| project.project_path.clone())
-        .collect()
-}
-
-fn central_import_chain_contains(central: &Path, sought: &Path, graph: Option<&DepGraph>) -> bool {
-    central == sought
-        || graph.is_some_and(|graph| {
-            graph
-            .deps_of(
-                &[NodeId::file(central)],
-                None,
-                Some(&HashSet::from([
-                    no_mistakes::codebase::dependencies::graph::EdgeKind::DotnetProjectDependency,
-                ])),
-            )
-            .iter()
-            .any(|entry| entry.node.as_file() == Some(sought))
-        })
-}
-fn nearest_central_props(root: &Path, dir: &Path, visible_paths: &[PathBuf]) -> Option<PathBuf> {
-    let mut current = dir.to_path_buf();
-    loop {
-        let candidate = current.join("Directory.Packages.props");
-        if visible_paths.contains(&candidate) {
-            return Some(candidate);
-        }
-        if current == root {
-            return None;
-        }
-        current = current.parent()?.to_path_buf();
-    }
-}
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
@@ -162,6 +29,33 @@ pub(super) struct LockfileSeedResult {
 pub(super) struct UntraceableLockfileDependency {
     pub(super) package_name: String,
     pub(super) lockfile: String,
+}
+
+pub(crate) fn first_untraceable_lockfile_dependency(
+    prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
+    discovered_tests: &[PathBuf],
+) -> Option<String> {
+    if prepared.lockfile_changed_packages.is_empty() {
+        return None;
+    }
+    let Ok(graph) = prepared.graph() else {
+        return Some("Failed to build dependency graph for lockfile check".to_string());
+    };
+    let all_test_set: HashSet<PathBuf> = discovered_tests.iter().cloned().collect();
+    let result = lockfile_seed_candidates(
+        &prepared.root,
+        &prepared.lockfile_changed_packages,
+        &prepared.workspace_map,
+        graph,
+        &all_test_set,
+        &HashSet::new(),
+    );
+    result.untraceable_dependencies.into_iter().next().map(|dep| {
+        format!(
+            "`{}` changed a dependency without a causal path to a configured test; full-suite selection requires global fallback opt-in",
+            dep.lockfile
+        )
+    })
 }
 
 pub(super) fn lockfile_seed_candidates(
@@ -283,109 +177,13 @@ fn insert_lockfile_candidate(
     }
 }
 
-/// A semantic `Package.resolved` delta starts at its owning manifest. The
-/// manifest-to-resolved edge is still represented in each reason so formatting-only
-/// lockfile edits never become graph seeds.
-pub(super) fn swift_resolved_seed_candidates(
-    root: &Path,
-    seeds: &[(PathBuf, PathBuf)],
-    graph: &DepGraph,
-    all_test_set: &HashSet<PathBuf>,
-) -> Vec<SelectedTest> {
-    let mut candidates = BTreeMap::new();
-    for (resolved, manifest) in seeds {
-        let (reachable_tests, path_parents) =
-            bfs_path_find_set(graph, &NodeId::file(manifest.clone()), all_test_set);
-        for (test_node, edge_path) in reachable_tests {
-            let NodeId::File(test_path) = &test_node else {
-                continue;
-            };
-            let rel_test = relative_path(root, test_path);
-            let mut node_chain = Vec::new();
-            let mut current = test_node.clone();
-            node_chain.push(slash_node_name(&current, root));
-            while let Some((parent, _)) = path_parents.get(&current) {
-                node_chain.push(slash_node_name(parent, root));
-                current = parent.clone();
-            }
-            node_chain.reverse();
-            node_chain.insert(0, relative_path(root, resolved));
-            let mut via = vec!["swift package dependency".to_string()];
-            via.extend(
-                edge_path
-                    .iter()
-                    .map(|kind| impact_reason_label(*kind).to_string()),
-            );
-            let mut via_details = vec![None];
-            via_details.extend(via_details_from_edges(&edge_path));
-            let reason = ImpactReason {
-                changed_file: relative_path(root, resolved),
-                path: node_chain,
-                via,
-                via_details,
-            };
-            let entry = candidates
-                .entry(rel_test.clone())
-                .or_insert_with(|| SelectedTest {
-                    test_file: rel_test,
-                    confidence: path_confidence(&edge_path),
-                    targets: Vec::new(),
-                    reasons: Vec::new(),
-                });
-            if !entry.reasons.contains(&reason) {
-                entry.reasons.push(reason);
-            }
-        }
-    }
-    candidates.into_values().collect()
-}
+#[path = "lockfile_seeds/dotnet.rs"]
+mod dotnet;
+pub(super) use dotnet::dotnet_dependency_seed_candidates;
 
-pub(super) fn swift_manifest_seed_candidates(
-    root: &Path,
-    manifests: &[PathBuf],
-    graph: &DepGraph,
-    all_test_set: &HashSet<PathBuf>,
-) -> Vec<SelectedTest> {
-    let mut candidates = BTreeMap::new();
-    for manifest in manifests {
-        let (tests, parents) =
-            bfs_path_find_set(graph, &NodeId::file(manifest.clone()), all_test_set);
-        for (node, edges) in tests {
-            let NodeId::File(test_path) = node else {
-                continue;
-            };
-            let mut path = vec![slash_node_name(&NodeId::file(test_path.clone()), root)];
-            let mut current = NodeId::file(test_path.clone());
-            while let Some((parent, _)) = parents.get(&current) {
-                path.push(slash_node_name(parent, root));
-                current = parent.clone();
-            }
-            path.reverse();
-            let test_file = relative_path(root, &test_path);
-            let reason = ImpactReason {
-                changed_file: relative_path(root, manifest),
-                path,
-                via: edges
-                    .iter()
-                    .map(|edge| impact_reason_label(*edge).to_string())
-                    .collect(),
-                via_details: via_details_from_edges(&edges),
-            };
-            let entry = candidates
-                .entry(test_file.clone())
-                .or_insert_with(|| SelectedTest {
-                    test_file,
-                    confidence: path_confidence(&edges),
-                    targets: Vec::new(),
-                    reasons: Vec::new(),
-                });
-            if !entry.reasons.contains(&reason) {
-                entry.reasons.push(reason);
-            }
-        }
-    }
-    candidates.into_values().collect()
-}
+#[path = "lockfile_seeds/swift.rs"]
+mod swift;
+pub(super) use swift::{swift_manifest_seed_candidates, swift_resolved_seed_candidates};
 
 #[path = "lockfile_seeds/merge.rs"]
 mod merge;

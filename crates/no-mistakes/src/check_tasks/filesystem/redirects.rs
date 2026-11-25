@@ -149,10 +149,29 @@ pub(super) fn run(
         super::manifests::run(root, config, files, &prepared.sources, defer_suppression)?;
     diagnostics.append(manifest_diagnostics);
     let config = config.as_ref();
-    let (config, terraform_diagnostics) =
-        super::terraform::run(root, config, files, &prepared, defer_suppression)?;
-    diagnostics.append(terraform_diagnostics);
-    let config = config.as_ref();
+    let mut without_explain_write;
+    let config = if config.rule_configured(rules::POSTGRES_EXPLAIN_WRITE_ROLLBACK) {
+        diagnostics.append(no_mistakes::perf_trace::filesystem_rule(
+            rules::POSTGRES_EXPLAIN_WRITE_ROLLBACK,
+            || {
+                rules::postgres_explain_write_rollback::diagnostics_with_files_sources_and_facts(
+                    root,
+                    config,
+                    files,
+                    &prepared.sources,
+                    facts,
+                    defer_suppression,
+                )
+            },
+        )?);
+        without_explain_write = config.clone();
+        super::handled::mark(&mut without_explain_write, |id| {
+            id == rules::POSTGRES_EXPLAIN_WRITE_ROLLBACK
+        });
+        &without_explain_write
+    } else {
+        config
+    };
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

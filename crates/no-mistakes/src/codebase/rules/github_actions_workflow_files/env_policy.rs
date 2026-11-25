@@ -8,8 +8,10 @@ use serde_yaml::Value;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-mod lines;
+pub(in crate::codebase::rules) mod lines;
 mod scan;
+mod scopes;
+pub(in crate::codebase::rules) use scopes::{shape_detail, visit_workflow_scopes, ScopeEvent};
 
 pub const RULE_ID: &str = "github-actions-env-policy";
 

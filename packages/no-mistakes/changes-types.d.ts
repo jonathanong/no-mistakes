@@ -48,6 +48,7 @@ export interface ChangesReportMetadata {
   schemaVersion: 1;
   complete: boolean;
   unclassified: string[];
+  changedFiles?: string[];
   reasons?: string[];
 }
 

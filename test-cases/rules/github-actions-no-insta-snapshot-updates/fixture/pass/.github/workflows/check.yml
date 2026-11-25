@@ -1,0 +1,21 @@
+name: Tests
+on: [pull_request]
+env: { INSTA_UPDATE: "no" }
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    env:
+      INSTA_UPDATE: auto
+    steps:
+      - run: cargo test --doc
+        env:
+          INSTA_UPDATE: new
+      - run: echo 'INSTA_UPDATE=always'
+      - run: cargo test
+        env:
+          OTHER_UPDATE: always
+  plain:
+    runs-on: ubuntu-latest
+    env:
+    steps:
+      - run: cargo test

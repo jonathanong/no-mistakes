@@ -1,4 +1,4 @@
-const { workflowJob } = require("./workflow-contract.cjs");
+const { workflowJob, workflowGateCommand } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
 const { readFileSync } = require("node:fs");
@@ -91,16 +91,17 @@ for (const name of [
       .split(",")
       .map((value) => value.trim())
       .filter(Boolean);
-    const script = body.split("        run: |\n")[1].replace(/^          /gm, "");
+    const [command, args] = workflowGateCommand(body);
     for (const dependency of needs) {
       for (const fixture of results) {
         const input = Object.fromEntries(needs.map((id) => [id, { result: "success" }]));
         input[dependency].result = fixture.result;
-        const child = spawnSync("bash", ["-eu", "-c", script], {
+        const child = spawnSync(command, args, {
           encoding: "utf8",
           env: {
             ...process.env,
             MACOS_REQUIRED: "",
+            MACOS_SMOKE_REQUIRED: "",
             MACOS_EVENT: "",
             MACOS_REF: "",
             RESULTS: JSON.stringify(input),

@@ -36,6 +36,7 @@ pub(crate) struct PreparedTestPlanInputs {
     pub(crate) config: NoMistakesConfig,
     config_path: Option<PathBuf>,
     pub(crate) collected: ChangedFiles,
+    changes_input: Option<super::plan::changes::ChangesInput>,
 }
 
 pub(crate) struct PreparedTestPlanRequest {
@@ -64,7 +65,7 @@ pub(crate) struct PreparedTestPlanRequest {
     test_filter: no_mistakes::codebase::test_filter::TestFileFilter,
     graph: OnceLock<std::result::Result<DepGraph, String>>,
     discovered_tests: Mutex<HashMap<TestFramework, std::result::Result<DiscoveredTests, String>>>,
-    changes_input: OnceLock<Option<super::plan::changes::ChangesInput>>,
+    changes_input: Option<super::plan::changes::ChangesInput>,
     config_invalidation: OnceLock<
         std::result::Result<Option<super::config_invalidation::ConfigInvalidation>, String>,
     >,

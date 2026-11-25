@@ -49,6 +49,7 @@ mod type_facts;
 mod types;
 mod wrappers;
 pub use types::*;
+pub(super) use wrappers::explain_execution;
 
 /// Parse source text without a repository scan, catalog, or database connection.
 pub fn parse_postgres_source(source: &PostgresSqlSource) -> PostgresSqlFacts {
