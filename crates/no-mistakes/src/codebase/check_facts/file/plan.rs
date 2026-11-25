@@ -90,23 +90,27 @@ pub(super) fn ts_source(source: Option<std::sync::Arc<str>>) -> TsFileFacts {
     }
 }
 
+fn requires_path_scoped_parse(plan: &CheckFactPlan, path: &Path) -> bool {
+    plan.lint_suppression_paths.contains(path)
+        || plan.vitest_default_exclude_paths.contains(path)
+        || plan.csp_allowed_origins_paths.contains(path)
+        || plan.test_reliability_paths.contains_key(path)
+        || plan.requires_call_sites(path)
+        || plan.production_import_paths.contains(path)
+}
+
 pub(super) fn requires_parse(
     root: &Path,
     plan: &CheckFactPlan,
     path: &Path,
     playwright: Option<&PlaywrightFactPlan>,
 ) -> bool {
-    plan.lint_suppression_paths.contains(path)
-        || plan.vitest_default_exclude_paths.contains(path)
-        || plan.csp_allowed_origins_paths.contains(path)
-        || plan.test_reliability_paths.contains_key(path)
-        || plan.requires_call_sites(path)
+    requires_path_scoped_parse(plan, path)
         || plan
             .postgres_executor_warning_scans
             .iter()
             .any(|scan| scan.includes(root, path))
         || plan.imports
-        || plan.production_import_paths.contains(path)
         || plan.query_annotation
         || plan.query_annotation_heads
         || super::sql_identifier::selected(root, path, plan)

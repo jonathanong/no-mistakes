@@ -25,21 +25,14 @@ struct OriginVisitor<'a> {
 impl<'a> Visit<'a> for OriginVisitor<'_> {
     fn visit_string_literal(&mut self, lit: &StringLiteral<'a>) {
         let value = crate::ast::js_literal(lit);
-        if looks_like_csp(&value) {
+        if value.contains("-src") {
             self.collected.csp_strings.push(value.into_owned());
         }
     }
 
     fn visit_template_literal(&mut self, template: &TemplateLiteral<'a>) {
-        if template.expressions.is_empty() {
-            if let Some(quasi) = template.quasis.first() {
-                if quasi.value.cooked.is_some() {
-                    let value = crate::ast::template_quasi_text(quasi);
-                    if looks_like_csp(&value) {
-                        self.collected.csp_strings.push(value.into_owned());
-                    }
-                }
-            }
+        if let Some(value) = static_template_text(template).filter(|v| v.contains("-src")) {
+            self.collected.csp_strings.push(value.into_owned());
         }
         walk::walk_template_literal(self, template);
     }
@@ -103,10 +96,6 @@ impl OriginVisitor<'_> {
     }
 }
 
-fn looks_like_csp(value: &str) -> bool {
-    value.contains("-src")
-}
-
 fn link_directive(element: &JSXOpeningElement<'_>) -> Option<CspDirective> {
     let rel = jsx_static_attr(element, "rel")?.0.to_ascii_lowercase();
     let tokens: Vec<&str> = rel.split_whitespace().collect();
@@ -123,25 +112,30 @@ fn link_directive(element: &JSXOpeningElement<'_>) -> Option<CspDirective> {
         let as_attr = jsx_static_attr(element, "as")
             .map(|(v, _)| v.to_ascii_lowercase())
             .unwrap_or_default();
-        return Some(match as_attr.as_str() {
-            "script" => CspDirective::Script,
-            "style" => CspDirective::Style,
-            "image" => CspDirective::Img,
-            "font" => CspDirective::Font,
-            "audio" | "video" => CspDirective::Media,
-            "fetch" => CspDirective::Connect,
-            _ => CspDirective::Default,
-        });
+        return Some(preload_directive(&as_attr));
     }
-    if tokens.iter().any(|token| {
+    (!is_non_fetch_link_rel(&tokens)).then_some(CspDirective::Default)
+}
+
+fn preload_directive(as_attr: &str) -> CspDirective {
+    match as_attr {
+        "script" => CspDirective::Script,
+        "style" => CspDirective::Style,
+        "image" => CspDirective::Img,
+        "font" => CspDirective::Font,
+        "audio" | "video" => CspDirective::Media,
+        "fetch" => CspDirective::Connect,
+        _ => CspDirective::Default,
+    }
+}
+
+fn is_non_fetch_link_rel(tokens: &[&str]) -> bool {
+    tokens.iter().any(|token| {
         matches!(
             *token,
             "preconnect" | "dns-prefetch" | "canonical" | "alternate" | "author" | "license"
         )
-    }) {
-        return None;
-    }
-    Some(CspDirective::Default)
+    })
 }
 
 fn jsx_static_attr<'a>(element: &'a JSXOpeningElement<'a>, name: &str) -> Option<(Cow<'a, str>, u32)> {
@@ -185,14 +179,19 @@ fn is_global_or_bare(callee: &Expression<'_>, names: &[&str]) -> bool {
     }
 }
 
+fn static_template_text<'a>(template: &'a TemplateLiteral<'a>) -> Option<Cow<'a, str>> {
+    if !template.expressions.is_empty() {
+        return None;
+    }
+    let quasi = template.quasis.first()?;
+    quasi.value.cooked?;
+    Some(crate::ast::template_quasi_text(quasi))
+}
+
 fn static_string<'a>(expression: &'a Expression<'a>) -> Option<Cow<'a, str>> {
     match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(value) => Some(crate::ast::js_literal(value)),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            let quasi = template.quasis.first()?;
-            quasi.value.cooked?;
-            Some(crate::ast::template_quasi_text(quasi))
-        }
+        Expression::TemplateLiteral(template) => static_template_text(template),
         _ => None,
     }
 }
