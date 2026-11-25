@@ -115,6 +115,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md)                   | Report a configured single enqueue inside an open per-item loop or callback.   |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
+| [`package-json-export-target-prefix`](package-json-export-target-prefix.md) | Require the `./` prefix on selected Node package export targets. |
 | [`package-json-nested-workspace-coverage`](package-json-nested-workspace-coverage.md) | Require nested workspace entries to exactly cover configured dependency packages. |
 | [`package-json-required-fields`](package-json-required-fields.md)             | Require configured package.json field-shape policy.                             |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |

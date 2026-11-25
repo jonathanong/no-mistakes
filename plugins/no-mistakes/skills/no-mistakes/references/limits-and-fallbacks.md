@@ -66,6 +66,10 @@ and unmatched package names remain `external`.
 }
 ```
 
+Use the opt-in `package-json-export-target-prefix` rule with `check` to catch
+missing `./` prefixes on direct and conditional Node export targets before
+any import site or build output exists.
+
 **Workaround for complex export maps:** `rg '@scope/pkg/'` to find importers.
 
 ## Bare npm specifiers

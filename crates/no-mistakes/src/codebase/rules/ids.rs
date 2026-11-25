@@ -45,6 +45,7 @@ pub use super::no_raw_ephemeral_port::RULE_ID as NO_RAW_EPHEMERAL_PORT;
 pub use super::no_single_enqueue_in_loop::RULE_ID as NO_SINGLE_ENQUEUE_IN_LOOP;
 pub use super::no_sparse_checkout::RULE_ID as NO_SPARSE_CHECKOUT;
 pub use super::no_test_git_sha::RULE_ID as NO_TEST_GIT_SHA;
+pub use super::package_json_export_target_prefix::RULE_ID as PACKAGE_JSON_EXPORT_TARGET_PREFIX;
 pub use super::package_json_nested_workspace_coverage::RULE_ID as PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE;
 pub use super::package_json_registry_only::RULE_ID as PACKAGE_JSON_REGISTRY_ONLY;
 pub use super::package_json_required_fields::RULE_ID as PACKAGE_JSON_REQUIRED_FIELDS;
