@@ -954,6 +954,8 @@ non-production. v1 emits `dart test`, not `flutter test`.
 
 ## Shared Domain Rules
 
+The CLI and async Node check APIs share the opt-in [`react-no-nested-buttons-and-links`](rules/react-no-nested-buttons-and-links.md) rule for native buttons and links in selected JSX and TSX files.
+
 Route, queue, and Kafka extractors are language-specific visitors. Route
 visitors emit `route` edges. HTTP callers emit `http`. Queue and Kafka
 visitors emit `queue-enqueue` and `queue-worker`. `server-route` and

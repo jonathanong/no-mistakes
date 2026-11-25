@@ -9,6 +9,7 @@ pub(crate) struct PreparedFactDemand {
     call_site_files: Vec<PathBuf>,
     comment_files: Vec<PathBuf>,
     vitest_default_exclude_files: Vec<PathBuf>,
+    nested_control_files: Vec<PathBuf>,
     test_reliability_files: Vec<PathBuf>,
     runner_config_files: Vec<PathBuf>,
     needs_other_facts: bool,
@@ -43,6 +44,10 @@ impl PreparedFactDemand {
             no_mistakes::codebase::rules::vitest_default_excludes::required_files(
                 root, config, files,
             )?;
+        plan.nested_control_paths = no_mistakes::codebase::rules::nested_controls::required_files(
+            root, config, files, sources,
+        )?;
+        self.nested_control_files = plan.nested_control_paths.iter().cloned().collect();
         plan.test_reliability_paths =
             no_mistakes::codebase::rules::test_reliability::required_files(
                 root, config, files, sources,
@@ -62,6 +67,7 @@ impl PreparedFactDemand {
             || !self.call_site_files.is_empty()
             || !self.comment_files.is_empty()
             || !self.vitest_default_exclude_files.is_empty()
+            || !self.nested_control_files.is_empty()
             || !self.test_reliability_files.is_empty()
             || !self.runner_config_files.is_empty()
     }
@@ -81,6 +87,7 @@ impl PreparedFactDemand {
         requested.extend(self.companion_import_files.iter().cloned());
         requested.extend(self.runner_config_files.iter().cloned());
         requested.extend(self.vitest_default_exclude_files.iter().cloned());
+        requested.extend(self.nested_control_files.iter().cloned());
         requested.extend(self.test_reliability_files.iter().cloned());
         ordered_path_intersection(&requested, &discovered)
     }
@@ -128,6 +135,7 @@ pub(crate) fn prepare(
         call_site_files: files,
         comment_files: plan.lint_suppression_paths.iter().cloned().collect(),
         vitest_default_exclude_files: plan.vitest_default_exclude_paths.iter().cloned().collect(),
+        nested_control_files: Vec::new(),
         test_reliability_files: Vec::new(),
         runner_config_files: plan
             .integration_runner_configs

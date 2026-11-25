@@ -35,6 +35,7 @@ pub use super::markdown_link_display_text::RULE_ID as MARKDOWN_LINK_DISPLAY_TEXT
 pub use super::markdown_mermaid_validation::RULE_ID as MARKDOWN_MERMAID_VALIDATION;
 pub use super::markdown_reachability::RULE_ID as MARKDOWN_REACHABILITY;
 pub use super::markdown_structure_budget::RULE_ID as MARKDOWN_STRUCTURE_BUDGET;
+pub use super::nested_controls::RULE_ID as REACT_NO_NESTED_BUTTONS_AND_LINKS;
 pub use super::nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use super::nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
 pub use super::nextjs_redirect_destinations::RULE_ID as NEXTJS_REDIRECT_DESTINATIONS;

@@ -148,6 +148,8 @@ Text-based Playwright selector edges are approximate. Prefer exact configured
 test ID attributes and literal locator values for strong route/component
 coverage.
 
+`check` can run the opt-in `react-no-nested-buttons-and-links` rule for native buttons and links in selected JSX and TSX files. Custom render paths and dynamic destinations are outside its scope.
+
 ## Structural / AST-pattern blast radius — use `ast-grep`
 
 `no-mistakes` answers **graph-aware** and **config-aware** queries. It does not

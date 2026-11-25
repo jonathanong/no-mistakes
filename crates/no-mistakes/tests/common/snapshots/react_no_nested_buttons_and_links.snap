@@ -1,0 +1,94 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "actions.tsx",
+          "line": 5,
+          "message": "<button> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<button type=\"button\">Save</button>"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 14,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<a href={\"/items\"}>Items</a>"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 20,
+          "message": "<a> is nested inside <a>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<strong><a href=\"\">Items</a></strong>"
+        },
+        {
+          "file": "variants.jsx",
+          "line": 7,
+          "message": "<button> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "<button type=\"button\" disabled>Save</button>"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse_error": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "a-disabled.tsx",
+          "line": 1,
+          "message": "directive for `react-no-nested-buttons-and-links` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file react-no-nested-buttons-and-links -- legacy UI",
+          "target": "react-no-nested-buttons-and-links"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "react-no-nested-buttons-and-links",
+          "file": "broken.tsx",
+          "message": "parsing broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 44, end: 45 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }. Repair the JSX so react-no-nested-buttons-and-links can verify control nesting."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "good.jsx",
+          "line": 1,
+          "message": "<a> is nested inside <button>. Move the inner control outside the outer control and render them as sibling elements.",
+          "rule": "react-no-nested-buttons-and-links",
+          "sourceLine": "export const action = <button type=\"button\"><a href=\"/items\">Items</a></button>;"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -97,6 +97,7 @@ pub(super) fn requires_parse(
     playwright: Option<&PlaywrightFactPlan>,
 ) -> bool {
     plan.lint_suppression_paths.contains(path)
+        || plan.nested_control_paths.contains(path)
         || plan.vitest_default_exclude_paths.contains(path)
         || plan.test_reliability_paths.contains_key(path)
         || plan.requires_call_sites(path)
