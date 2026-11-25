@@ -12,15 +12,23 @@ const MAX_VALUE_DEPTH: usize = 8;
 
 pub(super) enum ValueTrace {
     Resolved(FixtureInitializer),
-    Unresolved(&'static str),
+    Unresolved(&'static str, Vec<ImportRef>),
     None,
 }
 
 impl ValueTrace {
+    pub(super) fn unresolved(reason: &'static str, candidates: Vec<ImportRef>) -> Self {
+        if candidates.is_empty() {
+            Self::None
+        } else {
+            Self::Unresolved(reason, candidates)
+        }
+    }
+
     pub(super) fn into_resolved(self) -> Option<FixtureInitializer> {
         match self {
             Self::Resolved(init) => Some(init),
-            Self::Unresolved(_) | Self::None => None,
+            Self::Unresolved(..) | Self::None => None,
         }
     }
 }
@@ -49,9 +57,16 @@ pub(crate) fn fixture_initializers<'a>(
                 .filter(|declaration| declaration.id.is_binding_identifier())
                 .and_then(|declaration| declaration.init.as_ref())
             {
-                if let Some(import) = bindings.playwright_value_origin(initializer).into_resolved() {
-                    result.values.insert(export.local.clone(), import);
-                    continue;
+                match bindings.playwright_value_origin(initializer) {
+                    ValueTrace::Resolved(import) => {
+                        result.values.insert(export.local.clone(), import);
+                        continue;
+                    }
+                    ValueTrace::Unresolved(_, candidates) => {
+                        result.uncertain.insert(export.local.clone(), candidates);
+                        continue;
+                    }
+                    ValueTrace::None => {}
                 }
             }
         }
@@ -87,17 +102,12 @@ impl Bindings<'_, '_> {
         loop {
             if let Some(member) = value.as_member_expression() {
                 if let Some(property) = member.static_property_name().and_then(|n| n.as_str()) {
-                    if let Expression::Identifier(object) = unwrap_ts_wrappers(member.object()) {
-                        if let Some(import) = self
-                            .symbol(object)
-                            .and_then(|sym| self.import_origin(sym, Some(property)))
-                        {
-                            return ValueTrace::Resolved(FixtureInitializer {
-                                import,
-                                wrappers,
-                                derived_at,
-                            });
-                        }
+                    if let Some(import) = self.namespace_member_origin(member.object(), property) {
+                        return ValueTrace::Resolved(FixtureInitializer {
+                            import,
+                            wrappers,
+                            derived_at,
+                        });
                     }
                 }
                 return self.unresolved_if_provenance(

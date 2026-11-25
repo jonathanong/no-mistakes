@@ -1,0 +1,144 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/relations.ts",
+          "line": 5,
+          "message": "src/relations.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT id FROM tasks WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/singleton.ts",
+          "line": 11,
+          "message": "src/singleton.ts:11: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY settings WHERE is_singleton = $1 FOR UPDATE\", [true]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/singleton.ts",
+          "line": 5,
+          "message": "src/singleton.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY settings WHERE is_singleton = $1 FOR UPDATE\", [singleton]);",
+          "target": "redundant-prelock"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/inheritance-ddl.ts",
+          "line": 13,
+          "message": "src/inheritance-ddl.ts:13: unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT id FROM tasks WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/inheritance-ddl.ts",
+          "line": 6,
+          "message": "src/inheritance-ddl.ts:6: unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT id FROM tasks WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/relations.ts",
+          "line": 11,
+          "message": "src/relations.ts:11: unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT id FROM task_parent WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/relations.ts",
+          "line": 17,
+          "message": "src/relations.ts:17: unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT id FROM legacy_tasks WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/singleton.ts",
+          "import": "settings.updated_at",
+          "line": 12,
+          "message": "src/singleton.ts:12: do not write trigger-maintained column `settings.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(\"INSERT INTO settings (is_singleton, updated_at) VALUES (TRUE, DEFAULT) ON CONFLICT (is_singleton) DO UPDATE SET updated_at = EXCLUDED.updated_at\");",
+          "target": "updated_at"
+        },
+        {
+          "file": "src/singleton.ts",
+          "import": "settings.updated_at",
+          "line": 18,
+          "message": "src/singleton.ts:18: do not write trigger-maintained column `settings.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(\"INSERT INTO settings (is_singleton, updated_at) VALUES (FALSE, DEFAULT), (TRUE, DEFAULT) ON CONFLICT (is_singleton) DO UPDATE SET updated_at = EXCLUDED.updated_at\");",
+          "target": "updated_at"
+        },
+        {
+          "file": "src/singleton.ts",
+          "import": "settings.updated_at",
+          "line": 24,
+          "message": "src/singleton.ts:24: do not write trigger-maintained column `settings.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(\"INSERT INTO settings (is_singleton, updated_at) VALUES (FALSE, DEFAULT) ON CONFLICT (is_singleton) DO UPDATE SET updated_at = EXCLUDED.updated_at\");",
+          "target": "updated_at"
+        },
+        {
+          "file": "src/singleton.ts",
+          "import": "settings.updated_at",
+          "line": 32,
+          "message": "src/singleton.ts:32: do not write trigger-maintained column `settings.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(\"INSERT INTO settings (is_singleton, updated_at) VALUES ($1, DEFAULT) ON CONFLICT (is_singleton) DO UPDATE SET updated_at = EXCLUDED.updated_at\", [readSingleton()]);",
+          "target": "updated_at"
+        },
+        {
+          "file": "src/singleton.ts",
+          "import": "settings.updated_at",
+          "line": 6,
+          "message": "src/singleton.ts:6: do not write trigger-maintained column `settings.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(\"INSERT INTO settings (is_singleton, updated_at) VALUES ($1, $2) ON CONFLICT (is_singleton) DO UPDATE SET updated_at = EXCLUDED.updated_at\", [singleton, stamp]);",
+          "target": "updated_at"
+        },
+        {
+          "file": "src/singleton.ts",
+          "line": 17,
+          "message": "src/singleton.ts:17: unanalyzable: the following multi-row upsert can affect the locked key; cannot prove the pre-lock is redundant",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY settings WHERE is_singleton = $1 FOR UPDATE\", [true]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/singleton.ts",
+          "line": 23,
+          "message": "src/singleton.ts:23: row-lock-unwritten-relation: locked row in settings is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY settings WHERE is_singleton = $1 FOR UPDATE\", [true]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/singleton.ts",
+          "line": 31,
+          "message": "src/singleton.ts:31: unanalyzable: cannot prove the lock and upsert use the same immutable row key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY settings WHERE is_singleton = $1 FOR UPDATE\", [true]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

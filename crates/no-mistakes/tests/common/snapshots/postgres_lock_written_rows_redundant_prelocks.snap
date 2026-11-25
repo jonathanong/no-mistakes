@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/inheritance.ts",
           "line": 11,
-          "message": "src/inheritance.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table",
+          "message": "src/inheritance.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(\"SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE\", [id]);",
           "target": "unanalyzable"
@@ -207,7 +207,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/inheritance.ts",
           "line": 11,
-          "message": "src/inheritance.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table",
+          "message": "src/inheritance.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(\"SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE\", [id]);",
           "target": "unanalyzable"

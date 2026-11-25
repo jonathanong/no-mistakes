@@ -37,6 +37,7 @@ pub(crate) struct Location {
     line: usize,
     project: Option<String>,
     origin: Origin,
+    pub(crate) playwright_candidates: Vec<playwright_provenance::ImportRef>,
     pub(crate) playwright_import: Option<playwright_provenance::ImportRef>,
     pub(crate) playwright_binding: Option<Arc<str>>,
     pub(crate) playwright_wrappers: Vec<playwright_provenance::WrapperCall>,

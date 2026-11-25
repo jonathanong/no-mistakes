@@ -84,7 +84,7 @@ fn postgres_lock_written_rows_upsert_locked_key_check_json_snapshot() {
             "rules",
             "row-lock-unwritten-relation"
         ),
-        [5, 12, 22, 28, 38, 48, 57, 67, 78, 88, 98]
+        [5, 12, 22, 28, 38, 48, 67, 78, 88, 98]
     );
     assert_eq!(
         lines(
@@ -446,4 +446,25 @@ fn postgres_lock_written_rows_redundant_prelocks_check_json_snapshot() {
         "redundant-prelock"
     )
     .is_empty());
+}
+
+#[test]
+fn postgres_lock_written_rows_upsert_catalog_and_singleton_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_upsert_catalog_and_singleton",
+        &[(
+            "catalog",
+            "upsert-catalog-and-singleton",
+            "upsert-catalog-and-singleton.yml",
+        )],
+    );
+    let report = &reports["catalog"]["report"];
+    let unresolved = |file| lines_in_file(report, "rules", "unanalyzable", Some(file));
+    let redundant = |file| lines_in_file(report, "advisories", "redundant-prelock", Some(file));
+    assert_eq!(lines(report, "rules", "row-lock-unwritten-relation"), [23]);
+    assert_eq!(unresolved("src/relations.ts"), [11, 17]);
+    assert_eq!(unresolved("src/inheritance-ddl.ts"), [6, 13]);
+    assert_eq!(unresolved("src/singleton.ts"), [17, 31]);
+    assert_eq!(redundant("src/relations.ts"), [5]);
+    assert_eq!(redundant("src/singleton.ts"), [5, 11]);
 }

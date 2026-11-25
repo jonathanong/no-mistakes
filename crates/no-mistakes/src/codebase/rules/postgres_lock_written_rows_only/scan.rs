@@ -154,13 +154,13 @@ fn scan_file(
                     continue;
                 }
                 let self_contained = access.self_contained_locks.get(&lock_index);
+                let lock_catalog = statements::CatalogInvalidations::for_lock(
+                    catalog.zip(catalog_invalidations.as_ref()),
+                    call,
+                    lock.relation.as_deref(),
+                    &unresolved,
+                );
                 if !call.executor_transaction_known {
-                    let lock_catalog = statements::CatalogInvalidations::for_lock(
-                        catalog.zip(catalog_invalidations.as_ref()),
-                        call,
-                        lock.relation.as_deref(),
-                        &unresolved,
-                    );
                     rows::check_membership(
                         &mut output,
                         &site,
@@ -185,7 +185,7 @@ fn scan_file(
                         &writes,
                         id,
                         unresolved.contains(&id),
-                        written_by_trigger,
+                        (written_by_trigger, lock_catalog),
                     );
                 } else if self_contained.is_none() {
                     output.emit(&site, CHECKS[3], lock.relation.as_deref(), None, "row lock in autocommit is released immediately; move the lock and write into the same transaction");

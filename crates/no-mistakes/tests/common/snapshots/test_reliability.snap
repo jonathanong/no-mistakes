@@ -512,6 +512,409 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "followups": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-alias.spec.ts",
+          "message": "tests/class-alias.spec.ts:19: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-alias.spec.ts",
+          "message": "tests/class-alias.spec.ts:9: cannot verify whether `declared.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-instance.spec.ts",
+          "message": "tests/class-instance.spec.ts:12: cannot verify whether `test` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-instance.spec.ts",
+          "message": "tests/class-instance.spec.ts:8: cannot verify whether `new Suite().runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-this.spec.ts",
+          "message": "tests/class-this.spec.ts:7: cannot verify whether `this.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:12: cannot verify whether `localSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:15: cannot verify whether `chainedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:9: cannot verify whether `reexported` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/constructor-arg.spec.ts",
+          "message": "tests/constructor-arg.spec.ts:13: cannot verify whether `alias.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/distinct-factory.spec.ts",
+          "message": "tests/distinct-factory.spec.ts:9: cannot verify whether `test` is Playwright's `test` (local factory returns multiple distinct fixture origins); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:11: cannot verify whether `barreledSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:14: cannot verify whether `conditionalSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:17: cannot verify whether `typedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/let-later.spec.ts",
+          "message": "tests/let-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local-fixture.spec.ts",
+          "message": "tests/local-fixture.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:11: cannot verify whether `selfRef` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:14: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:17: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:20: cannot verify whether `s` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/loop.spec.ts",
+          "message": "tests/loop.spec.ts:4: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/member-boundaries.spec.ts",
+          "message": "tests/member-boundaries.spec.ts:4: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/mixed-factory.spec.ts",
+          "message": "tests/mixed-factory.spec.ts:11: cannot verify whether `suite` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/namespace-alias.spec.ts",
+          "message": "tests/namespace-alias.spec.ts:12: cannot verify whether `localAlias.base` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/namespace-alias.spec.ts",
+          "message": "tests/namespace-alias.spec.ts:9: cannot verify whether `alias.test` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/parameter.spec.ts",
+          "message": "tests/parameter.spec.ts:10: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/parameter.spec.ts",
+          "message": "tests/parameter.spec.ts:4: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/var-later.spec.ts",
+          "message": "tests/var-later.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/class-getter.spec.ts",
+          "message": "tests/class-getter.spec.ts:10: cannot verify whether `suite` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/class-instance.spec.ts",
+          "message": "tests/class-instance.spec.ts:9: cannot verify whether `new Suite().runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/class-this.spec.ts",
+          "message": "tests/class-this.spec.ts:8: cannot verify whether `this.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/constructor-arg.spec.ts",
+          "message": "tests/constructor-arg.spec.ts:10: cannot verify whether `holder.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/constructor-arg.spec.ts",
+          "message": "tests/constructor-arg.spec.ts:7: cannot verify whether `new Holder().runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/let-later.spec.ts",
+          "message": "tests/let-later.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local-fixture.spec.ts",
+          "message": "tests/local-fixture.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/loop.spec.ts",
+          "message": "tests/loop.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/member-boundaries.spec.ts",
+          "message": "tests/member-boundaries.spec.ts:6: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/mixed-factory.spec.ts",
+          "message": "tests/mixed-factory.spec.ts:12: cannot verify whether `suite` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/parameter.spec.ts",
+          "message": "tests/parameter.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/var-later.spec.ts",
+          "message": "tests/var-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 15,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 28,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 40,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 13,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 19,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 25,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 19,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 24,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 30,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 35,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 14,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 20,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 28,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 34,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 46,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 56,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 66,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 8,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: process.env.CI ? 1 : undefined,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "tests/namespace-alias.spec.ts",
+          "line": 5,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "ns.test.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/namespace-alias.spec.ts",
+          "line": 6,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "ns.test.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "local-playwright": {
     "exitCode": 1,
     "report": {
