@@ -1,0 +1,165 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../../../loose/value.mjs",
+          "line": 4,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { looseReceipt } from \"../../../loose/value.mjs\";",
+          "target": "loose/value.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../../shared/src/status.mjs",
+          "line": 1,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { receiptStatus } from \"../../shared/src/status.mjs\";",
+          "target": "packages/shared/src/status.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../../shared/src/status.mjs",
+          "line": 5,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export { receiptStatus as sharedStatus } from \"../../shared/src/status.mjs\";",
+          "target": "packages/shared/src/status.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../../shared/src/status.mjs",
+          "line": 9,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export const loadReceipt = () => import(\"../../shared/src/status.mjs\");",
+          "target": "packages/shared/src/status.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../../shared/src/types.mjs",
+          "line": 2,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import type { Receipt } from \"../../shared/src/types.mjs\";",
+          "target": "packages/shared/src/types.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../nested/entry.mjs",
+          "line": 3,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { nestedReceipt } from \"../nested/entry.mjs\";",
+          "target": "packages/app/nested/entry.mts"
+        },
+        {
+          "file": "packages/app/src/legacy.cjs",
+          "import": "../../shared/src/legacy.cjs",
+          "line": 1,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const { receiptStatus } = require(\"../../shared/src/legacy.cjs\");",
+          "target": "packages/shared/src/legacy.cjs"
+        }
+      ],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "rules",
+          "file": "packages/app/src/suppressed-file.mts",
+          "line": 2,
+          "reason": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceFile": "packages/app/src/suppressed-file.mts",
+          "sourceLine": "export { receiptStatus } from \"../../shared/src/status.mjs\";"
+        },
+        {
+          "directive": {
+            "kind": "line",
+            "line": 3
+          },
+          "domain": "rules",
+          "file": "packages/app/src/suppressed.mts",
+          "line": 3,
+          "reason": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceFile": "packages/app/src/suppressed.mts",
+          "sourceLine": "import type { Receipt } from \"../../shared/src/types.mjs\"; // no-mistakes-disable-line no-cross-package-relative-imports: The types are moving to the public entry."
+        },
+        {
+          "directive": {
+            "kind": "nextLine",
+            "line": 1
+          },
+          "domain": "rules",
+          "file": "packages/app/src/suppressed.mts",
+          "line": 2,
+          "reason": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceFile": "packages/app/src/suppressed.mts",
+          "sourceLine": "import { receiptStatus } from \"../../shared/src/status.mjs\";"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "suppressed": [],
+      "warnings": []
+    }
+  },
+  "incomplete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "no-cross-package-relative-imports",
+          "file": "packages/app/src/gaps/broken.mts",
+          "message": "parsing packages/app/src/gaps/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `}` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`}` expected\"), span: Span { start: 24, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/src/gaps/healthy.mts",
+          "import": "../../../shared/src/status.mjs",
+          "line": 1,
+          "message": "Keep package entry points stable: Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export { receiptStatus } from \"../../../shared/src/status.mjs\";",
+          "target": "packages/shared/src/status.mts"
+        }
+      ],
+      "suppressed": [],
+      "warnings": []
+    }
+  }
+}

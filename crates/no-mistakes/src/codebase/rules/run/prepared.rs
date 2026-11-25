@@ -77,6 +77,10 @@ fn graph_plan_with_forbidden(
         plan.include(GraphBuildPlan::imports_and_workspace());
         needed = true;
     }
+    if config.rule_configured(super::super::NO_CROSS_PACKAGE_RELATIVE_IMPORTS) {
+        plan.include(GraphBuildPlan::imports_and_workspace());
+        needed = true;
+    }
     if let Some(reachability_plan) = required_entrypoint_reachability::graph_plan(config) {
         plan.include(reachability_plan);
         needed = true;
@@ -122,6 +126,7 @@ pub fn canonical_graph_requires_full_file_universe(
         || postgres_sql_cross_file::needs_deep_analysis(config)
         || required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
+        || config.rule_configured(super::super::NO_CROSS_PACKAGE_RELATIVE_IMPORTS)
         || config.rule_configured(FORBIDDEN_CALLS)
         || config.rule_configured(super::super::test_no_live_repository_scan::RULE_ID)
         || config.rule_configured(UNCONSTRUCTED_ERROR_CLASS)

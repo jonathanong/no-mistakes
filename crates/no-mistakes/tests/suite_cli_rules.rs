@@ -38,6 +38,9 @@ mod cli_rule_recall_audit;
 #[path = "cli_check_terraform_iam_wildcards.rs"]
 mod cli_check_terraform_iam_wildcards;
 
+#[path = "cli_check_cross_package_relative_imports.rs"]
+mod cli_check_cross_package_relative_imports;
+
 #[path = "cli_shell_compatibility.rs"]
 mod cli_shell_compatibility;
 

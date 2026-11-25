@@ -18,3 +18,6 @@ mod rsc_callers;
 mod workspace;
 #[path = "cli_codebase_acceptance/workspace_resolve.rs"]
 mod workspace_resolve;
+
+#[path = "cli_codebase_acceptance/queue_virtual.rs"]
+mod queue_virtual;

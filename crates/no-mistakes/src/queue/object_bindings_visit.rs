@@ -7,7 +7,7 @@ use std::cell::Cell;
 
 pub(super) fn bind_pattern<'a>(
     collector: &mut Collector<'a>,
-    pattern: &BindingPattern<'a>,
+    pattern: &'a BindingPattern<'a>,
     scope: Scope,
     visible_from: u32,
     resolve_at: u32,
@@ -24,6 +24,7 @@ pub(super) fn bind_pattern<'a>(
             visible_from,
             resolve_at,
             init,
+            destructuring: None,
         });
         return;
     }
@@ -39,11 +40,12 @@ pub(super) fn bind_pattern<'a>(
             visible_from,
             resolve_at: visible_from,
             init: None,
+            destructuring: init.map(|expr| (pattern, expr)),
         });
     }
 }
 
-pub(super) fn collect_names<'a>(pattern: &BindingPattern<'a>, names: &mut Vec<&'a str>) {
+pub(in crate::queue) fn collect_names<'a>(pattern: &BindingPattern<'a>, names: &mut Vec<&'a str>) {
     match pattern {
         BindingPattern::BindingIdentifier(id) => names.push(id.name.as_str()),
         BindingPattern::ObjectPattern(object) => {

@@ -17,6 +17,9 @@ Both default off. See
 and
 [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
 
+Enable [`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
+to catch invalid Node export target prefixes in selected manifests before building packages.
+
 Enabled TS/JS checks share one source inventory and one parse per file for their
 combined fact demand. Resolution results, including unresolved imports, are
 memoized within the request. Analysis data is discarded when the request ends.
@@ -350,6 +353,11 @@ Unreadable or malformed input appears in the JSON `incomplete` list.
 Enable [`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md)
 to require narrower resources or a suppression in selected Terraform IAM Allow
 statements. Findings point to the opening line of the `resources` attribute.
+
+Enable [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md)
+to report relative imports whose resolved targets cross declared workspace
+package boundaries. Select the importing files with the rule's scope and path
+filters.
 
 Enable [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) for
 scripts targeting Bash before 4.4 and

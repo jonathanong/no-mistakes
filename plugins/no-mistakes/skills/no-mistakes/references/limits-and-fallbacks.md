@@ -66,6 +66,10 @@ and unmatched package names remain `external`.
 }
 ```
 
+Use the opt-in `package-json-export-target-prefix` rule with `check` to catch
+missing `./` prefixes on direct and conditional Node export targets before
+any import site or build output exists.
+
 **Workaround for complex export maps:** `rg '@scope/pkg/'` to find importers.
 
 ## Bare npm specifiers
@@ -217,6 +221,11 @@ Terraform or OpenTofu files that declare AWS IAM policy documents. Replace
 wildcard grants with explicit resource ARNs or explain a required wildcard in
 a suppression beside the `resources` attribute.
 See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/terraform-iam-no-undocumented-wildcards.md).
+
+For `no-cross-package-relative-imports`, scope the rule to the importing files
+that belong to declared workspace packages. Replace cross-package relative
+imports with a declared dependency and a public package specifier.
+See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/no-cross-package-relative-imports.md).
 
 ## Fact extraction failures
 
