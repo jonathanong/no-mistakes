@@ -154,21 +154,21 @@ fn finding_for(
     file: &str,
     imports: Option<&FxHashMap<SpreadImport, FxHashSet<String>>>,
 ) -> Option<RuleFinding> {
+    if array.spreads_config_defaults {
+        return None;
+    }
     let lookup = |import: &SpreadImport| imports.and_then(|imports| imports.get(import));
+    let missing: Vec<_> = app.required_globs.iter().filter(|glob| {
+        !array.globs.contains(glob.as_str())
+            && !array.imports.iter().filter_map(lookup).any(|globs| globs.contains(glob.as_str()))
+    }).map(String::as_str).collect();
+    if missing.is_empty() {
+        return None;
+    }
     let unknown = array.unknown || array.imports.iter().any(|import| lookup(import).is_none());
     let message = if unknown {
         "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.".into()
     } else {
-        if array.spreads_config_defaults {
-            return None;
-        }
-        let missing: Vec<_> = app.required_globs.iter().filter(|glob| {
-            !array.globs.contains(glob.as_str())
-                && !array.imports.iter().filter_map(lookup).any(|globs| globs.contains(glob.as_str()))
-        }).map(String::as_str).collect();
-        if missing.is_empty() {
-            return None;
-        }
         app.message.map(str::to_owned).unwrap_or_else(|| format!(
             "Add {} to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
             missing.join(", ")

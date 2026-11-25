@@ -6,7 +6,7 @@ declare const extraSizes: number[];
 it.each([12, 1_600])("mixed scalar %i", () => {});
 it.each([[48], [1_800]])("mixed row %i", () => {});
 it.each([
-  [1_200],
+  [1_200, "small"],
   [1_400, true],
   [1_600, null],
 ] as const)("scale row %i", () => {});

@@ -71,7 +71,7 @@ In both modes, it skips coverage exclusions, unrelated properties named
 `exclude`, properties followed by a later spread or dynamic key, arrays with unknown
 entries and no spread, and conditional or call-based `exclude` values. An
 array with a spread that cannot be resolved reports an `unanalyzable` finding
-on the `exclude` property. Rewrite the spread as a literal string array or
+on the `exclude` property when a required glob is still missing from the known entries. Rewrite the spread as a literal string array or
 reference a statically known const array. Package imports, re-exports, and
 runtime expressions in spreads are unanalyzable.
 
