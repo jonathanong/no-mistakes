@@ -1,6 +1,6 @@
 use std::net::Ipv6Addr;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum CspDirective {
     Default,
     Script,
@@ -50,7 +50,7 @@ impl CspDirective {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub(crate) struct ParsedOrigin {
     pub(crate) scheme: String,
     pub(crate) host: String,
@@ -70,7 +70,7 @@ impl ParsedOrigin {
             }
             (scheme, rest)
         };
-        let authority = rest.split(['/', '?', '#']).next()?;
+        let authority = authority_prefix(rest);
         if authority.is_empty() || authority.contains('@') {
             return None;
         }
@@ -101,10 +101,14 @@ impl ParsedOrigin {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum PortPattern {
     Any,
     Exact(Option<u16>),
+}
+
+pub(super) fn authority_prefix(rest: &str) -> &str {
+    let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    &rest[..end]
 }
 
 pub(super) fn scheme_matches(allowed: &str, actual: &str) -> bool {

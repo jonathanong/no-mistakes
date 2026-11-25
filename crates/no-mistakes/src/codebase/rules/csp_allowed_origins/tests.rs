@@ -229,8 +229,13 @@ fn ignores_relative_and_non_network_urls_and_flags_malformed_network_urls() {
     assert!(ParsedOrigin::parse("https://example.com:notaport/x").is_none());
     assert!(ParsedOrigin::parse("https://bad host/x").is_none());
     assert!(ParsedOrigin::parse("https://[not-ipv6]/x").is_none());
+    assert!(ParsedOrigin::parse("https://[::1/x").is_none());
+    assert!(ParsedOrigin::parse("https://[::1]junk/x").is_none());
+    assert!(ParsedOrigin::parse("https://bad]host/x").is_none());
+    assert!(ParsedOrigin::parse("https://a:b:80/x").is_none());
     assert!(ParsedOrigin::parse("///empty-host").is_none());
     assert!(ParsedOrigin::is_network_like_url("///empty-host"));
+    assert!(CspPolicySet::parse_from_text(":empty-prefix\nhttps://just-url\ncontent='unclosed").is_empty());
 }
 
 #[test]
@@ -356,4 +361,20 @@ fn covers_bare_arrays_binary_concat_and_expression_edge_cases() {
             diag.advisories
         );
     }
+
+    let errors_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/csp-allowed-origins/fixture/errors");
+    let broken_target_cfg = crate::config::v2::load_v2_config_with_path(
+        &errors_root,
+        Some(&errors_root.join("broken-target.yml")),
+    )
+    .unwrap()
+    .0;
+    assert!(check_with_files(
+        &errors_root,
+        &broken_target_cfg,
+        &[errors_root.join("broken.ts")],
+    )
+    .unwrap()
+    .is_empty());
 }

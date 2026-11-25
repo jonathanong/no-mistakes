@@ -22,14 +22,6 @@ pub(super) fn parse_policies_from_text(text: &str) -> Vec<CspPolicy> {
             policies.extend(CspPolicy::parse_list(value));
             continue;
         }
-        if trimmed.contains(',') {
-            let parsed = CspPolicy::parse_list(trimmed);
-            if parsed.len() > 1 {
-                flush_block(&mut policies, &mut block);
-                policies.extend(parsed);
-                continue;
-            }
-        }
         block.parse_single_policy(trimmed);
     }
     flush_block(&mut policies, &mut block);
@@ -43,35 +35,23 @@ fn flush_block(policies: &mut Vec<CspPolicy>, block: &mut CspPolicy) {
 }
 
 fn extract_quoted_fragments(line: &str) -> Vec<&str> {
-    let mut fragments = extract_delimited(line, '"', '"');
+    let fragments = extract_delimited(line, "\"", "\"");
     if fragments.is_empty() {
-        fragments = extract_single_quoted_attrs(line);
+        extract_delimited(line, "='", "'")
+    } else {
+        fragments
     }
-    fragments
 }
 
-fn extract_delimited(mut rest: &str, open: char, close: char) -> Vec<&str> {
+fn extract_delimited<'a>(mut rest: &'a str, open: &str, close: &str) -> Vec<&'a str> {
     let mut fragments = Vec::new();
     while let Some(idx) = rest.find(open) {
-        rest = &rest[idx + open.len_utf8()..];
+        rest = &rest[idx + open.len()..];
         let Some(end) = rest.find(close) else {
             break;
         };
         fragments.push(&rest[..end]);
-        rest = &rest[end + close.len_utf8()..];
-    }
-    fragments
-}
-
-fn extract_single_quoted_attrs(mut rest: &str) -> Vec<&str> {
-    let mut fragments = Vec::new();
-    while let Some(idx) = rest.find("='") {
-        rest = &rest[idx + 2..];
-        let Some(end) = rest.find('\'') else {
-            break;
-        };
-        fragments.push(&rest[..end]);
-        rest = &rest[end + 1..];
+        rest = &rest[end + close.len()..];
     }
     fragments
 }

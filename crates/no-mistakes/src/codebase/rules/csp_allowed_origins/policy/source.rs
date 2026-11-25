@@ -1,9 +1,8 @@
 use super::origin::{
-    host_matches, is_valid_csp_host, normalize_default_port, scheme_matches,
+    authority_prefix, host_matches, is_valid_csp_host, normalize_default_port, scheme_matches,
     split_host_port_pattern, ParsedOrigin, PortPattern,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum CspSource {
     Any,
     SelfKeyword,
@@ -18,9 +17,6 @@ pub(super) enum CspSource {
 
 pub(super) fn parse_source_token(raw: &str) -> Option<CspSource> {
     let token = raw.trim();
-    if token.is_empty() {
-        return None;
-    }
     if token == "*" {
         return Some(CspSource::Any);
     }
@@ -45,7 +41,7 @@ pub(super) fn parse_source_token(raw: &str) -> Option<CspSource> {
         Some(_) => return None,
         None => (None, lower.as_str()),
     };
-    let authority = authority_and_path.split(['/', '?', '#']).next()?;
+    let authority = authority_prefix(authority_and_path);
     let (host, port) = split_host_port_pattern(authority)?;
     if !is_valid_csp_host(&host) {
         return None;

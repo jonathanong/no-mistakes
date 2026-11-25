@@ -107,14 +107,12 @@ impl OriginVisitor<'_> {
                     &mut self.collected,
                     self.source,
                     span,
-                    None,
                     UnanalyzableReason::DynamicLinkRel,
                 ),
                 Some(JsxAttrValue::Dynamic(expr)) => record_unanalyzable(
                     &mut self.collected,
                     self.source,
                     expr.span().start,
-                    None,
                     UnanalyzableReason::DynamicLinkRel,
                 ),
             },
@@ -140,8 +138,7 @@ impl OriginVisitor<'_> {
                 &mut self.collected,
                 self.source,
                 spread.span.start,
-                Some(directive),
-                UnanalyzableReason::DynamicUrl,
+                UnanalyzableReason::DynamicUrl(directive),
             ),
             Some(arg) => {
                 if let Some(expr) = arg.as_expression() {

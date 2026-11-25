@@ -56,8 +56,7 @@ pub(super) fn record_url_expr(
             collected,
             source,
             other.span().start,
-            Some(directive),
-            UnanalyzableReason::DynamicUrl,
+            UnanalyzableReason::DynamicUrl(directive),
         ),
     }
 }
@@ -69,19 +68,18 @@ pub(super) fn record_static_url(
     directive: CspDirective,
     url: &str,
 ) {
-    if ParsedOrigin::parse(url).is_some() {
+    if let Some(origin) = ParsedOrigin::parse(url) {
         collected.refs.push(OriginRef {
             line: line_number(source, span_start),
             directive,
-            url: url.to_owned(),
+            origin,
         });
     } else if ParsedOrigin::is_network_like_url(url) {
         record_unanalyzable(
             collected,
             source,
             span_start,
-            Some(directive),
-            UnanalyzableReason::UnparsedUrl,
+            UnanalyzableReason::UnparsedUrl(directive),
         );
     }
 }
@@ -90,12 +88,10 @@ pub(super) fn record_unanalyzable(
     collected: &mut CollectedOrigins,
     source: &str,
     span: u32,
-    directive: Option<CspDirective>,
     reason: UnanalyzableReason,
 ) {
     collected.unanalyzable.push(UnanalyzableRef {
         line: line_number(source, span),
-        directive,
         reason,
     });
 }
@@ -116,13 +112,7 @@ fn record_prefix_or_dynamic(
             return;
         }
     }
-    record_unanalyzable(
-        collected,
-        source,
-        span,
-        Some(dir),
-        UnanalyzableReason::DynamicUrl,
-    );
+    record_unanalyzable(collected, source, span, UnanalyzableReason::DynamicUrl(dir));
 }
 
 fn static_origin_prefix(prefix: &str) -> Option<String> {

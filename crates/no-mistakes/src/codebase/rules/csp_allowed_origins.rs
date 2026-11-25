@@ -157,15 +157,12 @@ fn check_application(
             continue;
         }
         for origin_ref in &file_facts.csp_allowed_origins.refs {
-            let Some(origin) = ParsedOrigin::parse(&origin_ref.url) else {
-                continue;
-            };
-            if !policy.allows(origin_ref.directive, &origin, &app.self_origins) {
+            if !policy.allows(origin_ref.directive, &origin_ref.origin, &app.self_origins) {
                 diagnostics.findings.push(origin_finding(
                     &file,
                     origin_ref.line,
                     origin_ref.directive,
-                    &origin,
+                    &origin_ref.origin,
                     &csp_label,
                     app.message,
                 ));

@@ -7,12 +7,12 @@ mod text;
 pub(crate) use origin::{CspDirective, ParsedOrigin};
 use source::{parse_source_token, source_matches, CspSource};
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default)]
 pub(crate) struct CspPolicy {
     directives: BTreeMap<CspDirective, Vec<CspSource>>,
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default)]
 pub(crate) struct CspPolicySet {
     policies: Vec<CspPolicy>,
 }
