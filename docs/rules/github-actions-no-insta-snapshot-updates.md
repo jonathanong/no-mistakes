@@ -20,9 +20,11 @@ scripts in files directly under `.github/workflows/`.
   `--force-update-snapshots`. Direct `cargo-insta` invocations are covered
   too. Arguments after `--` belong to the test runner. Findings point to the
   step's `run:` key.
-- Opaque `run:` scripts use the same unanalyzable policy. Examples include
-  GitHub expressions interpolated into the script, dynamic command or Insta
-  arguments, incomplete shell syntax, and unsupported shells.
+- Opaque `run:` scripts use the same unanalyzable policy when the script
+  mentions Insta or the command or execution arguments are dynamic. An
+  unknown runner or shell, a literal `source` of an unrelated setup file,
+  or an expression used as data by a literal unrelated command can appear
+  in an ordinary step without producing a diagnostic.
 - Other inputs the rule cannot decide statically — unreadable or non-UTF-8 workflow
   files, unparsable workflow YAML (reported at the parser's line), non-mapping
   workflow documents, `jobs`, jobs, steps, or `env:` values (such as
@@ -90,9 +92,9 @@ For a single declaration use `no-mistakes-disable-line` or
 ## Limits
 
 The shell analysis handles direct commands in Bash and POSIX shell steps.
-Shell scripts invoked from separate files, inline shell `INSTA_UPDATE=...`
-assignments, local composite actions, and standalone Insta configuration are
-outside the rule's scope. The environment check covers the declaration at
+The analyzer checks inline shell text. It leaves separate script files, inline
+shell `INSTA_UPDATE=...` assignments, local composite actions, and standalone
+Insta configuration outside its scope. The environment check covers the declaration at
 each scope, including one overridden by a job or step. The rule is specific
 to Insta. It leaves Vitest and Jest `-u` alone.
 

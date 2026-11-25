@@ -1,6 +1,19 @@
 use crate::codebase::rules::github_actions_download_integrity::words::{self, Word};
 
+mod cargo;
+use cargo::{cargo, insta};
+
 const MAX_NESTING: usize = 4;
+
+pub(super) fn mentions_insta(script: &str) -> bool {
+    let bytes = script.as_bytes();
+    let identifier = |byte: &u8| byte.is_ascii_alphanumeric() || *byte == b'_';
+    bytes.windows(5).enumerate().any(|(start, word)| {
+        word.eq_ignore_ascii_case(b"insta")
+            && (start == 0 || !identifier(&bytes[start - 1]))
+            && !bytes.get(start + 5).is_some_and(identifier)
+    })
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum Check {
@@ -18,38 +31,56 @@ pub(super) fn checks(script: &str) -> Vec<Check> {
 
 fn inspect_script(script: &str, depth: usize, checks: &mut Vec<Check>) {
     let parsed = words::parse_ordered(script, true, false);
-    if parsed.unterminated_heredoc || parsed.unterminated_quote || parsed.unterminated_substitution
+    let mentions_insta = mentions_insta(script);
+    let opaque = if parsed.unterminated_heredoc
+        || parsed.unterminated_quote
+        || parsed.unterminated_substitution
     {
-        checks.push(Check::Unknown("contains incomplete shell syntax"));
+        Some("contains incomplete shell syntax")
+    } else if depth > MAX_NESTING {
+        Some("contains shell scripts nested too deeply to check")
+    } else {
+        None
+    };
+    if let Some(reason) = opaque {
+        if mentions_insta || parsed.commands.iter().any(dynamic_invocation) {
+            checks.push(Check::Unknown(reason));
+        }
         return;
     }
     for command in parsed.commands {
         let Some((name, index)) = words::command_at(&command.words) else {
-            if command.dynamic {
-                checks.push(Check::Unknown("contains a dynamic shell command"));
-            }
             continue;
         };
         let command_word = &command.words[index];
         let args = &command.words[index + 1..];
-        let result = if dynamic(command_word, command.dynamic)
-            || matches!(
-                name.as_str(),
-                "eval" | "source" | "." | "case" | "for" | "select"
-            ) {
+        let result = if command_word.text.contains("${{") {
+            Some(Check::Unknown("uses a GitHub expression in `run`"))
+        } else if dynamic(command_word, command.dynamic) {
             Some(Check::Unknown("invokes a dynamic command"))
         } else {
             match name.as_str() {
                 "cargo" => cargo(args, command.dynamic),
                 "cargo-insta" => insta(args, command.dynamic),
-                "bash" | "sh" | "zsh" | "dash" | "ash" | "ksh" => match args {
+                "eval" | "source" | "."
+                    if mentions_insta || args.iter().any(|word| dynamic(word, command.dynamic)) =>
+                {
+                    Some(Check::Unknown("invokes a dynamic command"))
+                }
+                "case" | "for" | "select" if mentions_insta => {
+                    Some(Check::Unknown("invokes a dynamic command"))
+                }
+                shell if is_shell(shell) => match args {
                     [flag, script, ..]
                         if flag.text == "-c" && !dynamic(script, command.dynamic) =>
                     {
-                        inspect_nested(&script.text, depth, checks);
+                        inspect_script(&script.text, depth + 1, checks);
                         None
                     }
-                    _ => Some(Check::Unknown("invokes a shell with an opaque script")),
+                    _ if mentions_insta || args.iter().any(|word| dynamic(word, command.dynamic)) => {
+                        Some(Check::Unknown("invokes a shell with an opaque script"))
+                    }
+                    _ => None,
                 },
                 _ => None,
             }
@@ -59,111 +90,29 @@ fn inspect_script(script: &str, depth: usize, checks: &mut Vec<Check>) {
         }
     }
     for (_, script) in parsed.substitutions {
-        inspect_nested(&script, depth, checks);
+        inspect_script(&script, depth + 1, checks);
     }
 }
 
-fn inspect_nested(script: &str, depth: usize, checks: &mut Vec<Check>) {
-    if depth < MAX_NESTING {
-        inspect_script(script, depth + 1, checks);
-    } else {
-        checks.push(Check::Unknown(
-            "contains shell scripts nested too deeply to check",
-        ));
-    }
+fn dynamic_invocation(command: &words::Command) -> bool {
+    let Some((name, index)) = words::command_at(&command.words) else {
+        return false;
+    };
+    dynamic(&command.words[index], command.dynamic)
+        || ((matches!(name.as_str(), "cargo" | "cargo-insta" | "eval" | "source" | ".")
+            || is_shell(&name))
+            && command.words[index + 1..]
+                .iter()
+                .any(|word| dynamic(word, command.dynamic)))
 }
 
-fn cargo(mut args: &[Word], command_dynamic: bool) -> Option<Check> {
-    if let Some((first, rest)) = args
-        .split_first()
-        .filter(|(first, _)| first.text.starts_with('+'))
-    {
-        if dynamic(first, command_dynamic) {
-            return Some(Check::Unknown("selects a dynamic Cargo toolchain"));
-        }
-        args = rest;
-    }
-    let args = skip_options(args, command_dynamic, CargoMode::Cargo)?;
-    let (first, rest) = args.split_first()?;
-    if dynamic(first, command_dynamic) {
-        return Some(Check::Unknown("passes a dynamic subcommand to Cargo"));
-    }
-    (first.text == "insta")
-        .then(|| insta(rest, command_dynamic))
-        .flatten()
-}
-
-fn insta(args: &[Word], command_dynamic: bool) -> Option<Check> {
-    let unknown = Check::Unknown("passes dynamic arguments to cargo-insta");
-    let args = skip_options(args, command_dynamic, CargoMode::Insta)?;
-    let (subcommand, rest) = args.split_first()?;
-    if dynamic(subcommand, command_dynamic) {
-        return Some(unknown);
-    }
-    let rest = rest
-        .split(|word| word.text == "--")
-        .next()
-        .unwrap_or_default();
-    if rest
-        .iter()
-        .any(|word| matches!(word.text.as_str(), "--help" | "-h"))
-    {
-        return None;
-    }
-    match subcommand.text.as_str() {
-        "accept" | "approve" => Some(Check::Accept("accept")),
-        "test" => {
-            for word in rest {
-                if dynamic(word, command_dynamic) {
-                    return Some(unknown);
-                }
-                let flag = match word.text.as_str() {
-                    "--accept" => "--accept",
-                    "--accept-unseen" => "--accept-unseen",
-                    "--force-update-snapshots" => "--force-update-snapshots",
-                    text if matches!(
-                        text.trim_end_matches([')', '}']),
-                        "--accept" | "--accept-unseen" | "--force-update-snapshots"
-                    ) =>
-                    {
-                        return Some(Check::Unknown(
-                            "uses an ambiguous grouped cargo-insta argument",
-                        ))
-                    }
-                    _ => continue,
-                };
-                return Some(Check::Accept(flag));
-            }
-            None
-        }
-        text if matches!(text.trim_end_matches([')', '}']), "accept" | "approve") => Some(
-            Check::Unknown("uses an ambiguous grouped cargo-insta subcommand"),
-        ),
-        _ => None,
-    }
-}
-
-enum CargoMode {
-    Cargo,
-    Insta,
-}
-
-fn skip_options(mut args: &[Word], command_dynamic: bool, mode: CargoMode) -> Option<&[Word]> {
-    while let [word, rest @ ..] = args {
-        let text = word.text.as_str();
-        match text {
-            "-h" | "--help" | "-V" | "--version" | "--" => return None,
-            "--color" => args = rest.get(1..)?,
-            "-C" | "--config" | "-Z" if matches!(mode, CargoMode::Cargo) => args = rest.get(1..)?,
-            option if option.starts_with('-') && !dynamic(word, command_dynamic) => args = rest,
-            _ => break,
-        }
-    }
-    Some(args)
+fn is_shell(name: &str) -> bool {
+    matches!(name, "bash" | "sh" | "zsh" | "dash" | "ash" | "ksh")
 }
 
 fn dynamic(word: &Word, command_dynamic: bool) -> bool {
-    word.expansion_may_split
+    word.text.contains("${{")
+        || word.expansion_may_split
         || word.bare_expansion.is_some()
         || word.quoted_expansion.is_some()
         || (command_dynamic && word.text.contains(['$', '`']))

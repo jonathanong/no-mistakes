@@ -52,13 +52,13 @@ fn check_step(run: &Value, step: &Mapping, job: &Value, workflow: &Value) -> Vec
     let Some(script) = run.as_str() else {
         return vec![Unknown("sets `run` to a non-string value")];
     };
-    if script.contains("${{") {
-        return vec![Unknown("uses a GitHub expression in `run`")];
-    }
-    if !checkable_shell(step, job, workflow) {
+    let checks = commands::checks(script);
+    if !checkable_shell(step, job, workflow)
+        && (commands::mentions_insta(script) || !checks.is_empty())
+    {
         return vec![Unknown("uses an unsupported or unknown shell")];
     }
-    commands::checks(script)
+    checks
 }
 
 fn checkable_shell(step: &Mapping, job: &Value, workflow: &Value) -> bool {

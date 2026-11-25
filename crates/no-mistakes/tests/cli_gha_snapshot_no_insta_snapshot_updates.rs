@@ -10,6 +10,7 @@ fn github_actions_no_insta_snapshot_updates_json_matches_snapshot() {
         ("scopes", "scopes", "enabled"),
         ("pass", "pass", "enabled"),
         ("cli", "cli", "enabled"),
+        ("ordinary-runs", "ordinary-runs", "enabled"),
         ("shells", "shells", "enabled"),
         ("merge-keys", "merge-keys", "enabled"),
         ("unanalyzable", "unanalyzable", "enabled"),

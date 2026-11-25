@@ -1,0 +1,32 @@
+name: Ordinary checks
+on: [pull_request]
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - run: npm test
+      - run: npm install
+      - run: echo ${{ github.sha }}
+  matrix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: cargo test
+      - run: npm test -- ${{ matrix.os }}
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ github.sha }}
+      - run: echo "$(echo ready)"
+      - run: eval 'echo ready'
+      - run: source ~/.cargo/env
+      - run: bash scripts/check.sh
+      - run: |
+          for sample in one two; do
+            echo "$sample"
+          done
+          case "$SAMPLE" in
+            one) echo ready ;;
+          esac
