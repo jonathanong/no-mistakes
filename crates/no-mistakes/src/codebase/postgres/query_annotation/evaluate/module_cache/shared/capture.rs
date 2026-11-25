@@ -185,3 +185,7 @@ fn collect_dep_refs(
         raw_dep_scopes.push(remap_scope(scope, &sub_remap));
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "capture_tests.rs"]
+mod tests;

@@ -15,7 +15,7 @@ pub(in crate::codebase::postgres::query_annotation) fn remap_captured_scope(
 ) -> Option<Scope> {
     if !scope
         .values()
-        .all(|value| envs_within(value, old_env, prefix))
+        .all(|value| envs_satisfy(value, &|env| env == old_env || env < prefix))
     {
         return None;
     }
@@ -32,26 +32,13 @@ pub(super) fn remap_scope_strict(
     scope: &Scope,
     remap: &FxHashMap<Environment, Environment>,
 ) -> Option<Scope> {
-    if !scope.values().all(|value| envs_in_map(value, remap)) {
+    if !scope
+        .values()
+        .all(|value| envs_satisfy(value, &|env| remap.contains_key(&env)))
+    {
         return None;
     }
-    Some(remap_scope_with(scope, &|env| {
-        remap.get(&env).copied().unwrap_or(env)
-    }))
-}
-
-fn envs_in_map(value: &Value, remap: &FxHashMap<Environment, Environment>) -> bool {
-    match value {
-        Value::Function(_, _, env) => remap.contains_key(env),
-        Value::Promise(inner) | Value::Evaluated(inner, _) => envs_in_map(inner, remap),
-        Value::Aggregate(items)
-        | Value::References(items)
-        | Value::Object(items)
-        | Value::Record(items, _)
-        | Value::Joined(items)
-        | Value::Possible(items) => items.iter().all(|item| envs_in_map(item, remap)),
-        _ => true,
-    }
+    Some(remap_scope_with(scope, &|env| remap[&env]))
 }
 
 fn remap_scope_with(scope: &Scope, remap: &impl Fn(Environment) -> Environment) -> Scope {
@@ -65,16 +52,16 @@ fn remap_scope_with(scope: &Scope, remap: &impl Fn(Environment) -> Environment) 
     Scope::from(values)
 }
 
-fn envs_within(value: &Value, old_env: Environment, prefix: usize) -> bool {
+fn envs_satisfy(value: &Value, pred: &impl Fn(Environment) -> bool) -> bool {
     match value {
-        Value::Function(_, _, env) => *env == old_env || *env < prefix,
-        Value::Promise(inner) | Value::Evaluated(inner, _) => envs_within(inner, old_env, prefix),
+        Value::Function(_, _, env) => pred(*env),
+        Value::Promise(inner) | Value::Evaluated(inner, _) => envs_satisfy(inner, pred),
         Value::Aggregate(items)
         | Value::References(items)
         | Value::Object(items)
         | Value::Record(items, _)
         | Value::Joined(items)
-        | Value::Possible(items) => items.iter().all(|item| envs_within(item, old_env, prefix)),
+        | Value::Possible(items) => items.iter().all(|item| envs_satisfy(item, pred)),
         _ => true,
     }
 }
