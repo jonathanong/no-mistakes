@@ -89,46 +89,37 @@ pub(super) fn starts_block_scalar(bytes: &[u8], pos: usize) -> bool {
     i >= bytes.len() || matches!(bytes[i], b'\r' | b'\n' | b'#')
 }
 
-pub(super) fn is_plain_merge_candidate(bytes: &[u8], pos: usize) -> bool {
-    let left_ok = pos == 0
-        || matches!(
-            bytes[pos - 1],
-            b' ' | b'\t' | b'\n' | b'\r' | b'{' | b'[' | b',' | b'-' | b'?' | b':'
-        );
+pub(super) fn is_plain_merge_candidate(
+    bytes: &[u8],
+    pos: usize,
+    flow_depth: usize,
+    explicit_or_anchored: bool,
+) -> bool {
     let after = pos + 2;
     let right_ok =
-        is_space_or_end(bytes, after) || matches!(bytes[after], b':' | b',' | b'}' | b']' | b'#');
-    if !left_ok || !right_ok {
+        is_space_or_end(bytes, after) || matches!(bytes[after], b':' | b',' | b'}' | b']');
+    if !right_ok {
         return false;
     }
-    let prev = previous_token_on_line(bytes, pos);
-    if prev.is_some_and(|token| token.starts_with(b"!")) {
-        return false;
-    }
-    followed_by_mapping_colon(bytes, after)
-        || prev.is_some_and(|t| t == b"?" || (t.starts_with(b"&") && t.len() > 1))
+    explicit_or_anchored || followed_by_mapping_colon(bytes, after, flow_depth)
 }
 
-fn followed_by_mapping_colon(bytes: &[u8], mut i: usize) -> bool {
-    while i < bytes.len() && matches!(bytes[i], b' ' | b'\t') {
-        i += 1;
+fn followed_by_mapping_colon(bytes: &[u8], mut i: usize, flow_depth: usize) -> bool {
+    loop {
+        while i < bytes.len() && matches!(bytes[i], b' ' | b'\t') {
+            i += 1;
+        }
+        if flow_depth > 0 && i < bytes.len() {
+            if matches!(bytes[i], b'\r' | b'\n') {
+                i += 1;
+                continue;
+            }
+            if bytes[i] == b'#' && i > 0 && matches!(bytes[i - 1], b' ' | b'\t' | b'\n' | b'\r') {
+                i = skip_to_newline(bytes, i);
+                continue;
+            }
+        }
+        break;
     }
-    i < bytes.len()
-        && bytes[i] == b':'
-        && (is_space_or_end(bytes, i + 1) || matches!(bytes[i + 1], b',' | b'}' | b']'))
-}
-
-fn previous_token_on_line(bytes: &[u8], mut end: usize) -> Option<&[u8]> {
-    while end > 0 && matches!(bytes[end - 1], b' ' | b'\t') {
-        end -= 1;
-    }
-    let is_sep = |b: u8| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'{' | b'[' | b',' | b':');
-    if end == 0 || is_sep(bytes[end - 1]) {
-        return None;
-    }
-    let mut start = end;
-    while start > 0 && !is_sep(bytes[start - 1]) {
-        start -= 1;
-    }
-    Some(&bytes[start..end])
+    i < bytes.len() && bytes[i] == b':' && is_mapping_colon(bytes, i, flow_depth, false)
 }
