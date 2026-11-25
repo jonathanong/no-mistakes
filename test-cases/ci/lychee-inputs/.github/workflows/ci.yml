@@ -1,0 +1,20 @@
+name: Sample CI
+on: pull_request
+jobs:
+  quality-links:
+    runs-on: ubuntu-slim
+    env:
+      LYCHEE_ARGS: >-
+        --no-progress
+        --exclude 'https://example.invalid/old'
+    steps:
+      - name: Prepare
+        run: echo 'Preparing documentation'
+      - name: Check internal links
+        uses: lycheeverse/lychee-action@1111111111111111111111111111111111111111
+        with:
+          args: --offline
+      - name: Check links
+        uses: lycheeverse/lychee-action@1111111111111111111111111111111111111111
+        with:
+          args: ${{ env.LYCHEE_ARGS }}
