@@ -82,13 +82,32 @@ pub(super) fn record_mutations(
         }
         break;
     }
+    while words
+        .get(index)
+        .is_some_and(|word| matches!(word.text.as_str(), "command" | "builtin"))
+    {
+        index += 1;
+        while let Some(flag) = words.get(index) {
+            if !flag.text.starts_with('-') {
+                break;
+            }
+            index += 1;
+            if flag.text == "--" {
+                break;
+            }
+        }
+    }
     let Some(cmd) = words.get(index) else {
         return;
     };
+    if cmd.quoted_expansion.is_some() || cmd.bare_expansion.is_some() {
+        *mutated_all = true;
+        return;
+    }
     let args = &words[index + 1..];
     match cmd.text.as_str() {
         "eval" | "source" | "." => *mutated_all = true,
-        "export" | "declare" | "typeset" | "local" | "readonly" | "unset" => {
+        "export" | "declare" | "typeset" | "local" | "readonly" | "unset" | "let" => {
             for arg in args {
                 if arg.text.starts_with('-') {
                     continue;
@@ -99,7 +118,7 @@ pub(super) fn record_mutations(
                 }
             }
         }
-        "read" => {
+        "read" | "mapfile" | "readarray" | "getopts" => {
             for arg in args {
                 if !arg.text.starts_with('-') && is_ident(&arg.text) {
                     mutated_vars.insert(arg.text.clone());

@@ -281,6 +281,11 @@ fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
         "          printf -v EVENT_NAME pull_request\n",
         "          eval 'EVENT_NAME=pull_request'\n",
         "          source ./env.sh\n",
+        "          command export EVENT_NAME=pull_request\n",
+        "          command -p -- unset EVENT_NAME\n",
+        "          command eval 'EVENT_NAME=pull_request'\n",
+        "          builtin declare -x EVENT_NAME=pull_request\n",
+        "          command \"$RUNNER_CMD\"\n",
     ] {
         let script = format!(
             "{mutation}          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
@@ -329,4 +334,11 @@ fn shell_guard_handles_reassignment_runner_var_and_edge_shapes() {
         "          fi\n",
     );
     assert_eq!(count(&with_env(multi)), 0);
+    // Semicolon-separated `if` without intervening whitespace is still recognized.
+    assert_eq!(
+        count(&with_env(
+            "          set -e;if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n"
+        )),
+        0
+    );
 }

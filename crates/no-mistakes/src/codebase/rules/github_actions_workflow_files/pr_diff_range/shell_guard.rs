@@ -10,7 +10,10 @@ pub(super) fn excluded_on_merge_group(
     script: &str,
     env: &BTreeMap<String, String>,
 ) -> Vec<Range<usize>> {
-    if !script.split_ascii_whitespace().any(|word| word == "if") {
+    if !script
+        .split(|ch: char| ch.is_ascii_whitespace() || matches!(ch, ';' | '|' | '&' | '(' | ')'))
+        .any(|word| word == "if")
+    {
         return Vec::new();
     }
     let parsed = parse(script);

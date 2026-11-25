@@ -130,3 +130,27 @@ jobs:
             base="$MERGE_GROUP_BASE_SHA"
           fi
           echo "$base"
+      - run: |
+          command export EVENT_NAME=pull_request
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          command eval 'EVENT_NAME=pull_request'
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          builtin export EVENT_NAME=pull_request
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
