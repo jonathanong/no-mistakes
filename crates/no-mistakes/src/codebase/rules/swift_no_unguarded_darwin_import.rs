@@ -13,7 +13,7 @@ const FIX: &str =
     "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.";
 
 static OPEN_CONDITIONAL: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?:^|;)[ \t\x0B\x00]*#if(?:[ \t\x0B\x00(!]|$)").unwrap()
+    Regex::new(r"(?:^|;)[ \t\x0B\x00]*#if(?:[ \t\x0B\x00(!][^/]*)?$").unwrap()
 });
 
 static DARWIN_IMPORT: LazyLock<Regex> = LazyLock::new(|| {

@@ -13,21 +13,21 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "Tests/Imports.swift",
-          "line": 30,
+          "line": 31,
           "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
           "rule": "swift-no-unguarded-darwin-import",
           "sourceLine": "import func Darwin.getpagesize"
         },
         {
           "file": "Tests/Imports.swift",
-          "line": 31,
+          "line": 32,
           "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
           "rule": "swift-no-unguarded-darwin-import",
           "sourceLine": "@preconcurrency import Darwin"
         },
         {
           "file": "Tests/Imports.swift",
-          "line": 32,
+          "line": 33,
           "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
           "rule": "swift-no-unguarded-darwin-import",
           "sourceLine": "import /* system module */ `Darwin`"
@@ -54,21 +54,21 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "Tests/Imports.swift",
-          "line": 30,
+          "line": 31,
           "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
           "rule": "swift-no-unguarded-darwin-import",
           "sourceLine": "import func Darwin.getpagesize"
         },
         {
           "file": "Tests/Imports.swift",
-          "line": 31,
+          "line": 32,
           "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
           "rule": "swift-no-unguarded-darwin-import",
           "sourceLine": "@preconcurrency import Darwin"
         },
         {
           "file": "Tests/Imports.swift",
-          "line": 32,
+          "line": 33,
           "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
           "rule": "swift-no-unguarded-darwin-import",
           "sourceLine": "import /* system module */ `Darwin`"

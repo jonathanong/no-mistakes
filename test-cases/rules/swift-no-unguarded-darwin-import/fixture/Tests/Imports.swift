@@ -1,7 +1,7 @@
 import DarwinExtras
 
 import Foundation; #if(canImport(Darwin))
-import enum Darwin.ClockValue
+import func Darwin.getpagesize
 #endif
 
 #if canImport(Darwin)
@@ -26,6 +26,7 @@ import Darwin
 let pattern = #/
 import Darwin
 /#
+let patternWithDirective = /; #if canImport/
 
 import func Darwin.getpagesize
 @preconcurrency import Darwin
