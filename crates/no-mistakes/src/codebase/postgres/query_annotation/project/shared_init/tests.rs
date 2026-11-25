@@ -390,3 +390,111 @@ fn purity_check_covers_step_and_callee_edge_cases() {
         ));
     }
 }
+
+#[test]
+fn shared_capture_rejects_impure_dep_mutated_dep_and_foreign_env() {
+    let dep = PathBuf::from("dep.mts");
+    let target = PathBuf::from("target.mts");
+    let ids = Arc::new(ModuleIds::new([dep.clone(), target.clone()]));
+    let facts = QueryAnnotationFileFacts::default();
+    let mut files = FxHashMap::default();
+    files.insert(dep.clone(), make_file(&facts, Vec::new(), &ids));
+    files.insert(target.clone(), make_file(&facts, Vec::new(), &ids));
+    let dep_id = ids.id(&dep);
+    let target_id = ids.id(&target);
+    let resolve = |_: &str, _: &std::path::Path| None;
+
+    // 1. Impure entry in SharedInit returns None on try_install_shared_module,
+    //    and a dependent whose direct dep is Impure is marked Impure.
+    let entries = dashmap::DashMap::new();
+    entries.insert(dep_id, SharedEntry::Impure);
+    let mut direct_deps = FxHashMap::default();
+    direct_deps.insert(target_id, vec![dep_id]);
+    let shared = Arc::new(SharedInit {
+        untrusted_array_intrinsics: false,
+        eligible: [target_id].into_iter().collect(),
+        direct_deps: direct_deps.clone(),
+        entries,
+    });
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(Arc::clone(&shared));
+    assert!(eval.try_install_shared_module(&dep, dep_id).is_none());
+    let env = eval.environment_scope(Scope::default());
+    let guard = eval.begin_shared_capture(target_id, env).unwrap();
+    eval.finish_shared_capture(target_id, env, guard);
+    assert!(matches!(
+        shared.entries.get(&target_id).as_deref(),
+        Some(SharedEntry::Impure)
+    ));
+    // Already-present entry returns early without overwriting.
+    let guard2 = eval.begin_shared_capture(target_id, env);
+    assert!(guard2.is_none());
+
+    // 2. Mutated dependency scope during capture marks target Impure.
+    let mut expected_dep_vals = FxHashMap::default();
+    expected_dep_vals.insert("x".into(), Value::Number(1));
+    let entries2 = dashmap::DashMap::new();
+    entries2.insert(
+        dep_id,
+        SharedEntry::Pure(Arc::new(CachedModule {
+            deps: Vec::new(),
+            dep_refs: Vec::new(),
+            dep_scopes: Vec::new(),
+            own_scopes: vec![Scope::from(expected_dep_vals)],
+        })),
+    );
+    let shared2 = Arc::new(SharedInit {
+        untrusted_array_intrinsics: false,
+        eligible: [target_id].into_iter().collect(),
+        direct_deps,
+        entries: entries2,
+    });
+    let mut eval2 = evaluator::new(&files, resolve, false);
+    eval2.modules.shared = Some(Arc::clone(&shared2));
+    let mut mutated_dep_vals = FxHashMap::default();
+    mutated_dep_vals.insert("x".into(), Value::Number(2));
+    let dep_env = eval2.environment_scope(Scope::from(mutated_dep_vals));
+    eval2.modules.insert(dep_id, dep_env);
+    let target_env = eval2.environment_scope(Scope::default());
+    let guard3 = eval2.begin_shared_capture(target_id, target_env).unwrap();
+    eval2.finish_shared_capture(target_id, target_env, guard3);
+    assert!(matches!(
+        shared2.entries.get(&target_id).as_deref(),
+        Some(SharedEntry::Impure)
+    ));
+
+    // 3. Foreign function environment in target scope marks target Impure.
+    let shared3 = Arc::new(SharedInit {
+        untrusted_array_intrinsics: false,
+        eligible: [target_id].into_iter().collect(),
+        direct_deps: FxHashMap::default(),
+        entries: dashmap::DashMap::new(),
+    });
+    let mut eval3 = evaluator::new(&files, resolve, false);
+    eval3.modules.shared = Some(Arc::clone(&shared3));
+    let mut foreign_vals = FxHashMap::default();
+    foreign_vals.insert(
+        "f".into(),
+        Value::Function(
+            Arc::new(Function {
+                start: 0,
+                params: Vec::new(),
+                body: Vec::new(),
+                supported: true,
+                asynchronous: false,
+                arrow: true,
+                self_name: None,
+                append_callback: None,
+            }),
+            Arc::new(target.clone()),
+            99,
+        ),
+    );
+    let env3 = eval3.environment_scope(Scope::from(foreign_vals));
+    let guard4 = eval3.begin_shared_capture(target_id, env3).unwrap();
+    eval3.finish_shared_capture(target_id, env3, guard4);
+    assert!(matches!(
+        shared3.entries.get(&target_id).as_deref(),
+        Some(SharedEntry::Impure)
+    ));
+}
