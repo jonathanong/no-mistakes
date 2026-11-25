@@ -43,6 +43,7 @@ impl InternalProducer {
             queue_name: self.queue.as_ref().map(|q| q.queue_name.clone()),
             job: self.site.job.clone(),
             message: "static queue producer has no matching worker".to_string(),
+            severity: None,
         }
     }
 }
@@ -97,6 +98,7 @@ impl InternalWorker {
             queue_name: Some(job.queue_name.clone()),
             job: Some(job.job.clone()),
             message: "static queue worker has no matching producer".to_string(),
+            severity: None,
         }
     }
 }

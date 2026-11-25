@@ -1,0 +1,62 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "valid-nested-merges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/job.yml",
+          "line": 13,
+          "message": ".github/workflows/job.yml:13: `uses: example/build@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: example/build@v1"
+        },
+        {
+          "file": ".github/workflows/job.yml",
+          "line": 16,
+          "message": ".github/workflows/job.yml: job \"verify\" has no timeout-minutes (defaults to GitHub's 6-hour ceiling); add a literal number",
+          "rule": "github-actions-job-timeouts",
+          "sourceLine": "verify:",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/job.yml",
+          "line": 16,
+          "message": ".github/workflows/job.yml:16: cannot determine job permissions (job merge may supply permissions). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "verify:",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/job.yml",
+          "line": 16,
+          "message": "concurrency intent missing: .github/workflows/job.yml#verify",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "verify:"
+        },
+        {
+          "file": ".github/workflows/quoted.yml",
+          "line": 11,
+          "message": ".github/workflows/quoted.yml:11: `uses: example/build@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: example/build@v1"
+        },
+        {
+          "file": ".github/workflows/step.yml",
+          "line": 11,
+          "message": ".github/workflows/step.yml:11: `uses: example/build@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: example/build@v1"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

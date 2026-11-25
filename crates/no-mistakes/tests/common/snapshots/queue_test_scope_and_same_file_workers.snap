@@ -1,0 +1,28 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "apps/api/orphan-enqueue.mts",
+          "job": "never-handled",
+          "kind": "unmatched-producer",
+          "line": 4,
+          "message": "static queue producer has no matching worker",
+          "queueFile": "packages/queues-mail/config.mts",
+          "queueName": "orphan",
+          "sourceLine": "await orphanQueue.add(\"never-handled\", { id: \"o1\" });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

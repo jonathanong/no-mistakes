@@ -4,7 +4,9 @@ rules:
     scope: repository
     options:
       policies:
-        - files: [app.yml, sequence.yml, scalar.yml, sequence-scalar-item.yml, nested.yml]
+        - files: [app.yml, sequence.yml, scalar.yml, sequence-scalar-item.yml, nested.yml, aliased-location.yml]
           bannedKeys: [runtime.legacy.enabled]
         - files: [required.yml]
           requiredKeys: [runtime.owner]
+        - files: [quoted.yml]
+          requiredKeys: [runtime.enabled, "runtime.options.<<", extra.enabled]

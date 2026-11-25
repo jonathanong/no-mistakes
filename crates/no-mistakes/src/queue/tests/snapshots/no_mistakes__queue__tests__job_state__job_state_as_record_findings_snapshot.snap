@@ -1,0 +1,76 @@
+---
+source: crates/no-mistakes/src/queue/tests/job_state.rs
+expression: snapshot
+---
+[
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "usage.ts",
+    "line": 12,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+    "sourceLine": "if ((await job?.getState()) === \"failed\") await job.retry();"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "usage.ts",
+    "line": 18,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+    "sourceLine": "if (await job?.isCompleted()) {"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "usage.ts",
+    "line": 27,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+    "sourceLine": "if (!failed) return;"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "usage.ts",
+    "line": 33,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+    "sourceLine": "for (const job of await widgets.getFailed(0, 100)) {"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "usage.ts",
+    "line": 41,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+    "sourceLine": "await widgets.addBulk(done.map((job) => ({ name: job.name, data: job.data })));"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "usage.ts",
+    "line": 47,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "failed or completed queue listing feeds add/addBulk/retry; select pending work from the database instead",
+    "sourceLine": "await Promise.all(jobs.map((job) => job.retry()));"
+  },
+  {
+    "kind": "job-state-as-record",
+    "severity": "advisory",
+    "file": "usage.ts",
+    "line": 92,
+    "queueFile": "queues.ts",
+    "queueName": "widgets",
+    "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+    "sourceLine": "if ((await job?.getState()) === \"failed\") await job.retry();"
+  }
+]

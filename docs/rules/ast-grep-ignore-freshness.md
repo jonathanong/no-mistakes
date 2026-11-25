@@ -35,7 +35,9 @@ directory, the `sgconfig` directory still wins.
 
 A rule file may contain several YAML documents separated by `---`. Each
 document's ignores are checked. A document that is not valid YAML is a
-finding. Documents parsed before that error are still checked. A flow list
+finding. A YAML merge that cannot be applied points to its original `<<`
+key in the affected document. Documents parsed before that error are still
+checked. A flow list
 such as `ignores: ['src/missing.ts', 'src/items.ts']` reports the line that
 contains the entry, including when the list continues on later lines. A
 comment after `ignores:` does not move the entry, and a `-` item at the same

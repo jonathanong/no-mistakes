@@ -37,13 +37,14 @@ pub(crate) fn note_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpressio
 }
 
 fn note_add(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding: String) {
+    let evidence = evidence_at(call, 2, &visitor.object_bindings);
     push_site(
         visitor,
         call.span().start,
         Some(binding),
         None,
         job_at(visitor, call, 0),
-        evidence_at(call, 2),
+        evidence,
     );
 }
 
@@ -90,12 +91,13 @@ fn note_bulk(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>, binding:
 }
 
 fn note_bulk_item(visitor: &mut QueueVisitor<'_>, object: &ObjectExpression<'_>, binding: String) {
+    let evidence = read_member(object, "opts", &visitor.object_bindings).unwrap_or_default();
     push_site(
         visitor,
         object.span().start,
         Some(binding),
         None,
         member_string(object, "name"),
-        read_member(object, "opts").unwrap_or_default(),
+        evidence,
     );
 }

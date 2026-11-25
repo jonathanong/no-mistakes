@@ -75,7 +75,14 @@ fn collect_workflows(
             kind: crate::codebase::ci_workflows::WorkflowDocumentErrorKind::Parse,
             message: error.to_string(),
         });
-        documents.push(ParsedWorkflowDocument { path, value });
+        let source = std::str::from_utf8(blob.content())
+            .ok()
+            .map(std::sync::Arc::from);
+        documents.push(ParsedWorkflowDocument {
+            path,
+            value,
+            source,
+        });
     }
     Ok(())
 }

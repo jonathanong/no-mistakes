@@ -1,0 +1,8 @@
+{
+  "name": "acme-queue-test-scope",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}
