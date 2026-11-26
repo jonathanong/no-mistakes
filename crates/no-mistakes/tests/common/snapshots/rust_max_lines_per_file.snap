@@ -453,6 +453,81 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "unavailable_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "bad.rs",
+          "line": 1,
+          "message": "cannot verify rust-max-lines-per-file: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "rust-max-lines-per-file",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "definite.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn first() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "definite.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn first() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bad.rs",
+          "line": 1,
+          "message": "cannot verify rust-max-lines-per-file: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "rust-max-lines-per-file",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "definite.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn first() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "within_src_limit": {
     "exitCode": 0,
     "report": {

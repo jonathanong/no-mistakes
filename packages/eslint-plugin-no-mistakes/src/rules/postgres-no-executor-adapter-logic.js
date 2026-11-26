@@ -1,7 +1,7 @@
 "use strict";
 
 const { resolveVariable } = require("./postgres-query-text");
-const { TS_ASSERTIONS } = require("./postgres-no-executor-adapter-binding");
+const { TS_ASSERTIONS, constInitializer } = require("./postgres-no-executor-adapter-binding");
 
 function unwrapPlain(node) {
   let current = node;
@@ -94,16 +94,25 @@ function mayBeNullish(node) {
   return !NEVER_NULLISH.has(current.type);
 }
 
-function propertyText(member) {
+function staticString(node, context, seen = new Set()) {
+  let current = node;
+  while (current && TS_ASSERTIONS.has(current.type)) current = current.expression;
+  if (current?.type === "Literal" && typeof current.value === "string") return current.value;
+  if (current?.type === "TemplateLiteral" && current.expressions.length === 0) {
+    return current.quasis[0].value.cooked;
+  }
+  if (current?.type === "Identifier" && context) {
+    const init = constInitializer(current, context, seen);
+    if (init) return staticString(init, context, seen);
+  }
+  return null;
+}
+
+function propertyText(member, context) {
   if (!member.computed) {
     return member.property?.type === "Identifier" ? member.property.name : null;
   }
-  const key = member.property;
-  if (key?.type === "Literal" && typeof key.value === "string") return key.value;
-  if (key?.type === "TemplateLiteral" && key.expressions.length === 0) {
-    return key.quasis[0].value.cooked;
-  }
-  return null;
+  return staticString(member.property, context);
 }
 
 // `.bind` on an executor value still calls that executor. Arguments after

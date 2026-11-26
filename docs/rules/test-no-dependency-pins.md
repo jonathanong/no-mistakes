@@ -357,7 +357,12 @@ or move the exact version assertion into a focused production-release check.
 
 ### Unanalyzable inputs
 
-- A selected file with invalid UTF-8 is decoded lossily and scanned, so a pinned dependency next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding. `options.unanalyzable` does not change either result. Literal version and pin text in readable files are ordinary findings.
+Selected files with invalid UTF-8 are decoded lossily and checked for literal pins.
+If a selected file cannot be read, the rule records its path as unanalyzable.
+The default policy is `report`, which records a finding. The rule option
+`unanalyzable` can override the repository policy with `report`, `advise`
+(an advisory), or `ignore`. The rule reports definite violations in readable
+files in all three modes.
 
 ## Suppression
 

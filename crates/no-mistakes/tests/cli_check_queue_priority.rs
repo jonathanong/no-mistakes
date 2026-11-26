@@ -146,3 +146,44 @@ fn queue_priority_producer_evidence_check_json_snapshot() {
         finding["queueFile"] == queue_file
     }));
 }
+
+#[test]
+fn queue_priority_flow_definitions_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/priority-flow-definitions/fixture");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "queue_priority_flow_definitions",
+        &[
+            ("production", root.clone(), root.join(".no-mistakes.yml")),
+            (
+                "include-tests",
+                root.clone(),
+                root.join("include-tests.yml"),
+            ),
+        ],
+        &[],
+        &[],
+    );
+    let report = &reports["production"]["report"];
+    let queues = report["queues"].as_array().unwrap();
+    assert_eq!(queues.len(), 2);
+    assert!(queues
+        .iter()
+        .all(|finding| finding["queueName"] == "orders"));
+    let warnings = report["warnings"].as_array().unwrap();
+    for site in ["direct.ts:3", "enqueue.ts:5", "enqueue.ts:8"] {
+        assert!(
+            warnings.iter().any(|warning| {
+                let warning = warning.as_str().unwrap();
+                warning.starts_with(&format!(
+                    "queues-check: {site} mixed-priority was not judged"
+                )) && warning.contains("queue \"reports\"")
+            }),
+            "missing abstention at {site}"
+        );
+    }
+    assert_eq!(warnings.len(), 3);
+    let inclusive = &reports["include-tests"]["report"];
+    assert!(inclusive["queues"].as_array().unwrap().is_empty());
+    assert_eq!(inclusive["warnings"].as_array().unwrap().len(), 5);
+}

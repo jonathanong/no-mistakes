@@ -14,6 +14,8 @@ Key options: `--root`, `--config`, `--tsconfig`, `--direction` (default
 `both`), `--depth` (default `2`), repeatable `--relationship`, `--format`
 (default `human`), and `--json`.
 
+The Node API exports `TraversalDirection` for this selector.
+
 Use `--direction deps` to inspect what a file or symbol consumes,
 `--direction dependents` to inspect callers, and `--direction both` for a small
 bidirectional slice.

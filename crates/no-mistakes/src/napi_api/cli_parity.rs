@@ -159,7 +159,7 @@ pub(crate) fn ci_topology_impact_json_impl(options: serde_json::Value) -> napi::
 pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<ImpactedChecksOptions>(options)?;
     let collect_timings = options.timings;
-    let args = build_impacted_checks_args(options);
+    let args = build_impacted_checks_args(options).map_err(to_napi_error)?;
     let mut timing = crate::impacted_checks::timing::TimingTracker::new(false, collect_timings);
     let (report, _) =
         crate::impacted_checks::generate_impacted_checks_with_timing(&args, &mut timing)

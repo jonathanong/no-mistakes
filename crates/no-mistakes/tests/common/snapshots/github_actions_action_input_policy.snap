@@ -198,6 +198,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disabled_next_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 15,
+          "message": ".github/workflows/sequence.yml: job \"build\" step \"example/publish-widget@v1\" calls `example/publish-widget` with a YAML merge key `<<` under `with:`. The allowlist cannot check merged inputs. Write the inputs inline under `with:` so the policy can check each one.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "<<: [{ keep-days: 1 }]",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "empty_actions": {
     "exitCode": 0,
     "report": {

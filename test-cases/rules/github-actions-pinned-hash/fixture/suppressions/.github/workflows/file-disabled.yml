@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-pinned-hash
+name: Pinning policy fixture
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: example/setup-widget@v1

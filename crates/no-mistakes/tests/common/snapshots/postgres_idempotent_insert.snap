@@ -2,6 +2,27 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "disable_directives": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/inserts.sql",
+          "line": 2,
+          "message": "sql/inserts.sql:2: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1);",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "disabled_insert": {
     "exitCode": 1,
     "report": {

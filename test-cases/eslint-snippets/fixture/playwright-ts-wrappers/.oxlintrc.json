@@ -1,0 +1,50 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "off"
+  },
+  "overrides": [
+    {
+      "files": ["unique.tsx"],
+      "rules": { "no-mistakes/playwright-unique": "error" }
+    },
+    {
+      "files": ["selector-priority.spec.ts"],
+      "rules": { "no-mistakes/playwright-selector-priority": "error" }
+    },
+    {
+      "files": ["interactive-test-id.tsx"],
+      "rules": {
+        "no-mistakes/playwright-require-interactive-test-id": [
+          "error",
+          { "interactiveComponents": ["Button"] }
+        ]
+      }
+    },
+    {
+      "files": ["exported-component.tsx"],
+      "rules": { "no-mistakes/playwright-require-exported-component-attribute": "error" }
+    },
+    {
+      "files": ["prefer-get-by-test-id.spec.ts"],
+      "rules": { "no-mistakes/playwright-prefer-get-by-test-id": "error" }
+    },
+    {
+      "files": ["no-empty.tsx"],
+      "rules": { "no-mistakes/playwright-no-empty": "error" }
+    },
+    {
+      "files": ["naming-convention.tsx"],
+      "rules": { "no-mistakes/playwright-naming-convention": "error" }
+    },
+    {
+      "files": ["literals.tsx", "literals-calls.spec.ts"],
+      "rules": { "no-mistakes/playwright-literals": "error" }
+    }
+  ]
+}

@@ -48,6 +48,16 @@ fn config_path_references_json_matches_snapshot() {
                 config("sgconfig.yml"),
             ),
             (
+                "disable_file",
+                root("suppression", "disable-file"),
+                config("sgconfig.yml"),
+            ),
+            (
+                "disable_line",
+                root("suppression", "disable-line"),
+                config("sgconfig.yml"),
+            ),
+            (
                 "pnpm_invalid_yaml",
                 root("fixture", "cases/pnpm-filter-invalid-yaml"),
                 config("pnpm-invalid-yaml.yml"),

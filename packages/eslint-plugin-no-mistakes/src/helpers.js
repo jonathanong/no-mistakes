@@ -1,6 +1,7 @@
 "use strict";
 
 const { fetchInvocation, isFetchCall } = require("./fetch-call");
+const { unwrapExpression } = require("./rules/async-ast");
 
 const DEFAULT_SELECTOR_ATTRIBUTES = ["data-testid", "data-pw"];
 const DEFAULT_NAMING_PATTERN = "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$";
@@ -57,18 +58,20 @@ function attributeName(attribute) {
 }
 
 function literalString(node) {
-  if (node.type === "Literal" && typeof node.value === "string") {
-    return node.value;
+  const target = unwrapExpression(node);
+  if (target?.type === "Literal" && typeof target.value === "string") {
+    return target.value;
   }
-  if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
-    return node.quasis.map((quasi) => quasi.value.raw).join("");
+  if (target?.type === "TemplateLiteral" && target.expressions.length === 0) {
+    return target.quasis.map((quasi) => quasi.value.raw).join("");
   }
   return null;
 }
 
 function staticTemplate(node) {
-  if (node && node.type === "TemplateLiteral" && node.expressions.length > 0) {
-    return node.quasis.some((quasi) => quasi.value.raw.length > 0);
+  const target = unwrapExpression(node);
+  if (target && target.type === "TemplateLiteral" && target.expressions.length > 0) {
+    return target.quasis.some((quasi) => quasi.value.raw.length > 0);
   }
   return false;
 }

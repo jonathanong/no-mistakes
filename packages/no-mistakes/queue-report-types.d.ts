@@ -70,6 +70,10 @@ export interface QueueCheckFinding {
   severity?: QueueCheckSeverity;
 }
 
+export interface QueueRelatedOptions extends ProjectOptions {
+  files: [string, ...string[]];
+}
+
 export interface QueueCheckOptions extends ProjectOptions {
   /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;

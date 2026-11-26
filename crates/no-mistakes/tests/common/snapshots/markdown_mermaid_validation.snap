@@ -1,6 +1,5 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
-assertion_line: 108
 ---
 {
   "saved_fixtures": {
@@ -32,6 +31,26 @@ assertion_line: 108
           "message": "invalid Mermaid diagram (flowchart-v2) at diagram line 2, column 6: unexpected end of input; expected node identifier, edge label",
           "rule": "markdown-mermaid-validation",
           "sourceLine": "```mermaid"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "diagrams.md",
+          "line": 12,
+          "message": "invalid Mermaid diagram (sequence) at diagram line 2, column 9: unexpected text; expected plus, minus, central, actor",
+          "rule": "markdown-mermaid-validation",
+          "sourceLine": "```mermaid <!-- broken diagram control -->"
         }
       ],
       "warnings": []

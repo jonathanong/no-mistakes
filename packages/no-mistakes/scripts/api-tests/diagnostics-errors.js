@@ -75,7 +75,7 @@ test("validation errors without diagnostics remain authoritative", async () => {
   );
 });
 
-test("collection rejects utilities, raw bindings and unknown operations", async () => {
+test("collection rejects utilities, native bindings and unknown operations", async () => {
   await withApi({}, async (api) => {
     for (const operation of [
       "collectDiagnostics",
@@ -83,8 +83,6 @@ test("collection rejects utilities, raw bindings and unknown operations", async 
       "diagnosticsSnapshot",
       "writePlanningImpactArtifacts",
       "createWorkflowTopologyIndex",
-      "testsComment",
-      "testsGraphMermaid",
       "checkJson",
       "unknown",
       "__proto__",
