@@ -17,7 +17,7 @@ pub const RULE_ID: &str = "github-actions-no-required-pr-path-filters";
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 struct Options {
-    workflows: BTreeSet<String>,
+    workflows: Vec<String>,
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
@@ -26,6 +26,56 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
 
 super::diagnostic_source_rule_entrypoints!();
 
+pub(crate) fn collect_config_errors(
+    root: &Path,
+    config_path: Option<&Path>,
+    config: &NoMistakesConfig,
+    errors: &mut Vec<String>,
+) {
+    for (index, rule) in super::validate_options::indexed_rule_applications(config, RULE_ID) {
+        let mut app_errors = BTreeSet::new();
+        if let Err(error) = super::path_filter::RulePathFilter::new(root, config, rule) {
+            app_errors.insert(format!("{error:#}"));
+        }
+        match rule.try_rule_options::<Options>() {
+            Ok(options) => collect_option_errors(&options, &mut app_errors),
+            Err(error) => {
+                app_errors.insert(format!("{error:#}"));
+            }
+        }
+        super::validate_options::push_application_errors(
+            root,
+            config,
+            index,
+            config_path,
+            app_errors,
+            errors,
+        );
+    }
+}
+
+fn collect_option_errors(options: &Options, errors: &mut BTreeSet<String>) {
+    if options.workflows.is_empty() {
+        errors.insert(super::validate_options::format_invalid_option(
+            RULE_ID,
+            "workflows",
+            &options.workflows,
+            "a non-empty list of literal workflow paths directly under .github/workflows",
+        ));
+        return;
+    }
+    for workflow in &options.workflows {
+        if gha_kind(workflow) != Some(false) || workflow.contains(['\\', '*', '?', '[', ']']) {
+            errors.insert(super::validate_options::format_invalid_option(
+                RULE_ID,
+                "workflows",
+                workflow,
+                "a literal path directly under .github/workflows",
+            ));
+        }
+    }
+}
+
 pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -33,36 +83,31 @@ pub fn diagnostics_with_files_and_sources(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Result<AnalysisDiagnostics> {
+    let mut errors = Vec::new();
+    collect_config_errors(root, None, config, &mut errors);
+    super::validate_options::finish(errors)?;
     let mut output = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
-        for workflow in &options.workflows {
-            ensure!(
-                gha_kind(workflow) == Some(false) && !workflow.contains(['\\', '*', '?', '[', ']']),
-                "{RULE_ID}: workflows entries must be literal paths directly under .github/workflows (got {workflow:?})"
-            );
-        }
-        if options.workflows.is_empty() {
-            continue;
-        }
+        let workflows: BTreeSet<String> = options.workflows.into_iter().collect();
         let selected = super::selected_rule_files_matching_with_sources(
             root,
             config,
             rule,
             files,
             sources,
-            |path| options.workflows.contains(&relative_slash_path(root, path)),
+            |path| workflows.contains(&relative_slash_path(root, path)),
         )?;
         let present_paths: BTreeSet<String> = files
             .iter()
             .map(|path| relative_slash_path(root, path))
-            .filter(|rel| options.workflows.contains(rel))
+            .filter(|rel| workflows.contains(rel))
             .collect();
         let selected_paths: BTreeSet<String> = selected
             .iter()
             .map(|path| relative_slash_path(root, path))
             .collect();
-        validate_configured_workflows(&options.workflows, &present_paths, &selected_paths)?;
+        validate_configured_workflows(&workflows, &present_paths, &selected_paths)?;
         let findings = selected
             .par_iter()
             .flat_map(|path| {
@@ -116,3 +161,7 @@ fn validate_configured_workflows(
     ensure!(parts.is_empty(), "{RULE_ID}: {}", parts.join("; "));
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "github_actions_no_required_pr_path_filters/tests.rs"]
+mod tests;

@@ -18,8 +18,16 @@ rules:
         - .github/workflows/ci.yml
 ```
 
-`workflows` lists exact repository-relative `.yml` and `.yaml` workflow paths.
-The default empty list selects no files. Every configured path must match a
+`workflows` is required (no default) and must be a non-empty list of exact
+repository-relative `.yml` and `.yaml` workflow paths directly under
+`.github/workflows`. Omitting `workflows`, passing an empty list, or passing a
+non-literal or non-workflow path is a configuration error: `check` validates
+options before analysis runs, exits with status 2 and empty stdout, and writes
+a diagnostic to stderr naming the config file, rule, and `options.workflows`
+(and async Node `check()` and `analyzeProject()` reject with the same message).
+To disable the rule, set `enabled: false`. `unanalyzable` (`report`, `advise`,
+or `ignore`; default `report`) controls how unreadable, malformed, or
+unrecognized workflow shapes are reported. Every configured path must match a
 selected workflow file; renamed, deleted, or misspelled entries fail the check
 early, and entries excluded by rule or project configuration also fail early
 naming the exclusion. Use the workflows that publish required checks in your

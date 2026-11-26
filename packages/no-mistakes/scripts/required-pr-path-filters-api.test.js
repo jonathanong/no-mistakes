@@ -40,5 +40,17 @@ test(
     assert.equal(child.error, undefined);
     assert.equal(child.status, 1, child.stderr);
     assert.deepEqual(JSON.parse(child.stdout), report);
+    const missingOptions = {
+      root: join(base, "fixture"),
+      config: join(base, "configs/missing-workflows.yml"),
+    };
+    await assert.rejects(
+      () => check(missingOptions),
+      /github-actions-no-required-pr-path-filters.*options\.workflows/,
+    );
+    await assert.rejects(
+      () => analyzeProject({ ...missingOptions, reports: [{ type: "check" }] }),
+      /github-actions-no-required-pr-path-filters.*options\.workflows/,
+    );
   },
 );

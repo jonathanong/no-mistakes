@@ -649,7 +649,7 @@ test("required PR path filters export the workflow scope type", () => {
     "utf8",
   );
   assert.match(declarations, /export interface GithubActionsNoRequiredPrPathFiltersOptions\b/);
-  assert.match(declarations, /workflows\?: string\[\];/);
+  assert.match(declarations, /workflows: string\[\];/);
   assert.match(declarations, /unanalyzable\?: Unanalyzable;/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
