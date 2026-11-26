@@ -36,9 +36,11 @@ The current validation graph is organized as follows:
 - Rust coverage builds instrumented test binaries once, then runs six test
   shards. Documentation tests run independently with their own ordinary Cargo
   cache, so they cannot rebuild an uninstrumented library on the coverage
-  producer before shards start. A collector merges profiles and checks
-  complete execution before producing LCOV and applying the existing coverage
-  and complexity gates.
+  producer before shards start. The collector checks complete execution and
+  stages the downloaded raw profiles under shard-specific names. It hard-links
+  the read-only profiles when the download and report directories share a
+  filesystem and copies them across filesystems. Reporting uses those profiles
+  to produce LCOV and apply the coverage and complexity gates.
 - Standalone library tests build without the CLI, then run as four shards from
   the archived test binaries. Native platform jobs build runtime and Rust test
   artifacts separately. Each platform has its own producer and consumer jobs,
