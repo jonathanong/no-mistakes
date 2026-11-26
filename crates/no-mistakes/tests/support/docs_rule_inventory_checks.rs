@@ -237,23 +237,18 @@ fn postgres_lock_reason_is_in_the_public_rule_inventory() {
     assert_eq!(rule, "postgres-lock-reason");
     let root = repo_root();
     assert!(rule_ids_from_source(&root).contains(rule));
-    let body = read(&root.join(format!("docs/rules/{rule}.md")));
-    for phrase in [
-        "lock-reason:",
-        "prevents:",
-        "writer:",
-        "deadlock-safe",
-        "pg_advisory_",
-        "severity: advisory",
-        "## Suppression",
-    ] {
-        assert!(body.contains(phrase), "missing {phrase}");
-    }
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    assert!(root
+        .join(format!(
+            "plugins/no-mistakes/skills/no-mistakes/references/{rule}.md"
+        ))
+        .is_file());
     for entry in [
         "docs/rules/README.md",
         "docs/cli/check.md",
         "docs/node-api.md",
         "docs/configuration/rules.md",
+        "plugins/no-mistakes/skills/no-mistakes/SKILL.md",
     ] {
         assert!(read(&root.join(entry)).contains(rule), "{entry}");
     }

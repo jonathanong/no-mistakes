@@ -35,6 +35,11 @@ scope (never inferred from hardcoded test globs).
 - `sqlInclude`: SQL file globs for native `.sql` files.
 - `helpers`: configured TypeScript or SQL helper function names that acquire
   locks (case-sensitive in TypeScript; unquoted SQL names fold to lowercase).
+  TypeScript matching inspects statically named callees (matching
+  `postgres-lock-inventory`); dynamically invoked call-of-call expressions such
+  as `getHelper()()` are not matched.
+- `schemaCatalogPath`: ignored when inherited from a referenced project's
+  `postgres` scope (this rule does not load a schema catalog).
 - `unanalyzable` (`report`, `advise`, or `ignore`; default `advise`): policy
   for dynamic executor SQL, unparseable SQL or TypeScript, stored routine
   bodies (`CREATE FUNCTION` / `CREATE PROCEDURE`), truncated SQL alternatives,
