@@ -1,5 +1,5 @@
 use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_suffix_name};
-use sqlparser::ast::{ObjectName, TableAlias};
+use sqlparser::ast::{Ident, ObjectName, TableAlias};
 
 #[derive(Clone)]
 pub(super) struct Binding {
@@ -25,9 +25,13 @@ impl ScopeStack {
     }
 
     pub(super) fn add_table(&mut self, name: &ObjectName, alias: Option<&TableAlias>) -> Binding {
+        self.add_table_alias(name, alias.map(|alias| &alias.name))
+    }
+
+    pub(super) fn add_table_alias(&mut self, name: &ObjectName, alias: Option<&Ident>) -> Binding {
         let relation = object_name_identity(name);
         let (qualifier, has_alias) = match alias {
-            Some(alias) => (ident_key(&alias.name), true),
+            Some(alias) => (ident_key(alias), true),
             None => (relation_suffix_name(&relation), false),
         };
         let binding = Binding {

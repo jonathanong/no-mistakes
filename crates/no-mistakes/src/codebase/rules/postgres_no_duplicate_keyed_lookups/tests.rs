@@ -152,6 +152,40 @@ fn detects_duplicate_lookups_in_cte_update_and_delete() {
 }
 
 #[test]
+fn detects_duplicate_lookups_in_with_dml_modifying_ctes_and_merge() {
+    let sql = "
+        WITH target_orders AS (SELECT id FROM orders WHERE status = 'pending')
+        UPDATE orders o
+        SET
+            cached_name = (SELECT a1.name FROM accounts a1 WHERE a1.id = o.account_id),
+            cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id)
+        FROM target_orders t
+        WHERE o.id = t.id;
+
+        WITH removed AS (
+            DELETE FROM orders o
+            WHERE (SELECT a1.suspended FROM accounts a1 WHERE a1.id = o.account_id)
+              AND (SELECT a2.archived FROM accounts a2 WHERE a2.id = o.account_id)
+            RETURNING o.id
+        )
+        SELECT id FROM removed;
+
+        MERGE INTO orders o
+        USING incoming_orders s
+        ON o.id = s.id
+        WHEN MATCHED THEN
+            UPDATE SET
+                cached_name = (SELECT a1.name FROM accounts a1 WHERE a1.id = s.account_id),
+                cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = s.account_id)
+        WHEN NOT MATCHED THEN
+            INSERT (id, cached_name)
+            VALUES (s.id, (SELECT a3.name FROM accounts a3 WHERE a3.id = s.account_id));
+    ";
+    let facts = collect(sql);
+    assert_eq!(facts.len(), 3);
+}
+
+#[test]
 fn validates_invalid_options_early() {
     let configs = crate::test_support::rule_fixture_root(RULE_ID)
         .parent()

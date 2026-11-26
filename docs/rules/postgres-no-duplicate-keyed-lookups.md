@@ -17,9 +17,10 @@ for additional columns from an already-fetched relation.
 
 ## What it catches
 
-Within a single `SELECT`, `UPDATE`, `DELETE`, or CTE query, this rule flags a
-second or subsequent keyed lookup of the same target relation when the
-normalized lookup key matches an earlier lookup in the same scope:
+Within a single `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `MERGE`, or `WITH` /
+data-modifying CTE query, this rule flags a second or subsequent keyed lookup of
+the same target relation when the normalized lookup key matches an earlier
+lookup in the same scope:
 
 - Repeated correlated scalar subqueries on the same relation and key, including
   unqualified inner key columns (`WHERE id = o.account_id`) and differing table

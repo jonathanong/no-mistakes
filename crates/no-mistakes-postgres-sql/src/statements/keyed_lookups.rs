@@ -1,3 +1,4 @@
+mod dml;
 mod expr_norm;
 mod join;
 mod normalize;
@@ -5,12 +6,11 @@ mod scope;
 mod subquery;
 
 use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
-use join::{inspect_join, record_lookup, register_table_factor, register_table_with_joins};
+use join::{inspect_join, record_lookup, register_table_factor};
 use normalize::LookupKey;
 use scope::ScopeStack;
 use sqlparser::ast::{
-    Delete, Expr, FromTable, OrderByKind, Query, Select, SelectItem, SetExpr, Statement, Update,
-    Visit, Visitor,
+    Expr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -28,13 +28,10 @@ fn walk_statement(
 ) {
     match statement {
         Statement::Query(query) => walk_query(query, scopes, out),
-        Statement::Insert(insert) => {
-            if let Some(source) = insert.source.as_deref() {
-                walk_query(source, scopes, out);
-            }
-        }
-        Statement::Update(update) => walk_update(update, scopes, out),
-        Statement::Delete(delete) => walk_delete(delete, scopes, out),
+        Statement::Insert(insert) => dml::walk_insert(insert, scopes, out),
+        Statement::Update(update) => dml::walk_update(update, scopes, out),
+        Statement::Delete(delete) => dml::walk_delete(delete, scopes, out),
+        Statement::Merge(merge) => dml::walk_merge(merge, scopes, out),
         Statement::CreateView(view) => walk_query(&view.query, scopes, out),
         Statement::CreateTable(table) => {
             if let Some(query) = table.query.as_deref() {
@@ -71,6 +68,10 @@ fn walk_set_expr(
             walk_set_expr(left, &[], scopes, out);
             walk_set_expr(right, &[], scopes, out);
         }
+        SetExpr::Update(statement)
+        | SetExpr::Delete(statement)
+        | SetExpr::Insert(statement)
+        | SetExpr::Merge(statement) => walk_statement(statement, scopes, out),
         _ => {}
     }
 }
@@ -92,10 +93,7 @@ fn walk_select(
     let exprs = select
         .projection
         .iter()
-        .filter_map(|item| match item {
-            SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => Some(expr),
-            _ => None,
-        })
+        .filter_map(select_item_expr)
         .chain(select.selection.iter())
         .chain(select.having.iter())
         .chain(order_exprs.iter().copied());
@@ -103,47 +101,15 @@ fn walk_select(
     scopes.pop_frame();
 }
 
-fn walk_update(
-    update: &Update,
-    scopes: &mut ScopeStack,
-    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) {
-    scopes.push_frame();
-    let mut seen = BTreeMap::new();
-    register_table_with_joins(&update.table, scopes, &mut seen, out);
-    if let Some(from) = &update.from {
-        let tables = match from {
-            sqlparser::ast::UpdateTableFromKind::BeforeSet(t)
-            | sqlparser::ast::UpdateTableFromKind::AfterSet(t) => t,
-        };
-        for table in tables {
-            register_table_with_joins(table, scopes, &mut seen, out);
-        }
-    }
-    let exprs = update
-        .assignments
-        .iter()
-        .map(|assignment| &assignment.value)
-        .chain(update.selection.iter());
-    inspect_exprs(exprs, scopes, &mut seen, out);
-    scopes.pop_frame();
+fn returning_exprs(items: Option<&[SelectItem]>) -> impl Iterator<Item = &Expr> {
+    items.into_iter().flatten().filter_map(select_item_expr)
 }
 
-fn walk_delete(
-    delete: &Delete,
-    scopes: &mut ScopeStack,
-    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) {
-    scopes.push_frame();
-    let mut seen = BTreeMap::new();
-    let from_tables = match &delete.from {
-        FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables) => tables,
-    };
-    for table in from_tables.iter().chain(delete.using.iter().flatten()) {
-        register_table_with_joins(table, scopes, &mut seen, out);
+fn select_item_expr(item: &SelectItem) -> Option<&Expr> {
+    match item {
+        SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => Some(expr),
+        _ => None,
     }
-    inspect_exprs(delete.selection.iter(), scopes, &mut seen, out);
-    scopes.pop_frame();
 }
 
 fn inspect_exprs<'a>(

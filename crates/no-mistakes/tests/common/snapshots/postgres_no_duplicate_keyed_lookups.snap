@@ -67,6 +67,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "dml_and_with": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 14,
+          "message": "queries/check.sql:14: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 13); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "AND (SELECT a2.archived FROM accounts a2 WHERE a2.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 25,
+          "message": "queries/check.sql:25: duplicate keyed lookup of `accounts` on `id = s.account_id` (already looked up at line 24); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = s.account_id);",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 7,
+          "message": "queries/check.sql:7: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 6); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id)",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "embedded_advise": {
     "exitCode": 1,
     "report": {
