@@ -1,9 +1,9 @@
 use super::checkout::CheckoutState;
 use super::diff::{ranges, Form, Range};
 use super::env_read;
-use super::exprs::{extract, unguarded_pull_request_read, End, PULL_REQUEST_READ};
+use super::exprs::{extract, unguarded_pull_request_read, PULL_REQUEST_READ};
 use super::options::CompiledOptions;
-use super::revisions::classify_token;
+use super::revisions::Revision;
 use super::shell_guard;
 use super::verdicts::{judge_diff_pair, Verdict};
 use super::RULE_ID;
@@ -52,12 +52,10 @@ pub(super) fn judge_step(
 ) {
     if opts.require_consistent_revision_pairs && (pull || queue) {
         let (text, exprs) = extract(step.script);
-        for range in ranges(&text, &exprs, &step.env) {
-            let left = classify_token(&range.left_raw, &exprs, &step.env, step.checkout);
-            let right = classify_token(&range.right_raw, &exprs, &step.env, step.checkout);
+        for range in ranges(&text, &exprs, &step.env, step.checkout) {
             match judge_diff_pair(
-                left,
-                right,
+                range.left,
+                range.right,
                 range.form,
                 step.mixed,
                 pull,
@@ -75,7 +73,7 @@ pub(super) fn judge_step(
         }
     } else if pull {
         let (text, exprs) = extract(step.script);
-        for range in ranges(&text, &exprs, &step.env) {
+        for range in ranges(&text, &exprs, &step.env, step.checkout) {
             if let Some(reason) = legacy_reason(&range, step.mixed) {
                 findings.push(finding(step, range.line, "diff", reason));
             }
@@ -94,14 +92,16 @@ pub(super) fn judge_step(
 
 fn legacy_reason(range: &Range, mixed: bool) -> Option<&'static str> {
     let ends = [range.left, range.right];
-    let base = ends
-        .iter()
-        .any(|end| matches!(end, End::BaseSha | End::BaseRef));
-    if mixed && base && ends.contains(&End::GithubSha) {
+    if mixed && ends.iter().any(|r| r.is_pr_base()) && ends.contains(&Revision::GithubSha) {
         return Some(PAIRED);
     }
-    let both = ends.contains(&End::BaseSha) && ends.contains(&End::HeadSha);
-    (both && range.form != Form::ThreeDot).then_some(TWO_DOT)
+    let has_base = ends
+        .iter()
+        .any(|r| matches!(r, Revision::PullRequestBaseSha | Revision::CoalescedBaseSha));
+    let has_head = ends
+        .iter()
+        .any(|r| matches!(r, Revision::PullRequestHeadSha | Revision::CoalescedHeadSha));
+    (has_base && has_head && range.form != Form::ThreeDot).then_some(TWO_DOT)
 }
 
 fn finding(step: &Step<'_>, script_line: usize, token: &str, reason: &str) -> RuleFinding {

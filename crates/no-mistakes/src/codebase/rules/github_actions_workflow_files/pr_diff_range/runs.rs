@@ -1,15 +1,55 @@
 use super::checkout::{job_effective_checkout, next_checkout_state, CheckoutState};
 use super::options::CompiledOptions;
 use super::pairs::{check_env_pairs, check_flag_pairs, check_with_pairs, PairContext, PairOutput};
+use super::pairs_locate::shape_unanalyzable;
 use super::step_judge::{judge_step, Step};
 use super::yaml_shapes::{env_of, events, get, guards};
 use super::RULE_ID;
-use crate::codebase::rules::github_actions_script_expressions::step_run_lines;
+use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::codebase::rules::github_actions_workflow_files::gha_kind;
+use crate::codebase::rules::github_actions_workflow_files::job_lines::document::Document;
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::scalar_name;
 use crate::codebase::rules::RuleFinding;
-use serde_yaml::Value;
+use serde_yaml::{Mapping, Value};
 use std::cell::OnceCell;
+
+fn literal_map(value: &Value) -> Option<&Mapping> {
+    value
+        .as_mapping()
+        .filter(|map| !map.contains_key(Value::String("<<".to_owned())))
+}
+
+struct Scope<'a> {
+    rel: &'a str,
+    source: &'a str,
+    mixed: bool,
+    pull: bool,
+    queue: bool,
+    document: &'a OnceCell<Option<Document>>,
+}
+
+impl<'a> Scope<'a> {
+    fn ctx(
+        &self,
+        job: Option<&'a str>,
+        step_index: Option<usize>,
+        checkout: CheckoutState,
+        located: Option<&'a StepRun>,
+    ) -> PairContext<'a> {
+        PairContext {
+            rel: self.rel,
+            source: self.source,
+            job,
+            step_index,
+            mixed: self.mixed,
+            pull: self.pull,
+            queue: self.queue,
+            checkout,
+            document: self.document,
+            located,
+        }
+    }
+}
 
 pub(super) fn check_source_with_options(
     rel: &str,
@@ -53,64 +93,67 @@ pub(super) fn check_source_with_options(
     let located = step_run_lines(source, false);
     let workflow_env = env_of(value.get("env"));
     let document = OnceCell::new();
+    let scope = Scope { rel, source, mixed, pull, queue, document: &document };
     let mut findings = Vec::new();
     let mut undecidable = Vec::new();
     let initial_checkout = CheckoutState::initial(pull, queue);
     if !opts.revision_pairs.is_empty() {
-        let ctx = PairContext {
-            rel,
-            source,
-            job: None,
-            step_index: None,
-            mixed,
-            pull,
-            queue,
-            checkout: initial_checkout,
-            document: &document,
-            located: None,
-        };
-        let mut out = PairOutput {
-            findings: &mut findings,
-            undecidable: &mut undecidable,
-        };
+        let ctx = scope.ctx(None, None, initial_checkout, None);
+        let mut out = PairOutput { findings: &mut findings, undecidable: &mut undecidable };
         check_env_pairs(&ctx, value.get("env"), &workflow_env, &opts.revision_pairs, &mut out);
     }
-    let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) else {
+    let Some(jobs_raw) = value.get("jobs").filter(|v| !v.is_null()) else {
         return (findings, undecidable);
     };
-    for (id, job) in jobs {
-        let Some(job) = job.as_mapping() else {
+    let Some(jobs) = literal_map(jobs_raw) else {
+        if opts.strict_enabled() {
+            undecidable.push(shape_unanalyzable(
+                rel, source, &document, None, None, "jobs", "workflow `jobs`",
+            ));
+        }
+        return (findings, undecidable);
+    };
+    for (id, job_raw) in jobs {
+        let name = scalar_name(id);
+        let Some(job) = literal_map(job_raw) else {
+            if opts.strict_enabled() {
+                undecidable.push(shape_unanalyzable(
+                    rel, source, &document, Some(&name), None, "job", &format!("job `{name}`"),
+                ));
+            }
             continue;
         };
-        let name = scalar_name(id);
         let mut job_env = workflow_env.clone();
         job_env.extend(env_of(get(job, "env")));
         let job_guard = guards(get(job, "if"));
-        let steps = get(job, "steps").and_then(Value::as_sequence);
+        let steps_raw = get(job, "steps").filter(|v| !v.is_null());
+        let steps = match steps_raw.map(Value::as_sequence) {
+            Some(Some(seq)) => Some(seq),
+            Some(None) => {
+                if opts.strict_enabled() {
+                    undecidable.push(shape_unanalyzable(
+                        rel, source, &document, Some(&name), None, "steps", &format!("job `{name}` `steps`"),
+                    ));
+                }
+                None
+            }
+            None => None,
+        };
         let job_checkout = job_effective_checkout(steps, pull, queue);
         if !opts.revision_pairs.is_empty() {
-            let ctx = PairContext {
-                rel,
-                source,
-                job: Some(&name),
-                step_index: None,
-                mixed,
-                pull,
-                queue,
-                checkout: job_checkout,
-                document: &document,
-                located: None,
-            };
-            let mut out = PairOutput {
-                findings: &mut findings,
-                undecidable: &mut undecidable,
-            };
+            let ctx = scope.ctx(Some(&name), None, job_checkout, None);
+            let mut out = PairOutput { findings: &mut findings, undecidable: &mut undecidable };
             check_env_pairs(&ctx, get(job, "env"), &job_env, &opts.revision_pairs, &mut out);
             check_with_pairs(&ctx, job, &opts.revision_pairs, &mut out);
         }
         let mut checkout = initial_checkout;
         for (index, step) in steps.into_iter().flatten().enumerate() {
-            let Some(step_map) = step.as_mapping() else {
+            let Some(step_map) = literal_map(step) else {
+                if opts.strict_enabled() {
+                    undecidable.push(shape_unanalyzable(
+                        rel, source, &document, Some(&name), Some(index + 1), "step", &format!("job `{name}` step {}", index + 1),
+                    ));
+                }
                 continue;
             };
             checkout = next_checkout_state(checkout, step_map, pull, queue);
@@ -120,22 +163,8 @@ pub(super) fn check_source_with_options(
                 .iter()
                 .find(|item| item.job == name && item.step == index + 1);
             if !opts.revision_pairs.is_empty() {
-                let ctx = PairContext {
-                    rel,
-                    source,
-                    job: Some(&name),
-                    step_index: Some(index + 1),
-                    mixed,
-                    pull,
-                    queue,
-                    checkout,
-                    document: &document,
-                    located: located_step,
-                };
-                let mut out = PairOutput {
-                    findings: &mut findings,
-                    undecidable: &mut undecidable,
-                };
+                let ctx = scope.ctx(Some(&name), Some(index + 1), checkout, located_step);
+                let mut out = PairOutput { findings: &mut findings, undecidable: &mut undecidable };
                 check_env_pairs(&ctx, get(step_map, "env"), &env, &opts.revision_pairs, &mut out);
                 check_with_pairs(&ctx, step_map, &opts.revision_pairs, &mut out);
                 if let Some(script) = get(step_map, "run").and_then(Value::as_str) {
@@ -146,17 +175,9 @@ pub(super) fn check_source_with_options(
                 continue;
             };
             let step = Step {
-                rel,
-                source,
-                mixed,
-                job: &name,
-                index: index + 1,
-                script,
-                env,
-                located: located_step,
-                document: &document,
-                guarded: job_guard || guards(get(step_map, "if")),
-                checkout,
+                rel, source, mixed, job: &name, index: index + 1, script, env,
+                located: located_step, document: &document,
+                guarded: job_guard || guards(get(step_map, "if")), checkout,
             };
             judge_step(&step, pull, queue, opts, &mut findings, &mut undecidable);
         }

@@ -1,4 +1,5 @@
-use super::exprs::{classify, End};
+use super::checkout::CheckoutState;
+use super::revisions::{classify_token, Revision};
 use crate::codebase::rules::github_actions_workflow_files::shell_words::{commands, Word};
 use std::collections::BTreeMap;
 
@@ -11,10 +12,8 @@ pub(super) enum Form {
 
 pub(super) struct Range {
     pub(super) line: usize,
-    pub(super) left: End,
-    pub(super) right: End,
-    pub(super) left_raw: String,
-    pub(super) right_raw: String,
+    pub(super) left: Revision,
+    pub(super) right: Revision,
     pub(super) form: Form,
 }
 
@@ -41,15 +40,25 @@ const VALUE_FLAGS: &[&str] = &[
     "--inter-hunk-context",
 ];
 
-pub(super) fn ranges(text: &str, exprs: &[String], env: &BTreeMap<String, String>) -> Vec<Range> {
+pub(super) fn ranges(
+    text: &str,
+    exprs: &[String],
+    env: &BTreeMap<String, String>,
+    checkout: CheckoutState,
+) -> Vec<Range> {
     commands(text)
         .commands
         .iter()
-        .filter_map(|command| range(command, exprs, env))
+        .filter_map(|command| range(command, exprs, env, checkout))
         .collect()
 }
 
-fn range(command: &[Word], exprs: &[String], env: &BTreeMap<String, String>) -> Option<Range> {
+fn range(
+    command: &[Word],
+    exprs: &[String],
+    env: &BTreeMap<String, String>,
+    checkout: CheckoutState,
+) -> Option<Range> {
     let mut words: Vec<&str> = command
         .iter()
         .flat_map(|word| word.text.split_whitespace())
@@ -98,10 +107,8 @@ fn range(command: &[Word], exprs: &[String], env: &BTreeMap<String, String>) -> 
     };
     Some(Range {
         line: command[0].line,
-        left: classify(left, exprs, env),
-        right: classify(right, exprs, env),
-        left_raw: left.to_string(),
-        right_raw: right.to_string(),
+        left: classify_token(left, exprs, env, checkout),
+        right: classify_token(right, exprs, env, checkout),
         form,
     })
 }

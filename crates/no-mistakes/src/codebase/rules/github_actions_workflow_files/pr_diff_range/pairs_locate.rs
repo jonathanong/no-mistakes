@@ -144,3 +144,52 @@ pub(super) fn emit(
         target,
     });
 }
+
+pub(super) fn shape_unanalyzable(
+    rel: &str,
+    source: &str,
+    document: &std::cell::OnceCell<Option<Document>>,
+    job: Option<&str>,
+    step_index: Option<usize>,
+    field: &str,
+    subject: &str,
+) -> RuleFinding {
+    let line = document
+        .get_or_init(|| Document::parse(source))
+        .as_ref()
+        .and_then(|doc| {
+            let root = doc.roots().first().copied();
+            match (job, step_index) {
+                (None, _) => root.and_then(|r| doc.field_line(r, field)),
+                (Some(name), None) => root
+                    .and_then(|r| doc.field(r, "jobs"))
+                    .and_then(|jobs| {
+                        if field == "steps" {
+                            doc.field(jobs, name)
+                                .and_then(|j| doc.field_line(j, "steps"))
+                        } else {
+                            doc.field_line(jobs, name)
+                        }
+                    }),
+                (Some(name), Some(index)) => root
+                    .and_then(|r| doc.field(r, "jobs"))
+                    .and_then(|jobs| doc.field(jobs, name))
+                    .and_then(|j| doc.field(j, "steps"))
+                    .and_then(|steps| doc.sequence(steps))
+                    .and_then(|seq| seq.get(index.saturating_sub(1)).copied())
+                    .map(|node| doc.nodes[node].line),
+            }
+        })
+        .unwrap_or(1);
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.to_string(),
+        file: rel.to_string(),
+        line,
+        message: format!(
+            "{rel}:{line}: {subject} uses a non-literal or YAML-merged shape, so PR revision pairs cannot be verified statically; write the job/steps mapping explicitly or suppress this line."
+        ),
+        import: None,
+        target: Some("unanalyzable".to_string()),
+    }
+}

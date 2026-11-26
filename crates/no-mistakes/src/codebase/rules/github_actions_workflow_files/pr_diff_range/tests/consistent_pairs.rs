@@ -247,7 +247,6 @@ jobs:
     env:
       DIFF_BASE: ${{ github.event.pull_request.base.sha }}
     steps:
-      - nope
       - env:
           OTHER: 1
         uses: ./.github/actions/x
@@ -259,6 +258,34 @@ jobs:
     let (findings, undecidable) = check(opts, partial);
     assert!(findings.is_empty());
     assert!(undecidable.is_empty());
+
+    let bad_jobs = "on: pull_request\njobs: bad\n";
+    let (findings, undecidable) = check(opts, bad_jobs);
+    assert!(findings.is_empty());
+    assert_eq!(undecidable.len(), 1, "{undecidable:#?}");
+    assert!(undecidable[0].contains("workflow `jobs`"));
+
+    let bad_shapes = r#"
+on: pull_request
+jobs:
+  scalar_job: nope
+  merged_job:
+    '<<': { runs-on: ubuntu-latest }
+  bad_steps:
+    steps: nope
+  step_shapes:
+    steps:
+      - nope
+      - '<<': { run: echo ok }
+"#;
+    let (findings, undecidable) = check(opts, bad_shapes);
+    assert!(findings.is_empty(), "{findings:#?}");
+    assert_eq!(undecidable.len(), 5, "{undecidable:#?}");
+    assert!(undecidable[0].contains("job `scalar_job`"));
+    assert!(undecidable[1].contains("job `merged_job`"));
+    assert!(undecidable[2].contains("job `bad_steps` `steps`"));
+    assert!(undecidable[3].contains("job `step_shapes` step 1"));
+    assert!(undecidable[4].contains("job `step_shapes` step 2"));
 }
 
 #[test]

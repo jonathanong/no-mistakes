@@ -103,23 +103,21 @@ fn classify_literal(piece: &str, exprs: &[String], checkout: CheckoutState) -> R
         "github.sha" => Revision::GithubSha,
         "github.event.merge_group.base_sha" => Revision::MergeGroupBaseSha,
         "github.event.merge_group.head_sha" => Revision::MergeGroupHeadSha,
-        other => classify_fallback(other),
+        other => classify_fallback(other).unwrap_or(Revision::Unknown),
     }
 }
 
-fn classify_fallback(expression: &str) -> Revision {
-    let Some((left, right)) = expression.split_once("||") else {
-        return Revision::Unknown;
-    };
+pub(super) fn classify_fallback(expression: &str) -> Option<Revision> {
+    let (left, right) = expression.split_once("||")?;
     match (left.trim(), right.trim()) {
         ("github.event.pull_request.base.sha", "github.event.merge_group.base_sha")
         | ("github.event.merge_group.base_sha", "github.event.pull_request.base.sha") => {
-            Revision::CoalescedBaseSha
+            Some(Revision::CoalescedBaseSha)
         }
         ("github.event.pull_request.head.sha", "github.event.merge_group.head_sha")
         | ("github.event.merge_group.head_sha", "github.event.pull_request.head.sha") => {
-            Revision::CoalescedHeadSha
+            Some(Revision::CoalescedHeadSha)
         }
-        _ => Revision::Unknown,
+        _ => None,
     }
 }
