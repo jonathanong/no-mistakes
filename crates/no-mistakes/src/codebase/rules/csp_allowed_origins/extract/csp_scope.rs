@@ -1,7 +1,9 @@
 use super::csp_strings::{is_dynamic_policy_candidate, CspExprResult};
 use super::url::{record_unanalyzable, record_url_expr};
 use super::OriginVisitor;
-use crate::codebase::rules::csp_allowed_origins::{CspDirective, UnanalyzableReason};
+use crate::codebase::rules::csp_allowed_origins::{
+    CollectedOrigins, CspDirective, UnanalyzableReason,
+};
 use crate::codebase::ts_source::line_number;
 use oxc_ast::ast::{Argument, ArrowFunctionExpression, Expression};
 use oxc_ast_visit::{walk, Visit};
@@ -10,13 +12,14 @@ use oxc_span::GetSpan;
 impl OriginVisitor<'_> {
     pub(super) fn counts(&self) -> (usize, usize) {
         (
-            self.collected.csp_strings.len(),
+            self.collected.csp_strings.len() + self.collected.deferred_policies.len(),
             self.collected.csp_unanalyzable.len(),
         )
     }
 
     pub(super) fn note_resolved_binding(&mut self, name: &str, s0: usize, u0: usize) {
-        if self.collected.csp_strings.len() > s0 && self.collected.csp_unanalyzable.len() == u0 {
+        let (strings, unanalyzable) = self.counts();
+        if strings > s0 && unanalyzable == u0 {
             self.resolved_bindings.insert(name.to_owned());
         }
     }
@@ -45,11 +48,11 @@ impl OriginVisitor<'_> {
 
     pub(super) fn visit_csp_expr<T, W>(&mut self, try_collect: T, walk_children: W)
     where
-        T: FnOnce(&mut Vec<String>) -> CspExprResult,
+        T: FnOnce(&mut CollectedOrigins) -> CspExprResult,
         W: FnOnce(&mut Self),
     {
         let result = if self.csp_depth == 0 {
-            try_collect(&mut self.collected.csp_strings)
+            try_collect(&mut self.collected)
         } else {
             CspExprResult::Ignored
         };

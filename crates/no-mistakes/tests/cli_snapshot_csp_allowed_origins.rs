@@ -10,6 +10,7 @@ fn csp_allowed_origins_json_matches_snapshot() {
     let dynamic_policies = rules_path("csp-allowed-origins", "fixture", "dynamic-policies");
     let mixed_static_dynamic = rules_path("csp-allowed-origins", "fixture", "mixed-static-dynamic");
     let parse_error_target = rules_path("csp-allowed-origins", "fixture", "parse-error-target");
+    let const_registries = rules_path("csp-allowed-origins", "fixture", "const-registries");
     assert_saved_fixture(
         "csp_allowed_origins",
         &[
@@ -113,6 +114,21 @@ fn csp_allowed_origins_json_matches_snapshot() {
                 "parse-error-target-ignore",
                 parse_error_target.clone(),
                 parse_error_target.join("ignore.yml"),
+            ),
+            (
+                "const-registry-same-module",
+                const_registries.clone(),
+                const_registries.join("same-module.yml"),
+            ),
+            (
+                "const-registry-imported",
+                const_registries.clone(),
+                const_registries.join("imported.yml"),
+            ),
+            (
+                "const-registry-mutated",
+                const_registries.clone(),
+                const_registries.join("mutated.yml"),
             ),
         ],
     );

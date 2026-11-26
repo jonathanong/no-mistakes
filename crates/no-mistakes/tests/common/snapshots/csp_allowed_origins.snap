@@ -2,6 +2,75 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "const-registry-imported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 4,
+          "message": "Origin 'https://unlisted.example.net' used for connect-src is not allowed by CSP in src/imported-csp.ts. Add 'https://unlisted.example.net' to connect-src in src/imported-csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://unlisted.example.net/v1/items\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "const-registry-mutated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/mutated.ts",
+          "line": 11,
+          "message": "Dynamic CSP policy expression in src/mutated.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return `connect-src 'self' ${pushedOrigins.join(\" \")}`;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/mutated.ts",
+          "line": 7,
+          "message": "Dynamic CSP policy expression in src/mutated.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return `connect-src 'self' ${listedOrigins.join(\" \")}`;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "const-registry-same-module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 4,
+          "message": "Origin 'https://unlisted.example.net' used for connect-src is not allowed by CSP in src/same-module.ts. Add 'https://unlisted.example.net' to connect-src in src/same-module.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://unlisted.example.net/v1/items\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "default-off": {
     "exitCode": 0,
     "report": {

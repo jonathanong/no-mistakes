@@ -774,7 +774,9 @@ rules:
 third-party browser origins (including protocol-relative `//host` and IPv6
 literals) in JS/TS/JSX/TSX files against static CSP directives declared in the
 root-relative files listed in required `options.cspFiles` (first duplicate
-directive wins per policy; multiple policies intersect). Optional
+directive wins per policy; multiple policies intersect; a module-level `const`
+string array may supply those origins through `.join` or a spread, including
+one named import). Optional
 `options.selfOrigins` lists first-party origins treated as `'self'` (default
 `[]`). Dynamic URLs, malformed network URLs, and dynamic `<link>` `rel`/`as`
 attributes use the shared `options.unanalyzable` policy (`report` by default,
