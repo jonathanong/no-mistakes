@@ -32,6 +32,8 @@ mod check_playwright_patterns;
 #[path = "check_recall_audit.rs"]
 mod check_recall_audit;
 
+#[path = "check_nested_controls.rs"]
+mod check_nested_controls;
 #[path = "check_react_consumed_directives.rs"]
 mod check_react_consumed_directives;
 #[path = "check_redirect_suppression.rs"]
