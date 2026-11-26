@@ -117,13 +117,11 @@ fn supported_sql_aliases_preserve_inherited_cross_file_reports() {
         ]
     );
     let baseline = check_runner::json_value(&baseline);
-    for config in ["project-fail.yml"] {
-        assert_eq!(
-            check_runner::json_value(&report(config, None)),
-            baseline,
-            "{config}"
-        );
-    }
+    assert_eq!(
+        check_runner::json_value(&report("project-fail.yml", None)),
+        baseline,
+        "project-fail.yml"
+    );
 }
 
 #[test]
