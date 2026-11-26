@@ -26,6 +26,16 @@ fn postgres_require_named_constraints_reports_and_suppressions() {
                 migration.clone(),
             ),
             (
+                "disable_file",
+                rules_path(RULE, "fixture", "disable-file"),
+                migration.clone(),
+            ),
+            (
+                "disable_line",
+                rules_path(RULE, "fixture", "disable-lines"),
+                migration.clone(),
+            ),
+            (
                 "named_and_create_table",
                 rules_path(RULE, "fixture", "pass"),
                 migration.clone(),

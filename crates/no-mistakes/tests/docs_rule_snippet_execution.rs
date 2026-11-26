@@ -73,62 +73,32 @@ fn rule_ids_from_source(root: &Path) -> BTreeSet<String> {
 
 #[test]
 fn rule_docs_execute_valid_and_counterexample_snippets() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Mutex;
     let root = repo_root();
-    let mut failures = Vec::new();
-    for rule_id in rule_ids_from_source(&root) {
-        let page = docs_rule_snippets::load_page(&root, &rule_id);
-        let mut valid = docs_rule_snippets::heading_section(&page.body, "Valid example");
-        if docs_rule_snippets::fences(&valid).is_empty() {
-            valid = docs_rule_snippets::labeled_section(&page.body, &["Valid example", "Pass"]);
-        }
-        let mut counter = docs_rule_snippets::counterexample_section(&page.body);
-        if docs_rule_snippets::fences(&counter).is_empty() {
-            counter = docs_rule_snippets::labeled_section(&page.body, &["Counterexample", "Fail"]);
-        }
-        let valid_fences = docs_rule_snippets::fences(&valid);
-        let counter_fences = docs_rule_snippets::fences(&counter);
-        if valid_fences.is_empty() {
-            failures.push(format!(
-                "{}: Valid example needs an executable fence",
-                page.file
-            ));
-            continue;
-        }
-        if counter_fences.is_empty() {
-            failures.push(format!(
-                "{}: Counterexample needs an executable fence",
-                page.file
-            ));
-            continue;
-        }
-        let config = docs_rule_snippets::rule_config_yaml(&page.body, &rule_id);
-        for (label, expect_report, snippet) in [
-            ("Valid example", false, valid_fences.as_slice()),
-            ("Counterexample", true, counter_fences.as_slice()),
-        ] {
-            for (index, fences) in docs_rule_snippets::snippet_runs(snippet) {
-                let fixture = docs_rule_snippets::materialize_snippet(&config, &fences);
-                match docs_rule_snippets::run_rule(fixture.path(), &rule_id) {
-                    Ok(hits) => {
-                        if hits.is_empty() == expect_report {
-                            failures.push(format!(
-                                "{}: {label}[{index}] expected {} but hits={hits:?}",
-                                page.file,
-                                if expect_report {
-                                    "a finding"
-                                } else {
-                                    "silence"
-                                },
-                            ));
-                        }
-                    }
-                    Err(err) => {
-                        failures.push(format!("{}: {label}[{index}] run error: {err}", page.file))
-                    }
+    let rules: Vec<String> = rule_ids_from_source(&root).into_iter().collect();
+    let next = AtomicUsize::new(0);
+    let slots: Vec<Mutex<Vec<String>>> = (0..rules.len()).map(|_| Mutex::new(Vec::new())).collect();
+    let workers = std::thread::available_parallelism()
+        .map_or(2, usize::from)
+        .clamp(2, 4)
+        .min(rules.len().max(1));
+    std::thread::scope(|scope| {
+        for _ in 0..workers {
+            scope.spawn(|| loop {
+                let idx = next.fetch_add(1, Ordering::Relaxed);
+                if idx >= rules.len() {
+                    break;
                 }
-            }
+                let local = docs_rule_snippets::execute_rule_snippets(&root, &rules[idx]);
+                *slots[idx].lock().unwrap_or_else(|e| e.into_inner()) = local;
+            });
         }
-    }
+    });
+    let failures: Vec<String> = slots
+        .into_iter()
+        .flat_map(|slot| slot.into_inner().unwrap_or_else(|e| e.into_inner()))
+        .collect();
     let gaps = read(&root.join("crates/no-mistakes/tests/support/docs_rule_snippet_gaps.txt"));
     let known: Vec<&str> = gaps
         .lines()

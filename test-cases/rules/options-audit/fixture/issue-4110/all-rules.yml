@@ -10,6 +10,7 @@ rules:
   - {rule: coverage-producer-assertion-owner, scope: repository, options: {bogusOption: true}}
   - {rule: csharp-max-lines-per-file, scope: repository, options: {bogusOption: true}}
   - {rule: csharp-no-async-void-delegate, scope: repository, options: {bogusOption: true}}
+  - {rule: csp-allowed-origins, scope: repository, options: {bogusOption: true}}
   - {rule: declared-payload-compatibility, scope: repository, options: {bogusOption: true}}
   - {rule: dependabot-cooldown-policy, scope: repository, options: {bogusOption: true}}
   - {rule: doc-consistency, scope: repository, options: {bogusOption: true}}

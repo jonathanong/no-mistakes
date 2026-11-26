@@ -1,0 +1,141 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/deep-expansion.yml",
+          "line": 11,
+          "message": ".github/workflows/deep-expansion.yml:11: job `check` step 1 exceeds the shell nesting limit at a command substitution, so configured command policies could not be checked there. Move the nested commands to a direct run step.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "printf '%s' \"$(example-tool)\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 6,
+          "message": "cannot verify github-actions-run-command-policy: YAML could not be parsed (did not find expected ',' or ']' at line 6 column 28, while parsing a flow sequence at line 6 column 14); repair source syntax so this check can verify the file",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- env: [first, second}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/nested-shell.yml",
+          "line": 8,
+          "message": ".github/workflows/nested-shell.yml:8: job `check` step 1 exceeds the shell nesting limit at a literal shell script, so configured command policies could not be checked there. Move the nested commands to a direct run step.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "bash -c bash\" -c bash' -c \"bash'\" -c '\"'\"bash'\"'\"' -c '\"'\"'\"'\"'\"'\"'\"example-tool",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/deep-expansion.yml",
+          "line": 17,
+          "message": ".github/workflows/deep-expansion.yml:17: job `check` step 2 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "printf '%s' \"$(printf '%s' \"$(printf '%s' \"$(printf '%s' \"$(example-tool)\")\")\")\"",
+          "target": "example-tool"
+        },
+        {
+          "file": ".github/workflows/nested-shell.yml",
+          "line": 9,
+          "message": ".github/workflows/nested-shell.yml:9: job `check` step 2 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- run: bash -c bash' -c bash\" -c 'bash\"' -c '\"'\"'example-tool",
+          "target": "example-tool"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/deep-expansion.yml",
+          "line": 17,
+          "message": ".github/workflows/deep-expansion.yml:17: job `check` step 2 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "printf '%s' \"$(printf '%s' \"$(printf '%s' \"$(printf '%s' \"$(example-tool)\")\")\")\"",
+          "target": "example-tool"
+        },
+        {
+          "file": ".github/workflows/nested-shell.yml",
+          "line": 9,
+          "message": ".github/workflows/nested-shell.yml:9: job `check` step 2 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- run: bash -c bash' -c bash\" -c 'bash\"' -c '\"'\"'example-tool",
+          "target": "example-tool"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/deep-expansion.yml",
+          "line": 11,
+          "message": ".github/workflows/deep-expansion.yml:11: job `check` step 1 exceeds the shell nesting limit at a command substitution, so configured command policies could not be checked there. Move the nested commands to a direct run step.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "printf '%s' \"$(example-tool)\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/deep-expansion.yml",
+          "line": 17,
+          "message": ".github/workflows/deep-expansion.yml:17: job `check` step 2 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "printf '%s' \"$(printf '%s' \"$(printf '%s' \"$(printf '%s' \"$(example-tool)\")\")\")\"",
+          "target": "example-tool"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 6,
+          "message": "cannot verify github-actions-run-command-policy: YAML could not be parsed (did not find expected ',' or ']' at line 6 column 28, while parsing a flow sequence at line 6 column 14); repair source syntax so this check can verify the file",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- env: [first, second}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/nested-shell.yml",
+          "line": 8,
+          "message": ".github/workflows/nested-shell.yml:8: job `check` step 1 exceeds the shell nesting limit at a literal shell script, so configured command policies could not be checked there. Move the nested commands to a direct run step.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "bash -c bash\" -c bash' -c \"bash'\" -c '\"'\"bash'\"'\"' -c '\"'\"'\"'\"'\"'\"'\"example-tool",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/nested-shell.yml",
+          "line": 9,
+          "message": ".github/workflows/nested-shell.yml:9: job `check` step 2 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- run: bash -c bash' -c bash\" -c 'bash\"' -c '\"'\"'example-tool",
+          "target": "example-tool"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

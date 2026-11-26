@@ -23,6 +23,11 @@ fn no_test_git_sha_json_matches_snapshot() {
                 rules_path(RULE, "configs", "allowed-synthetic.yml"),
             ),
             ("both_lines", fail.clone(), tests_include.clone()),
+            (
+                "suppressions",
+                rules_path(RULE, "fixture", "suppressions"),
+                tests_include.clone(),
+            ),
             ("tests_include", pass.clone(), tests_include.clone()),
             (
                 "src_include",

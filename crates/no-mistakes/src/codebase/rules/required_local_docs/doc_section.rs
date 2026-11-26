@@ -1,9 +1,13 @@
-use crate::codebase::rules::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::rules::{
+    analysis_policy::AnalysisDiagnostics,
+    file_diagnostics::{classified_applications, ClassifiedInputFindings, FileRuleInputs},
+    source_access::read_failure,
+    RuleFinding,
+};
+use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
 use globset::{GlobBuilder, GlobSetBuilder};
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -31,49 +35,41 @@ pub(crate) fn check_required_doc_section_with_files(
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let sources = crate::codebase::rules::source_store_for_files(all_files);
-    check_required_doc_section_with_files_and_sources(root, config, all_files, &sources)
+    diagnostics_with_files_and_sources(root, config, all_files, &sources, true)
+        .map(|output| output.findings)
 }
 
-pub(crate) fn check_required_doc_section_with_files_and_sources(
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(REQUIRED_DOC_SECTION_RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: DocSectionOptions = rule.try_rule_options()?;
-            let target_roots = crate::codebase::rules::target_roots(root, config, rule);
-            let skip = crate::codebase::rules::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| {
-                    crate::codebase::rules::file_allowed_by_roots_and_skip(
-                        root,
-                        &skip,
-                        p,
-                        &target_roots,
-                    )
-                })
-                .cloned()
-                .collect();
-            let files =
-                crate::codebase::rules::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_doc_section_with_sources(root, &opts, &files, sources)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    crate::codebase::rules::sort_findings(&mut findings);
-    Ok(findings)
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    classified_applications(
+        FileRuleInputs {
+            root,
+            config,
+            files: all_files,
+            sources,
+            defer_suppression,
+        },
+        REQUIRED_DOC_SECTION_RULE_ID,
+        |opts, files, _, _| {
+            Ok(ClassifiedInputFindings {
+                findings: scan_doc_section_with_sources(root, opts, files, sources)?,
+                ..Default::default()
+            })
+        },
+    )
 }
 
 pub(super) fn scan_doc_section_with_sources(
     root: &Path,
     opts: &DocSectionOptions,
     files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let Some(glob_set) = compile_options(opts)? else {
         return Ok(Vec::new());
@@ -84,8 +80,12 @@ pub(super) fn scan_doc_section_with_sources(
         if !glob_set.is_match(&rel) {
             continue;
         }
-        let Some(content) = crate::codebase::rules::read_language_source(sources, file) else {
-            continue;
+        let content = match sources.read_source_path(file) {
+            Ok(content) => content,
+            Err(error) => {
+                findings.push(read_failure(root, file, REQUIRED_DOC_SECTION_RULE_ID, &error));
+                continue;
+            }
         };
         if !crate::codebase::markdown_sections::has_required_heading(
             &content,

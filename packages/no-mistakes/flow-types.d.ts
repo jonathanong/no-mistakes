@@ -1,4 +1,4 @@
-import type { Relationship } from "./traversal-types";
+import type { Relationship, TraversalDirection } from "./traversal-types";
 
 export interface FlowOptions {
   target: string;
@@ -8,7 +8,7 @@ export interface FlowOptions {
   tsconfig?: string;
   /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
-  direction?: "deps" | "dependents" | "both";
+  direction?: TraversalDirection;
   depth?: number;
   relationships?: Relationship[];
 }

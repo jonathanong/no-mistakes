@@ -60,7 +60,8 @@ fn cli_parity_builders_cover_defaults_and_validation() {
             diff: Some("diff --git a/src/app.ts b/src/app.ts".to_string()),
             ..Default::default()
         },
-    );
+    )
+    .unwrap();
     assert_eq!(impacted.changed_file, vec![PathBuf::from("src/app.ts")]);
     assert!(impacted.diff.is_none());
     assert_eq!(
@@ -71,12 +72,11 @@ fn cli_parity_builders_cover_defaults_and_validation() {
     let stdin_impacted = crate::napi_api::cli_parity::build_impacted_checks_args(
         crate::napi_api::options::ImpactedChecksOptions {
             diff_stdin: true,
-            diff_command: Some("git diff".to_string()),
             ..Default::default()
         },
-    );
+    )
+    .unwrap();
     assert!(stdin_impacted.diff_stdin);
-    assert_eq!(stdin_impacted.diff_command.as_deref(), Some("git diff"));
 
     let impact = crate::napi_api::cli_parity::build_impact_args(
         crate::napi_api::options::TestsImpactOptions {

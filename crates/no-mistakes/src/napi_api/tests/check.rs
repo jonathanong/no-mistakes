@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::json;
 
+#[path = "check_csp_allowed_origins.rs"]
+mod check_csp_allowed_origins;
+
 #[path = "check_partial.rs"]
 mod check_partial;
 

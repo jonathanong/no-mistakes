@@ -1,4 +1,6 @@
-use super::{CheckFileFacts, EdgeIndex, EdgeKind, ExportKey, ExportLookup, FxHashSet};
+use super::{
+    CheckFileFacts, EdgeIndex, EdgeKind, ExportKey, ExportLookup, FxHashSet, UNRESOLVED_EXPORT,
+};
 use std::path::Path;
 
 pub(super) fn is_declaration(path: &Path) -> bool {
@@ -13,7 +15,7 @@ impl ExportLookup<'_> {
         key: &ExportKey,
         facts: Option<&CheckFileFacts>,
     ) {
-        let Some(refs) = facts.and_then(|file| {
+        let Some((reason, refs)) = facts.and_then(|file| {
             let binding = file
                 .ts
                 .exported_bindings
@@ -34,7 +36,7 @@ impl ExportLookup<'_> {
             .iter()
             .any(|import| import.is_playwright_test() || self.local(&key.file, import).is_none())
         {
-            self.uncertain.insert(key.clone());
+            self.uncertain.insert(key.clone(), reason);
             return;
         }
         let deps: Vec<_> = refs
@@ -43,30 +45,31 @@ impl ExportLookup<'_> {
             .collect();
         if !deps.is_empty() {
             next.extend(deps.iter().cloned());
-            self.uncertain_deps.insert(key.clone(), deps);
+            self.uncertain_deps.insert(key.clone(), (reason, deps));
         }
     }
 
-    pub(in crate::codebase::check_facts::playwright_provenance) fn reaches_uncertain(
+    pub(in crate::codebase::check_facts::playwright_provenance) fn uncertainty_reason(
         &self,
         relationships: &EdgeIndex<ExportKey, EdgeKind>,
         root: &ExportKey,
-    ) -> bool {
+    ) -> Option<&'static str> {
+        let mut reason = None;
         let mut seen = FxHashSet::default();
         let mut stack = vec![root.clone()];
         while let Some(key) = stack.pop() {
             if !seen.insert(key.clone()) {
                 continue;
             }
-            if self.uncertain.contains(&key) {
-                return true;
+            if let Some(&direct) = self.uncertain.get(&key) {
+                reason = Some(prefer_reason(reason, direct));
             }
-            if let Some(deps) = self.uncertain_deps.get(&key) {
+            if let Some((candidate, deps)) = self.uncertain_deps.get(&key) {
                 if deps
                     .iter()
                     .any(|dep| self.proves_playwright(relationships, dep))
                 {
-                    return true;
+                    reason = Some(prefer_reason(reason, candidate));
                 }
                 stack.extend(deps.iter().cloned());
             }
@@ -74,6 +77,14 @@ impl ExportLookup<'_> {
                 stack.extend(neighbors.iter().map(|(target, _)| target.clone()));
             }
         }
-        false
+        reason
+    }
+}
+
+fn prefer_reason(current: Option<&'static str>, next: &'static str) -> &'static str {
+    match current {
+        None | Some(UNRESOLVED_EXPORT) => next,
+        Some(current) if next == UNRESOLVED_EXPORT => current,
+        Some(current) => current.min(next),
     }
 }

@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "retries-disable-line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 11,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -88,6 +88,7 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
     let repo = tracked_repo();
     let root = repo.path().to_path_buf();
     let explicit = git_all(&rules_path(RULE, "fixture", "explicit"));
+    let disable_line = git_all(&rules_path(RULE, "fixture", "disable-line"));
     let no_sgconfig = git_all(&rules_path(RULE, "fixture", "no-sgconfig"));
     let sgconfig_yaml = git_all(&rules_path(RULE, "fixture", "sgconfig-yaml"));
     let nested = git_all(&rules_path(RULE, "fixture", "nested"));
@@ -99,6 +100,11 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
             (
                 "explicit_files",
                 explicit.path().to_path_buf(),
+                PathBuf::new(),
+            ),
+            (
+                "disable_line",
+                disable_line.path().to_path_buf(),
                 PathBuf::new(),
             ),
             (
@@ -168,6 +174,10 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
     assert!(explicit_hits
         .iter()
         .any(|hit| hit == "custom/widgets.yml:custom/missing.ts"));
+    assert_eq!(
+        targets(&report["disable_line"]),
+        ["custom/widgets.yml:custom/missing.ts"]
+    );
     assert!(explicit_hits
         .iter()
         .any(|hit| hit.starts_with("missing/widgets.yml:")));

@@ -162,6 +162,57 @@ test("pre-push Clippy uses the workflow scope", () => {
   );
 });
 
+test("pre-push requires the fetched main to be an ancestor of the branch", () => {
+  const directory = mkdtempSync(path.join(tmpdir(), "pre-push-ancestry-"));
+  const git = (...args) => {
+    const result = spawnSync("git", args, { cwd: directory, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+  const commit = (message) => {
+    git(
+      "-c",
+      "user.name=Sample Contributor",
+      "-c",
+      "user.email=sample@example.test",
+      "-c",
+      "core.hooksPath=unused-hooks",
+      "commit",
+      "--allow-empty",
+      "--no-gpg-sign",
+      "-m",
+      message,
+    );
+    return git("rev-parse", "HEAD");
+  };
+  const push = (sha) =>
+    spawnSync("sh", [path.join(root, ".husky/pre-push"), "sample", directory], {
+      cwd: directory,
+      input: `refs/heads/topic ${sha} refs/heads/topic ${"0".repeat(40)}\n`,
+      encoding: "utf8",
+    });
+  try {
+    git("init", "--initial-branch=main", "--template=");
+    const older = commit("Older main");
+    const main = commit("Current main");
+    git("switch", "-c", "topic");
+    const newer = commit("Topic commit");
+    const behind = push(older);
+    assert.equal(behind.status, 1, behind.stderr);
+    assert.match(behind.stdout, /behind sample main by 1 commit/);
+    for (const sha of [main, newer]) {
+      const current = push(sha);
+      assert.equal(current.status, 1, current.stderr);
+      assert.match(
+        current.stdout,
+        /ast-grep is not installed|python3 is not installed|oxfmt\/oxlint not found/,
+      );
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test("release validation tools come from the workflow without replacing tagged Rust source", () => {
   const workflow = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
   const body = workflow.split("\n  validate-rust:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];

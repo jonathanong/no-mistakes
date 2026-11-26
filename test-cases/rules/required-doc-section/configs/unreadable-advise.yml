@@ -1,0 +1,13 @@
+reportUnusedDisableDirectives: ignore
+rules:
+  - rule: required-doc-section
+    scope: repository
+    options:
+      unanalyzable: advise
+      glob: docs/*.md
+      requiredHeading: '## Example'
+  - rule: test-no-dependency-pins
+    scope: repository
+    options:
+      unanalyzable: advise
+      include: [tests/*.test.ts]

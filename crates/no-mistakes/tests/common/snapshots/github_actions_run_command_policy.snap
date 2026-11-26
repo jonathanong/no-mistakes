@@ -14,6 +14,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disabled-file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/release/action.yml",
+          "line": 7,
+          "message": ".github/actions/release/action.yml:7: composite step 1 runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api -f x=1 repos/example/widgets/labels",
+          "target": "gh api"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "empty-opt-in": {
     "exitCode": 0,
     "report": {

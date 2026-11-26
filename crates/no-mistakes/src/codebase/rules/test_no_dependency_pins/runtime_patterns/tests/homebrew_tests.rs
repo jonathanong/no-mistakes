@@ -1,5 +1,5 @@
-use super::super::super::{check_source, compile_options, Options};
-use super::pins;
+use super::super::super::check_source;
+use super::{default_compiled_options, pins};
 
 #[test]
 fn homebrew_formulae_need_homebrew_context() {
@@ -52,8 +52,7 @@ fn a_homebrew_formula_version_has_at_most_two_components() {
 }
 
 fn readings(line: &str) -> Vec<(String, String)> {
-    let options = compile_options(&Options::default()).unwrap();
-    check_source("src/app.test.mts", line, &options)
+    check_source("src/app.test.mts", line, default_compiled_options())
         .into_iter()
         .filter_map(|finding| Some((finding.target?, finding.import?)))
         .collect()

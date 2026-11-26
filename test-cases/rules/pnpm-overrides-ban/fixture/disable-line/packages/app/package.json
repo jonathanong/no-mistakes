@@ -1,0 +1,7 @@
+{
+  "name": "app",
+  "private": true,
+  "overrides": {
+    "hono": "4.0.0"
+  }
+}

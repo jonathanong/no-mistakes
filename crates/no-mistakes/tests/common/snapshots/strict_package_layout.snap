@@ -14,6 +14,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/api/index.js",
+          "line": 1,
+          "message": "packages/api/index.js: root-level file must be in allowedRootFiles, a test file, or a .md file",
+          "rule": "strict-package-layout",
+          "sourceLine": "module.exports = {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "dot_root": {
     "exitCode": 1,
     "report": {

@@ -1,6 +1,10 @@
 "use strict";
 
 const { literalString } = require("./helpers");
+const {
+  isTransparentExpression,
+  unwrapExpression: unwrapTransparent,
+} = require("./rules/async-ast");
 
 function nonEmptyStrings(value, fallback) {
   if (!Array.isArray(value)) {
@@ -40,7 +44,7 @@ function wrapperArguments(node) {
   if (name !== "call" && name !== "apply") return args;
   if (args.some((arg) => arg?.type === "SpreadElement")) return [];
   if (name === "call") return args.slice(1);
-  const list = args[1];
+  const list = unwrapTransparent(args[1]);
   if (
     list?.type !== "ArrayExpression" ||
     list.elements.some((element) => !element || element.type === "SpreadElement")
@@ -56,16 +60,18 @@ function isConfiguredWrapper(callee, opts) {
 }
 
 function staticCalleeName(node) {
-  if (!node || node.type !== "MemberExpression") return null;
-  if (node.computed && node.property?.type === "Identifier") return null;
-  if (!node.computed && typeof node.property?.name === "string") return node.property.name;
-  return literalString(node.property);
+  const target = unwrapTransparent(node);
+  if (!target || target.type !== "MemberExpression") return null;
+  const property = unwrapTransparent(target.property);
+  if (target.computed && property?.type === "Identifier") return null;
+  if (!target.computed && typeof target.property?.name === "string") return target.property.name;
+  return literalString(property);
 }
 
 function calleeName(node) {
   let current = node;
   for (let depth = 0; depth < 4; depth += 1) {
-    while (current?.type === "ChainExpression") current = current.expression;
+    current = unwrapTransparent(current);
     if (current?.type === "MemberExpression") {
       const name = staticCalleeName(current);
       if (name === "call" || name === "apply") {
@@ -89,15 +95,7 @@ function isFunctionNode(node) {
 }
 
 function isExpressionWrapper(node) {
-  return [
-    "ChainExpression",
-    "ParenthesizedExpression",
-    "TSAsExpression",
-    "TSSatisfiesExpression",
-    "TSNonNullExpression",
-    "TSTypeAssertion",
-    "TypeCastExpression",
-  ].includes(node.type);
+  return isTransparentExpression(node);
 }
 
 module.exports = {

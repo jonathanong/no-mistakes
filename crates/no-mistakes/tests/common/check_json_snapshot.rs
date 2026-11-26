@@ -20,12 +20,61 @@ pub mod source_lines;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Condvar, Mutex, OnceLock};
 #[path = "check_json_normalize.rs"]
 mod check_json_normalize;
 pub use check_json_normalize::normalize_report;
 #[cfg(test)]
 use check_json_normalize::repo_roots;
 use check_json_normalize::{normalize_value, root_variants, sort_value};
+
+struct ProcessPermit;
+
+struct ConcurrencyLimiter {
+    active: Mutex<usize>,
+    ready: Condvar,
+    limit: usize,
+}
+
+impl ConcurrencyLimiter {
+    fn new() -> Self {
+        let limit = std::thread::available_parallelism()
+            .map_or(2, usize::from)
+            .clamp(2, 4);
+        Self {
+            active: Mutex::new(0),
+            ready: Condvar::new(),
+            limit,
+        }
+    }
+
+    fn acquire(&self) -> ProcessPermit {
+        let mut active = self.active.lock().unwrap_or_else(|e| e.into_inner());
+        while *active >= self.limit {
+            active = self.ready.wait(active).unwrap_or_else(|e| e.into_inner());
+        }
+        *active += 1;
+        ProcessPermit
+    }
+
+    fn release(&self) {
+        let mut active = self.active.lock().unwrap_or_else(|e| e.into_inner());
+        *active -= 1;
+        self.ready.notify_one();
+    }
+}
+
+impl Drop for ProcessPermit {
+    fn drop(&mut self) {
+        snapshot_limiter().release();
+    }
+}
+
+fn snapshot_limiter() -> &'static ConcurrencyLimiter {
+    static LIMITER: OnceLock<ConcurrencyLimiter> = OnceLock::new();
+    LIMITER.get_or_init(ConcurrencyLimiter::new)
+}
 
 /// An empty configuration path selects automatic discovery, including fragments.
 pub fn assert_saved_fixture(name: &str, cases: &[(&str, PathBuf, PathBuf)]) {
@@ -68,10 +117,42 @@ pub(super) fn assert_saved_fixture_checked(
     clean: bool,
     args: &[&str],
 ) -> Value {
+    let total_runs = cases.len() * 2;
+    let next_task = AtomicUsize::new(0);
+    let outputs: Vec<Mutex<Option<Value>>> = (0..total_runs).map(|_| Mutex::new(None)).collect();
+    let workers = snapshot_limiter().limit.min(total_runs).max(1);
+    std::thread::scope(|scope| {
+        for _ in 0..workers {
+            scope.spawn(|| loop {
+                let task = next_task.fetch_add(1, Ordering::Relaxed);
+                if task >= total_runs {
+                    break;
+                }
+                let (_, root, config) = &cases[task / 2];
+                let jobs = (task % 2) + 1;
+                let value = {
+                    let _permit = snapshot_limiter().acquire();
+                    run_normalized(root, config, jobs, envs, args)
+                };
+                *outputs[task].lock().unwrap_or_else(|e| e.into_inner()) = Some(value);
+            });
+        }
+    });
+    let mut outputs = outputs.into_iter();
     let mut document = serde_json::Map::new();
-    for (label, root, config) in cases {
-        let jobs_one = run_normalized(root, config, 1, envs, args);
-        let jobs_two = run_normalized(root, config, 2, envs, args);
+    for (label, _, _) in cases {
+        let jobs_one = outputs
+            .next()
+            .unwrap()
+            .into_inner()
+            .unwrap_or_else(|e| e.into_inner())
+            .unwrap();
+        let jobs_two = outputs
+            .next()
+            .unwrap()
+            .into_inner()
+            .unwrap_or_else(|e| e.into_inner())
+            .unwrap();
         assert_eq!(
             jobs_one, jobs_two,
             "{label} changed between --jobs 1 and --jobs 2"
@@ -121,6 +202,10 @@ fn run_normalized(
     let mut command = Command::new(env!("CARGO_BIN_EXE_no-mistakes"));
     command
         .current_dir(root)
+        .env(
+            "CARGO_BIN_EXE_no-mistakes",
+            env!("CARGO_BIN_EXE_no-mistakes"),
+        )
         .env_remove("RAYON_NUM_THREADS")
         .envs(envs.iter().copied())
         .args(snapshot_command_args(&jobs_arg))

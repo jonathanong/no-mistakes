@@ -1,0 +1,7 @@
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [control.yml, file.yml, line.yml, next-line.yml]
+          bannedKeys: [runtime.legacy.enabled]

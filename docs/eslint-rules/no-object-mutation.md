@@ -36,6 +36,10 @@ rows.push(row);
 
 function write(box) {
   box.client.get = replica.get;
+  (box.client.get as unknown) = replica.get;
+  box.client.get! = replica.get;
+  ({ get: (box.client.get as unknown) } = replica);
+  ({ get: box.client.get! } = replica);
 }
 
 function touch(box, rows) {

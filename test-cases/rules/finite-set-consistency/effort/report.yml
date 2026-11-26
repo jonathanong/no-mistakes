@@ -1,0 +1,19 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+      sets:
+        - name: names
+          file: names.yml
+          kind: yaml-sequence
+          key: values
+        - name: typed
+          file: names.ts
+          kind: ts-string-union
+          target: Names
+      comparisons:
+        - left: names
+          right: typed
+          mode: equal-set

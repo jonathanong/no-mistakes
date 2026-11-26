@@ -20,6 +20,8 @@ fn pnpm_overrides_ban_json_matches_snapshot() {
     let cases = vec![
         case("pass", "pass", "repository.yml"),
         case("fail_workspace", "fail-workspace", "repository.yml"),
+        case("disable_line", "disable-line", "repository.yml"),
+        case("disable_next_line", "disable-next-line", "repository.yml"),
         case(
             "fail_package_overrides",
             "fail-package-overrides",

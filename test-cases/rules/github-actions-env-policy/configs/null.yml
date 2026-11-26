@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-env-policy
+    scope: repository
+    options:
+      required:
+        SAMPLE_MODE: null

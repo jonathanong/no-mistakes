@@ -1,0 +1,14 @@
+version: 2
+queues:
+  includeTests: true
+projects:
+  demo:
+    root: .
+    queues:
+      enqueues: ["**/*.ts"]
+      workers: ["**/*.ts"]
+tests:
+  vitest:
+    projects:
+      unit:
+        include: ["tests/**/*.test.ts"]

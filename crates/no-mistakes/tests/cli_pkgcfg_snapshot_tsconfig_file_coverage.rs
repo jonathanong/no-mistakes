@@ -25,6 +25,7 @@ fn tsconfig_file_coverage_json_matches_snapshot() {
         "tsconfig_file_coverage",
         &[
             ("uncovered", fixture("fail"), empty.clone()),
+            ("disable_file", fixture("disable-file"), empty.clone()),
             ("included", pass.clone(), empty.clone()),
             ("allow_orphan", allow.clone(), config("allow-generate.yml")),
             (
