@@ -22,6 +22,9 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
                 .map(drop)
         },
     ),
+    (rules::csp_allowed_origins::RULE_ID, |rule, _| {
+        rules::csp_allowed_origins::validate_options(&rule.strict_rule_options()?).map(drop)
+    }),
     (rules::finite_set_consistency::RULE_ID, |rule, _| {
         rule.strict_rule_options::<rules::finite_set_consistency::Options>()?
             .validate()

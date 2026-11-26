@@ -1,0 +1,18 @@
+name: Verify fixture
+on:
+  workflow_dispatch:
+    inputs:
+      cache_pattern:
+        type: string
+permissions: {}
+env:
+  CACHE_PATTERN: ${{ inputs.cache_pattern }}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/cache@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        with:
+          path: .cache/example
+          key: ${{ runner.os }}-${{ hashFiles('example.lock') }}

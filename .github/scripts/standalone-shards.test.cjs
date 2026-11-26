@@ -163,9 +163,9 @@ test("each archive build selects one compile shard", () =>
         readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.shard`), "utf8").trim(),
         String(shard),
       );
-      assert.match(
-        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.rustc-wrapper`), "utf8"),
-        /standalone-shard-rustc\.sh/,
+      assert.equal(
+        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.rustc-wrapper`), "utf8").trim(),
+        path.join(__dirname, `standalone-shard-rustc-${shard}.sh`),
       );
     }
   }));
@@ -175,5 +175,27 @@ test("a preselected compile shard is rejected", () =>
     const result = invoke(["build", bundle], { NM_TEST_SHARD: "1" });
     assert.equal(result.status, 1);
     assert.match(result.stderr, /already selected/);
+    assert.equal(existsSync(path.join(bundle, "build.json")), false);
+  }));
+
+test("the three bounded build steps publish only after every archive exists", () =>
+  scenario(({ bundle, invoke }) => {
+    for (const index of ["1", "2", "3"]) {
+      const result = invoke(["build", bundle, index]);
+      assert.equal(result.status, 0, result.stderr);
+      const shard = Number(index) - 1;
+      assert.equal(
+        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.shard`), "utf8").trim(),
+        String(shard),
+      );
+      assert.equal(existsSync(path.join(bundle, "build.json")), index === "3");
+    }
+  }));
+
+test("the final build step rejects missing earlier archives", () =>
+  scenario(({ bundle, invoke }) => {
+    const result = invoke(["build", bundle, "3"]);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /requires all three archives/);
     assert.equal(existsSync(path.join(bundle, "build.json")), false);
   }));
