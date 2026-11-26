@@ -146,6 +146,7 @@
   "GithubActionsEnvPolicyOptions",
   "GithubActionsEnvPolicyValue",
   "GithubActionsNoPollWaitJobOptions",
+  "GithubActionsNoRequiredPrPathFiltersOptions",
   "GithubActionsPinnedHashOptions",
   "GithubActionsRunCommandArg",
   "GithubActionsRunCommandArgScope",

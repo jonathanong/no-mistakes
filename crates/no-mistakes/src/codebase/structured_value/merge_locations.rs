@@ -1,9 +1,12 @@
 use super::document_spans::{document_spans, DocumentSpan};
-use super::merge_keys::{expand_located, KeyLocation};
-use super::plain_merge_scan::has_plain_merge_key;
+use super::merge_keys::{KeyLocation, MergeError};
+use super::{contains_merge, StructuredValueError};
 use crate::fx::FxHashMap;
 use granit_parser::{Event, Parser, ScalarStyle};
 use serde_yaml::Value;
+
+mod located_keys;
+use located_keys::LocatedKeys;
 
 pub(super) struct MergeLocations<'a> {
     source: &'a str,
@@ -90,41 +93,37 @@ impl<'a> MergeLocations<'a> {
         locations
     }
 
-    pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), (usize, String)> {
+    pub(super) fn expand(&self, index: usize, value: &mut Value) -> Result<(), MergeError> {
+        self.locations(index, value).expand(value)
+    }
+
+    pub(super) fn expand_scoped(&self, value: Value) -> Result<Value, StructuredValueError> {
+        self.locations(0, &value).expand_scoped(value)
+    }
+
+    fn locations(&self, index: usize, value: &Value) -> LocatedKeys {
         let doc_span = self.doc_spans.get(index).copied();
-        let doc_source = doc_span.map_or(self.source, |span| {
-            &self.source[span.start_byte..span.end_byte]
-        });
         let root = self.roots.get(index).copied().flatten();
         if root.is_none() {
             if let Some(span) = doc_span {
                 if span.start_byte > 0 {
+                    let doc_source = &self.source[span.start_byte..span.end_byte];
                     let reparsed = Self::parse_with_offset(doc_source, span.start_line - 1);
                     if reparsed.roots.first().copied().flatten().is_some() {
-                        return reparsed.expand(0, value);
+                        return reparsed.locations(0, value);
                     }
                 }
             }
         }
-        let fallback_line = root
+        let line = root
             .map(|root| self.nodes[root].line)
             .or_else(|| doc_span.map(|span| span.start_line))
             .unwrap_or(1);
-        let locations =
-            root.map_or_else(FxHashMap::default, |root| self.key_locations(root, value));
-        let literal_only = !has_plain_merge_key(doc_source);
-        expand_located(value, &|key| {
-            if let Some(location) = locations.get(&key.as_ptr()).copied() {
-                return Ok(location);
-            }
-            if literal_only {
-                return Ok(KeyLocation::Literal);
-            }
-            Err((
-                fallback_line,
-                "could not match a YAML `<<` key to its source location".to_string(),
-            ))
-        })
+        let mut located = LocatedKeys::new(line, root.is_none());
+        if let Some(root) = root {
+            self.key_locations(root, value, &mut located);
+        }
+        located
     }
 
     fn key_location(&self, key: usize) -> Option<KeyLocation> {
@@ -142,8 +141,7 @@ impl<'a> MergeLocations<'a> {
 
     // Expansion moves YAML keys in place. A lost string identity is an error
     // because only a key matched to a literal source node can be left intact.
-    fn key_locations(&self, root: usize, value: &Value) -> FxHashMap<*const u8, KeyLocation> {
-        let mut lines = FxHashMap::default();
+    fn key_locations(&self, root: usize, value: &Value, located: &mut LocatedKeys) {
         let mut pending = vec![(root, value)];
         while let Some((id, value)) = pending.pop() {
             if let Value::Tagged(tagged) = value {
@@ -158,9 +156,7 @@ impl<'a> MergeLocations<'a> {
                     let (marks, _) = children.as_chunks::<2>();
                     for ((key, value), &[key_mark, value_mark]) in mapping.iter().zip(marks) {
                         if let Some(key) = key.as_str().filter(|key| *key == "<<") {
-                            if let Some(location) = self.key_location(key_mark) {
-                                lines.insert(key.as_ptr(), location);
-                            }
+                            located.record(key, self.key_location(key_mark));
                         }
                         pending.push((value_mark, value));
                     }
@@ -170,9 +166,11 @@ impl<'a> MergeLocations<'a> {
                 {
                     pending.extend(children.iter().copied().zip(items));
                 }
+                (_, Value::Mapping(_) | Value::Sequence(_)) if !located.incomplete => {
+                    located.incomplete = contains_merge(value);
+                }
                 _ => {}
             }
         }
-        lines
     }
 }

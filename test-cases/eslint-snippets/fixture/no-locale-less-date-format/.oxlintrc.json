@@ -16,6 +16,19 @@
           { "methods": [], "constructors": ["Intl.DateTimeFormat", "Intl.NumberFormat"] }
         ]
       }
+    },
+    {
+      "files": ["intl-unknown.mjs"],
+      "rules": {
+        "no-mistakes/no-locale-less-date-format": [
+          "error",
+          {
+            "methods": [],
+            "constructors": ["Intl.DateTimeFormat", "Intl.NumberFormat"],
+            "unknownValues": "finding"
+          }
+        ]
+      }
     }
   ]
 }

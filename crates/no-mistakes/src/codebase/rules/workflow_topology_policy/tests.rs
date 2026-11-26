@@ -10,6 +10,7 @@ mod concurrency_behavior;
 mod concurrency_collisions;
 mod concurrency_config;
 mod forbidden_events;
+mod merge_uncertainty;
 mod secrets_inherit;
 mod support;
 

@@ -7,10 +7,11 @@ suspends evaluation; importers through `export *` barrels can observe uninitiali
 bindings under Bun or some bundlers. Prefer an exported async initialization
 function, called explicitly by the entrypoint.
 
-This file-local rule is opt-in in ESLint and Oxlint. It reports `await` expressions
-and `for await` loops outside functions, including nested blocks, class heritage,
-and computed class keys. Function and method bodies are allowed. It does not
-inspect dependency graphs or asynchronous resource disposal (`await using`).
+This file-local rule is opt-in in ESLint and Oxlint. It reports `await` expressions,
+`for await` loops, and asynchronous resource disposal (`await using`) declarations
+outside functions, including nested blocks, class heritage, and computed class
+keys. Function and method bodies are allowed. It does not inspect dependency
+graphs.
 
 ## Disallowed
 
@@ -19,6 +20,7 @@ export const settings = await loadSettings();
 for await (const event of events) {
   consume(event);
 }
+await using handle = openHandle();
 ```
 
 ## Allowed

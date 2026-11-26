@@ -1,0 +1,19 @@
+name: Default shells
+on: [pull_request]
+defaults:
+  run:
+    shell: bash
+jobs:
+  workflow_default:
+    runs-on: windows-latest
+    steps:
+      - run: cargo insta accept
+  job_default:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - run: cargo insta test
+      - run: cargo insta test --accept
+        shell: bash

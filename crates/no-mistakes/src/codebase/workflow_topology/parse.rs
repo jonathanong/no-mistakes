@@ -9,6 +9,7 @@ use crate::codebase::structured_value::expand_yaml_mapping_if_merged;
 use serde_yaml::Value;
 
 mod malformed;
+pub(crate) mod merge_uncertainty;
 
 pub(crate) use malformed::malformed_workflow;
 use malformed::workflow_basename;
@@ -37,10 +38,13 @@ pub fn parse_workflow_value(value: &Value, path: &str, source: Option<&str>) -> 
         return malformed_workflow(path, "workflow root must be a mapping");
     }
 
-    let value = match expand_yaml_mapping_if_merged(value, source) {
-        Ok(value) => value,
-        Err(message) => return malformed_workflow(path, &message),
-    };
+    match expand_yaml_mapping_if_merged(value, source) {
+        Ok(value) => parse_expanded(&value, path, false),
+        Err(error) => merge_uncertainty::parse(path, error),
+    }
+}
+
+fn parse_expanded(value: &Value, path: &str, job_inventory_unknown: bool) -> ParsedWorkflow {
     let on = value.get("on");
     let triggers = workflow_values::parse_triggers(on);
     let workflow_permissions =
@@ -111,6 +115,7 @@ pub fn parse_workflow_value(value: &Value, path: &str, source: Option<&str>) -> 
             &job_keys,
             &mut edges,
             &mut diagnostics,
+            job_inventory_unknown,
         );
     }
 
@@ -131,7 +136,7 @@ pub fn parse_workflow_value(value: &Value, path: &str, source: Option<&str>) -> 
             job_ids,
             concurrency,
             env: value_primitives::string_record(value.get("env")),
-            secret_references: super::secret_references::workflow(&value),
+            secret_references: super::secret_references::workflow(value),
         },
         jobs,
         edges,
@@ -147,6 +152,7 @@ fn add_job_edges(
     job_keys: &CaseInsensitiveLookup<&Value>,
     edges: &mut Vec<model::WorkflowTopologyEdge>,
     diagnostics: &mut Vec<model::WorkflowTopologyDiagnostic>,
+    job_inventory_unknown: bool,
 ) {
     for need in value_primitives::string_list(job.get("needs")) {
         let (resolved_key, is_missing) = match job_keys.resolve(&need) {
@@ -159,7 +165,7 @@ fn add_job_edges(
             from: target.clone(),
             to: job_id.to_string(),
         }));
-        if is_missing {
+        if is_missing && !job_inventory_unknown {
             diagnostics.push(
                 model::WorkflowTopologyDiagnostic::new(
                     model::DiagnosticCode::MissingNeedsDependency,

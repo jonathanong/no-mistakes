@@ -1,0 +1,24 @@
+version: 2
+unanalyzable: advise
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      forbiddenEvents: [pull_request_target]
+      forbiddenJobs: [".github/workflows/long-tag.yml#sibling"]
+      requiredJobs: [".github/workflows/long-tag.yml#verify", ".github/workflows/long-tag.yml#missing"]
+      stepOrders:
+        - jobId: ".github/workflows/long-tag.yml#verify"
+          steps: [{id: setup}]
+        - jobId: ".github/workflows/long-tag.yml#sibling"
+          steps: [{id: setup}]
+        - jobId: ".github/workflows/long-tag.yml#pending"
+          steps: [{id: setup}]
+      requiredDirectEdges:
+        - [".github/workflows/long-tag.yml#sibling", ".github/workflows/long-tag.yml#pending"]
+        - [".github/workflows/long-tag.yml#missing", ".github/workflows/long-tag.yml#sibling"]
+      forbiddenDirectEdges:
+        - [".github/workflows/long-tag.yml#sibling", ".github/workflows/long-tag.yml#verify"]
+      exactFanIns:
+        ".github/workflows/long-tag.yml#pending": [".github/workflows/long-tag.yml#sibling"]
+        ".github/workflows/long-tag.yml#verify": []

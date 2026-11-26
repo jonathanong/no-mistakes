@@ -165,3 +165,37 @@ fn supplemental_read_failure_remains_addressable_without_widening_scopes() {
     assert!(facts.files().is_empty());
     assert!(facts.graph_file_universe().is_empty());
 }
+
+#[test]
+fn supplemental_nested_controls_preserve_their_scoped_facts() {
+    let root = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/react-no-nested-buttons-and-links/fixture"),
+    );
+    let jsx = root.join("variants.jsx");
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        std::slice::from_ref(&jsx),
+    ))));
+    let plan = CheckFactPlan {
+        nested_control_paths: Arc::new([jsx.clone()].into_iter().collect()),
+        ..Default::default()
+    };
+    let facts = collect_check_facts_with_supplemental_call_sites(
+        &crate::codebase::analysis_session::AnalysisSession::disabled(),
+        &root,
+        (Vec::new(), Vec::new()),
+        Vec::new(),
+        plan,
+        None,
+        sources,
+    );
+    let locations = facts
+        .ts
+        .get(&jsx)
+        .and_then(|file| file.nested_controls.as_ref())
+        .expect("supplemental nested-control facts");
+    assert!(locations.iter().any(|location| location.line == 9));
+    assert_eq!(facts.stats.files_parsed, 1);
+    assert!(facts.files().is_empty());
+    assert!(facts.graph_file_universe().is_empty());
+}

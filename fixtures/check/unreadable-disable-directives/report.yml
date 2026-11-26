@@ -1,0 +1,6 @@
+reportUnusedDisableDirectives: report
+rules:
+  - rule: rust-max-lines-per-file
+    enabled: false
+    scope: repository
+    include: ["src/**"]

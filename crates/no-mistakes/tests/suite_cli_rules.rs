@@ -35,6 +35,9 @@ mod cli_check_rule_severity;
 #[path = "cli_rule_recall_audit.rs"]
 mod cli_rule_recall_audit;
 
+#[path = "cli_check_terraform_iam_wildcards.rs"]
+mod cli_check_terraform_iam_wildcards;
+
 #[path = "cli_check_cross_package_relative_imports.rs"]
 mod cli_check_cross_package_relative_imports;
 
@@ -299,6 +302,8 @@ mod cli_gha_snapshot_workflow_policy_bans;
 
 #[path = "cli_gha_snapshot_local_action_checkout.rs"]
 mod cli_gha_snapshot_local_action_checkout;
+#[path = "cli_gha_snapshot_required_pr_path_filters.rs"]
+mod cli_gha_snapshot_required_pr_path_filters;
 
 #[path = "cli_snapshot_dependabot_cooldown_policy.rs"]
 mod cli_snapshot_dependabot_cooldown_policy;

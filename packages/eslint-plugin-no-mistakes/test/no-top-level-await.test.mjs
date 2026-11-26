@@ -27,6 +27,10 @@ describe(id, () => {
       check("wrapped.ts").map((m) => m.line),
       [2],
     );
+    assert.deepEqual(
+      check("await-using.ts").map((m) => m.line),
+      [1, 3],
+    );
   });
   it("allows only direct main-guard consequents, with an explicit opt-out", () => {
     assert.deepEqual(
@@ -41,6 +45,10 @@ describe(id, () => {
       check("wrapped.ts", { allowInImportMetaMain: false }).map((m) => m.line),
       [1, 2],
     );
+    assert.deepEqual(
+      check("await-using.ts", { allowInImportMetaMain: false }).map((m) => m.line),
+      [1, 3, 10],
+    );
   });
   it("supports actual-comment suppressions and a custom message", () => {
     assert.deepEqual(
@@ -52,6 +60,7 @@ describe(id, () => {
       check("unsafe.mjs", { message: "Initialize in main" })[0].message,
       "Initialize in main",
     );
+    assert.throws(() => check("unsafe.mjs", { message: "   " }), /should match pattern/);
   });
   it("is opt-in and has no automatic rewrite", () => {
     assert.equal(plugin.configs.recommended.rules[`no-mistakes/${id}`], undefined);
@@ -65,10 +74,16 @@ describe(id, () => {
         "safe.mjs",
         "guards.mjs",
         "wrapped.ts",
+        "await-using.ts",
         "suppressions.mjs",
         "suppression-file.mjs",
       ].map((name) => ({ name, file: name })),
       { name: "strict guard", file: "safe.mjs", options: { allowInImportMetaMain: false } },
+      {
+        name: "strict guard await using",
+        file: "await-using.ts",
+        options: { allowInImportMetaMain: false },
+      },
       { name: "custom message", file: "unsafe.mjs", options: { message: "Initialize in main" } },
     ].map((item) => ({
       ...item,
@@ -83,6 +98,7 @@ describe(id, () => {
     ["safe.mjs", 0],
     ["guards.mjs", 8],
     ["wrapped.ts", 1],
+    ["await-using.ts", 2],
     ["suppressions.mjs", 1],
     ["suppression-file.mjs", 0],
   ]) {
