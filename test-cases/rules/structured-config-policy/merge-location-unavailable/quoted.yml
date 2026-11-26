@@ -1,0 +1,5 @@
+defaults: &defaults {owner: example}
+merged:
+  <<: *defaults
+literal:
+  "<<": keep
