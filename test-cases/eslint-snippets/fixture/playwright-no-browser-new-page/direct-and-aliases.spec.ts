@@ -108,3 +108,9 @@ runOnly("destructured modifier", async ({ browser }) => {
 test("ts this parameter", async function (this: unknown, { browser }) {
   await browser.newPage();
 });
+
+test("repeated var newPage self-alias does not recurse", async ({ browser }) => {
+  var create = browser.newPage;
+  var create = create;
+  void create;
+});

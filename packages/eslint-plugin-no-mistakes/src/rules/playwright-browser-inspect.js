@@ -15,8 +15,7 @@ const TEST_PARENTS = new Set([
 ]);
 
 function hasLaterWrite(variable) {
-  const writes = variable.references.filter((ref) => ref.isWrite());
-  return writes.length > 1 || writes.some((ref) => !ref.init);
+  return variable.defs.length > 1 || variable.references.some((ref) => ref.isWrite() && !ref.init);
 }
 
 function isPureCheck(expr, parent) {

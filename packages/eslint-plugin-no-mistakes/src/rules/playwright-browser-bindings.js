@@ -88,6 +88,7 @@ function createBrowserBindings(context, modules) {
     if (node.type !== "Identifier") return null;
     const variable = resolveVariable(node, context);
     if (!variable || seen.has(variable) || variable.defs.length !== 1) return null;
+    seen = new Set(seen);
     seen.add(variable);
     const def = variable.defs[0];
     if (def.type === "ImportBinding" && def.parent.type === "ImportDeclaration") {

@@ -101,3 +101,13 @@ deferredRegistrar = test;
 deferredRegistrar("deferred registrar", async ({ browser }) => {
   await browser.newPage();
 });
+let steppedRegistrar = test.step as unknown as typeof test;
+steppedRegistrar = test;
+steppedRegistrar("stepped then reassigned registrar", async ({ browser }) => {
+  await browser.newPage();
+});
+test("repeated var browser alias", async ({ browser }) => {
+  var repeatedBrowser = browser;
+  var repeatedBrowser = {} as typeof browser;
+  void repeatedBrowser;
+});

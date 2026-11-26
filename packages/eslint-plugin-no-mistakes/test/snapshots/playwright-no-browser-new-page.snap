@@ -485,6 +485,17 @@
           "messageId": "noBrowserNewPage",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
           "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 31,
+          "endLine": 113,
+          "file": "direct-and-aliases.spec.ts",
+          "line": 113,
+          "message": "Use the shared `appPage` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup.",
+          "messageId": "noBrowserNewPage",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
         }
       ],
       "name": "direct and aliased calls",
@@ -928,6 +939,28 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 108,
+          "file": "unanalyzable.spec.ts",
+          "line": 106,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 22,
+          "endLine": 110,
+          "file": "unanalyzable.spec.ts",
+          "line": 110,
+          "message": "Cannot prove reassigned `browser` binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
         }
       ],
       "name": "unanalyzable default finding mode",
@@ -1206,6 +1239,13 @@
           "column": 9,
           "file": "direct-and-aliases.spec.ts",
           "line": 109,
+          "message": "Use the shared `appPage` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 7,
+          "file": "direct-and-aliases.spec.ts",
+          "line": 113,
           "message": "Use the shared `appPage` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup."
         }
       ],
@@ -1496,6 +1536,20 @@
           "file": "unanalyzable.spec.ts",
           "line": 101,
           "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 1,
+          "file": "unanalyzable.spec.ts",
+          "line": 106,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 7,
+          "file": "unanalyzable.spec.ts",
+          "line": 110,
+          "message": "Cannot prove reassigned `browser` binding avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         }
       ],
       "name": "unanalyzable.spec.ts",

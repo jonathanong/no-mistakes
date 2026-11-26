@@ -28,7 +28,7 @@ test("loads orders", async ({ browser }) => {
 
 ```ts
 // e2e/orders-alias.spec.ts
-import { test } from "./fixtures";
+import { test } from "@playwright/test";
 
 test("opens page through alias", async ({ browser: localBrowser }) => {
   const { newPage } = localBrowser;
@@ -65,7 +65,7 @@ import { test } from "@playwright/test";
 test("opens an isolated browser context", async ({ browser }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto("/public");
+  await page.goto("https://example.test/public");
   await context.close();
 });
 ```
@@ -77,7 +77,11 @@ import { test as base } from "@playwright/test";
 export const test = base.extend({
   appPage: async ({ browser }, use) => {
     const page = await browser.newPage();
-    await use(page);
+    try {
+      await use(page);
+    } finally {
+      await page.close();
+    }
   },
 });
 ```
