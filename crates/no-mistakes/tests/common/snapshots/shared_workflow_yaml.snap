@@ -62,6 +62,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Invalid YAML (did not find expected node content at line 3 column 1, while parsing a flow node); fix the YAML so inline script length can be checked.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": ""
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 3 column 1, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

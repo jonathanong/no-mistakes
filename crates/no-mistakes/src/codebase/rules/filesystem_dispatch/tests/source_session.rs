@@ -59,12 +59,21 @@ fn workflow_rules_share_parsed_sources_and_cached_syntax_errors() {
     assert_eq!(
         rules_for(".github/workflows/malformed.yml"),
         [
+            GITHUB_ACTIONS_DOWNLOAD_INTEGRITY,
             GITHUB_ACTIONS_JOB_TIMEOUTS,
             GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES,
             GITHUB_ACTIONS_STEP_TIMEOUTS,
         ]
         .into()
     );
+    let download_failure = findings
+        .iter()
+        .find(|finding| {
+            finding.file == ".github/workflows/malformed.yml"
+                && finding.rule == GITHUB_ACTIONS_DOWNLOAD_INTEGRITY
+        })
+        .unwrap();
+    assert_eq!(download_failure.target.as_deref(), Some("unanalyzable"));
     let work = observer.snapshot().work;
     assert_eq!(work["yaml.requests"], 8);
     assert_eq!(work["yaml.parses"], 2);

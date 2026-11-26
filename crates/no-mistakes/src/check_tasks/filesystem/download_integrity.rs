@@ -23,7 +23,7 @@ pub(super) fn run(
             defer_suppression,
         );
     }
-    let mut output = no_mistakes::perf_trace::rule(
+    let result = no_mistakes::perf_trace::rule(
         "analysis.filesystem_rules.github-actions-download-integrity",
         || {
             rules::github_actions_download_integrity::diagnostics_with_files_and_sources(
@@ -35,7 +35,13 @@ pub(super) fn run(
                 defer_suppression,
             )
         },
-    )?;
+    );
+    let mut output = match prepared.session {
+        Some(session) => session
+            .capture_check_result(rules::github_actions_download_integrity::RULE_ID, result)?
+            .unwrap_or_default(),
+        None => result?,
+    };
     // Consume both channels once at the rule boundary. The remaining dispatch
     // must not scan downloads again or rediscover advisories at finalization.
     let mut remaining = config.clone();
