@@ -30,25 +30,26 @@ impl InstancePropertyEvidence {
     }
 }
 
-pub(super) fn non_transparent_parent(
-    semantic: &Semantic<'_>,
-    start: NodeId,
-) -> Option<(Span, NodeId)> {
+pub(super) fn non_transparent_parent(semantic: &Semantic<'_>, start: NodeId) -> (Span, NodeId) {
     let mut child_span = semantic.nodes().kind(start).span();
-    for ancestor in semantic.nodes().ancestors(start) {
-        if matches!(
-            ancestor.kind(),
-            AstKind::ParenthesizedExpression(_)
-                | AstKind::TSAsExpression(_)
-                | AstKind::TSSatisfiesExpression(_)
-                | AstKind::TSNonNullExpression(_)
-        ) {
-            child_span = ancestor.kind().span();
-            continue;
-        }
-        return Some((child_span, ancestor.id()));
-    }
-    None
+    let parent_id = semantic
+        .nodes()
+        .ancestors(start)
+        .find(|ancestor| {
+            let transparent = matches!(
+                ancestor.kind(),
+                AstKind::ParenthesizedExpression(_)
+                    | AstKind::TSAsExpression(_)
+                    | AstKind::TSSatisfiesExpression(_)
+                    | AstKind::TSNonNullExpression(_)
+            );
+            if transparent {
+                child_span = ancestor.kind().span();
+            }
+            !transparent
+        })
+        .map_or(start, |a| a.id());
+    (child_span, parent_id)
 }
 
 pub(super) fn is_unshadowed_object_assign(
@@ -86,26 +87,24 @@ pub(super) fn same_unconditional_block(
     use_id: NodeId,
     decl_block: Option<NodeId>,
 ) -> bool {
-    let Some(target) = decl_block else {
-        return false;
-    };
-    for ancestor in semantic.nodes().ancestors(use_id) {
-        if ancestor.id() == target {
-            return true;
-        }
-        if !matches!(
-            ancestor.kind(),
-            AstKind::ExpressionStatement(_)
-                | AstKind::AssignmentExpression(_)
-                | AstKind::ParenthesizedExpression(_)
-                | AstKind::TSAsExpression(_)
-                | AstKind::TSSatisfiesExpression(_)
-                | AstKind::TSNonNullExpression(_)
-        ) {
-            return false;
-        }
-    }
-    false
+    decl_block.is_some_and(|target| {
+        semantic
+            .nodes()
+            .ancestors(use_id)
+            .find(|a| {
+                a.id() == target
+                    || !matches!(
+                        a.kind(),
+                        AstKind::ExpressionStatement(_)
+                            | AstKind::AssignmentExpression(_)
+                            | AstKind::ParenthesizedExpression(_)
+                            | AstKind::TSAsExpression(_)
+                            | AstKind::TSSatisfiesExpression(_)
+                            | AstKind::TSNonNullExpression(_)
+                    )
+            })
+            .is_some_and(|a| a.id() == target)
+    })
 }
 
 pub(super) fn static_string_expr<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {

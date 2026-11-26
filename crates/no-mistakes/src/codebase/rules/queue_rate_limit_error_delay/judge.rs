@@ -43,7 +43,10 @@ pub(super) fn call_arguments(facts: &TsFileFacts, offset: u32) -> CallDelayArgs<
     {
         return empty;
     }
-    let values = module.call_arguments.as_deref().and_then(|m| m.get(&offset));
+    let values = module
+        .call_arguments
+        .as_deref()
+        .and_then(|m| m.get(&offset));
     let provenance = module.path_provenance.as_deref();
     let absent = provenance
         .and_then(|p| p.absent_or_non_finite_args.get(&offset))
@@ -83,9 +86,9 @@ fn judge_instance_property(args: &CallDelayArgs<'_>, prop: &str) -> DelayVerdict
     };
     match evidence.properties.get(prop) {
         Some(InstancePropertyValue::Positive) => DelayVerdict::Valid,
-        Some(InstancePropertyValue::Invalid) => {
-            DelayVerdict::Missing(format!("instance property `{prop}` must be a positive duration"))
-        }
+        Some(InstancePropertyValue::Invalid) => DelayVerdict::Missing(format!(
+            "instance property `{prop}` must be a positive duration"
+        )),
         Some(InstancePropertyValue::AbsentOrNonFinite) => DelayVerdict::Missing(format!(
             "instance property `{prop}` is undefined or non-finite"
         )),
@@ -142,9 +145,7 @@ fn judge_scalar_delay(value: &ArgumentValue, pos: usize) -> DelayVerdict {
             DelayVerdict::Valid
         }
         ArgumentValue::Unknown => DelayVerdict::Valid,
-        ArgumentValue::Scalar(_) | ArgumentValue::Array(_) | ArgumentValue::Object(_) => {
-            DelayVerdict::Missing(format!("delay argument {pos} must be a positive duration"))
-        }
+        _ => DelayVerdict::Missing(format!("delay argument {pos} must be a positive duration")),
     }
 }
 
@@ -173,17 +174,15 @@ fn judge_property_delay(
                     DelayVerdict::Valid
                 }
                 ArgumentValue::Unknown => DelayVerdict::Valid,
-                ArgumentValue::Scalar(_) | ArgumentValue::Array(_) | ArgumentValue::Object(_) => {
-                    DelayVerdict::Missing(format!(
-                        "options property `{prop}` must be a positive duration"
-                    ))
-                }
+                _ => DelayVerdict::Missing(format!(
+                    "options property `{prop}` must be a positive duration"
+                )),
             }
         }
         ArgumentValue::Unknown => DelayVerdict::Unanalyzable(format!(
             "options argument {pos} is not a closed object literal, so `{prop}` could not be verified"
         )),
-        ArgumentValue::Scalar(_) | ArgumentValue::Array(_) => DelayVerdict::Missing(format!(
+        _ => DelayVerdict::Missing(format!(
             "options argument {pos} must be an object supplying a positive `{prop}` delay"
         )),
     }

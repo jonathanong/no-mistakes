@@ -14,7 +14,7 @@ impl<'a> Projector<'a, '_> {
         &mut self,
         call_id: NodeId,
     ) -> Option<InstancePropertyEvidence> {
-        let (child_span, parent_id) = ast::non_transparent_parent(self.semantic, call_id)?;
+        let (child_span, parent_id) = ast::non_transparent_parent(self.semantic, call_id);
         match self.semantic.nodes().kind(parent_id) {
             AstKind::ThrowStatement(_) | AstKind::ExpressionStatement(_) => None,
             AstKind::CallExpression(call) => {
@@ -70,10 +70,7 @@ impl<'a> Projector<'a, '_> {
         decl_block: Option<NodeId>,
         ev: &mut InstancePropertyEvidence,
     ) {
-        let Some((child_span, use_id)) = ast::non_transparent_parent(self.semantic, ref_id) else {
-            ev.opaque_mutation = true;
-            return;
-        };
+        let (child_span, use_id) = ast::non_transparent_parent(self.semantic, ref_id);
         match self.semantic.nodes().kind(use_id) {
             AstKind::ThrowStatement(_) => {}
             AstKind::StaticMemberExpression(member) if member.object.span() == child_span => {

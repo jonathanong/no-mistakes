@@ -111,7 +111,10 @@ fn options_validation_rejects_empty_blank_duplicate_conflicts_and_out_of_range()
         }],
     })
     .unwrap();
-    assert_eq!(valid[0].delay, DelaySpec::InstanceProperty("delayMs".into()));
+    assert_eq!(
+        valid[0].delay,
+        DelaySpec::InstanceProperty("delayMs".into())
+    );
 }
 
 fn config_messages(config: &NoMistakesConfig) -> Vec<String> {
@@ -163,14 +166,36 @@ rules:
     assert!(ok_errors.is_empty(), "{ok_errors:?}");
 }
 
+fn av(values: Vec<ArgumentValue>) -> ArgumentValues {
+    ArgumentValues {
+        values,
+        spread_from: None,
+        path: None,
+    }
+}
+
+fn ev(key: &str, value: InstancePropertyValue) -> InstancePropertyEvidence {
+    let mut properties = FxHashMap::default();
+    properties.insert(key.to_string(), value);
+    InstancePropertyEvidence {
+        properties,
+        opaque_mutation: false,
+    }
+}
+
 #[test]
 fn judge_arguments_classifies_positional_object_and_instance_property_targets() {
     let pos0 = arg_target(0, None);
-    let empty = ArgumentValues {
-        values: vec![],
-        spread_from: None,
+    let empty = av(vec![]);
+    let spread = ArgumentValues {
+        values: vec![ArgumentValue::Unknown],
+        spread_from: Some(0),
         path: None,
     };
+    let positive = av(vec![ArgumentValue::Scalar(json!(5000))]);
+    let zero = av(vec![ArgumentValue::Scalar(json!(0))]);
+    let dynamic_ok = av(vec![ArgumentValue::Unknown]);
+    let non_obj_arr = av(vec![ArgumentValue::Array(vec![])]);
     assert!(matches!(
         judge_arguments(&call_args(Some(&empty), None, None), &pos0),
         DelayVerdict::Missing(_)
@@ -179,84 +204,100 @@ fn judge_arguments_classifies_positional_object_and_instance_property_targets() 
         judge_arguments(&call_args(None, None, None), &pos0),
         DelayVerdict::Unanalyzable(_)
     ));
-    let spread = ArgumentValues {
-        values: vec![ArgumentValue::Unknown],
-        spread_from: Some(0),
-        path: None,
-    };
     assert!(matches!(
         judge_arguments(&call_args(Some(&spread), None, None), &pos0),
         DelayVerdict::Unanalyzable(_)
     ));
-    let positive = ArgumentValues {
-        values: vec![ArgumentValue::Scalar(json!(5000))],
-        spread_from: None,
-        path: None,
-    };
     assert_eq!(
         judge_arguments(&call_args(Some(&positive), None, None), &pos0),
         DelayVerdict::Valid
     );
-    let zero = ArgumentValues {
-        values: vec![ArgumentValue::Scalar(json!(0))],
-        spread_from: None,
-        path: None,
-    };
     assert!(matches!(
         judge_arguments(&call_args(Some(&zero), None, None), &pos0),
         DelayVerdict::Missing(_)
     ));
-    let dynamic_ok = ArgumentValues {
-        values: vec![ArgumentValue::Unknown],
-        spread_from: None,
-        path: None,
-    };
     assert_eq!(
         judge_arguments(&call_args(Some(&dynamic_ok), None, None), &pos0),
         DelayVerdict::Valid
     );
     assert!(matches!(
-        judge_arguments(&call_args(Some(&dynamic_ok), Some(&[(0, None)]), None), &pos0),
+        judge_arguments(
+            &call_args(Some(&dynamic_ok), Some(&[(0, None)]), None),
+            &pos0
+        ),
+        DelayVerdict::Missing(_)
+    ));
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&non_obj_arr), None, None), &pos0),
         DelayVerdict::Missing(_)
     ));
 
     let prop_target = arg_target(0, Some("retryAfterMs"));
-    let mut obj = FxHashMap::default();
-    obj.insert("retryAfterMs".to_string(), ArgumentValue::Scalar(json!(1500)));
-    let valid_obj = ArgumentValues {
-        values: vec![ArgumentValue::Object(obj)],
-        spread_from: None,
-        path: None,
+    let obj_with = |key: &str, value: ArgumentValue| {
+        let mut map = FxHashMap::default();
+        map.insert(key.to_string(), value);
+        av(vec![ArgumentValue::Object(map)])
     };
+    let valid_obj = obj_with("retryAfterMs", ArgumentValue::Scalar(json!(1500)));
+    let bad_prop_obj = obj_with("retryAfterMs", ArgumentValue::Scalar(json!("soon")));
+    let dyn_prop_obj = obj_with("retryAfterMs", ArgumentValue::Unknown);
+    let other_prop_obj = obj_with("other", ArgumentValue::Scalar(json!(1500)));
     assert_eq!(
         judge_arguments(&call_args(Some(&valid_obj), None, None), &prop_target),
         DelayVerdict::Valid
     );
+    assert_eq!(
+        judge_arguments(&call_args(Some(&dyn_prop_obj), None, None), &prop_target),
+        DelayVerdict::Valid
+    );
+    assert!(matches!(
+        judge_arguments(
+            &call_args(
+                Some(&dyn_prop_obj),
+                Some(&[(0, Some("retryAfterMs".to_string()))]),
+                None,
+            ),
+            &prop_target,
+        ),
+        DelayVerdict::Missing(_)
+    ));
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&empty), None, None), &prop_target),
+        DelayVerdict::Missing(_)
+    ));
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&other_prop_obj), None, None), &prop_target),
+        DelayVerdict::Missing(_)
+    ));
     assert!(matches!(
         judge_arguments(&call_args(Some(&dynamic_ok), None, None), &prop_target),
         DelayVerdict::Unanalyzable(_)
     ));
     assert!(matches!(
-        judge_arguments(&call_args(Some(&dynamic_ok), Some(&[(0, None)]), None), &prop_target),
+        judge_arguments(
+            &call_args(Some(&dynamic_ok), Some(&[(0, None)]), None),
+            &prop_target
+        ),
         DelayVerdict::Missing(_)
     ));
     assert!(matches!(
         judge_arguments(&call_args(Some(&positive), None, None), &prop_target),
         DelayVerdict::Missing(_)
     ));
-    let mut bad_prop = FxHashMap::default();
-    bad_prop.insert("retryAfterMs".to_string(), ArgumentValue::Scalar(json!("soon")));
-    let bad_prop_obj = ArgumentValues {
-        values: vec![ArgumentValue::Object(bad_prop)],
-        spread_from: None,
-        path: None,
-    };
     assert!(matches!(
         judge_arguments(&call_args(Some(&bad_prop_obj), None, None), &prop_target),
         DelayVerdict::Missing(_)
     ));
 
     let inst = instance_target("delayMs");
+    let good_ev = ev("delayMs", InstancePropertyValue::Positive);
+    let inv_ev = ev("delayMs", InstancePropertyValue::Invalid);
+    let abs_ev = ev("delayMs", InstancePropertyValue::AbsentOrNonFinite);
+    let other_ev = ev("code", InstancePropertyValue::Invalid);
+    let opaque_ev = InstancePropertyEvidence {
+        properties: FxHashMap::default(),
+        opaque_mutation: true,
+    };
     assert!(matches!(
         judge_arguments(&call_args(None, None, None), &inst),
         DelayVerdict::Unanalyzable(_)
@@ -265,53 +306,38 @@ fn judge_arguments_classifies_positional_object_and_instance_property_targets() 
         judge_arguments(&call_args(Some(&empty), None, None), &inst),
         DelayVerdict::Missing(_)
     ));
-    let mut props = FxHashMap::default();
-    props.insert("delayMs".to_string(), InstancePropertyValue::Positive);
-    let good_ev = InstancePropertyEvidence {
-        properties: props,
-        opaque_mutation: false,
-    };
     assert_eq!(
         judge_arguments(&call_args(Some(&empty), None, Some(&good_ev)), &inst),
         DelayVerdict::Valid
     );
-    let mut inv_props = FxHashMap::default();
-    inv_props.insert("delayMs".to_string(), InstancePropertyValue::Invalid);
-    let inv_ev = InstancePropertyEvidence {
-        properties: inv_props,
-        opaque_mutation: false,
-    };
     assert!(matches!(
         judge_arguments(&call_args(Some(&empty), None, Some(&inv_ev)), &inst),
         DelayVerdict::Missing(_)
     ));
-    let mut abs_props = FxHashMap::default();
-    abs_props.insert("delayMs".to_string(), InstancePropertyValue::AbsentOrNonFinite);
-    let abs_ev = InstancePropertyEvidence {
-        properties: abs_props,
-        opaque_mutation: false,
-    };
     assert!(matches!(
         judge_arguments(&call_args(Some(&empty), None, Some(&abs_ev)), &inst),
         DelayVerdict::Missing(_)
     ));
-    let opaque_ev = InstancePropertyEvidence {
-        properties: FxHashMap::default(),
-        opaque_mutation: true,
-    };
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&empty), None, Some(&other_ev)), &inst),
+        DelayVerdict::Missing(_)
+    ));
     assert!(matches!(
         judge_arguments(&call_args(Some(&empty), None, Some(&opaque_ev)), &inst),
         DelayVerdict::Unanalyzable(_)
     ));
-    let mut other_props = FxHashMap::default();
-    other_props.insert("code".to_string(), InstancePropertyValue::Invalid);
-    let other_ev = InstancePropertyEvidence {
-        properties: other_props,
-        opaque_mutation: false,
-    };
     assert!(matches!(
-        judge_arguments(&call_args(Some(&empty), None, Some(&other_ev)), &inst),
-        DelayVerdict::Missing(_)
+        judge_arguments(
+            &CallDelayArgs {
+                values: Some(&empty),
+                absent: None,
+                instance: None,
+                call_derived_construct: false,
+                dynamic_scope: true,
+            },
+            &inst,
+        ),
+        DelayVerdict::Unanalyzable(_)
     ));
 }
 
@@ -370,9 +396,14 @@ fn call_arguments_and_format_and_entry_guards_handle_edge_cases() {
     assert!(unan.import.is_none());
 
     let empty_cfg = NoMistakesConfig::default();
-    let empty_res =
-        check_with_catalog(Path::new("/repo"), &empty_cfg, None, &CheckFactMap::default(), None)
-            .unwrap();
+    let empty_res = check_with_catalog(
+        Path::new("/repo"),
+        &empty_cfg,
+        None,
+        &CheckFactMap::default(),
+        None,
+    )
+    .unwrap();
     assert!(empty_res.findings.is_empty());
 
     let active_cfg: NoMistakesConfig = serde_yaml::from_str(
@@ -454,4 +485,23 @@ fn candidate_targets_parse_failures_and_config_errors_are_covered() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, "broken.ts");
     assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
+
+    let inst_fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/queue-rate-limit-error-delay/instance-edge-cases.ts");
+    let map = collect_ts_facts(
+        std::slice::from_ref(&inst_fixture),
+        TsFactPlan {
+            module_bindings: true,
+            call_arguments: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let facts = map.get(&inst_fixture).expect("instance edge-case facts");
+    let provenance = facts
+        .module_bindings
+        .as_deref()
+        .and_then(|m| m.path_provenance.as_deref())
+        .expect("path provenance");
+    assert!(!provenance.instance_properties.is_empty());
+    assert!(!provenance.call_derived_constructs.is_empty());
 }

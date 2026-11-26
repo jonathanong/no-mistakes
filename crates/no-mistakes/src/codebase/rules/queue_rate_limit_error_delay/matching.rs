@@ -25,9 +25,7 @@ pub(super) fn has_local_value_export_target(site: &ResolvedCallSite) -> bool {
                 specifier,
                 repository_target: None,
                 ..
-            } if specifier.starts_with('.')
-                || specifier.starts_with('/')
-                || specifier.starts_with('#')
+            } if specifier.starts_with(['.', '/', '#'])
         )
     })
 }
