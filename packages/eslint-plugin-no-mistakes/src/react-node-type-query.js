@@ -113,6 +113,7 @@ function definePattern(
 module.exports = {
   definePattern,
   keyName,
+  qualifierText,
   reactTypeStatus,
   typeAnnotation,
   typeName,

@@ -75,7 +75,6 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     if (fact?.unresolved) return "unresolved";
     if (fact) return "no";
     const def = variableDef(callee, context);
-    if (def?.type === "ImportBinding") return useNames.has(callee.name) ? "yes" : "no";
     if (def?.type === "Variable" && def.node?.parent?.kind === "const" && def.node.init) {
       seen.add(callee.name);
       if (def.node.id.type === "Identifier") {
