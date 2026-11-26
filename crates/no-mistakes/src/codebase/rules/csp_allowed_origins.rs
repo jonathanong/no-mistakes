@@ -14,7 +14,7 @@ use std::sync::Arc;
 mod extract;
 mod findings;
 mod load;
-mod options;
+pub(super) mod options;
 mod policy;
 
 pub(crate) use extract::collect_for_plan;
@@ -23,6 +23,7 @@ use findings::{
 };
 pub(crate) use findings::{CollectedOrigins, OriginRef, UnanalyzableReason, UnanalyzableRef};
 use load::load_policy;
+pub(super) use options::validate_options;
 use options::{applications, Application};
 pub(crate) use policy::{CspDirective, CspPolicySet, ParsedOrigin};
 

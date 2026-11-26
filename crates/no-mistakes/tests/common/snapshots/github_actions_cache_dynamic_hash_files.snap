@@ -1,0 +1,144 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 18,
+          "message": "Cache `key` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ hashFiles('example.lock', env.CACHE_PATTERN) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 18,
+          "message": "Cache `key` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ hashFiles('example.lock', env.CACHE_PATTERN, 'src/**') }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 19,
+          "message": "Cache `restore-keys` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: ${{ hashFiles(format('{0}/**', env.CACHE_PATTERN)) }}",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 18,
+          "message": "Cache `key` calls hashFiles with broad pattern `src/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ hashFiles('example.lock', env.CACHE_PATTERN, 'src/**') }}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 18,
+          "message": "directive for `github-actions-cache-key-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-cache-key-policy",
+          "target": "github-actions-cache-key-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 18,
+          "message": "directive for `github-actions-cache-key-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-cache-key-policy",
+          "target": "github-actions-cache-key-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 18,
+          "message": "Cache `key` calls hashFiles with broad pattern `src/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ hashFiles('example.lock', env.CACHE_PATTERN, 'src/**') }}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 18,
+          "message": "Cache `key` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ hashFiles('example.lock', env.CACHE_PATTERN) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 18,
+          "message": "Cache `key` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ hashFiles('example.lock', env.CACHE_PATTERN, 'src/**') }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 18,
+          "message": "Cache `key` calls hashFiles with broad pattern `src/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ hashFiles('example.lock', env.CACHE_PATTERN, 'src/**') }}"
+        },
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 19,
+          "message": "Cache `restore-keys` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: ${{ hashFiles(format('{0}/**', env.CACHE_PATTERN)) }}",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

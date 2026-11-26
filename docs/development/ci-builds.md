@@ -462,8 +462,10 @@ cache states and include scheduling overhead.
 The [standalone archive producer](../../.github/scripts/standalone-shards.cjs)
 uses long-distance archive compression to reduce repeated shard downloads while
 preserving symbol names for panic diagnostics. Debug metadata is already disabled;
-stripping symbols would remove those diagnostics. A single test executable
-dominates the archive, so splitting it would make each shard fetch the same binary.
+stripping symbols would remove those diagnostics. Once the producer compiles the
+three test executables, it publishes one artifact per shard. Each test runner
+downloads its archive and the shared revision manifest. Warm dispatches validate
+that all three artifacts are present and unexpired.
 
 The [standalone shard workflow](../../.github/workflows/ci.yml) bounds the initial
 download separately from one fresh attempt after failure, within the existing
@@ -685,8 +687,13 @@ denies both lints. `crates/no-mistakes/build.rs` sets
 and clippy do. The standalone build sets `NM_TEST_SHARD` to `0`, `1`, and `2`
 on three sequential `cargo nextest archive` commands and writes
 `standalone-0.tar.zst`, `standalone-1.tar.zst`, and `standalone-2.tar.zst`.
-Each consumer runs one of those archives and does not hash-partition it. The
-job also sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
+Each consumer runs one of those archives and does not hash-partition it. Cargo
+uses a distinct workspace compiler wrapper path for each shard, preserving the
+three library test fingerprints in one target while sharing registry dependencies.
+The build restores input timestamps only when a workspace cache matches and
+records them only when a successful main build will publish a new cache.
+Each archive command has its own deadline within the 25-minute producer job.
+The first command also builds registry dependencies. The job sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
 `CARGO_PROFILE_DEV_DEBUG=0`, `CARGO_PROFILE_TEST_DEBUG=0`,
 `CARGO_PROFILE_DEV_CODEGEN_UNITS=4096`, and
 `CARGO_PROFILE_TEST_CODEGEN_UNITS=4096`. The cache key includes the test

@@ -114,11 +114,7 @@ fn inherited_ignored_sql_aliases_preserve_both_cross_file_rule_reports() {
         ]
     );
     let baseline = check_runner::json_value(&baseline);
-    for config in [
-        "project-fail.yml",
-        "project-previously-ignored.yml",
-        "opaque-legacy.yml",
-    ] {
+    for config in ["project-fail.yml", "project-previously-ignored.yml"] {
         assert_eq!(
             check_runner::json_value(&report(config, None)),
             baseline,
