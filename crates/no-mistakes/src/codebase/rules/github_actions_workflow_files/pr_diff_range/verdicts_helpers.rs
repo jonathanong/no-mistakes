@@ -41,6 +41,14 @@ pub(super) const UNKNOWN_REVISION: &str = "uses a revision expression or variabl
     statically, so base/merge pair consistency cannot be proven; pass explicit GitHub event SHAs \
     or `HEAD^1`/`HEAD`, or suppress this line";
 
+pub(super) const NON_MAPPING_ENV: &str = "sets `env` to a non-mapping or YAML-merged value, so \
+    configured `revisionPairs` environment pairs cannot be verified statically; use a literal \
+    mapping or suppress this line";
+
+pub(super) const NON_MAPPING_WITH: &str = "sets `with` to a non-mapping or YAML-merged value, so \
+    configured `revisionPairs` input pairs cannot be verified statically; use a literal mapping \
+    or suppress this line";
+
 pub(super) fn uses_unknown_checkout(a: Revision, b: Revision, checkout: CheckoutState) -> bool {
     let uses_head = matches!(a, Revision::CheckedOutUnknownHead | Revision::MergeCommitBase)
         || matches!(b, Revision::CheckedOutUnknownHead | Revision::MergeCommitBase);
@@ -68,11 +76,19 @@ pub(super) fn merge_parent_verdict(
     {
         return Some(Verdict::Mismatch(MISMATCH_CHECKOUT_MERGE_PARENT));
     }
-    let ok = checkout == CheckoutState::MergeCommit
+    let ok = (checkout == CheckoutState::MergeCommit
         && (matches!(
             other,
             Revision::MergeCommitHead | Revision::MergeCommitSecondParent
-        ) || (!mixed && matches!(other, Revision::GithubSha)));
+        ) || (!mixed && matches!(other, Revision::GithubSha))))
+        || (checkout == CheckoutState::MergeGroup
+            && matches!(
+                other,
+                Revision::CheckedOutMergeGroupHead
+                    | Revision::MergeCommitSecondParent
+                    | Revision::MergeGroupHeadSha
+                    | Revision::GithubSha
+            ));
     Some(if ok {
         Verdict::Consistent
     } else {

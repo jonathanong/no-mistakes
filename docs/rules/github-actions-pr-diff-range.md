@@ -140,12 +140,13 @@ rules:
   must use a consistent revision pair, tracking each job's `actions/checkout`
   `with.ref`:
   - Consistent pairs: `HEAD^1` with `HEAD` (or `HEAD^2`) after a merge-commit
-    checkout; three-dot `<base>...<head>` between PR base (`base.sha` or
+    or `merge_group` checkout; three-dot `<base>...<head>` between PR base (`base.sha` or
     `origin/${{ github.base_ref }}`) and PR head (`head.sha`, `head_ref`, or
     `HEAD` after checking out `pull_request.head.sha`); three-dot
     `origin/${{ github.base_ref }}...${{ github.sha }}` (or `HEAD`) on
     pull-request-only merge-commit checkouts; `merge_group.base_sha` with
-    `merge_group.head_sha`; and matching `||` fallbacks on both ends.
+    `merge_group.head_sha` (or `HEAD`/`github.sha` on `merge_group`-only
+    workflows); and matching `||` fallbacks on both ends.
   - Mismatched pairs (reported as findings): pairing `pull_request.base.sha`
     with `github.sha` or merge-commit `HEAD` (even in a three-dot diff on a
     pull-request-only workflow); two-dot or two-argument
@@ -161,8 +162,9 @@ rules:
 - `unanalyzable`: `report | advise | ignore` (defaults to `advise` when
   `requireConsistentRevisionPairs` is `true` or `revisionPairs` is non-empty).
   Controls diagnostics for dynamic/unrecognized revisions in a configured pair
-  or half-known `git diff` range, `HEAD`/`HEAD^1` after an unknown
-  `actions/checkout` `with.ref`, and invalid workflow YAML.
+  or half-known `git diff` range, non-mapping or YAML-merged `env:` / `with:`
+  blocks when matching `revisionPairs` are configured, `HEAD`/`HEAD^1` after an
+  unknown `actions/checkout` `with.ref`, and invalid workflow YAML.
 - Unknown option keys and malformed `revisionPairs` entries (missing side,
   mixed kinds, duplicate names, invalid env or flag syntax) fail at config load
   with exit code 2.
@@ -216,11 +218,12 @@ In a workflow that also runs on `push` or `merge_group`, do not pair
 With no options set, invalid YAML and unrecognized commands produce no finding.
 When `requireConsistentRevisionPairs` is `true` or `revisionPairs` is
 non-empty, dynamic/unrecognized revisions in configured pairs or half-known
-`git diff` ranges, `HEAD`/`HEAD^1` under an unresolved `actions/checkout`
-`with.ref`, and invalid workflow YAML are routed through `options.unanalyzable`
-(`advise` by default; `report` fails the check; `ignore` omits them). Line,
-next-line, and file suppression directives apply to both findings and
-advisories.
+`git diff` ranges, non-mapping or YAML-merged `env:` / `with:` blocks when
+matching `revisionPairs` are configured, `HEAD`/`HEAD^1` under an unresolved
+`actions/checkout` `with.ref`, and invalid workflow YAML are routed through
+`options.unanalyzable` (`advise` by default; `report` fails the check; `ignore`
+omits them). Line, next-line, and file suppression directives apply to both
+findings and advisories.
 
 ## Suppression
 

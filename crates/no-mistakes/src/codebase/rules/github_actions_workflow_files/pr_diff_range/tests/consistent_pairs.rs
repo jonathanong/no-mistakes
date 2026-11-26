@@ -39,6 +39,10 @@ fn consistent_pairs_allow_merge_commit_and_three_dot_pr_diffs() {
         "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff origin/${{ github.base_ref }}...${{ github.event.pull_request.head.ref }}\n",
         "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}...${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}\n",
         "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}...${{ github.event.merge_group.head_sha || github.event.pull_request.head.sha }}\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff HEAD^1 HEAD\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff HEAD^1 HEAD^2\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff HEAD^1 ${{ github.event.merge_group.head_sha }}\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff HEAD^1 ${{ github.sha }}\n",
         "on: merge_group\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.merge_group.head_sha }}\n      - run: git diff ${{ github.event.merge_group.base_sha }} HEAD\n",
         "on: merge_group\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha }} ${{ github.event.merge_group.head_sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff foo bar\n",
@@ -70,6 +74,7 @@ fn consistent_pairs_reject_mismatched_base_merge_and_checkout_pairs() {
         "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.head.sha }} ${{ github.sha }}\n",
         "on: merge_group\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha }} ${{ github.event.merge_group.base_sha }}\n",
         "on: merge_group\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.head_sha }} HEAD\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff HEAD^1 ${{ github.event.pull_request.head.sha }}\n",
     ] {
         let (findings, _) = check(opts, workflow);
         assert!(!findings.is_empty(), "expected mismatch for:\n{workflow}");
@@ -123,6 +128,7 @@ jobs:
     assert_eq!(findings.len(), 3, "{findings:#?}");
     assert_eq!(undecidable.len(), 7, "{undecidable:#?}");
 
+    let flag_only = "revisionPairs:\n  - baseFlag: --base\n    headFlag: --head\n";
     for unknown_checkout in [
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with: bad\n      - run: node x --base HEAD^1 --head HEAD\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: 123\n      - run: node x --base HEAD^1 --head HEAD\n",
@@ -130,10 +136,39 @@ jobs:
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ inputs.ref }}\n      - run: node x --base HEAD^1 --head HEAD\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          '<<': { ref: main }\n      - run: node x --base HEAD^1 --head HEAD\n",
     ] {
-        let (findings, undecidable) = check(opts, unknown_checkout);
+        let (findings, undecidable) = check(flag_only, unknown_checkout);
         assert!(findings.is_empty(), "{unknown_checkout}\n{findings:#?}");
         assert_eq!(undecidable.len(), 1, "{unknown_checkout}\n{undecidable:#?}");
     }
+
+    let non_mapping = r#"
+on: pull_request
+env: ${{ inputs.workflow_env }}
+jobs:
+  caller:
+    uses: ./.github/workflows/callee.yml
+    with: ${{ inputs.caller_with }}
+  job_shapes:
+    env:
+    steps:
+      - env: bad
+        uses: ./.github/actions/analyze
+        with:
+      - uses: ./.github/actions/analyze
+        with:
+          '<<': { base-rev: HEAD^1 }
+"#;
+    let (findings, undecidable) = check(opts, non_mapping);
+    assert!(findings.is_empty(), "{findings:#?}");
+    assert_eq!(undecidable.len(), 4, "{undecidable:#?}");
+    assert!(undecidable[0].contains("workflow (env)"));
+    assert!(undecidable[1].contains("job `caller` (with)"));
+    assert!(undecidable[2].contains("job `job_shapes` step 1 (env)"));
+    assert!(undecidable[3].contains("job `job_shapes` step 2 (with)"));
+
+    let (findings, undecidable) = check(flag_only, non_mapping);
+    assert!(findings.is_empty(), "{findings:#?}");
+    assert!(undecidable.is_empty(), "{undecidable:#?}");
 }
 
 #[test]

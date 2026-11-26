@@ -1,11 +1,11 @@
 use super::checkout::CheckoutState;
 use super::exprs::extract;
 use super::options::CompiledRevisionPair;
-use super::pairs_locate::{env_pair_line, extract_flag_pair, with_pair_line};
+use super::pairs_locate::{emit, env_pair_line, extract_flag_pair, field_line, with_pair_line};
 use super::revisions::{classify_token, classify_value, Revision};
 use super::verdicts::{judge_explicit_pair, Verdict};
+use super::verdicts_helpers::{NON_MAPPING_ENV, NON_MAPPING_WITH};
 use super::yaml_shapes::get;
-use super::RULE_ID;
 use crate::codebase::rules::github_actions_script_expressions::StepRun;
 use crate::codebase::rules::github_actions_workflow_files::job_lines::document::Document;
 use crate::codebase::rules::github_actions_workflow_files::script_line::yaml_line;
@@ -33,6 +33,16 @@ pub(super) struct PairOutput<'a> {
     pub(super) undecidable: &'a mut Vec<RuleFinding>,
 }
 
+fn literal_mapping(value: &Value) -> Option<&Mapping> {
+    value
+        .as_mapping()
+        .filter(|map| !map.contains_key(Value::String("<<".to_owned())))
+}
+
+fn judge(ctx: &PairContext<'_>, base: Revision, head: Revision) -> Verdict {
+    judge_explicit_pair(base, head, ctx.mixed, ctx.pull, ctx.queue, ctx.checkout)
+}
+
 pub(super) fn check_env_pairs(
     ctx: &PairContext<'_>,
     local_env: Option<&Value>,
@@ -40,38 +50,38 @@ pub(super) fn check_env_pairs(
     pairs: &[CompiledRevisionPair],
     out: &mut PairOutput<'_>,
 ) {
-    let Some(local_map) = local_env.and_then(Value::as_mapping) else {
+    let Some(raw) = local_env.filter(|v| !v.is_null()) else {
+        return;
+    };
+    if !pairs
+        .iter()
+        .any(|p| matches!(p, CompiledRevisionPair::Env { .. }))
+    {
+        return;
+    }
+    let Some(local_map) = literal_mapping(raw) else {
+        let line = field_line(ctx, "env");
+        emit(ctx, line, "env", Verdict::Unanalyzable(NON_MAPPING_ENV), out);
         return;
     };
     for pair in pairs {
         let CompiledRevisionPair::Env { base, head } = pair else {
             continue;
         };
-        let touched = get(local_map, base).is_some() || get(local_map, head).is_some();
-        if !touched {
+        if get(local_map, base).is_none() && get(local_map, head).is_none() {
             continue;
         }
         let (Some(base_val), Some(head_val)) = (effective_env.get(base), effective_env.get(head))
         else {
             continue;
         };
-        let base_rev = classify_value(base_val, ctx.checkout);
-        let head_rev = classify_value(head_val, ctx.checkout);
-        let line = env_pair_line(ctx, head, base);
-        emit(
+        let verdict = judge(
             ctx,
-            line,
-            &format!("env pair `{base}` / `{head}`"),
-            judge_explicit_pair(
-                base_rev,
-                head_rev,
-                ctx.mixed,
-                ctx.pull,
-                ctx.queue,
-                ctx.checkout,
-            ),
-            out,
+            classify_value(base_val, ctx.checkout),
+            classify_value(head_val, ctx.checkout),
         );
+        let line = env_pair_line(ctx, head, base);
+        emit(ctx, line, &format!("env pair `{base}` / `{head}`"), verdict, out);
     }
 }
 
@@ -81,7 +91,18 @@ pub(super) fn check_with_pairs(
     pairs: &[CompiledRevisionPair],
     out: &mut PairOutput<'_>,
 ) {
-    let Some(with_map) = get(owner, "with").and_then(Value::as_mapping) else {
+    let Some(raw) = get(owner, "with").filter(|v| !v.is_null()) else {
+        return;
+    };
+    if !pairs
+        .iter()
+        .any(|p| matches!(p, CompiledRevisionPair::Input { .. }))
+    {
+        return;
+    }
+    let Some(with_map) = literal_mapping(raw) else {
+        let line = field_line(ctx, "with");
+        emit(ctx, line, "with", Verdict::Unanalyzable(NON_MAPPING_WITH), out);
         return;
     };
     for pair in pairs {
@@ -97,21 +118,9 @@ pub(super) fn check_with_pairs(
         let head_rev = head_raw
             .as_str()
             .map_or(Revision::Unknown, |val| classify_value(val, ctx.checkout));
+        let verdict = judge(ctx, base_rev, head_rev);
         let line = with_pair_line(ctx, head, base);
-        emit(
-            ctx,
-            line,
-            &format!("input pair `{base}` / `{head}`"),
-            judge_explicit_pair(
-                base_rev,
-                head_rev,
-                ctx.mixed,
-                ctx.pull,
-                ctx.queue,
-                ctx.checkout,
-            ),
-            out,
-        );
+        emit(ctx, line, &format!("input pair `{base}` / `{head}`"), verdict, out);
     }
 }
 
@@ -122,10 +131,10 @@ pub(super) fn check_flag_pairs(
     pairs: &[CompiledRevisionPair],
     out: &mut PairOutput<'_>,
 ) {
-    let has_flags = pairs
+    if !pairs
         .iter()
-        .any(|pair| matches!(pair, CompiledRevisionPair::Flag { .. }));
-    if !has_flags {
+        .any(|p| matches!(p, CompiledRevisionPair::Flag { .. }))
+    {
         return;
     }
     let (text, exprs) = extract(script);
@@ -141,56 +150,9 @@ pub(super) fn check_flag_pairs(
                 .map_or(Revision::Unknown, |tok| classify_token(tok, &exprs, env, ctx.checkout));
             let head_rev = head_tok
                 .map_or(Revision::Unknown, |tok| classify_token(tok, &exprs, env, ctx.checkout));
+            let verdict = judge(ctx, base_rev, head_rev);
             let line = yaml_line(ctx.located, script, command[0].line, base);
-            emit(
-                ctx,
-                line,
-                &format!("flag pair `{base}` / `{head}`"),
-                judge_explicit_pair(
-                    base_rev,
-                    head_rev,
-                    ctx.mixed,
-                    ctx.pull,
-                    ctx.queue,
-                    ctx.checkout,
-                ),
-                out,
-            );
+            emit(ctx, line, &format!("flag pair `{base}` / `{head}`"), verdict, out);
         }
-    }
-}
-
-fn emit(
-    ctx: &PairContext<'_>,
-    line: usize,
-    label: &str,
-    verdict: Verdict,
-    out: &mut PairOutput<'_>,
-) {
-    let where_text = match (ctx.job, ctx.step_index) {
-        (Some(job), Some(step)) => format!("job `{job}` step {step}"),
-        (Some(job), None) => format!("job `{job}`"),
-        (None, _) => "workflow".to_string(),
-    };
-    match verdict {
-        Verdict::Consistent => {}
-        Verdict::Mismatch(reason) => out.findings.push(RuleFinding {
-            causes: Vec::new(),
-            rule: RULE_ID.to_string(),
-            file: ctx.rel.to_string(),
-            line,
-            message: format!("{}:{line}: {where_text} ({label}) {reason}.", ctx.rel),
-            import: None,
-            target: ctx.job.map(str::to_owned),
-        }),
-        Verdict::Unanalyzable(reason) => out.undecidable.push(RuleFinding {
-            causes: Vec::new(),
-            rule: RULE_ID.to_string(),
-            file: ctx.rel.to_string(),
-            line,
-            message: format!("{}:{line}: {where_text} ({label}) {reason}.", ctx.rel),
-            import: None,
-            target: Some("unanalyzable".to_string()),
-        }),
     }
 }

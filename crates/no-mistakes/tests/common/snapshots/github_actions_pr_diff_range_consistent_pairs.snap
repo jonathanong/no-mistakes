@@ -29,6 +29,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-pr-diff-range",
           "sourceLine": "DIFF_HEAD: ${{ github.event.pull_request.head.sha }}",
           "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 25,
+          "message": ".github/workflows/unanalyzable.yml:25: job `non_mapping_env` (env) sets `env` to a non-mapping or YAML-merged value, so configured `revisionPairs` environment pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "env: ${{ inputs.env }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 32,
+          "message": ".github/workflows/unanalyzable.yml:32: job `non_mapping_with` step 1 (with) sets `with` to a non-mapping or YAML-merged value, so configured `revisionPairs` input pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "with: ${{ inputs.with }}",
+          "target": "unanalyzable"
         }
       ],
       "codebase": [],
@@ -261,6 +277,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/unanalyzable.yml:20: job `dynamic_env` (env pair `DIFF_BASE` / `DIFF_HEAD`) uses a revision expression or variable that cannot be classified statically, so base/merge pair consistency cannot be proven; pass explicit GitHub event SHAs or `HEAD^1`/`HEAD`, or suppress this line.",
           "rule": "github-actions-pr-diff-range",
           "sourceLine": "DIFF_HEAD: ${{ github.event.pull_request.head.sha }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 25,
+          "message": ".github/workflows/unanalyzable.yml:25: job `non_mapping_env` (env) sets `env` to a non-mapping or YAML-merged value, so configured `revisionPairs` environment pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "env: ${{ inputs.env }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 32,
+          "message": ".github/workflows/unanalyzable.yml:32: job `non_mapping_with` step 1 (with) sets `with` to a non-mapping or YAML-merged value, so configured `revisionPairs` input pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "with: ${{ inputs.with }}",
           "target": "unanalyzable"
         }
       ],
