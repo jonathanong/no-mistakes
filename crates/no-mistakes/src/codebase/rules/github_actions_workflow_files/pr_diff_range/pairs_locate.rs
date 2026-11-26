@@ -58,64 +58,61 @@ fn match_flag<'a>(words: &[&'a str], index: usize, flag: &str) -> Option<(Option
             .map(|w| w.trim_end_matches([')', '`']));
         return Some((next, if next.is_some() { 2 } else { 1 }));
     }
-    let rest = word.strip_prefix(flag)?.strip_prefix('=')?;
-    Some(((!rest.is_empty()).then_some(rest), 1))
+    word.strip_prefix(flag)
+        .and_then(|rest| rest.strip_prefix('='))
+        .map(|rest| ((!rest.is_empty()).then_some(rest), 1))
+}
+
+fn locate(ctx: &PairContext<'_>, find: impl FnOnce(&Document) -> Option<usize>) -> usize {
+    ctx.document
+        .get_or_init(|| Document::parse(ctx.source))
+        .as_ref()
+        .and_then(find)
+        .unwrap_or(1)
 }
 
 fn owner_node(doc: &Document, ctx: &PairContext<'_>) -> Option<usize> {
-    let root = *doc.roots().first()?;
+    let root = doc.roots().first().copied();
     let Some(job_name) = ctx.job else {
-        return Some(root);
+        return root;
     };
-    let job = doc.field(doc.field(root, "jobs")?, job_name)?;
-    Some(
-        ctx.step_index
-            .and_then(|index| {
-                doc.sequence(doc.field(job, "steps")?)?
-                    .get(index.saturating_sub(1))
-                    .copied()
-            })
-            .unwrap_or(job),
-    )
+    let job = root
+        .and_then(|r| doc.field(r, "jobs"))
+        .and_then(|jobs| doc.field(jobs, job_name));
+    match ctx.step_index {
+        Some(index) => job
+            .and_then(|j| doc.field(j, "steps"))
+            .and_then(|steps| doc.sequence(steps))
+            .and_then(|seq| seq.get(index.saturating_sub(1)).copied()),
+        None => job,
+    }
 }
 
 pub(super) fn field_line(ctx: &PairContext<'_>, field: &str) -> usize {
-    ctx.document
-        .get_or_init(|| Document::parse(ctx.source))
-        .as_ref()
-        .and_then(|doc| doc.field_line(owner_node(doc, ctx)?, field))
-        .unwrap_or(1)
+    locate(ctx, |doc| {
+        owner_node(doc, ctx).and_then(|owner| doc.field_line(owner, field))
+    })
 }
 
 pub(super) fn env_pair_line(ctx: &PairContext<'_>, head: &str, base: &str) -> usize {
-    ctx.document
-        .get_or_init(|| Document::parse(ctx.source))
-        .as_ref()
-        .and_then(|doc| {
-            if let Some(job) = ctx.job {
-                let step_idx = ctx.step_index.map_or(usize::MAX, |i| i.saturating_sub(1));
-                env_read::line(doc, job, step_idx, head)
-                    .or_else(|| env_read::line(doc, job, step_idx, base))
-            } else {
-                let root = *doc.roots().first()?;
-                let env = doc.field(root, "env")?;
-                doc.field_line(env, head)
-                    .or_else(|| doc.field_line(env, base))
-            }
-        })
-        .unwrap_or(1)
+    locate(ctx, |doc| match ctx.job {
+        Some(job) => {
+            let step_idx = ctx.step_index.map_or(usize::MAX, |i| i.saturating_sub(1));
+            env_read::line(doc, job, step_idx, head)
+                .or_else(|| env_read::line(doc, job, step_idx, base))
+        }
+        None => owner_node(doc, ctx)
+            .and_then(|root| doc.field(root, "env"))
+            .and_then(|env| doc.field_line(env, head)),
+    })
 }
 
-pub(super) fn with_pair_line(ctx: &PairContext<'_>, head: &str, base: &str) -> usize {
-    ctx.document
-        .get_or_init(|| Document::parse(ctx.source))
-        .as_ref()
-        .and_then(|doc| {
-            let with = doc.field(owner_node(doc, ctx)?, "with")?;
-            doc.field_line(with, head)
-                .or_else(|| doc.field_line(with, base))
-        })
-        .unwrap_or(1)
+pub(super) fn with_pair_line(ctx: &PairContext<'_>, head: &str) -> usize {
+    locate(ctx, |doc| {
+        owner_node(doc, ctx)
+            .and_then(|owner| doc.field(owner, "with"))
+            .and_then(|with| doc.field_line(with, head))
+    })
 }
 
 pub(super) fn emit(

@@ -322,16 +322,24 @@ jobs:
       dry_run: true
   call_merged:
     <<: *remote_call
+  call_remote_inherit:
+    uses: owner/repo/.github/workflows/ci.yml@v1
+    secrets: inherit
+  call_empty_contract:
+    uses: ./.github/workflows/empty-contract.yml
 "#;
+    let empty_contract = "on:\n  workflow_call:\njobs:\n  ok:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ok\n";
     let extra = run_in_memory(
         "requireExplicitWorkflowCallBindings: true",
         &[
             (".github/workflows/scalar.yml", Ok(scalar_callee)),
             (".github/workflows/typed.yml", Ok(typed_callee)),
+            (".github/workflows/empty-contract.yml", Ok(empty_contract)),
             (".github/workflows/caller.yml", Ok(caller)),
         ],
     );
-    assert!(extra.findings.is_empty(), "{:#?}", extra.findings);
+    assert_eq!(extra.findings.len(), 1, "{:#?}", extra.findings);
+    assert!(extra.findings[0].message.contains("forbidden secrets: inherit"));
     let extra_adv: Vec<&str> = extra.advisories.iter().map(|f| f.message.as_str()).collect();
     assert!(
         extra_adv.iter().any(|m| m.contains("sets `with` to `inherit`")),

@@ -119,7 +119,7 @@ pub(super) fn check_with_pairs(
             .as_str()
             .map_or(Revision::Unknown, |val| classify_value(val, ctx.checkout));
         let verdict = judge(ctx, base_rev, head_rev);
-        let line = with_pair_line(ctx, head, base);
+        let line = with_pair_line(ctx, head);
         emit(ctx, line, &format!("input pair `{base}` / `{head}`"), verdict, out);
     }
 }

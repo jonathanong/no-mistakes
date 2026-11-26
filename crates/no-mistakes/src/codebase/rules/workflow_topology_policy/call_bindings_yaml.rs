@@ -53,24 +53,24 @@ impl RawWorkflows {
         workflow_path: &str,
         field: &str,
     ) -> Option<String> {
-        let call = self
-            .docs
-            .get(workflow_path)?
-            .get("on")?
-            .as_mapping()?
-            .get("workflow_call")?
-            .as_mapping()?;
-        let raw = call.get(field)?;
-        (!raw.is_null() && !raw.is_mapping()).then(|| describe_value(raw))
+        self.docs
+            .get(workflow_path)
+            .and_then(|doc| doc.get("on"))
+            .and_then(Value::as_mapping)
+            .and_then(|on| on.get("workflow_call"))
+            .and_then(Value::as_mapping)
+            .and_then(|call| call.get(field))
+            .filter(|raw| !raw.is_null() && !raw.is_mapping())
+            .map(describe_value)
     }
 
     fn job_mapping(&self, workflow_path: &str, job_key: &str) -> Option<&serde_yaml::Mapping> {
         self.docs
-            .get(workflow_path)?
-            .get("jobs")?
-            .as_mapping()?
-            .get(Value::String(job_key.to_string()))?
-            .as_mapping()
+            .get(workflow_path)
+            .and_then(|doc| doc.get("jobs"))
+            .and_then(Value::as_mapping)
+            .and_then(|jobs| jobs.get(Value::String(job_key.to_string())))
+            .and_then(Value::as_mapping)
     }
 }
 
@@ -91,7 +91,7 @@ fn classify_binding(raw: &Value, allow_inherit: bool) -> RawBindingMap<'_> {
         Value::Mapping(map) => {
             let entries = map
                 .iter()
-                .filter_map(|(key, value)| Some((key.as_str()?.to_string(), value)))
+                .filter_map(|(key, value)| key.as_str().map(|name| (name.to_string(), value)))
                 .collect();
             RawBindingMap::Mapping(entries)
         }

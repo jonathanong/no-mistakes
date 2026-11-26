@@ -33,6 +33,8 @@ fn consistent_pairs_allow_merge_commit_and_three_dot_pr_diffs() {
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ''\n      - run: git diff HEAD^1 ${{ github.sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: refs/pull/${{ github.event.pull_request.number }}/merge\n      - run: git diff HEAD~1 HEAD\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.sha }}\n      - run: git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.head.sha }}...${{ github.event.pull_request.base.sha }}\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha }} ${{ github.sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff refs/remotes/origin/${{ github.base_ref }}...${{ github.sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n      - run: git diff ${{ github.event.pull_request.base.sha }}...HEAD\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.head_ref }}\n      - run: git diff origin/${{ github.event.pull_request.base.ref }}...HEAD\n",
@@ -112,7 +114,7 @@ jobs:
       - env:
           DIFF_BASE: origin/${{ github.base_ref }}
         run: |
-          node scripts/check.mjs --base=HEAD^1 --base=HEAD^1 --head=HEAD --head=HEAD -- --base ignored
+          node scripts/check.mjs --base-extra x --base=HEAD^1 --base=HEAD^1 --head=HEAD --head=HEAD -- --base ignored
           node scripts/check.mjs --base HEAD^1 --base origin/${{ github.base_ref }} --head HEAD
           node scripts/check.mjs --base HEAD^1 --head HEAD --head ${{ github.sha }}
           node scripts/check.mjs --base= --head HEAD
@@ -122,7 +124,7 @@ jobs:
       - uses: ./.github/actions/analyze
         with:
           base-rev: 123
-          head-rev: HEAD
+          head-rev: 456
 "#;
     let (findings, undecidable) = check(opts, workflow);
     assert_eq!(findings.len(), 3, "{findings:#?}");
@@ -271,12 +273,15 @@ fn invalid_revision_pair_options_are_rejected() {
         "revisionPairs:\n  - baseEnv: BASE\n    headFlag: --head\n",
         "revisionPairs:\n  - baseEnv: BASE\n    headEnv: BASE\n",
         "revisionPairs:\n  - baseEnv: 123BAD\n    headEnv: HEAD\n",
+        "revisionPairs:\n  - baseEnv: A-B\n    headEnv: HEAD\n",
         "revisionPairs:\n  - baseEnv: BASE\n    headEnv: 123BAD\n",
         "revisionPairs:\n  - baseInput: base\n",
         "revisionPairs:\n  - headInput: head\n",
         "revisionPairs:\n  - baseInput: ' '\n    headInput: head\n",
+        "revisionPairs:\n  - baseInput: base\n    headInput: ' '\n",
         "revisionPairs:\n  - baseFlag: --base\n",
         "revisionPairs:\n  - headFlag: --head\n",
+        "revisionPairs:\n  - baseFlag: '-'\n    headFlag: --head\n",
         "revisionPairs:\n  - baseFlag: base\n    headFlag: --head\n",
         "revisionPairs:\n  - baseFlag: --base\n    headFlag: head\n",
         "revisionPairs:\n  - baseFlag: '--a b'\n    headFlag: --head\n",
