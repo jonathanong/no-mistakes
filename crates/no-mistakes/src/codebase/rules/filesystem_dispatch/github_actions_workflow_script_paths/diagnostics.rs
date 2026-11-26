@@ -109,7 +109,7 @@ pub(super) fn run(
 
 fn check_path(ctx: &RunCtx<'_>, path: &Path, rel: &str) -> AnalysisDiagnostics {
     match ctx.sources.read_path(path) {
-        Ok(source) => workflow::check_source(ctx, rel, &source),
+        Ok(source) => workflow::check_source(ctx, path, rel, &source),
         Err(error) => {
             let mut diag = AnalysisDiagnostics::default();
             let item = unreadable_finding(&error, ctx.defer_suppression, |line| {

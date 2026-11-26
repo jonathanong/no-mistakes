@@ -22,13 +22,13 @@ pub(super) fn check_file(
     {
         return AnalysisDiagnostics::default();
     }
-    let mut diag = match serde_yaml::from_str::<Value>(&source) {
+    let mut diag = match sources.parse_loaded_yaml(path, &source, false) {
         Ok(value) => check_parsed(&rel, &source, &value, opts),
         Err(err) => {
             let mut out = AnalysisDiagnostics::default();
             out.findings.push(finding(
                 &rel,
-                err.location().map_or(1, |loc| loc.line()),
+                err.line(),
                 format!("{rel}: invalid YAML ({err})"),
                 None,
             ));
@@ -44,8 +44,8 @@ pub(super) fn check_file(
         ));
     }
     if !opts.defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut diag.findings, &source);
-        super::super::suppress_rule_findings_with_source(&mut diag.advisories, &source);
+        super::super::suppress_rule_findings_for_path(sources, path, &mut diag.findings);
+        super::super::suppress_rule_findings_for_path(sources, path, &mut diag.advisories);
     }
     diag
 }

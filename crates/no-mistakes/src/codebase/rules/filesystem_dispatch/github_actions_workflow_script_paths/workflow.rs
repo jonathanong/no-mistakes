@@ -9,14 +9,20 @@ use crate::codebase::rules::{
     github_actions_workflow_files::{run_scripts::scalar_name, step_lines},
 };
 use serde_yaml::{Mapping, Value};
+use std::path::Path;
 
-pub(super) fn check_source(ctx: &RunCtx<'_>, rel: &str, source: &str) -> AnalysisDiagnostics {
+pub(super) fn check_source(
+    ctx: &RunCtx<'_>,
+    path: &Path,
+    rel: &str,
+    source: &str,
+) -> AnalysisDiagnostics {
     let mut diag = AnalysisDiagnostics::default();
     let trimmed = source.trim_start_matches('\u{feff}');
-    let value = match serde_yaml::from_str::<Value>(trimmed) {
+    let value = match ctx.sources.parse_loaded_yaml(path, source, true) {
         Ok(value) => value,
         Err(error) => {
-            let line = error.location().map_or(1, |loc| loc.line());
+            let line = error.line();
             diag.unanalyzable(
                 ctx.unanalyzable,
                 finding(

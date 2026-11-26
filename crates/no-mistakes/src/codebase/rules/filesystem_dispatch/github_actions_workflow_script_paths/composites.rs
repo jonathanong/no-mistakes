@@ -2,7 +2,7 @@ use super::scripts::{self, ScriptHit, ScriptHitKind, WorkingDir};
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 const MAX_ACTION_DEPTH: usize = 4;
 
@@ -41,7 +41,7 @@ fn walk_action(
     visited: &mut BTreeSet<String>,
     hits: &mut Vec<ScriptHit>,
 ) -> String {
-    let Some((action_path, source)) = read_action(root, sources, rel_dir) else {
+    let Some((action_path, full_path, source)) = read_action(root, sources, rel_dir) else {
         let missing = if rel_dir.is_empty() {
             "action.yml".to_string()
         } else {
@@ -61,7 +61,7 @@ fn walk_action(
     if !visited.insert(action_path.clone()) || depth >= MAX_ACTION_DEPTH {
         return action_path;
     }
-    let Ok(value) = serde_yaml::from_str::<Value>(&source) else {
+    let Ok(value) = sources.parse_loaded_yaml(&full_path, &source, true) else {
         hits.push(ScriptHit {
             line: 1,
             kind: ScriptHitKind::Unanalyzable {
@@ -125,7 +125,11 @@ fn step_working_dir(step: &Mapping) -> WorkingDir {
     }
 }
 
-fn read_action(root: &Path, sources: &SourceStore, rel_dir: &str) -> Option<(String, String)> {
+fn read_action(
+    root: &Path,
+    sources: &SourceStore,
+    rel_dir: &str,
+) -> Option<(String, PathBuf, String)> {
     for filename in ["action.yml", "action.yaml"] {
         let rel = if rel_dir.is_empty() {
             filename.to_string()
@@ -134,7 +138,7 @@ fn read_action(root: &Path, sources: &SourceStore, rel_dir: &str) -> Option<(Str
         };
         let full = root.join(&rel);
         if let Ok(source) = sources.read_path(&full) {
-            return Some((rel, source.to_string()));
+            return Some((rel, full, source.to_string()));
         }
     }
     None
