@@ -562,12 +562,14 @@ For [`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md),
 listing the rule turns on the default pull-request diff-range and `merge_group`
 checks. Set `options.requireConsistentRevisionPairs: true` to enforce
 consistent base/merge and base/head revision pairs across `git diff` ranges
-(tracking `actions/checkout` `with.ref`), and configure `options.revisionPairs`
-with `{ baseEnv, headEnv }`, `{ baseInput, headInput }`, or
-`{ baseFlag, headFlag }` entries to check env vars, `with:` inputs, or CLI
-flags. `options.unanalyzable: report | advise | ignore` defaults to `advise`
-when either option is enabled. The rule stays off until a configuration lists
-it.
+(tracking `actions/checkout` `with.ref`, including `HEAD^1 HEAD` on
+`merge_group` checkouts), and configure `options.revisionPairs` with
+`{ baseEnv, headEnv }`, `{ baseInput, headInput }`, or `{ baseFlag, headFlag }`
+entries to check env vars, `with:` inputs, or CLI flags.
+`options.unanalyzable: report | advise | ignore` defaults to `advise` when
+either option is enabled, covering unresolved checkout refs, dynamic revisions,
+non-mapping or YAML-merged `env:` / `with:` blocks for configured pairs, and
+invalid workflow YAML. The rule stays off until a configuration lists it.
 
 Set `options.workflows` to a required non-empty list of exact repository-relative
 paths directly under `.github/workflows` for workflows that supply required PR
