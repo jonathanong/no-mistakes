@@ -36,6 +36,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-conflict-ordering",
             "postgres-lock-written-rows-only",
             "postgres-lock-inventory",
+            "postgres-lock-reason",
             "postgres-lock-ordering",
             "postgres-required-predicates",
             "postgres-generated-column-predicates",
