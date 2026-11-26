@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { eslintFindings, oxlintFindings, snapshotDocument } from "./diagnostic-snapshot.mjs";
 import { fixture, lint, plugin, __dirname } from "./helpers.mjs";
 const id = "gh-api-argument-safety";
 const fixtureRoot = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
@@ -132,6 +133,30 @@ describe(id, () => {
       );
       assert.equal(diagnostics.length, count, name);
     }
+  });
+  it("consumes opaque field values in both lint engines", async () => {
+    const file = "opaque-field-values.ts";
+    const result = spawnSync(
+      process.execPath,
+      [
+        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+        "--config",
+        resolve(fixtureRoot, ".oxlintrc.json"),
+        "-A",
+        "no-sparse-arrays",
+        "--format",
+        "json",
+        resolve(fixtureRoot, file),
+      ],
+      { encoding: "utf8" },
+    );
+    assert.equal(result.status, 1, result.stderr);
+    await expect(
+      snapshotDocument({
+        eslint: eslintFindings(check(file, { wrappers }), file),
+        oxlint: oxlintFindings(JSON.parse(result.stdout).diagnostics, file),
+      }),
+    ).toMatchFileSnapshot("snapshots/gh-api-opaque-field-values.snap");
   });
   it("exports a non-recommended opt-in rule", () => {
     assert.ok(plugin.rules[id]);

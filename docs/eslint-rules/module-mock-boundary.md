@@ -54,6 +54,9 @@ Use the real internal module, mock an external leaf, or make a narrowly tagged
 integration override that preserves the real module. Keep any baseline entry
 temporary; stale entries are reported.
 
+The rule follows direct mock calls through TypeScript assertions, non-null
+assertions, and `satisfies`, including wrappers around a comma expression.
+
 ## Limits
 
 A computed identifier key, such as `const { [key]: mocked } = ns`, is not the export spelled by that identifier. A string or expression-free template key is. The same holds for a method taken from a framework alias: `const { [name]: clear } = vi` is not `vi.mock`, while `const { ["mock"]: clear } = vi` is. `const mock = vi.mock as typeof vi.mock` is still `vi.mock`. `const mocking = vi as typeof vi` is still `vi`. `(vi.mock as typeof vi.mock).call` is still `vi.mock.call`.

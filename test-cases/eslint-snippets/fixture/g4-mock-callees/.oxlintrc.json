@@ -1,0 +1,16 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "categories": { "correctness": "off" },
+  "overrides": [
+    { "files": ["**/boundary.ts"], "rules": { "no-mistakes/module-mock-boundary": "error" } },
+    {
+      "files": ["**/preserve.ts"],
+      "rules": { "no-mistakes/module-mock-preserve-exports": "error" }
+    }
+  ]
+}
