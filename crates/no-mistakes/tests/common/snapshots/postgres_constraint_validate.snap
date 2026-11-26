@@ -2,6 +2,39 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 25,
+          "message": "ALTER TABLE ADD CONSTRAINT control_case_body_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE control_case ADD CONSTRAINT control_case_body_check CHECK (body <> '') NOT VALID;",
+          "target": "control_case.control_case_body_check"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "do_block_without_validate": {
     "exitCode": 1,
     "report": {

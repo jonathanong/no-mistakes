@@ -15,6 +15,7 @@ fn test_reliability_check_json_snapshot() {
         "local-playwright",
         "local-playwright-default",
         "playwright-export-shapes",
+        "serial-disable-line",
         "wrapped-fixtures",
         "wrapped-fixtures-configured",
     ]
@@ -23,9 +24,11 @@ fn test_reliability_check_json_snapshot() {
             "workflow-action" | "blank-reason" => {
                 rules_path("test-no-retries", "fixture", "workflow-action")
             }
-            "malformed" | "static-shapes" | "playwright-export-shapes" | "followups" => {
-                rules_path("test-no-retries", "fixture", name)
-            }
+            "malformed"
+            | "static-shapes"
+            | "playwright-export-shapes"
+            | "followups"
+            | "serial-disable-line" => rules_path("test-no-retries", "fixture", name),
             "local-playwright" | "local-playwright-default" => {
                 rules_path("test-no-retries", "fixture", "local-playwright")
             }

@@ -26,13 +26,19 @@ fn nextjs_no_api_routes_json_matches_snapshot() {
 
 #[test]
 fn nextjs_no_caching_json_matches_snapshot() {
+    let effort = "rules/nextjs-no-caching/fixture/effort-low";
     assert_saved_fixture(
         "nextjs_no_caching",
-        &[c(
-            "fail",
-            "codebase-analysis/no-nextjs-caching/fixture",
-            "../../../rules/nextjs-no-caching/config/nextjs_no_caching_fails_for_cache_features.yml",
-        )],
+        &[
+            c(
+                "fail",
+                "codebase-analysis/no-nextjs-caching/fixture",
+                "../../../rules/nextjs-no-caching/config/nextjs_no_caching_fails_for_cache_features.yml",
+            ),
+            c("report", effort, "report.yml"),
+            c("advise", effort, "advise.yml"),
+            c("ignore", effort, "ignore.yml"),
+        ],
     );
 }
 
