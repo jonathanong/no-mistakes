@@ -741,4 +741,5 @@ paths remain unanalyzable; see [awaited return origins](../postgres-query-annota
 
 ## Invalid UTF-8
 
-Source text this rule reads, including standalone SQL, is decoded lossily, so a stray byte does not drop the file or replace it with an encoding failure. Other read errors contribute no source text. `unanalyzableSql` still applies to SQL the statement pass cannot parse.
+The rule reads SQL from executor calls in application source. Source text
+is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_require_query_annotation/scan.rs#L39-L61).
