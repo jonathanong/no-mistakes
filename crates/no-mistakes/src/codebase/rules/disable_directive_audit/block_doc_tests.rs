@@ -1,5 +1,7 @@
+use super::scan::project;
 use super::tests::root;
 use super::*;
+use crate::codebase::ts_source::{audit_directives_for_path, DisableDirective};
 
 #[test]
 fn rust_block_docs_share_fence_groups_and_preserve_physical_locations() {

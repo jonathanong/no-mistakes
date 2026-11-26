@@ -30,3 +30,15 @@ fn vitest_default_excludes_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn vitest_default_excludes_spreads_check_json_snapshot() {
+    let root = rules_path("vitest-default-excludes", "fixture", "spreads");
+    assert_saved_fixture(
+        "vitest_default_excludes_spreads",
+        &[
+            ("spreads", root.clone(), root.join(".no-mistakes.yml")),
+            ("satisfied", root.clone(), root.join("satisfied.yml")),
+        ],
+    );
+}

@@ -11,10 +11,16 @@ pub(crate) struct FileRuleInputs<'a> {
     pub defer_suppression: bool,
 }
 
-pub(crate) fn read_applications<O: DeserializeOwned + Default>(
+#[derive(Default, Debug)]
+pub(crate) struct ClassifiedInputFindings {
+    pub(crate) findings: Vec<RuleFinding>,
+    pub(crate) uncertainty: Vec<RuleFinding>,
+}
+
+pub(crate) fn classified_applications<O: DeserializeOwned + Default>(
     inputs: FileRuleInputs<'_>,
     rule_id: &str,
-    scan: impl Fn(&O, &[PathBuf], &[PathBuf], &[PathBuf]) -> Result<Vec<RuleFinding>> + Sync,
+    scan: impl Fn(&O, &[PathBuf], &[PathBuf], &[PathBuf]) -> Result<ClassifiedInputFindings> + Sync,
 ) -> Result<AnalysisDiagnostics> {
     let outputs: Result<Vec<_>> = inputs
         .config
@@ -34,8 +40,11 @@ pub(crate) fn read_applications<O: DeserializeOwned + Default>(
                 rule,
                 &scope,
             )?;
-            let findings = scan(&options, &files, &scope, &roots)?;
-            application(
+            let ClassifiedInputFindings {
+                findings,
+                uncertainty,
+            } = scan(&options, &files, &scope, &roots)?;
+            let mut diagnostics = application(
                 inputs.root,
                 inputs.sources,
                 inputs.config,
@@ -43,7 +52,19 @@ pub(crate) fn read_applications<O: DeserializeOwned + Default>(
                 findings,
                 inputs.defer_suppression,
                 InputUncertainty::Read,
-            )
+            )?;
+            if !uncertainty.is_empty() {
+                diagnostics.append(application(
+                    inputs.root,
+                    inputs.sources,
+                    inputs.config,
+                    rule,
+                    uncertainty,
+                    inputs.defer_suppression,
+                    InputUncertainty::ReadOrParse,
+                )?);
+            }
+            Ok(diagnostics)
         })
         .collect();
     let mut diagnostics = AnalysisDiagnostics::default();

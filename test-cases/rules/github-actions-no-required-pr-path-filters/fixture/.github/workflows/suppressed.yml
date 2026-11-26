@@ -1,0 +1,10 @@
+name: Verify
+on:
+  pull_request:
+    # no-mistakes-disable-next-line github-actions-no-required-pr-path-filters
+    paths: ['src/**']
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/verify

@@ -65,8 +65,10 @@ pub(super) fn project_impact(inputs: ImpactInputs<'_>) -> CiTopologyImpactReport
         // file rather than the entry-reachable reusable workflow it shadows.
         if reachable.contains(&diagnostic.workflow_path)
             || diagnostic.code.as_str() == "duplicate-workflow-name"
-            || (diagnostic.code.as_str() == "malformed-workflow"
-                && changed_paths.contains(&diagnostic.workflow_path))
+            || (matches!(
+                diagnostic.code.as_str(),
+                "malformed-workflow" | "unlocated-yaml-merge"
+            ) && changed_paths.contains(&diagnostic.workflow_path))
         {
             let diagnostic = topology_diagnostic(diagnostic, &entry, base, head);
             global_fallback |= diagnostic.scope == CiTopologyImpactDiagnosticScope::Global;

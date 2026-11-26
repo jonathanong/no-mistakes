@@ -50,6 +50,7 @@ declare namespace plugin {
     methods?: string[];
     constructors?: string[];
     allowUndefinedLocale?: boolean;
+    unknownValues?: "ignore" | "finding";
   }
 
   export type PostgresNoExecutorAdapterMode = "all" | "forwarding-only";

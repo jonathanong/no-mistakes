@@ -9,12 +9,16 @@ use fixture_config::prepared_rules;
 #[test]
 fn dispatch_with_files_covers_all_rule_branches() {
     let (fixture, config_path) = prepared_rules(FILESYSTEM_RULE_IDS);
-    let findings =
-        run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
-    // Empty file list → no findings; but all dispatch branches have been entered.
+    let workflow = fixture.path().join(".github/workflows/ci.yml");
+    let findings = run_filesystem_rules_with_files(
+        fixture.path(),
+        Some(&config_path),
+        std::slice::from_ref(&workflow),
+    )
+    .unwrap();
     assert!(
         findings.is_empty(),
-        "empty file list should produce no findings: {findings:?}"
+        "clean minimal workflow fixture should produce no findings: {findings:?}"
     );
 }
 

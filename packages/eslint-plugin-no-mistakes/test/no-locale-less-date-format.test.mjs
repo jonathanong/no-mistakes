@@ -143,6 +143,64 @@ const cases = [
     options: { methods: ["formatDate"], allowUndefinedLocale: true },
     lines: [1],
   },
+  {
+    name: "no-mistakes line and next-line suppression directives suppress findings",
+    file: "suppressions.mjs",
+    lines: [5],
+    oxlint: true,
+  },
+  {
+    name: "no-mistakes file suppression directive suppresses the entire file",
+    file: "suppression-file.mjs",
+    lines: [],
+    oxlint: true,
+  },
+  {
+    name: "unknownValues finding reports spread first arguments on matched methods",
+    file: "unknown-locale.mjs",
+    options: { unknownValues: "finding" },
+    lines: [4, 5],
+  },
+  {
+    name: "unknownValues finding reports undefined in dynamic with and eval scopes",
+    file: "dynamic-scope.js",
+    sourceType: "script",
+    options: { unknownValues: "finding" },
+    lines: [2, 6],
+  },
+  {
+    name: "dynamic with scope leaves configured constructor namespace unknown by default",
+    file: "dynamic-scope-intl.js",
+    sourceType: "script",
+    options: { methods: [], constructors: ["Intl.DateTimeFormat"] },
+    lines: [],
+  },
+  {
+    name: "unknownValues finding reports configured constructor in dynamic with scope",
+    file: "dynamic-scope-intl.js",
+    sourceType: "script",
+    options: { methods: [], constructors: ["Intl.DateTimeFormat"], unknownValues: "finding" },
+    lines: [2],
+  },
+  {
+    name: "dynamic constructor spreads and computed keys stay unknown by default",
+    file: "intl-unknown.mjs",
+    options: { methods: [], constructors },
+    lines: [],
+  },
+  {
+    name: "unknownValues finding reports dynamic constructor spreads and computed keys while respecting shadowing and resolvedOptions",
+    file: "intl-unknown.mjs",
+    options: { methods: [], constructors, unknownValues: "finding" },
+    lines: [2, 3, 4],
+    oxlint: true,
+  },
+  {
+    name: "unknownValues finding reports dynamic computed Intl constructor alongside missing locales",
+    file: "intl-constructors.mjs",
+    options: { methods: [], constructors, unknownValues: "finding" },
+    lines: [1, 2, 3, 4, 9],
+  },
 ];
 
 it("snapshots configured locale checks and scope boundaries", async () => {
@@ -204,5 +262,22 @@ it("keeps real Oxlint and ESLint scope diagnostics identical", () => {
       findings.map((finding) => finding.ruleId),
       file,
     ).toEqual(expectedLines.map(() => ruleId));
+  }
+});
+
+it("rejects blank methods, non-dotted constructors, and invalid unknownValues", () => {
+  const source = fixture(`${rule}/missing-locale.mjs`);
+  for (const [invalidOption, pattern] of [
+    [{ methods: [""] }, /should match pattern/],
+    [{ methods: ["   "] }, /should match pattern/],
+    [{ constructors: [""] }, /should match pattern/],
+    [{ constructors: ["DateTimeFormat"] }, /should match pattern/],
+    [{ constructors: ["Intl.DateTimeFormat.extra"] }, /should match pattern/],
+    [{ unknownValues: "warn" }, /should be equal to one of the allowed values/],
+  ]) {
+    expect(
+      () => pluginFindings(source, rule, invalidOption, `${rule}/missing-locale.mjs`),
+      JSON.stringify(invalidOption),
+    ).toThrow(pattern);
   }
 });

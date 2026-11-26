@@ -1,0 +1,17 @@
+version: 2
+unanalyzable: ignore
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [long-tag.yml]
+          requiredKeys: [required.owner, runtime.owner]
+          bannedKeys: [defaults.legacy, runtime.legacy]
+          valueAssertions:
+            - kind: equals
+              key: defaults.legacy
+              value: false
+            - kind: equals
+              key: runtime.legacy
+              value: false
