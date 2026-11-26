@@ -18,6 +18,11 @@ fn github_actions_run_command_policy_json_matches_snapshot() {
                 policy.clone(),
             ),
             (
+                "disabled-file",
+                rules_path(RULE, "fixture", "suppressions"),
+                policy.clone(),
+            ),
+            (
                 "compliant",
                 rules_path(RULE, "fixture", "compliant"),
                 policy.clone(),

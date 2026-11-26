@@ -68,6 +68,7 @@ fn queue_job_state_as_record_selected_config_check_json_snapshot() {
     let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "queue_job_state_as_record_selected_config",
         &[
+            ("suppression", root.join("suppression"), PathBuf::new()),
             ("default-on", on.clone(), PathBuf::new()),
             ("explicit-off", on.clone(), on.join("explicit.yml")),
             ("default-off", off.clone(), PathBuf::new()),
@@ -83,6 +84,14 @@ fn queue_job_state_as_record_selected_config_check_json_snapshot() {
         assert_eq!(advisories.len(), 1, "{name}: {advisories:?}");
         assert_eq!(advisories[0]["rule"], "queues-check");
     }
+    let result = &reports["suppression"];
+    assert_eq!(result["exitCode"], 0);
+    assert_eq!(result["report"]["queues"], serde_json::json!([]));
+    let advisories = result["report"]["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 1, "{result}");
+    assert_eq!(advisories[0]["rule"], "queues-check");
+    assert_eq!(advisories[0]["file"], "usage.ts");
+    assert_eq!(advisories[0]["line"], 8);
     for name in ["explicit-off", "default-off"] {
         assert_eq!(reports[name]["exitCode"], 0);
         assert_eq!(reports[name]["report"]["queues"], serde_json::json!([]));

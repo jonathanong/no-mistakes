@@ -44,7 +44,16 @@ fn github_actions_env_policy_json_matches_snapshot() {
                 policy.clone(),
             ),
             // 1 finding: line and next-line directives hide two of three.
-            ("disabled", rules_path(RULE, "fixture", "disabled"), policy),
+            (
+                "disabled",
+                rules_path(RULE, "fixture", "disabled"),
+                policy.clone(),
+            ),
+            (
+                "disabled_file",
+                rules_path(RULE, "fixture", "suppressions"),
+                policy,
+            ),
         ],
     );
 }

@@ -28,6 +28,11 @@ fn github_actions_docker_host_ports_json_matches_snapshot() {
                 rules_path(RULE, "configs", "fail.yml"),
             ),
             (
+                "suppressions",
+                rules_path(RULE, "fixture", "suppressions"),
+                rules_path(RULE, "configs", "fail.yml"),
+            ),
+            (
                 "flow",
                 rules_path(RULE, "fixture", "flow"),
                 rules_path(RULE, "configs", "flow.yml"),
