@@ -41,6 +41,10 @@ project trigger must name a project declared at the root. An environment or
 group percentage limit accepts a number from 0 to 100 or a string such as
 `"25%"`.
 
+Configuration loading rejects unrecognized framework names such as
+`testPlan.custom`. Move the settings under the supported framework key for
+the runner. Configure standalone validation commands under `checks.commands`.
+
 ## Named triggers
 
 Prefer a list of named triggers when the matching paths are not owned by a

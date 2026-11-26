@@ -36,8 +36,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraR
     // instead of silently producing an empty result.
     let config = load_v2_config_from_visible(&root, config_path, &root_visible_paths)?;
     let terraform = config.infra.terraform.clone();
-    // Compile the test globs up front so an invalid pattern is reported rather
-    // than silently dropping all covering-test suggestions.
+    // Build the match set used for module-relative test paths.
     let test_globset = compile_test_globs(&terraform.test.test_globs)?;
     let files =
         crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths);
