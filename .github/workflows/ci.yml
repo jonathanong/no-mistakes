@@ -2775,7 +2775,7 @@ jobs:
           tool: cargo-nextest@0.9.151
       - name: Build standalone library without a CLI
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 20
+        timeout-minutes: 13
         env:
           WORKSPACE_CACHE_KEY: ${{ steps.standalone-lib-workspace-cache.outputs.cache-matched-key }}
         shell: bash
@@ -2787,7 +2787,15 @@ jobs:
           printf 'standalone library build: cargo_jobs=%s dev_units=%s test_units=%s dev_debug=%s test_debug=%s incremental=%s shards=%s\n' \
             "$CARGO_BUILD_JOBS" "$CARGO_PROFILE_DEV_CODEGEN_UNITS" "$CARGO_PROFILE_TEST_CODEGEN_UNITS" \
             "$CARGO_PROFILE_DEV_DEBUG" "$CARGO_PROFILE_TEST_DEBUG" "$CARGO_INCREMENTAL" 3
-          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle
+          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 1
+      - name: Build standalone library shard 2
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 10
+        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 2
+      - name: Build standalone library shard 3
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 10
+        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 3
       - name: Record standalone compiler inputs for cache publication
         if: ${{ env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2

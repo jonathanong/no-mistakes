@@ -683,8 +683,9 @@ Each consumer runs one of those archives and does not hash-partition it. Cargo
 uses a distinct workspace compiler wrapper path for each shard, preserving the
 three library test fingerprints in one target while sharing registry dependencies.
 The build restores input timestamps only when a workspace cache matches and
-records them only when a successful main build will publish a new cache. The
-job also sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
+records them only when a successful main build will publish a new cache.
+Each archive command has its own deadline within the 25-minute producer job.
+The first command also builds registry dependencies. The job sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
 `CARGO_PROFILE_DEV_DEBUG=0`, `CARGO_PROFILE_TEST_DEBUG=0`,
 `CARGO_PROFILE_DEV_CODEGEN_UNITS=4096`, and
 `CARGO_PROFILE_TEST_CODEGEN_UNITS=4096`. The cache key includes the test
