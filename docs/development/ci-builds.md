@@ -6,6 +6,26 @@
 
 For job sizing, see the `github-actions-authoring` skill.
 
+Two setup-dominated, sub-2-minute policy checks are explicit exceptions because
+their runner queue wait and setup exceeded their check runtime and neither sits
+on any PR critical path (baseline 30-run non-cancelled PR medians: 15m04s
+non-Rust, 49m44s Rust):
+
+- `JavaScript policy` (`quality-js`): previously 4 `ubuntu-slim` jobs at 52s
+  median each (~38s checkout/pnpm setup for 2s–18s checks, plus 2m19s median
+  wait each); combined into one `ubuntu-slim` job (measured 1m27s on run
+  `45781752900`: 46s setup + 1s formatting + 2s lint + 20s duplication + 10s
+  spelling). Later steps use `if: ${{ !cancelled() }}` so formatting, lint,
+  duplication, and spelling all report in one run.
+- `cargo fmt --all -- --check`: previously a separate `ubuntu-latest` matrix
+  entry in `quality-rust` (13s check, 26s total, 9m04s median wait); folded as
+  a post-Clippy `if: ${{ !cancelled() }}` step in `all-feature Clippy` (2m26s
+  + 13s = ~2m39s, well below the 5m57s sibling `PostgreSQL source identities`
+  matrix entry).
+
+Parallel test shards (`javascript-shards`, `linux-api-tests`,
+`rust-coverage-shards`, `standalone-shards`) remain parallel.
+
 ## Parallel CI layout and measured baseline
 
 The pull-request workflow splits compilation-heavy checks into producer and
@@ -31,7 +51,7 @@ The current validation graph is organized as follows:
   and Rust coverage merges when GitHub cancels the workflow. Active runs
   still evaluate dependency results and reject failures.
 - Independent Linux CLI and N-API producers upload their binaries for the AST check and
-  Linux real-addon tests. Ordinary JavaScript tests run in two Vitest shards;
+  Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
   a merge job combines the blob reports and coverage before enforcing the
   configured floors. Linux real-addon cases run in isolated matrix jobs, using
   the shared case partitioning script even for tests registered through umbrella imports.

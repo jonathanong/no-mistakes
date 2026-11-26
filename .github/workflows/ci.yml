@@ -429,14 +429,14 @@ jobs:
         uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
         with:
           tool: cargo-nextest@0.9.151
-      - name: Check Rust formatting
-        if: ${{ matrix.name == 'all-feature Clippy' }}
-        timeout-minutes: 2
-        run: cargo fmt --all -- --check
       # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Run isolated Rust quality check
         timeout-minutes: ${{ matrix.name == 'PostgreSQL source identities' && 30 || 18 }}
         run: ${{ matrix.command }}
+      - name: Check Rust formatting
+        if: ${{ !cancelled() && matrix.name == 'all-feature Clippy' }}
+        timeout-minutes: 2
+        run: cargo fmt --all -- --check
       - name: Diagnose Rust disk usage after failure
         if: ${{ failure() || cancelled() }}
         timeout-minutes: 2
@@ -484,12 +484,15 @@ jobs:
         timeout-minutes: 2
         run: pnpm run fmt:js:check
       - name: Run JavaScript lint
+        if: ${{ !cancelled() }}
         timeout-minutes: 2
         run: pnpm run lint:js
       - name: Check JavaScript duplication
+        if: ${{ !cancelled() }}
         timeout-minutes: 2
         run: pnpm run lint:duplicates
       - name: Check spelling
+        if: ${{ !cancelled() }}
         timeout-minutes: 2
         run: pnpm run lint:spell
   quality-links:
@@ -757,13 +760,13 @@ jobs:
           if-no-files-found: error
           retention-days: 1
   javascript-shards:
-    name: JavaScript shard (${{ matrix.shard }}/2)
+    name: JavaScript shard (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 8
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -804,7 +807,7 @@ jobs:
         run: pnpm run build:js
       - name: Run JavaScript tests
         timeout-minutes: 4
-        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/2 --reporter=blob
+        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/4 --reporter=blob
       - name: Upload JavaScript shard report
         timeout-minutes: 3
         if: ${{ always() }}
