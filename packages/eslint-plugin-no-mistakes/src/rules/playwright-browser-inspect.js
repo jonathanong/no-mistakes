@@ -142,7 +142,7 @@ function createBrowserInspector(
   }
 
   function inspectVariable(variable, visited, target) {
-    if (visited.has(variable)) return;
+    if (!variable || visited.has(variable)) return;
     visited.add(variable);
     if (hasLaterWrite(variable)) {
       reportUnanalyzable(variable.identifiers[0], `reassigned ${target.label} binding`);
@@ -194,8 +194,9 @@ function createBrowserInspector(
   };
 
   return function inspectCallback(fn) {
-    if (fn.params.length === 0) return;
-    let param = fn.params[0];
+    const first = fn.params[0]?.type === "Identifier" && fn.params[0].name === "this" ? 1 : 0;
+    let param = fn.params[first];
+    if (!param) return;
     if (param.type === "RestElement") {
       reportUnanalyzable(param, "rest parameter capturing Playwright fixtures");
       return;

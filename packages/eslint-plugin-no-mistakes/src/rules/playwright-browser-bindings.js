@@ -82,6 +82,8 @@ function createBrowserBindings(context, modules) {
       return memberApi(resolveRegistrar(node.object, seen), memberKey(node));
     }
     if (node.type === "CallExpression") {
+      const cjs = requireSource(node);
+      if (cjs && modules.has(cjs)) return { kind: "namespace", source: cjs };
       const api = resolveRegistrar(node.callee, seen);
       return api?.kind === "extend" || api?.kind === "mergeTests" ? { kind: "test" } : null;
     }
@@ -102,14 +104,9 @@ function createBrowserBindings(context, modules) {
       return memberApi({ kind: "namespace", source }, imported);
     }
     if (def.type !== "Variable" || isReassigned(node, context) || !def.node.init) return null;
-    const cjs = requireSource(def.node.init);
-    const owner = cjs && modules.has(cjs) ? { kind: "namespace", source: cjs } : null;
-    if (def.node.id.type === "Identifier") return owner ?? resolveRegistrar(def.node.init, seen);
+    if (def.node.id.type === "Identifier") return resolveRegistrar(def.node.init, seen);
     return def.node.id.type === "ObjectPattern"
-      ? memberApi(
-          owner ?? resolveRegistrar(def.node.init, seen),
-          patternKeyForName(def.node.id, node.name),
-        )
+      ? memberApi(resolveRegistrar(def.node.init, seen), patternKeyForName(def.node.id, node.name))
       : null;
   }
 
@@ -190,9 +187,10 @@ function createBrowserBindings(context, modules) {
       }
       const resolved = resolveCallback(slot);
       if (resolved.kind === "fn") return resolved;
-      return staticString(args[0]) !== null
-        ? { kind: "opaque", node: slot, reason: "unresolved test callback" }
-        : null;
+      const last = unwrapExpression(slot);
+      return staticString(last) !== null || last.type === "TemplateLiteral"
+        ? null
+        : { kind: "opaque", node: slot, reason: "unresolved test callback" };
     }
     return null;
   }

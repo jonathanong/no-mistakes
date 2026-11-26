@@ -44,6 +44,10 @@ test("no parameters", async () => {
   expect(1).toBe(1);
 });
 
+test("ts this parameter only", async function (this: unknown) {
+  expect(this).toBeUndefined();
+});
+
 test.describe("suite callback does not receive fixtures", () => {
   test.describe.only("nested suite", () => {
     const browser = { newPage: () => ({}) };
@@ -54,6 +58,7 @@ test.describe("suite callback does not receive fixtures", () => {
 test.use({ viewport: { width: 1280, height: 720 } });
 test.only.skip(true, "chained modifier annotation");
 test.skip(true, "conditional skip annotation");
+test.skip(true, `conditional skip ${contextMethod}`);
 test.skip(true);
 test.skip();
 test.beforeEach();

@@ -104,3 +104,7 @@ const { only: runOnly } = test;
 runOnly("destructured modifier", async ({ browser }) => {
   await browser.newPage();
 });
+
+test("ts this parameter", async function (this: unknown, { browser }) {
+  await browser.newPage();
+});

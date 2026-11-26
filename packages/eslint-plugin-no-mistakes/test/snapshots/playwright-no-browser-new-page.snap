@@ -13,9 +13,9 @@
         {
           "column": 9,
           "endColumn": 26,
-          "endLine": 5,
+          "endLine": 6,
           "file": "commonjs.spec.cjs",
-          "line": 5,
+          "line": 6,
           "message": "Use the shared `page` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup.",
           "messageId": "noBrowserNewPage",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -24,9 +24,31 @@
         {
           "column": 9,
           "endColumn": 26,
-          "endLine": 9,
+          "endLine": 10,
           "file": "commonjs.spec.cjs",
-          "line": 9,
+          "line": 10,
+          "message": "Use the shared `page` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup.",
+          "messageId": "noBrowserNewPage",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 26,
+          "endLine": 14,
+          "file": "commonjs.spec.cjs",
+          "line": 14,
+          "message": "Use the shared `page` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup.",
+          "messageId": "noBrowserNewPage",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 26,
+          "endLine": 18,
+          "file": "commonjs.spec.cjs",
+          "line": 18,
           "message": "Use the shared `page` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup.",
           "messageId": "noBrowserNewPage",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -452,6 +474,17 @@
           "messageId": "noBrowserNewPage",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
           "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 26,
+          "endLine": 109,
+          "file": "direct-and-aliases.spec.ts",
+          "line": 109,
+          "message": "Use the shared `appPage` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup.",
+          "messageId": "noBrowserNewPage",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
         }
       ],
       "name": "direct and aliased calls",
@@ -776,11 +809,33 @@
           "severity": 2
         },
         {
-          "column": 11,
-          "endColumn": 24,
+          "column": 42,
+          "endColumn": 58,
           "endLine": 74,
           "file": "unanalyzable.spec.ts",
           "line": 74,
+          "message": "Cannot prove unresolved test callback avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 39,
+          "endLine": 75,
+          "file": "unanalyzable.spec.ts",
+          "line": 75,
+          "message": "Cannot prove unresolved test callback avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 24,
+          "endLine": 76,
+          "file": "unanalyzable.spec.ts",
+          "line": 76,
           "message": "Cannot prove spread test arguments avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -789,9 +844,9 @@
         {
           "column": 20,
           "endColumn": 33,
-          "endLine": 75,
+          "endLine": 77,
           "file": "unanalyzable.spec.ts",
-          "line": 75,
+          "line": 77,
           "message": "Cannot prove spread test arguments avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -800,9 +855,9 @@
         {
           "column": 1,
           "endColumn": 3,
-          "endLine": 78,
+          "endLine": 80,
           "file": "unanalyzable.spec.ts",
-          "line": 76,
+          "line": 78,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -811,9 +866,9 @@
         {
           "column": 1,
           "endColumn": 3,
-          "endLine": 81,
+          "endLine": 83,
           "file": "unanalyzable.spec.ts",
-          "line": 79,
+          "line": 81,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -822,9 +877,9 @@
         {
           "column": 1,
           "endColumn": 3,
-          "endLine": 84,
+          "endLine": 86,
           "file": "unanalyzable.spec.ts",
-          "line": 82,
+          "line": 84,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -833,9 +888,9 @@
         {
           "column": 1,
           "endColumn": 3,
-          "endLine": 88,
+          "endLine": 90,
           "file": "unanalyzable.spec.ts",
-          "line": 86,
+          "line": 88,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
@@ -1112,6 +1167,13 @@
           "file": "direct-and-aliases.spec.ts",
           "line": 105,
           "message": "Use the shared `appPage` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 9,
+          "file": "direct-and-aliases.spec.ts",
+          "line": 109,
+          "message": "Use the shared `appPage` fixture instead of browser.newPage(). Calling browser.newPage() creates an unmanaged context and page that bypass shared fixture setup and cleanup."
         }
       ],
       "name": "direct-and-aliases.spec.ts",
@@ -1327,44 +1389,58 @@
         },
         {
           "code": "no-mistakes(playwright-no-browser-new-page)",
-          "column": 11,
+          "column": 42,
           "file": "unanalyzable.spec.ts",
           "line": 74,
+          "message": "Cannot prove unresolved test callback avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 23,
+          "file": "unanalyzable.spec.ts",
+          "line": 75,
+          "message": "Cannot prove unresolved test callback avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 11,
+          "file": "unanalyzable.spec.ts",
+          "line": 76,
           "message": "Cannot prove spread test arguments avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         },
         {
           "code": "no-mistakes(playwright-no-browser-new-page)",
           "column": 20,
           "file": "unanalyzable.spec.ts",
-          "line": 75,
+          "line": 77,
           "message": "Cannot prove spread test arguments avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         },
         {
           "code": "no-mistakes(playwright-no-browser-new-page)",
           "column": 1,
           "file": "unanalyzable.spec.ts",
-          "line": 76,
+          "line": 78,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         },
         {
           "code": "no-mistakes(playwright-no-browser-new-page)",
           "column": 1,
           "file": "unanalyzable.spec.ts",
-          "line": 79,
+          "line": 81,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         },
         {
           "code": "no-mistakes(playwright-no-browser-new-page)",
           "column": 1,
           "file": "unanalyzable.spec.ts",
-          "line": 82,
+          "line": 84,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         },
         {
           "code": "no-mistakes(playwright-no-browser-new-page)",
           "column": 1,
           "file": "unanalyzable.spec.ts",
-          "line": 86,
+          "line": 88,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         }
       ],

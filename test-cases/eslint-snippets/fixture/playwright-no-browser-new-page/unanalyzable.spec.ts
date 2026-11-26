@@ -71,6 +71,8 @@ test.only(...spreadArgs);
 test.beforeEach(...spreadArgs);
 test.beforeEach(externalCallback);
 test.skip("skipped with unknown callback", externalCallback);
+test.skip(`dynamic title ${dynamicKey}`, externalCallback);
+test.skip(dynamicKey, externalCallback);
 test.skip(...spreadArgs);
 test.skip("title", ...spreadArgs);
 test[dynamicMethod]("dynamic registrar", async ({ browser }) => {

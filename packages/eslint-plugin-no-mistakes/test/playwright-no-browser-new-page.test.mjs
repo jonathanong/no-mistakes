@@ -100,7 +100,7 @@ describe(rule, () => {
     ).toEqual([7]);
     expect(
       cases.find((item) => item.name === "commonjs require provenance").findings.map((f) => f.line),
-    ).toEqual([5, 9]);
+    ).toEqual([6, 10, 14, 18]);
 
     await expect(
       snapshotDocument({
