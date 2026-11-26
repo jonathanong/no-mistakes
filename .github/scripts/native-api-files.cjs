@@ -40,6 +40,7 @@ const linuxFiles = [
   "packages/no-mistakes/scripts/shell-compatibility-api.test.js",
   "packages/no-mistakes/scripts/changes-api.test.js",
   "packages/no-mistakes/scripts/cache-setup-policy-api.test.js",
+  "packages/no-mistakes/scripts/graph-report-api.test.js",
 ];
 
 module.exports = { platformFiles, linuxFiles };
