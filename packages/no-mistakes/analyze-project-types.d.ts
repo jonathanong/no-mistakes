@@ -21,7 +21,7 @@ import type {
   ResolveCheckFilesOptions,
   ResolveCheckOptions,
 } from "./query-types";
-import type { QueueCheckOptions } from "./queue-report-types";
+import type { QueueCheckOptions, QueueRelatedOptions } from "./queue-report-types";
 import type {
   InfraOptions,
   PlaywrightOptions,
@@ -53,7 +53,7 @@ export type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "con
 export type BatchedDependencyTraverseOptions = (TraverseGraphOptions | TraversePathsOptions) &
   Pick<ProjectOptions, "config">;
 export type BatchedQueueCheckOptions = Omit<QueueCheckOptions, "root" | "tsconfig" | "config">;
-export type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
+export type BatchedQueueRelatedOptions = Omit<QueueRelatedOptions, "root" | "tsconfig" | "config">;
 export type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
 export type BatchedReactUsagesOptions = Pick<

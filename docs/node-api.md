@@ -634,7 +634,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `testsGraphMermaid` | `testsGraphMermaid(options)` |
 | `queueCheck` | `queueCheck(options)` |
 | `queueEdges` | `queueEdges(options)` |
-| `queueRelated` | `queueRelated(options)` |
+| `queueRelated` | `queueRelated(options)` accepts `QueueRelatedOptions` with at least one file or queue node in `files` |
 | `queues` | `queues(options)` |
 | `serverContracts` | `serverContracts(options)` |
 | `serverRouteEdges` | `serverRouteEdges(options)` |
@@ -823,7 +823,7 @@ through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
 no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`
 (including `runtimeAssets` entries, `TestNoLiveRepositoryScanRuntimeAsset`,
 and opt-in `analyzers` entries, `TestNoLiveRepositoryScanAnalyzer`),
-exported from `no-mistakes/types`. Runtime-asset reads are advisories with
+exported from `no-mistakes`. Runtime-asset reads are advisories with
 target `runtime asset` in the check report. A configured analyzer launch
 against the live working directory is an ordinary finding with target
 `analyzer subprocess`.
