@@ -1,0 +1,7 @@
+__metadata:
+  version: 6
+
+"widget-kit@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "widget-kit@npm:1.0.0"
+  checksum: widget-v1

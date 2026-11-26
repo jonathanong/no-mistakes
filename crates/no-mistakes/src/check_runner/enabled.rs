@@ -98,6 +98,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,
+        postgres_explain_write_rollback_paths: Default::default(),
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
         query_annotation: false,

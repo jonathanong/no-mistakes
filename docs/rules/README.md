@@ -75,6 +75,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`forbidden-calls`](forbidden-calls.md)                                       | Prevent configured roots from invoking selected functions.                      |
 | [`coverage-producer-assertion-owner`](coverage-producer-assertion-owner.md) | Require configured coverage producers to reach assertion owners. |
 | [`github-actions-env-policy`](github-actions-env-policy.md) | Require or forbid `env:` values at workflow, job and step scope. |
+| [`github-actions-no-insta-snapshot-updates`](github-actions-no-insta-snapshot-updates.md) | Ban Insta modes that accept snapshots in GitHub Actions. |
 | [`github-actions-action-input-policy`](github-actions-action-input-policy.md)     | Require or ban `with:` inputs for each configured action family.            |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-cache-key-policy`](github-actions-cache-key-policy.md)           | Require configured platform fragments and lockfile provenance in actions/cache keys. |
@@ -123,6 +124,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`pnpm-overrides-ban`](pnpm-overrides-ban.md)                                 | Ban pnpm dependency version overrides; keep packageExtensions.                  |
 | [`pnpm-release-age-policy`](pnpm-release-age-policy.md)                       | Keep minimumReleaseAgeExclude aligned with registries and Dependabot cooldown. |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
+| [`postgres-explain-write-rollback`](postgres-explain-write-rollback.md) | Flag executing PostgreSQL write plans that can persist in standalone scripts. |
 | [`postgres-explicit-columns`](postgres-explicit-columns.md)                       | Require explicit column lists instead of `SELECT *` on wide tables.         |
 | [`postgres-bounded-statements`](postgres-bounded-statements.md)                   | Require a LIMIT, a unique-key lookup or an aggregate on statements that can match many rows. |
 | [`postgres-generated-column-predicates`](postgres-generated-column-predicates.md) | Ban predicates and sorts on generated timestamp columns.                     |
@@ -162,7 +164,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-object-naming`](postgres-object-naming.md)                         | Check PostgreSQL object names against configured patterns, plurals, and tokens. |
 | [`postgres-require-query-annotation`](postgres-require-query-annotation.md)   | Require a leading /* name */ annotation on executed PostgreSQL SQL.             |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
-| [`playwright-no-serial`](playwright-no-serial.md) | Report Playwright settings that force serial execution. |
+| [`playwright-no-serial`](playwright-no-serial.md)                             | Report Playwright settings that force serial execution.                         |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |
 | [`playwright-unique-html-ids`](playwright-unique-html-ids.md)                 | Require unique HTML `id` values in Playwright analysis.                         |
 | [`playwright-unique-test-ids`](playwright-unique-test-ids.md)                 | Require unique test ID values in Playwright analysis.                           |
@@ -191,7 +193,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |
 | [`test-no-live-repository-scan`](test-no-live-repository-scan.md)             | Ban live-repository directory scans reachable from Vitest roots.                |
-| [`test-no-retries`](test-no-retries.md) | Cap retries declared in test runners and supported GitHub Actions steps. |
+| [`test-no-retries`](test-no-retries.md)                                       | Cap retries declared in test runners and supported GitHub Actions steps.        |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
 | [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to be owned by a tracked tsconfig.             |

@@ -85,7 +85,7 @@ impl<'a> CatalogInvalidations<'a> {
                 .iter()
                 .flat_map(|facts| &facts.lock_writes.ddl_events)
             {
-                if let DdlEvent::Change(relation) = change {
+                if let DdlEvent::Change(relation) | DdlEvent::DescendantsChanged(relation) = change {
                     invalidations
                         .relations
                         .insert(relation_suffix_key(relation));

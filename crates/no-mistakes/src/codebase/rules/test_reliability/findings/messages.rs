@@ -9,7 +9,9 @@ pub(super) fn unresolved_binding_message(relative: &str, id: &str, location: &Lo
         .playwright_binding
         .as_deref()
         .unwrap_or("test");
-    if let Some((module, export)) = location.resolved_playwright_exports.first() {
+    if let Some((module, export)) = location.resolved_playwright_exports.first().filter(|_| {
+        location.playwright_import.is_some() || location.unresolved_reason.is_none()
+    }) {
         let reason = location
             .unresolved_reason
             .map_or_else(String::new, |reason| format!(" ({reason})"));

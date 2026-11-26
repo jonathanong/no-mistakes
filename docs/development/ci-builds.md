@@ -44,39 +44,62 @@ The current validation graph is organized as follows:
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
-  On `main`, Windows runs six Rust shards and six real-addon API shards and
-  macOS runs three Rust shards and two real-addon API shards, with every
-  selected case still executed once.
+  On `main`, Windows runs six Rust shards and six real-addon API shards.
+  The main macOS suite runs one Rust test job and one real-addon API
+  test job. Each downloads its archive once and runs every selected case.
+  Folding the shards saves runner setup and download time. The test
+  cases in each native suite now share one job's elapsed-time budget.
   macOS has two tiers because GitHub allows only five concurrent macOS jobs
   account-wide, so macOS runners are the queue bottleneck. Windows is not
   queue-bound, but its 14 jobs were about a quarter of pull request CI cost and
   counted against the account's 40-job concurrency limit, so it has the same
   two tiers.
-  A pull request runs one `macOS smoke` job (`macos-smoke`) instead of the
-  full sharded macOS suite. It builds the CLI and N-API addon, runs
+  A pull request that changes a macOS input runs one `macOS smoke` job
+  (`macos-smoke`). It builds the CLI and N-API addon, runs
   `check` on a saved fixture and requires the `agents-md-max-size` finding on
   `AGENTS.md:1`. It runs the explicit OS-dependent list in
   `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
-  harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), the blocked
-  check invocation tests, one `analyzeProject` call on a saved fixture through
+  harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), one
+  `analyzeProject` call on a saved fixture through
   the built addon, and real-addon API tests for the cross-process lock, rename
   semantics, and diagnostics. The dependency-report API tests stay in the full
   suite because their expected output depends on which test first sizes the
   process Rayon pool. The list is explicit,
   not heuristic, and `smoke-tests.test.cjs` fails when a listed file,
   test target or test name no longer exists, and `smoke.cjs` fails when a
-  listed Cargo target runs zero tests. The job runs for every pull
-  request whose Rust scope is not independent (`rust-pr-scope.cjs`); there is
-  no separate macOS path filter.
-  The smoke job does not compile its Rust tests from scratch. Before running
-  them it restores the `native-test-harness-workspace-v2-aarch64-apple-darwin`
+  listed Cargo target runs zero tests.
+
+  The [macOS scope](../../.github/scripts/macos-pr-scope.cjs) uses the same
+  NUL-delimited merge-base diff as the Rust scope. It runs on an empty or
+  unavailable diff, file type changes, and any path outside these exclusions.
+
+  | Paths that can skip macOS smoke | Scope |
+  | --- | --- |
+  | `docs/**`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md` | Documentation |
+  | `fixtures/**`, `test-cases/**`, `**/*.snap` | Test data. The smoke fixture directories `fixtures/check/aggregate-agents-md-max-size/` and `fixtures/napi/real-addon-dependencies/` always trigger. |
+  | `packages/eslint-plugin-no-mistakes/**`, `plugins/no-mistakes-rules/**`, `packages/no-mistakes/*.d.ts` | Independent lint tooling and declaration-only changes |
+  | `.github/scripts/lychee-gateway.cjs`, `.github/scripts/lychee-gateway.test.cjs`, `.github/scripts/lychee-github-gateway.test.cjs` | Documentation link-check tooling |
+  | `crates/no-mistakes/src/codebase/rules/**/*.rs` | Rule logic without platform, filesystem, path, process, or native API markers in either Git revision |
+  | Other JavaScript and TypeScript files | Standalone scripts outside `.github/`, `scripts/`, and `packages/no-mistakes*/` |
+
+  All remaining paths trigger the job. These include Cargo manifests and lockfiles,
+  the Rust toolchain and build scripts, Rust implementation outside the rule tree,
+  CI workflows and their scripts, and native package code. A rename contributes
+  both old and new paths. The rule scope reads both committed trees so a platform
+  operation added or removed in an otherwise portable rule still triggers smoke.
+  Before compiling the Rust tests, smoke first tries to restore the
+  `native-test-harness-workspace-v2-aarch64-apple-darwin`
   `target/debug` snapshot that `native-test-build-macos` saves on `main`
-  (same key, restore keys and paths; PRs restore and never save), and
-  `smoke.cjs` uses the same `profileArgs` cargo profile, so only the changed
-  crates and the two smoke harnesses rebuild. The tests run before the
-  runtime build because that build rewrites the `no-mistakes` crate-type,
-  which invalidates restored test units. Before this, the job restored no
-  `target/`, spent 14m27s compiling on one run and hit the 15 minute step
+  (same primary key, harness restore prefixes and paths). PRs only restore.
+  `smoke.cjs` uses the same `profileArgs` Cargo profile. If the harness cache
+  misses, smoke falls back to the compatible macOS runtime workspace from
+  `main` for compiled dependencies and still builds the selected harnesses.
+  The integration harness checks that the CLI deadline stops blocked
+  configuration loading. The full binary test harness, including the
+  internal blocked-check tests, runs in the native suite on main.
+  The tests run before the runtime build, which rewrites the `no-mistakes`
+  crate-type and invalidates restored test units. Before this, the job restored
+  no `target/`, spent 14m27s compiling on one run and hit the 15 minute step
   timeout; `cache-topology.test.cjs` and `smoke-tests.test.cjs` guard the
   shared key and profile. The timeout was not raised.
   Restoring `target/debug` does not avoid recompiling the changed
@@ -104,9 +127,9 @@ The current validation graph is organized as follows:
   instead of on the pull request. The release workflow is a manual dispatch
   and does not read `main` CI results, so the maintainer must confirm `main` is
   green, including the full macOS and Windows jobs, before dispatching a release. `Native tests` accepts the skipped
-  full macOS jobs on a pull request, requires `macOS smoke` to succeed, and
-  likewise accepts the skipped full Windows jobs and requires `Windows smoke`
-  on a pull request. `Tests with coverage` keeps requiring `Native tests` to
+  full macOS jobs on a pull request and requires `macOS smoke` to succeed
+  when the macOS scope requests it. It accepts the skipped full Windows jobs
+  and requires `Windows smoke` when the Rust scope requests it on a pull request. `Tests with coverage` keeps requiring `Native tests` to
   succeed, and the smoke jobs are not separate required checks. The release
   workflow does not use these outputs.
   A pull request likewise runs one `Windows smoke` job (`windows-smoke`,
@@ -231,11 +254,13 @@ main-push run of Test CI or Benchmarks finishes. A run can save caches before a
 later job fails, so cleanup also runs after unsuccessful completions.
 
 After deduplication it evicts least-recently-accessed main workspace snapshots
-until the inventory fits an 8 GiB budget. These build caches can be recreated;
-open PRs, unknown families, release dependencies, and active benchmark handoffs
-remain protected. If protected entries alone exceed the budget, cleanup reports
-the remaining excess rather than deleting them. Individual uploads can briefly
-precede their cleanup jobs; the policy does not reserve quota atomically.
+until the inventory fits an 8 GiB budget. Budget eviction skips the newest
+main macOS test harness snapshot so pull request smoke jobs can restore it.
+Deduplication still removes superseded harness snapshots. Open PRs, unknown
+families, release dependencies, and active benchmark handoffs also remain
+protected. If protected entries alone exceed the budget, cleanup reports the
+remaining excess. Individual uploads can briefly precede their cleanup jobs,
+so the policy does not reserve quota atomically.
 
 A later main release repopulated the inventory to 10.480 GiB. Retiring its nine
 accumulated v1 workspaces and ten duplicate pnpm snapshots projects to 2.704 GiB
@@ -614,7 +639,7 @@ For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
 
 ## Standalone library compiler budget
 
-<!-- cspell:ignore nm_shard_all NM_TEST_SHARD codegen nextest CODEGEN dead_code unused_imports -->
+<!-- cspell:ignore nm_shard_all nm_shard_postgres_source NM_TEST_SHARD codegen nextest CODEGEN dead_code unused_imports -->
 
 `Build standalone library tests` compiles the default-feature library test
 target on a 16 GB `ubuntu-latest` runner. Workspace dev and test profiles
@@ -1445,20 +1470,26 @@ checks. This is one local observation with the host and network limits stated
 above, not a hosted tail estimate.
 
 The PostgreSQL source-identity quality check filters tests at runtime, so that
-filter alone does not bound Rust test compilation. It now compiles and runs all
-three existing unit-test slices with the same no-default-feature and
-`test-instrumentation` settings. Each slice uses the standalone library's
-4096 codegen units and zero debug info, and the job retains its 30-minute step
-and 40-minute job bounds. Run 45000861345 exhausted the job bound while the
-original quality command was still active; its runner did not upload the
-step log. The existing standalone memory measurements explain why compiling
-the entire test harness is unsafe on the hosted runner. Resource samples now
-wrap this command too. No tests are dropped and failures are never retried.
-Local validation used eight build jobs under a 12 GiB scope with a warm
-dependency cache: the three crate compilations took 91, 86, and 87 seconds
-and ran 9, 17, and 314 source tests respectively (340 total). This is local
-validation, not a hosted-runner time guarantee. Shared instrumentation helpers
-are available independently of the selected test slice.
+filter alone does not bound Rust test compilation. It previously compiled and
+ran all three unit-test slices (`0`, `1`, `2`) sequentially because the
+`codebase::postgres::source::` tests spanned all three slices, spending ~15
+minutes compiling unrelated test modules three times (e.g., main run
+`45687283513`: 14m51s total, 8927 MiB peak `rustc` RSS, 340 runs covering 328
+unique tests with 6 plain `cfg(test)` tests repeated across slices). It now
+compiles once with `NM_TEST_SHARD=postgres-source` (`cfg(nm_shard_postgres_source)`),
+which includes only the `codebase::postgres::source` unit-test modules and
+shared plain `cfg(test)` modules under the same `--no-default-features` and
+`--features test-instrumentation` settings, 4096 codegen units, and zero debug
+info. The job retains its 30-minute step and 40-minute job bounds, and
+`postgres-source-identities.test.cjs` locks that every
+`codebase::postgres::source::` unit test compiles into the `postgres-source`
+slice. Run 45000861345 exhausted the job bound while the original whole-crate
+quality command was still active; its runner did not upload the step log. The
+existing standalone memory measurements explain why compiling the entire test
+harness is unsafe on the hosted runner. Resource samples continue to wrap this
+command. No tests are dropped and failures are never retried. Shared
+instrumentation helpers remain available independently of the selected test
+slice.
 
 The JavaScript coverage merge keeps its required local coverage and shard
 checks separate from its best-effort upload. In run 45014849129, the required

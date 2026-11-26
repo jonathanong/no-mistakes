@@ -47,6 +47,7 @@ impl<'a> ReportBuilder<'a> {
                 .record(observation);
         }
         self.report.unclassified.extend(diff.unclassified);
+        self.report.changed_files.extend(diff.changed_file);
         self.report.reasons.extend(diff.reasons);
         self.deferred.extend(diff.deferred);
     }

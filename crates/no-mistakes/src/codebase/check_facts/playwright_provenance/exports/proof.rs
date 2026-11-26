@@ -4,29 +4,10 @@ use super::{
 use std::collections::hash_map::Entry;
 use std::path::Path;
 
-#[derive(Clone, Copy)]
-pub(in crate::codebase::check_facts::playwright_provenance) enum FixtureProof {
-    Playwright,
-    Unresolved(&'static str),
-    Unknown,
-}
-
-impl FixtureProof {
-    pub(in crate::codebase::check_facts::playwright_provenance) fn unresolved_reason(
-        self,
-    ) -> Option<&'static str> {
-        match self {
-            Self::Unresolved(reason) => Some(reason),
-            _ => None,
-        }
-    }
-}
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Binding<'a> {
     Missing,
     Unproven,
-    Unresolved(&'static str),
     Playwright(Option<(&'a Path, u32)>),
 }
 
@@ -34,10 +15,6 @@ impl<'a> Binding<'a> {
     fn join(self, other: Self) -> Self {
         match (self, other) {
             (Self::Missing, result) | (result, Self::Missing) => result,
-            (Self::Unresolved(a), Self::Unresolved(b)) => Self::Unresolved(a.min(b)),
-            (Self::Unresolved(reason), _) | (_, Self::Unresolved(reason)) => {
-                Self::Unresolved(reason)
-            }
             (a, b) if a == b => a,
             _ => Self::Unproven,
         }
@@ -45,11 +22,11 @@ impl<'a> Binding<'a> {
 }
 
 impl ExportLookup<'_> {
-    pub(in crate::codebase::check_facts::playwright_provenance) fn fixture_proof(
+    pub(in crate::codebase::check_facts::playwright_provenance) fn proves_playwright(
         &self,
         relationships: &EdgeIndex<ExportKey, EdgeKind>,
         root: &ExportKey,
-    ) -> FixtureProof {
+    ) -> bool {
         let mut bindings = FxHashMap::default();
         let mut pending = vec![(root, false)];
         while let Some((key, finish)) = pending.pop() {
@@ -68,19 +45,17 @@ impl ExportLookup<'_> {
                     Some(ExportProof::Playwright(offset, deps)) if self.all_wrappers_ok(deps) => {
                         Binding::Playwright(offset.map(|offset| (key.file.as_path(), offset)))
                     }
-                    Some(ExportProof::Alias(offset, deps)) => match upstream {
-                        Binding::Unresolved(reason) => Binding::Unresolved(reason),
-                        Binding::Playwright(identity) if self.all_wrappers_ok(deps) => {
-                            Binding::Playwright(
+                    Some(ExportProof::Alias(offset, deps)) if self.all_wrappers_ok(deps) => {
+                        match upstream {
+                            Binding::Playwright(identity) => Binding::Playwright(
                                 offset
                                     .map(|offset| (key.file.as_path(), offset))
                                     .or(identity),
-                            )
+                            ),
+                            _ => Binding::Unproven,
                         }
-                        _ => Binding::Unproven,
-                    },
+                    }
                     Some(ExportProof::Stars) => upstream,
-                    Some(ExportProof::Unresolved(reason)) => Binding::Unresolved(reason),
                     _ => Binding::Unproven,
                 };
                 bindings.insert(key, proven);
@@ -90,11 +65,7 @@ impl ExportLookup<'_> {
                 pending.extend(targets().map(|target| (target, false)));
             }
         }
-        match bindings.get(root) {
-            Some(Binding::Playwright(_)) => FixtureProof::Playwright,
-            Some(Binding::Unresolved(reason)) => FixtureProof::Unresolved(reason),
-            _ => FixtureProof::Unknown,
-        }
+        matches!(bindings.get(root), Some(Binding::Playwright(_)))
     }
 
     pub(in crate::codebase::check_facts::playwright_provenance) fn proves_wrapper(

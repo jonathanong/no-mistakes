@@ -59,8 +59,13 @@ pub(super) fn source_findings(
             .resolved_playwright_exports
             .iter()
             .any(|(m, e)| ctx.fixtures.contains(&(m.clone(), e.to_string())));
-        if (location.playwright_import.is_none() && location.unresolved_reason.is_none())
-            || configured
+        if location.unresolved_reason.is_some() && location.playwright_candidates.is_empty() && !configured
+            && location.playwright_import.is_none()
+        {
+            continue;
+        }
+        if (location.unresolved_reason.is_none() && location.playwright_import.is_none())
+            || (configured && location.playwright_candidates.is_empty())
         {
             if let Some((target, message)) = detail {
                 findings.push(RuleFinding {

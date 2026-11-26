@@ -9,7 +9,8 @@ use crate::fx::{FxHashMap, FxHashSet, PathSet};
 use std::path::{Path, PathBuf};
 
 mod exports;
-use exports::{ExportLookup, FixtureProof};
+mod projection;
+use exports::ExportLookup;
 
 pub(super) fn project(
     session: FactRequest<'_>,
@@ -29,12 +30,23 @@ pub(super) fn project(
     let pending = spec_files()
         .filter_map(|path| Some((path, facts.get(path)?)))
         .flat_map(|(path, file)| {
-            file.test_reliability.iter().filter_map(|location| {
-                Some((
-                    path.clone(),
-                    location.playwright_import.as_ref()?.clone(),
-                    location.playwright_wrappers.clone(),
-                ))
+            file.test_reliability.iter().flat_map(|location| {
+                location
+                    .playwright_import
+                    .iter()
+                    .map(|import| {
+                        (
+                            path.clone(),
+                            import.clone(),
+                            location.playwright_wrappers.clone(),
+                        )
+                    })
+                    .chain(
+                        location
+                            .playwright_candidates
+                            .iter()
+                            .map(|import| (path.clone(), import.clone(), Vec::new())),
+                    )
             })
         })
         .collect::<FxHashSet<_>>();
@@ -119,63 +131,56 @@ pub(super) fn project(
     let relationships = lookup.finalize();
     let mut proofs = FxHashMap::default();
     let mut verified = FxHashSet::default();
-    let mut unverified = FxHashMap::default();
+    let mut resolved_map = FxHashMap::default();
+    let mut uncertainties = FxHashMap::default();
     for item in pending {
         let (path, import, wrappers) = &item;
-        let mut proof_for = |key: &exports::ExportKey| {
-            *proofs
-                .entry(key.clone())
-                .or_insert_with(|| lookup.fixture_proof(&relationships, key))
-        };
-        let import_key = (!import.is_playwright_test())
+        let key = (!import.is_playwright_test())
             .then(|| lookup.local(path, import))
             .flatten();
-        let proof = if import.is_playwright_test() {
-            FixtureProof::Playwright
-        } else {
-            import_key
-                .as_ref()
-                .map_or(FixtureProof::Unknown, &mut proof_for)
-        };
-        let mut reason = proof.unresolved_reason();
-        let mut wrappers_ok = true;
-        for wrapper in wrappers {
-            let key = lookup.local(path, &wrapper.callee);
-            if !key
-                .as_ref()
-                .is_some_and(|key| lookup.proves_wrapper(key, wrapper.arg_index))
-            {
-                wrappers_ok = false;
-                reason = reason.or_else(|| proof_for(key.as_ref()?).unresolved_reason());
-            }
-        }
-        if matches!(proof, FixtureProof::Playwright) && wrappers_ok {
+        let base_ok = import.is_playwright_test()
+            || key.as_ref().is_some_and(|key| {
+                *proofs
+                    .entry(key.clone())
+                    .or_insert_with(|| lookup.proves_playwright(&relationships, key))
+            });
+        let wrappers_ok = wrappers.iter().all(|wrapper| {
+            lookup
+                .local(path, &wrapper.callee)
+                .is_some_and(|key| lookup.proves_wrapper(&key, wrapper.arg_index))
+        });
+        if base_ok && wrappers_ok {
             verified.insert(item);
             continue;
         }
-        let exports: Vec<_> = import_key
+        let mut reason_for = |key: &exports::ExportKey| {
+            *uncertainties
+                .entry(key.clone())
+                .or_insert_with(|| lookup.uncertainty_reason(&relationships, key))
+        };
+        let reason = key
+            .as_ref()
+            .and_then(&mut reason_for)
+            .filter(|reason| *reason != exports::UNRESOLVED_EXPORT)
+            .or_else(|| {
+                wrappers.iter().find_map(|wrapper| {
+                    let key = lookup.local(path, &wrapper.callee)?;
+                    reason_for(&key).filter(|reason| *reason != exports::UNRESOLVED_EXPORT)
+                })
+            });
+        let exports: Vec<_> = key
             .iter()
             .flat_map(|key| lookup.reachable_exports(&relationships, key))
             .map(|target| (relative_slash_path(root, &target.file), target.name))
             .collect();
-        unverified.insert(item, (reason, exports));
+        resolved_map.insert(item, (reason, exports));
     }
-    for path in spec_files() {
-        let Some(file) = facts.get_mut(path) else {
-            continue;
-        };
-        for location in &mut file.test_reliability {
-            let Some(import) = location.playwright_import.clone() else {
-                continue;
-            };
-            let key = (path.clone(), import, location.playwright_wrappers.clone());
-            if verified.contains(&key) {
-                location.playwright_import = None;
-                location.playwright_wrappers.clear();
-            } else if let Some((reason, exports)) = unverified.get(&key) {
-                location.unresolved_reason = *reason;
-                location.resolved_playwright_exports = exports.clone();
-            }
-        }
-    }
+    projection::apply(
+        &lookup,
+        spec_files(),
+        facts,
+        &verified,
+        &resolved_map,
+        &uncertainties,
+    );
 }

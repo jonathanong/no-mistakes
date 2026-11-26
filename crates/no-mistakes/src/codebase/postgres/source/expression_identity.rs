@@ -69,6 +69,6 @@ impl<'de> Deserialize<'de> for Fields<'de> {
     }
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2, nm_shard_postgres_source)))]
 #[path = "tests/expression_identity.rs"]
 mod tests;

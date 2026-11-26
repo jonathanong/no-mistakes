@@ -7,23 +7,23 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{Expression, Program};
 use oxc_semantic::{Semantic, SymbolId};
-
 const MAX_VALUE_DEPTH: usize = 8;
 
 pub(super) enum ValueTrace {
     Resolved(FixtureInitializer),
-    Unresolved(&'static str),
+    Unresolved(&'static str, Vec<ImportRef>),
     None,
 }
 
 impl ValueTrace {
-    fn into_export(self) -> Option<Result<FixtureInitializer, &'static str>> {
-        match self {
-            Self::Resolved(init) => Some(Ok(init)),
-            Self::Unresolved(reason) => Some(Err(reason)),
-            Self::None => None,
+    pub(super) fn unresolved(reason: &'static str, candidates: Vec<ImportRef>) -> Self {
+        if candidates.is_empty() {
+            Self::None
+        } else {
+            Self::Unresolved(reason, candidates)
         }
     }
+
 }
 
 pub(crate) fn fixture_initializers<'a>(
@@ -52,22 +52,29 @@ pub(crate) fn fixture_initializers<'a>(
                 .and_then(|declaration| declaration.init.as_ref())
             {
                 match bindings.playwright_value_origin(initializer) {
-                    ValueTrace::Resolved(init) => {
-                        result.values.insert(export.local.clone(), Ok(init));
+                    ValueTrace::Resolved(import) => {
+                        result.values.insert(export.local.clone(), import);
                         continue;
                     }
-                    ValueTrace::Unresolved(reason) => unresolved_initializer = Some(Err(reason)),
+                    trace @ ValueTrace::Unresolved(..) => unresolved_initializer = Some(trace),
                     ValueTrace::None => {}
                 }
             }
         }
-        let mut visited = FxHashSet::default();
-        if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
+        if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut FxHashSet::default()) {
             result.wrappers.insert(export.local.clone(), summary);
-        } else if let Some(origin) = unresolved_initializer
-            .or_else(|| bindings.factory_return_origin(symbol, 0).into_export())
-        {
-            result.values.insert(export.local.clone(), origin);
+        } else {
+            let trace = unresolved_initializer
+                .unwrap_or_else(|| bindings.factory_return_origin(symbol, 0));
+            match trace {
+                ValueTrace::Resolved(init) => {
+                    result.values.insert(export.local.clone(), init);
+                }
+                ValueTrace::Unresolved(reason, candidates) => {
+                    result.uncertain.insert(export.local.clone(), (reason, candidates));
+                }
+                ValueTrace::None => {}
+            }
         }
     }
     result
@@ -95,17 +102,12 @@ impl Bindings<'_, '_> {
         loop {
             if let Some(member) = value.as_member_expression() {
                 if let Some(property) = member.static_property_name().and_then(|n| n.as_str()) {
-                    if let Expression::Identifier(object) = unwrap_ts_wrappers(member.object()) {
-                        if let Some(import) = self
-                            .symbol(object)
-                            .and_then(|sym| self.import_origin(sym, Some(property)))
-                        {
-                            return ValueTrace::Resolved(FixtureInitializer {
-                                import,
-                                wrappers,
-                                derived_at,
-                            });
-                        }
+                    if let Some(import) = self.namespace_member_origin(member.object(), property) {
+                        return ValueTrace::Resolved(FixtureInitializer {
+                            import,
+                            wrappers,
+                            derived_at,
+                        });
                     }
                 }
                 return self.unresolved_if_provenance(

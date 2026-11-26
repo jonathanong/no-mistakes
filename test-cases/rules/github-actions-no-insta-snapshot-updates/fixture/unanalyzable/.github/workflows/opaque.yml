@@ -1,0 +1,9 @@
+name: Dynamic
+env: ${{ fromJSON(vars.ENV) }}
+jobs:
+  unknown: ${{ vars.JOB }}
+  unit:
+    steps:
+      - ${{ vars.STEP }}
+      - env: []
+      - env: { INSTA_UPDATE: true }

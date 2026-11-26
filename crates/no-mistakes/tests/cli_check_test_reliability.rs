@@ -11,6 +11,7 @@ fn test_reliability_check_json_snapshot() {
         "blank-reason",
         "malformed",
         "static-shapes",
+        "followups",
         "local-playwright",
         "local-playwright-default",
         "playwright-export-shapes",
@@ -22,7 +23,7 @@ fn test_reliability_check_json_snapshot() {
             "workflow-action" | "blank-reason" => {
                 rules_path("test-no-retries", "fixture", "workflow-action")
             }
-            "malformed" | "static-shapes" | "playwright-export-shapes" => {
+            "malformed" | "static-shapes" | "playwright-export-shapes" | "followups" => {
                 rules_path("test-no-retries", "fixture", name)
             }
             "local-playwright" | "local-playwright-default" => {
@@ -113,7 +114,7 @@ fn uncertain_playwright_factory_check_json_snapshot() {
             && entry["message"]
                 .as_str()
                 .unwrap()
-                .contains("local factory has an unverified return branch")
+                .contains("local factory return could not be traced statically")
     }));
 }
 
