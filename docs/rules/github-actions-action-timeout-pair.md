@@ -129,8 +129,8 @@ is outside the policy.
 
 ## Options and defaults
 
-Each `include` entry must be a valid glob and each `uses` entry must be nonblank.
-Set a nonblank `nestedInput` when configuring `nestedTimeoutSeconds` or enabling
+Each `include` entry must be a valid glob and each `uses` entry must be non-blank.
+Set a non-blank `nestedInput` when configuring `nestedTimeoutSeconds` or enabling
 `nestedBelowStepTimeout`.
 
 - `uses` accepts exact matches and case-insensitive prefixes ending in `@`.

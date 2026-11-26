@@ -35,7 +35,7 @@ Neither `maxMinutes` nor `allow` entries bypass the sum check.
 ## Options
 
 Every configured `maxMinutes` must be positive. An `allow` entry accepts `job`
-and an optional `maxMinutes`. Use a nonblank workflow path and job ID joined by
+and an optional `maxMinutes`. Use a non-blank workflow path and job ID joined by
 `#` for `job`.
 
 `include` defaults to workflow `.yml` and `.yaml` files. `maxMinutes` is an
