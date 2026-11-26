@@ -24,7 +24,7 @@ pub fn declared_config(root: &Path, cli_config: Option<&Path>) -> Result<serde_j
             super::fragment_validation::deserialize(merged.clone(), &provenance, &documents)?;
         config.config_provenance = provenance;
         super::aliases::mark_deprecated(&mut config, &deprecated);
-        super::fragment_validation::finish(&mut config, &documents, &documents[0].path)?;
+        super::fragment_validation::finish(root, &mut config, &documents, &documents[0].path)?;
     }
     Ok(serde_json::to_value(merged)?)
 }

@@ -47,7 +47,7 @@ pub(crate) enum ArgScope {
     Positional,
 }
 
-pub(super) struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     pub(super) commands: Vec<CompiledPolicy>,
     pub(super) include: Vec<String>,
 }
@@ -75,7 +75,11 @@ pub(super) struct CompiledForbiddenPattern {
     pub(super) message: Option<String>,
 }
 
-pub(super) fn compile(options: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile(options: Options) -> Result<CompiledOptions> {
+    crate::codebase::rules::file_matching::compile_globs(
+        options.include.iter().map(String::as_str),
+    )
+    .context("options.include")?;
     let mut commands = Vec::with_capacity(options.commands.len());
     for (index, entry) in options.commands.into_iter().enumerate() {
         commands.push(compile_policy(entry, index)?);

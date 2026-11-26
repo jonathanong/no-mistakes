@@ -1,0 +1,79 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/widget.ts",
+          "line": 1,
+          "message": "directive names unknown rule `nextjs-no-cacheing`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file nextjs-no-cacheing: typo",
+          "target": "nextjs-no-cacheing"
+        },
+        {
+          "file": "src/widget.ts",
+          "line": 2,
+          "message": "directive names unknown rule `github-actions-job-permissons`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line github-actions-job-permissons: typo",
+          "target": "github-actions-job-permissons"
+        },
+        {
+          "file": "src/widget.ts",
+          "line": 6,
+          "message": "directive names unknown rule `nextjs-no-cacheing`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "export const caption = \"no-mistakes-disable-line ignore-string\"; // no-mistakes-disable-line nextjs-no-cacheing: typo",
+          "target": "nextjs-no-cacheing"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/widget.ts",
+          "line": 1,
+          "message": "directive names unknown rule `nextjs-no-cacheing`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file nextjs-no-cacheing: typo",
+          "target": "nextjs-no-cacheing"
+        },
+        {
+          "file": "src/widget.ts",
+          "line": 2,
+          "message": "directive names unknown rule `github-actions-job-permissons`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line github-actions-job-permissons: typo",
+          "target": "github-actions-job-permissons"
+        },
+        {
+          "file": "src/widget.ts",
+          "line": 6,
+          "message": "directive names unknown rule `nextjs-no-cacheing`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "export const caption = \"no-mistakes-disable-line ignore-string\"; // no-mistakes-disable-line nextjs-no-cacheing: typo",
+          "target": "nextjs-no-cacheing"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

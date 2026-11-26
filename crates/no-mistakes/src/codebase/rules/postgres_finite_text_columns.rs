@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod collect;
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod parse;
 mod pin;
 mod scan;

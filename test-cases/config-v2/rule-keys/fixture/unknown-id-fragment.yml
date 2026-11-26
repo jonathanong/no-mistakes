@@ -1,0 +1,2 @@
+- rule: unique-exprts
+  scope: repository

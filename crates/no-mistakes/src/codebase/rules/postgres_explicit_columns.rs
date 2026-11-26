@@ -19,7 +19,7 @@ const DEFAULT_WHOLE_ROW: &[&str] = &[
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
@@ -70,7 +70,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     )
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     if opts.schema_catalog_path.trim().is_empty() {
         bail!("{RULE_ID} option schemaCatalogPath: required");
     }

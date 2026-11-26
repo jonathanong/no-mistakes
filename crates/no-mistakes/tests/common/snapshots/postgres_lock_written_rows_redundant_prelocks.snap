@@ -197,31 +197,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "invalid_fail": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "src/query.ts",
-          "line": 93,
-          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: reviewed transaction protocol",
-          "target": "postgres-lock-written-rows-only"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-lock-written-rows-only",
-          "message": "postgres-lock-written-rows-only: redundant-prelock supports only advise or ignore"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/redundant-invalid-fail.yml:5: postgres-lock-written-rows-only: redundant-prelock supports only advise or ignore\n"
   },
   "no_catalog": {
     "exitCode": 0,

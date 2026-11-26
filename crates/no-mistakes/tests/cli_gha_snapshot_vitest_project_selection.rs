@@ -6,7 +6,7 @@ const RULE: &str = "github-actions-vitest-project-selection";
 fn github_actions_vitest_project_selection_json_matches_snapshot() {
     assert_saved_fixture(
         "github_actions_vitest_project_selection",
-        &["report", "heredocs"].map(|name| {
+        &["report", "heredocs", "suppressions"].map(|name| {
             (
                 name,
                 rules_path(RULE, "fixture", name),

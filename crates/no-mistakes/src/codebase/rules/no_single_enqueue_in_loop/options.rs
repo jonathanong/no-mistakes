@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     pub(super) single: Vec<ApiTarget>,
     pub(super) bulk: Vec<ApiTarget>,
     pub(super) single_export_pattern: Option<String>,
@@ -29,7 +29,7 @@ pub(super) struct ApiTarget {
 }
 
 #[derive(Debug)]
-pub(super) struct Targets {
+pub(in crate::codebase::rules) struct Targets {
     pub(super) single: Vec<(String, String)>,
     pub(super) bulk: Vec<(String, String)>,
     pub(super) single_export_pattern: Option<Regex>,
@@ -37,7 +37,7 @@ pub(super) struct Targets {
     pub(super) module_globs: Option<GlobSet>,
 }
 
-pub(super) fn validate(options: &Options) -> Result<Targets> {
+pub(in crate::codebase::rules) fn validate(options: &Options) -> Result<Targets> {
     let single = collect("single", &options.single)?;
     let bulk = collect("bulk", &options.bulk)?;
     let single_pairs: BTreeSet<_> = single.iter().cloned().collect();

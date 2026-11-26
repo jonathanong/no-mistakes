@@ -5,7 +5,7 @@ use crate::config::v2::{
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod proof;
 mod scan;
 

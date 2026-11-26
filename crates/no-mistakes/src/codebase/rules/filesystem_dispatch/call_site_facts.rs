@@ -15,6 +15,7 @@ pub(super) fn requires_shared_facts(config: &NoMistakesConfig) -> bool {
         FORBIDDEN_LINT_SUPPRESSIONS,
         REACT_NO_NESTED_BUTTONS_AND_LINKS,
         VITEST_DEFAULT_EXCLUDES,
+        CSP_ALLOWED_ORIGINS,
         PRODUCTION_DEPENDENCY_DECLARATIONS,
         REQUIRED_COMPANION_IMPORTS,
     ]
@@ -53,6 +54,8 @@ pub(super) fn prepare_call_site_facts(
     plan.require_call_site_paths(&call_site_files);
     plan.vitest_default_exclude_paths =
         super::vitest_default_excludes::required_files(root, config, files)?;
+    plan.csp_allowed_origins_paths =
+        super::csp_allowed_origins::required_files(root, config, files)?;
     plan.nested_control_paths =
         super::nested_controls::required_files(root, config, files, sources)?;
     plan.test_reliability_paths =
@@ -77,25 +80,55 @@ pub(super) fn prepare_call_site_facts(
     crate::codebase::postgres::configure_prepared_postgres_plan(root, config, &mut plan)?;
     crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
-    if plan.lint_suppression_paths.is_empty()
-        && plan.vitest_default_exclude_paths.is_empty()
-        && plan.nested_control_paths.is_empty()
-        && plan.test_reliability_paths.is_empty()
-        && !needs_call_sites
-        && plan.companion_import_plans.is_empty()
-        && plan.production_import_paths.is_empty()
-        && plan.postgres_schema_catalog_paths.is_empty()
-        && plan.postgres_explain_write_rollback_paths.is_empty()
-        && !plan.postgres_schema
-        && !plan.postgres_dml
-        && !plan.embedded_sql
-    {
+    if !has_fact_demand(&plan, needs_call_sites) {
         return Ok(None);
     }
-    let mut files = call_site_files;
+    let files = collect_fact_files(
+        root,
+        &plan,
+        call_site_files,
+        lock_inventory_helpers,
+        sources,
+    )?;
+    Ok(Some(
+        collect_check_facts_with_graph_files_playwright_and_sources(
+            root,
+            files,
+            Vec::new(),
+            plan,
+            None,
+            Arc::clone(sources),
+        ),
+    ))
+}
+
+fn has_fact_demand(plan: &CheckFactPlan, needs_call_sites: bool) -> bool {
+    needs_call_sites
+        || !plan.lint_suppression_paths.is_empty()
+        || !plan.vitest_default_exclude_paths.is_empty()
+        || !plan.csp_allowed_origins_paths.is_empty()
+        || !plan.nested_control_paths.is_empty()
+        || !plan.test_reliability_paths.is_empty()
+        || !plan.companion_import_plans.is_empty()
+        || !plan.production_import_paths.is_empty()
+        || !plan.postgres_schema_catalog_paths.is_empty()
+        || !plan.postgres_explain_write_rollback_paths.is_empty()
+        || plan.postgres_schema
+        || plan.postgres_dml
+        || plan.embedded_sql
+}
+
+fn collect_fact_files(
+    root: &Path,
+    plan: &CheckFactPlan,
+    mut files: Vec<PathBuf>,
+    lock_inventory_helpers: Vec<PathBuf>,
+    sources: &SourceStore,
+) -> Result<Vec<PathBuf>> {
     files.extend(lock_inventory_helpers);
     files.extend(plan.lint_suppression_paths.iter().cloned());
     files.extend(plan.vitest_default_exclude_paths.iter().cloned());
+    files.extend(plan.csp_allowed_origins_paths.iter().cloned());
     files.extend(plan.nested_control_paths.iter().cloned());
     files.extend(plan.test_reliability_paths.keys().cloned());
     files.extend(plan.production_import_paths.iter().cloned());
@@ -112,7 +145,7 @@ pub(super) fn prepare_call_site_facts(
     files.extend(crate::codebase::postgres::prepared::write_sql_paths(
         root,
         &sources.inventory().target_file_paths(),
-        &plan,
+        plan,
     ));
     if plan.embedded_sql {
         files.extend(
@@ -125,16 +158,7 @@ pub(super) fn prepare_call_site_facts(
     }
     files.sort();
     files.dedup();
-    Ok(Some(
-        collect_check_facts_with_graph_files_playwright_and_sources(
-            root,
-            files,
-            Vec::new(),
-            plan,
-            None,
-            Arc::clone(sources),
-        ),
-    ))
+    Ok(files)
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

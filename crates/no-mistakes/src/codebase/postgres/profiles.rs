@@ -1,5 +1,5 @@
 use super::{EmbeddedSqlOptions, SqlIdentifierAssertion, TrustedSqlTag};
-use crate::config::v2::NoMistakesConfig;
+use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -87,6 +87,13 @@ struct EmbeddedSqlRuleOptions {
 #[serde(default, rename_all = "camelCase")]
 struct CatalogRuleOptions {
     schema_catalog_path: String,
+}
+
+pub(crate) fn validate_embedded_sql_rule_options(rule: &RuleDef) -> Result<()> {
+    if PREPARED_EMBEDDED_SQL_RULE_IDS.contains(&rule.rule.as_str()) {
+        rule.try_rule_options::<EmbeddedSqlRuleOptions>()?;
+    }
+    Ok(())
 }
 
 /// Resolve every distinct embedded-SQL projection requested by the supplied

@@ -1,0 +1,4 @@
+- rule: github-actions-download-integrity
+  scope: repository
+  options:
+    bogusOption: true

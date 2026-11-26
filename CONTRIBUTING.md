@@ -289,6 +289,26 @@ machine:
   and commit and push early so a crash loses no work.
 - Delete throwaway target directories as soon as they are no longer needed.
 
+The pre-push hook accepts Cargo's usual `CARGO_TARGET_DIR`. Use one private
+target for a worktree's local validation and pushes so Cargo can reuse matching
+inputs. Running the hook's exact Clippy command locally warms the same cache
+when the profile, features, and environment match.
+
+A lane can hand its private target from a retired checkout to a successor.
+Wait for the old checkout's Cargo processes to finish and keep the target's
+absolute path. Before removing the old worktree, run the following **from the
+old checkout** with the lane's existing target.
+
+```sh
+: "${CARGO_TARGET_DIR:?set the lane's absolute target path}"
+cargo clean --locked --workspace --target-dir "$CARGO_TARGET_DIR"
+```
+
+This removes workspace outputs so Cargo checks the successor's own sources.
+Registry dependency artifacts remain available. Use a fresh private target
+when the old workspace had extra local path dependencies, used a separate
+build directory, or cannot be cleaned. Each active lane keeps its own target.
+
 ## Deprecations
 
 Before deprecating a command, compare every supported input, option, scope, and

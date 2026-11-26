@@ -122,7 +122,7 @@ pub use profiles::{
 };
 pub(crate) use profiles::{
     configured_embedded_sql_options, load_schema_catalogs, prepare_embedded_sql_facts,
-    prepare_rule_sql_facts,
+    prepare_rule_sql_facts, validate_embedded_sql_rule_options,
 };
 pub use rule_options::fail_unanalyzable_sql;
 pub use rule_options::{has_sql_advice, unanalyzable_sql_mode, UnanalyzableSqlMode};

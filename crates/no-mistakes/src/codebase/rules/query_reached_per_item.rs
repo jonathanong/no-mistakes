@@ -11,7 +11,7 @@ use std::path::Path;
 mod allow;
 mod candidate_policy;
 mod candidates;
-mod config;
+pub(in crate::codebase::rules) mod config;
 mod traces;
 pub(crate) use config::graph_plan;
 use config::{exempt, Options, Sinks};

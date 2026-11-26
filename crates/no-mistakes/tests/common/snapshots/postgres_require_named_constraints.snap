@@ -23,6 +23,39 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 6,
+          "message": "migrations/001.sql:6: ALTER TABLE ADD FOREIGN KEY constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE control_case ADD FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE NOT VALID;",
+          "target": "control_case.FOREIGN KEY"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "disabled_next_line": {
     "exitCode": 0,
     "report": {

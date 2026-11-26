@@ -3,23 +3,28 @@ rules:
     name: tagged-low
     options:
       effort: low
+      executorNames: []
       trustedSqlTags: [{ module: sql-template-strings, name: default }]
   - rule: postgres-require-query-annotation
     name: empty-low
     options:
       effort: low
+      executorNames: []
       trustedSqlTags: []
   - rule: postgres-require-query-annotation
     options:
       effort: max
+      executorNames: []
       trustedSqlTags: [{ module: sql-template-strings, name: default }]
   - rule: postgres-require-query-annotation
-    options: { effort: low }
+    options: { effort: low, executorNames: [] }
   - rule: postgres-require-query-annotation
     enabled: false
     options:
       effort: low
+      executorNames: []
       trustedSqlTags: []
   - rule: postgres-no-offset
     options:
+      executorNames: []
       trustedSqlTags: [{ module: sql-template-strings, name: default }]

@@ -68,6 +68,7 @@ fn queue_job_state_as_record_selected_config_check_json_snapshot() {
     let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "queue_job_state_as_record_selected_config",
         &[
+            ("suppression", root.join("suppression"), PathBuf::new()),
             ("default-on", on.clone(), PathBuf::new()),
             ("explicit-off", on.clone(), on.join("explicit.yml")),
             ("default-off", off.clone(), PathBuf::new()),
@@ -83,6 +84,14 @@ fn queue_job_state_as_record_selected_config_check_json_snapshot() {
         assert_eq!(advisories.len(), 1, "{name}: {advisories:?}");
         assert_eq!(advisories[0]["rule"], "queues-check");
     }
+    let result = &reports["suppression"];
+    assert_eq!(result["exitCode"], 0);
+    assert_eq!(result["report"]["queues"], serde_json::json!([]));
+    let advisories = result["report"]["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 1, "{result}");
+    assert_eq!(advisories[0]["rule"], "queues-check");
+    assert_eq!(advisories[0]["file"], "usage.ts");
+    assert_eq!(advisories[0]["line"], 8);
     for name in ["explicit-off", "default-off"] {
         assert_eq!(reports[name]["exitCode"], 0);
         assert_eq!(reports[name]["report"]["queues"], serde_json::json!([]));
@@ -262,6 +271,11 @@ fn queue_shared_test_scope_check_json_snapshot() {
         &[
             ("default", root.clone(), PathBuf::new()),
             (
+                "disable-directives",
+                root.with_file_name("queue-shared-test-scope-suppression"),
+                root.join(".no-mistakes.yml"),
+            ),
+            (
                 "include-test-file",
                 root.clone(),
                 root.join("include-test-file.yml"),
@@ -286,6 +300,14 @@ fn queue_shared_test_scope_check_json_snapshot() {
         .unwrap();
     assert_eq!(default_advisories.len(), 1, "{default_advisories:?}");
     assert_eq!(default_advisories[0]["file"], "src/producer.ts");
+
+    let suppression = &reports["disable-directives"];
+    assert_eq!(suppression["exitCode"], 1);
+    let queues = suppression["report"]["queues"].as_array().unwrap();
+    assert_eq!(queues.len(), 1, "{queues:?}");
+    assert_eq!(queues[0]["kind"], "unbounded-job-retention");
+    assert_eq!(queues[0]["file"], "src/producer.ts");
+    assert_eq!(queues[0]["line"], 4);
 
     for name in ["include-test-file", "include-all-tests"] {
         assert_eq!(reports[name]["exitCode"], 1);
@@ -402,10 +424,11 @@ fn queue_retention_and_listing_followups_check_json_snapshot() {
     assert!(advisories.iter().all(|row| row["file"] == "listing.ts"));
 
     let warnings = report["warnings"].as_array().unwrap();
-    assert_eq!(warnings.len(), 5, "{warnings:?}");
+    assert_eq!(warnings.len(), 19, "{warnings:?}");
     for (location, rule) in [
         ("enqueue.ts:8", "unbounded-job-retention"),
         ("enqueue.ts:13", "unbounded-job-retention"),
+        ("enqueue.ts:13", "mixed-priority"),
         ("listing.ts:45", "job-state-as-record"),
         ("listing.ts:59", "job-state-as-record"),
         ("listing.ts:91", "job-state-as-record"),

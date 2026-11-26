@@ -1,0 +1,6 @@
+rules:
+  - rule: required-doc-section
+    scope: repository
+    options:
+      glob: "agents/*/README.md"
+      requiredHeading: "## Perf"

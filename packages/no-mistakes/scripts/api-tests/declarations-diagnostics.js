@@ -61,7 +61,7 @@ test("verbose diagnostics exposes named report contracts and preserves operation
   );
 });
 
-test("diagnostics selectors cover public analyses and exclude utilities and raw Markdown", () => {
+test("diagnostics selectors cover public analyses and text renderers", () => {
   const root = readFileSync(join(packageRoot, "index.js"), "utf8");
   const excluded = new Set([
     "collectDiagnostics",
@@ -69,8 +69,6 @@ test("diagnostics selectors cover public analyses and exclude utilities and raw 
     "diagnosticsSnapshot",
     "version",
     "writePlanningImpactArtifacts",
-    "testsComment",
-    "testsGraphMermaid",
   ]);
   const expected = [...root.matchAll(/module\.exports\.(\w+) =/g)]
     .map((match) => match[1])

@@ -85,7 +85,7 @@ pub(crate) fn parse_sources_quiet(
     documents: &[ConfigDocument],
 ) -> Result<NoMistakesConfig> {
     if documents.len() == 1 && documents[0].section.is_none() {
-        return super::parse_v2_config_quiet(&documents[0].source, &documents[0].path);
+        return super::parse_v2_config_quiet(root, &documents[0].source, &documents[0].path);
     }
     let (merged, provenance, deprecated) = merge_documents(root, documents)?;
     let mut config: NoMistakesConfig =
@@ -93,7 +93,7 @@ pub(crate) fn parse_sources_quiet(
     let path = documents.first().map(|d| d.path.as_path()).unwrap_or(root);
     config.config_provenance = provenance;
     super::aliases::mark_deprecated(&mut config, &deprecated);
-    super::fragment_validation::finish(&mut config, documents, path)?;
+    super::fragment_validation::finish(root, &mut config, documents, path)?;
     Ok(config)
 }
 

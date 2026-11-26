@@ -2,6 +2,27 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schemas.json",
+          "line": 1,
+          "message": "contract `widget`: unproven: producer schema `schemas.json/producer` at $[\"details\"] is unanalyzable at effort low; low supports scalar roots, flat objects with scalar properties, and root arrays with scalar items. Use effort max, or flatten both declarations and their actual payloads; selecting leaf pointers alone does not preserve parent constraints",
+          "rule": "declared-payload-compatibility",
+          "sourceLine": "{",
+          "target": "widget"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "fail": {
     "exitCode": 1,
     "report": {
@@ -23,6 +44,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {
@@ -32,6 +77,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schemas.json",
+          "line": 1,
+          "message": "contract `widget`: unproven: producer schema `schemas.json/producer` at $[\"details\"] is unanalyzable at effort low; low supports scalar roots, flat objects with scalar properties, and root arrays with scalar items. Use effort max, or flatten both declarations and their actual payloads; selecting leaf pointers alone does not preserve parent constraints",
+          "rule": "declared-payload-compatibility",
+          "sourceLine": "{",
+          "target": "widget"
+        }
+      ],
       "warnings": []
     }
   }

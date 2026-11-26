@@ -17,6 +17,11 @@ fn playwright_coverage_json_matches_snapshot() {
             c("report", dir, ".no-mistakes-report.yml"),
             c("advise", dir, ".no-mistakes-advise.yml"),
             c("ignore", dir, ".no-mistakes-ignore.yml"),
+            c(
+                "disable_file",
+                "playwright-coverage/suppression",
+                ".no-mistakes.yml",
+            ),
         ],
     );
 }
@@ -25,11 +30,18 @@ fn playwright_coverage_json_matches_snapshot() {
 fn playwright_prefer_test_id_locators_json_matches_snapshot() {
     assert_saved_fixture(
         "playwright_prefer_test_id_locators",
-        &[c(
-            "fail",
-            "playwright-prefer-test-id-locators/fixture",
-            ".no-mistakes.yml",
-        )],
+        &[
+            c(
+                "fail",
+                "playwright-prefer-test-id-locators/fixture",
+                ".no-mistakes.yml",
+            ),
+            c(
+                "suppression",
+                "playwright-prefer-test-id-locators/suppression",
+                ".no-mistakes.yml",
+            ),
+        ],
     );
 }
 
@@ -68,6 +80,11 @@ fn playwright_unique_test_ids_json_matches_snapshot() {
             c("configured_report", owned, "configured-report.yml"),
             c("component_report", owned, "component-report.yml"),
             c("dedicated_html_report", owned, "dedicated-html-report.yml"),
+            c(
+                "disable_line",
+                "playwright-unique-test-ids/suppression",
+                ".no-mistakes.yml",
+            ),
         ],
     );
 }

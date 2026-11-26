@@ -56,7 +56,7 @@ fn api_route_demand_keeps_react_parse_failures_incomplete_without_candidates() {
 }
 
 #[test]
-fn raw_api_route_requests_read_only_selected_route_candidates() {
+fn raw_api_route_checks_audit_selected_source_without_parsing() {
     let fixture = fixture();
     let root = fixture.path().canonicalize().unwrap();
     let mut expected = [
@@ -91,13 +91,10 @@ fn raw_api_route_requests_read_only_selected_route_candidates() {
         assert_eq!(files(&result), expected, "jobs={jobs}: {:?}", result.rules);
         assert_eq!(
             work.get("source.reads"),
-            Some(&14),
+            Some(&20),
             "jobs={jobs}: {work:#?}"
         );
-        assert_eq!(
-            work.get("source.read_errors").copied().unwrap_or_default(),
-            0
-        );
+        assert_eq!(work.get("source.read_errors"), Some(&1), "{work:#?}");
         assert_eq!(work.get("parse.files").copied().unwrap_or_default(), 0);
         assert_eq!(
             work.get("parse.files_after_extract")
@@ -105,19 +102,15 @@ fn raw_api_route_requests_read_only_selected_route_candidates() {
                 .unwrap_or_default(),
             0
         );
-        assert!(
-            work.get("source.bytes").copied().unwrap_or_default() < 12_000,
-            "route-only request read dense ordinary source: {work:#?}"
-        );
         assert!(result.warnings.is_empty(), "{:?}", result.warnings);
-        assert!(result.advisories.is_empty(), "{:?}", result.advisories);
+        assert_unknown_rule_directive(&result);
         assert_eq!(result.analysis_warning_count, 0);
         assert!(result.analysis_fallbacks.is_empty());
     }
 }
 
 #[test]
-fn raw_route_hygiene_adds_source_reads_without_adding_ts_parses() {
+fn raw_route_hygiene_reuses_scoped_source_without_adding_ts_parses() {
     let fixture = fixture();
     let root = fixture.path().canonicalize().unwrap();
     for jobs in [1, 4] {
@@ -133,7 +126,8 @@ fn raw_route_hygiene_adds_source_reads_without_adding_ts_parses() {
         let baseline = run_all(root.clone(), Some(root.join(".no-mistakes.yml")), None).unwrap();
         assert_eq!(files(&audited), files(&baseline));
         let work = observer.snapshot().work;
-        // The audit reads ordinary selected source too, through the same store.
+        assert_unknown_rule_directive(&baseline);
+        // Known hygiene and unknown-name diagnostics read through the same store.
         assert_eq!(work.get("source.reads"), Some(&20), "{work:#?}");
         assert_eq!(work.get("source.read_errors"), Some(&1), "{work:#?}");
         assert_eq!(work.get("parse.files").copied().unwrap_or_default(), 0);
@@ -189,11 +183,7 @@ fn mixed_route_and_source_fact_consumers_keep_each_others_work() {
         "the mixed request must reuse extracted facts: {mixed_work:#?}"
     );
     assert!(raw_result.warnings.is_empty(), "{:?}", raw_result.warnings);
-    assert!(
-        raw_result.advisories.is_empty(),
-        "{:?}",
-        raw_result.advisories
-    );
+    assert_unknown_rule_directive(&raw_result);
     assert!(
         mixed_result.warnings.is_empty(),
         "{:?}",
@@ -203,9 +193,17 @@ fn mixed_route_and_source_fact_consumers_keep_each_others_work() {
     assert_eq!(mixed_result.analysis_warning_count, 0);
     assert!(raw_result.analysis_fallbacks.is_empty());
     assert!(mixed_result.analysis_fallbacks.is_empty());
-    assert!(
-        mixed_result.advisories.is_empty(),
-        "{:?}",
-        mixed_result.advisories
+    assert_unknown_rule_directive(&mixed_result);
+}
+
+fn assert_unknown_rule_directive(result: &super::CheckResults) {
+    let diagnostics = &result.advisories;
+    assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+    assert_eq!(diagnostics[0].rule, "invalid-disable-directive");
+    assert_eq!(diagnostics[0].file, "apps/admin/src/dense.ts");
+    assert_eq!(diagnostics[0].line, 1);
+    assert_eq!(
+        diagnostics[0].target.as_deref(),
+        Some("nextjs-no-api-route")
     );
 }

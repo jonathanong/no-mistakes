@@ -60,6 +60,7 @@ fn pnpm_release_age_policy_json_matches_snapshot() {
         case("past_eligibility", "pass", "past-eligibility.yml"),
         case("included_exclude", "included-exclude", "registered.yml"),
         case("duplicate_exclude", "duplicate-exclude", "registered.yml"),
+        case("disable_file", "disable-file", "registered.yml"),
         case("unreadable_exclude", "unreadable-exclude", "registered.yml"),
         // The unit file list always named dependabot.yml, even when absent.
         saved_case(

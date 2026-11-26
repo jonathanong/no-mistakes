@@ -82,7 +82,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /export type BatchedQueueRelatedOptions = BatchedProjectOptions & \{ files: string\[\] \}/,
+    /export type BatchedQueueRelatedOptions = Omit<QueueRelatedOptions, "root" \| "tsconfig" \| "config">/,
   );
   assert.match(
     analyzeProjectDeclarations,

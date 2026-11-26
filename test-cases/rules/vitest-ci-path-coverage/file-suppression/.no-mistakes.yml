@@ -1,0 +1,19 @@
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      includeVitestProjectGlobs: false
+      includeFullSuiteTriggers: false
+      sourceGlobsByProject:
+        backend: ["src/index.ts"]
+        sibling: ["src/sibling.ts"]
+      projectFilters:
+        backend: [backend]
+        sibling: [sibling]
+      workflows:
+        - path: .github/workflows/ci.yml
+          job: detect-changes
+          stepId: filter
+        - path: .github/workflows/sibling.yml
+          job: detect-changes
+          stepId: filter

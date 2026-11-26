@@ -1,0 +1,12 @@
+name: Check
+on: push
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ready
+        env:
+          SAMPLE_MODE: ''
+      - run: echo configured
+        env:
+          SAMPLE_MODE: enabled

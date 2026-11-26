@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: csp-allowed-origins
+    scope: repository
+    include:
+      - src/**/*.{ts,tsx}
+    exclude:
+      - src/ignored/**
+    options:
+      cspFiles:
+        - src/csp.ts
+      selfOrigins:
+        - https://app.example.com

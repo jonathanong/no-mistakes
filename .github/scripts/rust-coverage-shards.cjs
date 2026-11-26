@@ -2,8 +2,10 @@ const { spawnSync } = require("node:child_process");
 const { createHash } = require("node:crypto");
 const {
   closeSync,
+  constants,
   copyFileSync,
   existsSync,
+  linkSync,
   lstatSync,
   mkdirSync,
   openSync,
@@ -214,7 +216,8 @@ function collect(directory, input, total, env = process.env) {
       const raw = readdirSync(join(folder, "profiles")).sort();
       for (const name of raw) {
         const file = join(folder, "profiles", name);
-        if (!name.endsWith(".profraw") || !lstatSync(file).isFile() || lstatSync(file).size === 0)
+        const stat = lstatSync(file);
+        if (!name.endsWith(".profraw") || !stat.isFile() || stat.size === 0)
           throw new Error(`Invalid raw profile: ${name}`);
         const destination = join(build.target, `shard-${index}-${name}`);
         if (existsSync(destination)) throw new Error(`Profile already exists: ${destination}`);
@@ -228,7 +231,14 @@ function collect(directory, input, total, env = process.env) {
       errors.push(`Shard ${index}: ${error.message}`);
     }
   }
-  for (const [source, destination] of profiles) copyFileSync(source, destination);
+  for (const [source, destination] of profiles) {
+    try {
+      linkSync(source, destination);
+    } catch (error) {
+      if (error.code !== "EXDEV") throw error;
+      copyFileSync(source, destination, constants.COPYFILE_EXCL);
+    }
+  }
   writeFileSync(join(input, "references.txt"), references.join("\n"));
   const summary = `## Rust coverage shards\n\n| Shard | Exit | Profiles | Milliseconds |\n| --- | --- | --- | --- |\n${rows.join("\n")}\n\n${errors.join("\n")}\n`;
   writeFileSync(join(input, "summary.md"), summary);
