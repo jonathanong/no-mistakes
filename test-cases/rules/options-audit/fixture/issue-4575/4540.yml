@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src]
+      forbiddenFiles: ['**/*.test.ts']
+      exceptions:
+        - roots: ['[']
+          allowedFiles: [src/fixture.ts]

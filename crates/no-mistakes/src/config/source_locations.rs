@@ -7,6 +7,19 @@ mod yaml;
 
 pub(crate) use no_mistakes_rule_kernel::validate_options::{ConfigPath, Segment};
 
+impl std::fmt::Display for ConfigPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (position, segment) in self.0.iter().enumerate() {
+            match segment {
+                Segment::Key(key) if position == 0 => f.write_str(key)?,
+                Segment::Key(key) => write!(f, ".{key}")?,
+                Segment::Index(index) => write!(f, "[{index}]")?,
+            }
+        }
+        Ok(())
+    }
+}
+
 pub(crate) struct ConfigLocations {
     nodes: Vec<Node>,
 }

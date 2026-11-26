@@ -35,7 +35,7 @@ pub(super) enum EachTableMode {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub(super) struct Scopes {
     pub(super) tests: Vec<String>,
     pub(super) helpers: Vec<String>,

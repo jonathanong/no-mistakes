@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      allow:
+        - path: scripts/generate.ts
+          reason: Generated entrypoint outside the app program
+          auditUnexpectedField: true

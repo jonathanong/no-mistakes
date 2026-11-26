@@ -33,7 +33,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Clone, Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct SetSpec {
     pub(crate) name: String,
     pub(crate) file: String,
@@ -48,7 +48,7 @@ pub(crate) struct SetSpec {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct Comparison {
     pub(crate) left: String,
     pub(crate) right: String,

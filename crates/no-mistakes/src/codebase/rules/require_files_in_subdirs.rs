@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 pub const RULE_ID: &str = "require-files-in-subdirs";
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct PackageSpec {
     pub(crate) root: PathBuf,
     pub(crate) required_files: Vec<String>,

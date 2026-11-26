@@ -15,7 +15,7 @@ const DEFAULT_TEST_DIR: &str = "__tests__";
 const DEFAULT_TEST_PATTERNS: &[&str] = &["*.test.*", "*.spec.*"];
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct PackageLayoutSpec {
     /// Parent directory that contains individual package subdirectories.
     pub(crate) root: PathBuf,

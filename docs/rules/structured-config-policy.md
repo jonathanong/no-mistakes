@@ -136,6 +136,9 @@ support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 `when` is optional. `ancestor-override-subset` key names default to `extends`,
 `overrides`, `files`, `excludeFiles`, and `rules`.
 
+Unknown fields in `policies` entries and their `valueAssertions` or `when`
+entries are configuration errors.
+
 ## Valid example
 
 ```yaml

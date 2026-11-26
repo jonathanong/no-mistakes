@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: test-no-dependency-pins
+    scope: repository
+    options:
+      patterns:
+        - reason: Exact action ref
+          regex: 'v[0-9]+'
+          auditUnexpectedField: true

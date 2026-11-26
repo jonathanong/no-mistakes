@@ -12,7 +12,7 @@ pub(in crate::codebase::rules) struct Options {
 }
 
 #[derive(Debug, serde::Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(super) struct Exception {
     pub roots: Vec<String>,
     pub allowed_files: Vec<String>,

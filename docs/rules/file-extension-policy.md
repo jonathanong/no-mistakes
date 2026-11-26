@@ -19,6 +19,8 @@ such as `../outside`, is one finding on the config file at line 1
 `allowlist` is exact repository-relative paths. Each `scopes` entry has `path`
 and `bannedExtensions`; no implicit scope or banned-extension default exists.
 
+Config loading rejects unknown keys in `scopes` entries.
+
 ## Valid example
 
 A `.ts` file under a scope banning `.js` and `.jsx` passes.

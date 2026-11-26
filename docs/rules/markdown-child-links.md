@@ -21,6 +21,8 @@ supported canonical HTML-list form.
 all lists default to empty; an empty group list performs no checks.
 Shared rule `include`/`exclude` filters further scope Markdown files.
 
+Config loading rejects unknown keys in `groups` entries.
+
 ```yaml
 rules:
   - rule: markdown-child-links

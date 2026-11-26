@@ -34,7 +34,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub(crate) struct PatternOption {
     pub(crate) reason: String,
     pub(crate) regex: String,

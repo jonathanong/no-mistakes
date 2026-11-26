@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      auxiliaryConfigs:
+        - path: tsconfig.dependency-cruiser.json
+          reason: Dependency resolver config
+          auditUnexpectedField: true

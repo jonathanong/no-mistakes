@@ -27,7 +27,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub(crate) struct PermanentPackage {
     pub(crate) name: String,
     pub(crate) pattern: Option<String>,
@@ -35,7 +35,7 @@ pub(crate) struct PermanentPackage {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct TemporaryGroup {
     pub(crate) selectors: Vec<String>,
     pub(crate) reason: String,

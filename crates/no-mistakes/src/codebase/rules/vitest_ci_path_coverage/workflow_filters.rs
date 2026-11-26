@@ -18,7 +18,7 @@ use workflow_paths::{workflow_path_filters, WorkflowPathFilters};
 mod tests;
 
 #[derive(Clone, Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct WorkflowSelector {
     pub(crate) path: String,
     pub(crate) job: String,
