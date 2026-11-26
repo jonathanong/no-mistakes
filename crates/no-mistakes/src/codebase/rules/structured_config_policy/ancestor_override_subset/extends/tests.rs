@@ -12,7 +12,7 @@ fn follow_rejects_an_extends_chain_at_the_depth_limit() {
     ))));
     let assertion = ValueAssertion::default();
     let keys = Keys::from_assertion(&assertion);
-    let mut findings = Vec::new();
+    let mut result = ClassifiedInputFindings::default();
     let mut parsed_ancestors = ParsedAncestorCache::default();
     let mut walk = Walk {
         root,
@@ -26,13 +26,13 @@ fn follow_rejects_an_extends_chain_at_the_depth_limit() {
         traversal_exhausted: false,
         parsed_ancestors: &mut parsed_ancestors,
         ancestors: Vec::new(),
-        findings: &mut findings,
+        result: &mut result,
     };
 
     walk.follow(root, "./Cargo.toml");
 
-    assert_eq!(walk.findings.len(), 1);
-    assert!(walk.findings[0].message.contains("maximum depth"));
+    assert_eq!(walk.result.findings.len(), 1);
+    assert!(walk.result.findings[0].message.contains("maximum depth"));
     assert!(walk.ancestors.is_empty());
 }
 
@@ -55,7 +55,7 @@ fn bounds_repeated_occurrences_in_a_fanout_graph() {
         crate::codebase::structured_value::parse_structured_value(&nested, &source).unwrap();
     let assertion = ValueAssertion::default();
     let keys = Keys::from_assertion(&assertion);
-    let mut findings = Vec::new();
+    let mut result = ClassifiedInputFindings::default();
     let mut parsed_ancestors = ParsedAncestorCache::default();
     let mut walk = Walk {
         root: &root,
@@ -69,16 +69,18 @@ fn bounds_repeated_occurrences_in_a_fanout_graph() {
         traversal_exhausted: false,
         parsed_ancestors: &mut parsed_ancestors,
         ancestors: Vec::new(),
-        findings: &mut findings,
+        result: &mut result,
     };
 
     walk.visit(&nested, &value);
 
     assert_eq!(walk.ancestors.len(), 3);
-    assert_eq!(walk.findings.len(), 1, "{:?}", walk.findings);
-    assert!(walk.findings[0]
-        .message
-        .contains("maximum of 3 occurrences"));
+    assert_eq!(walk.result.findings.len(), 1, "{:?}", walk.result.findings);
+    assert!(
+        walk.result.findings[0]
+            .message
+            .contains("maximum of 3 occurrences")
+    );
 }
 
 #[test]
@@ -101,7 +103,7 @@ fn bounds_repeated_invalid_local_extends_attempts() {
             "extends: ['{spec}', '{spec}', '{spec}', '{spec}']"
         ))
         .unwrap();
-        let mut findings = Vec::new();
+        let mut result = ClassifiedInputFindings::default();
         let mut parsed_ancestors = ParsedAncestorCache::default();
         let mut walk = Walk {
             root: &root,
@@ -115,13 +117,20 @@ fn bounds_repeated_invalid_local_extends_attempts() {
             traversal_exhausted: false,
             parsed_ancestors: &mut parsed_ancestors,
             ancestors: Vec::new(),
-            findings: &mut findings,
+            result: &mut result,
         };
         walk.visit(&nested, &value);
-        assert_eq!(walk.findings.len(), 3, "{spec}: {:?}", walk.findings);
-        assert!(walk.findings[2]
-            .message
-            .contains("maximum of 2 occurrences"));
+        assert_eq!(
+            walk.result.findings.len(),
+            3,
+            "{spec}: {:?}",
+            walk.result.findings
+        );
+        assert!(
+            walk.result.findings[2]
+                .message
+                .contains("maximum of 2 occurrences")
+        );
     }
 }
 
@@ -144,7 +153,7 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
         crate::codebase::structured_value::parse_structured_value(&nested, &source).unwrap();
     let assertion = ValueAssertion::default();
     let keys = Keys::from_assertion(&assertion);
-    let mut findings = Vec::new();
+    let mut result = ClassifiedInputFindings::default();
     let mut parsed_ancestors = ParsedAncestorCache::default();
     let mut walk = Walk {
         root: &root,
@@ -158,10 +167,14 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
         traversal_exhausted: false,
         parsed_ancestors: &mut parsed_ancestors,
         ancestors: Vec::new(),
-        findings: &mut findings,
+        result: &mut result,
     };
     walk.visit(&nested, &value);
-    assert!(walk.findings.is_empty(), "{:?}", walk.findings);
+    assert!(
+        walk.result.findings.is_empty(),
+        "{:?}",
+        walk.result.findings
+    );
     assert_eq!(
         walk.ancestors
             .iter()
@@ -174,10 +187,11 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
             "diamond/right.json",
         ],
     );
-    assert!(walk
-        .parsed_ancestors
-        .values
-        .contains_key(&root.join("diamond/shared.json")));
+    assert!(
+        walk.parsed_ancestors
+            .values
+            .contains_key(&root.join("diamond/shared.json"))
+    );
 }
 
 #[test]
@@ -194,7 +208,7 @@ fn follow_skips_package_specifiers_and_reports_cycles() {
     ])));
     let assertion = ValueAssertion::default();
     let keys = Keys::from_assertion(&assertion);
-    let mut findings = Vec::new();
+    let mut result = ClassifiedInputFindings::default();
     let mut parsed_ancestors = ParsedAncestorCache::default();
     let mut walk = Walk {
         root,
@@ -208,40 +222,51 @@ fn follow_skips_package_specifiers_and_reports_cycles() {
         traversal_exhausted: false,
         parsed_ancestors: &mut parsed_ancestors,
         ancestors: Vec::new(),
-        findings: &mut findings,
+        result: &mut result,
     };
 
     walk.follow(root, "@scope/config");
-    assert!(walk.findings.is_empty(), "{:?}", walk.findings);
+    assert!(
+        walk.result.findings.is_empty(),
+        "{:?}",
+        walk.result.findings
+    );
     walk.traversal_exhausted = true;
     walk.follow(root, "./Cargo.toml");
-    assert!(walk.findings.is_empty(), "{:?}", walk.findings);
+    assert!(
+        walk.result.findings.is_empty(),
+        "{:?}",
+        walk.result.findings
+    );
     walk.traversal_exhausted = false;
     walk.follow(root, "./Cargo.toml");
     assert!(
-        walk.findings
+        walk.result
+            .findings
             .iter()
             .any(|finding| finding.message.contains("cycle")),
         "{:?}",
-        walk.findings
+        walk.result.findings
     );
     walk.follow(root, "./src/lib.rs");
     assert!(
-        walk.findings
+        walk.result
+            .findings
             .iter()
             .any(|finding| finding.message.contains("lib.rs")),
         "{:?}",
-        walk.findings
+        walk.result.findings
     );
     walk.visit(
         root,
         &serde_yaml::from_str("extends: 1").expect("invalid extends fixture"),
     );
     assert!(
-        walk.findings
+        walk.result
+            .findings
             .iter()
             .any(|finding| finding.message.contains("extends")),
         "{:?}",
-        walk.findings
+        walk.result.findings
     );
 }

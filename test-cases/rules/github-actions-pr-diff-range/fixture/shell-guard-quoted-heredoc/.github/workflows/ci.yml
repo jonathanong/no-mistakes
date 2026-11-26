@@ -1,0 +1,36 @@
+name: Quoted heredoc before event guard
+on: [pull_request, merge_group]
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    env:
+      EVENT_NAME: ${{ github.event_name }}
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+    steps:
+      - run: |
+          cat <<'EOF' > /tmp/helper.sh
+          sha=$(git rev-parse HEAD)
+          stamp=`date -u +%s`
+          mode=${EVENT_NAME:=pull_request}
+          count=$((1 + 1))
+          EOF
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"
+      - run: |
+          cat <<"EOF" > /tmp/doc.txt
+          literal $(echo unset) EVENT_NAME
+          EOF
+          cat <<\EOF > /tmp/note.txt
+          literal $(echo unset) EVENT_NAME
+          EOF
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$MERGE_GROUP_BASE_SHA"
+          fi
+          echo "$base"

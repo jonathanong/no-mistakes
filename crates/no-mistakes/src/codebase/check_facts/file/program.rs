@@ -153,11 +153,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         test_reliability: prepared.test_reliability,
         fixture_initializers: prepared.fixture_initializers,
         lint_suppressions: plan.collect_lint_suppressions(path, program, source),
-        vitest_default_excludes: if plan.vitest_default_exclude_paths.contains(path) {
-            crate::codebase::rules::vitest_default_excludes::collect(program, source)
-        } else {
-            Default::default()
-        },
+        vitest_default_excludes: prepared.vitest_default_excludes,
         csp_allowed_origins: csp_allowed_origins::collect_for_plan(path, source, program, plan),
         ts: ts.into(),
         production_imports: None,

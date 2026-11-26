@@ -1,0 +1,5 @@
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/verify

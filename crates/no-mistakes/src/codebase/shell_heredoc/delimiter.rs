@@ -4,7 +4,6 @@ use crate::codebase::shell_words::{split_quoted_words, Whitespace};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum DelimiterStyle {
     StripQuotes,
-    LeadingQuote,
     WhitespaceWord,
     AsciiQuotedWords,
 }
@@ -23,6 +22,51 @@ pub(crate) fn char_delimiter(input: &[char], style: DelimiterStyle) -> (String, 
         .count();
     let word = read_word(input[start..].iter().copied(), style);
     (word.text, start + word.width)
+}
+
+pub(crate) fn char_delimiter_quoted(input: &[char]) -> (String, usize, bool) {
+    let start = input
+        .iter()
+        .take_while(|&&ch| matches!(ch, ' ' | '\t'))
+        .count();
+    let mut text = String::new();
+    let mut index = start;
+    let mut quote: Option<char> = None;
+    let mut quoted = false;
+    while index < input.len() {
+        let ch = input[index];
+        match quote {
+            Some(open) if ch == open => {
+                quote = None;
+                index += 1;
+            }
+            Some(_) => {
+                text.push(ch);
+                index += 1;
+            }
+            None if matches!(ch, '\'' | '"') => {
+                quote = Some(ch);
+                quoted = true;
+                index += 1;
+            }
+            None if ch == '\\' => {
+                let Some(&next) = input.get(index + 1).filter(|&&c| c != '\n') else {
+                    break;
+                };
+                text.push(next);
+                quoted = true;
+                index += 2;
+            }
+            None if ch.is_whitespace() || matches!(ch, ';' | '|' | '&' | '<' | '>' | '(' | ')') => {
+                break;
+            }
+            None => {
+                text.push(ch);
+                index += 1;
+            }
+        }
+    }
+    (text, index, quoted && quote.is_none())
 }
 
 pub(crate) fn line_opener(line: &str) -> Option<(Document, bool)> {

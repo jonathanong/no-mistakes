@@ -1,0 +1,57 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/unreadable.rs",
+          "line": 1,
+          "message": "cannot verify unused-disable-directive: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "unused-disable-directive",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/unreadable.rs",
+          "line": 1,
+          "message": "cannot verify unused-disable-directive: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "unused-disable-directive",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

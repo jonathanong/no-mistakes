@@ -13,7 +13,7 @@ pub(super) fn run(
     defer_suppression: bool,
 ) -> Result<AnalysisDiagnostics> {
     if !enabled || !config.rule_configured(rules::CSP_ALLOWED_ORIGINS) {
-        return super::redirects::run(
+        return super::terraform::run(
             root,
             config,
             enabled,
@@ -37,7 +37,7 @@ pub(super) fn run(
         })?;
     let mut remaining = config.clone();
     super::handled::mark(&mut remaining, |id| id == rules::CSP_ALLOWED_ORIGINS);
-    let rest = super::redirects::run(
+    let rest = super::terraform::run(
         root,
         &remaining,
         enabled,

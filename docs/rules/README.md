@@ -87,6 +87,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |
 | [`github-actions-job-permissions`](github-actions-job-permissions.md)             | Report jobs that inherit explicit workflow-level token write permissions.    |
 | [`github-actions-local-action-checkout`](github-actions-local-action-checkout.md) | Require a preceding root self checkout covering each local action path. |
+| [`github-actions-no-required-pr-path-filters`](github-actions-no-required-pr-path-filters.md) | Keep configured required PR workflows free of trigger-level path filters. |
 | [`github-actions-max-inline-script-lines`](github-actions-max-inline-script-lines.md) | Keep workflow and composite-action scripts small enough to lint and test separately. |
 | [`github-actions-step-timeouts`](github-actions-step-timeouts.md)                 | Require bounded timeouts on executable workflow steps.                      |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Pin remote action refs to commit SHAs with version comments and optionally pin images to SHA-256 digests. |
@@ -191,6 +192,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |
 | [`swift-no-unguarded-darwin-import`](swift-no-unguarded-darwin-import.md)       | Gate Darwin imports in portable Swift test sources.                            |
 | [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md)                 | Require @MainActor on Swift classes whose names end with ViewModel.             |
+| [`terraform-iam-no-undocumented-wildcards`](terraform-iam-no-undocumented-wildcards.md) | Explain literal wildcard resource grants in Terraform IAM policy statements. |
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
 | [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |

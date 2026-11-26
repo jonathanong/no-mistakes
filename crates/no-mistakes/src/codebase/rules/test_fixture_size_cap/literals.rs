@@ -5,6 +5,9 @@ use oxc_ast::ast::{
 };
 use oxc_span::Span;
 
+mod time_cells;
+use time_cells::TimeCells;
+
 pub(super) fn is_named_member(callee: &Expression, object: &str, property: &str) -> bool {
     member_names(callee).is_some_and(|(found_object, found_property)| {
         found_object == object && found_property == property
@@ -92,29 +95,34 @@ pub(super) fn count_oversized_table_cells(
     array: &ArrayExpression,
     is_oversized: impl Fn(f64) -> bool,
 ) -> Option<usize> {
-    array
-        .elements
-        .iter()
-        .flat_map(
-            |element| match element.as_expression().map(unwrap_ts_wrappers) {
-                Some(Expression::ArrayExpression(row)) => row.elements.as_slice(),
-                _ => std::slice::from_ref(element),
-            },
-        )
-        .try_fold(0, |count, element| {
-            if matches!(element, ArrayExpressionElement::Elision(_)) {
-                return Some(count);
-            }
-            match unwrap_ts_wrappers(element.as_expression()?) {
-                Expression::NumericLiteral(literal) => {
-                    is_oversized(literal.value).then_some(count + 1)
-                }
-                Expression::StringLiteral(_)
-                | Expression::BooleanLiteral(_)
-                | Expression::NullLiteral(_) => Some(count),
-                _ => None,
-            }
-        })
+    let flat_time = TimeCells::for_elements(&array.elements);
+    array.elements.iter().try_fold(0, |count, element| {
+        if let Some(Expression::ArrayExpression(row)) = element.as_expression().map(unwrap_ts_wrappers) {
+            let row_time = TimeCells::for_elements(&row.elements);
+            row.elements.iter().try_fold(count, |count, cell| {
+                count_cell(cell, &row_time, &is_oversized, count)
+            })
+        } else {
+            count_cell(element, &flat_time, &is_oversized, count)
+        }
+    })
+}
+
+fn count_cell(
+    element: &ArrayExpressionElement,
+    time: &TimeCells,
+    is_oversized: &impl Fn(f64) -> bool,
+    count: usize,
+) -> Option<usize> {
+    if matches!(element, ArrayExpressionElement::Elision(_)) {
+        return Some(count);
+    }
+    match unwrap_ts_wrappers(element.as_expression()?) {
+        Expression::NumericLiteral(literal) if time.contains(literal.value) => Some(count),
+        Expression::NumericLiteral(literal) => is_oversized(literal.value).then_some(count + 1),
+        Expression::BooleanLiteral(_) | Expression::NullLiteral(_) | Expression::StringLiteral(_) => Some(count),
+        _ => None,
+    }
 }
 
 pub(super) fn integer_cardinality(value: f64) -> Option<u64> {
