@@ -58,11 +58,13 @@ await verify(page.getByRole("status")).toHaveText("Done", { timeout: 30_000 });
   to `10000`.
 - `unanalyzable` is `finding` or `ignore`. It defaults to `finding`. A dynamic
   `require`, a computed destructure of `@playwright/test`, or an import from
-  another file whose local name is not `expect` reports `unanalyzable` when
+  another file whose exported name is not `expect` reports `unanalyzable` when
   that matcher passes a `timeout` property. `import { expect } from "./fixtures"`
-  keeps the cap check. A binding traced to a different package stays quiet.
-  Reassigned `let` bindings stay quiet. A matcher with no `timeout` property
-  stays quiet.
+  keeps the cap check, because the exported name and the local name are both
+  `expect`. `import { expect as check } from "./fixtures"` stays quiet.
+  `import { test as expect } from "./fixtures"` reports `unanalyzable`. A
+  binding traced to a different package stays quiet. Reassigned `let` bindings
+  stay quiet. A matcher with no `timeout` property stays quiet.
 
 ## Fix
 
@@ -73,7 +75,7 @@ overall budget rather than increasing one assertion beyond the cap.
 
 A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `pw.expect` counts only when `pw` is a namespace import from `@playwright/test`, `require("@playwright/test")`, `import pw = require("@playwright/test")`, or a single-write alias of that namespace. `import { "expect" as named }` counts too. A single-write `{ expect }` destructure of that namespace counts too. `const check = customAssertions.expect` is not that namespace. `const verify = check` still counts when `check` is a renamed `expect` import. TypeScript `as`, `satisfies`, `!`, angle-bracket assertions, instantiation expressions, and parentheses are transparent on the callee, the options object, the `timeout` key, and the number. A computed identifier key is not a static name.
 
-An import from another file whose local name is not `expect` is not resolved. With `unanalyzable` left at `finding`, a matcher that passes `timeout` reports `unanalyzable`. `import { expect } from "./fixtures"` is still checked against the cap.
+An import from another file is checked against the cap only when the exported name and the local name are both `expect`. Any other exported name reports `unanalyzable` when the matcher passes `timeout`. `import { expect as check } from "./fixtures"` stays quiet.
 
 ```js
 // assertions.mjs

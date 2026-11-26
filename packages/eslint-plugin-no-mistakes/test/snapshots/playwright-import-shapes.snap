@@ -244,6 +244,25 @@
       "rule": "playwright-assertion-timeout-cap"
     },
     {
+      "file": "e2e/assertion-relative-alias.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 7,
+          "file": "e2e/assertion-relative-alias.spec.ts",
+          "line": 7,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "relative expect alias follows both names",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-relative-expect.spec.ts",
       "findings": [
         {
@@ -1259,6 +1278,21 @@
         }
       ],
       "name": "assertion unresolved expect (#4578)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-alias.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-relative-alias.spec.ts",
+          "line": 7,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "relative expect alias follows both names",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },

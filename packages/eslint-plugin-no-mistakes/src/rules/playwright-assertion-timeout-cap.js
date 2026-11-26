@@ -62,7 +62,7 @@ function expectFact(fact) {
     return fact.exported === "expect";
   }
   if (!isUnreadSource(fact.source)) return false;
-  // import { expect } from "./fixtures" kept the cap check by local name.
+  // Exported name expect falls through to the local-name check below.
   if (fact.status === "export" && fact.exported === "expect") return null;
   return "opaque";
 }

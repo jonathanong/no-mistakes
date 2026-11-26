@@ -70,6 +70,12 @@ const cases = [
     ],
   },
   {
+    name: "relative expect alias follows both names",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-relative-alias.spec.ts",
+    expected: [[7, "unanalyzable"]],
+  },
+  {
     name: "assertion member and package roots",
     rule: "playwright-assertion-timeout-cap",
     file: "e2e/assertion-members.spec.ts",
