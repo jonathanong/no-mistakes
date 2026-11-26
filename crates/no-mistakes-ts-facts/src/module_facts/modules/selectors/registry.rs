@@ -99,3 +99,6 @@ fn local_registry(
     }
     Some((binding.symbol_id(), keys))
 }
+
+#[cfg(test)]
+mod tests;

@@ -33,3 +33,6 @@ static TS_FACTS_HOOKS: NoMistakesTsFactsHooks = NoMistakesTsFactsHooks;
 pub(crate) fn ensure_registered() {
     no_mistakes_ts_facts::hooks::register_diagnostics_hooks(&TS_FACTS_HOOKS);
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod tests;

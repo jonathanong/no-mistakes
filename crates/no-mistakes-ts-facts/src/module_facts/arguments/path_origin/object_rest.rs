@@ -56,9 +56,9 @@ impl<'a> Projector<'a, '_> {
         let semantic = self.semantic;
         let symbol = self.binding_symbol(id)?;
         let declaration = semantic.scoping().symbol_declaration(symbol);
-        let (pattern, parameter) = match semantic.nodes().kind(declaration) {
-            AstKind::FormalParameter(parameter) => (&parameter.pattern, Some(parameter)),
-            AstKind::VariableDeclarator(declaration) => (&declaration.id, None),
+        let (pattern, decl_kind) = match semantic.nodes().kind(declaration) {
+            AstKind::FormalParameter(parameter) => (&parameter.pattern, Ok(parameter)),
+            AstKind::VariableDeclarator(declaration) => (&declaration.id, Err(declaration)),
             _ => return None,
         };
         let BindingPattern::ObjectPattern(pattern) = pattern else {
@@ -75,28 +75,35 @@ impl<'a> Projector<'a, '_> {
         }) {
             return None;
         }
-        if let Some(parameter) = parameter {
-            let list = semantic.nodes().parent_node(declaration);
-            let params = list.kind().as_formal_parameters()?;
-            let index = params
-                .items
-                .iter()
-                .position(|item| item.span == parameter.span)?;
-            let start = semantic.nodes().parent_kind(list.id()).span().start;
-            let default = parameter.initializer.as_ref().filter(|value| {
-                !matches!(value.get_inner_expression(), Expression::ObjectExpression(object) if object.properties.is_empty())
-            }).map(|_| PathDefault { value: Box::new(PathOrigin::unknown()), nullish: false });
-            return Some(PathOrigin {
-                param: Some(index),
-                param_member: Some(key.to_owned()),
-                param_owner: Some(start),
-                owner_line: Some(super::super::line_in(semantic.source_text(), start)),
-                param_default: default,
-                ..PathOrigin::unknown()
-            });
-        }
-        let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(declaration) else {
-            return None;
+        let declaration = match decl_kind {
+            Ok(parameter) => {
+                let list = semantic.nodes().parent_node(declaration);
+                let params = list.kind().as_formal_parameters()?;
+                let index = params
+                    .items
+                    .iter()
+                    .position(|item| item.span == parameter.span)?;
+                let start = semantic.nodes().parent_kind(list.id()).span().start;
+                let default = parameter
+                    .initializer
+                    .as_ref()
+                    .filter(|value| {
+                        !matches!(value.get_inner_expression(), Expression::ObjectExpression(object) if object.properties.is_empty())
+                    })
+                    .map(|_| PathDefault {
+                        value: Box::new(PathOrigin::unknown()),
+                        nullish: false,
+                    });
+                return Some(PathOrigin {
+                    param: Some(index),
+                    param_member: Some(key.to_owned()),
+                    param_owner: Some(start),
+                    owner_line: Some(super::super::line_in(semantic.source_text(), start)),
+                    param_default: default,
+                    ..PathOrigin::unknown()
+                });
+            }
+            Err(declaration) => declaration,
         };
         let init = declaration.init.as_ref()?;
         if let Expression::Identifier(source) = init.get_inner_expression() {
@@ -112,3 +119,6 @@ impl<'a> Projector<'a, '_> {
         self.member_origin(init, key, depth + 1)
     }
 }
+
+#[cfg(test)]
+mod tests;

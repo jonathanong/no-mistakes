@@ -124,3 +124,6 @@ pub(in super::super) fn property_types(
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

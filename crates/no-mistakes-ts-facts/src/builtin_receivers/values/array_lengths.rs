@@ -75,3 +75,6 @@ fn integer(argument: &Argument<'_>) -> Option<i64> {
     };
     value.is_finite().then_some(value.trunc() as i64)
 }
+
+#[cfg(test)]
+mod tests;

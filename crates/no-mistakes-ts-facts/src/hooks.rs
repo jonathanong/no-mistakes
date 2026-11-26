@@ -46,6 +46,18 @@ fn record_work_with(hooks: Option<&dyn DiagnosticsHooks>, metric: &'static str, 
     }
 }
 
+fn run_hook<T>(operation: impl FnOnce() -> T, invoke: impl FnOnce(&mut dyn FnMut())) -> T {
+    let mut slot = Some(operation);
+    let mut result = None;
+    invoke(&mut || {
+        let op = slot
+            .take()
+            .expect("diagnostics hook must invoke operation once");
+        result = Some(op());
+    });
+    result.expect("diagnostics hook must invoke operation")
+}
+
 fn trace_file_with<T>(
     hooks: Option<&dyn DiagnosticsHooks>,
     pass: FilePass,
@@ -53,17 +65,10 @@ fn trace_file_with<T>(
     units: u64,
     operation: impl FnOnce() -> T,
 ) -> T {
-    let Some(hooks) = hooks else {
-        return operation();
-    };
-    let mut slot = Some(operation);
-    let mut result = None;
-    hooks.trace_file(pass, path, units, &mut || {
-        if let Some(op) = slot.take() {
-            result = Some(op());
-        }
-    });
-    result.expect("diagnostics hook must invoke operation")
+    match hooks {
+        Some(hooks) => run_hook(operation, |cb| hooks.trace_file(pass, path, units, cb)),
+        None => operation(),
+    }
 }
 
 fn trace_current_file_with<T>(
@@ -72,17 +77,10 @@ fn trace_current_file_with<T>(
     units: u64,
     operation: impl FnOnce() -> T,
 ) -> T {
-    let Some(hooks) = hooks else {
-        return operation();
-    };
-    let mut slot = Some(operation);
-    let mut result = None;
-    hooks.trace_current_file(pass, units, &mut || {
-        if let Some(op) = slot.take() {
-            result = Some(op());
-        }
-    });
-    result.expect("diagnostics hook must invoke operation")
+    match hooks {
+        Some(hooks) => run_hook(operation, |cb| hooks.trace_current_file(pass, units, cb)),
+        None => operation(),
+    }
 }
 
 #[cfg(test)]

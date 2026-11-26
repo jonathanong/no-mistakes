@@ -42,3 +42,6 @@ pub(super) fn body(expression: &Expression<'_>, param: &str) -> Option<String> {
     (crate::ast::property_key_name(&property.key)? == "default")
         .then(|| read(&property.value, param))?
 }
+
+#[cfg(test)]
+mod tests;
