@@ -14,6 +14,19 @@ pub struct RouteCoverageSource {
     pub helpers: Vec<RouteCoverageHelper>,
 }
 
+impl RouteCoverageSource {
+    pub(crate) fn empty_required_field(&self) -> Option<&'static str> {
+        [
+            ("project", self.project.is_empty()),
+            ("include", self.include.is_empty()),
+            ("routes", self.routes.is_empty()),
+            ("helpers", self.helpers.is_empty()),
+        ]
+        .into_iter()
+        .find_map(|(field, empty)| empty.then_some(field))
+    }
+}
+
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[serde(rename_all = "camelCase")]
 pub enum RouteCoverageFramework {

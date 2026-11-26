@@ -35,6 +35,7 @@ pub(crate) use fragments::{
 };
 mod check_commands;
 mod deprecations;
+mod external_config;
 mod json_relation_map_keys;
 use deprecations::emit_v2_deprecation_warnings;
 mod path_globs;
@@ -43,6 +44,8 @@ mod validation;
 use validation::validate_v2_config;
 mod swift_commands;
 mod targeted_triggers;
+mod test_config;
+
 /// Load the unified `.no-mistakes.yml` (or a recognized legacy config) from
 /// `root`, returning a [`NoMistakesConfig`].
 ///

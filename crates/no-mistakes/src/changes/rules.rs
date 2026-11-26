@@ -1,4 +1,4 @@
-use super::config::{ChangesConfig, IdRule};
+use super::config::{from_path_parts, ChangesConfig, IdRule};
 use crate::codebase::keyed_diff::KeyOptions;
 use anyhow::{bail, Context, Result};
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
@@ -111,9 +111,7 @@ fn compile_id<'a>(id: Option<&'a IdRule>, keyed: &mut Vec<KeyOptions>) -> Result
     };
     match (id.from_path.as_deref(), id.keys_of.as_ref()) {
         (Some(template), None) => {
-            let (prefix, suffix) = template
-                .split_once("{id}")
-                .filter(|(_, suffix)| !suffix.contains("{id}"))
+            let (prefix, suffix) = from_path_parts(template)
                 .context("fromPath requires exactly one {id} placeholder")?;
             Ok(Id::FromPath {
                 prefix,

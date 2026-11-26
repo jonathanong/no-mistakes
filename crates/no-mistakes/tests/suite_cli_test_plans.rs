@@ -68,3 +68,6 @@ mod cli_vitest_config_extends;
 mod cli_vitest_project_names;
 #[path = "cli_vitest_workspace_precedence.rs"]
 mod cli_vitest_workspace_precedence;
+
+#[path = "cli_config_strict_workflow.rs"]
+mod cli_config_strict_workflow;

@@ -99,7 +99,7 @@ fn all_supported_frameworks_retain_deprecated_aliases() {
         1
     );
     let declared = super::declared_config(&root, None).unwrap();
-    assert!(declared["testPlan"]["custom"]
+    assert!(declared["testPlan"]["vitest"]
         .get("fullSuiteTriggers")
         .is_some());
 }

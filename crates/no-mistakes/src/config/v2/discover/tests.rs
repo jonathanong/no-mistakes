@@ -106,16 +106,19 @@ fn targeted_full_suite_trigger_validates_paths_and_targets() {
         .unwrap_err()
         .to_string();
     assert!(error.contains(
-        "config.yml.testPlan.vitest.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+        "testPlan.vitest.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
     ));
 
     let mut legacy = NoMistakesConfig::default();
+    legacy
+        .projects
+        .insert("app".to_string(), Project::default());
     legacy
         .test_plan
         .vitest
         .full_suite_triggers
         .projects
-        .insert("missing".to_string(), TestPlanProjectDependency::All(true));
+        .insert("app".to_string(), TestPlanProjectDependency::All(true));
     validate_v2_config(&legacy, Path::new("config.yml")).unwrap();
 }
 
@@ -237,7 +240,7 @@ fn kotlin_targeted_project_triggers_require_a_top_level_project() {
         .unwrap_err()
         .to_string();
     assert!(error.contains(
-        "config.yml.testPlan.kotlin.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+        "testPlan.kotlin.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
     ));
 }
 
@@ -256,7 +259,7 @@ fn elixir_targeted_project_triggers_require_a_top_level_project() {
         .unwrap_err()
         .to_string();
     assert!(error.contains(
-        "config.yml.testPlan.elixir.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+        "testPlan.elixir.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
     ));
 }
 
@@ -275,7 +278,7 @@ fn dart_targeted_project_triggers_require_a_top_level_project() {
         .unwrap_err()
         .to_string();
     assert!(error.contains(
-        "config.yml.testPlan.dart.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+        "testPlan.dart.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
     ));
 }
 

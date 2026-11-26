@@ -44,6 +44,8 @@ pub(super) fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Resu
         project.validate_vitest_setup_files(name)?;
     }
     targeted_triggers::validate(config, path)?;
+    super::test_config::validate(config)?;
+    super::external_config::validate(config)?;
     path_globs::validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())
 }

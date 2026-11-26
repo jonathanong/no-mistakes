@@ -1,5 +1,10 @@
 <!-- cspell:ignore autolib autobins autotests -->
 
+Test and runner mappings reject unknown keys. The loader also validates fixture
+registry and always-include globs. Playwright route coverage sources require
+nonempty `include`, `routes`, and `helpers` lists, and their include globs must
+parse. These constraints also apply to sources declared per app.
+
 # Tests And Selectors
 
 `tests` config describes runner configs, project policies, and Playwright

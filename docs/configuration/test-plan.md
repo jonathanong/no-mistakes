@@ -36,6 +36,11 @@ Group types:
 Global full-suite fallback is explicit opt-in through config or
 `--global-config-fallback true`.
 
+Configuration loading validates environment and legacy trigger globs. A legacy
+project trigger must name a project declared at the root. An environment or
+group percentage limit accepts a number from 0 to 100 or a string such as
+`"25%"`.
+
 ## Named triggers
 
 Prefer a list of named triggers when the matching paths are not owned by a

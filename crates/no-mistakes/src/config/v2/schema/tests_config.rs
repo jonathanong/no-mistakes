@@ -11,9 +11,14 @@ pub use impact::ImpactConfig;
 #[path = "tests_config_jvm.rs"]
 mod tests_config_jvm;
 pub use tests_config_jvm::{DartConfig, ElixirConfig, JavaConfig, KotlinConfig};
+mod runners;
+pub use runners::{
+    DotnetConfig, DotnetProjectConfig, GoConfig, JestConfig, PhpConfig, PythonConfig, RailsConfig,
+    RustLangConfig, StorybookConfig,
+};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Tests {
     pub playwright: PlaywrightTestConfig,
     pub vitest: VitestConfig,
@@ -33,7 +38,7 @@ pub struct Tests {
     pub impact: ImpactConfig,
 }
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct PlaywrightTestConfig {
     pub configs: Option<StringOrList>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
@@ -72,7 +77,7 @@ pub struct PlaywrightTestConfig {
 /// optional and overrides the value [`crate::config::v2::frontend_apps`]
 /// would otherwise resolve for the bound app.
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct PlaywrightAppBinding {
     /// The `.no-mistakes.yml` `projects:` key of the frontend app this
     /// Playwright project exercises. Required when the repository configures
@@ -87,7 +92,7 @@ pub struct PlaywrightAppBinding {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct PlaywrightSelectors {
     pub html_ids: bool,
     pub test_ids: Vec<String>,
@@ -106,7 +111,7 @@ pub struct PlaywrightSelectorWrapper {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct VitestConfig {
     pub configs: Option<StringOrList>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
@@ -143,69 +148,7 @@ impl SwiftConfig {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct PythonConfig {
-    pub packages: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct GoConfig {
-    pub modules: Vec<String>,
-}
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct RustLangConfig {
-    pub packages: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct RailsConfig {
-    pub apps: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct PhpConfig {
-    pub framework: Option<String>,
-    pub apps: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct DotnetConfig {
-    pub solutions: Vec<String>,
-    pub projects: BTreeMap<String, DotnetProjectConfig>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct DotnetProjectConfig {
-    pub project: String,
-    #[serde(default)]
-    pub include: Vec<String>,
-    #[serde(default)]
-    pub exclude: Vec<String>,
-    #[serde(default)]
-    pub test: bool,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct JestConfig {
-    pub configs: Option<StringOrList>,
-    pub projects: BTreeMap<String, TestProjectPolicy>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct StorybookConfig {
-    pub configs: Option<StringOrList>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct TestProjectPolicy {
     pub include: Vec<String>,
     pub exclude: Vec<String>,

@@ -1,6 +1,10 @@
 <!-- cspell:ignore resx -->
 # Categorized semantic changes
 
+Category and rule globs are validated when configuration loads. Every nested
+rule needs at least one path. An explicit `match` needs an `{id}` or `<id>`
+placeholder, and `id.fromPath` needs exactly one `{id}`.
+
 Declare opaque category names under `changes.categories`. The same configuration
 controls [`changes diff`](../cli/changes-diff.md) and
 [`tests plan --changes`](../cli/tests-plan.md#semantic-change-reports).

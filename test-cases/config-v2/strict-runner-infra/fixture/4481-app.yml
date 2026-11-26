@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    apps:
+      example:
+        routeCoverageSources:
+          - framework: vitest
+            project: example
+            include: ["[broken"]
+            routes: [/api/example]
+            helpers:
+              - module: ./example.ts
+                export: example
+                urlArgument: 0

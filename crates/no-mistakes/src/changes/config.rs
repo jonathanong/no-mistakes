@@ -58,6 +58,12 @@ pub struct IdRule {
     pub keys_of: Option<KeysOf>,
 }
 
+pub(crate) fn from_path_parts(template: &str) -> Option<(&str, &str)> {
+    template
+        .split_once("{id}")
+        .filter(|(_, suffix)| !suffix.contains("{id}"))
+}
+
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum KeysOf {

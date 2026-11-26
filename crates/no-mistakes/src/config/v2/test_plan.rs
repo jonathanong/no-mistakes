@@ -5,7 +5,7 @@ mod named_triggers;
 pub use named_triggers::NamedFullSuiteTrigger;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct TestPlanConfig {
     pub dotnet: TestPlanFrameworkConfig,
     pub playwright: TestPlanFrameworkConfig,
@@ -26,7 +26,7 @@ pub struct TestPlanConfig {
 /// Raw deserialization target that accepts both `fullSuiteTriggers` (current)
 /// and the deprecated `dependencies` key.
 #[derive(Debug, Clone, Deserialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 struct TestPlanFrameworkConfigRaw {
     /// Current name.
     full_suite_triggers: Option<TestPlanDependencies>,
@@ -127,7 +127,7 @@ pub struct TestPlanTargetedProjectDependency {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct TestPlanEnvironment {
     pub all: bool,
     #[serde(alias = "global_config_fallback")]
@@ -139,7 +139,7 @@ pub struct TestPlanEnvironment {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct TestPlanGroup {
     #[serde(rename = "type")]
     pub type_: TestPlanGroupType,
@@ -159,7 +159,7 @@ pub enum TestPlanGroupType {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct TestPlanLimit {
     pub percent: Option<TestPlanPercent>,
     pub files: Option<usize>,
@@ -176,7 +176,10 @@ impl TestPlanPercent {
     pub fn value(&self) -> Option<f64> {
         match self {
             Self::Number(value) => Some(*value),
-            Self::String(raw) => raw.trim().trim_end_matches('%').parse().ok(),
+            Self::String(raw) => {
+                let trimmed = raw.trim();
+                trimmed.strip_suffix('%').unwrap_or(trimmed).parse().ok()
+            }
         }
     }
 }

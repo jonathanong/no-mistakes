@@ -251,29 +251,6 @@ fn test_for_honors_test_root_anchor() {
 }
 
 #[test]
-fn validate_module_mode_test_root_rejects_shared_root() {
-    use crate::config::v2::schema::TerraformTestConvention;
-    let shared = TerraformTestConvention {
-        test_globs: vec!["**/*.test.mts".to_string()],
-        test_root: Some("tests".to_string()),
-        match_mode: Some("module".to_string()),
-    };
-    assert!(validate_module_mode_test_root(&shared).is_err());
-    // Module mode without a shared root, and resource mode with one, are allowed.
-    assert!(validate_module_mode_test_root(&TerraformTestConvention {
-        match_mode: Some("module".to_string()),
-        ..Default::default()
-    })
-    .is_ok());
-    assert!(validate_module_mode_test_root(&TerraformTestConvention {
-        test_root: Some("tests".to_string()),
-        match_mode: Some("resource".to_string()),
-        ..Default::default()
-    })
-    .is_ok());
-}
-
-#[test]
 fn compile_test_globs_validates_patterns() {
     assert!(compile_test_globs(&[]).unwrap().is_none());
     assert!(compile_test_globs(&["[".to_string()]).is_err());
@@ -281,11 +258,27 @@ fn compile_test_globs_validates_patterns() {
 }
 
 #[test]
-fn validate_match_mode_rejects_unknown_values() {
-    assert!(validate_match_mode(None).is_ok());
-    assert!(validate_match_mode(Some("resource")).is_ok());
-    assert!(validate_match_mode(Some("module")).is_ok());
-    assert!(validate_match_mode(Some("modules")).is_err());
+fn load_terraform_config_rejects_invalid_modes_and_shared_module_roots() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/strict-runner-infra/fixture");
+    for (name, field) in [
+        ("4484.yml", "infra.terraform.test.match"),
+        ("4484-shared-module.yml", "infra.terraform.test.testRoot"),
+    ] {
+        let result = analyze_project(&root, Some(Path::new(name)));
+        let error = result.err().expect("expected invalid Terraform config");
+        assert!(error.to_string().contains(field), "{error}");
+    }
+    for name in [
+        "valid.yml",
+        "terraform-resource.yml",
+        "terraform-default.yml",
+    ] {
+        assert!(
+            analyze_project(&root, Some(Path::new(name))).is_ok(),
+            "{name}"
+        );
+    }
 }
 
 #[test]

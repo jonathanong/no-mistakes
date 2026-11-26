@@ -444,3 +444,43 @@ fn renamed_config_with_equal_values_does_not_invalidate_frameworks() {
         );
     }
 }
+
+#[test]
+fn structured_trigger_config_rejects_empty_and_invalid_target_fields() {
+    for (fixture_name, expected) in [
+        ("invalid-target-empty-paths.yml", "paths must not be empty"),
+        (
+            "invalid-target-empty-targets.yml",
+            "targets must not be empty",
+        ),
+        (
+            "invalid-target-blank-target.yml",
+            "targets[0] must not be blank",
+        ),
+        (
+            "invalid-target-duplicate.yml",
+            "targets[1] duplicates targets[0] `database`",
+        ),
+        (
+            "invalid-target-missing-resource-project.yml",
+            "references missing top-level projects.missing-resource",
+        ),
+        ("invalid-target-glob.yml", "contains invalid glob"),
+    ] {
+        let fixture = fixture();
+        let root = fixture.path();
+        copy_config(root, fixture_name);
+        let output = plan(
+            root,
+            "vitest",
+            &["--changed-file", "migrations/001.sql", "--json"],
+        );
+        assert!(!output.status.success(), "{fixture_name}");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains(".no-mistakes.yml") && stderr.contains("testPlan.vitest"),
+            "{stderr}"
+        );
+        assert!(stderr.contains(expected), "{stderr}");
+    }
+}

@@ -1,5 +1,8 @@
 # Infrastructure (Terraform/OpenTofu)
 
+Terraform test globs and the `resource` or `module` match mode are validated
+when configuration loads, including for commands outside `infra`.
+
 The `infra.terraform` block enables the [`infra`](../cli/infra.md) command. No
 Terraform analysis runs unless `moduleRoots` is set — there are no default-on
 conventions.

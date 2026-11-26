@@ -1,3 +1,4 @@
+use crate::config::source_locations::ConfigPath;
 use crate::config::v2::schema::{
     NamedFullSuiteTrigger, NoMistakesConfig, TestPlanProjectDependency,
 };
@@ -23,18 +24,35 @@ pub(super) fn validate(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         ("dart", &config.test_plan.dart),
         ("jest", &config.test_plan.jest),
     ] {
+        let framework_path = ConfigPath::default().key("testPlan").key(framework);
+        for (environment, policy) in &plan.environments {
+            super::test_config::validate_environment(
+                policy,
+                &framework_path.clone().key("environments").key(environment),
+            )?;
+        }
         validate_named_triggers(&plan.full_suite_triggers.triggers, path, framework)?;
         for (project, dependency) in &plan.full_suite_triggers.projects {
-            let TestPlanProjectDependency::Targeted(targeted) = dependency else {
-                continue;
-            };
-            let base = format!(
-                "{}.testPlan.{framework}.fullSuiteTriggers.projects.{project}",
-                path.display()
-            );
+            let field = framework_path
+                .clone()
+                .key("fullSuiteTriggers")
+                .key("projects")
+                .key(project);
             if !config.projects.contains_key(project) {
-                anyhow::bail!("{base} references missing top-level projects.{project}");
+                return Err(super::path_globs::field_error(
+                    field.clone(),
+                    format!("{field} references missing top-level projects.{project}"),
+                ));
             }
+            let targeted = match dependency {
+                TestPlanProjectDependency::All(_) => continue,
+                TestPlanProjectDependency::Patterns(patterns) => {
+                    super::test_config::validate_paths(patterns, &field)?;
+                    continue;
+                }
+                TestPlanProjectDependency::Targeted(targeted) => targeted,
+            };
+            let base = format!("{}.{field}", path.display());
             validate_paths(&targeted.paths, &base)?;
             if targeted.targets.is_empty() {
                 anyhow::bail!("{base}.targets must not be empty");

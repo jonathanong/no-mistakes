@@ -1,7 +1,7 @@
 use super::{
     TestPlanDependencies, TestPlanIgnoredChangedTestsFramework, TestPlanProjectDependency,
 };
-use serde::de::{self, Deserializer};
+use serde::de::{self, value::MapAccessDeserializer, value::SeqAccessDeserializer};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -25,7 +25,7 @@ pub struct NamedFullSuiteTrigger {
 }
 
 #[derive(Debug, Deserialize, Default)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 struct TestPlanDependenciesMap {
     #[serde(alias = "ignore_changed_tests")]
     ignore_changed_tests: Vec<TestPlanIgnoredChangedTestsFramework>,
@@ -33,32 +33,38 @@ struct TestPlanDependenciesMap {
     triggers: Vec<NamedFullSuiteTrigger>,
 }
 
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum TestPlanDependenciesRaw {
-    List(Vec<NamedFullSuiteTrigger>),
-    Map(TestPlanDependenciesMap),
+impl<'de> Deserialize<'de> for TestPlanDependencies {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_any(DependenciesVisitor)
+    }
 }
 
-impl<'de> Deserialize<'de> for TestPlanDependencies {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        match TestPlanDependenciesRaw::deserialize(deserializer)? {
-            TestPlanDependenciesRaw::List(triggers) => {
-                validate_named(&triggers).map_err(de::Error::custom)?;
-                Ok(TestPlanDependencies {
-                    triggers,
-                    ..TestPlanDependencies::default()
-                })
-            }
-            TestPlanDependenciesRaw::Map(map) => {
-                validate_named(&map.triggers).map_err(de::Error::custom)?;
-                Ok(TestPlanDependencies {
-                    ignore_changed_tests: map.ignore_changed_tests,
-                    projects: map.projects,
-                    triggers: map.triggers,
-                })
-            }
-        }
+struct DependenciesVisitor;
+
+impl<'de> de::Visitor<'de> for DependenciesVisitor {
+    type Value = TestPlanDependencies;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("a full-suite trigger mapping or a list of named triggers")
+    }
+
+    fn visit_seq<S: de::SeqAccess<'de>>(self, sequence: S) -> Result<Self::Value, S::Error> {
+        let triggers = Vec::deserialize(SeqAccessDeserializer::new(sequence))?;
+        validate_named(&triggers).map_err(de::Error::custom)?;
+        Ok(TestPlanDependencies {
+            triggers,
+            ..TestPlanDependencies::default()
+        })
+    }
+
+    fn visit_map<M: de::MapAccess<'de>>(self, mapping: M) -> Result<Self::Value, M::Error> {
+        let map = TestPlanDependenciesMap::deserialize(MapAccessDeserializer::new(mapping))?;
+        validate_named(&map.triggers).map_err(de::Error::custom)?;
+        Ok(TestPlanDependencies {
+            ignore_changed_tests: map.ignore_changed_tests,
+            projects: map.projects,
+            triggers: map.triggers,
+        })
     }
 }
 

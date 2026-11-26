@@ -32,10 +32,7 @@ pub(crate) type PreparedLinks = BTreeMap<RouteCoverageSource, Result<Vec<RouteLi
 pub(crate) fn validate(sources: &[RouteCoverageSource]) -> anyhow::Result<()> {
     for source in sources {
         anyhow::ensure!(
-            !source.project.is_empty()
-                && !source.include.is_empty()
-                && !source.routes.is_empty()
-                && !source.helpers.is_empty(),
+            source.empty_required_field().is_none(),
             "routeCoverageSources requires project, include, routes, and helpers"
         );
         for route in &source.routes {
