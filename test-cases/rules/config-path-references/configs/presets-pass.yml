@@ -26,4 +26,3 @@ rules:
         - coverage-rules
         - pnpm-workspace-filters
         - no-mistakes
-      excludePaths: [missing-until-created/**]

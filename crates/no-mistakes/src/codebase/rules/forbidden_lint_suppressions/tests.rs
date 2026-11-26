@@ -38,8 +38,11 @@ fn invalid_options_fail_before_reading_sources() {
         "bad-directive.yml",
         "empty-id.yml",
     ] {
+        let root = fixture();
+        let application =
+            serde_yaml::from_str(&std::fs::read_to_string(root.join(config)).unwrap()).unwrap();
         assert!(
-            required_files(&fixture(), &configured(config), &files()).is_err(),
+            required_files(&root, &application, &files()).is_err(),
             "{config}"
         );
     }

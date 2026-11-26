@@ -3,7 +3,7 @@ use crate::codebase::postgres::{require_catalog_path, AllowList, CatalogObjectRe
 use anyhow::{bail, Result};
 use std::collections::BTreeSet;
 
-pub(super) struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     pub(super) allowed_types: Vec<String>,
     pub(super) allow_enum_types: bool,
     pub(super) check_primary_keys: bool,
@@ -12,7 +12,7 @@ pub(super) struct Compiled {
     pub(super) message: Option<String>,
 }
 
-pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(super::RULE_ID, options.schema_catalog_path.trim())?;
     if options.allowed_types.is_empty() {
         bail!(

@@ -216,22 +216,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "blank-reason": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "test-no-retries",
-          "message": "test-no-retries: allowlist[0]: reason must not be blank"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/blank-reason.yml:4: test-no-retries: allowlist[0]: reason must not be blank\n"
   },
   "default": {
     "exitCode": 1,

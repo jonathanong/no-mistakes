@@ -19,23 +19,14 @@ impl PreparedScopePlan {
         session.insert_visible_paths(&root, visible_paths.clone());
         let has_non_check_report = options.reports.iter().any(|r| r.report_type != "check");
         let include_check_plan = options.reports.iter().any(|r| r.report_type == "check");
-        let check_config = include_check_plan
-            .then(|| session.config_with_path(&root, options.config.as_deref().map(Path::new)))
-            .transpose()?;
-        if let Some((config, config_path)) = &check_config {
-            crate::codebase::rules::validate_rule_options(
-                &root,
-                config_path.as_deref(),
-                config.as_ref(),
-            )?;
-        }
+        let config = session.config(&root, options.config.as_deref().map(Path::new))?;
         let (import_usages, import_usage_files) =
             prepare_import_usage_views(options, &root, &session)?;
         let ordinary_calls = prepare_ordinary_call_sites(options, &root, session.clone())?;
         let build_plan = graph_build_plan(options)?;
         let (framework_plan, ordinary_excluded) = with_vitest_check_framework(
             framework_preparation_plan(options, build_plan)?,
-            check_config.as_ref().map(|(config, _)| config.as_ref()),
+            include_check_plan.then_some(config.as_ref()),
             &root,
             visible_paths.paths_for(&root).as_ref(),
             has_non_check_report,
@@ -47,6 +38,7 @@ impl PreparedScopePlan {
                 options.config.as_deref().map(Path::new),
                 build_plan,
                 SnapshotTraversalPreparation {
+                    config: Some(config),
                     visible_paths,
                     session: session.clone(),
                     include_check_plan,

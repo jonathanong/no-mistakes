@@ -1,8 +1,6 @@
 rules:
-  - rule: test-effort-adopter
+  - rule: unique-exports
     scope: repository
     options:
-      importSpecifier: '@example/db'
-      include: ['src/query.mts']
       unanalyzable: advise
       unanalyzableSql: bogus

@@ -2,7 +2,7 @@ use super::{Options, RULE_ID};
 use anyhow::{ensure, Result};
 
 impl Options {
-    pub(super) fn validate(&self) -> Result<()> {
+    pub(in crate::codebase::rules) fn validate(&self) -> Result<()> {
         for (index, spec) in self.sets.iter().enumerate() {
             ensure!(
                 !spec.name.trim().is_empty(),

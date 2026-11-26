@@ -149,112 +149,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "invalid-absolute.yml": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "production-exports-only-used-by-tests",
-          "message": "production-exports-only-used-by-tests: options.platformConsumedExports file must be a nonempty root-relative file path"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-absolute.yml:8: production-exports-only-used-by-tests: options.platformConsumedExports file must be a nonempty root-relative file path\n"
   },
   "invalid-field.yml": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "production-exports-only-used-by-tests",
-          "message": "invalid options for rule `production-exports-only-used-by-tests` at options.platformConsumedExports[0].extra: unknown field `extra`, expected `file` or `exports`"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-field.yml:8: invalid options for rule `production-exports-only-used-by-tests` at options.platformConsumedExports[0].extra: unknown field `extra`, expected `file` or `exports`\n"
   },
   "invalid-file.yml": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "production-exports-only-used-by-tests",
-          "message": "production-exports-only-used-by-tests: options.platformConsumedExports file must be a nonempty root-relative file path"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-file.yml:8: production-exports-only-used-by-tests: options.platformConsumedExports file must be a nonempty root-relative file path\n"
   },
   "invalid-name.yml": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "production-exports-only-used-by-tests",
-          "message": "production-exports-only-used-by-tests: options.platformConsumedExports exports must contain nonempty export names"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-name.yml:8: production-exports-only-used-by-tests: options.platformConsumedExports exports must contain nonempty export names\n"
   },
   "invalid-names.yml": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "production-exports-only-used-by-tests",
-          "message": "production-exports-only-used-by-tests: options.platformConsumedExports exports must contain nonempty export names"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-names.yml:8: production-exports-only-used-by-tests: options.platformConsumedExports exports must contain nonempty export names\n"
   },
   "invalid-parent.yml": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "production-exports-only-used-by-tests",
-          "message": "production-exports-only-used-by-tests: options.platformConsumedExports file must stay within the root"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid-parent.yml:8: production-exports-only-used-by-tests: options.platformConsumedExports file must stay within the root\n"
   },
   "off.yml": {
     "exitCode": 0,

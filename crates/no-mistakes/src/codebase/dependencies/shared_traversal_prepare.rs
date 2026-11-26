@@ -1,4 +1,5 @@
 pub(crate) struct SnapshotTraversalPreparation {
+    pub(crate) config: Option<std::sync::Arc<crate::config::v2::NoMistakesConfig>>,
     pub(crate) visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
     pub(crate) session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     pub(crate) include_check_plan: bool,
@@ -7,6 +8,7 @@ pub(crate) struct SnapshotTraversalPreparation {
 }
 
 struct TraversalPreparationContext {
+    config: Option<std::sync::Arc<crate::config::v2::NoMistakesConfig>>,
     dataset: std::sync::Arc<crate::codebase::analysis_dataset::AnalysisDataset>,
     session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     include_check_plan: bool,
@@ -74,6 +76,7 @@ impl SharedTraversalContext {
             TraversalPreparationContext {
                 dataset,
                 session,
+                config: None,
                 include_check_plan: false,
                 needs_reverse_graph,
                 framework_plan,
@@ -89,6 +92,7 @@ impl SharedTraversalContext {
         preparation: SnapshotTraversalPreparation,
     ) -> Result<Self> {
         let SnapshotTraversalPreparation {
+            config,
             visible_paths,
             session,
             include_check_plan,
@@ -105,6 +109,7 @@ impl SharedTraversalContext {
             TraversalPreparationContext {
                 dataset,
                 session,
+                config,
                 include_check_plan,
                 needs_reverse_graph,
                 framework_plan,

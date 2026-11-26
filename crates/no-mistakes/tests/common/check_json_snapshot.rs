@@ -136,16 +136,15 @@ fn run_normalized(
     let stdout = String::from_utf8_lossy(&output.stdout);
     let exit_code = output.status.code().unwrap_or(-1);
     reject_lock_timeout(&stdout, exit_code, root, jobs);
-    let report = serde_json::from_str::<Value>(&stdout).unwrap_or_else(|error| {
-        panic!(
-            "check JSON ({error}), exit {exit_code}\nstdout: {stdout}\nstderr: {}",
-            String::from_utf8_lossy(&output.stderr)
-        )
-    });
-    let mut value = serde_json::json!({
-        "exitCode": exit_code,
-        "report": report,
-    });
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let mut value = if exit_code == 2 && stdout.is_empty() {
+        serde_json::json!({"exitCode": exit_code, "stderr": stderr})
+    } else {
+        let report = serde_json::from_str::<Value>(&stdout).unwrap_or_else(|error| {
+            panic!("check JSON ({error}), exit {exit_code}\nstdout: {stdout}\nstderr: {stderr}")
+        });
+        serde_json::json!({"exitCode": exit_code, "report": report})
+    };
     normalize_value(&mut value, &root_variants(root));
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let repo = manifest.ancestors().nth(2).unwrap_or(manifest);

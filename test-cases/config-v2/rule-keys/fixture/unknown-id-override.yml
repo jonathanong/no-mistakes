@@ -1,0 +1,4 @@
+overrides:
+  - files: ['src/**/*.ts']
+    rules:
+      unique-exprts: false

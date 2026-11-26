@@ -52,12 +52,36 @@ pub(super) fn run_all_with_session_options(
     let runner_deadline_plan = include_runner_config_deadlines
         .then(|| plan.integration_runner_configs.clone())
         .flatten();
+    no_mistakes::invocation::set_timeout_phase("check.discovery");
+    no_mistakes::invocation::check_timeout()?;
+    let (views, discover_duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "discovery",
+        no_mistakes::diagnostics::TimingKind::Serial,
+        || {
+            crate::check_discovery::discover_check_file_views_from_snapshot(
+                &root,
+                config,
+                &config.filesystem.skip_directories,
+                unique_exports_enabled,
+                prepared.visible_paths.as_ref(),
+            )
+        },
+    );
+    let sources = prepared.visible_paths.source_store_for(&root);
+    let disable_directives =
+        no_mistakes::codebase::rules::disable_directive_audit::PreparedDisableDirectives::prepare(
+            &root,
+            config,
+            &views.filesystem,
+            &sources,
+        )?;
     let needs_shared_facts = fact_demand.needs_shared_facts();
     if finite_set_plan::no_analysis_requested(
         needs_shared_facts,
         filesystem_rules_enabled,
         no_mistakes::playwright::rules::configured(config),
     ) && !config.audits_disable_directives()
+        && disable_directives.is_empty()
     {
         fact_collection::release_extract_programs(&session);
         let mut results = empty_results([None]);
@@ -75,22 +99,6 @@ pub(super) fn run_all_with_session_options(
             .map(|plan| plan.deadline_evidence(&Default::default()));
         return Ok(results);
     }
-    no_mistakes::invocation::set_timeout_phase("check.discovery");
-    no_mistakes::invocation::check_timeout()?;
-    let (views, discover_duration) = no_mistakes::diagnostics::measure_if_enabled(
-        "discovery",
-        no_mistakes::diagnostics::TimingKind::Serial,
-        || {
-            crate::check_discovery::discover_check_file_views_from_snapshot(
-                &root,
-                config,
-                &config.filesystem.skip_directories,
-                unique_exports_enabled,
-                prepared.visible_paths.as_ref(),
-            )
-        },
-    );
-    let sources = prepared.visible_paths.source_store_for(&root);
     fact_demand.include_discovered_files(&root, config, &views.filesystem, &sources, &mut plan)?;
     let needs_shared_facts = fact_demand.needs_shared_facts();
     let (discovered, graph_files) = crate::check_discovery::select_graph_files(
@@ -116,10 +124,6 @@ pub(super) fn run_all_with_session_options(
             playwright_fact_plan,
             sources: std::sync::Arc::clone(&sources),
         });
-    let disable_directives =
-        no_mistakes::codebase::rules::disable_directive_audit::PreparedDisableDirectives::prepare(
-            &root, config, &fs_files, &sources,
-        )?;
     if include_sql_verdicts || no_mistakes::codebase::postgres::has_sql_advice(config) {
         facts.enable_sql_verdicts();
     }

@@ -394,5 +394,8 @@ mod cli_suppression_index;
 #[path = "cli_queue_factory_wrappers.rs"]
 mod cli_queue_factory_wrappers;
 
+#[path = "cli_config_rule_validation.rs"]
+mod cli_config_rule_validation;
+
 #[path = "cli_react_nested_controls_snapshot.rs"]
 mod cli_react_nested_controls_snapshot;

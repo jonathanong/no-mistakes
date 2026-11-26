@@ -1,34 +1,16 @@
+use crate::codebase::rules::rule_ids::configurable_rule_ids;
+use std::collections::HashSet;
+use std::sync::LazyLock;
+
+const DIRECTIVE_ONLY_IDS: [&str; 3] = [
+    "queues-check",
+    "unused-disable-directive",
+    "invalid-disable-directive",
+];
+
+static KNOWN_RULES: LazyLock<HashSet<&'static str>> =
+    LazyLock::new(|| configurable_rule_ids().chain(DIRECTIVE_ONLY_IDS).collect());
+
 pub(super) fn known_rule(rule: &str) -> bool {
-    use super::super::*;
-    super::super::filesystem_dispatch::FILESYSTEM_RULE_IDS.contains(&rule)
-        || [
-            coverage_producer_assertion_owner::RULE_ID,
-            production_exports_test_only::RULE_ID,
-            FORBIDDEN_CALLS,
-            FORBIDDEN_DEPENDENCIES,
-            NEXTJS_NO_API_ROUTES,
-            NEXTJS_NO_CACHING,
-            POSTGRES_NO_MUTABLE_SQL_REGISTRY,
-            POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
-            POSTGRES_SQL_FRAGMENT_ESCAPE,
-            QUERY_REACHED_PER_ITEM,
-            no_single_enqueue_in_loop::RULE_ID,
-            REQUIRE_STORYBOOK_STORIES,
-            REQUIRED_ENTRYPOINT_REACHABILITY,
-            NO_CROSS_PACKAGE_RELATIVE_IMPORTS,
-            SERVER_ROUTE_CLIENT_BOUNDARY,
-            TEST_NO_LIVE_REPOSITORY_SCAN,
-            TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
-            UNCONSTRUCTED_ERROR_CLASS,
-            "assert-no-fetch",
-            "queues-check",
-            "unique-exports",
-            "playwright-coverage",
-            "playwright-unique-test-ids",
-            "playwright-unique-html-ids",
-            "playwright-prefer-test-id-locators",
-            "unused-disable-directive",
-            "invalid-disable-directive",
-        ]
-        .contains(&rule)
+    KNOWN_RULES.contains(rule)
 }

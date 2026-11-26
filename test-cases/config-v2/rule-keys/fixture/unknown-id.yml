@@ -1,0 +1,5 @@
+version: 2
+rules:
+  - rule: unique-exprts
+    scope: repository
+    include: ['src/**/*.ts']

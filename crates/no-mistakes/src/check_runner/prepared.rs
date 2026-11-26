@@ -38,7 +38,6 @@ pub(crate) fn prepare_from_shared(
     tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     workspace: SharedWorkspace,
 ) -> Result<PreparedCheckInputs> {
-    no_mistakes::codebase::rules::validate_rule_options(root, config_path, &config)?;
     let root_paths = visible_paths.paths_for(root);
     let sources = visible_paths.source_store_for(root);
     no_mistakes::codebase::rules::analysis_policy::prepare_rule_analysis(

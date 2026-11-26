@@ -2,7 +2,7 @@ use super::analysis::{is_declaration_file, unconstructed};
 use super::config::Options;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{ClassDeclaration, DepGraph, GraphBuildPlan};
-use crate::codebase::rules::path_filter::{GlobMatcher, RulePathFilter};
+use crate::codebase::rules::path_filter::RulePathFilter;
 use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, RuleFinding};
 use crate::codebase::ts_source::{is_test_file, relative_slash_path};
 use crate::config::v2::schema::RuleDef;
@@ -32,8 +32,7 @@ pub(crate) fn check_with_graph(
             other => other,
         };
         let options: Options = application.try_rule_options()?;
-        let extra_tests =
-            GlobMatcher::new(&options.test_files, &format!("{RULE_ID} options.testFiles"))?;
+        let extra_tests = options.test_file_matcher()?;
         let path_filter = RulePathFilter::new(&root, config, application)?;
         let is_test = |file: &Path| {
             let relative = relative_slash_path(&root, file);

@@ -20,7 +20,7 @@ pub(crate) enum ObjectKind {
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     objects: Option<Vec<String>>,
     column_name_patterns: Vec<String>,
@@ -93,7 +93,7 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
         .collect()
 }
 
-fn compile_options(opts: &Options) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<Compiled> {
     require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     let min_length = u64::try_from(opts.min_length.unwrap_or(1)).unwrap_or(0);
     if min_length < 1 {

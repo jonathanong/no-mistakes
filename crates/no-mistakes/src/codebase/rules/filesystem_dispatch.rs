@@ -51,7 +51,7 @@ use super::{
 mod call_site_facts;
 mod candidate_helpers;
 mod candidate_index;
-pub(super) mod dependabot_cooldown_policy;
+pub(in crate::codebase::rules) mod dependabot_cooldown_policy;
 mod entrypoints;
 mod execute;
 pub mod github_actions_run_command_policy;
@@ -61,7 +61,7 @@ mod metadata;
 mod preserved;
 mod run_rule;
 mod run_rule_engines;
-pub(super) mod shell_compatibility;
+pub(in crate::codebase::rules) mod shell_compatibility;
 #[macro_use]
 mod registry;
 use super::{
