@@ -48,3 +48,99 @@ fn workspace_relative_imports_reports_malformed_selected_source_to_rust_callers(
         .as_deref()
         .is_some_and(|file| file.ends_with("packages/app/src/gaps/broken.mts")));
 }
+
+#[test]
+fn vitest_import_calls_distinguish_vitest_bindings_and_computed_args() {
+    use crate::codebase::dependencies::extract::{
+        FunctionCall, ImportedBinding, ImportedBindingKind, InvocationKind,
+    };
+    use crate::codebase::dependencies::graph::{vitest_import_calls, VitestReceiver};
+    use crate::codebase::ts_source::facts::TsFileFacts;
+
+    let call = |callee: &str, line: u32, arg: Option<&str>, scope: Option<usize>| FunctionCall {
+        caller: None,
+        caller_id: None,
+        syntactic_caller: None,
+        callee: callee.to_owned(),
+        line,
+        offset: 0,
+        is_callback: false,
+        invocation: InvocationKind::Call,
+        target_identity: crate::codebase::dependencies::extract::CallTargetIdentity::Unknown,
+        callee_binding_scope: scope,
+        static_arg: arg.map(str::to_owned),
+        static_cwd: None,
+    };
+    let facts = TsFileFacts {
+        imported_bindings: vec![
+            ImportedBinding {
+                specifier: "vitest".to_owned(),
+                local: "mock".to_owned(),
+                imported: "vi".to_owned(),
+                kind: ImportedBindingKind::Named,
+                is_type_only: false,
+            },
+            ImportedBinding {
+                specifier: "vitest".to_owned(),
+                local: "vitest".to_owned(),
+                imported: "*".to_owned(),
+                kind: ImportedBindingKind::Namespace,
+                is_type_only: false,
+            },
+            ImportedBinding {
+                specifier: "./helpers".to_owned(),
+                local: "other".to_owned(),
+                imported: "vi".to_owned(),
+                kind: ImportedBindingKind::Named,
+                is_type_only: false,
+            },
+        ],
+        function_calls: vec![
+            call("vi.importActual", 1, Some("./a.ts"), None),
+            call("mock.importMock", 2, Some("../mod"), None),
+            call("vitest.vi.importActual", 3, None, None),
+            call("vi.importActual", 4, Some("./shadowed.ts"), Some(1)),
+            call("other.importActual", 5, Some("./helper.ts"), None),
+            call("<unknown>.importMock", 8, Some("./factory.ts"), None),
+            call("vitest.other.importActual", 9, Some("./ignored.ts"), None),
+            call("vi.spyOn", 6, Some("./ignored.ts"), None),
+            call("plainCall", 7, Some("./ignored.ts"), None),
+        ],
+        ..Default::default()
+    };
+    let found: Vec<_> = vitest_import_calls(&facts)
+        .map(|item| (item.line, item.specifier, item.computed, item.receiver))
+        .collect();
+    assert_eq!(
+        found,
+        vec![
+            (1, "./a.ts", false, VitestReceiver::Direct),
+            (2, "../mod", false, VitestReceiver::Direct),
+            (3, "<computed>", true, VitestReceiver::Direct),
+            (
+                4,
+                "./shadowed.ts",
+                false,
+                VitestReceiver::Unproven {
+                    imported_from: None
+                }
+            ),
+            (
+                5,
+                "./helper.ts",
+                false,
+                VitestReceiver::Unproven {
+                    imported_from: Some("./helpers")
+                }
+            ),
+            (
+                8,
+                "./factory.ts",
+                false,
+                VitestReceiver::Unproven {
+                    imported_from: None
+                }
+            ),
+        ]
+    );
+}

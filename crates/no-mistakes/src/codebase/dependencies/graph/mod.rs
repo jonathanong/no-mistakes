@@ -41,6 +41,8 @@ include!("selector_folded_dynamic_imports.rs");
 include!("vitest_setup_project.rs");
 include!("builder.rs");
 include!("import_targets.rs");
+mod vitest_import_calls;
+pub(crate) use vitest_import_calls::{vitest_import_calls, VitestReceiver};
 include!("builder_class_ancestry.rs");
 include!("builder_session.rs");
 include!("builder_check_facts.rs");

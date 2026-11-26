@@ -6,6 +6,7 @@ pub(super) fn collect(
     request: &GraphRuleRequest<'_>,
     session: Option<&AnalysisSession>,
     findings: &mut Vec<RuleFinding>,
+    advisories: &mut Vec<RuleFinding>,
 ) -> Result<()> {
     let Some(graph) = request
         .dependency_graph
@@ -33,7 +34,8 @@ pub(super) fn collect(
             )
         });
     if let Some(output) = session.capture_check_result(relative_imports::RULE_ID, result)? {
-        findings.extend(output);
+        findings.extend(output.findings);
+        advisories.extend(output.advisories);
     }
     Ok(())
 }

@@ -32,11 +32,16 @@ declarations and package manifests. The nearest declared package owns a file.
 The rule includes recorded static imports, re-exports, type-only imports,
 literal dynamic imports, and `require()` calls. It skips package-name imports,
 computed specifiers, resolution-only `require.resolve()` calls, and sites with
-no unique resolved file target. Run `resolve-check` to diagnose resolution
-failures. Origin filters select the importing files. A reached file can still
-prove a crossing when it is outside those filters. Unreadable or malformed selected
-workspace sources appear in `incomplete`. Other files continue to produce
-findings.
+no unique resolved file target. A direct `vi.importActual()` or
+`vi.importMock()` call with a literal relative specifier is resolved on that
+same graph. Calls through a local re-export, a helper return, or another
+unproved receiver follow the shared `unanalyzable` policy, which defaults to
+`advise` for this rule, when the specifier could cross the package boundary.
+Import `vi` directly from `vitest` so the rule can resolve the crossing. Run
+`resolve-check` to diagnose resolution failures. Origin filters select the
+importing files. A reached file can still prove a crossing when it is outside
+those filters. Unreadable or malformed selected workspace sources appear in
+`incomplete`. Other files continue to produce findings.
 
 ## Valid example
 

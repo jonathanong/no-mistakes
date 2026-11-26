@@ -29,6 +29,30 @@ fn import_file_pass(
             edges.push(edge);
         }
     }
+    for call in vitest_import_calls(facts) {
+        if call.computed || call.receiver != VitestReceiver::Direct {
+            continue;
+        }
+        let classification = resolver.classify_import(call.specifier, path, workspace, graph_files);
+        let resolved = classification
+            .resolver_path()
+            .and_then(|target| graph_files.visible_path(target))
+            .or_else(|| {
+                classification
+                    .workspace_path()
+                    .and_then(|target| graph_files.visible_path(target))
+            });
+        let recorded = import_target_for(
+            resolved,
+            &classification,
+            resolver,
+            path,
+            call.specifier,
+            workspace,
+            graph_files,
+        );
+        targets.push((call.specifier.to_owned(), recorded));
+    }
     (path.to_path_buf(), edges, targets)
 }
 

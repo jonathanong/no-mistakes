@@ -89,7 +89,11 @@ impl NoMistakesConfig {
             legacy_policy(rule)?
                 .or(self.unanalyzable)
                 .or(self.unanalyzable_sql)
-                .unwrap_or_default()
+                .unwrap_or(if rule.rule == "no-cross-package-relative-imports" {
+                    Unanalyzable::Advise
+                } else {
+                    Unanalyzable::Report
+                })
         };
         if rule.rule == "postgres-grouping-not-aggregation" && unanalyzable == Unanalyzable::Report
         {
