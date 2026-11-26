@@ -88,16 +88,20 @@ Only literal arrays are inspected. Endpoint templates retain their static
 segments, so a slash before a question mark is detected across substitutions.
 Field values and jq/template options are not endpoints. Separate and attached
 `-f`, `-F`, `--field`, `--raw-field`, `-X`, and `--method` forms are recognized.
+A separate field flag consumes one argument. When that argument is a single
+expression, the rule can check for an explicit method regardless of the field
+value. A spread or a missing entry leaves the argument layout uncertain.
 A method must have a nonempty static alphabetic value. The exact static endpoint
 `graphql` is exempt from the method diagnostic, but not endpoint-query checking.
 
-Unknown elements, spreads, unknown flags, dynamic methods, and dynamic endpoints
-can hide protocol structure. The rule conservatively omits the missing-method
-claim when that structure is uncertain; a definite endpoint query is still
-reported. A template with a fixed leading REST prefix and a fixed slash, such
-as `repos/${repo}/labels`, cannot become a flag or the exact `graphql` endpoint,
-so its field flags still require an explicit method. It does not execute arrays, follow argv aliases, or prove unknown
-requests safe. Configure wrappers only for APIs with this argv protocol.
+Outside a consumed field value, unknown elements can hide protocol structure,
+as can spreads, unknown flags, dynamic methods, and dynamic endpoints. The rule
+reports definite endpoint queries and omits the missing-method diagnostic when
+that structure is uncertain. A template with a fixed leading REST prefix and a
+fixed slash, such as `repos/${repo}/labels`, cannot become a flag or the exact
+`graphql` endpoint, so its field flags still require an explicit method. The
+rule inspects argv syntax without executing arrays or following argv aliases.
+Configure wrappers only for APIs with this argv protocol.
 
 Same-file `child_process` namespace members, a default import of that module, a single `const` alias, a string or expression-free template member, an optional call, and a comma callee are the same call. `execFile.call` and a literal-array `execFile.apply` shift the arguments. A spread `.call` or a non-literal `.apply` is not read as argv.
 

@@ -17,12 +17,13 @@ The rule parses Git-visible YAML files under `.github/workflows/**` and
 `.github/actions/**` by default. It reports `sparse-checkout` and
 `sparse-checkout-cone-mode` only in a `with:` mapping for an
 `actions/checkout@…` workflow or composite-action step. Malformed selected YAML
-is reported as a configuration finding. `options.include` replaces the default
-selection; common `include` and `exclude` add further rule-path scoping.
+produces a finding. A nonempty `options.include` replaces the default
+selection. Common `include` and `exclude` add further rule-path scoping.
 
 ## Options and defaults
 
-`options.include` defaults to `.github/workflows/**` and `.github/actions/**`.
+`options.include` uses `.github/workflows/**` and `.github/actions/**`
+when omitted or empty. [Include selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout.rs#L83-L96).
 
 ## Valid example
 
@@ -70,9 +71,8 @@ options:
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it judges literal sparse-checkout usage. Nothing is routed through `options.unanalyzable`.
+Unreadable files and steps without a statically recognized checkout and
+a `with:` mapping are skipped. The rule does not use `options.unanalyzable`. [File reading](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout/scan.rs#L14-L32) and [step scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout/scan.rs#L77-L91).
 
 ## Suppression
 

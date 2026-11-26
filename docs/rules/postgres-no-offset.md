@@ -342,4 +342,8 @@ See [statement coverage and locations](postgres-no-offset-coverage.md).
 
 ## Invalid UTF-8
 
-Executor source and standalone SQL are decoded lossily at `max` and `low` effort, so a stray byte does not drop the file or replace it with an encoding failure. A missing file remains a read error. `unanalyzableSql` still applies to SQL the statement pass cannot parse.
+Both efforts decode executor source and standalone SQL lossily. Both skip a
+standalone SQL file that disappeared after selection and propagate other read
+errors. Low effort routes malformed embedded SQL through `unanalyzableSql`.
+Max effort skips malformed SQL, and low effort skips malformed standalone
+SQL. [Max effort scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_offset/scan.rs#L63-L86) and [low effort scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_offset/low.rs#L66-L95).

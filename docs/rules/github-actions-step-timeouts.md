@@ -106,9 +106,9 @@ Each uses its own timeout policy and source locations.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it judges literal `timeout-minutes` values on parsed steps. Nothing is routed through `options.unanalyzable`.
+Invalid YAML produces an ordinary finding. The rule skips unreadable files,
+non-mapping jobs, non-sequence step lists, and non-mapping step entries.
+This rule does not use `options.unanalyzable`. [Workflow and job scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_step_timeouts/scan.rs#L14-L66) and [step scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_step_timeouts/steps.rs#L39-L44).
 
 ## Suppression
 

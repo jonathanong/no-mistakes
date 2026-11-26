@@ -1,6 +1,7 @@
 "use strict";
 
 const { propertyName, memberPropertyName, logicalCall, literalString } = require("./logical-call");
+const { unwrapSequence } = require("./async-ast");
 const { collectPatternNames } = require("./ast-pattern-names");
 const {
   expressionName,
@@ -98,24 +99,8 @@ function moduleMockSpecifierArgument(node) {
   return { dynamic: true };
 }
 
-function unwrapCallee(callee) {
-  let current = callee;
-  for (let depth = 0; depth < 4; depth += 1) {
-    if (current?.type === "ChainExpression") {
-      current = current.expression;
-      continue;
-    }
-    if (current?.type === "SequenceExpression" && current.expressions.length > 0) {
-      current = current.expressions[current.expressions.length - 1];
-      continue;
-    }
-    break;
-  }
-  return current;
-}
-
 function isModuleMockMemberCall(node, context) {
-  const callee = unwrapCallee(node.callee);
+  const callee = unwrapSequence(node.callee);
   if (callee?.type !== "MemberExpression") return false;
   const method = memberPropertyName(callee);
   if (!MODULE_MOCK_METHODS.has(method)) return false;

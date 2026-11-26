@@ -56,7 +56,7 @@ match `actions/checkout@` without the tag, read the image, runtime, or runner
 from the workflow under test instead of restating it, or compare a generated
 fixture.
 Keep exact versions in production installers and workflow files; this rule
-only scans test files.
+selects test files by default.
 
 Use `no-mistakes-disable-next-line test-no-dependency-pins` or
 `no-mistakes-disable-line` for a one-off fixture, or
@@ -323,12 +323,12 @@ Not caught, by design:
 
 ## Options and defaults
 
-There is no user-facing `defaultInclude` option. Internally, when `include` is
-omitted, the default include is the supported test-file pattern: `__tests__/` and
-`*.test.{mts,ts,tsx,mjs,js,cts,cjs}`, including mocks. `include` replaces that
-set; `patterns` replaces the default pin regexes, including the container image,
-setup version, Homebrew formula, and runner label patterns and the placeholder
-exemption. Both options default to the shown behavior when omitted.
+There is no user-facing `defaultInclude` option.
+Omitting `include` or setting it to `[]` selects the built-in test-file
+patterns: `__tests__/` and `*.test.{mts,ts,tsx,mjs,js,cts,cjs}`, including
+mocks. A nonempty `include` replaces that set. A nonempty `patterns` list
+replaces the built-in pin regexes and their placeholder exemption. Omitting
+`patterns` or setting it to `[]` uses the built-in regexes. [File selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_dependency_pins.rs#L57-L64) and [pattern selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_dependency_pins.rs#L125-L140).
 
 ## Valid example
 
