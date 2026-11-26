@@ -12,7 +12,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
-    use crate::codebase::rules::nested_controls;
+    use crate::codebase::rules::{csp_allowed_origins, nested_controls};
     let root = variant.root;
     let plan = variant.plan;
     let playwright = variant.playwright;
@@ -158,11 +158,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         } else {
             Default::default()
         },
-        csp_allowed_origins: if plan.csp_allowed_origins_paths.contains(path) {
-            crate::codebase::rules::csp_allowed_origins::collect(program, source)
-        } else {
-            Default::default()
-        },
+        csp_allowed_origins: csp_allowed_origins::collect_for_plan(path, source, program, plan),
         ts: ts.into(),
         production_imports: None,
         source: stored_source,

@@ -17,7 +17,7 @@ mod load;
 mod options;
 mod policy;
 
-pub(crate) use extract::collect;
+pub(crate) use extract::collect_for_plan;
 use findings::{csp_unanalyzable_finding, origin_finding, unanalyzable_finding};
 pub(crate) use findings::{CollectedOrigins, OriginRef, UnanalyzableReason, UnanalyzableRef};
 use load::load_policy;

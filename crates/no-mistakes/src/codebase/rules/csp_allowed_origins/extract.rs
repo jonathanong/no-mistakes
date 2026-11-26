@@ -23,7 +23,20 @@ use csp_strings::{
 use jsx::record_jsx_element;
 use url::is_global_or_bare;
 
-pub(crate) fn collect(program: &Program<'_>, source: &str) -> CollectedOrigins {
+pub(crate) fn collect_for_plan(
+    path: &std::path::Path,
+    source: &str,
+    program: &Program<'_>,
+    plan: &crate::codebase::check_facts::CheckFactPlan,
+) -> CollectedOrigins {
+    if plan.csp_allowed_origins_paths.contains(path) {
+        collect(program, source)
+    } else {
+        CollectedOrigins::default()
+    }
+}
+
+fn collect(program: &Program<'_>, source: &str) -> CollectedOrigins {
     let mut visitor = OriginVisitor {
         source,
         collected: CollectedOrigins::default(),
