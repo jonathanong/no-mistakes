@@ -48,6 +48,13 @@ declared roots and top-level filters, not from that rule's input options. A
 known rule outside its enabled application scope is reported as disabled or out
 of scope.
 
+An unreadable file in the audit scope is not silently skipped: it produces an
+`unused-disable-directive` read-failure diagnostic at line 1 with
+`target: "unanalyzable"`, routed through `reportUnusedDisableDirectives`
+(`advisories` under `advise`, `rules` under `report`, omitted without reading
+under `ignore`). Files with invalid UTF-8 continue to be decoded lossily from
+retained bytes so directives in them are still audited.
+
 PostgreSQL statement rules also audit next-line comments inside statically
 recovered executor SQL. For example, after an indexed LIMIT-bounded probe is
 accepted by `postgres-required-predicates`, remove its in-template
