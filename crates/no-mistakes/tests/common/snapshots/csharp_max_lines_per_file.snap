@@ -108,6 +108,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "5 physical lines (max 3) - split into smaller types or files",
           "rule": "csharp-max-lines-per-file",
           "sourceLine": "// no-mistakes-disable-next-line csharp-max-lines-per-file"
+        },
+        {
+          "file": "MissingRule.cs",
+          "line": 1,
+          "message": "5 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "// no-mistakes-disable-next-line : missing rule name"
         }
       ],
       "warnings": []
