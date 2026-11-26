@@ -1,0 +1,153 @@
+use oxc_ast::{
+    ast::{Argument, CallExpression, Expression, Program},
+    AstKind,
+};
+use oxc_semantic::{Semantic, SemanticBuilder};
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
+
+mod loader_use;
+mod trace;
+
+#[derive(Debug, Clone, Default)]
+pub struct FixtureReads {
+    calls: BTreeMap<String, Option<ProvenReads>>,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ProvenReads {
+    starts: BTreeSet<usize>,
+    paths: BTreeSet<String>,
+    argument: String,
+    callee: Vec<String>,
+}
+
+impl FixtureReads {
+    pub fn collect(path: &Path, source: &str, literals: &BTreeSet<String>) -> Self {
+        crate::ast::with_program(path, source, |program, source| {
+            Self::from_program(program, source, literals)
+        })
+        .unwrap_or_default()
+    }
+
+    pub fn from_program(program: &Program<'_>, source: &str, literals: &BTreeSet<String>) -> Self {
+        let built = SemanticBuilder::new()
+            .with_build_nodes(true)
+            .with_check_syntax_error(true)
+            .build(program);
+        if !built.diagnostics.is_empty() {
+            return Self::default();
+        }
+        Self::from_semantic(&built.semantic, source, literals)
+    }
+
+    pub fn from_semantic(
+        semantic: &Semantic<'_>,
+        source: &str,
+        literals: &BTreeSet<String>,
+    ) -> Self {
+        let mut reads = Self::default();
+        if semantic.scoping().root_scope_flags().contains_direct_eval() {
+            return reads;
+        }
+        let mut arguments = BTreeMap::<_, usize>::new();
+        for node in semantic.nodes().iter() {
+            let call = match node.kind() {
+                AstKind::WithStatement(_) => return Self::default(),
+                AstKind::CallExpression(call) => call,
+                _ => continue,
+            };
+            let Some(Argument::StringLiteral(argument)) = call.arguments.first() else {
+                continue;
+            };
+            let Some(argument) = argument.value.as_str() else {
+                continue;
+            };
+            *arguments.entry(argument).or_default() += 1;
+            if call.arguments.len() != 1 || !is_loader_candidate(call) {
+                continue;
+            }
+            let Some(callee) = crate::ast::expression_path(&call.callee) else {
+                continue;
+            };
+            let literal = crate::ast::span_text(source, call.span);
+            if !literals.contains(literal) {
+                continue;
+            }
+            let entry = reads.calls.entry(literal.to_owned()).or_insert_with(|| {
+                Some(ProvenReads {
+                    argument: argument.to_owned(),
+                    callee,
+                    ..ProvenReads::default()
+                })
+            });
+            if let Some(proven) = entry {
+                if let Some(paths) = trace::reads(semantic, node.id()) {
+                    proven.starts.insert(call.span.start as usize);
+                    proven.paths.extend(paths);
+                } else {
+                    *entry = None;
+                }
+            }
+        }
+        if loader_use::has_unsafe_loader_use(semantic, &reads) {
+            return Self::default();
+        }
+        // A second call with the same argument may load the fixture through another spelling.
+        reads.calls.values_mut().for_each(|entry| {
+            if entry.as_ref().is_some_and(|proven| {
+                arguments.get(proven.argument.as_str()) != Some(&proven.starts.len())
+            }) {
+                *entry = None;
+            }
+        });
+        reads
+    }
+
+    pub fn affects(&self, source: &str, literal: &str, changed: &[String]) -> bool {
+        let Some(Some(reads)) = self.calls.get(literal) else {
+            return true;
+        };
+        reads.paths.iter().any(|read| {
+            changed
+                .iter()
+                .any(|path| contains_pointer(read, path) || contains_pointer(path, read))
+        }) || !covers_every_occurrence(source, literal, &reads.starts)
+    }
+}
+
+fn is_loader_candidate(call: &CallExpression<'_>) -> bool {
+    if call.optional {
+        return false;
+    }
+    let mut callee = &call.callee;
+    while let Expression::StaticMemberExpression(member) = callee {
+        if member.optional {
+            return false;
+        }
+        callee = &member.object;
+    }
+    matches!(callee, Expression::Identifier(_))
+}
+
+fn contains_pointer(parent: &str, child: &str) -> bool {
+    child
+        .strip_prefix(parent)
+        .is_some_and(|suffix| suffix.is_empty() || suffix.starts_with('/'))
+}
+
+fn covers_every_occurrence(source: &str, literal: &str, starts: &BTreeSet<usize>) -> bool {
+    let first = literal.chars().next().expect("registered call is nonempty");
+    let mut offset = 0;
+    while let Some(next) = source[offset..].find(literal) {
+        let start = offset + next;
+        if !starts.contains(&start) {
+            return false;
+        }
+        offset = start + first.len_utf8();
+    }
+    true
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod tests;

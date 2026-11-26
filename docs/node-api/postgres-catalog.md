@@ -72,6 +72,11 @@ accepts it) or `"ordering"` (only conflict and lock ordering accept it). It requ
 `psql` and keeps connection secrets in the named environment variable. The caller
 writes the returned object to disk. See [`postgres catalog`](../cli/postgres.md) for
 what a catalog holds, what it leaves out, and its limitations.
+
+Complete catalogs expose optional `PostgresCompleteCatalogTable.hasDescendants`
+with explicit inheritance and partition evidence from PostgreSQL. Older
+catalogs omit it and retain unknown descendant scope.
+
 Both catalog types expose optional `currentDatabase`, the database name
 recorded in the catalog; older catalogs omit it and preserve conservative
 analysis. The optional `currentDatabase` option, like the CLI's

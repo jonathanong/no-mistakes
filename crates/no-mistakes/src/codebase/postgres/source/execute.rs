@@ -89,7 +89,7 @@ pub(super) fn collect(
     Ok(PostgresSqlStatementKind::LiteralExecute { execute })
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2, nm_shard_postgres_source)))]
 mod tests;
 
 fn unsupported(parser: &mut Parser<'_>) -> Result<PostgresSqlStatementKind, String> {

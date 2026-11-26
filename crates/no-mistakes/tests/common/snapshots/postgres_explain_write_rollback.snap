@@ -101,6 +101,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "benchmarks/unknown-keywords.sql",
+          "line": 1,
+          "message": "benchmarks/unknown-keywords.sql:1:1: cannot verify postgres-explain-write-rollback (SQL script could not be parsed completely). Fix the script so its SQL and transaction state can be statically analyzed, suppress with `-- no-mistakes-disable-next-line postgres-explain-write-rollback: reason`, or set options.unanalyzable to advise or ignore.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "SELECT 'unterminated;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "benchmarks/unparsed-explain.sql",
+          "line": 1,
+          "message": "benchmarks/unparsed-explain.sql:1:1: cannot verify postgres-explain-write-rollback (SQL script could not be parsed completely). Fix the script so its SQL and transaction state can be statically analyzed, suppress with `-- no-mistakes-disable-next-line postgres-explain-write-rollback: reason`, or set options.unanalyzable to advise or ignore.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "eXpLaIn ANALYZE DELETE FROM sample_jobs WHERE id = 42;",
+          "target": "unanalyzable"
+        },
+        {
           "file": "benchmarks/unparsed.sql",
           "line": 1,
           "message": "benchmarks/unparsed.sql:1:1: cannot verify postgres-explain-write-rollback (SQL script could not be parsed completely). Fix the script so its SQL and transaction state can be statically analyzed, suppress with `-- no-mistakes-disable-next-line postgres-explain-write-rollback: reason`, or set options.unanalyzable to advise or ignore.",
@@ -763,6 +779,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-explain-write-rollback",
           "sourceLine": "EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 42; EXPLAIN ANALYZE DELETE FROM sample_jobs WHERE id = 43;",
           "target": "DELETE"
+        },
+        {
+          "file": "benchmarks/unknown-keywords.sql",
+          "line": 1,
+          "message": "benchmarks/unknown-keywords.sql:1:1: cannot verify postgres-explain-write-rollback (SQL script could not be parsed completely). Fix the script so its SQL and transaction state can be statically analyzed, suppress with `-- no-mistakes-disable-next-line postgres-explain-write-rollback: reason`, or set options.unanalyzable to advise or ignore.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "SELECT 'unterminated;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "benchmarks/unparsed-explain.sql",
+          "line": 1,
+          "message": "benchmarks/unparsed-explain.sql:1:1: cannot verify postgres-explain-write-rollback (SQL script could not be parsed completely). Fix the script so its SQL and transaction state can be statically analyzed, suppress with `-- no-mistakes-disable-next-line postgres-explain-write-rollback: reason`, or set options.unanalyzable to advise or ignore.",
+          "rule": "postgres-explain-write-rollback",
+          "sourceLine": "eXpLaIn ANALYZE DELETE FROM sample_jobs WHERE id = 42;",
+          "target": "unanalyzable"
         },
         {
           "file": "benchmarks/unparsed.sql",

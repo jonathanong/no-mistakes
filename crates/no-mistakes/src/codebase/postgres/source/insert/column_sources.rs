@@ -1,5 +1,5 @@
 mod branches;
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2, nm_shard_postgres_source)))]
 mod tests;
 use super::{super::locations::Locations, super::types::*};
 use branches::{collect, validate_arity, Branch};

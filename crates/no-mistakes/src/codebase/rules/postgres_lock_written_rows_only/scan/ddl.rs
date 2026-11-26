@@ -44,6 +44,7 @@ pub(super) fn exemptions(
         let mut relationships = Vec::new();
         for (index, event) in events {
             match event {
+                DdlEvent::DescendantsChanged(_) => {}
                 DdlEvent::Related(left, right) => relationships.push((left, right)),
                 DdlEvent::Lock(lock) => {
                     if let Some(relation) =

@@ -33,3 +33,21 @@ fn tests_plan_json_routes_changes_reports() {
         .reason
         .contains("directTestOwner conflicts with changes"));
 }
+
+#[test]
+fn tests_plan_json_narrows_fixture_attribute_reads() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-plan-changes-attributes/narrow/fixture/head");
+    let output = tests_plan_json_impl(json!({
+        "framework": "vitest",
+        "root": root,
+        "changes": "../reports/size.json",
+        "changedFiles": ["fixtures/profile.avatar.json"]
+    }))
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    let tests = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(tests.len(), 1, "{plan:#}");
+    assert_eq!(tests[0]["test_file"], "tests/size.test.ts");
+}

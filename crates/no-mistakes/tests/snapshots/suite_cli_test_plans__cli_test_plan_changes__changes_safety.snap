@@ -10,7 +10,7 @@ expression: "serde_json::to_string_pretty(&summaries).unwrap()"
       "tests/reader.test.ts"
     ],
     "fallback": true,
-    "reason": "Invalid changes report `reports/bad-category.json`: unknown field `chnaged`, expected one of `changed`, `added`, `removed` at line 1 column 92",
+    "reason": "Invalid changes report `reports/bad-category.json`: unknown field `chnaged`, expected one of `changed`, `added`, `removed`, `attributePaths` at line 1 column 92",
     "warnings": [
       "changes-fallback"
     ]

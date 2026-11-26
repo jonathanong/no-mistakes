@@ -61,7 +61,7 @@ pub(in crate::queue::extract_worker_rate_limit) enum ModuleClassInit {
 }
 
 pub(in crate::queue::extract_worker_rate_limit) struct PendingCall {
-    pub(super) line: usize,
+    pub(super) start: u32,
     pub(super) receiver: PendingReceiver,
 }
 

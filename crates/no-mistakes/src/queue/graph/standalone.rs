@@ -1,9 +1,7 @@
 use super::{
     build_filter, build_prepared_report, build_report, queue_project_facts_from_ts,
-    ConfiguredTestScope, FileFacts,
-};
-use super::{
-    InternalProducer, InternalWorker, Path, PathBuf, PreparedProjectReport, ProjectReport,
+    ConfiguredTestScope, FileFacts, InternalProducer, InternalWorker, Path, PathBuf,
+    PreparedProjectReport, ProjectReport,
 };
 use crate::queue::graph_resolution::{queue_definitions, resolve_producers, resolve_workers};
 use std::collections::HashMap;
@@ -189,6 +187,7 @@ fn analyze_project_inner<T>(
     );
     crate::queue::job_options::judge_into_facts(root, &mut facts, &test_scope);
     crate::queue::worker_rate_limit::resolve(&mut facts, &resolver, &remapper);
+    crate::queue::rate_limit::resolve(&mut facts, &resolver, &remapper);
     crate::queue::job_state::resolve_sites(
         &mut facts,
         &queue_defs,
