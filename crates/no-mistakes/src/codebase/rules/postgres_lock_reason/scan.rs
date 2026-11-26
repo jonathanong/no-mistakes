@@ -120,7 +120,7 @@ fn typescript(
             }
             let status = load_ts_comments(path, sources, &mut ts_comments)
                 .map_or(super::comment::ReasonStatus::Absent, |comments| {
-                    comments.status_for_ts_line(call.line as usize)
+                    comments.status_for_ts_offset(call.line as usize, call.offset)
                 });
             push_reason_finding(rel, call.line as usize, "helper", status, &mut out.findings);
         }

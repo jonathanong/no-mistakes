@@ -1,10 +1,16 @@
-use super::CommentIndex;
+pub(super) fn is_utf8_cont(b: u8) -> bool {
+    (b & 0xC0) == 0x80
+}
 
-pub(super) fn find_eol(bytes: &[u8], mut i: usize) -> usize {
+pub(super) fn find_eol(bytes: &[u8], mut i: usize) -> (usize, usize) {
+    let mut chars = 0usize;
     while i < bytes.len() && bytes[i] != b'\n' {
+        if !is_utf8_cont(bytes[i]) {
+            chars += 1;
+        }
         i += 1;
     }
-    i
+    (i, chars)
 }
 
 pub(super) fn advance_utf8_char(source: &str, i: usize, col: usize) -> (usize, usize) {
@@ -39,7 +45,9 @@ pub(super) fn scan_block_comment(
             col = 1;
             i += 1;
         } else {
-            col += 1;
+            if !is_utf8_cont(bytes[i]) {
+                col += 1;
+            }
             i += 1;
         }
     }
@@ -76,7 +84,9 @@ pub(super) fn scan_sql_quoted(
             col = 1;
             i += 1;
         } else {
-            col += 1;
+            if !is_utf8_cont(bytes[i]) {
+                col += 1;
+            }
             i += 1;
         }
     }
@@ -89,6 +99,9 @@ pub(super) fn scan_dollar_quote_or_char(
     mut line: usize,
     mut col: usize,
 ) -> (usize, usize, usize) {
+    if start > 0 && is_ident(bytes[start - 1]) {
+        return (start + 1, line, col + 1);
+    }
     let mut end = start + 1;
     if bytes.get(end).is_some_and(u8::is_ascii_digit) {
         return (start + 1, line, col + 1);
@@ -100,16 +113,17 @@ pub(super) fn scan_dollar_quote_or_char(
         return (start + 1, line, col + 1);
     }
     let delim = &bytes[start..=end];
+    let delim_chars = delim.iter().filter(|&&b| !is_utf8_cont(b)).count();
     let mut i = end + 1;
-    col += delim.len();
+    col += delim_chars;
     while i < bytes.len() {
         if bytes[i..].starts_with(delim) {
-            return (i + delim.len(), line, col + delim.len());
+            return (i + delim.len(), line, col + delim_chars);
         }
         if bytes[i] == b'\n' {
             line += 1;
             col = 1;
-        } else {
+        } else if !is_utf8_cont(bytes[i]) {
             col += 1;
         }
         i += 1;
@@ -117,64 +131,7 @@ pub(super) fn scan_dollar_quote_or_char(
     (bytes.len(), line, col)
 }
 
-pub(super) fn scan_js_quoted(
-    bytes: &[u8],
-    start: usize,
-    mut line: usize,
-    mut col: usize,
-) -> (usize, usize, usize) {
-    let quote = bytes[start];
-    let mut i = start + 1;
-    col += 1;
-    while i < bytes.len() {
-        if bytes[i] == b'\\' {
-            i = scan_escaped(bytes, i, &mut line, &mut col);
-        } else if bytes[i] == quote {
-            return (i + 1, line, col + 1);
-        } else if bytes[i] == b'\n' {
-            line += 1;
-            col = 1;
-            i += 1;
-        } else {
-            col += 1;
-            i += 1;
-        }
-    }
-    (bytes.len(), line, col)
-}
-
-pub(super) fn scan_js_template(
-    bytes: &[u8],
-    mut i: usize,
-    mut line: usize,
-    mut col: usize,
-    index: &mut CommentIndex,
-    braces: &mut Vec<usize>,
-) -> (usize, usize, usize) {
-    while i < bytes.len() {
-        if bytes[i] == b'\\' {
-            i = scan_escaped(bytes, i, &mut line, &mut col);
-        } else if bytes[i] == b'`' {
-            index.mark_code(line, col);
-            return (i + 1, line, col + 1);
-        } else if bytes.get(i..i + 2) == Some(b"${") {
-            index.mark_code(line, col);
-            braces.push(0);
-            return (i + 2, line, col + 2);
-        } else if bytes[i] == b'\n' {
-            line += 1;
-            col = 1;
-            i += 1;
-        } else {
-            index.mark_code(line, col);
-            col += 1;
-            i += 1;
-        }
-    }
-    (bytes.len(), line, col)
-}
-
-fn scan_escaped(bytes: &[u8], i: usize, line: &mut usize, col: &mut usize) -> usize {
+pub(super) fn scan_escaped(bytes: &[u8], i: usize, line: &mut usize, col: &mut usize) -> usize {
     if bytes.get(i + 1) == Some(&b'\n') {
         *line += 1;
         *col = 1;
@@ -184,6 +141,6 @@ fn scan_escaped(bytes: &[u8], i: usize, line: &mut usize, col: &mut usize) -> us
     (i + 2).min(bytes.len())
 }
 
-fn is_ident(b: u8) -> bool {
+pub(super) fn is_ident(b: u8) -> bool {
     b.is_ascii_alphanumeric() || b == b'_' || b >= 0x80
 }

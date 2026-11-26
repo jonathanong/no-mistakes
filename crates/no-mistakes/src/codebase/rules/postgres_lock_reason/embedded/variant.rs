@@ -48,7 +48,7 @@ pub(super) fn check_variant(
     let sql_comments = CommentIndex::for_sql(variant_sql_text(call, variant_index));
     let ts_index = load_ts_comments(ctx.path, ctx.sources, ctx.ts_comments);
     let call_status = ts_index.map_or(ReasonStatus::Absent, |comments| {
-        comments.status_for_ts_line(call.line as usize)
+        comments.status_for_ts_offset(call.line as usize, call.execution_range.0)
     });
     let positions = positions.get_or_insert_with(|| Positions::new(call, variant_index));
     let check = VariantContext {

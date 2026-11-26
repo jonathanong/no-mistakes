@@ -10,7 +10,7 @@ export interface PostgresLockReasonOptions {
   sqlInclude?: string[];
   /** Module specifier exporting configured PostgreSQL executors. */
   importSpecifier?: string;
-  /** Explicit executor function or method names; use `[]` to scan SQL files only. */
+  /** Explicit executor function or method names. Without `importSpecifier`, `[]` selects no executor calls. With `importSpecifier`, `[]` keeps the default `[query, read, write]`. Factory and type receivers select executors independently. */
   executorNames?: string[];
   /** Additional executor names appended to the defaults. */
   extraExecutorNames?: string[];
@@ -20,9 +20,9 @@ export interface PostgresLockReasonOptions {
   executorFactoryNames?: string[];
   /** TypeScript type names whose values act as executors. */
   executorTypeNames?: string[];
-  /** Option property names on executor calls carrying SQL text. */
+  /** Option property names on executor calls whose values select an executor override, such as `query` for `{ query: tx }`. */
   executorOptionProperties?: string[];
-  /** Structured executor option properties carrying SQL text. */
+  /** Structured executor option properties whose values select an executor override, such as `{ name: "query" }` for `{ query: tx }`. */
   executorOptions?: { name: string }[];
   /** Trusted tagged template helpers whose interpolated SQL is scanned. */
   trustedSqlTags?: { module: string; name: string }[];

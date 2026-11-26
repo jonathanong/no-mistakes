@@ -24,7 +24,6 @@ pub struct RuleDef {
     pub options: serde_yaml::Value,
     /// `error` (default for most rules) fails `check`; `advisory` reports the
     /// findings as non-failing advisories.
-    #[serde(skip_serializing_if = "RuleSeverity::is_error")]
     pub severity: RuleSeverity,
 }
 
@@ -107,10 +106,6 @@ pub enum RuleSeverity {
 }
 
 impl RuleSeverity {
-    fn is_error(&self) -> bool {
-        *self == Self::Error
-    }
-
     pub fn default_for_rule(rule: &str) -> Self {
         if rule == "postgres-lock-reason" {
             Self::Advisory

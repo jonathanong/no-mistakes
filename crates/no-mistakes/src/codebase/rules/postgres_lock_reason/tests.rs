@@ -4,6 +4,8 @@ use super::*;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::config::v2::schema::RuleSeverity;
 
+mod edge_cases;
+
 fn fixture(scenario: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-lock-reason/fixture")
