@@ -1,0 +1,20 @@
+name: Workflow shapes
+on: push
+jobs:
+  broken: false
+  bad_steps:
+    steps: {}
+  bad_step:
+    steps:
+      - false
+      - uses: example/cache@v2
+      - uses: example/cache@v2
+        with:
+          key: no-path
+      - uses: example/cache@v2
+        with:
+          path: 9
+      - uses: example/cache@v2
+        with:
+          path: .cache/widgets
+          key: prefix-${{ inputs.key

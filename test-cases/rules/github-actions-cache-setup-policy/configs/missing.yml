@@ -1,0 +1,4 @@
+version: 2
+rules:
+  - rule: github-actions-cache-setup-policy
+    scope: repository
