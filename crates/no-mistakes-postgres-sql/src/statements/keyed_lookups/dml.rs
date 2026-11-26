@@ -4,7 +4,7 @@ use super::{inspect_exprs, returning_exprs};
 use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Delete, Expr, FromTable, Insert, Merge, MergeAction, MergeInsertKind, MergeUpdateKind,
-    TableObject, Update,
+    OutputClause, TableObject, Update,
 };
 use std::collections::BTreeMap;
 
@@ -48,9 +48,17 @@ pub(super) fn walk_update(
         .assignments
         .iter()
         .map(|assignment| &assignment.value)
-        .chain(update.selection.iter())
-        .chain(returning_exprs(update.returning.as_deref()));
+        .chain(update.selection.iter());
     inspect_exprs(exprs, scopes, &mut seen, out);
+    if let Some(returning) = update.returning.as_deref() {
+        let mut returning_seen = BTreeMap::new();
+        inspect_exprs(
+            returning_exprs(Some(returning)),
+            scopes,
+            &mut returning_seen,
+            out,
+        );
+    }
     scopes.pop_frame();
 }
 
@@ -85,11 +93,27 @@ pub(super) fn walk_merge(
     register_table_factor(&merge.table, scopes, out);
     register_table_factor(&merge.source, scopes, out);
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
+    let mut category_seen: BTreeMap<String, _> = BTreeMap::new();
     for clause in &merge.clauses {
-        let mut clause_seen = base_seen.clone();
-        let mut exprs: Vec<&Expr> = clause.predicate.iter().collect();
+        let pred_seen = category_seen
+            .entry(clause.clause_kind.to_string())
+            .or_insert_with(|| base_seen.clone());
+        if let Some(predicate) = &clause.predicate {
+            inspect_exprs(std::iter::once(predicate), scopes, pred_seen, out);
+        }
+        let mut action_seen = pred_seen.clone();
+        let mut exprs = Vec::new();
         collect_merge_action_exprs(&clause.action, &mut exprs);
-        inspect_exprs(exprs, scopes, &mut clause_seen, out);
+        inspect_exprs(exprs, scopes, &mut action_seen, out);
+    }
+    if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
+        let mut returning_seen = BTreeMap::new();
+        inspect_exprs(
+            returning_exprs(Some(select_items)),
+            scopes,
+            &mut returning_seen,
+            out,
+        );
     }
     scopes.pop_frame();
 }

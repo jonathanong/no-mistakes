@@ -1,68 +1,29 @@
+use super::builtins::AGGREGATE_FUNCTIONS;
+use super::expr_norm::normalize_expr;
+use super::join::record_lookup;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::ScopeSnapshot;
 use crate::codebase::postgres::idents::{
     ident_key, object_name_identity, relation_suffix_name, unwrap_expr,
 };
+use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Expr, GroupByExpr, LimitClause, ObjectNamePart, OrderByKind, Query, Select, SetExpr, Spanned,
     TableFactor, Visit, Visitor,
 };
+use std::collections::BTreeMap;
 use std::ops::ControlFlow;
 
-pub(super) struct SubqueryLookup {
-    pub(super) key: LookupKey,
-    pub(super) key_display: String,
-    pub(super) line: usize,
-    pub(super) column: usize,
-    pub(super) conditional: bool,
-}
-
-const AGGREGATE_FUNCTIONS: &[&str] = &[
-    "count",
-    "sum",
-    "avg",
-    "min",
-    "max",
-    "array_agg",
-    "json_agg",
-    "jsonb_agg",
-    "json_object_agg",
-    "jsonb_object_agg",
-    "string_agg",
-    "bool_and",
-    "bool_or",
-    "every",
-    "bit_and",
-    "bit_or",
-    "bit_xor",
-    "xmlagg",
-    "percentile_cont",
-    "percentile_disc",
-    "mode",
-    "stddev",
-    "stddev_pop",
-    "stddev_samp",
-    "variance",
-    "var_pop",
-    "var_samp",
-    "corr",
-    "covar_pop",
-    "covar_samp",
-    "range_agg",
-    "range_intersect_agg",
-    "any_value",
-];
-
-pub(super) fn collect_expr_lookups(
+pub(super) fn inspect_expr(
     expr: &Expr,
     outer: &ScopeSnapshot,
-    conditional: bool,
-    out: &mut Vec<SubqueryLookup>,
+    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     match unwrap_expr(expr) {
         Expr::Subquery(query) => {
-            if let Some(lookup) = extract_scalar_subquery(query, outer, conditional) {
-                out.push(lookup);
+            if let Some((key, key_display, line, column)) = extract_scalar_subquery(query, outer) {
+                record_lookup(key, key_display, line, column, seen, out);
             }
         }
         Expr::Case {
@@ -72,20 +33,27 @@ pub(super) fn collect_expr_lookups(
             ..
         } => {
             if let Some(operand) = operand {
-                collect_expr_lookups(operand, outer, conditional, out);
+                inspect_expr(operand, outer, seen, out);
             }
+            let mut cond_seen = seen.clone();
             for (index, branch) in conditions.iter().enumerate() {
-                let cond_flag = conditional || index > 0;
-                collect_expr_lookups(&branch.condition, outer, cond_flag, out);
-                collect_expr_lookups(&branch.result, outer, true, out);
+                if index == 0 {
+                    inspect_expr(&branch.condition, outer, seen, out);
+                    cond_seen = seen.clone();
+                } else {
+                    inspect_expr(&branch.condition, outer, &mut cond_seen, out);
+                }
+                let mut arm_seen = cond_seen.clone();
+                inspect_expr(&branch.result, outer, &mut arm_seen, out);
             }
             if let Some(else_expr) = else_result {
-                collect_expr_lookups(else_expr, outer, true, out);
+                let mut else_seen = cond_seen;
+                inspect_expr(else_expr, outer, &mut else_seen, out);
             }
         }
         other => {
             crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
-                collect_expr_lookups(child, outer, conditional, out);
+                inspect_expr(child, outer, seen, out);
             });
         }
     }
@@ -94,11 +62,11 @@ pub(super) fn collect_expr_lookups(
 fn extract_scalar_subquery(
     query: &Query,
     outer: &ScopeSnapshot,
-    conditional: bool,
-) -> Option<SubqueryLookup> {
-    if query.with.is_some() || has_offset(query.limit_clause.as_ref()) {
+) -> Option<(LookupKey, String, usize, usize)> {
+    if query.with.is_some() || query.fetch.is_some() {
         return None;
     }
+    let limit = normalize_limit(query.limit_clause.as_ref(), outer)?;
     let SetExpr::Select(select) = query.body.as_ref() else {
         return None;
     };
@@ -120,6 +88,9 @@ fn extract_scalar_subquery(
     else {
         return None;
     };
+    if alias.as_ref().is_some_and(|a| !a.columns.is_empty()) {
+        return None;
+    }
     let selection = select.selection.as_ref()?;
     let relation = object_name_identity(name);
     let self_qualifier = match alias {
@@ -131,30 +102,41 @@ fn extract_scalar_subquery(
         Some(OrderByKind::All(_)) => return None,
         None => &[],
     };
-    let (key, key_display) =
-        extract_lookup_key(&relation, &self_qualifier, true, selection, outer, order_by)?;
+    let (key, key_display) = extract_lookup_key(
+        &relation,
+        &self_qualifier,
+        true,
+        selection,
+        outer,
+        order_by,
+        limit,
+    )?;
     let start = select.select_token.0.span.start;
     let fallback = query.span().start;
     let at = if start.line > 0 { start } else { fallback };
-    Some(SubqueryLookup {
+    Some((
         key,
         key_display,
-        line: at.line.max(1) as usize,
-        column: at.column.max(1) as usize,
-        conditional,
-    })
+        at.line.max(1) as usize,
+        at.column.max(1) as usize,
+    ))
 }
 
-fn has_offset(limit: Option<&LimitClause>) -> bool {
-    matches!(
-        limit,
-        Some(
-            LimitClause::LimitOffset {
-                offset: Some(_),
-                ..
-            } | LimitClause::OffsetCommaLimit { .. }
-        )
-    )
+fn normalize_limit(limit: Option<&LimitClause>, outer: &ScopeSnapshot) -> Option<Option<String>> {
+    match limit {
+        None => Some(None),
+        Some(LimitClause::LimitOffset {
+            limit: None,
+            offset: None,
+            ..
+        }) => Some(None),
+        Some(LimitClause::LimitOffset {
+            limit: Some(expr),
+            offset: None,
+            ..
+        }) => Some(Some(normalize_expr(expr, None, false, outer)?)),
+        _ => None,
+    }
 }
 
 fn empty_group_by(group_by: &GroupByExpr) -> bool {

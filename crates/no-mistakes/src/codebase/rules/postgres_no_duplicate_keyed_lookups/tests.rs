@@ -186,6 +186,121 @@ fn detects_duplicate_lookups_in_with_dml_modifying_ctes_and_merge() {
 }
 
 #[test]
+fn detects_values_group_by_chained_using_join_on_case_arm_and_merge_predicates() {
+    let sql = "
+        INSERT INTO report(name, tier)
+        VALUES (
+            (SELECT name FROM accounts WHERE id = $1),
+            (SELECT tier FROM accounts WHERE id = $1)
+        );
+
+        SELECT count(*)
+        FROM orders o
+        GROUP BY
+            (SELECT name FROM accounts WHERE id = o.account_id),
+            (SELECT tier FROM accounts WHERE id = o.account_id);
+
+        SELECT o.id, a.name, b.tier
+        FROM orders o
+        LEFT JOIN accounts a USING (account_id)
+        LEFT JOIN accounts b USING (account_id);
+
+        SELECT o.id
+        FROM orders o
+        LEFT JOIN teams t ON t.id = o.team_id
+          AND (SELECT a1.active FROM accounts a1 WHERE a1.id = o.account_id)
+          AND (SELECT a2.verified FROM accounts a2 WHERE a2.id = o.account_id);
+
+        SELECT
+            o.id,
+            CASE
+                WHEN o.flag THEN
+                    (SELECT a1.short_name FROM accounts a1 WHERE a1.id = o.account_id)
+                    || (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id)
+                ELSE (SELECT a3.display_name FROM accounts a3 WHERE a3.id = o.account_id)
+            END
+        FROM orders o;
+
+        MERGE INTO orders o
+        USING incoming_orders s ON o.id = s.id
+        WHEN MATCHED AND (SELECT a1.active FROM accounts a1 WHERE a1.id = s.account_id) THEN
+            UPDATE SET status = 'a'
+        WHEN MATCHED AND (SELECT a2.locked FROM accounts a2 WHERE a2.id = s.account_id) THEN
+            UPDATE SET status = 'b'
+        RETURNING
+            (SELECT a3.name FROM accounts a3 WHERE a3.id = s.account_id),
+            (SELECT a4.tier FROM accounts a4 WHERE a4.id = s.account_id);
+
+        UPDATE orders o
+        SET cached_name = (SELECT a1.name FROM accounts a1 WHERE a1.id = o.account_id)
+        RETURNING
+            (SELECT a2.name FROM accounts a2 WHERE a2.id = o.account_id),
+            (SELECT a3.tier FROM accounts a3 WHERE a3.id = o.account_id);
+    ";
+    let facts = collect(sql);
+    assert_eq!(facts.len(), 8);
+}
+
+#[test]
+fn excludes_unvetted_functions_quoted_types_distinct_limits_column_aliases_and_json_aggs() {
+    let sql = r#"
+        SELECT o.id, a1.name, a2.tier
+        FROM orders o
+        LEFT JOIN accounts a1 ON a1.id = coalesce(o.override_id, uuidv4())
+        LEFT JOIN accounts a2 ON a2.id = coalesce(o.override_id, uuidv4());
+
+        SELECT o.id, a1.name, a2.tier
+        FROM orders o
+        LEFT JOIN accounts a1 ON a1.id = uuidv7()
+        LEFT JOIN accounts a2 ON a2.id = uuidv7();
+
+        SELECT o.id,
+            (SELECT a1.name FROM accounts a1 WHERE a1.id = app.next_lookup_id(o.id)),
+            (SELECT a2.tier FROM accounts a2 WHERE a2.id = app.next_lookup_id(o.id))
+        FROM orders o;
+
+        SELECT o.id, a1.name, a2.tier
+        FROM orders o
+        LEFT JOIN accounts a1 ON a1.id = o.raw_id::"Key"
+        LEFT JOIN accounts a2 ON a2.id = o.raw_id::"key";
+
+        SELECT o.id,
+            (SELECT a1.name FROM accounts a1 WHERE a1.id = o.account_id LIMIT 0),
+            (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id LIMIT 1)
+        FROM orders o;
+
+        SELECT o.id, a.name, b.tier
+        FROM orders o
+        LEFT JOIN accounts a(id, other) ON a.id = o.account_id
+        LEFT JOIN accounts b(other, id) ON b.id = o.account_id;
+
+        SELECT o.id, a.name,
+            (SELECT json_object_agg_strict(a2.k, a2.v) FROM accounts a2 WHERE a2.id = o.account_id),
+            (SELECT jsonb_object_agg_unique(a3.k, a3.v) FROM accounts a3 WHERE a3.id = o.account_id)
+        FROM orders o
+        LEFT JOIN accounts a ON a.id = o.account_id;
+
+        UPDATE orders o
+        SET account_id = o.account_id + 1,
+            cached_name = (SELECT a1.name FROM accounts a1 WHERE a1.id = o.account_id)
+        RETURNING (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id);
+    "#;
+    assert!(collect(sql).is_empty());
+}
+
+#[test]
+fn standalone_check_with_files_collects_sql_only_findings() {
+    let base = crate::test_support::rule_fixture_root(RULE_ID);
+    let root = base.join("scalar-subqueries");
+    let config_path = base.parent().unwrap().join("configs/enabled-sql.yml");
+    let config: NoMistakesConfig =
+        serde_yaml::from_str(&std::fs::read_to_string(&config_path).unwrap()).unwrap();
+    let files = vec![root.join("queries/check.sql")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 2);
+}
+
+#[test]
 fn validates_invalid_options_early() {
     let configs = crate::test_support::rule_fixture_root(RULE_ID)
         .parent()

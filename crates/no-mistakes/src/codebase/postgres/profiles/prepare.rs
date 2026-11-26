@@ -86,6 +86,7 @@ pub(crate) fn prepare_rule_sql_facts(
             && !config
                 .rule_applications("postgres-lock-inventory")
                 .is_empty())
+            || (rule_ids.contains(&"postgres-no-duplicate-keyed-lookups") && !patterns.is_empty())
             || low_sql
             || (!profiles.is_empty()
                 && dml_ids

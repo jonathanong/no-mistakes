@@ -1,6 +1,6 @@
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::{ScopeSnapshot, ScopeStack};
-use super::walk_query;
+use super::{inspect_exprs, walk_query};
 use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_suffix_name};
 use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
@@ -70,28 +70,45 @@ pub(super) fn inspect_join(
         } => join_lookup(join, name, alias.as_ref(), &before),
         _ => None,
     };
-    if let Some((key, key_display, line, column)) = candidate {
-        record_lookup(key, key_display, line, column, false, seen, out);
+    let mut using_provenance = Vec::new();
+    if let Some((key, key_display, line, column, provenance)) = candidate {
+        using_provenance = provenance;
+        record_lookup(key, key_display, line, column, seen, out);
     }
     register_table_factor(&join.relation, scopes, out);
+    for (col, binding) in using_provenance {
+        scopes.record_using_column(col, binding);
+    }
+    if let Some(JoinConstraint::On(expr)) = join_constraint(&join.join_operator) {
+        inspect_exprs(std::iter::once(expr), scopes, seen, out);
+    }
 }
 
-fn join_lookup(
-    join: &Join,
-    name: &ObjectName,
-    alias: Option<&TableAlias>,
-    outer: &ScopeSnapshot,
-) -> Option<(LookupKey, String, usize, usize)> {
-    let constraint = match &join.join_operator {
+fn join_constraint(op: &JoinOperator) -> Option<&JoinConstraint> {
+    match op {
         JoinOperator::Join(c)
         | JoinOperator::Inner(c)
         | JoinOperator::Left(c)
         | JoinOperator::LeftOuter(c)
         | JoinOperator::Right(c)
         | JoinOperator::RightOuter(c)
-        | JoinOperator::FullOuter(c) => c,
-        _ => return None,
-    };
+        | JoinOperator::FullOuter(c) => Some(c),
+        _ => None,
+    }
+}
+
+type JoinLookupResult = (LookupKey, String, usize, usize, Vec<(String, usize)>);
+
+fn join_lookup(
+    join: &Join,
+    name: &ObjectName,
+    alias: Option<&TableAlias>,
+    outer: &ScopeSnapshot,
+) -> Option<JoinLookupResult> {
+    if alias.is_some_and(|a| !a.columns.is_empty()) {
+        return None;
+    }
+    let constraint = join_constraint(&join.join_operator)?;
     let relation = object_name_identity(name);
     let self_qualifier = match alias {
         Some(alias) => ident_key(&alias.name),
@@ -103,23 +120,25 @@ fn join_lookup(
     match constraint {
         JoinConstraint::On(expr) => {
             let (key, display) =
-                extract_lookup_key(&relation, &self_qualifier, false, expr, outer, &[])?;
-            Some((key, display, line, column))
+                extract_lookup_key(&relation, &self_qualifier, false, expr, outer, &[], None)?;
+            Some((key, display, line, column, Vec::new()))
         }
         JoinConstraint::Using(cols) => {
-            let binding = outer.single_current_binding()?;
             if cols.is_empty() {
                 return None;
             }
             let mut equalities = Vec::new();
             let mut display = Vec::new();
+            let mut provenance = Vec::new();
             for col in cols {
                 let name = col
                     .0
                     .last()
                     .and_then(|part| part.as_ident())
                     .map(ident_key)?;
+                let binding = outer.resolve_using_column(&name)?;
                 equalities.push((name.clone(), format!("b{binding}.{name}")));
+                provenance.push((name.clone(), binding));
                 display.push(name);
             }
             equalities.sort();
@@ -129,10 +148,12 @@ fn join_lookup(
                     equalities,
                     residuals: Vec::new(),
                     order_by: Vec::new(),
+                    limit: None,
                 },
                 format!("USING ({})", display.join(", ")),
                 line,
                 column,
+                provenance,
             ))
         }
         _ => None,
@@ -144,7 +165,6 @@ pub(super) fn record_lookup(
     key_display: String,
     line: usize,
     column: usize,
-    conditional: bool,
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
@@ -157,7 +177,7 @@ pub(super) fn record_lookup(
             line,
             column,
         });
-    } else if !conditional {
+    } else {
         seen.insert(key, (line, column));
     }
 }

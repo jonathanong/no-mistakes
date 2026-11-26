@@ -43,8 +43,10 @@ The rule stays silent when the lookups are not proven to read the same row:
   an `EXISTS (...)` test.
 - Mutually exclusive `CASE WHEN ... THEN (SELECT ...) ELSE (SELECT ...) END`
   branches.
-- Volatile key expressions (`gen_random_uuid()`, `random()`, `clock_timestamp()`,
-  sequence-advancing functions), or ambiguous/unprovable expressions.
+- Volatile key expressions (UUID generators such as `gen_random_uuid()`,
+  `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
+  or unrecognized functions whose volatility is unknown, unresolved table column
+  alias lists, distinct `LIMIT` clauses, or ambiguous/unprovable expressions.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.
@@ -75,9 +77,11 @@ rules:
   `excludeExecutorNames` / `executorFactoryNames` / `executorTypeNames` /
   `executorOptionProperties` / `trustedSqlTags`: standard PostgreSQL executor
   selection. Set `importSpecifier` (or `executorNames`) for embedded TS/JS
-  queries, or `executorNames: []` to scan only `.sql` files selected by
-  `sqlInclude`. Setting both `executorNames` and `extraExecutorNames` is a
-  configuration error. See
+  queries. To scan only standalone `.sql` files selected by `sqlInclude`, set
+  `executorNames: []` with `importSpecifier` unset (or another executor scope
+  that selects no embedded calls); a nonempty `importSpecifier` with
+  `executorNames: []` retains default executor selection. Setting both
+  `executorNames` and `extraExecutorNames` is a configuration error. See
   [executor selection](../configuration/rules.md#postgresql-executor-selection).
 - `unanalyzable`: shared uncertainty policy (`report`, `advise`, or `ignore`;
   default `report`). `report` fails on dynamically constructed or unparseable
@@ -131,9 +135,12 @@ LEFT JOIN accounts a2 ON o.account_id = a2.id;
 
 ## Fix
 
-Replace the repeated joins or correlated scalar subqueries with one `LEFT JOIN`
-(or `INNER JOIN` when the target row is guaranteed to exist) and select all
-needed columns from that single binding.
+Verify that the lookup key identifies at most one row (or otherwise preserves
+query cardinality and behavior) before consolidating repeated joins or
+correlated scalar subqueries into a single join projecting every needed column.
+Preserve the original filtering semantics: use `INNER JOIN` when the original
+query excluded rows without a match, and `LEFT JOIN` when unmatched rows should
+remain in the result.
 
 ## Suppression
 

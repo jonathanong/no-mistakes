@@ -9,6 +9,7 @@ pub(super) struct LookupKey {
     pub(super) equalities: Vec<(String, String)>,
     pub(super) residuals: Vec<String>,
     pub(super) order_by: Vec<String>,
+    pub(super) limit: Option<String>,
 }
 
 pub(super) fn extract_lookup_key(
@@ -18,6 +19,7 @@ pub(super) fn extract_lookup_key(
     predicate: &Expr,
     outer: &ScopeSnapshot,
     order_by: &[OrderByExpr],
+    limit: Option<String>,
 ) -> Option<(LookupKey, String)> {
     let mut conjuncts = Vec::new();
     flatten_and(predicate, &mut conjuncts);
@@ -57,6 +59,7 @@ pub(super) fn extract_lookup_key(
             equalities,
             residuals,
             order_by: norm_order,
+            limit,
         },
         key_display,
     ))

@@ -1,24 +1,10 @@
+use super::builtins::SAFE_PURE_FUNCTIONS;
 use super::scope::ScopeSnapshot;
-use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
+use crate::codebase::postgres::idents::{ident_key, object_name_identity, unwrap_expr};
 use sqlparser::ast::{
-    DataType, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, InTarget,
+    ArrayElemTypeDef, DataType, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments,
     ObjectNamePart, OrderByExpr,
 };
-
-const VOLATILE_FUNCTIONS: &[&str] = &[
-    "random",
-    "clock_timestamp",
-    "timeofday",
-    "nextval",
-    "setval",
-    "currval",
-    "lastval",
-    "gen_random_uuid",
-    "uuid_generate_v1",
-    "uuid_generate_v4",
-    "txid_current",
-    "pg_current_xact_id",
-];
 
 pub(super) fn normalize_expr(
     expr: &Expr,
@@ -88,7 +74,7 @@ pub(super) fn normalize_expr(
         )),
         Expr::In {
             expr,
-            target: InTarget::List(list),
+            target: sqlparser::ast::InTarget::List(list),
             negated,
             ..
         } => {
@@ -114,7 +100,7 @@ pub(super) fn normalize_function(
     if function.over.is_some() || function.filter.is_some() || !function.within_group.is_empty() {
         return None;
     }
-    let name = function
+    let parts: Vec<String> = function
         .name
         .0
         .iter()
@@ -122,10 +108,13 @@ pub(super) fn normalize_function(
             ObjectNamePart::Identifier(ident) => Some(ident_key(ident)),
             _ => None,
         })
-        .collect::<Option<Vec<_>>>()?
-        .join(".");
-    let base = name.rsplit('.').next().unwrap_or(&name);
-    if VOLATILE_FUNCTIONS.contains(&base) {
+        .collect::<Option<Vec<_>>>()?;
+    let base = match parts.as_slice() {
+        [name] => name.as_str(),
+        [schema, name] if schema == "pg_catalog" => name.as_str(),
+        _ => return None,
+    };
+    if !SAFE_PURE_FUNCTIONS.contains(&base) {
         return None;
     }
     let FunctionArguments::List(list) = &function.args else {
@@ -142,11 +131,32 @@ pub(super) fn normalize_function(
             _ => None,
         })
         .collect::<Option<Vec<_>>>()?;
-    Some(format!("fn({name},{})", args.join(",")))
+    Some(format!("fn({base},{})", args.join(",")))
 }
 
 pub(super) fn canonical_type(data_type: &DataType) -> String {
-    data_type.to_string().to_ascii_lowercase()
+    match data_type {
+        DataType::Custom(name, mods) => {
+            let base = object_name_identity(name);
+            if mods.is_empty() {
+                base
+            } else {
+                let mods = mods
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",");
+                format!("{base}({mods})")
+            }
+        }
+        DataType::Array(
+            ArrayElemTypeDef::AngleBracket(inner)
+            | ArrayElemTypeDef::SquareBracket(inner, _)
+            | ArrayElemTypeDef::Parenthesis(inner)
+            | ArrayElemTypeDef::Qualified(inner, _),
+        ) => format!("{}[]", canonical_type(inner)),
+        other => other.to_string().to_ascii_lowercase(),
+    }
 }
 
 pub(super) fn normalize_order_by(

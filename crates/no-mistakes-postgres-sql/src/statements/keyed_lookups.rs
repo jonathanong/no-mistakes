@@ -1,3 +1,4 @@
+mod builtins;
 mod dml;
 mod expr_norm;
 mod join;
@@ -6,15 +7,14 @@ mod scope;
 mod subquery;
 
 use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
-use join::{inspect_join, record_lookup, register_table_factor};
+use join::{inspect_join, register_table_factor};
 use normalize::LookupKey;
 use scope::ScopeStack;
 use sqlparser::ast::{
-    Expr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
+    Expr, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
-use subquery::collect_expr_lookups;
 
 pub(crate) fn collect(statement: &Statement, out: &mut Vec<SqlDuplicateKeyedLookupFact>) {
     let mut scopes = ScopeStack::default();
@@ -64,6 +64,17 @@ fn walk_set_expr(
     match body {
         SetExpr::Select(select) => walk_select(select, order_exprs, scopes, out),
         SetExpr::Query(query) => walk_query(query, scopes, out),
+        SetExpr::Values(values) => {
+            scopes.push_frame();
+            let mut seen = BTreeMap::new();
+            inspect_exprs(
+                values.rows.iter().flat_map(|row| row.content.iter()),
+                scopes,
+                &mut seen,
+                out,
+            );
+            scopes.pop_frame();
+        }
         SetExpr::SetOperation { left, right, .. } => {
             walk_set_expr(left, &[], scopes, out);
             walk_set_expr(right, &[], scopes, out);
@@ -90,11 +101,16 @@ fn walk_select(
             inspect_join(join, scopes, &mut seen, out);
         }
     }
+    let group_by_exprs: &[Expr] = match &select.group_by {
+        GroupByExpr::Expressions(exprs, _) => exprs.as_slice(),
+        GroupByExpr::All(_) => &[],
+    };
     let exprs = select
         .projection
         .iter()
         .filter_map(select_item_expr)
         .chain(select.selection.iter())
+        .chain(group_by_exprs.iter())
         .chain(select.having.iter())
         .chain(order_exprs.iter().copied());
     inspect_exprs(exprs, scopes, &mut seen, out);
@@ -119,14 +135,9 @@ fn inspect_exprs<'a>(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     let outer = scopes.snapshot();
-    let mut subqueries = Vec::new();
     for expr in exprs {
-        collect_expr_lookups(expr, &outer, false, &mut subqueries);
+        subquery::inspect_expr(expr, &outer, seen, out);
         walk_nested_queries_in_expr(expr, scopes, out);
-    }
-    for lookup in subqueries {
-        let (line, col, cond) = (lookup.line, lookup.column, lookup.conditional);
-        record_lookup(lookup.key, lookup.key_display, line, col, cond, seen, out);
     }
 }
 
