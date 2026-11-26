@@ -476,4 +476,6 @@ and use ordinary location-scoped directives for source exceptions.
 
 ## Invalid UTF-8
 
-Source text this rule reads, including standalone SQL, is decoded lossily, so a stray byte does not drop the file or replace it with an encoding failure. A missing file remains a read error.
+Source text, including standalone SQL, is decoded lossily. The rule skips
+a standalone SQL file that disappeared after selection and propagates
+other standalone SQL read errors. [Standalone SQL reading](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_grouping_not_aggregation/scan.rs#L31-L40).

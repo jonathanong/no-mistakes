@@ -3,6 +3,7 @@ const {
   resolveVariable,
   isReassigned,
   recordObjectPatternBindings,
+  staticImportSource,
 } = require("./async-target-bindings");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 const { unwrapExpression, isFunction } = require("./async-ast");
@@ -99,12 +100,13 @@ function createBindingResolver(context) {
     try {
       const def = variable.defs[0];
       if (def.type === "ImportBinding") {
+        const source = staticImportSource(def);
         if (
-          def.node.type === "ImportNamespaceSpecifier" &&
-          new Set(["vitest", "vitest/config", "vite"]).has(def.parent.source.value)
+          ["ImportNamespaceSpecifier", "TSImportEqualsDeclaration"].includes(def.node.type) &&
+          ["vitest", "vitest/config", "vite"].includes(source)
         )
-          return { kind: "namespace", source: def.parent.source.value, root: variable };
-        return imported(importSpecifierName(def.node), def.parent.source.value, variable);
+          return { kind: "namespace", source, root: variable };
+        return imported(importSpecifierName(def.node), source, variable);
       }
       if (def.type === "Parameter") {
         const fn = def.node;

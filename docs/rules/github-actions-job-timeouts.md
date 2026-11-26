@@ -36,8 +36,10 @@ Neither `maxMinutes` nor `allow` entries bypass the sum check.
 
 `include` defaults to workflow `.yml` and `.yaml` files. `maxMinutes` is an
 optional cap. `rejectStepExceedingJob` and `rejectJobAtOrAboveStepSum` both
-default to `false`. Each `allow` entry names a `path#jobId` and may set a higher
-`maxMinutes` cap.
+default to `false`. Each `allow` entry names a `path#jobId` and can set a higher
+`maxMinutes` cap. An entry that omits its cap exempts that job from the
+ordinary cap. Both forms still require a supported timeout and leave step
+comparisons active. [Cap exemptions](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_job_timeouts/scan.rs#L94-L157).
 
 ```yaml
 rules:
@@ -197,9 +199,11 @@ the partner reports over-cap steps.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no `options.unanalyzable` channel. A missing or malformed job `timeout-minutes` is a finding, and invalid YAML is a finding. Step timeouts are judged only when `rejectStepExceedingJob` is enabled: a missing step timeout is not a finding, and a value with no supported literal upper bound is. An over-cap finding requires `maxMinutes`.
+Invalid YAML and missing or malformed job `timeout-minutes` produce ordinary
+findings. An over-cap job finding requires `maxMinutes`. With
+`rejectStepExceedingJob`, an explicitly set step timeout with no supported
+literal value is a finding. The optional step-sum check skips a job when it
+cannot establish a sum. This rule does not use `options.unanalyzable`. [Workflow scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_job_timeouts/scan.rs#L22-L32), [step comparison](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_job_timeouts/step_comparison.rs#L32-L46), and [step sum](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_job_timeouts/step_sum.rs#L10-L19).
 
 ## Related rules
 

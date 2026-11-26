@@ -1,0 +1,132 @@
+{
+  "eslint": [
+    {
+      "column": 1,
+      "endColumn": 53,
+      "endLine": 4,
+      "file": "opaque-field-values.ts",
+      "line": 4,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+      "messageId": "missingMethod",
+      "ruleId": "no-mistakes/gh-api-argument-safety",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 50,
+      "endLine": 5,
+      "file": "opaque-field-values.ts",
+      "line": 5,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+      "messageId": "missingMethod",
+      "ruleId": "no-mistakes/gh-api-argument-safety",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 55,
+      "endLine": 6,
+      "file": "opaque-field-values.ts",
+      "line": 6,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+      "messageId": "missingMethod",
+      "ruleId": "no-mistakes/gh-api-argument-safety",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 50,
+      "endLine": 7,
+      "file": "opaque-field-values.ts",
+      "line": 7,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+      "messageId": "missingMethod",
+      "ruleId": "no-mistakes/gh-api-argument-safety",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 55,
+      "endLine": 8,
+      "file": "opaque-field-values.ts",
+      "line": 8,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+      "messageId": "missingMethod",
+      "ruleId": "no-mistakes/gh-api-argument-safety",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 59,
+      "endLine": 9,
+      "file": "opaque-field-values.ts",
+      "line": 9,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+      "messageId": "missingMethod",
+      "ruleId": "no-mistakes/gh-api-argument-safety",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 56,
+      "endLine": 11,
+      "file": "opaque-field-values.ts",
+      "line": 11,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET).",
+      "messageId": "missingMethod",
+      "ruleId": "no-mistakes/gh-api-argument-safety",
+      "severity": 2
+    }
+  ],
+  "oxlint": [
+    {
+      "code": "no-mistakes(gh-api-argument-safety)",
+      "column": 1,
+      "file": "opaque-field-values.ts",
+      "line": 4,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+    },
+    {
+      "code": "no-mistakes(gh-api-argument-safety)",
+      "column": 1,
+      "file": "opaque-field-values.ts",
+      "line": 5,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+    },
+    {
+      "code": "no-mistakes(gh-api-argument-safety)",
+      "column": 1,
+      "file": "opaque-field-values.ts",
+      "line": 6,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+    },
+    {
+      "code": "no-mistakes(gh-api-argument-safety)",
+      "column": 1,
+      "file": "opaque-field-values.ts",
+      "line": 7,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+    },
+    {
+      "code": "no-mistakes(gh-api-argument-safety)",
+      "column": 1,
+      "file": "opaque-field-values.ts",
+      "line": 8,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+    },
+    {
+      "code": "no-mistakes(gh-api-argument-safety)",
+      "column": 1,
+      "file": "opaque-field-values.ts",
+      "line": 9,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+    },
+    {
+      "code": "no-mistakes(gh-api-argument-safety)",
+      "column": 1,
+      "file": "opaque-field-values.ts",
+      "line": 11,
+      "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+    }
+  ]
+}
