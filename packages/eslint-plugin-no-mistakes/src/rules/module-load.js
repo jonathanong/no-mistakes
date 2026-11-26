@@ -10,7 +10,7 @@ const { requireResolution } = require("./async-target-sources");
 const { literalString } = require("./logical-call");
 
 function patternExport(pattern, name) {
-  for (const property of pattern?.properties || []) {
+  for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
@@ -35,7 +35,7 @@ function importLoad(definition) {
     ) {
       return null;
     }
-    return source === null ? { source: null } : { source, exportName: "*" };
+    return { source, exportName: "*" };
   }
   if (!source) return null;
   if (definition.node?.type === "ImportNamespaceSpecifier") return { source, exportName: "*" };

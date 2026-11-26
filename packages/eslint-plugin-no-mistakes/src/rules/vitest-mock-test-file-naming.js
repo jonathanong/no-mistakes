@@ -92,7 +92,6 @@ function isMockingCall(node, context) {
 }
 
 function opaqueMock(node, context) {
-  if (isMockingCall(node, context)) return false;
   const callee = unwrap(node.callee);
   if (callee?.type !== "MemberExpression") return false;
   const method = propertyName(callee.property, callee.computed);

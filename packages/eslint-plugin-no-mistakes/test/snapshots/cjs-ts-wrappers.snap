@@ -46,6 +46,57 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 2,
+          "file": "shapes.test.ts",
+          "line": 2,
+          "message": "Module mock boundary does not allow mocking internal module \"./dep\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 7,
+          "file": "shapes.test.ts",
+          "line": 7,
+          "message": "Module mock boundary does not allow mocking internal module \"./other\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 11,
+          "file": "shapes.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 15,
+          "file": "shapes.test.ts",
+          "line": 15,
+          "message": "Module mock boundary does not allow mocking internal module \"./from-namespace\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "module-mock-boundary:boundary-ignore": [
@@ -113,6 +164,18 @@
   "no-vitest-sequential:sequential": [
     {
       "file": "not-a-runner.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "redeclare.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "type-only.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -248,6 +311,112 @@
           "line": 3,
           "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 2,
+          "file": "shapes.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 13,
+          "file": "shapes.test.ts",
+          "line": 13,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 17,
+          "file": "shapes.test.ts",
+          "line": 17,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 20,
+          "file": "shapes.test.ts",
+          "line": 20,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 22,
+          "file": "shapes.test.ts",
+          "line": 22,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 24,
+          "file": "shapes.test.ts",
+          "line": 24,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 31,
+          "file": "shapes.test.ts",
+          "line": 31,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 33,
+          "file": "shapes.test.ts",
+          "line": 33,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 38,
+          "file": "shapes.test.ts",
+          "line": 38,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
           "ruleId": "no-mistakes/no-vitest-sequential",
           "severity": 2
         }
@@ -663,6 +832,90 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 4,
+          "file": "shapes.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 7,
+          "file": "shapes.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 15,
+          "file": "shapes.test.ts",
+          "line": 15,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 21,
+          "file": "shapes.test.ts",
+          "line": 21,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 32,
+          "file": "shapes.test.ts",
+          "line": 32,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 38,
+          "file": "shapes.test.ts",
+          "line": 38,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 44,
+          "file": "shapes.test.ts",
+          "line": 44,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
@@ -957,6 +1210,72 @@
           "singleExportPattern": "^enqueue"
         }
       ]
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "shapes.test.ts",
+          "line": 6,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 7,
+          "file": "shapes.test.ts",
+          "line": 7,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 11,
+          "file": "shapes.test.ts",
+          "line": 11,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 20,
+          "file": "shapes.test.ts",
+          "line": 20,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 24,
+          "file": "shapes.test.ts",
+          "line": 24,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue"
+        }
+      ]
     }
   ],
   "test-no-wall-time-assertions:wall": [
@@ -1035,6 +1354,42 @@
           "line": 5,
           "message": "Cannot tell whether this elapsed-time assertion reads wall time. Use a static Date, performance, or perf_hooks binding.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 70,
+          "endLine": 5,
+          "file": "shapes.test.ts",
+          "line": 5,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "decoy-timer.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 6,
+          "file": "decoy-timer.test.ts",
+          "line": 6,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
           "ruleId": "no-mistakes/test-no-wall-time-assertions",
           "severity": 2
         }
@@ -1169,6 +1524,24 @@
           "line": 1,
           "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 12,
+          "file": "shapes.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
           "ruleId": "no-mistakes/vitest-mock-test-file-naming",
           "severity": 2
         }

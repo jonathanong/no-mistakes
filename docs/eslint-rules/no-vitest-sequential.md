@@ -49,7 +49,7 @@ member/option keys, the options object, and the `true` option value:
 // Disallowed: type-only wrappers do not make execution parallel.
 (test.sequential as typeof test)("users", () => {});
 test["sequential" as const]("users", () => {});
-test("users", ({ sequential: true as const } satisfies object), () => {});
+test("users", { sequential: true as const } satisfies object, () => {});
 
 // Rewrite each call to run independently, with isolated fixture/state.
 test("users", () => {});
@@ -69,7 +69,7 @@ runner alias. An opaque argument array does not expose its options. A visible
 prevents full argument normalization. Rewrite
 sequential registrations as parallel tests rather than hiding their options in a wrapper.
 
-A renamed import, a namespace member, a string or expression-free template key, optional chaining, a comma callee, `Function.prototype` forwarding, and one `const` alias are the same `.sequential` call. Vitest's default import is not a runner. A computed identifier key is not a static name. A module-scope binding named `test`, `it`, or `describe` is still a runner, including `const test = base.extend({})`, `import { baseTest as test } from "./fixtures"`, `import test from "./fx"`, `const { describe } = require("vitest")`, and a module-scope `function`, `let`, or `var`. A parameter or other nested-scope shadow, such as `function helper(suite)`, is not. `const test = createTest(); test("x", { sequential: true })` still uses the local name. `test.sequential.each(rows)(name, fn)` reports once. `const suite = v.describe; suite.sequential(...)` and `const t = test; t.sequential(...)` follow that one `const` alias.
+A renamed import, a namespace member, a string or expression-free template key, optional chaining, a comma callee, `Function.prototype` forwarding, and one `const` alias are the same `.sequential` call. Vitest's default import is not a runner. A type-only import, including `import type { test }` and `import { type it }`, is erased and is not a runner. A computed identifier key is not a static name. A module-scope binding named `test`, `it`, or `describe` is still a runner, including `const test = base.extend({})`, `import { baseTest as test } from "./fixtures"`, `import test from "./fx"`, `const { describe } = require("vitest")`, and a module-scope `function`, `let`, or `var`. A parameter or other nested-scope shadow, such as `function helper(suite)`, is not. `const test = createTest(); test("x", { sequential: true })` still uses the local name. `test.sequential.each(rows)(name, fn)` reports once. `const suite = v.describe; suite.sequential(...)` and `const t = test; t.sequential(...)` follow that one `const` alias.
 
 Another file's re-export is not visible here.
 

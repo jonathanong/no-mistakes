@@ -18,8 +18,14 @@ const groups = [
   {
     rule: "no-vitest-sequential",
     dir: "sequential",
-    invalid: ["helper.js", "default-import.test.ts", "wrappers.test.ts", "dynamic.test.ts"],
-    valid: ["not-a-runner.test.ts"],
+    invalid: [
+      "helper.js",
+      "default-import.test.ts",
+      "wrappers.test.ts",
+      "dynamic.test.ts",
+      "shapes.test.ts",
+    ],
+    valid: ["not-a-runner.test.ts", "redeclare.js", "type-only.test.ts"],
   },
   {
     rule: "no-vitest-sequential",
@@ -30,7 +36,7 @@ const groups = [
   {
     rule: "module-mock-boundary",
     dir: "boundary",
-    invalid: ["mocks.test.ts", "dynamic.test.ts"],
+    invalid: ["mocks.test.ts", "dynamic.test.ts", "shapes.test.ts"],
   },
   {
     rule: "module-mock-boundary",
@@ -59,6 +65,7 @@ const groups = [
       "computed-key.test.ts",
       "import-equals.test.ts",
       "dynamic.test.ts",
+      "shapes.test.ts",
     ],
     valid: ["foo.mock.test.ts", "expect-only.test.ts"],
   },
@@ -71,7 +78,7 @@ const groups = [
   {
     rule: "test-no-shared-state",
     dir: "shared",
-    invalid: ["cjs.test.ts", "wrappers.test.ts", "dynamic.test.ts"],
+    invalid: ["cjs.test.ts", "wrappers.test.ts", "dynamic.test.ts", "shapes.test.ts"],
     valid: ["not-a-callee.test.ts"],
   },
   {
@@ -83,7 +90,13 @@ const groups = [
   {
     rule: "test-no-wall-time-assertions",
     dir: "wall",
-    invalid: ["clocks.test.ts", "wrapped.test.ts", "dynamic.test.ts"],
+    invalid: [
+      "clocks.test.ts",
+      "wrapped.test.ts",
+      "dynamic.test.ts",
+      "shapes.test.ts",
+      "decoy-timer.test.ts",
+    ],
     valid: ["fake-timers.test.ts"],
   },
   {
@@ -125,7 +138,7 @@ const groups = [
     rule: "test-no-typed-enqueue-fake",
     dir: "enqueue-prefix",
     options: [{ singleExportPattern: "^enqueue" }],
-    invalid: ["wrappers.test.ts"],
+    invalid: ["wrappers.test.ts", "shapes.test.ts"],
   },
   {
     rule: "test-no-typed-enqueue-fake",

@@ -10,7 +10,6 @@ const TEST_NAMES = new Set(["test", "it", "describe"]);
 
 function importedName(specifier) {
   const imported = specifier.imported;
-  if (!imported) return null;
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
@@ -33,9 +32,10 @@ function patternTests(pattern) {
 }
 
 function recordVitestImport(node, state) {
-  if (node.source?.value !== "vitest") return;
+  if (node.source?.value !== "vitest" || node.importKind === "type") return;
   state.usesVitest = true;
   for (const specifier of node.specifiers) {
+    if (specifier.importKind === "type") continue;
     if (
       specifier.type === "ImportNamespaceSpecifier" ||
       specifier.type === "ImportDefaultSpecifier"
@@ -53,11 +53,6 @@ function recordImportEquals(node, state) {
     return;
   }
   const source = literalString(node.moduleReference.expression);
-  if (source === null) {
-    state.opaque.add(node.id.name);
-    state.usesVitest = true;
-    return;
-  }
   if (source !== "vitest") return;
   state.usesVitest = true;
   state.namespaces.add(node.id.name);
@@ -68,13 +63,8 @@ function recordRequire(declaration, state, context) {
   if (!resolution) return;
   if (resolution.source !== null && resolution.source !== "vitest") return;
   state.usesVitest = true;
-  if (resolution.source === null) {
-    if (declaration.id?.type === "Identifier") state.opaque.add(declaration.id.name);
-    for (const entry of patternTests(declaration.id)) {
-      if (entry.dynamic) state.opaque.add(entry.local.name);
-    }
-    return;
-  }
+  // A non-static require is judged later as unanalyzable, not as a runner.
+  if (resolution.source === null) return;
   if (declaration.id?.type === "Identifier") {
     state.namespaces.add(declaration.id.name);
     return;

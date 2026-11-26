@@ -91,7 +91,6 @@ function hasSequentialOption(node) {
 }
 
 function acceptsRunner(root, context, namespaces) {
-  if (!root || root.type !== "Identifier") return false;
   const variable = resolveVariable(root, context);
   if (!variable || variable.defs.length === 0) return true;
   if (variable.defs.length !== 1) return false;
