@@ -295,3 +295,45 @@ fn find_config_root_and_empty_rule_names() {
         .to_string();
     assert!(error.contains("rules[0].rule is required"));
 }
+
+#[test]
+fn fragment_deserialize_without_provenance_uses_fallback_message() {
+    let value: serde_yaml::Value = serde_yaml::from_str("rules: bad").unwrap();
+    let error = super::fragment_validation::deserialize(
+        value,
+        &super::super::schema::ConfigProvenance::default(),
+        &[],
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(
+        error.contains("failed to deserialize merged configuration"),
+        "{error}"
+    );
+}
+
+#[test]
+fn validate_document_rejects_unknown_rule_key_in_full_document() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/rule-keys/fixture/unknown-id.yml");
+    let document = super::ConfigDocument {
+        source: std::fs::read_to_string(&path).unwrap(),
+        path,
+        section: None,
+    };
+    let error = super::fragment_validation::validate_document(&document)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("unknown rule"), "{error}");
+}
+
+#[test]
+fn declared_config_rejects_invalid_rule_options() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/options-audit/fixture/issue-4110");
+    let config = root.join("invalid-options.yml");
+    let error = super::declared_config(&root, Some(&config))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("bogusOption"), "{error}");
+}
