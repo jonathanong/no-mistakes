@@ -1,3 +1,4 @@
+require("./declarations-planning-inputs");
 const { assert, test, readFileSync, join, packageRoot, repositoryRoot } = require("./context");
 
 test("executed PostgreSQL source extraction exposes its named async contract", () => {

@@ -26,6 +26,9 @@ export type TestPlanFramework =
   | "dart"
   | "jest";
 
+/** Git comparison input. A head revision is meaningful only with a base. */
+export type GitDiffRevisions = { base?: string; head?: never } | { base: string; head: string };
+
 /** Shared option bag for `testsPlan()`. Direct-owner plans omit incompatible fields via `TestsPlanOptions`. */
 export interface TestsPlanOptionsBase {
   framework?: TestPlanFramework;
@@ -36,6 +39,7 @@ export interface TestsPlanOptionsBase {
   /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   base?: string;
+  /** Head revision. Requires `base`. */
   head?: string;
   /** Git diff refspec, e.g. "origin/main...HEAD". Sugar for base/head. */
   fromGitDiff?: string;
@@ -63,22 +67,24 @@ export interface TestsPlanOptionsBase {
  * Options for `testsPlan()`. Direct-owner plans intentionally bypass normal
  * test-plan policy, so their incompatible options are rejected at compile time.
  */
-export type TestsPlanOptions =
-  | (Omit<
-      TestsPlanOptionsBase,
-      "framework" | "limitPercent" | "limitFiles" | "globalConfigFallback" | "changes"
-    > & {
-      /** Select changed framework-owned tests plus tests one reverse graph edge away. */
-      directTestOwner: true;
-      framework: TestPlanFramework;
-      /** Direct-owner selection is bounded to changed files; use testsImpact for explicit entrypoints. */
-      entrypoints?: never;
-      limitPercent?: never;
-      limitFiles?: never;
-      globalConfigFallback?: never;
-      changes?: never;
-    })
-  | (TestsPlanOptionsBase & { directTestOwner?: false });
+export type TestsPlanOptions = GitDiffRevisions &
+  (
+    | (Omit<
+        TestsPlanOptionsBase,
+        "framework" | "limitPercent" | "limitFiles" | "globalConfigFallback" | "changes"
+      > & {
+        /** Select changed framework-owned tests plus tests one reverse graph edge away. */
+        directTestOwner: true;
+        framework: TestPlanFramework;
+        /** Direct-owner selection is bounded to changed files; use testsImpact for explicit entrypoints. */
+        entrypoints?: never;
+        limitPercent?: never;
+        limitFiles?: never;
+        globalConfigFallback?: never;
+        changes?: never;
+      })
+    | (TestsPlanOptionsBase & { directTestOwner?: false })
+  );
 
 export interface TestsImpactOptions {
   /** Project root. Defaults to the current working directory. */

@@ -68,7 +68,9 @@ export type BatchedCheckOptions = Pick<
   Pick<CheckOptions, "includeRunnerConfigDeadlines" | "includeSqlVerdicts">;
 export type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;
 export type BatchedRootConfigOptions<T> = Omit<T, "root" | "config">;
-export type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "config">;
+export type BatchedRootTsConfigOptions<T> = T extends unknown
+  ? Omit<T, "root" | "tsconfig" | "config">
+  : never;
 
 export type AnalyzeProjectReportRequest =
   | ({ type: "dependencies"; id?: string } & BatchedDependencyTraverseOptions)
