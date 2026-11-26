@@ -77,6 +77,42 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "first_line_next_line_directive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "Directive.cs",
+          "line": 1,
+          "message": "directive for `csharp-max-lines-per-file` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line csharp-max-lines-per-file",
+          "target": "csharp-max-lines-per-file"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Control.cs",
+          "line": 1,
+          "message": "4 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "public sealed class Control"
+        },
+        {
+          "file": "Directive.cs",
+          "line": 1,
+          "message": "5 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "// no-mistakes-disable-next-line csharp-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "input_advise": {
     "exitCode": 1,
     "report": {
