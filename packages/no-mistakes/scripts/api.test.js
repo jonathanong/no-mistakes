@@ -26,6 +26,21 @@ require("./api-tests/declarations-runtime");
 
 const { assert, test, readFileSync, join, packageRoot } = require("./api-tests/context");
 
+test("cache setup policy exports both workflow selectors", () => {
+  const options = readFileSync(
+    join(packageRoot, "github-actions-cache-setup-policy-types.d.ts"),
+    "utf8",
+  );
+  assert.match(options, /export interface GitHubActionsCacheSetupPolicyOptions/);
+  assert.match(options, /export interface GitHubActionsCacheKeyShape/);
+  assert.match(options, /export interface GitHubActionsSetupDeadline/);
+  assert.match(options, /unanalyzable\?: Unanalyzable;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-cache-setup-policy-types";/,
+  );
+});
+
 test("github-actions-pinned-hash images option is publicly named", () => {
   const declaration = readFileSync(
     join(packageRoot, "github-actions-pinned-hash-types.d.ts"),
@@ -541,6 +556,11 @@ test("queue wait finding kinds are public without narrowing other queue findings
   );
 });
 
+test("YAML merge uncertainty is declared in topology reports", () => {
+  const topology = readFileSync(join(packageRoot, "workflow-topology-types.d.ts"), "utf8");
+  assert.match(topology, /\| "unlocated-yaml-merge"/);
+});
+
 test("workflow topology policy exports the reusable workflow lock option", () => {
   const declarations = readFileSync(
     join(packageRoot, "workflow-topology-policy-types.d.ts"),
@@ -640,5 +660,19 @@ test("changes diff and planner changes have exported public contracts", () => {
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
     /export \{ changesDiff \} from "\.\/changes-types"/,
+  );
+});
+
+test("required PR path filters export the workflow scope type", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-no-required-pr-path-filters-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface GithubActionsNoRequiredPrPathFiltersOptions\b/);
+  assert.match(declarations, /workflows: string\[\];/);
+  assert.match(declarations, /unanalyzable\?: Unanalyzable;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-no-required-pr-path-filters-types";/,
   );
 });

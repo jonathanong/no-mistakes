@@ -1,0 +1,7 @@
+name: Verify
+on: { pull_request: { paths: ['src/**'] } }
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/verify

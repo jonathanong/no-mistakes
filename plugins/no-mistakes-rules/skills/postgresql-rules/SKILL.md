@@ -41,6 +41,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT fold away a statement without keeping the lock or snapshot guarantee it gave.
 - MUST NOT write an ORM lock that never executes; lazy querysets take no lock until evaluated, and some ORMs drop the lock on bulk delete.
 - MUST NOT lock related tables in different orders on different paths; lock parent before child everywhere.
+- SHOULD NOT insert a foreign-key child row in the same transaction before updating a column of the same parent covered by a unique index usable as a foreign-key target. Concurrent transactions can each take `FOR KEY SHARE` during the foreign-key check, then deadlock when each update needs `FOR UPDATE` strength. Update the parent first, or acquire the stronger parent lock before the insert.
 - MUST NOT pick which parent to lock from an unlocked read of the child's foreign key; lock that parent, then lock the child and re-check the key, retrying if it moved.
 - SHOULD NOT ship a job that locks contended rows without a recovery path for deadlocks, such as bounded retries with backoff.
 - MUST NOT keep using a transaction after a statement fails unless it ran in a savepoint you rolled back to; every later statement fails with `25P02`.

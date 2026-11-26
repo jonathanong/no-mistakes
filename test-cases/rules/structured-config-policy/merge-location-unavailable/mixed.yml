@@ -1,0 +1,8 @@
+quoted: {"<<": literal}
+merged: {<<: {owner: widgets}}
+misread: &misread
+  retained: true
+  # libyaml ends this comment at U+0085 (NEL).  <<: {rest: unknown}
+receiver:
+  <<: [*misread, {fallback: later}]
+  explicit: true

@@ -1,0 +1,6 @@
+x-on: &shared_on
+  pull_request:
+    paths: ['src/**']
+  pull_request_target: 42
+on: *shared_on
+jobs: {}

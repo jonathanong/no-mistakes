@@ -1,0 +1,222 @@
+{
+  "eslint": [
+    {
+      "column": 1,
+      "endColumn": 28,
+      "endLine": 5,
+      "file": "boundary.ts",
+      "line": 5,
+      "message": "Module mock boundary requires literal specifiers.",
+      "messageId": "boundary",
+      "ruleId": "no-mistakes/module-mock-boundary",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 48,
+      "endLine": 6,
+      "file": "boundary.ts",
+      "line": 6,
+      "message": "Module mock boundary requires literal specifiers.",
+      "messageId": "boundary",
+      "ruleId": "no-mistakes/module-mock-boundary",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 29,
+      "endLine": 7,
+      "file": "boundary.ts",
+      "line": 7,
+      "message": "Module mock boundary requires literal specifiers.",
+      "messageId": "boundary",
+      "ruleId": "no-mistakes/module-mock-boundary",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 55,
+      "endLine": 8,
+      "file": "boundary.ts",
+      "line": 8,
+      "message": "Module mock boundary requires literal specifiers.",
+      "messageId": "boundary",
+      "ruleId": "no-mistakes/module-mock-boundary",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 57,
+      "endLine": 9,
+      "file": "boundary.ts",
+      "line": 9,
+      "message": "Module mock boundary requires literal specifiers.",
+      "messageId": "boundary",
+      "ruleId": "no-mistakes/module-mock-boundary",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 54,
+      "endLine": 10,
+      "file": "boundary.ts",
+      "line": 10,
+      "message": "Module mock boundary requires literal specifiers.",
+      "messageId": "boundary",
+      "ruleId": "no-mistakes/module-mock-boundary",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 30,
+      "endLine": 4,
+      "file": "preserve.ts",
+      "line": 4,
+      "message": "Module mock factory must spread the real module to preserve exports.",
+      "messageId": "preserve",
+      "ruleId": "no-mistakes/module-mock-preserve-exports",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 50,
+      "endLine": 5,
+      "file": "preserve.ts",
+      "line": 5,
+      "message": "Module mock factory must spread the real module to preserve exports.",
+      "messageId": "preserve",
+      "ruleId": "no-mistakes/module-mock-preserve-exports",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 31,
+      "endLine": 6,
+      "file": "preserve.ts",
+      "line": 6,
+      "message": "Module mock factory must spread the real module to preserve exports.",
+      "messageId": "preserve",
+      "ruleId": "no-mistakes/module-mock-preserve-exports",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 57,
+      "endLine": 7,
+      "file": "preserve.ts",
+      "line": 7,
+      "message": "Module mock factory must spread the real module to preserve exports.",
+      "messageId": "preserve",
+      "ruleId": "no-mistakes/module-mock-preserve-exports",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 59,
+      "endLine": 8,
+      "file": "preserve.ts",
+      "line": 8,
+      "message": "Module mock factory must spread the real module to preserve exports.",
+      "messageId": "preserve",
+      "ruleId": "no-mistakes/module-mock-preserve-exports",
+      "severity": 2
+    },
+    {
+      "column": 1,
+      "endColumn": 56,
+      "endLine": 9,
+      "file": "preserve.ts",
+      "line": 9,
+      "message": "Module mock factory must spread the real module to preserve exports.",
+      "messageId": "preserve",
+      "ruleId": "no-mistakes/module-mock-preserve-exports",
+      "severity": 2
+    }
+  ],
+  "oxlint": [
+    {
+      "code": "no-mistakes(module-mock-boundary)",
+      "column": 1,
+      "file": "boundary.ts",
+      "line": 5,
+      "message": "Module mock boundary requires literal specifiers."
+    },
+    {
+      "code": "no-mistakes(module-mock-boundary)",
+      "column": 1,
+      "file": "boundary.ts",
+      "line": 6,
+      "message": "Module mock boundary requires literal specifiers."
+    },
+    {
+      "code": "no-mistakes(module-mock-boundary)",
+      "column": 1,
+      "file": "boundary.ts",
+      "line": 7,
+      "message": "Module mock boundary requires literal specifiers."
+    },
+    {
+      "code": "no-mistakes(module-mock-boundary)",
+      "column": 1,
+      "file": "boundary.ts",
+      "line": 8,
+      "message": "Module mock boundary requires literal specifiers."
+    },
+    {
+      "code": "no-mistakes(module-mock-boundary)",
+      "column": 1,
+      "file": "boundary.ts",
+      "line": 9,
+      "message": "Module mock boundary requires literal specifiers."
+    },
+    {
+      "code": "no-mistakes(module-mock-boundary)",
+      "column": 1,
+      "file": "boundary.ts",
+      "line": 10,
+      "message": "Module mock boundary requires literal specifiers."
+    },
+    {
+      "code": "no-mistakes(module-mock-preserve-exports)",
+      "column": 1,
+      "file": "preserve.ts",
+      "line": 4,
+      "message": "Module mock factory must spread the real module to preserve exports."
+    },
+    {
+      "code": "no-mistakes(module-mock-preserve-exports)",
+      "column": 1,
+      "file": "preserve.ts",
+      "line": 5,
+      "message": "Module mock factory must spread the real module to preserve exports."
+    },
+    {
+      "code": "no-mistakes(module-mock-preserve-exports)",
+      "column": 1,
+      "file": "preserve.ts",
+      "line": 6,
+      "message": "Module mock factory must spread the real module to preserve exports."
+    },
+    {
+      "code": "no-mistakes(module-mock-preserve-exports)",
+      "column": 1,
+      "file": "preserve.ts",
+      "line": 7,
+      "message": "Module mock factory must spread the real module to preserve exports."
+    },
+    {
+      "code": "no-mistakes(module-mock-preserve-exports)",
+      "column": 1,
+      "file": "preserve.ts",
+      "line": 8,
+      "message": "Module mock factory must spread the real module to preserve exports."
+    },
+    {
+      "code": "no-mistakes(module-mock-preserve-exports)",
+      "column": 1,
+      "file": "preserve.ts",
+      "line": 9,
+      "message": "Module mock factory must spread the real module to preserve exports."
+    }
+  ]
+}

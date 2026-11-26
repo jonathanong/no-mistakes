@@ -218,9 +218,9 @@ what it means depends on the export's kind:
   consumed.
 - Classes: a type-position use counts as production use, because the class type
   is part of the production API.
-- Default exports and any export whose kind cannot be determined: the
-  type-only importers are reported as an unanalyzable advisory, never silently
-  counted or dropped.
+- Default exports and exports whose kind cannot be determined: type-only
+  importers follow `options.unanalyzable`: `report` by default, `advise`, or
+  `ignore`. [Unknown-consumer routing](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/execution.rs#L92-L113).
 
 Reported (value export, type-only production reference, runtime test use):
 
@@ -295,13 +295,10 @@ Node loader findings.
 - `platformConsumedExports`: optional explicit platform-consumption entries. Each
   entry has an exact root-relative `file` and a nonempty `exports` list of exact
   exported names; use `default` for the default export. File paths are normalized
-  before matching. Each listed name counts as a production consumer only in that
-  file. Other exports in the same file remain independently analyzed, including
-  their unknown consumers and uncertainty advisories. An entry applies only to
-  a non-forwarded export declared in that exact file; it can settle an otherwise
-  unknown namespace consumer for that named export, but it does not infer which
-  names a platform reads. Forwarded exports, including external star exports,
-  remain outside this rule's candidates.
+  before matching. The rule follows named re-exports from an explicitly
+  configured name, so listing a name on a barrel can establish a production
+  consumer for the source export. Other names remain independently analyzed.
+  Forwarded exports themselves remain outside the candidate set. [Platform consumer lookup](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/config.rs#L91-L112) and [candidate filtering](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/execution.rs#L68-L87).
 - `unanalyzable`: shared `report` (default), `advise`, or `ignore` policy. Rule-level
   configuration overrides the repository policy.
 

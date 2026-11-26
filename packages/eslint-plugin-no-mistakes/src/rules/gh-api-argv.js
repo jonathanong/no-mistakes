@@ -68,8 +68,11 @@ function inspectArgv(array, includesApi) {
     if (text.startsWith("-X") && text !== "-X") hasMethod = method(text.slice(2));
     if (text.startsWith("--method=")) hasMethod = method(text.slice(9));
     if (valueFlags.has(text)) {
-      if (token(args[i + 1]) === null) uncertain = true;
-      const next = token(args[i + 1]);
+      const value = args[i + 1];
+      const next = token(value);
+      if (next === null && (!fieldFlags.has(text) || !value || value.type === "SpreadElement")) {
+        uncertain = true;
+      }
       if (!(text === "-X" || text === "--method") || !next?.startsWith("-")) i += 1;
     } else if (
       switches.has(text) ||
