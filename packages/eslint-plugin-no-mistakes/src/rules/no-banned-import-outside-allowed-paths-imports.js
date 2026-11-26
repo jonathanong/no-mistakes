@@ -60,11 +60,10 @@ function seedImportEquals(node, context, config, aliasMap) {
   if (node.importKind === "type" || node.id?.type !== "Identifier") return;
   const ref = node.moduleReference;
   if (ref?.type !== "TSExternalModuleReference") return;
-  const expression = unwrapExpression(ref.expression);
-  const moduleSpecifier = expression?.type === "Literal" ? String(expression.value) : null;
+  // The external-module grammar only accepts a string literal.
+  const moduleSpecifier = String(unwrapExpression(ref.expression).value);
   if (!moduleSpecifier) return;
   const variable = resolveVariable(node.id, context);
-  if (!variable) return;
   if (hasAnyBannedName(config, moduleSpecifier) || CREATE_REQUIRE_MODULES.has(moduleSpecifier)) {
     aliasMap.set(variable, { kind: "object", modules: new Set([moduleSpecifier]) });
   }

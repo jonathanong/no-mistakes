@@ -20,7 +20,6 @@ function unassertedCall(node, call) {
 }
 
 function moduleObject(root, sourceCode) {
-  if (root?.type !== "Identifier") return false;
   const def = resolveVariable(sourceCode, root)?.defs[0];
   if (!def) return false;
   if (def.node?.type === "ImportNamespaceSpecifier") return true;

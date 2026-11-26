@@ -54,7 +54,6 @@ module.exports = {
       )
         return null;
       const client = unwrapExpression(member.object);
-      if (!client) return null;
       const named = client.type === "Identifier" && options.clients?.includes(client.name);
       const imported = options.imports?.some((selector) =>
         matchesRuntimeImport(client, selector, context),

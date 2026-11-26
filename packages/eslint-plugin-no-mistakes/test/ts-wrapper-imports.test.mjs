@@ -255,6 +255,7 @@ const cases = [
     rule: "ts-no-function-aliases",
     lines: {
       "function wrap(a)": ["alias"],
+      "function wrapRequireCall(a)": ["alias"],
       "function wrapCall(a)": ["alias"],
       "function viaComputed(x)": ["alias"],
       "function viaApply(x)": ["alias"],

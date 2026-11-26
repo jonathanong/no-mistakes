@@ -83,15 +83,6 @@ function traverse(context, node, visit, root = node) {
   }
 }
 
-function peelsTo(node, target) {
-  let current = node;
-  while (current && current !== target) {
-    if (!isTransparentExpression(current)) return false;
-    current = current.expression;
-  }
-  return current === target;
-}
-
 function isUnconditionalBeforeReturn(node, block) {
   let current = node;
   while (current && current !== block) {
@@ -122,7 +113,6 @@ module.exports = {
   isTransparentExpression,
   isUnconditionalBeforeReturn,
   traverse,
-  peelsTo,
   unwrapExpression,
   unwrapSequence,
   unwrapTransparentParent,

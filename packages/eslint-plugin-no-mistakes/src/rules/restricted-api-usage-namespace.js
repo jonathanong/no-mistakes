@@ -59,8 +59,7 @@ function namespaceVisitors({ context, targets, report, bindings, suppressed }) {
     return namespaceBinding(expression, context, bindings);
   }
   function remember(id, source, name) {
-    const variable = resolveVariable(id, context);
-    if (variable) bindings.set(variable, { source, name });
+    bindings.set(resolveVariable(id, context), { source, name });
   }
   function sourceLoad(node, source) {
     for (const target of targets) {

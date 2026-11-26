@@ -15,7 +15,7 @@ const importSelectorSchema = {
 };
 
 function oneDef(id, context) {
-  const variable = id?.type === "Identifier" ? resolveVariable(id, context) : null;
+  const variable = resolveVariable(id, context);
   if (!variable || variable.defs.length !== 1) return null;
   return { variable, def: variable.defs[0] };
 }
@@ -24,8 +24,8 @@ function importEqualsSource(node) {
   const ref = node?.moduleReference;
   if (node?.type !== "TSImportEqualsDeclaration" || node.importKind === "type") return null;
   if (ref?.type !== "TSExternalModuleReference") return null;
-  const expression = unwrapExpression(ref.expression);
-  return expression?.type === "Literal" ? String(expression.value) : null;
+  // The external-module grammar only accepts a string literal.
+  return String(unwrapExpression(ref.expression).value);
 }
 
 function patternName(pattern, localName) {
@@ -105,8 +105,7 @@ function resolveImportedValue(expression, context, seen = new Set()) {
     return {
       source: def.parent.source.value,
       imported: importedName,
-      names:
-        importedName === "default" && local !== "default" ? [local, "default"] : [importedName],
+      names: importedName === "default" ? [local, "default"] : [importedName],
     };
   }
   if (
@@ -118,7 +117,7 @@ function resolveImportedValue(expression, context, seen = new Set()) {
     return {
       source: def.parent.source.value,
       imported: "default",
-      names: local === "default" ? ["default"] : [local, "default"],
+      names: [local, "default"],
     };
   }
   if (def.type === "Variable" && def.node?.id?.type === "ObjectPattern") {

@@ -46,7 +46,6 @@ function hoistedFn(node, scope) {
 
 function seedImportEquals(statement, scope) {
   if (statement.type !== "TSImportEqualsDeclaration" || statement.importKind === "type") return;
-  if (statement.id?.type !== "Identifier") return;
   const ref = statement.moduleReference;
   const source = unwrap(ref?.type === "TSExternalModuleReference" ? ref.expression : null);
   if (source?.type !== "Literal") return;

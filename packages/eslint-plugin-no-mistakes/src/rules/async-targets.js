@@ -44,7 +44,7 @@ function createTargetMatcher(
   }
 
   function recordDefaultNames(id, source) {
-    if (id.name !== "default") recordDirect(id, source, id.name);
+    recordDirect(id, source, id.name);
     recordDirect(id, source, "default");
   }
 

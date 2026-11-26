@@ -1097,11 +1097,22 @@
           "severity": 2
         },
         {
-          "column": 25,
-          "endColumn": 45,
-          "endLine": 32,
+          "column": 8,
+          "endColumn": 2,
+          "endLine": 34,
           "file": "function-aliases.ts",
           "line": 32,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 45,
+          "endLine": 36,
+          "file": "function-aliases.ts",
+          "line": 36,
           "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
           "messageId": "alias",
           "ruleId": "no-mistakes/ts-no-function-aliases",
@@ -1811,9 +1822,16 @@
         },
         {
           "code": "no-mistakes(ts-no-function-aliases)",
-          "column": 25,
+          "column": 8,
           "file": "function-aliases.ts",
           "line": 32,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        },
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 25,
+          "file": "function-aliases.ts",
+          "line": 36,
           "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
         }
       ],

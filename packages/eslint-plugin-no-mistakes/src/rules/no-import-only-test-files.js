@@ -89,7 +89,7 @@ function isTestRequire(statement, context) {
 }
 
 function importEqualsSource(node) {
-  if (node?.type !== "TSImportEqualsDeclaration" || node.importKind === "type") return null;
+  if (node.importKind === "type") return null;
   const ref = node.moduleReference;
   if (ref?.type !== "TSExternalModuleReference") return null;
   return stringArgument(ref.expression);

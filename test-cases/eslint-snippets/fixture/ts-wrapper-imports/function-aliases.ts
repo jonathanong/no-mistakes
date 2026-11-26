@@ -13,6 +13,10 @@ export function wrap(a) {
   return m.run(a);
 }
 
+export function wrapRequireCall(a) {
+  return m.call(a);
+}
+
 export function wrapCall(a) {
   return n.call(a);
 }
