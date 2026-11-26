@@ -45,3 +45,13 @@ fn atomic_publication_preserves_previous_catalog_after_partial_write_failure() {
     assert_eq!(std::fs::read_dir(directory.path()).unwrap().count(), 1);
     assert!(publish_catalog(&directory.path().join("missing/catalog.json"), |_| Ok(())).is_err());
 }
+
+#[test]
+fn native_publication_rejects_a_non_path_output() {
+    let error = crate::napi_api::generate_postgres_catalog_json_impl(serde_json::json!({
+        "connectionEnv": "SAMPLE_DB_URL",
+        "output": false
+    }))
+    .unwrap_err();
+    assert!(error.reason.contains("expected path string"));
+}

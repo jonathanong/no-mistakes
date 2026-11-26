@@ -1,7 +1,7 @@
 use super::options::{parse_options_value, resolve_project_root, to_napi_error};
 use no_mistakes::codebase::lockfile::{self, PackageManager};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 mod git;
 use git::{detect_lockfiles_from_head, find_git_root, git_ref_exists, git_show_file};
@@ -105,52 +105,11 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
             }
             continue;
         };
-        let new_content = if let Some(head) = options.head.as_deref() {
-            match git_show_file(&git_root, head, &rel).map_err(git_io_to_napi)? {
-                Some(content) => content,
-                None => {
-                    if !git_ref_exists(&git_root, head).map_err(git_io_to_napi)? {
-                        return Err(napi::Error::from_reason(format!(
-                            "Could not retrieve `{}` at ref `{}`; ensure the head ref exists in the git history",
-                            rel, head
-                        )));
-                    }
-                    // Ref is valid but file deleted at head — report all packages as removed
-                    String::new()
-                }
-            }
-        } else {
-            std::fs::read_to_string(lf_path).unwrap_or_default()
+        let new_content = match options.head.as_deref() {
+            Some(head) => git_lockfile_content(&git_root, head, &rel, "head")?,
+            None => std::fs::read_to_string(lf_path).unwrap_or_default(),
         };
-        let old_content = if options.head.is_some() {
-            match git_show_file(&git_root, &base, &rel).map_err(git_io_to_napi)? {
-                Some(content) => content,
-                None => {
-                    if !git_ref_exists(&git_root, &base).map_err(git_io_to_napi)? {
-                        return Err(napi::Error::from_reason(format!(
-                            "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
-                            rel, base
-                        )));
-                    }
-                    // Valid base ref but file not at base — newly added at head
-                    String::new()
-                }
-            }
-        } else {
-            match git_show_file(&git_root, &base, &rel).map_err(git_io_to_napi)? {
-                Some(c) => c,
-                None => {
-                    if !git_ref_exists(&git_root, &base).map_err(git_io_to_napi)? {
-                        return Err(napi::Error::from_reason(format!(
-                            "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
-                            rel, base
-                        )));
-                    }
-                    // Valid base ref but file not at base — newly added lockfile; report all as added
-                    String::new()
-                }
-            }
-        };
+        let old_content = git_lockfile_content(&git_root, &base, &rel, "base")?;
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
         let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
         let diff = lockfile::diff(&old_pkgs, &new_pkgs);
@@ -171,6 +130,23 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
     } else {
         Ok(crate::cli::json_string(&entries))
     }
+}
+
+fn git_lockfile_content(
+    git_root: &Path,
+    reference: &str,
+    lockfile: &str,
+    kind: &str,
+) -> napi::Result<String> {
+    if let Some(content) = git_show_file(git_root, reference, lockfile).map_err(git_io_to_napi)? {
+        return Ok(content);
+    }
+    if !git_ref_exists(git_root, reference).map_err(git_io_to_napi)? {
+        return Err(napi::Error::from_reason(format!(
+            "Could not retrieve `{lockfile}` at ref `{reference}`; ensure the {kind} ref exists in the git history"
+        )));
+    }
+    Ok(String::new())
 }
 
 fn manager_name(m: PackageManager) -> &'static str {

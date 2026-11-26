@@ -29,3 +29,9 @@ fn mermaid_rejects_graph_diagnostics_while_json_keeps_them() {
     let error = ci_topology_json_impl(mermaid).unwrap_err();
     assert!(error.reason.contains(diagnostic));
 }
+
+#[test]
+fn topology_rejects_an_unknown_output_format() {
+    let error = ci_topology_json_impl(json!({ "root": fixture(), "format": "html" })).unwrap_err();
+    assert!(error.reason.contains("unknown variant `html`"));
+}
