@@ -445,19 +445,26 @@ jobs:
         run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
   quality-js:
     name: JavaScript policy (${{ matrix.name }})
-    runs-on: ubuntu-slim
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 8
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: formatting
+            runner: ubuntu-slim
             command: pnpm run fmt:js:check
           - name: lint
+            runner: ubuntu-slim
             command: pnpm run lint:js
-          - name: duplication
-            command: pnpm run lint:duplicates
+          - name: duplication (Rust)
+            runner: ubuntu-latest
+            command: pnpm run lint:duplicates:rust
+          - name: duplication (JS/TS)
+            runner: ubuntu-slim
+            command: pnpm run lint:duplicates:js
           - name: spelling
+            runner: ubuntu-slim
             command: pnpm run lint:spell
     steps:
       - name: Checkout
