@@ -114,9 +114,10 @@ fn referenced_deps(
     }
     let mut specifiers: Vec<&str> = names
         .into_iter()
-        .filter_map(|name| {
-            let index = imports.get(name)?;
-            Some(file.module.ts.imported_bindings[*index].specifier.as_str())
+        .map(|name| {
+            file.module.ts.imported_bindings[imports[name]]
+                .specifier
+                .as_str()
         })
         .collect();
     for binding in &file.module.ts.exported_bindings {

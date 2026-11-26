@@ -56,12 +56,12 @@ fn discover_handles_precise_records_and_cycles() {
     files.insert(a.clone(), make_file(&precise, vec!["./b.mts"], &ids));
     files.insert(b.clone(), make_file(&precise, vec!["./a.mts"], &ids));
     files.insert(c.clone(), make_file(&precise, vec!["./a.mts"], &ids));
-    let resolve = |specifier: &str, _: &std::path::Path| match specifier {
-        "./a.mts" => Some(a.clone()),
-        "./b.mts" => Some(b.clone()),
-        "./c.mts" => Some(c.clone()),
-        _ => None,
-    };
+    let targets = FxHashMap::from_iter([
+        ("./a.mts", a.clone()),
+        ("./b.mts", b.clone()),
+        ("./c.mts", c.clone()),
+    ]);
+    let resolve = |specifier: &str, _: &std::path::Path| targets.get(specifier).cloned();
     let graph = candidates::discover(&files, &[r1, r2], &ids, &resolve);
     assert!(graph.cyclic.contains(&ids.id(&a)));
     assert!(graph.cyclic.contains(&ids.id(&b)));
@@ -262,11 +262,8 @@ fn build_handles_missing_module_ids_cyclic_candidates_and_non_verbose_notes() {
     files.insert(r2.clone(), make_file(&facts, vec!["./a.mts"], &ids));
     files.insert(a.clone(), make_file(&facts, vec!["./b.mts"], &ids));
     files.insert(b.clone(), make_file(&facts, vec!["./a.mts"], &ids));
-    let resolve = |specifier: &str, _: &std::path::Path| match specifier {
-        "./a.mts" => Some(a.clone()),
-        "./b.mts" => Some(b.clone()),
-        _ => None,
-    };
+    let targets = FxHashMap::from_iter([("./a.mts", a.clone()), ("./b.mts", b.clone())]);
+    let resolve = |specifier: &str, _: &std::path::Path| targets.get(specifier).cloned();
     let status = super::build(&files, &[r1, r2], &resolve, false, &empty_failures, None);
     assert!(matches!(
         status,

@@ -25,20 +25,23 @@ fn make_file<'a>(
 
 #[test]
 fn referenced_deps_tracks_named_star_and_local_reexports() {
-    let [r1, r2, barrel_named, barrel_star, barrel_local, leaf_named, leaf_star, leaf_local] = [
-        "r1.mts",
-        "r2.mts",
-        "barrel_named.mts",
-        "barrel_star.mts",
-        "barrel_local.mts",
-        "leaf_named.mts",
-        "leaf_star.mts",
-        "leaf_local.mts",
-    ]
-    .map(PathBuf::from);
+    let [r1, r2, missing, barrel_named, barrel_star, barrel_local, leaf_named, leaf_star, leaf_local] =
+        [
+            "r1.mts",
+            "r2.mts",
+            "missing.mts",
+            "barrel_named.mts",
+            "barrel_star.mts",
+            "barrel_local.mts",
+            "leaf_named.mts",
+            "leaf_star.mts",
+            "leaf_local.mts",
+        ]
+        .map(PathBuf::from);
     let ids = Arc::new(ModuleIds::new([
         r1.clone(),
         r2.clone(),
+        missing.clone(),
         barrel_named.clone(),
         barrel_star.clone(),
         barrel_local.clone(),
@@ -138,6 +141,11 @@ fn referenced_deps_tracks_named_star_and_local_reexports() {
                         local: "localOnly".into(),
                         exported: "localOnly".into(),
                     },
+                    ExportedBinding {
+                        specifier: None,
+                        local: "unmodeled".into(),
+                        exported: "unmodeled".into(),
+                    },
                 ],
                 ..Default::default()
             },
@@ -157,16 +165,17 @@ fn referenced_deps_tracks_named_star_and_local_reexports() {
         make_file(&empty_facts, TsFileFacts::default(), &ids),
     );
 
-    let resolve = |specifier: &str, _: &std::path::Path| match specifier {
-        "./barrel_named.mts" => Some(barrel_named.clone()),
-        "./barrel_star.mts" => Some(barrel_star.clone()),
-        "./barrel_local.mts" => Some(barrel_local.clone()),
-        "./leaf_named.mts" => Some(leaf_named.clone()),
-        "./leaf_star.mts" => Some(leaf_star.clone()),
-        "./leaf_local.mts" => Some(leaf_local.clone()),
-        _ => None,
-    };
-    let graph = discover(&files, &[r1, r2], &ids, &resolve);
+    let targets: FxHashMap<&str, PathBuf> = FxHashMap::from_iter([
+        ("./barrel_named.mts", barrel_named.clone()),
+        ("./barrel_star.mts", barrel_star.clone()),
+        ("./barrel_local.mts", barrel_local.clone()),
+        ("./leaf_named.mts", leaf_named.clone()),
+        ("./leaf_star.mts", leaf_star.clone()),
+        ("./leaf_local.mts", leaf_local.clone()),
+    ]);
+    let resolve = |specifier: &str, _: &std::path::Path| targets.get(specifier).cloned();
+    let graph = discover(&files, &[r1, r2, missing.clone()], &ids, &resolve);
+    assert!(graph.direct_deps[&ids.id(&missing)].is_empty());
     assert_eq!(
         graph.direct_deps[&ids.id(&barrel_named)],
         vec![ids.id(&leaf_named)]

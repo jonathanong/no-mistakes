@@ -184,11 +184,8 @@ fn build_cached_module_handles_defer_impure_dep_mutation_foreign_env_and_diamond
         let guard = eval.begin_shared_capture(id, env).unwrap();
         eval.finish_shared_capture(id, env, guard);
     }
-    let Some(entry) = shared.entries.get(&top_id) else {
-        panic!("expected top_id to be cached");
-    };
-    let SharedEntry::Pure(cached) = entry.value() else {
-        panic!("expected top_id to be Pure");
-    };
-    assert_eq!(cached.dep_refs.len(), 3);
+    assert!(matches!(
+        shared.entries.get(&top_id).as_deref(),
+        Some(SharedEntry::Pure(cached)) if cached.dep_refs.len() == 3
+    ));
 }
