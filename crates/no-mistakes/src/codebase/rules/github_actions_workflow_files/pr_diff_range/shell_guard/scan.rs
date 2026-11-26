@@ -1,27 +1,62 @@
 use std::ops::Range;
 
-pub(super) fn has_arithmetic_in_range(
+mod arithmetic;
+
+pub(super) use arithmetic::has_arithmetic_in_range;
+
+pub(super) struct HeredocSpan {
+    pub(super) range: Range<usize>,
+    pub(super) quoted: bool,
+}
+
+pub(super) fn has_complex_expansion_in_range(
     script: &str,
     range: Range<usize>,
-    heredocs: &[Range<usize>],
+    heredocs: &[HeredocSpan],
 ) -> bool {
     let mut cursor = range.start;
     for doc in heredocs {
-        if doc.end <= cursor {
+        if doc.range.end <= cursor {
             continue;
         }
-        if doc.start >= range.end {
+        if doc.range.start >= range.end {
             break;
         }
-        if doc.start > cursor && has_arithmetic_command(&script[cursor..doc.start]) {
+        if doc.range.start > cursor && has_complex_expansion(&script[cursor..doc.range.start]) {
             return true;
         }
-        cursor = cursor.max(doc.end.min(range.end));
+        let body_start = doc.range.start.max(cursor);
+        let body_end = doc.range.end.min(range.end);
+        if !doc.quoted && has_unquoted_heredoc_expansion(&script[body_start..body_end]) {
+            return true;
+        }
+        cursor = cursor.max(body_end);
     }
-    cursor < range.end && has_arithmetic_command(&script[cursor..range.end])
+    cursor < range.end && has_complex_expansion(&script[cursor..range.end])
 }
 
-pub(super) fn has_complex_expansion(source: &str) -> bool {
+fn has_unquoted_heredoc_expansion(source: &str) -> bool {
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'\\'
+            && bytes
+                .get(i + 1)
+                .is_some_and(|next| matches!(next, b'$' | b'`' | b'\\' | b'\n'))
+        {
+            i += 2;
+        } else {
+            match check_expansion(bytes, i) {
+                Expansion::Complex => return true,
+                Expansion::Simple(next) => i = next,
+                Expansion::None => i += 1,
+            }
+        }
+    }
+    false
+}
+
+fn has_complex_expansion(source: &str) -> bool {
     let bytes = source.as_bytes();
     let mut in_double = false;
     let mut i = 0;
@@ -61,50 +96,6 @@ pub(super) fn has_complex_expansion(source: &str) -> bool {
                 Expansion::Simple(next) => i = next,
                 Expansion::None => i += 1,
             }
-        }
-    }
-    false
-}
-
-fn has_arithmetic_command(source: &str) -> bool {
-    let bytes = source.as_bytes();
-    let mut in_double = false;
-    let mut at_cmd_start = true;
-    let mut i = 0;
-    while i < bytes.len() {
-        let byte = bytes[i];
-        if in_double {
-            if byte == b'\\' && i + 1 < bytes.len() {
-                i += 2;
-            } else {
-                in_double = byte != b'"';
-                i += 1;
-            }
-        } else if byte == b'\\' {
-            at_cmd_start = false;
-            i += 2;
-        } else if byte == b'\'' {
-            at_cmd_start = false;
-            i = skip_single(bytes, i + 1);
-        } else if byte == b'$' && bytes.get(i + 1) == Some(&b'\'') {
-            at_cmd_start = false;
-            i = skip_ansi_c(bytes, i + 2);
-        } else if byte == b'"' {
-            at_cmd_start = false;
-            in_double = true;
-            i += 1;
-        } else if is_comment_start(bytes, i) {
-            i = skip_comment(bytes, i);
-        } else if matches!(byte, b';' | b'\n' | b'|' | b'&') {
-            at_cmd_start = true;
-            i += 1;
-        } else if byte.is_ascii_whitespace() {
-            i += 1;
-        } else if at_cmd_start && byte == b'(' && bytes.get(i + 1) == Some(&b'(') {
-            return true;
-        } else {
-            at_cmd_start = false;
-            i += 1;
         }
     }
     false

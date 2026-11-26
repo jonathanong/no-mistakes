@@ -13,6 +13,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT swallow rejections with `.catch(() => {})` unless the operation is explicitly best-effort and its failure needs no follow-up.
 - MUST NOT `return promise` inside `try` when the `catch` should handle it; without `await` the rejection escapes the `catch`. Use `return await`.
 - MUST NOT `await` a synchronous array method.
+- SHOULD NOT use top-level `await` or top-level `await using` in library modules; module evaluation suspends and barrel re-exports can expose uninitialized bindings in some runtimes and bundlers.
 - SHOULD NOT fan out with unbounded `Promise.all` over input-sized lists; bound concurrency or batch.
 - MUST NOT call network, DNS, or model clients without an explicit timeout or abort signal.
 - MUST NOT display stale async results; abort superseded requests or compare tokens.
