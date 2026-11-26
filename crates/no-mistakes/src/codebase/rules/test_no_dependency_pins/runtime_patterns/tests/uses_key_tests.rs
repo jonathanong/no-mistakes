@@ -2,15 +2,15 @@
 //! reported under (`exact action ref` or `versioned Homebrew formula`), never
 //! whether it is reported, so these tests compare reasons and not text.
 
-use super::super::super::{check_source, compile_options, Options};
+use super::super::super::check_source;
+use super::default_compiled_options;
 
 const ACTION_REF: &str = "exact action ref";
 const FORMULA: &str = "versioned Homebrew formula";
 
 /// The line and reason of every finding in `content`.
 fn reasons(content: &str) -> Vec<(usize, String)> {
-    let options = compile_options(&Options::default()).unwrap();
-    check_source("src/app.test.mts", content, &options)
+    check_source("src/app.test.mts", content, default_compiled_options())
         .into_iter()
         .filter_map(|finding| Some((finding.line, finding.target?)))
         .collect()

@@ -24,8 +24,8 @@ use rule_docs_helpers::{read, repo_root, rule_ids_from_source};
 #[path = "support/docs_review_regressions.rs"]
 mod docs_review_regressions;
 use cli_docs_helpers::{
-    consumer_identifier_paths, enum_block, enum_variants, kebab_case, reachable_cli_pages,
-    rust_sources, subcommand_enums,
+    consumer_identifier_paths, consumer_identifier_violations, enum_block, enum_variants,
+    kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
 };
 
 #[path = "support/docs_coverage_commands.rs"]
@@ -80,31 +80,7 @@ fn consumer_identifiers_stay_outside_the_denylist() {
         );
     }
 
-    let mut violations = Vec::new();
-    for path in consumer_identifier_paths(&root) {
-        let relative = path.strip_prefix(&root).unwrap_or(&path);
-        let bytes = std::fs::read(&path)
-            .unwrap_or_else(|err| panic!("failed to read {}: {err}", relative.display()));
-        let Ok(text) = String::from_utf8(bytes) else {
-            continue;
-        };
-        let lower = text.to_ascii_lowercase();
-        if relative == Path::new(DENYLIST_FILE) {
-            continue;
-        }
-        for (line, contents) in lower.lines().enumerate() {
-            for token in CONSUMER_TOKENS {
-                if contents.contains(token) {
-                    violations.push(format!(
-                        "{}:{} contains a forbidden consumer identifier",
-                        relative.display(),
-                        line + 1
-                    ));
-                }
-            }
-        }
-    }
-    violations.sort();
+    let violations = consumer_identifier_violations(&root, DENYLIST_FILE, CONSUMER_TOKENS);
     assert!(
         violations.is_empty(),
         "consumer identifiers may occur only in the documented deny-list:\n{}",
