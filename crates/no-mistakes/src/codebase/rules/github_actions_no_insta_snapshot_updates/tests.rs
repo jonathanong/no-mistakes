@@ -66,11 +66,21 @@ fn invalid_utf8_workflow_reports_byte_line_and_honors_file_suppression() {
         false,
     )
     .unwrap();
-    assert_eq!(out.findings.len(), 1, "{:?}", out.findings);
-    assert!(out.advisories.is_empty());
-    assert_eq!(out.findings[0].file, ".github/workflows/invalid-utf8.yml");
-    assert_eq!(out.findings[0].line, 2);
-    assert_eq!(out.findings[0].target.as_deref(), Some("unanalyzable"));
+    assert!(out.findings.is_empty(), "{:?}", out.findings);
+    assert_eq!(out.advisories.len(), 1, "{:?}", out.advisories);
+    assert_eq!(out.advisories[0].file, ".github/workflows/invalid-utf8.yml");
+    assert_eq!(out.advisories[0].line, 2);
+    assert_eq!(out.advisories[0].target.as_deref(), Some("unanalyzable"));
+    let reported = diagnostics_with_files_and_sources(
+        &root,
+        &config("unanalyzable-report.yml"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert_eq!(reported.findings.len(), 1, "{:?}", reported.findings);
+    assert!(reported.advisories.is_empty());
     assert_eq!(sources.physical_read_count(), 2);
 }
 
@@ -87,10 +97,11 @@ fn parse_error_uses_real_line_and_custom_message_overrides_output() {
         false,
     )
     .unwrap();
-    assert_eq!(out.findings.len(), 1, "{:?}", out.findings);
-    assert_eq!(out.findings[0].line, 5);
+    assert!(out.findings.is_empty(), "{:?}", out.findings);
+    assert_eq!(out.advisories.len(), 1, "{:?}", out.advisories);
+    assert_eq!(out.advisories[0].line, 5);
     assert_eq!(
-        out.findings[0].message,
+        out.advisories[0].message,
         "Custom snapshot update policy message."
     );
 }
@@ -108,10 +119,73 @@ fn yaml_merge_keys_report_unanalyzable_in_workflow_jobs_and_env() {
         false,
     )
     .unwrap();
-    let lines: Vec<_> = out.findings.iter().map(|f| f.line).collect();
-    assert_eq!(lines, [3, 5, 9], "{:?}", out.findings);
+    assert!(out.findings.is_empty(), "{:?}", out.findings);
+    let lines: Vec<_> = out.advisories.iter().map(|f| f.line).collect();
+    assert_eq!(lines, [3, 5, 9], "{:?}", out.advisories);
     assert!(out
-        .findings
+        .advisories
         .iter()
         .all(|f| f.target.as_deref() == Some("unanalyzable")));
+    let reported = diagnostics_with_files_and_sources(
+        &root,
+        &config("unanalyzable-report.yml"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+    let reported_lines: Vec<_> = reported.findings.iter().map(|f| f.line).collect();
+    assert_eq!(reported_lines, [3, 5, 9], "{:?}", reported.findings);
+}
+
+#[test]
+fn dynamic_commands_and_opaque_shells_advise_by_default_and_honor_policy() {
+    let base = crate::test_support::rule_fixture_root(RULE_ID);
+    for (fixture, expected_lines) in [
+        ("dynamic-commands", vec![7, 9]),
+        ("opaque-shell-script", vec![7]),
+    ] {
+        let root = base.join(fixture);
+        let files = [root.join(".github/workflows/check.yml")];
+        let sources = source_store_for_files(&files);
+        let default = diagnostics_with_files_and_sources(
+            &root,
+            &config("enabled.yml"),
+            &files,
+            &sources,
+            false,
+        )
+        .unwrap();
+        assert!(default.findings.is_empty(), "{fixture}: {:?}", default.findings);
+        assert_eq!(
+            default.advisories.iter().map(|f| f.line).collect::<Vec<_>>(),
+            expected_lines
+        );
+        assert!(default
+            .advisories
+            .iter()
+            .all(|f| f.target.as_deref() == Some("unanalyzable")));
+
+        let mut repo_report = config("enabled.yml");
+        repo_report.unanalyzable = Some(Unanalyzable::Report);
+        let inherited =
+            diagnostics_with_files_and_sources(&root, &repo_report, &files, &sources, false)
+                .unwrap();
+        assert_eq!(
+            inherited.findings.iter().map(|f| f.line).collect::<Vec<_>>(),
+            expected_lines
+        );
+        assert!(inherited.advisories.is_empty());
+
+        let ignored = diagnostics_with_files_and_sources(
+            &root,
+            &config("unanalyzable-ignore.yml"),
+            &files,
+            &sources,
+            false,
+        )
+        .unwrap();
+        assert!(ignored.findings.is_empty());
+        assert!(ignored.advisories.is_empty());
+    }
 }

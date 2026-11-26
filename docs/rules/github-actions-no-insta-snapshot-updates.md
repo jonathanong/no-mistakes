@@ -33,13 +33,25 @@ scripts in files directly under `.github/workflows/`.
   `env: []`), non-sequence `steps:` values, YAML merge keys (`<<:`), non-scalar
   `INSTA_UPDATE` values, or GitHub expressions such as
   `${{ vars.SNAPSHOT_MODE }}` — are routed through the rule's shared
-  `unanalyzable` policy (`report` by default, or `advise` / `ignore`).
+  `unanalyzable` policy (`advise` by default, or `report` / `ignore`).
 
 ## Options and defaults
 
 This rule is off by default. Add it to `rules` to enable it. It honors the
 rule's standard `include`, `exclude`, and `message` fields and the shared
-`options.unanalyzable` policy (`report` by default, or `advise` / `ignore`).
+`options.unanalyzable` policy (`advise` | `report` | `ignore`). When
+`options.unanalyzable` is omitted, it inherits the repository-level
+`unanalyzable` setting if present and otherwise defaults to `advise`.
+
+- `advise` (default): records unanalyzable steps, expressions, YAML errors, and
+  unreadable files as non-failing advisories (exit `0` when no definite
+  findings exist).
+- `report`: turns unanalyzable entries into failing findings (exit `1`).
+- `ignore`: drops unanalyzable entries.
+
+Definite findings (`INSTA_UPDATE: always|1|force|unseen`, `cargo insta accept`,
+`cargo insta test --accept`, etc.) always report as failing findings under
+every `unanalyzable` setting.
 
 ```yaml
 rules:

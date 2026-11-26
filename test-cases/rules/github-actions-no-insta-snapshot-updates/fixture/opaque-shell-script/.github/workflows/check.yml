@@ -1,0 +1,7 @@
+name: Opaque shell script
+on: [pull_request]
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - run: bash script.sh "$ARGS"
