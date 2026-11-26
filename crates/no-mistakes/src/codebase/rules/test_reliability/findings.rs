@@ -65,7 +65,7 @@ pub(super) fn source_findings(
             continue;
         }
         if (location.unresolved_reason.is_none() && location.playwright_import.is_none())
-            || (configured && location.playwright_candidates.is_empty())
+            || (configured && location.playwright_import.is_some())
         {
             if let Some((target, message)) = detail {
                 findings.push(RuleFinding {

@@ -119,7 +119,11 @@ the file if it is not. When provenance survives through a receiver that cannot
 be fully traced, such as a later assignment or a mixed factory return, the
 rule records `incomplete` even when the retry count is within the configured
 cap. This includes mixed factory returns reached through imports and
-re-exports. See [Playwright receiver limits](playwright-no-serial.md#limits).
+re-exports and imported wrappers whose return could not be traced.
+A configured fixture establishes the identity of its imported export.
+Local choices, later assignments, and wrappers applied at the call site
+still need to preserve that identity.
+See [Playwright receiver limits](playwright-no-serial.md#limits).
 Bind the rule application to a Vitest project with
 `rules[].tests.vitest` to check global Vitest calls. Workflow discovery uses
 `ci.workflowDirs`. An unreadable or malformed input also appears in the JSON

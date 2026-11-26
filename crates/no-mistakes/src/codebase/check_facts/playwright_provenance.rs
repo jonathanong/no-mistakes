@@ -167,9 +167,11 @@ pub(super) fn project(
                     let key = lookup.local(path, &wrapper.callee)?;
                     reason_for(&key).filter(|reason| *reason != exports::UNRESOLVED_EXPORT)
                 })
-            });
+            })
+            .or((!wrappers_ok).then_some("fixture wrapper return could not be traced statically"));
         let exports: Vec<_> = key
             .iter()
+            .filter(|_| wrappers_ok)
             .flat_map(|key| lookup.reachable_exports(&relationships, key))
             .map(|target| (relative_slash_path(root, &target.file), target.name))
             .collect();

@@ -142,3 +142,23 @@ fn uncertain_star_playwright_factory_check_json_snapshot() {
     assert_eq!(reports["configured"]["exitCode"], 0);
     assert!(reports["configured"]["report"]["incomplete"].is_null());
 }
+
+#[test]
+fn uncertain_playwright_receiver_check_json_snapshot() {
+    let root = rules_path("test-no-retries", "fixture", "review-uncertain-binding");
+    let reports = super::check_json_snapshot::assert_saved_fixture_report(
+        "uncertain_playwright_receiver",
+        &[("configured", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["configured"]["report"];
+    assert_eq!(reports["configured"]["exitCode"], 1);
+    let rules = report["rules"].as_array().unwrap();
+    assert_eq!(rules.len(), 4);
+    assert!(rules.iter().all(|entry| {
+        entry["file"] == "tests/local.spec.mts" && matches!(entry["line"].as_u64(), Some(10 | 13))
+    }));
+    let incomplete = report["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 5);
+}
