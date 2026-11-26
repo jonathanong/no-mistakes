@@ -2765,10 +2765,10 @@ jobs:
         timeout-minutes: 3
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-
           path: |
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
@@ -2781,16 +2781,31 @@ jobs:
           tool: cargo-nextest@0.9.151
       - name: Build standalone library without a CLI
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 20
+        timeout-minutes: 13
+        env:
+          WORKSPACE_CACHE_KEY: ${{ steps.standalone-lib-workspace-cache.outputs.cache-matched-key }}
         shell: bash
         run: |
           set -euo pipefail
-          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          if [[ -n "$WORKSPACE_CACHE_KEY" ]]; then
+            node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          fi
           printf 'standalone library build: cargo_jobs=%s dev_units=%s test_units=%s dev_debug=%s test_debug=%s incremental=%s shards=%s\n' \
             "$CARGO_BUILD_JOBS" "$CARGO_PROFILE_DEV_CODEGEN_UNITS" "$CARGO_PROFILE_TEST_CODEGEN_UNITS" \
             "$CARGO_PROFILE_DEV_DEBUG" "$CARGO_PROFILE_TEST_DEBUG" "$CARGO_INCREMENTAL" 3
-          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle
-          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 1
+      - name: Build standalone library shard 2
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 10
+        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 2
+      - name: Build standalone library shard 3
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 10
+        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 3
+      - name: Record standalone compiler inputs for cache publication
+        if: ${{ env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 2
+        run: node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
       - name: Save verified workspace artifacts
         if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
@@ -2801,13 +2816,39 @@ jobs:
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
             ${{ runner.temp }}/nm-standalone-lib-cargo-inputs
-      - name: Upload standalone library archive
+      - name: Upload standalone library archive 1
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: standalone-library
-          path: target/standalone-bundle
+          name: standalone-library-1
+          path: |
+            target/standalone-bundle/build.json
+            target/standalone-bundle/standalone-0.tar.zst
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - name: Upload standalone library archive 2
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: standalone-library-2
+          path: |
+            target/standalone-bundle/build.json
+            target/standalone-bundle/standalone-1.tar.zst
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - name: Upload standalone library archive 3
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: standalone-library-3
+          path: |
+            target/standalone-bundle/build.json
+            target/standalone-bundle/standalone-2.tar.zst
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
@@ -2841,7 +2882,7 @@ jobs:
         with:
           run-id: ${{ needs.standalone-build.outputs.artifact-run-id }}
           github-token: ${{ github.token }}
-          name: standalone-library
+          name: standalone-library-${{ matrix.shard }}
           path: target/standalone-bundle
       - name: Retry standalone library archive download
         if: ${{ !cancelled() && steps.standalone-download.outcome == 'failure' }}
@@ -2850,7 +2891,7 @@ jobs:
         with:
           run-id: ${{ needs.standalone-build.outputs.artifact-run-id }}
           github-token: ${{ github.token }}
-          name: standalone-library
+          name: standalone-library-${{ matrix.shard }}
           path: target/standalone-bundle
       - name: Start isolated PostgreSQL for catalog fixtures
         timeout-minutes: 5
