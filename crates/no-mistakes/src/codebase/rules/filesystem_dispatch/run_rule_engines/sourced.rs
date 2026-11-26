@@ -109,15 +109,6 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
-        GITHUB_ACTIONS_WORKFLOW_SCRIPT_PATHS => {
-            github_actions_workflow_script_paths::check_with_files_sources_and_deferred_suppression(
-                root,
-                config,
-                files,
-                sources,
-                defer_suppression,
-            )
-        }
         GITHUB_ACTIONS_CACHE_KEY_POLICY => {
             github_actions_cache_key_policy::check_with_files_sources_and_deferred_suppression(
                 root, config, files, sources, defer_suppression,

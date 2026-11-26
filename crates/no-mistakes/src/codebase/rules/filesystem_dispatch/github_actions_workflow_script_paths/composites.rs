@@ -110,18 +110,7 @@ fn walk_action(
 fn step_working_dir(step: &Mapping) -> WorkingDir {
     match mapping_get(step, "working-directory") {
         None | Some(Value::Null) => WorkingDir::Known(String::new()),
-        Some(Value::String(raw)) => {
-            let trimmed = raw.trim();
-            if trimmed.contains("${{") || trimmed.contains('$') {
-                WorkingDir::Dynamic(trimmed.to_string())
-            } else {
-                match scripts::resolve_rel_path("", trimmed) {
-                    Some(dir) => WorkingDir::Known(dir),
-                    None => WorkingDir::OutsideRepo,
-                }
-            }
-        }
-        Some(_) => WorkingDir::Dynamic("non-string".to_string()),
+        Some(value) => super::workflow::parse_working_dir(value),
     }
 }
 

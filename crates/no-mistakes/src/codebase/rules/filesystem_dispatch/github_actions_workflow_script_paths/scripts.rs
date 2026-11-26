@@ -7,7 +7,7 @@ use paths::{apply_cd, check_candidate, is_dynamic_word, unanalyzable};
 
 const MAX_NESTED_DEPTH: usize = 4;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum WorkingDir {
     Known(String),
     OutsideRepo,

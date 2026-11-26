@@ -174,7 +174,7 @@ fn step_working_dir(step: &Mapping, inherited: WorkingDir) -> WorkingDir {
     }
 }
 
-fn parse_working_dir(value: &Value) -> WorkingDir {
+pub(super) fn parse_working_dir(value: &Value) -> WorkingDir {
     match value {
         Value::Null => WorkingDir::Known(String::new()),
         Value::String(raw) => {

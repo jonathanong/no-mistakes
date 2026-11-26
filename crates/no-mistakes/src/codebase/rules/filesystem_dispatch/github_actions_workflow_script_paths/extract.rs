@@ -24,14 +24,7 @@ const TSX_VAL_FLAGS: &[&str] = &[
     "--require",
 ];
 const TSX_INLINE_FLAGS: &[&str] = &["-e", "--eval", "-p", "--print"];
-const SUBCMD_VAL_FLAGS: &[&str] = &[
-    "--cwd",
-    "--config",
-    "-c",
-    "--env-file",
-    "--allow-read",
-    "--allow-write",
-];
+const SUBCMD_VAL_FLAGS: &[&str] = &["--cwd", "--config", "-c", "--env-file"];
 
 pub(super) fn shell_c_operand(words: &[Word], mut index: usize) -> Option<&Word> {
     while let Some(word) = words.get(index) {

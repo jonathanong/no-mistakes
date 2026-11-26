@@ -1,5 +1,6 @@
 use super::{env_policy, no_poll_wait_job, pr_diff_range};
 use crate::codebase::rules::{
+    filesystem_dispatch::github_actions_workflow_script_paths,
     github_actions_cache_setup_policy, github_actions_no_insta_snapshot_updates,
     github_actions_no_required_pr_path_filters,
 };
@@ -37,6 +38,15 @@ pub(in crate::codebase::rules) fn run(
         )),
         github_actions_no_insta_snapshot_updates::RULE_ID => Some(
             github_actions_no_insta_snapshot_updates::check_with_files_and_sources(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            ),
+        ),
+        github_actions_workflow_script_paths::RULE_ID => Some(
+            github_actions_workflow_script_paths::check_with_files_sources_and_deferred_suppression(
                 root,
                 config,
                 files,
