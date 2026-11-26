@@ -73,8 +73,7 @@ fn is_pure_top_level_expr(expr: &Expr, file: &File<'_>) -> bool {
         | Expr::Object(items)
         | Expr::Record(items, _)
         | Expr::Sequence(items)
-        | Expr::Alternatives(items)
-        | Expr::Opaque(items) => items.iter().all(|item| is_pure_top_level_expr(item, file)),
+        | Expr::Alternatives(items) => items.iter().all(|item| is_pure_top_level_expr(item, file)),
         Expr::Call {
             callee,
             args,
@@ -86,6 +85,7 @@ fn is_pure_top_level_expr(expr: &Expr, file: &File<'_>) -> bool {
                 && is_pure_local_scalar_callee(callee, file)
         }
         Expr::Array(_)
+        | Expr::Opaque(_)
         | Expr::Tagged(..)
         | Expr::SlotWrite { .. }
         | Expr::OpaqueWrite { .. }

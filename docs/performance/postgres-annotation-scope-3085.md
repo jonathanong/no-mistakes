@@ -1,10 +1,11 @@
 # PostgreSQL annotation scope: regression and native validation
 
-PR [#3088](https://github.com/jongleberry/no-mistakes/pull/3088) removes the shared
-scalar module-initialization cache after downstream validation reported higher
-CPU cost. Scoped executor seeds still prune irrelevant roots. Excluded callers
-that can supply SQL arguments to selected helpers retain contextual evaluation.
-There is no cross-root initialization sharing or once-per-run promise.
+PR [#3088](https://github.com/jonathanong/no-mistakes/pull/3088) previously removed
+the earlier shared scalar module-initialization cache after downstream validation
+reported higher CPU cost. Scoped executor seeds still prune irrelevant roots, and
+excluded callers that can supply SQL arguments to selected helpers retain contextual
+evaluation. Multi-root profiles now reuse statically pure imported modules lazily
+through the per-profile `SharedInit` cache without throwaway initialization.
 
 The reported consumer comparison used 0.109.6 versus 0.109.6 plus this PR's changes,
 an unchanged configuration, maximum effort, three interleaved runs per variant,

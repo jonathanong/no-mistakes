@@ -52,14 +52,14 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
     let target_id = ids.id(&target);
     let resolve = |_: &str, _: &std::path::Path| None;
 
-    for case in 0..6 {
+    for case in 0..7 {
         let shared = Arc::new(SharedInit {
             untrusted_array_intrinsics: false,
             eligible: [target_id].into_iter().collect(),
             direct_deps: FxHashMap::default(),
             entries: dashmap::DashMap::new(),
         });
-        let mut eval = evaluator::new(&files, resolve, false);
+        let mut eval = evaluator::new(&files, resolve, case == 6);
         eval.modules.shared = Some(Arc::clone(&shared));
         let env = eval.environment_scope(Scope::default());
         let guard = eval.begin_shared_capture(target_id, env).unwrap();
@@ -76,9 +76,10 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
                 eval.captured_bindings
                     .insert(env, FxHashMap::from_iter([("x".into(), env)]).into());
             }
-            _ => {
+            5 => {
                 eval.scopes[env].insert("arr".into(), Value::Array(1));
             }
+            _ => eval.mark_untrusted_array_intrinsics(),
         }
         eval.finish_shared_capture(target_id, env, guard);
         assert!(
@@ -93,10 +94,7 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
 
 #[test]
 fn build_cached_module_handles_defer_impure_dep_mutation_foreign_env_and_diamond() {
-    let paths: Vec<PathBuf> = ["base.mts", "a.mts", "b.mts", "top.mts"]
-        .into_iter()
-        .map(PathBuf::from)
-        .collect();
+    let paths = ["base.mts", "a.mts", "b.mts", "top.mts"].map(PathBuf::from);
     let facts = QueryAnnotationFileFacts::default();
     let (ids, files) = empty_files(&paths, &facts);
     let [base_id, a_id, b_id, top_id] = [

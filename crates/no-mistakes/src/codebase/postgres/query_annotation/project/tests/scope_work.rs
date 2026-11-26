@@ -236,3 +236,21 @@ fn lazy_transitive_shared_init_never_panics_and_matches_main() {
         "{work:?}"
     );
 }
+
+#[test]
+fn local_promotion_preserves_untrusted_array_intrinsics_from_regexp_init() {
+    let (report, diagnostics) = observed_check(&fixture("helper-tracing-entrypoint-reuse-regexp"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    let mut lines: Vec<u64> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect();
+    lines.sort_unstable();
+    assert_eq!(lines, vec![5, 9, 13, 17], "{report}");
+    assert_eq!(
+        diagnostics.work["postgres.annotation.module_initializations"],
+        5
+    );
+}

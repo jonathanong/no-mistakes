@@ -369,9 +369,15 @@ fn promote_reused_captures_pure_without_extra_init_and_skips_impure() {
     evaluator
         .modules
         .captured_inits
-        .insert(impure_id, (99, super::super::Scope::from(ref_vals)));
+        .insert(impure_id, Some((99, super::super::Scope::from(ref_vals))));
     unpromotable.remove(&impure_id);
     evaluator.modules.insert(impure_id, 99);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 1);
+    assert!(unpromotable.contains(&impure_id));
+
+    // Rejected in-place capture (e.g. intrinsic-trust mutation) marks unpromotable.
+    evaluator.modules.captured_inits.insert(impure_id, None);
+    unpromotable.remove(&impure_id);
     snapshot.promote_reused(&mut evaluator, &mut unpromotable, 1);
     assert!(unpromotable.contains(&impure_id));
 }

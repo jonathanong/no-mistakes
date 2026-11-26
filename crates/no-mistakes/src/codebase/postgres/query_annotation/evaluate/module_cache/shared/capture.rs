@@ -11,6 +11,7 @@ use std::sync::Arc;
 pub(in crate::codebase::postgres::query_annotation) struct SharedCaptureGuard {
     shared: Arc<SharedInit>,
     before_untrusted: bool,
+    before_untrusted_writes: u64,
     before_events: usize,
     before_invalidated: usize,
     before_builder_updates: usize,
@@ -30,6 +31,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         Some(SharedCaptureGuard {
             shared: Arc::clone(shared),
             before_untrusted: self.untrusted_array_intrinsics,
+            before_untrusted_writes: self.modules.untrusted_intrinsic_writes,
             before_events: self.event_log.len(),
             before_invalidated: self.invalidated_builders.len(),
             before_builder_updates: self.builder_updates.len(),
@@ -61,7 +63,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
     }
 
-    fn captured_prefix_count(&self, env: Environment) -> usize {
+    pub(in crate::codebase::postgres::query_annotation) fn captured_prefix_count(
+        &self,
+        env: Environment,
+    ) -> usize {
         self.captured_bindings
             .keys()
             .filter(|&&frame| frame <= env)
@@ -70,6 +75,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     fn is_clean_shared_init(&self, env: Environment, guard: &SharedCaptureGuard) -> bool {
         self.untrusted_array_intrinsics == guard.before_untrusted
+            && self.modules.untrusted_intrinsic_writes == guard.before_untrusted_writes
             && self.event_log.len() == guard.before_events
             && self.invalidated_builders.len() == guard.before_invalidated
             && self.builder_updates.len() == guard.before_builder_updates

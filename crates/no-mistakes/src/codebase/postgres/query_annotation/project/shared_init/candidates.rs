@@ -125,29 +125,49 @@ fn referenced_deps(
 }
 
 fn post_order(
-    id: ModuleId,
+    root: ModuleId,
     direct_deps: &FxHashMap<ModuleId, Vec<ModuleId>>,
     state: &mut FxHashMap<ModuleId, u8>,
     order: &mut Vec<ModuleId>,
     cyclic: &mut FxHashSet<ModuleId>,
 ) {
-    match state.get(&id).copied().unwrap_or(0) {
-        2 => return,
-        1 => {
-            cyclic.insert(id);
-            return;
-        }
-        _ => {}
+    if state.get(&root).copied().unwrap_or(0) != 0 {
+        return;
     }
-    state.insert(id, 1);
-    if let Some(deps) = direct_deps.get(&id) {
-        for &dep in deps {
-            post_order(dep, direct_deps, state, order, cyclic);
-            if cyclic.contains(&dep) {
-                cyclic.insert(id);
+    state.insert(root, 1);
+    let mut stack = vec![(root, 0usize)];
+    while let Some((id, next_idx)) = stack.last_mut() {
+        let id = *id;
+        let dep = direct_deps
+            .get(&id)
+            .and_then(|deps| deps.get(*next_idx))
+            .copied();
+        if let Some(dep) = dep {
+            *next_idx += 1;
+            match state.get(&dep).copied().unwrap_or(0) {
+                0 => {
+                    state.insert(dep, 1);
+                    stack.push((dep, 0));
+                }
+                1 => {
+                    cyclic.insert(dep);
+                    cyclic.insert(id);
+                }
+                _ => {
+                    if cyclic.contains(&dep) {
+                        cyclic.insert(id);
+                    }
+                }
+            }
+        } else {
+            stack.pop();
+            state.insert(id, 2);
+            order.push(id);
+            if cyclic.contains(&id) {
+                if let Some(&(parent, _)) = stack.last() {
+                    cyclic.insert(parent);
+                }
             }
         }
     }
-    state.insert(id, 2);
-    order.push(id);
 }

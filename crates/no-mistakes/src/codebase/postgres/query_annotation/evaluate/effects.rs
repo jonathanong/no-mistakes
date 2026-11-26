@@ -22,16 +22,22 @@ use crate::fx::FxHashSet;
 use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn mark_untrusted_array_intrinsics(&mut self) {
+        self.untrusted_array_intrinsics = true;
+        self.modules.untrusted_intrinsic_writes =
+            self.modules.untrusted_intrinsic_writes.wrapping_add(1);
+    }
+
     pub(super) fn invalidate_live_builders(&mut self) {
         // Opaque hooks may patch intrinsics even without live builders.
-        self.untrusted_array_intrinsics = true;
+        self.mark_untrusted_array_intrinsics();
         let ids = self.collect_live_builder_ids(std::mem::drop);
         self.invalidate_builder_ids(ids);
     }
 
     pub(super) fn invalidate_opaque_builders(&mut self, values: &[Value]) {
         // Opaque hooks can patch intrinsics even when no builder exists yet.
-        self.untrusted_array_intrinsics = true;
+        self.mark_untrusted_array_intrinsics();
         self.invalidate_builders(values);
     }
 

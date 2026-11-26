@@ -44,33 +44,28 @@ fn make_file<'a>(
 
 #[test]
 fn discover_handles_precise_records_and_cycles() {
-    let r1 = PathBuf::from("r1.mts");
-    let r2 = PathBuf::from("r2.mts");
-    let a = PathBuf::from("a.mts");
-    let b = PathBuf::from("b.mts");
-    let ids = Arc::new(ModuleIds::new([
-        r1.clone(),
-        r2.clone(),
-        a.clone(),
-        b.clone(),
-    ]));
+    let [r1, r2, a, b, c] = ["r1.mts", "r2.mts", "a.mts", "b.mts", "c.mts"].map(PathBuf::from);
+    let ids = Arc::new(ModuleIds::new([&r1, &r2, &a, &b, &c].into_iter().cloned()));
     let precise = QueryAnnotationFileFacts {
         precise_records: true,
         ..Default::default()
     };
     let mut files = FxHashMap::default();
-    files.insert(r1.clone(), make_file(&precise, vec!["./a.mts"], &ids));
-    files.insert(r2.clone(), make_file(&precise, vec!["./a.mts"], &ids));
+    files.insert(r1.clone(), make_file(&precise, vec!["./c.mts"], &ids));
+    files.insert(r2.clone(), make_file(&precise, vec!["./c.mts"], &ids));
     files.insert(a.clone(), make_file(&precise, vec!["./b.mts"], &ids));
     files.insert(b.clone(), make_file(&precise, vec!["./a.mts"], &ids));
+    files.insert(c.clone(), make_file(&precise, vec!["./a.mts"], &ids));
     let resolve = |specifier: &str, _: &std::path::Path| match specifier {
         "./a.mts" => Some(a.clone()),
         "./b.mts" => Some(b.clone()),
+        "./c.mts" => Some(c.clone()),
         _ => None,
     };
     let graph = candidates::discover(&files, &[r1, r2], &ids, &resolve);
     assert!(graph.cyclic.contains(&ids.id(&a)));
     assert!(graph.cyclic.contains(&ids.id(&b)));
+    assert!(graph.cyclic.contains(&ids.id(&c)));
 }
 
 #[test]

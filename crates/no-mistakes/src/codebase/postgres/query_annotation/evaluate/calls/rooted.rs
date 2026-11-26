@@ -125,7 +125,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             return Value::Unsupported;
         }
         let Value::Function(function, function_path, captured) = target else {
-            self.untrusted_array_intrinsics = true;
+            self.mark_untrusted_array_intrinsics();
             self.invalidate_builders(&arguments);
             self.opaque_callbacks(&arguments, depth);
             return if handled_projection {

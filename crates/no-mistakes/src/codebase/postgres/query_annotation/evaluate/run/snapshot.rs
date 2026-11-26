@@ -108,13 +108,14 @@ impl RunSnapshot {
         }
         let mut captured: Vec<_> = evaluator.modules.captured_inits.drain().collect();
         captured.sort_unstable_by_key(|(id, _)| *id);
-        for (id, (old_env, scope)) in captured {
+        for (id, entry) in captured {
             self.modules.capture_on_init.remove(&id);
-            if !self.modules.contains_key(&id)
-                && !unpromotable.contains(&id)
-                && !self.try_install_captured(id, old_env, &scope)
-            {
-                unpromotable.insert(id);
+            if !self.modules.contains_key(&id) && !unpromotable.contains(&id) {
+                let installed = entry
+                    .is_some_and(|(old_env, scope)| self.try_install_captured(id, old_env, &scope));
+                if !installed {
+                    unpromotable.insert(id);
+                }
             }
         }
         if remaining_tasks < 2 {

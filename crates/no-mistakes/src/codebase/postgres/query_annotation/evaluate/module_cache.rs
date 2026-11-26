@@ -16,7 +16,8 @@ pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     pub(in crate::codebase::postgres::query_annotation) capture_on_init:
         FxHashMap<ModuleId, Vec<(Environment, Scope)>>,
     pub(in crate::codebase::postgres::query_annotation) captured_inits:
-        FxHashMap<ModuleId, (Environment, Scope)>,
+        FxHashMap<ModuleId, Option<(Environment, Scope)>>,
+    pub(in crate::codebase::postgres::query_annotation) untrusted_intrinsic_writes: u64,
 }
 
 pub(in crate::codebase::postgres::query_annotation) mod shared;
@@ -38,6 +39,7 @@ impl ModuleCache {
             sources: Default::default(),
             capture_on_init: FxHashMap::default(),
             captured_inits: FxHashMap::default(),
+            untrusted_intrinsic_writes: 0,
         }
     }
 }
