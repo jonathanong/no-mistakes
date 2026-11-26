@@ -14,7 +14,7 @@ use std::sync::Arc;
 mod extract;
 mod findings;
 mod load;
-mod options;
+pub(super) mod options;
 mod policy;
 
 pub(crate) use extract::collect_for_plan;
