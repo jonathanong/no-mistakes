@@ -1,5 +1,6 @@
 use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
+use crate::codebase::workflow_topology::artifact_types::ArtifactMatchKind;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
@@ -43,7 +44,7 @@ pub(crate) struct ArtifactEdgeRule {
     pub(crate) to: String,
     pub(crate) name: String,
     #[serde(rename = "match")]
-    pub(crate) match_kind: Option<String>,
+    pub(crate) match_kind: Option<ArtifactMatchKind>,
 }
 
 #[derive(Deserialize, Default, Clone)]

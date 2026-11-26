@@ -36,11 +36,6 @@ fn artifact_edges(options: &Options) -> Result<()> {
         for (key, value) in [("from", &edge.from), ("to", &edge.to), ("name", &edge.name)] {
             nonblank(RULE_ID, path.clone().key(key), value)?;
         }
-        if let Some(kind) = edge.match_kind.as_deref() {
-            if !matches!(kind, "exact" | "pattern" | "all" | "possible") {
-                return Err(invalid(RULE_ID, path.key("match"), "must be exact, pattern, all, or possible"));
-            }
-        }
     }
     Ok(())
 }

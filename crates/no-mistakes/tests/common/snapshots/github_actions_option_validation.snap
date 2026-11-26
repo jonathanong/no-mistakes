@@ -124,7 +124,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   },
   "4515-2": {
     "exitCode": 2,
-    "stderr": "error: 4515-2.yml:10: invalid options for rule `workflow-topology-policy` at options.requiredArtifactEdges[0].match: must be exact, pattern, all, or possible\n"
+    "stderr": "error: 4515-2.yml:10: invalid options for rule `workflow-topology-policy` at options.requiredArtifactEdges[0].match: unknown variant `typo`, expected one of `exact`, `pattern`, `all`, `possible`\n"
   },
   "4515-3": {
     "exitCode": 2,
