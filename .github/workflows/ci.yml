@@ -2458,6 +2458,7 @@ jobs:
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+          NATIVE_WORKSPACE_CACHE_KEY: ${{ steps.native-workspace-cache.outputs.cache-matched-key }}
         run: |
           set -euo pipefail
           rm -rf target/native-build-diagnostics
@@ -2471,7 +2472,9 @@ jobs:
               raise SystemExit(f"expected {old!r} in {path}")
           path.write_text(text.replace(old, new, 1))
           PY
-          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          if [[ -n "$NATIVE_WORKSPACE_CACHE_KEY" ]]; then
+            node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          fi
           node .github/scripts/build-native.cjs
           cp target/debug/libno_mistakes.dylib target/debug/no-mistakes.node
 
