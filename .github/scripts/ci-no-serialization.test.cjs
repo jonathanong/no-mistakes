@@ -3,12 +3,12 @@ const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
 const YAML = require("yaml");
-const ci = YAML.parse(
-  readFileSync(path.resolve(__dirname, "../workflows/ci.yml"), "utf8"),
-);
+const ci = YAML.parse(readFileSync(path.resolve(__dirname, "../workflows/ci.yml"), "utf8"));
 
-test("JavaScript tests wait for the coverage merge and the Linux API shards", () => {
-  assert.deepEqual(ci.jobs["javascript-tests"].needs, ["javascript-coverage", "linux-api-tests"]);
+test("Tests with coverage waits directly for the coverage merge and the Linux API shards", () => {
+  assert.equal(ci.jobs["javascript-tests"], undefined);
+  assert.ok(ci.jobs["tests-gate"].needs.includes("javascript-coverage"));
+  assert.ok(ci.jobs["tests-gate"].needs.includes("linux-api-tests"));
 });
 
 test("each cache is retained by its own job right after its producer", () => {

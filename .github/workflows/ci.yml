@@ -403,9 +403,6 @@ jobs:
           - name: coverage warnings
             command: cargo check --locked --workspace --lib --tests --all-features
             flags: -D warnings --cfg coverage
-          - name: formatting
-            command: cargo fmt --all -- --check
-            flags: -D warnings
     env:
       RUSTFLAGS: ${{ matrix.flags }}
     steps:
@@ -417,9 +414,9 @@ jobs:
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
-          components: clippy, rustfmt
+          components: ${{ contains(matrix.name, 'Clippy') && 'clippy, rustfmt' || '' }}
       - name: Cache Rust quality artifacts
-        if: ${{ matrix.name != 'formatting' && env.COLD_BUILD != 'true' }}
+        if: ${{ env.COLD_BUILD != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
@@ -432,6 +429,10 @@ jobs:
         uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
         with:
           tool: cargo-nextest@0.9.151
+      - name: Check Rust formatting
+        if: ${{ matrix.name == 'all-feature Clippy' }}
+        timeout-minutes: 2
+        run: cargo fmt --all -- --check
       # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Run isolated Rust quality check
         timeout-minutes: ${{ matrix.name == 'PostgreSQL source identities' && 30 || 18 }}
@@ -441,21 +442,9 @@ jobs:
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
   quality-js:
-    name: JavaScript policy (${{ matrix.name }})
+    name: JavaScript policy
     runs-on: ubuntu-slim
     timeout-minutes: 8
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: formatting
-            command: pnpm run fmt:js:check
-          - name: lint
-            command: pnpm run lint:js
-          - name: duplication
-            command: pnpm run lint:duplicates
-          - name: spelling
-            command: pnpm run lint:spell
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -491,9 +480,18 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Run isolated JavaScript policy check
-        timeout-minutes: 5
-        run: ${{ matrix.command }}
+      - name: Check JavaScript formatting
+        timeout-minutes: 2
+        run: pnpm run fmt:js:check
+      - name: Run JavaScript lint
+        timeout-minutes: 2
+        run: pnpm run lint:js
+      - name: Check JavaScript duplication
+        timeout-minutes: 2
+        run: pnpm run lint:duplicates
+      - name: Check spelling
+        timeout-minutes: 2
+        run: pnpm run lint:spell
   quality-links:
     name: Documentation links
     runs-on: ubuntu-slim
@@ -759,13 +757,13 @@ jobs:
           if-no-files-found: error
           retention-days: 1
   javascript-shards:
-    name: JavaScript shard (${{ matrix.shard }}/4)
+    name: JavaScript shard (${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
     timeout-minutes: 8
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2]
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -806,7 +804,7 @@ jobs:
         run: pnpm run build:js
       - name: Run JavaScript tests
         timeout-minutes: 4
-        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/4 --reporter=blob
+        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/2 --reporter=blob
       - name: Upload JavaScript shard report
         timeout-minutes: 3
         if: ${{ always() }}
@@ -973,22 +971,8 @@ jobs:
             target/native-api-tests-summary.md
 
       # Codecov is reporting only; an outage must not block merges.
-  javascript-tests:
-    name: JavaScript tests
-    needs: [javascript-coverage, linux-api-tests]
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-slim
-    timeout-minutes: 3
-    steps:
-      - name: Require all component jobs
-        timeout-minutes: 1
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
   timeout-policy-browser-tests:
     name: ${{ matrix.name }}
-    needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -2671,42 +2655,6 @@ jobs:
         timeout-minutes: 10
         run: node .github/scripts/smoke.cjs windows api target/debug/no-mistakes.node
 
-  native-tests:
-    name: Native tests
-    needs:
-      [
-        changes,
-        native-build,
-        native-build-macos,
-        native-test-build,
-        native-test-build-macos,
-        native-rust-tests,
-        native-rust-tests-macos,
-        native-api-tests,
-        native-api-tests-macos,
-        macos-smoke,
-        windows-smoke,
-      ]
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-slim
-    timeout-minutes: 3
-    steps:
-      - name: Checkout
-        timeout-minutes: 3
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Require all component jobs
-        timeout-minutes: 1
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-          RUST_REQUIRED: ${{ needs.changes.outputs.rust }}
-          MACOS_REQUIRED: ${{ needs.changes.outputs.macos }}
-          MACOS_SMOKE_REQUIRED: ${{ needs.changes.outputs.macos-smoke }}
-          MACOS_EVENT: ${{ github.event_name }}
-          MACOS_REF: ${{ github.ref }}
-          WINDOWS_REQUIRED: ${{ needs.changes.outputs.windows }}
-        run: node .github/scripts/native-tests-gate.cjs
   standalone-build:
     name: Build standalone library tests
     needs: changes
@@ -2852,19 +2800,6 @@ jobs:
       - name: Test standalone Rust library without a CLI build
         timeout-minutes: 6
         run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 3
-  tests-standalone-lib:
-    name: Standalone library tests
-    needs: [changes, standalone-build, standalone-shards]
-    if: ${{ !cancelled() && needs.changes.outputs.rust == 'true' }}
-    runs-on: ubuntu-slim
-    timeout-minutes: 3
-    steps:
-      - name: Require all component jobs
-        timeout-minutes: 1
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
   # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   rust-coverage-build:
     name: Build instrumented Rust tests
@@ -3139,12 +3074,6 @@ jobs:
           cargo llvm-cov report --show-missing-lines 2>&1 | tail -60
         continue-on-error: true
 
-      - name: Install cargo-crap
-        timeout-minutes: 5
-        uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
-        with:
-          tool: cargo-crap
-
       - name: Enforce CRAP threshold
         id: rust-crap
         timeout-minutes: 2
@@ -3312,23 +3241,45 @@ jobs:
         quality,
         docs-tests,
         packages,
-        javascript-tests,
+        javascript-coverage,
+        linux-api-tests,
         timeout-policy-browser-tests,
-        native-tests,
+        native-build,
+        native-build-macos,
+        native-test-build,
+        native-test-build-macos,
+        native-rust-tests,
+        native-rust-tests-macos,
+        native-api-tests,
+        native-api-tests-macos,
+        macos-smoke,
+        windows-smoke,
         tests,
-        tests-standalone-lib,
+        standalone-build,
+        standalone-shards,
       ]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
-      - name: Check test and quality results
+      - name: Checkout
+        timeout-minutes: 2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts/tests-gate.cjs
+          sparse-checkout-cone-mode: false
+      - name: Require all component jobs
         timeout-minutes: 1
         env:
           RESULTS: ${{ toJSON(needs) }}
           RUST_REQUIRED: ${{ needs.changes.outputs.rust }}
-        run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result==="skipped" && process.env.RUST_REQUIRED==="false" && /^(docs-tests|tests|tests-standalone-lib)$/.test(name)) continue; if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+          MACOS_REQUIRED: ${{ needs.changes.outputs.macos }}
+          MACOS_SMOKE_REQUIRED: ${{ needs.changes.outputs.macos-smoke }}
+          MACOS_EVENT: ${{ github.event_name }}
+          MACOS_REF: ${{ github.ref }}
+          WINDOWS_REQUIRED: ${{ needs.changes.outputs.windows }}
+        run: node .github/scripts/tests-gate.cjs
   ast-analysis:
     name: AST analysis
     needs: linux-runtime
