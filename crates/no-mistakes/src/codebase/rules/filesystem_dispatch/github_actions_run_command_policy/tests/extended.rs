@@ -1,7 +1,7 @@
-use super::judge::{scan_script, HitKind};
-use super::options::{self, Options};
-use super::runs::check_shell_source;
-use super::{collect_config_errors, diagnostics_with_files_and_sources, RULE_ID};
+use super::super::judge::{scan_script, HitKind};
+use super::super::options::{self, Options};
+use super::super::runs::check_shell_source;
+use super::super::{collect_config_errors, diagnostics_with_files_and_sources, RULE_ID};
 use crate::codebase::ts_source::discover_files;
 use crate::config::v2::{load_v2_config, NoMistakesConfig, Unanalyzable};
 use std::path::PathBuf;

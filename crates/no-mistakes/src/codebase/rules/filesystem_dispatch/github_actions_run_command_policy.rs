@@ -56,5 +56,3 @@ pub fn diagnostics_with_files_and_sources(
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
-#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
-mod tests_extended;
