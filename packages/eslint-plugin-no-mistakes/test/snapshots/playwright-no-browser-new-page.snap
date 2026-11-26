@@ -895,6 +895,39 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/playwright-no-browser-new-page",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 95,
+          "file": "unanalyzable.spec.ts",
+          "line": 93,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 98,
+          "file": "unanalyzable.spec.ts",
+          "line": 96,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 103,
+          "file": "unanalyzable.spec.ts",
+          "line": 101,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-browser-new-page",
+          "severity": 2
         }
       ],
       "name": "unanalyzable default finding mode",
@@ -1442,6 +1475,27 @@
           "file": "unanalyzable.spec.ts",
           "line": 88,
           "message": "Cannot prove dynamic Playwright test method avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 1,
+          "file": "unanalyzable.spec.ts",
+          "line": 93,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 1,
+          "file": "unanalyzable.spec.ts",
+          "line": 96,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
+        },
+        {
+          "code": "no-mistakes(playwright-no-browser-new-page)",
+          "column": 1,
+          "file": "unanalyzable.spec.ts",
+          "line": 101,
+          "message": "Cannot prove reassigned Playwright test binding avoids browser.newPage(). Use the shared `appPage` fixture directly, or make the browser usage statically visible."
         }
       ],
       "name": "unanalyzable.spec.ts",

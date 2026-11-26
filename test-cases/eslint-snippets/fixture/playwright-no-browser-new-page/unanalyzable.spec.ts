@@ -88,3 +88,16 @@ const { ...pwRest } = pw;
 pwRest.test("rest namespace registrar", async ({ browser }) => {
   await browser.newContext();
 });
+let reassignedRegistrar = test;
+reassignedRegistrar = externalCallback as unknown as typeof test;
+reassignedRegistrar("reassigned registrar", async ({ browser }) => {
+  await browser.newPage();
+});
+reassignedRegistrar.only("reassigned registrar modifier", async ({ browser }) => {
+  await browser.newPage();
+});
+let deferredRegistrar: typeof test | undefined;
+deferredRegistrar = test;
+deferredRegistrar("deferred registrar", async ({ browser }) => {
+  await browser.newPage();
+});

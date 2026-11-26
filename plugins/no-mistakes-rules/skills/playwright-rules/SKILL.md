@@ -13,7 +13,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT run browser tests against a dev server; test a production build.
 - MUST NOT assume `scrollIntoViewIfNeeded` triggers scroll-driven behavior; scroll for real.
 - MUST NOT swallow failures from a locator that the test requires for an action or assertion.
-- MUST NOT call `browser.newPage()` when a shared page fixture is available; receive the shared page fixture instead.
+- MUST NOT call `browser.newPage()` outside a fixture definition when a shared page fixture is available; receive the shared page fixture instead.
 - MUST NOT hide flakiness with large assertion or test timeouts; fix the readiness condition.
 - MUST NOT compute unique tokens at module or `describe` scope for use in hooks; generate them inside the hook.
 - MUST NOT drive infinite scroll with one raw scroll call; scroll until the awaited request fires.

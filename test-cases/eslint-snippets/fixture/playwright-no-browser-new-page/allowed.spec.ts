@@ -72,6 +72,9 @@ const {
 run();
 const { a: _nested, ...restHelpers } = helpers;
 restHelpers.go();
+let localCallback = () => {};
+localCallback = () => {};
+localCallback();
 
 const customTest = test.extend({
   appPage: async ({ browser }, use) => {
