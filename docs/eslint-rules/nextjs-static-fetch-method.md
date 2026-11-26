@@ -9,6 +9,8 @@ relationships without executing the application.
 
 ```ts
 await fetch("/api/users", { method: requestMethod });
+await fetch("/api/users", { method: "GET", ...overrides });
+await fetch.apply(undefined, args);
 ```
 
 ## Allowed
@@ -16,13 +18,24 @@ await fetch("/api/users", { method: requestMethod });
 ```ts
 await fetch("/api/users", { method: "POST" });
 await fetch("/api/users", { method: `POST` });
+await fetch("/api/users", { ...overrides, method: "GET" });
 ```
 
 ## Options
 
 This rule has no options.
 
-`globalThis`, `window`, `self`, and `global` `fetch`, a string or expression-free template member, a single `const` alias, `const { fetch }` from those roots, an optional call, and `.call` or a literal-array `.apply` are the same call. `.call` and `.apply` shift the arguments.
+The rule recognizes global `fetch`, including static member access on
+`globalThis`, `window`, `self`, and `global`, and `const` aliases or destructured bindings
+of those references. Optional calls are supported.
+
+For `.call` and `.apply`, the rule checks the forwarded options position. It reports a recognized `fetch` target when an opaque forwarding list
+or an argument spread hides the options position.
+
+Within an options object literal, properties take effect in source order.
+A spread or computed key that could set `method` makes it unresolved. A later
+explicit literal `method` takes precedence. A call with omitted options or an
+object literal with no possible `method` property is allowed.
 
 ## Fix
 
@@ -31,7 +44,10 @@ methods into small static branches when route analysis matters.
 
 ## Limits
 
-`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A computed identifier key is not the `fetch` property, including when that identifier is spelled `fetch`: `const fetch = "setTimeout"; const { [fetch]: schedule } = globalThis`. `const request = fetch as typeof fetch` is still `fetch`. `(globalThis as typeof globalThis).fetch` and `const { fetch: request } = globalThis as typeof globalThis` are still the global `fetch`.
+The object property check applies to inline object literals. Pass an inline
+object to make the method visible when options are assembled elsewhere.
+
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. A computed identifier key is not the `fetch` property, including when that identifier is spelled `fetch`: `const fetch = "setTimeout"; const { [fetch]: schedule } = globalThis`. `const request = fetch as typeof fetch` is still `fetch`. `(globalThis as typeof globalThis).fetch` and `const { fetch: request } = globalThis as typeof globalThis` are still the global `fetch`.
 
 ## Suppression
 

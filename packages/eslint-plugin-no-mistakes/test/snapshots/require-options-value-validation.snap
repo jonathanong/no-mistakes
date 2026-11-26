@@ -63,10 +63,10 @@
 6:invalidOptionValue
 
 ## value-validation-spread (off)
-
+4:missingOptions
 
 ## value-validation-spread (on)
-
+4:missingOptions
 
 ## value-validation-spread (on+shorthand)
-
+4:missingOptions

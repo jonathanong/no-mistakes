@@ -22,7 +22,6 @@ const suite = {
     methodCase("fetch('https://api.example.com', { method: `POST` });"),
     methodCase("fetch('https://api.example.com', { cache: 'no-store' });"),
     methodCase("fetch('https://api.example.com', opts);"),
-    methodCase("fetch('https://api.example.com', { ...opts });"),
     methodCase("fetch('https://api.example.com', { ['method']: 'GET' });"),
     methodCase("fetch('https://api.example.com', { 'method': 'POST' });"),
     // The last duplicate method property is the literal.

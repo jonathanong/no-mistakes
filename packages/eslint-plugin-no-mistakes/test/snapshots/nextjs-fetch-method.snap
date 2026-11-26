@@ -68,12 +68,6 @@
     },
     {
       "file": "fixture.jsx",
-      "findings": [],
-      "kind": "valid",
-      "options": null
-    },
-    {
-      "file": "fixture.jsx",
       "findings": [
         {
           "column": 48,

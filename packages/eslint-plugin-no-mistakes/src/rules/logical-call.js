@@ -16,12 +16,18 @@ function memberPropertyName(node) {
   return propertyName(current.property);
 }
 
-// The call that actually runs, after optional chaining, a type or non-null
-// assertion, a comma callee, and `.call` / a literal `.apply` array. Opaque
-// `.apply` or a spread `.call` returns null so callers do not read the wrong
-// argument. A target-aware caller can stop at configured call/apply methods;
-// unmatched intrinsic chains then use the explicit receiver from the outer call.
-function logicalCall(node, stopAt) {
+// null means the argument's position is opaque. undefined means it is absent.
+function argumentAt(args, index) {
+  if (!args) return null;
+  for (let position = 0; position <= index && position < args.length; position += 1) {
+    if (args[position]?.type === "SpreadElement") return null;
+  }
+  return args[index] ?? undefined;
+}
+
+// Target-aware callers can stop at configured call/apply methods. Unmatched
+// intrinsic chains use the explicit receiver from the outer call.
+function logicalCall(node, stopAt, preserveOpaqueArguments = false) {
   if (node?.type !== "CallExpression") return null;
   let callee = unwrapExpression(node.callee);
   let args = node.arguments;
@@ -39,26 +45,30 @@ function logicalCall(node, stopAt) {
     if (callee?.type !== "MemberExpression") break;
     const name = memberPropertyName(callee);
     if (name !== "call" && name !== "apply") break;
-    if (name === "call") {
-      if (args.some((arg) => arg?.type === "SpreadElement")) return null;
-      callee = stopAt && forwarded ? thisArg : callee.object;
-      thisArg = args[0];
-      forwarded = true;
-      args = args.slice(1);
-      continue;
-    }
-    if (args.some((arg) => arg?.type === "SpreadElement")) return null;
-    const list = unwrapExpression(args[1]);
-    if (
-      list?.type !== "ArrayExpression" ||
-      list.elements.some((element) => !element || element.type === "SpreadElement")
-    ) {
+    if (!preserveOpaqueArguments && args.some((arg) => arg?.type === "SpreadElement")) {
       return null;
     }
     callee = stopAt && forwarded ? thisArg : callee.object;
-    thisArg = args[0];
+    thisArg = argumentAt(args, 0);
     forwarded = true;
-    args = list.elements;
+    if (name === "call") {
+      args = thisArg === null ? null : args.slice(1);
+      continue;
+    }
+    const list = unwrapExpression(argumentAt(args, 1));
+    if (list?.type === "ArrayExpression") {
+      if (
+        !preserveOpaqueArguments &&
+        list.elements.some((element) => !element || element.type === "SpreadElement")
+      ) {
+        return null;
+      }
+      args = list.elements;
+    } else if (preserveOpaqueArguments) {
+      args = list === undefined || (list?.type === "Literal" && list.value === null) ? [] : null;
+    } else {
+      return null;
+    }
   }
   return { callee: unwrapExpression(callee), arguments: args, forwarded };
 }
@@ -72,4 +82,4 @@ function literalString(node) {
   return null;
 }
 
-module.exports = { propertyName, memberPropertyName, logicalCall, literalString };
+module.exports = { argumentAt, propertyName, memberPropertyName, logicalCall, literalString };
