@@ -94,6 +94,7 @@ fn nextjs_redirect_destinations_json_matches_snapshot() {
 #[test]
 fn server_route_client_boundary_json_matches_snapshot() {
     let fail = "rules/server-route-client-boundary/fixture/fail";
+    let inputs = "rules/file-input-analysis/fixture";
     assert_saved_fixture(
         "server_route_client_boundary",
         &[
@@ -109,6 +110,26 @@ fn server_route_client_boundary_json_matches_snapshot() {
                 "non_source_files",
                 "rules/server-route-client-boundary/fixture/non-source-project-files",
                 ".no-mistakes.yml",
+            ),
+            c(
+                "suppression",
+                "rules/server-route-client-boundary/fixture/suppression",
+                "../fail/boundary-only.no-mistakes.yml",
+            ),
+            c(
+                "input_report",
+                inputs,
+                "server-route-client-boundary-report.yml",
+            ),
+            c(
+                "input_advise",
+                inputs,
+                "server-route-client-boundary-advise.yml",
+            ),
+            c(
+                "input_ignore",
+                inputs,
+                "server-route-client-boundary-ignore.yml",
             ),
         ],
     );

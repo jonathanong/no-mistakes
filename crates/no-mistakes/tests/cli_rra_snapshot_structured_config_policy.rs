@@ -22,6 +22,11 @@ fn structured_config_policy_json_matches_snapshot() {
             // `<<: *defaults` is expanded, so the anchored banned key is present.
             ("merge_key", root("merge-key"), cfg("merge-key.yml")),
             (
+                "suppressions",
+                root("suppressions"),
+                cfg("suppressions.yml"),
+            ),
+            (
                 "required_banned",
                 fixture.clone(),
                 cfg("required-banned.yml"),

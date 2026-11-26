@@ -34,6 +34,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/modules/format/index.test.mts",
+          "line": 1,
+          "message": "backend/modules/format/index.test.mts: no corresponding source file found",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "import { expect, test } from 'vitest';"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {

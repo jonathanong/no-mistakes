@@ -131,6 +131,11 @@ fn swift_no_raw_print_json_matches_snapshot() {
                 "swift-no-raw-print/fixture/pass",
                 ".no-mistakes.yml",
             ),
+            c(
+                "disable_lines",
+                "swift-no-raw-print/fixture/disable-lines",
+                "../../config/swift_no_raw_print_cli_fails.yml",
+            ),
         ],
     );
 }
@@ -175,6 +180,11 @@ fn swift_viewmodel_main_actor_json_matches_snapshot() {
                 "pass",
                 "swift-viewmodel-main-actor/fixture/pass",
                 ".no-mistakes.yml",
+            ),
+            c(
+                "disable_lines",
+                "swift-viewmodel-main-actor/fixture/disable-lines",
+                "../../config/swift_viewmodel_main_actor_cli_fails.yml",
             ),
         ],
     );

@@ -271,6 +271,11 @@ fn queue_shared_test_scope_check_json_snapshot() {
         &[
             ("default", root.clone(), PathBuf::new()),
             (
+                "disable-directives",
+                root.with_file_name("queue-shared-test-scope-suppression"),
+                root.join(".no-mistakes.yml"),
+            ),
+            (
                 "include-test-file",
                 root.clone(),
                 root.join("include-test-file.yml"),
@@ -295,6 +300,14 @@ fn queue_shared_test_scope_check_json_snapshot() {
         .unwrap();
     assert_eq!(default_advisories.len(), 1, "{default_advisories:?}");
     assert_eq!(default_advisories[0]["file"], "src/producer.ts");
+
+    let suppression = &reports["disable-directives"];
+    assert_eq!(suppression["exitCode"], 1);
+    let queues = suppression["report"]["queues"].as_array().unwrap();
+    assert_eq!(queues.len(), 1, "{queues:?}");
+    assert_eq!(queues[0]["kind"], "unbounded-job-retention");
+    assert_eq!(queues[0]["file"], "src/producer.ts");
+    assert_eq!(queues[0]["line"], 4);
 
     for name in ["include-test-file", "include-all-tests"] {
         assert_eq!(reports[name]["exitCode"], 1);

@@ -222,6 +222,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/control.ts",
+          "line": 1,
+          "message": "src/control.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const control = 1;",
+          "target": "src/control.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "empty_allow_path": {
     "exitCode": 0,
     "report": {
