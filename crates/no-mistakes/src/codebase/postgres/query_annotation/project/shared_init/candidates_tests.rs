@@ -112,7 +112,11 @@ fn referenced_deps_tracks_named_star_and_local_reexports() {
         make_file(
             &empty_facts,
             TsFileFacts {
-                star_reexport_specifiers: vec!["./leaf_star.mts".into()],
+                star_reexport_specifiers: vec![
+                    "./leaf_star.mts".into(),
+                    "./external.mts".into(),
+                    "./unresolved.mts".into(),
+                ],
                 ..Default::default()
             },
             &ids,
@@ -172,6 +176,7 @@ fn referenced_deps_tracks_named_star_and_local_reexports() {
         ("./leaf_named.mts", leaf_named.clone()),
         ("./leaf_star.mts", leaf_star.clone()),
         ("./leaf_local.mts", leaf_local.clone()),
+        ("./external.mts", missing.clone()),
     ]);
     let resolve = |specifier: &str, _: &std::path::Path| targets.get(specifier).cloned();
     let graph = discover(&files, &[r1, r2, missing.clone()], &ids, &resolve);
