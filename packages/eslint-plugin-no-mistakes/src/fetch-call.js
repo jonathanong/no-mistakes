@@ -13,14 +13,25 @@ const LOCAL_BINDING_TYPES = new Set([
 ]);
 const FETCH_ROOTS = new Set(["globalThis", "window", "self", "global"]);
 
+function typeOnlyImport(def) {
+  return (
+    def?.type === "ImportBinding" &&
+    (def.node?.importKind === "type" || def.parent?.importKind === "type")
+  );
+}
+
+function shadowsFetch(def) {
+  return LOCAL_BINDING_TYPES.has(def?.type) && !typeOnlyImport(def);
+}
+
 function isFetchShadowed(scope) {
   while (scope) {
     const get = scope.set?.get;
     const variable = typeof get === "function" ? get.call(scope.set, "fetch") : null;
-    if (variable) return variable.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+    if (variable) return variable.defs.some(shadowsFetch);
     if (!scope.set || typeof get !== "function") {
       const fallback = scope.variables?.find((item) => item.name === "fetch");
-      if (fallback) return fallback.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+      if (fallback) return fallback.defs.some(shadowsFetch);
     }
     scope = scope.upper;
   }

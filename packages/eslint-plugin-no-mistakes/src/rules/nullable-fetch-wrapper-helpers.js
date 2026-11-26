@@ -1,6 +1,7 @@
 "use strict";
 
 const { typeAnnotation, typeName } = require("../react-node-types");
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
 const {
   memberPropertyName,
   repoRelativeFilename,
@@ -18,16 +19,8 @@ function compilePatterns(patterns = []) {
 }
 
 function calleePath(node) {
-  let current = node;
+  const current = unwrapExpression(node);
   if (!current) return null;
-  while (
-    current.type === "TSAsExpression" ||
-    current.type === "TSTypeAssertion" ||
-    current.type === "TSNonNullExpression"
-  ) {
-    current = current.expression;
-  }
-  if (current.type === "ChainExpression") current = current.expression;
   if (current.type === "Identifier") return current.name;
   if (current.type !== "MemberExpression") return null;
   const object = calleePath(current.object);
@@ -78,7 +71,9 @@ function returnTypeAnnotation(node) {
 }
 
 function variableDeclarator(node) {
-  return node.parent?.type === "VariableDeclarator" ? node.parent : null;
+  let parent = node?.parent;
+  while (isTransparentExpression(parent)) parent = parent.parent;
+  return parent?.type === "VariableDeclarator" ? parent : null;
 }
 
 function variableDeclaration(node) {

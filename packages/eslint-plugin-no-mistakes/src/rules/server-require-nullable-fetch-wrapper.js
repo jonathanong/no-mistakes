@@ -3,7 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { logicalCall, pathAllowed } = require("./module-mock-helpers");
-const { resolveVariable } = require("./async-target-bindings");
+const { importSpellings, reportsUnanalyzable, rootIdentifier } = require("./import-resolution");
 const helpers = require("./nullable-fetch-wrapper-helpers");
 
 const {
@@ -27,30 +27,13 @@ function isFunctionBoundary(node) {
   );
 }
 
-function rootIdentifier(node) {
-  let current = node;
-  while (current?.type === "ChainExpression" || current?.type === "MemberExpression") {
-    current = current.type === "ChainExpression" ? current.expression : current.object;
-  }
-  return current?.type === "Identifier" ? current : null;
-}
-
-function spelledCallee(callee, context) {
+function calleeNames(callee, context) {
   const path = calleePath(callee);
-  if (!path) return null;
-  const root = rootIdentifier(callee);
-  if (!root) return path;
-  const variable = resolveVariable(root, context);
-  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (def?.type !== "ImportBinding" || def.node?.type !== "ImportSpecifier") return path;
-  const imported = def.node.imported;
-  const importedName = imported?.type === "Literal" ? String(imported.value) : imported?.name;
-  if (!importedName || importedName === root.name) return path;
-  return `${importedName}${path.slice(root.name.length)}`;
-}
-
-function wrapperMatches(callee, wrapper, context) {
-  return calleePath(callee) === wrapper || spelledCallee(callee, context) === wrapper;
+  const spelled = importSpellings(rootIdentifier(callee), path, context);
+  return {
+    names: [...new Set([path, ...spelled.names].filter(Boolean))],
+    unresolved: spelled.unresolved,
+  };
 }
 
 function argumentContains(argument, target) {
@@ -62,27 +45,31 @@ function argumentContains(argument, target) {
   );
 }
 
-function insideWrapper(node, wrapper, context) {
+function wrapperState(node, wrapper, context) {
   let current = node.parent;
   while (current) {
-    if (current.type !== "CallExpression") {
-      if (isFunctionBoundary(current)) return false;
-      current = current.parent;
-      continue;
+    if (current.type === "CallExpression") {
+      const info = calleeNames(current.callee, context);
+      const invoked = logicalCall(current);
+      const forwarded = invoked ? calleeNames(invoked.callee, context) : null;
+      const matched =
+        info.names.includes(wrapper) ||
+        (forwarded?.names.includes(wrapper) &&
+          invoked.arguments.some((argument) => argumentContains(argument, node)));
+      if (matched) return "inside";
+      const holds =
+        current.arguments.some((argument) => argumentContains(argument, node)) ||
+        (invoked?.arguments ?? []).some((argument) => argumentContains(argument, node));
+      if (holds && (info.unresolved || forwarded?.unresolved)) return "unresolved";
     }
-    if (wrapperMatches(current.callee, wrapper, context)) return true;
-    const invoked = logicalCall(current);
-    if (
-      invoked &&
-      wrapperMatches(invoked.callee, wrapper, context) &&
-      invoked.arguments.some((argument) => argumentContains(argument, node))
-    ) {
-      return true;
-    }
-    if (isFunctionBoundary(current)) return false;
+    if (isFunctionBoundary(current)) return "outside";
     current = current.parent;
   }
-  return false;
+  return "outside";
+}
+
+function insideWrapper(node, wrapper, context) {
+  return wrapperState(node, wrapper, context) === "inside";
 }
 
 module.exports = Object.assign(
@@ -104,6 +91,7 @@ module.exports = Object.assign(
             nullableReturnTypeNames: { type: "array", items: { type: "string" } },
             inferNullableFromTopLevelEntityPath: { type: "boolean" },
             topLevelEntityPathPatterns: { type: "array", items: { type: "string" } },
+            unanalyzable: { enum: ["finding", "ignore"] },
           },
           required: ["getterCalleePatterns", "requiredWrapperCallee"],
           additionalProperties: false,
@@ -112,6 +100,8 @@ module.exports = Object.assign(
       messages: {
         wrapper:
           "Wrap nullable entity fetch '{{callee}}' in {{wrapper}} so missing entities map to null consistently.",
+        unanalyzable:
+          "Could not resolve whether '{{callee}}' is the configured getter or wrapper. Use a static import.",
       },
     },
     (context) => {
@@ -170,22 +160,31 @@ module.exports = Object.assign(
         CallExpression(node) {
           if (!currentFunctionChecked()) return;
           const invoked = logicalCall(node);
-          const name = [
-            calleePath(node.callee),
-            spelledCallee(node.callee, context),
-            invoked ? calleePath(invoked.callee) : null,
-            invoked ? spelledCallee(invoked.callee, context) : null,
-          ].find(
-            (candidate) => candidate && getterPatterns.some((pattern) => pattern.test(candidate)),
+          const direct = calleeNames(node.callee, context);
+          const forwarded = invoked ? calleeNames(invoked.callee, context) : null;
+          const names = [...direct.names, ...(forwarded?.names ?? [])];
+          const unresolved = direct.unresolved || forwarded?.unresolved === true;
+          const name = names.find((candidate) =>
+            getterPatterns.some((pattern) => pattern.test(candidate)),
           );
-          if (!name) return;
-          if (insideWrapper(node, options.requiredWrapperCallee, context)) return;
+          const wrapped = wrapperState(node, options.requiredWrapperCallee, context);
+          if (wrapped === "inside") return;
           if (suppressed(node)) return;
-          context.report({
-            node,
-            messageId: "wrapper",
-            data: { callee: name, wrapper: options.requiredWrapperCallee },
-          });
+          if ((wrapped === "unresolved" || (!name && unresolved)) && reportsUnanalyzable(context)) {
+            context.report({
+              node,
+              messageId: "unanalyzable",
+              data: { callee: name || "this call" },
+            });
+            return;
+          }
+          if (name) {
+            context.report({
+              node,
+              messageId: "wrapper",
+              data: { callee: name, wrapper: options.requiredWrapperCallee },
+            });
+          }
         },
       };
     },

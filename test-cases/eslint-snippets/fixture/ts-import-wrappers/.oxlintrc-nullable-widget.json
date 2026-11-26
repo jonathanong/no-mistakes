@@ -1,0 +1,19 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "off",
+    "no-mistakes/server-require-nullable-fetch-wrapper": [
+      "error",
+      {
+        "getterCalleePatterns": ["^getWidget$"],
+        "requiredWrapperCallee": "wrapNullable",
+        "nullableReturnTypeNames": ["Widget"]
+      }
+    ]
+  }
+}

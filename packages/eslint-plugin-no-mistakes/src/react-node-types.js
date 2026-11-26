@@ -1,41 +1,22 @@
 "use strict";
 
-function keyName(node) {
-  if (!node) return null;
-  if (node.type === "Identifier") return node.name;
-  return node.type === "Literal" ? String(node.value) : null;
-}
-
-function unwrapType(node) {
-  return node &&
-    (node.type === "TSParenthesizedType" ||
-      node.type === "TSOptionalType" ||
-      node.type === "TSRestType")
-    ? unwrapType(node.typeAnnotation)
-    : node;
-}
-
-function typeName(node) {
-  const current = unwrapType(node);
-  if (!current) return null;
-  if (current.type !== "TSTypeReference") return null;
-  const name = current.typeName;
-  if (name.type === "Identifier") return name.name;
-  return name.type === "TSQualifiedName" &&
-    name.left.type === "Identifier" &&
-    name.right.type === "Identifier"
-    ? `${name.left.name}.${name.right.name}`
-    : null;
-}
-
-function typeAnnotation(node) {
-  return node && node.typeAnnotation ? unwrapType(node.typeAnnotation.typeAnnotation) : null;
-}
+const { literalString } = require("./rules/module-mock-helpers");
+const { unwrapExpression } = require("./rules/async-ast");
+const {
+  definePattern,
+  keyName,
+  reactTypeStatus,
+  typeAnnotation,
+  typeName,
+} = require("./react-node-type-query");
 
 function createReactNodeFacts(program) {
   const reactNodeNames = new Set(["React.ReactNode"]);
+  const unresolvedNamespaces = new Set();
+  const unresolvedTypes = new Set();
   const aliases = new Map();
   const objectProps = new Map();
+  const typeFacts = () => ({ aliases, reactNodeNames, unresolvedNamespaces, unresolvedTypes });
 
   function topLevelDeclaration(statement) {
     return (statement.type === "ExportNamedDeclaration" ||
@@ -59,8 +40,7 @@ function createReactNodeFacts(program) {
   }
 
   function isReactNodeType(type) {
-    const name = typeName(type);
-    return Boolean(name && (reactNodeNames.has(name) || aliases.get(name) === true));
+    return reactTypeStatus(type, typeFacts()) === "yes";
   }
 
   function collectMembers(members) {
@@ -90,6 +70,38 @@ function createReactNodeFacts(program) {
     }
   }
 
+  for (const statement of program.body || []) {
+    if (statement.type !== "TSImportEqualsDeclaration" || statement.id?.type !== "Identifier") {
+      continue;
+    }
+    const reference = statement.moduleReference;
+    const moduleName =
+      reference?.type === "TSExternalModuleReference" ? literalString(reference.expression) : null;
+    if (moduleName === "react") reactNodeNames.add(`${statement.id.name}.ReactNode`);
+    else if (moduleName === null) unresolvedNamespaces.add(statement.id.name);
+  }
+
+  for (const statement of program.body || []) {
+    const declaration = topLevelDeclaration(statement);
+    if (declaration.type !== "VariableDeclaration" || declaration.kind !== "const") continue;
+    for (const declarator of declaration.declarations || []) {
+      if (declarator.id?.type !== "Identifier") continue;
+      const call = unwrapExpression(declarator.init);
+      if (
+        call?.type !== "CallExpression" ||
+        call.optional ||
+        unwrapExpression(call.callee)?.type !== "Identifier" ||
+        unwrapExpression(call.callee)?.name !== "require" ||
+        call.arguments.length !== 1
+      ) {
+        continue;
+      }
+      const moduleName = literalString(call.arguments[0]);
+      if (moduleName === "react") reactNodeNames.add(`${declarator.id.name}.ReactNode`);
+      else if (moduleName === null) unresolvedNamespaces.add(declarator.id.name);
+    }
+  }
+
   let changed = true;
   while (changed) {
     changed = false;
@@ -97,8 +109,12 @@ function createReactNodeFacts(program) {
       const declaration = topLevelDeclaration(statement);
       if (declaration.type !== "TSTypeAliasDeclaration") continue;
       const name = declaration.id.name;
-      if (!aliases.has(name) && isReactNodeType(declaration.typeAnnotation)) {
+      const status = reactTypeStatus(declaration.typeAnnotation, typeFacts());
+      if (status === "yes" && !aliases.has(name)) {
         aliases.set(name, true);
+        changed = true;
+      } else if (status === "unresolved" && !unresolvedTypes.has(name)) {
+        unresolvedTypes.add(name);
         changed = true;
       }
     }
@@ -135,12 +151,14 @@ function createReactNodeFacts(program) {
     }
   }
 
-  return { aliases, objectProps, reactNodeNames };
+  return { aliases, objectProps, reactNodeNames, unresolvedNamespaces, unresolvedTypes };
 }
 
 module.exports = {
   createReactNodeFacts,
+  definePattern,
   keyName,
+  reactTypeStatus,
   typeAnnotation,
   typeName,
 };

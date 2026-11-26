@@ -42,7 +42,9 @@ export function AliasedPanel(props: { children: ReactNode }) {
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"`. It defaults to `"finding"`. A
+ReactNode type whose import cannot be resolved reports `unanalyzable` instead
+of passing silently. `"ignore"` drops only that uncertain report.
 
 ## Fix
 
@@ -52,6 +54,8 @@ fallback; preserve an explicit `null` when it is meaningful.
 ## Limits
 
 `props["children"]`, ``props[`children`]``, and `const node = children` are the same ReactNode value when the binding is declared in this file. A computed identifier key is not a static property name.
+
+`import React = require("react")`, `import("react").ReactNode`, `(children satisfies ReactNode)`, `props!.children`, and `const { children } = props!` are the same ReactNode value. A non-static `const React = require(moduleName)` or `import(moduleName).ReactNode` reports `unanalyzable`.
 
 String and expression-free template destructuring keys retain the declared prop
 type. An unannotated `const p = props` also retains it, including through more

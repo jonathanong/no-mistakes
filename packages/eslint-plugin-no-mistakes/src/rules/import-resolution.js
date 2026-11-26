@@ -1,0 +1,169 @@
+"use strict";
+
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
+const { literalString } = require("./logical-call");
+const { resolveVariable } = require("./async-target-bindings");
+
+function reportsUnanalyzable(context) {
+  return (context.options?.[0]?.unanalyzable ?? "finding") === "finding";
+}
+
+function isFreeRequire(node, context) {
+  const current = unwrapSequence(node);
+  if (current?.type !== "Identifier" || current.name !== "require") return false;
+  if (!context?.sourceCode?.getScope) return true;
+  const variable = resolveVariable(current, context);
+  if (!variable || variable.defs.length === 0) return true;
+  return !variable.defs.some((def) => def.type && def.type !== "ImplicitGlobalVariable");
+}
+
+// undefined: not a require. null: require whose module is not a static string.
+function requireModule(node, context) {
+  const call = unwrapSequence(node);
+  if (call?.type !== "CallExpression" || call.optional) return undefined;
+  if (!isFreeRequire(call.callee, context) || call.arguments.length !== 1) {
+    return isFreeRequire(call.callee, context) ? null : undefined;
+  }
+  return literalString(call.arguments[0]);
+}
+
+function typeOnlyImport(def) {
+  return def?.node?.importKind === "type" || def?.parent?.importKind === "type";
+}
+
+function importedSpecifierName(specifier) {
+  const imported = specifier?.imported;
+  if (imported?.type === "Identifier") return imported.name;
+  return imported?.type === "Literal" ? String(imported.value) : null;
+}
+
+function importBindingFact(def) {
+  const node = def.node;
+  if (node?.type === "TSImportEqualsDeclaration") {
+    const reference = node.moduleReference;
+    if (reference?.type !== "TSExternalModuleReference") return { unresolved: true };
+    const moduleName = literalString(reference.expression);
+    if (moduleName === null) return { unresolved: true };
+    return { module: moduleName, kind: "namespace", imported: null, typeOnly: typeOnlyImport(def) };
+  }
+  const moduleName = def.parent?.source?.value;
+  if (typeof moduleName !== "string") return { unresolved: true };
+  const typeOnly = typeOnlyImport(def);
+  if (node?.type === "ImportNamespaceSpecifier") {
+    return { module: moduleName, kind: "namespace", imported: null, typeOnly };
+  }
+  if (node?.type === "ImportDefaultSpecifier") {
+    return { module: moduleName, kind: "default", imported: null, typeOnly };
+  }
+  if (node?.type === "ImportSpecifier") {
+    const imported = importedSpecifierName(node);
+    if (!imported) return { unresolved: true };
+    return { module: moduleName, kind: "named", imported, typeOnly };
+  }
+  return { unresolved: true };
+}
+
+function patternLocal(value) {
+  let current = value;
+  while (current?.type === "AssignmentPattern") current = current.left;
+  return current?.type === "Identifier" ? current : null;
+}
+
+function patternImported(pattern, name) {
+  if (pattern?.type !== "ObjectPattern") return null;
+  for (const property of pattern.properties) {
+    if (property.type !== "Property" || patternLocal(property.value)?.name !== name) continue;
+    if (!property.computed && property.key?.type === "Identifier") return property.key.name;
+    const key = literalString(property.key);
+    return key === null ? undefined : key;
+  }
+  return null;
+}
+
+function namespaceMember(base, imported) {
+  if (!base || base.typeOnly) return null;
+  if (base.unresolved) return { unresolved: true };
+  if (base.kind !== "namespace" && base.kind !== "default") return null;
+  if (imported === "default") return { ...base, kind: "default", imported: null };
+  return { module: base.module, kind: "named", imported, typeOnly: false };
+}
+
+function destructureFact(declarator, name, context, seen) {
+  const imported = patternImported(declarator.id, name);
+  if (imported === null) return null;
+  if (imported === undefined) return { unresolved: true };
+  const required = requireModule(declarator.init, context);
+  if (required === null) return { unresolved: true };
+  if (typeof required === "string") {
+    return namespaceMember({ module: required, kind: "namespace", typeOnly: false }, imported);
+  }
+  return namespaceMember(importFact(declarator.init, context, seen), imported);
+}
+
+function factFromDef(def, name, context, seen) {
+  if (def?.type === "ImportBinding") return importBindingFact(def);
+  if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return null;
+  return destructureFact(def.node, name, context, seen);
+}
+
+function importFact(node, context, seen = new Set()) {
+  const current = unwrapSequence(node);
+  if (!current || !context?.sourceCode?.getScope) return null;
+  const required = requireModule(current, context);
+  if (required === null) return { unresolved: true };
+  if (typeof required === "string") {
+    return { module: required, kind: "namespace", imported: null, typeOnly: false };
+  }
+  if (current.type !== "Identifier") return null;
+  if (seen.has(current.name)) return { unresolved: true };
+  seen.add(current.name);
+  const variable = resolveVariable(current, context);
+  if (!variable || variable.defs.length === 0) return null;
+  if (variable.defs.length !== 1) return { unresolved: true };
+  const def = variable.defs[0];
+  const direct = factFromDef(def, current.name, context, seen);
+  if (direct) return direct;
+  if (
+    def.type === "Variable" &&
+    def.parent?.kind === "const" &&
+    def.node?.id?.type === "Identifier" &&
+    def.node.init
+  ) {
+    return importFact(def.node.init, context, seen);
+  }
+  return null;
+}
+
+function rootIdentifier(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "MemberExpression") current = unwrapExpression(current.object);
+  return current?.type === "Identifier" ? current : null;
+}
+
+function importSpellings(root, localPath, context) {
+  if (!root || !localPath) return { names: [], unresolved: false };
+  const fact = importFact(root, context);
+  if (!fact) return { names: [], unresolved: false };
+  if (fact.unresolved) return { names: [], unresolved: true };
+  if (fact.typeOnly) return { names: [], unresolved: false };
+  if (fact.kind === "named" && fact.imported && fact.imported !== root.name) {
+    if (localPath === root.name) return { names: [fact.imported], unresolved: false };
+    if (localPath.startsWith(`${root.name}.`)) {
+      return {
+        names: [`${fact.imported}${localPath.slice(root.name.length)}`],
+        unresolved: false,
+      };
+    }
+  }
+  if (fact.kind === "namespace" && localPath.startsWith(`${root.name}.`)) {
+    return { names: [localPath.slice(root.name.length + 1)], unresolved: false };
+  }
+  return { names: [], unresolved: false };
+}
+
+module.exports = {
+  importFact,
+  importSpellings,
+  reportsUnanalyzable,
+  rootIdentifier,
+};

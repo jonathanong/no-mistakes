@@ -2,11 +2,19 @@
 
 const { literalString, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { unwrapExpression } = require("./async-ast");
+const { reportsUnanalyzable } = require("./import-resolution");
+const { nextImportState } = require("./nextjs-script-imports");
 
 const NEXT_FILE_PATTERN = /(?:^|[/\\])(?:app|pages)(?:[/\\]|$)/;
 
 function isNextPath(filename) {
-  return NEXT_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
+  return NEXT_FILE_PATTERN.test(String(filename || "").replace(/\\/g, "/"));
+}
+
+function attributeExpression(attribute) {
+  if (attribute?.value?.type === "JSXExpressionContainer") return attribute.value.expression;
+  return attribute?.value;
 }
 
 function isJsonLdScript(node) {
@@ -18,10 +26,7 @@ function isJsonLdScript(node) {
     ) {
       return false;
     }
-    const value =
-      attribute.value?.type === "JSXExpressionContainer"
-        ? attribute.value.expression
-        : attribute.value;
+    const value = unwrapExpression(attributeExpression(attribute));
     return value?.type === "Literal" && value.value === "application/ld+json";
   });
 }
@@ -36,10 +41,7 @@ function jsxAttribute(node, name) {
 }
 
 function attributeValue(attribute) {
-  const value =
-    attribute?.value?.type === "JSXExpressionContainer"
-      ? attribute.value.expression
-      : attribute?.value;
+  const value = attributeExpression(attribute);
   return value ? literalString(value) : null;
 }
 
@@ -66,6 +68,10 @@ function isAllowedInlineScript(node, options, patterns) {
   );
 }
 
+function isScriptTag(node) {
+  return node.name.type === "JSXIdentifier" && node.name.name === "script";
+}
+
 module.exports = Object.assign(
   rule(
     {
@@ -79,6 +85,7 @@ module.exports = Object.assign(
             allowInlineScriptIdPatterns: { type: "array", items: { type: "string" } },
             structuredDataComponent: { type: "string", minLength: 1 },
             structuredDataMessage: { type: "string", minLength: 1 },
+            unanalyzable: { enum: ["finding", "ignore"] },
           },
           additionalProperties: false,
         },
@@ -86,6 +93,8 @@ module.exports = Object.assign(
       messages: {
         script: "Use next/script instead of a raw <script> tag.",
         structuredData: "{{message}}",
+        unanalyzable:
+          "Could not resolve whether this file imports Next.js. Use a static next/ import.",
       },
     },
     (context) => {
@@ -93,19 +102,26 @@ module.exports = Object.assign(
       const patterns = allowedIdPatterns(options);
       const suppressed = ruleSuppression(context, "nextjs-no-manual-script-tags");
       let isNextFile = isNextPath(context.filename);
+      let nextUnresolved = false;
       function report(node, messageId, data) {
         if (suppressed(node)) return;
         context.report(data ? { node, messageId, data } : { node, messageId });
       }
       return {
-        ImportDeclaration(node) {
-          if (typeof node.source.value === "string" && node.source.value.startsWith("next/")) {
-            isNextFile = true;
-          }
+        Program(node) {
+          if (isNextFile) return;
+          const state = nextImportState(node, context);
+          isNextFile = state.next;
+          nextUnresolved = state.unresolved && !state.next;
         },
         JSXOpeningElement(node) {
-          if (!isNextFile) return;
-          if (node.name.type !== "JSXIdentifier" || node.name.name !== "script") return;
+          if (!isScriptTag(node)) return;
+          if (!isNextFile) {
+            if (nextUnresolved && reportsUnanalyzable(context)) {
+              report(node, "unanalyzable");
+            }
+            return;
+          }
           if (isJsonLdScript(node)) {
             if (options.structuredDataComponent || options.structuredDataMessage) {
               report(node, "structuredData", {

@@ -41,7 +41,10 @@ const userFromServer = React.use(userPromise);
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"`. It defaults to `"finding"`. A call
+that looks like `use(Promise.resolve(...))` whose `use` import cannot be
+resolved reports `unanalyzable` instead of passing silently. `"ignore"` drops
+only that uncertain report.
 
 ## Fix
 
@@ -51,7 +54,7 @@ actual operand; the rule does not autofix by removing `Promise.resolve`.
 
 ## Limits
 
-A default or namespace import of `react`, `const { use } = React`, a string or expression-free template key, optional chaining, a comma callee, and `Promise.resolve.call` are the same call. `React.use["call"]` forwards the same way as `.call`. A computed identifier key is not static.
+A default or namespace import of `react`, `const { use } = React`, `require("react")`, `import React = require("react")`, a string or expression-free template key, optional chaining, a comma callee, and `Promise.resolve.call` are the same call. `React.use["call"]` forwards the same way as `.call`. A computed identifier key is not static. `as`, `satisfies`, and a type-argument instantiation on `use` or `Promise.resolve` do not hide the call. A type-only import is not a runtime `use`. A non-static `require` of the callee reports `unanalyzable`.
 
 The constructor-alias path follows same-file `const` identity chains to global
 `Promise` when no local binding shadows it. It requires each alias initializer to precede

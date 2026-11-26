@@ -122,7 +122,12 @@ The schema accepts an object: `internalSpecifiers?: string[]`,
 `allowInlineScriptIds?: string[]` and `allowInlineScriptIdPatterns?: string[]`
 exempt a raw `<script>` only when it also has `dangerouslySetInnerHTML`.
 Both default to no exemptions. Literal `type="application/ld+json"` and
-`type={"application/ld+json"}` tags are allowed by default.
+`type={"application/ld+json"}` tags are allowed by default, including an `as`
+or `satisfies` wrapper around that literal or an allowed `id`.
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. Outside `app`
+and `pages`, a non-static `require`, `import()`, or `import = require` reports
+on each raw `<script>`. A static `require("next/…")` or
+`import Name = require("next/…")` counts as a Next.js file.
 
 Set `structuredDataComponent?: string` to recommend a project component for
 JSON-LD, or `structuredDataMessage?: string` for a custom diagnostic. Both
@@ -347,12 +352,25 @@ class member. Both ECMAScript imports and literal CommonJS `require` calls are
 supported. See [the rule reference](eslint-rules/postgres-pool-requires-error-listener.md)
 for supported patterns and fixes.
 
+### `react-no-nullish-react-node`
+
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. A ReactNode
+import that cannot be resolved reports instead of passing silently.
+
+### `react-no-use-promise-resolve`
+
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. A
+`use(Promise.resolve(...))` call whose import cannot be resolved reports
+instead of passing silently. `require("react")` and
+`import React = require("react")` are runtime `use` bindings.
+
 ### `server-require-nullable-fetch-wrapper`
 
 `includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,
 `getterCalleePatterns: string[]`, `requiredWrapperCallee: string`,
 `nullableReturnTypeNames?: string[]`, `inferNullableFromTopLevelEntityPath?: boolean`
-(default `false`), and `topLevelEntityPathPatterns?: string[]`.
+(default `false`), `topLevelEntityPathPatterns?: string[]`, and
+`unanalyzable?: "finding" | "ignore"` (default `"finding"`).
 
 ### `test-no-fixed-temp-paths`
 

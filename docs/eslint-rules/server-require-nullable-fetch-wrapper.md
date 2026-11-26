@@ -52,7 +52,12 @@ The schema accepts an options object.
 
 Optional lists default to empty and inference defaults to `false`.
 
-An import rename is spelled back to the imported name before the getter pattern is tested. An optional call, a comma callee, and `.call` or a literal-array `.apply` inside the wrapper are the same call.
+`unanalyzable` is `"finding"` or `"ignore"`. It defaults to `"finding"`. A
+getter or wrapper whose import cannot be resolved reports `unanalyzable`
+instead of a definite `wrapper` finding or a silent pass. `"ignore"` drops
+only that uncertain report.
+
+An import rename is spelled back to the imported name before the getter pattern is tested. `require("./api")`, `import Api = require("./api")`, and `import * as api` spell the member the same way. An optional call, a comma callee, `satisfies` or `as` around the exported function or the receiver, and `.call` or a literal-array `.apply` inside the wrapper are the same call.
 
 ## Fix
 

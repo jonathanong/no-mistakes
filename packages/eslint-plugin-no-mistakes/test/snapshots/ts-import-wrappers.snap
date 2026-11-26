@@ -1,0 +1,978 @@
+{
+  "eslint": [
+    {
+      "file": "src/dynamic-next.tsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 46,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/dynamic-next.tsx",
+          "line": 3,
+          "message": "Could not resolve whether this file imports Next.js. Use a static next/ import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "dynamic next require",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "src/dynamic-next.tsx",
+      "findings": [],
+      "name": "ignored dynamic next require",
+      "options": {
+        "unanalyzable": "ignore"
+      },
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "src/import-equals-head.tsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 46,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/import-equals-head.tsx",
+          "line": 2,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "import-equals next/head",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "src/require-head.tsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 46,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/require-head.tsx",
+          "line": 2,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "require next/head",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "src/plain.tsx",
+      "findings": [],
+      "name": "static non-next require",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "app/page.tsx",
+      "findings": [],
+      "name": "wrapped script attributes",
+      "options": {
+        "allowInlineScriptIds": [
+          "theme"
+        ]
+      },
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "fetch-type-only.ts",
+      "findings": [
+        {
+          "column": 25,
+          "endColumn": 28,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-type-only.ts",
+          "line": 4,
+          "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-method",
+          "severity": 2
+        }
+      ],
+      "name": "type-only fetch method",
+      "options": null,
+      "rule": "nextjs-static-fetch-method"
+    },
+    {
+      "file": "fetch-method.ts",
+      "findings": [
+        {
+          "column": 25,
+          "endColumn": 28,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-method.ts",
+          "line": 2,
+          "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-method",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 28,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-method.ts",
+          "line": 3,
+          "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-method",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 28,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-method.ts",
+          "line": 4,
+          "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-method",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 41,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-method.ts",
+          "line": 5,
+          "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-method",
+          "severity": 2
+        }
+      ],
+      "name": "wrapped fetch method",
+      "options": null,
+      "rule": "nextjs-static-fetch-method"
+    },
+    {
+      "file": "fetch-type-only.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 10,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-type-only.ts",
+          "line": 5,
+          "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-url",
+          "severity": 2
+        }
+      ],
+      "name": "type-only fetch url",
+      "options": null,
+      "rule": "nextjs-static-fetch-url"
+    },
+    {
+      "file": "fetch-url.ts",
+      "findings": [
+        {
+          "column": 30,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-url.ts",
+          "line": 5,
+          "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-url",
+          "severity": 2
+        }
+      ],
+      "name": "wrapped fetch url",
+      "options": null,
+      "rule": "nextjs-static-fetch-url"
+    },
+    {
+      "file": "iife.tsx",
+      "findings": [
+        {
+          "column": 6,
+          "endColumn": 24,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/iife.tsx",
+          "line": 3,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 47,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/iife.tsx",
+          "line": 4,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 55,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/iife.tsx",
+          "line": 5,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        }
+      ],
+      "name": "wrapped jsx iife",
+      "options": null,
+      "rule": "react-no-iife-in-jsx"
+    },
+    {
+      "file": "react-nullish-unresolved.tsx",
+      "findings": [],
+      "name": "ignored unresolved ReactNode import",
+      "options": {
+        "unanalyzable": "ignore"
+      },
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish.tsx",
+          "line": 5,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish.tsx",
+          "line": 9,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 48,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish.tsx",
+          "line": 17,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 21,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish.tsx",
+          "line": 21,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 26,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish.tsx",
+          "line": 26,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "import-equals and wrapped ReactNode",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-import-type.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-import-type.tsx",
+          "line": 4,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "unresolved import type ReactNode",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-unresolved.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-unresolved.tsx",
+          "line": 5,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "unresolved ReactNode import",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-use-cjs.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-cjs.tsx",
+          "line": 3,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-cjs.tsx",
+          "line": 8,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-cjs.tsx",
+          "line": 13,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "commonjs and import-equals use",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "react-use-unresolved.tsx",
+      "findings": [],
+      "name": "ignored unresolved react require",
+      "options": {
+        "unanalyzable": "ignore"
+      },
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "react-use-unresolved.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-unresolved.tsx",
+          "line": 4,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "unresolved react require",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "react-use-wrappers.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-wrappers.tsx",
+          "line": 3,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-wrappers.tsx",
+          "line": 4,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-wrappers.tsx",
+          "line": 5,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-wrappers.tsx",
+          "line": 6,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "wrapped use(Promise.resolve)",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "nullable-cjs.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 19,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-cjs.ts",
+          "line": 3,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-cjs.ts",
+          "line": 8,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 27,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-cjs.ts",
+          "line": 13,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "commonjs nullable getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-satisfies.ts",
+      "findings": [
+        {
+          "column": 63,
+          "endColumn": 78,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-satisfies.ts",
+          "line": 5,
+          "message": "Wrap nullable entity fetch 'api.getUser' in withNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 69,
+          "endColumn": 84,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-satisfies.ts",
+          "line": 6,
+          "message": "Wrap nullable entity fetch 'api.getUser' in withNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 41,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-satisfies.ts",
+          "line": 8,
+          "message": "Wrap nullable entity fetch 'api.getUser' in withNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "satisfies nullable getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^api\\.getUser$"
+        ],
+        "requiredWrapperCallee": "withNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-unresolved.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved.ts",
+          "line": 4,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "unresolved nullable getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    }
+  ],
+  "oxlint": {
+    "fetch": [
+      {
+        "file": "fetch-method.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-static-fetch-method)",
+            "column": 25,
+            "file": "fetch-method.ts",
+            "line": 2,
+            "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+          },
+          {
+            "code": "no-mistakes(nextjs-static-fetch-method)",
+            "column": 25,
+            "file": "fetch-method.ts",
+            "line": 3,
+            "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+          },
+          {
+            "code": "no-mistakes(nextjs-static-fetch-method)",
+            "column": 25,
+            "file": "fetch-method.ts",
+            "line": 4,
+            "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+          },
+          {
+            "code": "no-mistakes(nextjs-static-fetch-method)",
+            "column": 38,
+            "file": "fetch-method.ts",
+            "line": 5,
+            "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+          }
+        ],
+        "name": "fetch-method.ts",
+        "options": null
+      },
+      {
+        "file": "fetch-type-only.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-static-fetch-method)",
+            "column": 25,
+            "file": "fetch-type-only.ts",
+            "line": 4,
+            "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+          },
+          {
+            "code": "no-mistakes(nextjs-static-fetch-url)",
+            "column": 7,
+            "file": "fetch-type-only.ts",
+            "line": 5,
+            "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed."
+          }
+        ],
+        "name": "fetch-type-only.ts",
+        "options": null
+      },
+      {
+        "file": "fetch-url.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-static-fetch-url)",
+            "column": 30,
+            "file": "fetch-url.ts",
+            "line": 5,
+            "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed."
+          }
+        ],
+        "name": "fetch-url.ts",
+        "options": null
+      }
+    ],
+    "iife": [
+      {
+        "file": "iife.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-iife-in-jsx)",
+            "column": 6,
+            "file": "iife.tsx",
+            "line": 3,
+            "message": "Avoid IIFEs in JSX; extract the logic into a variable or component."
+          },
+          {
+            "code": "no-mistakes(react-no-iife-in-jsx)",
+            "column": 6,
+            "file": "iife.tsx",
+            "line": 4,
+            "message": "Avoid IIFEs in JSX; extract the logic into a variable or component."
+          },
+          {
+            "code": "no-mistakes(react-no-iife-in-jsx)",
+            "column": 6,
+            "file": "iife.tsx",
+            "line": 5,
+            "message": "Avoid IIFEs in JSX; extract the logic into a variable or component."
+          }
+        ],
+        "name": "iife.tsx",
+        "options": null
+      }
+    ],
+    "nullable-user": [
+      {
+        "file": "nullable-satisfies.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 63,
+            "file": "nullable-satisfies.ts",
+            "line": 5,
+            "message": "Wrap nullable entity fetch 'api.getUser' in withNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 69,
+            "file": "nullable-satisfies.ts",
+            "line": 6,
+            "message": "Wrap nullable entity fetch 'api.getUser' in withNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-satisfies.ts",
+            "line": 8,
+            "message": "Wrap nullable entity fetch 'api.getUser' in withNullable so missing entities map to null consistently."
+          }
+        ],
+        "name": "nullable-satisfies.ts",
+        "options": null
+      }
+    ],
+    "nullable-widget": [
+      {
+        "file": "nullable-cjs.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-cjs.ts",
+            "line": 3,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-cjs.ts",
+            "line": 8,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-cjs.ts",
+            "line": 13,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          }
+        ],
+        "name": "nullable-cjs.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-unresolved.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-unresolved.ts",
+            "line": 4,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-unresolved.ts",
+        "options": null
+      }
+    ],
+    "nullish": [
+      {
+        "file": "react-nullish-unresolved.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-unresolved.tsx",
+            "line": 5,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-unresolved.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish.tsx",
+            "line": 5,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish.tsx",
+            "line": 9,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish.tsx",
+            "line": 17,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish.tsx",
+            "line": 21,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish.tsx",
+            "line": 26,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish.tsx",
+        "options": null
+      }
+    ],
+    "nullish-ignore": [
+      {
+        "file": "react-nullish-unresolved.tsx",
+        "findings": [],
+        "name": "react-nullish-unresolved.tsx",
+        "options": null
+      }
+    ],
+    "react-use": [
+      {
+        "file": "react-use-cjs.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-cjs.tsx",
+            "line": 3,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-cjs.tsx",
+            "line": 8,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-cjs.tsx",
+            "line": 13,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          }
+        ],
+        "name": "react-use-cjs.tsx",
+        "options": null
+      },
+      {
+        "file": "react-use-unresolved.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-unresolved.tsx",
+            "line": 4,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          }
+        ],
+        "name": "react-use-unresolved.tsx",
+        "options": null
+      },
+      {
+        "file": "react-use-wrappers.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 1,
+            "file": "react-use-wrappers.tsx",
+            "line": 3,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 1,
+            "file": "react-use-wrappers.tsx",
+            "line": 4,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 1,
+            "file": "react-use-wrappers.tsx",
+            "line": 5,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 1,
+            "file": "react-use-wrappers.tsx",
+            "line": 6,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          }
+        ],
+        "name": "react-use-wrappers.tsx",
+        "options": null
+      }
+    ],
+    "script": [
+      {
+        "file": "app/page.tsx",
+        "findings": [],
+        "name": "app/page.tsx",
+        "options": null
+      },
+      {
+        "file": "src/dynamic-next.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 24,
+            "file": "src/dynamic-next.tsx",
+            "line": 3,
+            "message": "Could not resolve whether this file imports Next.js. Use a static next/ import."
+          }
+        ],
+        "name": "src/dynamic-next.tsx",
+        "options": null
+      },
+      {
+        "file": "src/import-equals-head.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 24,
+            "file": "src/import-equals-head.tsx",
+            "line": 2,
+            "message": "Use next/script instead of a raw <script> tag."
+          }
+        ],
+        "name": "src/import-equals-head.tsx",
+        "options": null
+      },
+      {
+        "file": "src/plain.tsx",
+        "findings": [],
+        "name": "src/plain.tsx",
+        "options": null
+      },
+      {
+        "file": "src/require-head.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 24,
+            "file": "src/require-head.tsx",
+            "line": 2,
+            "message": "Use next/script instead of a raw <script> tag."
+          }
+        ],
+        "name": "src/require-head.tsx",
+        "options": null
+      }
+    ],
+    "script-ignore": [
+      {
+        "file": "src/dynamic-next.tsx",
+        "findings": [],
+        "name": "src/dynamic-next.tsx",
+        "options": null
+      }
+    ]
+  }
+}
