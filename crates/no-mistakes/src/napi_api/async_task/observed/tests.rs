@@ -64,6 +64,19 @@ fn verbose_transport_quotes_text_while_ordinary_transport_leaves_it_raw() {
 }
 
 #[test]
+fn observed_invocation_returns_raw_mermaid_from_a_saved_plan() {
+    let plan = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/node-api/planning-parity/legacy-plan.json");
+    let options = serde_json::json!({ "plan": plan });
+    let expected = crate::napi_api::tests_graph_mermaid_impl(options.clone()).unwrap();
+    let input = Buffer::from(serde_json::to_vec(&options).unwrap());
+    let result = execute_json(&input, crate::napi_api::tests_graph_mermaid_impl, true).unwrap();
+
+    assert!(expected.starts_with("graph TD"));
+    assert_eq!(result.as_ref(), expected.as_bytes());
+}
+
+#[test]
 fn source_batches_get_structured_diagnostics_without_changing_their_input() {
     let output = execute_pure(
         serde_json::json!({
