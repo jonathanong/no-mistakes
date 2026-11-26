@@ -7,6 +7,9 @@ mod check_partial;
 #[path = "check_swift_darwin_imports.rs"]
 mod check_swift_darwin_imports;
 
+#[path = "check_workflow_merge.rs"]
+mod check_workflow_merge;
+
 #[path = "check_job_permissions.rs"]
 mod check_job_permissions;
 

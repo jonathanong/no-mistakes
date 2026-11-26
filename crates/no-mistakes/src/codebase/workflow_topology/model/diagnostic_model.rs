@@ -3,6 +3,7 @@
 //! existing `model::DiagnosticCode`-style path elsewhere in the crate keeps
 //! working unchanged.
 
+use super::super::parse::merge_uncertainty::WorkflowMergeUncertainty;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -15,6 +16,7 @@ pub enum Severity {
 #[serde(rename_all = "kebab-case")]
 pub enum DiagnosticCode {
     MalformedWorkflow,
+    UnlocatedYamlMerge,
     MissingNeedsDependency,
     JobDependencyCycle,
     DuplicateStepId,
@@ -48,6 +50,7 @@ impl DiagnosticCode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::MalformedWorkflow => "malformed-workflow",
+            Self::UnlocatedYamlMerge => "unlocated-yaml-merge",
             Self::MissingNeedsDependency => "missing-needs-dependency",
             Self::JobDependencyCycle => "job-dependency-cycle",
             Self::DuplicateStepId => "duplicate-step-id",
@@ -94,6 +97,8 @@ pub struct WorkflowTopologyDiagnostic {
     pub call_job_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub callee_workflow_path: Option<String>,
+    #[serde(skip)]
+    pub(crate) merge_uncertainty: Option<WorkflowMergeUncertainty>,
 }
 
 impl WorkflowTopologyDiagnostic {
@@ -113,7 +118,16 @@ impl WorkflowTopologyDiagnostic {
             step_index: None,
             call_job_id: None,
             callee_workflow_path: None,
+            merge_uncertainty: None,
         }
+    }
+
+    pub(crate) fn with_merge_uncertainty(
+        mut self,
+        merge_uncertainty: WorkflowMergeUncertainty,
+    ) -> Self {
+        self.merge_uncertainty = Some(merge_uncertainty);
+        self
     }
 
     pub fn with_job(mut self, job_id: impl Into<String>) -> Self {

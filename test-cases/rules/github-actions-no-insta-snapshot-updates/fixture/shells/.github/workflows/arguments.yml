@@ -1,0 +1,16 @@
+name: Command syntax
+on: [pull_request]
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo insta --help
+      - run: cargo help insta
+      - run: cargo
+      - run: cargo insta
+      - run: cargo --color
+      - run: cargo --config
+      - run: cargo insta --color
+      - run: cargo insta test -- "${FILTER}"
+      - run: '"$(printf cargo)" insta test --accept'
+      - run: 'printf "%s\n" result > "$(printf example.log)"'

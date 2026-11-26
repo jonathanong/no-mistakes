@@ -127,4 +127,4 @@ pub fn diagnostics_with_files_and_sources(
 mod tests;
 
 mod applications;
-pub(crate) use applications::{read_applications, FileRuleInputs};
+pub(crate) use applications::{classified_applications, ClassifiedInputFindings, FileRuleInputs};

@@ -8,7 +8,7 @@ pub fn diagnostics_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<super::super::analysis_policy::AnalysisDiagnostics> {
-    super::super::file_diagnostics::read_applications::<Options>(
+    super::super::file_diagnostics::classified_applications::<Options>(
         super::super::file_diagnostics::FileRuleInputs {
             root,
             config,

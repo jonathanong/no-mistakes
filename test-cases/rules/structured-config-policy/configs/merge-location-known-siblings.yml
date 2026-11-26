@@ -1,0 +1,17 @@
+version: 2
+unanalyzable: advise
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [long-tag.yml]
+          valueAssertions:
+            - kind: ancestor-override-subset
+              rulesKey: runtime.rules
+        - files: [compared.yml]
+          valueAssertions:
+            - kind: equals-file
+              key: runtime.legacy
+              fromKey: defaults.missing
+              file: long-tag.yml

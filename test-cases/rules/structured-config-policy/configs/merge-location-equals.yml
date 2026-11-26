@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [compared.yml]
+          valueAssertions:
+            - kind: equals-file
+              key: runtime.legacy
+              file: long-tag.yml
