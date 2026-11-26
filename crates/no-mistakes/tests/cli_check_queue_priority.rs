@@ -171,9 +171,19 @@ fn queue_priority_flow_definitions_check_json_snapshot() {
         .iter()
         .all(|finding| finding["queueName"] == "orders"));
     let warnings = report["warnings"].as_array().unwrap();
-    assert_eq!(warnings.len(), 1);
-    assert!(warnings[0].as_str().unwrap().contains("queue \"reports\""));
+    for site in ["direct.ts:3", "enqueue.ts:5", "enqueue.ts:8"] {
+        assert!(
+            warnings.iter().any(|warning| {
+                let warning = warning.as_str().unwrap();
+                warning.starts_with(&format!(
+                    "queues-check: {site} mixed-priority was not judged"
+                )) && warning.contains("queue \"reports\"")
+            }),
+            "missing abstention at {site}"
+        );
+    }
+    assert_eq!(warnings.len(), 3);
     let inclusive = &reports["include-tests"]["report"];
     assert!(inclusive["queues"].as_array().unwrap().is_empty());
-    assert_eq!(inclusive["warnings"].as_array().unwrap().len(), 2);
+    assert_eq!(inclusive["warnings"].as_array().unwrap().len(), 5);
 }

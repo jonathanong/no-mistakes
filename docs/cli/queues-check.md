@@ -186,7 +186,8 @@ root with a known queue name joins direct producers when that queue has one
 definition file in the shared queue scope. Definitions in configured test
 files count only when `queues.includeTests` includes them. Multiple in-scope
 definition files for that name make the check abstain and emit a not-judged
-warning at the flow enqueue. Flow `children` are outside this check. An unresolved queue is not
+warning at each affected enqueue, including direct `Queue` calls and flow
+enqueues. Flow `children` are outside this check. An unresolved queue is not
 grouped with a resolved one. Give every producer on the queue priority 0, or give every producer a
 priority greater than 0.
 

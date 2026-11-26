@@ -1,5 +1,5 @@
 use crate::queue::extract::FileFacts;
-use crate::queue::extract_model::{EnqueuePriority, ProducerBinding};
+use crate::queue::extract_model::EnqueuePriority;
 use crate::queue::graph_model::{CheckFinding, InternalProducer};
 use crate::queue::source::relative_string;
 use crate::queue::test_scope::ConfiguredTestScope;
@@ -36,17 +36,16 @@ pub(super) fn mixed_priority_findings(
             None
         };
         let Some(queue) = resolved_flow_queue(queue, definition) else {
-            if let ProducerBinding::Flow(name) = &producer.site.binding {
-                diagnostics.push(Diagnostic {
-                    severity: Severity::Warning,
-                    file: relative_string(root, &producer.site.file),
-                    line: producer.site.line,
-                    message: format!(
-                        "mixed-priority was not judged for queue {name:?} because the flow queue has multiple definition files"
-                    ),
-                    kind: DiagnosticKind::CheckAbstention,
-                });
-            }
+            diagnostics.push(Diagnostic {
+                severity: Severity::Warning,
+                file: relative_string(root, &producer.site.file),
+                line: producer.site.line,
+                message: format!(
+                    "mixed-priority was not judged for queue {:?} because the flow queue has multiple definition files",
+                    queue.queue_name
+                ),
+                kind: DiagnosticKind::CheckAbstention,
+            });
             continue;
         };
         groups.entry(queue).or_default().push(producer);

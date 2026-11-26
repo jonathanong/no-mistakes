@@ -83,6 +83,7 @@ fn queue_required_options_resolved_receiver_check_json_snapshot() {
     assert_eq!(
         report["warnings"],
         serde_json::json!([
+            r#"queues-check: enqueue.ts:11 mixed-priority was not judged for queue "shared" because the flow queue has multiple definition files"#,
             r#"queues-check: enqueue.ts:15 mixed-priority was not judged for queue "shared" because the flow queue has multiple definition files"#,
             r#"queues-check: enqueue.ts:16 mixed-priority was not judged for queue "shared" because the flow queue has multiple definition files"#,
         ])
@@ -109,6 +110,12 @@ fn queue_required_options_resolved_receiver_check_json_snapshot() {
     assert_eq!(
         report["diagnostics"],
         serde_json::json!([
+            {
+                "file": "enqueue.ts",
+                "line": 11,
+                "message": "mixed-priority was not judged for queue \"shared\" because the flow queue has multiple definition files",
+                "severity": "warning"
+            },
             {
                 "file": "enqueue.ts",
                 "line": 15,

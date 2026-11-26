@@ -43,6 +43,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [],
       "warnings": [
+        "queues-check: enqueue.ts:11 mixed-priority was not judged for queue \"shared\" because the flow queue has multiple definition files",
         "queues-check: enqueue.ts:15 mixed-priority was not judged for queue \"shared\" because the flow queue has multiple definition files",
         "queues-check: enqueue.ts:16 mixed-priority was not judged for queue \"shared\" because the flow queue has multiple definition files"
       ]
