@@ -1,4 +1,5 @@
 pub(crate) fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::tests::PlanArgs> {
+    validate_head_requires_base(options.base.as_deref(), options.head.as_deref())?;
     let framework = options
         .framework
         .as_deref()
@@ -127,10 +128,26 @@ fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
 }
 
+fn validate_head_requires_base(base: Option<&str>, head: Option<&str>) -> AnyhowResult<()> {
+    anyhow::ensure!(head.is_none() || base.is_some(), "head requires base");
+    Ok(())
+}
+
 pub(crate) fn build_impacted_checks_args(
     options: ImpactedChecksOptions,
-) -> crate::impacted_checks::ImpactedChecksArgs {
-    crate::impacted_checks::ImpactedChecksArgs {
+) -> AnyhowResult<crate::impacted_checks::ImpactedChecksArgs> {
+    validate_head_requires_base(options.base.as_deref(), options.head.as_deref())?;
+    let diff_sources = [
+        options.diff.is_some(),
+        options.diff_file.is_some(),
+        options.diff_stdin,
+        options.diff_command.is_some(),
+    ];
+    anyhow::ensure!(
+        diff_sources.into_iter().filter(|present| *present).count() <= 1,
+        "diff, diffFile, diffStdin, and diffCommand are mutually exclusive"
+    );
+    Ok(crate::impacted_checks::ImpactedChecksArgs {
         files: Vec::new(),
         root: options
             .root
@@ -142,8 +159,7 @@ pub(crate) fn build_impacted_checks_args(
         head: options.head,
         changed_file: strings_to_paths(options.changed_files),
         changed_files: options.changed_files_file.map(PathBuf::from),
-        // Match `testsPlan`: the N-API `diff` option is inline diff content.
-        diff: None,
+        diff: options.diff_file.map(PathBuf::from),
         diff_stdin: options.diff_stdin,
         diff_command: options.diff_command,
         diff_content: options.diff,
@@ -154,7 +170,7 @@ pub(crate) fn build_impacted_checks_args(
         // binding; they must never print CLI progress to the Node process.
         timings: false,
         diagnose_empty: false,
-    }
+    })
 }
 
 fn entrypoint_parts(

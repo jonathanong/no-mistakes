@@ -24,7 +24,7 @@ pub(crate) struct Options {
     pub(crate) message: Option<String>,
 }
 
-pub(super) struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     pub(super) suffix: String,
     pub(super) attribute: String,
     pub(super) allow: FileAllow,
@@ -59,7 +59,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     Ok(findings)
 }
 
-fn compile_options(opts: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         suffix: match opts.suffix.filter(|s| !s.is_empty()) {
             Some(suffix) => suffix,

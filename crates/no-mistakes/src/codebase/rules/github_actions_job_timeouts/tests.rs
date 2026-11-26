@@ -98,3 +98,17 @@ fn document_location_parse_failure_returns_no_partial_index() {
             .unwrap();
     assert_eq!(super::job_lines::collect(&source).line("missing"), 2);
 }
+
+#[test]
+fn unsupported_partner_option_is_rejected_at_config_load() {
+    let root = fixture("effort-policy");
+    for (fixture, key) in [
+        ("ignored-exclude.yml", "exclude"),
+        ("unknown.yml", "unsupported"),
+    ] {
+        let error = crate::config::v2::load_v2_config(&root, Some(std::path::Path::new(fixture)))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(&format!("options.{key}")), "{error}");
+    }
+}

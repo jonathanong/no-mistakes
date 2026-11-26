@@ -14,8 +14,15 @@ pub const RULE_ID: &str = "postgres-explain-write-rollback";
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     sql_include: Vec<String>,
+}
+
+pub(in crate::codebase::rules) fn validate_options(options: &Options) -> Result<GlobMatcher> {
+    if options.sql_include.is_empty() {
+        bail!("{RULE_ID} requires options.sqlInclude to select standalone SQL scripts");
+    }
+    GlobMatcher::new(&options.sql_include, &format!("{RULE_ID} sqlInclude"))
 }
 
 fn selected_for_rule(
@@ -26,10 +33,7 @@ fn selected_for_rule(
     sources: &SourceStore,
 ) -> Result<Vec<PathBuf>> {
     let options: Options = rule.try_rule_options()?;
-    if options.sql_include.is_empty() {
-        bail!("{RULE_ID} requires options.sqlInclude to select standalone SQL scripts");
-    }
-    let include = GlobMatcher::new(&options.sql_include, &format!("{RULE_ID} sqlInclude"))?;
+    let include = validate_options(&options)?;
     super::selected_rule_files_matching_with_sources(root, config, rule, files, sources, |path| {
         path.extension().is_some_and(|ext| ext == "sql")
             && include.is_match(&relative_slash_path(root, path))

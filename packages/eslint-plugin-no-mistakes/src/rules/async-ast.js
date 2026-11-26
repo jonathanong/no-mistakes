@@ -2,11 +2,13 @@
 
 const transparentExpressionTypes = new Set([
   "ChainExpression",
+  "ParenthesizedExpression",
   "TSNonNullExpression",
   "TSAsExpression",
   "TSTypeAssertion",
   "TSSatisfiesExpression",
   "TSInstantiationExpression",
+  "TypeCastExpression",
 ]);
 
 function isFunction(node) {

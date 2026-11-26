@@ -10,7 +10,7 @@ pub(super) use root::{catalog_names, PlaywrightRoot, Root};
 
 #[derive(Debug, Deserialize, Default)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     pub(super) roots: Vec<Root>,
     pub(super) exclude_roots: Option<StringOrList>,
     pub(super) traversal: Traversal,
@@ -98,7 +98,7 @@ pub(super) struct FunctionSelector {
     pub(super) symbol: String,
 }
 
-pub(super) fn validate(options: &Options) -> Result<()> {
+pub(in crate::codebase::rules) fn validate(options: &Options) -> Result<()> {
     if options.roots.is_empty() {
         bail!("{RULE_ID}: each application requires at least one options.roots selector");
     }

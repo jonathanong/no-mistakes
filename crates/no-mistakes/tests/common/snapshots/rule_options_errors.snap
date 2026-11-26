@@ -4,27 +4,27 @@ source: crates/no-mistakes/tests/cli_rule_options_audit.rs
 {
   "finite-missing-name": {
     "exitCode": 2,
-    "stderr": "error: finite-set-consistency: sets[0].name is required and must not be empty\n"
+    "stderr": "error: .no-mistakes.yml:1: finite-set-consistency: sets[0].name is required and must not be empty\n"
   },
   "finite-missing-kind-empty": {
     "exitCode": 2,
-    "stderr": "error: finite-set-consistency: sets[0].kind is required and must not be empty\n"
+    "stderr": "error: .no-mistakes.yml:1: finite-set-consistency: sets[0].kind is required and must not be empty\n"
   },
   "finite-missing-comparison-right": {
     "exitCode": 2,
-    "stderr": "error: finite-set-consistency: comparisons[0].right is required and must not be empty\n"
+    "stderr": "error: .no-mistakes.yml:1: finite-set-consistency: comparisons[0].right is required and must not be empty\n"
   },
   "finite-missing-left": {
     "exitCode": 2,
-    "stderr": "error: finite-set-consistency: comparisons[0].left is required and must not be empty\n"
+    "stderr": "error: config.json:6: finite-set-consistency: comparisons[0].left is required and must not be empty\n"
   },
   "finite-blank-name": {
     "exitCode": 2,
-    "stderr": "error: finite-set-consistency: sets[0].name is required and must not be empty\n"
+    "stderr": "error: config.json:6: finite-set-consistency: sets[0].name is required and must not be empty\n"
   },
   "finite-blank-kind": {
     "exitCode": 2,
-    "stderr": "error: finite-set-consistency: sets[0].kind is required and must not be empty\n"
+    "stderr": "error: config.json:6: finite-set-consistency: sets[0].kind is required and must not be empty\n"
   },
   "finite-invalid-yaml-low": {
     "exitCode": 1,
@@ -39,28 +39,28 @@ source: crates/no-mistakes/tests/cli_rule_options_audit.rs
     "stderr": "incomplete finite-set-consistency: finite set 'a': could not parse values.yml as YAML: did not find expected node content at line 2 column 1, while parsing a flow node; repair the configured YAML source\n"
   },
   "version-missing-source-option": {
-    "exitCode": 1,
-    "stderr": "incomplete filesystem: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 2,
+    "stderr": "error: config.json:1: version-pin-consistency: options.sourceFile is required and must not be empty\n"
   },
   "version-missing-source-key": {
-    "exitCode": 1,
-    "stderr": "incomplete filesystem: version-pin-consistency: sourceKey is required and must not be empty\n"
+    "exitCode": 2,
+    "stderr": "error: config.json:6: version-pin-consistency: options.sourceKey is required and must not be empty\n"
   },
   "version-missing-anchors": {
-    "exitCode": 1,
-    "stderr": "incomplete filesystem: version-pin-consistency: anchors is required\n"
+    "exitCode": 2,
+    "stderr": "error: config.json:1: version-pin-consistency: options.anchors is required\n"
   },
   "version-blank-sourceFile": {
-    "exitCode": 1,
-    "stderr": "incomplete filesystem: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 2,
+    "stderr": "error: config.json:7: version-pin-consistency: options.sourceFile is required and must not be empty\n"
   },
   "version-blank-sourceKey": {
-    "exitCode": 1,
-    "stderr": "incomplete filesystem: version-pin-consistency: sourceKey is required and must not be empty\n"
+    "exitCode": 2,
+    "stderr": "error: config.json:8: version-pin-consistency: options.sourceKey is required and must not be empty\n"
   },
   "version-missing-options": {
-    "exitCode": 1,
-    "stderr": "incomplete filesystem: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 2,
+    "stderr": "error: config.json:3: version-pin-consistency: options.sourceFile is required and must not be empty\n"
   },
   "email-missing-required": {
     "exitCode": 1,
@@ -75,11 +75,11 @@ source: crates/no-mistakes/tests/cli_rule_options_audit.rs
     "stderr": "incomplete test-email-domain-policy: test-email-domain-policy: bannedDomains is required\n"
   },
   "timeout-literals-missing-file": {
-    "exitCode": 1,
-    "stderr": "incomplete github-actions-test-timeout-literals: github-actions-test-timeout-literals: allow[0].file is required and must not be empty\n"
+    "exitCode": 2,
+    "stderr": "error: .no-mistakes.yml:4: github-actions-test-timeout-literals: allow[0].file is required and must not be empty\n"
   },
   "vitest-project-duplicate": {
-    "exitCode": 1,
-    "stderr": "incomplete github-actions-vitest-project-selection: github-actions-vitest-project-selection: projects[1].project `widgets` is duplicated\n"
+    "exitCode": 2,
+    "stderr": "error: .no-mistakes.yml:4: github-actions-vitest-project-selection: projects[1].project `widgets` is duplicated\n"
   }
 }

@@ -41,3 +41,8 @@ impl Options {
         });
     }
 }
+
+pub(in crate::codebase::rules) fn validate_options(opts: &Options) -> anyhow::Result<()> {
+    super::patterns::compile(&opts.banned_patterns)?;
+    Ok(())
+}

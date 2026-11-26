@@ -2,6 +2,26 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Control.cs",
+          "line": 1,
+          "message": "4 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "public sealed class Control"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "disabled": {
     "exitCode": 0,
     "report": {
@@ -52,6 +72,81 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "10 physical lines (max 3) - split into smaller types or files",
           "rule": "csharp-max-lines-per-file",
           "sourceLine": "namespace App.Sub;"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "input_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "csharp/bad.cs",
+          "line": 1,
+          "message": "cannot verify csharp-max-lines-per-file: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "csharp-max-lines-per-file",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "csharp/definite.cs",
+          "line": 1,
+          "message": "3 physical lines (max 1) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "class Example {"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "input_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "csharp/definite.cs",
+          "line": 1,
+          "message": "3 physical lines (max 1) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "class Example {"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "input_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "csharp/bad.cs",
+          "line": 1,
+          "message": "cannot verify csharp-max-lines-per-file: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "csharp-max-lines-per-file",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "csharp/definite.cs",
+          "line": 1,
+          "message": "3 physical lines (max 1) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "class Example {"
         }
       ],
       "warnings": []

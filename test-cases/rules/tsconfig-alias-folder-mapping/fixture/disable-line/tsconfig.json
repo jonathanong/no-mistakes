@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@agents/widget": ["backend/agents/widget.ts"], // no-mistakes-disable-line tsconfig-alias-folder-mapping
+      "@agents/control": ["backend/agents/control.ts"]
+    }
+  }
+}

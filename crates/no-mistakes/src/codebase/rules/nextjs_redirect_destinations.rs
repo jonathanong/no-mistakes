@@ -11,7 +11,7 @@ pub(crate) use prepared::with_standalone as with_standalone_resolver;
 #[doc(hidden)]
 pub use prepared::PreparedConfigResolver;
 mod extract;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod routes;
 mod scan;
 mod static_values;

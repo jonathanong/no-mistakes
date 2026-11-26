@@ -79,6 +79,11 @@ fn postgres_sql_fragment_escape_absence_gap_matches_siblings() {
         &[
             ("fragment_on", root.clone(), root.join(".no-mistakes.yml")),
             ("fragment_off", root.clone(), root.join("siblings.yml")),
+            (
+                "disable_directives",
+                root.with_file_name("disable-directives"),
+                root.join(".no-mistakes.yml"),
+            ),
         ],
         &[],
         &[],

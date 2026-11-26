@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod check;
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod name;
 mod scan;
 
@@ -14,7 +14,7 @@ pub const RULE_ID: &str = "postgres-table-shape";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     shapes: Vec<ShapeOptions>,
     banned_table_patterns: Vec<BannedOptions>,

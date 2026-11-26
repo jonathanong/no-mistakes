@@ -133,30 +133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "unknown": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [
-        {
-          "file": "sql/policy.sql",
-          "line": 18,
-          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
-          "target": "postgres-sql-statement-policy"
-        }
-      ],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-sql-statement-policy",
-          "message": "postgres-sql-statement-policy: unknown bannedClauses entry `unknown-clause`"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/issue-3856-unknown.yml:4: postgres-sql-statement-policy: unknown bannedClauses entry `unknown-clause`\n"
   }
 }

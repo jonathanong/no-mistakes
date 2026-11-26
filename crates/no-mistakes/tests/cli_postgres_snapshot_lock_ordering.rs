@@ -39,6 +39,7 @@ fn postgres_lock_ordering_check_json_snapshot() {
         &[
             // src/disabled.ts is suppressed and must not add a finding.
             ("fail_abba", fix("fail")),
+            ("disable_directives", fix("disable-directives")),
             ("pass_order", fix("pass-order")),
             ("pass_skip", fix("pass-skip")),
             ("pass_directive", fix("pass-directive")),

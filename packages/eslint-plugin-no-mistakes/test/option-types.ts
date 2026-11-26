@@ -4,6 +4,8 @@ import plugin, {
   type TestNoWallTimeAssertionsOptions,
   type NoLocaleLessDateFormatOptions,
   type PlaywrightTestTimeoutCapOptions,
+  type PlaywrightNoBrowserNewPageOptions,
+  type PlaywrightNoBrowserNewPageUnanalyzable,
   type PlaywrightNoRawScrollPaginationOptions,
   type PostgresNoExecutorAdapterMode,
   type PostgresNonWritingCallee,
@@ -115,4 +117,22 @@ export const defaultPaginationOptions: pluginRequire.PlaywrightNoRawScrollPagina
 export const invalidSentinelTestIds: PlaywrightNoRawScrollPaginationOptions = {
   // @ts-expect-error Test IDs must be strings.
   sentinelTestIds: [true],
+};
+
+export const browserNewPageUnanalyzable: PlaywrightNoBrowserNewPageUnanalyzable = "finding";
+export const browserNewPageOptions: PlaywrightNoBrowserNewPageOptions = {
+  fixtureName: "appPage",
+  browserFixtureName: "browser",
+  registrationPackages: ["./fixtures"],
+  unanalyzable: browserNewPageUnanalyzable,
+  message: "Use the shared appPage fixture.",
+};
+export const defaultBrowserNewPageOptions: pluginRequire.PlaywrightNoBrowserNewPageOptions = {};
+export const invalidBrowserNewPageUnanalyzable: PlaywrightNoBrowserNewPageOptions = {
+  // @ts-expect-error Unanalyzable policy must be finding or ignore.
+  unanalyzable: "warn",
+};
+export const invalidBrowserFixtureName: PlaywrightNoBrowserNewPageOptions = {
+  // @ts-expect-error Fixture name must be a string.
+  fixtureName: 42,
 };

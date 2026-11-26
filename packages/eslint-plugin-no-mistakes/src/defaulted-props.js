@@ -1,17 +1,19 @@
 "use strict";
 
 const { isStringLiteralNode, literalString, staticTemplate } = require("./helpers");
+const { unwrapExpression } = require("./rules/async-ast");
 const EMPTY_FUNCTION = { params: [], body: null };
 
 function isLiteralLike(node, opts, context) {
-  const value = literalString(node);
+  const target = unwrapExpression(node);
+  const value = literalString(target);
   if (value !== null) {
     return true;
   }
-  if (opts.allowStaticTemplates && staticTemplate(node)) {
+  if (opts.allowStaticTemplates && staticTemplate(target)) {
     return true;
   }
-  if (opts.allowDefaultedProps && isDefaultedPropReference(node, context)) {
+  if (opts.allowDefaultedProps && isDefaultedPropReference(target, context)) {
     return true;
   }
   return false;
@@ -180,13 +182,14 @@ function isAfterDeclaration(node, declaration) {
 }
 
 function isFunctionParameterSource(node, context) {
-  if (node?.type === "MemberExpression") {
-    return isFunctionParameterSource(node.object, context);
+  const target = unwrapExpression(node);
+  if (target?.type === "MemberExpression") {
+    return isFunctionParameterSource(target.object, context);
   }
-  if (node?.type !== "Identifier" || !/props$/i.test(node.name)) {
+  if (target?.type !== "Identifier" || !/props$/i.test(target.name)) {
     return false;
   }
-  const variable = findVariable(context.sourceCode.getScope(node), node.name);
+  const variable = findVariable(context.sourceCode.getScope(target), target.name);
   return Boolean(variable?.defs.some((def) => def.type === "Parameter"));
 }
 

@@ -1,0 +1,6 @@
+changes:
+  categories:
+    localization:
+      rules:
+        - paths: ['Messages*.resx']
+          id: { keysOf: resx }

@@ -25,7 +25,7 @@ pub(super) const DEFAULT_TRUSTED_HOSTS: &[&str] = &[
 /// `downloadHelpers` adds command names beside `curl` and `wget`.
 #[derive(Debug, Deserialize, Default)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     trusted_hosts: Option<Vec<String>>,
     download_helpers: Vec<String>,
     shell_source_include: Vec<String>,
@@ -41,7 +41,7 @@ enum SkipAnnotationScope {
     Line,
 }
 
-fn compile_hosts(opts: &Options) -> Result<Vec<String>> {
+pub(in crate::codebase::rules) fn compile_hosts(opts: &Options) -> Result<Vec<String>> {
     let hosts = match &opts.trusted_hosts {
         None => DEFAULT_TRUSTED_HOSTS
             .iter()
@@ -51,14 +51,14 @@ fn compile_hosts(opts: &Options) -> Result<Vec<String>> {
             .iter()
             .map(|host| {
                 url::configured_host(host).ok_or_else(|| {
-                    anyhow::anyhow!("{RULE_ID} trustedHosts entry `{host}` is not a host")
+                    anyhow::anyhow!("{RULE_ID} options.trustedHosts entry `{host}` is not a host")
                 })
             })
             .collect::<Result<_>>()?,
     };
     for helper in &opts.download_helpers {
         if !valid_helper(helper) {
-            anyhow::bail!("{RULE_ID} downloadHelpers entry `{helper}` is not a command name");
+            anyhow::bail!("{RULE_ID} options.downloadHelpers entry `{helper}` is not a command name");
         }
     }
     Ok(hosts)

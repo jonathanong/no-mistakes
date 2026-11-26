@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-docker-host-ports
+name: File exception
+description: Start a synthetic database with a file exemption
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: docker run -p 5432:5432 postgres

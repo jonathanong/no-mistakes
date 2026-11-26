@@ -102,7 +102,11 @@ fn build_report_and_relationships(
     check.extend(dedup_checks);
     let mut check = dedup_sorted(check);
     check.extend(crate::queue::priority_mix::mixed_priority_findings(
-        root, &producers, facts, test_scope,
+        root,
+        &producers,
+        facts,
+        test_scope,
+        &mut report_diagnostics,
     ));
     check.sort();
     report_diagnostics.extend(job_state_diagnostics);

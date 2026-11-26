@@ -22,7 +22,7 @@ mod runner;
 mod selection;
 mod source_failures;
 mod suppression;
-mod types;
+pub(in crate::codebase::rules) mod types;
 
 use colocated_tests::covered_components as colocated_test_covered_components;
 pub(crate) use config::configured_story_files;

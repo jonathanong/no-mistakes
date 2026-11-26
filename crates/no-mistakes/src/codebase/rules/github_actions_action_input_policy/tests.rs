@@ -353,7 +353,15 @@ rules:
     )
     .unwrap();
     let mut errors = Vec::new();
-    super::collect_config_errors(std::path::Path::new("/repo"), None, &config, &mut errors);
+    let root = std::path::Path::new("/repo");
+    super::collect_config_errors(root, None, &config, &mut errors);
+    let config_path = root.join(".no-mistakes.yml");
+    let mut with_location = Vec::new();
+    super::collect_config_errors(root, Some(&config_path), &config, &mut with_location);
+    assert_eq!(
+        with_location,
+        errors.iter().map(|error| format!(".no-mistakes.yml: {error}")).collect::<Vec<_>>()
+    );
     let joined = errors.join("\n");
     assert!(joined.contains("[unclosed"), "{joined}");
     assert!(joined.contains("options.include"), "{joined}");

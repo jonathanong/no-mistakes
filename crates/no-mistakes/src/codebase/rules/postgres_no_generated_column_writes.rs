@@ -40,7 +40,7 @@ pub(crate) struct ExtraGeneratedColumn {
     pub(crate) column: String,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     include: GlobMatcher,
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
@@ -101,7 +101,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings.finish())
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     Ok(CompiledOptions {
         include,

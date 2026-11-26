@@ -15,14 +15,10 @@ impl<'a> FileMatcher<'a> {
         target_roots: &'a [PathBuf],
         patterns: impl Iterator<Item = &'p str>,
     ) -> Result<Self> {
-        let mut builder = GlobSetBuilder::new();
-        for pattern in patterns {
-            builder.add(Glob::new(pattern.trim_start_matches("./"))?);
-        }
         Ok(Self {
             root,
             target_roots,
-            globs: builder.build()?,
+            globs: compile_globs(patterns)?,
         })
     }
 
@@ -45,6 +41,14 @@ impl<'a> FileMatcher<'a> {
             .cloned()
             .collect()
     }
+}
+
+pub(super) fn compile_globs<'p>(patterns: impl Iterator<Item = &'p str>) -> Result<GlobSet> {
+    let mut builder = GlobSetBuilder::new();
+    for pattern in patterns {
+        builder.add(Glob::new(pattern.trim_start_matches("./"))?);
+    }
+    builder.build().map_err(Into::into)
 }
 
 pub(crate) fn matching_files(

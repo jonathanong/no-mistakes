@@ -92,6 +92,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "suppression_forms": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/lib/index.mts",
+          "import": "chalk",
+          "line": 1,
+          "message": "packages/lib/index.mts: imports 'chalk', which @acme/lib declares only under a non-production dependency field (e.g. devDependencies); the production deploy prunes that field, so move it to dependencies (or optionalDependencies/peerDependencies)",
+          "rule": "production-dependency-declarations",
+          "sourceLine": "import chalk from \"chalk\";",
+          "target": "chalk"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "test_only_importer": {
     "exitCode": 0,
     "report": {

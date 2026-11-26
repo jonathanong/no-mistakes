@@ -37,8 +37,8 @@ fn standalone_validates_options_before_reading_the_catalog() {
         ("invalid-allow", "table.column"),
         ("bad-mode", "unknown field"),
     ] {
-        let config =
-            load_v2_config(&root, Some(&fixture().join(format!("configs/{name}.yml")))).unwrap();
+        let path = fixture().join(format!("configs/{name}.yml"));
+        let config = serde_yaml::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
         let error = check_with_files(&root, &config, &[]).unwrap_err();
         assert!(error.to_string().contains(expected), "{name}: {error}");
     }

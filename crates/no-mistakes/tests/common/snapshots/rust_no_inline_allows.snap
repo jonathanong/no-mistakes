@@ -218,5 +218,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "attributes.rs",
+          "line": 9,
+          "message": "inline #[allow(unused_imports)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(unused_imports)]"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

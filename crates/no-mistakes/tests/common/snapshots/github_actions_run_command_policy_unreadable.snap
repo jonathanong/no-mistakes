@@ -1,0 +1,83 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/unavailable.yml",
+          "line": 1,
+          "message": "cannot verify github-actions-run-command-policy: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "github-actions-run-command-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/sibling.yml",
+          "line": 6,
+          "message": ".github/workflows/sibling.yml:6: job `check` step 1 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- run: example-tool",
+          "target": "example-tool"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/sibling.yml",
+          "line": 6,
+          "message": ".github/workflows/sibling.yml:6: job `check` step 1 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- run: example-tool",
+          "target": "example-tool"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/sibling.yml",
+          "line": 6,
+          "message": ".github/workflows/sibling.yml:6: job `check` step 1 runs `example-tool` without required argument `--dry-run`. Add `--dry-run` to the `example-tool` command.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "- run: example-tool",
+          "target": "example-tool"
+        },
+        {
+          "file": ".github/workflows/unavailable.yml",
+          "line": 1,
+          "message": "cannot verify github-actions-run-command-policy: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "github-actions-run-command-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

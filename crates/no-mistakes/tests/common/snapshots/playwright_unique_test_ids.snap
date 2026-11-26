@@ -397,6 +397,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 2,
+          "message": "selector [data-testid=\"edit\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "const edit = <button data-testid=\"edit\" />;",
+          "target": "data-testid=edit"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 4,
+          "message": "selector [data-testid=\"control\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "const save = <button data-testid=\"control\" />;",
+          "target": "data-testid=control"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 5,
+          "message": "selector [data-testid=\"control\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "const saveDuplicate = <button data-testid=\"control\" />;",
+          "target": "data-testid=control"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "duplicate": {
     "exitCode": 1,
     "report": {

@@ -43,7 +43,7 @@ fn cli_hygiene_modes_preserve_suppression_and_choose_exit_status() {
     for (config, code, advisory_count, rule_count) in [
         (".no-mistakes.yml", 0, 6, 0),
         ("report.yml", 1, 0, 6),
-        ("ignore.yml", 0, 0, 0),
+        ("ignore.yml", 0, 1, 0),
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
             .args(["check", "--root"])
@@ -201,6 +201,15 @@ fn check_json_snapshot_rust_block_doc_suppressions() {
     ]
     .map(|(label, config)| (label, root.clone(), root.join(config)));
     crate::check_json_snapshot::assert_saved_fixture("rust_block_doc_suppressions", &cases);
+}
+
+#[test]
+fn check_json_snapshot_unknown_suppression_rules_without_rule_applications() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unknown-disable-rule");
+    let cases = [("ignore", ".no-mistakes.yml"), ("report", "report.yml")]
+        .map(|(label, config)| (label, root.clone(), root.join(config)));
+    crate::check_json_snapshot::assert_saved_fixture("unknown_suppression_rules", &cases);
 }
 
 #[cfg(unix)]

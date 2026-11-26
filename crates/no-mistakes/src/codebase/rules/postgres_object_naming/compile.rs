@@ -6,7 +6,7 @@ use anyhow::{bail, Result};
 use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub(super) struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     pub(super) patterns: BTreeMap<String, CompiledPattern>,
     pub(super) check_constraint_backed_indexes: bool,
     pub(super) table_min_words: Option<usize>,
@@ -25,7 +25,7 @@ pub(super) struct UnderscoreRule {
     pub(super) allow: Option<Regex>,
 }
 
-pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(super::RULE_ID, options.schema_catalog_path.trim())?;
     let mut patterns = BTreeMap::new();
     for (kind, raw) in &options.patterns {

@@ -3,7 +3,7 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-mod prepared;
+pub(in crate::codebase::rules) mod prepared;
 mod scan;
 
 use prepared::{is_csharp_file, PreparedRule};

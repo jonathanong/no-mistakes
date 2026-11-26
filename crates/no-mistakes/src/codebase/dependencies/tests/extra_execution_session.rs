@@ -43,6 +43,7 @@ fn shared_traversal_keeps_the_session_owned_seeded_dataset() {
         None,
         build_plan,
         SnapshotTraversalPreparation {
+            config: None,
             visible_paths: std::sync::Arc::clone(&visible_paths),
             session: std::sync::Arc::clone(&session),
             include_check_plan: false,
