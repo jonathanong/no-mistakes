@@ -143,7 +143,7 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     let directory = tempfile::tempdir().unwrap();
-    let guard = InvocationGuard::acquire_at_path(
+    let guard = InvocationGuard::acquire_for_cli_at_path(
         InvocationOptions {
             timeout: Some(Duration::from_secs(5)),
             invocation_timeout: None,
@@ -152,7 +152,6 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
             jobs: None,
         },
         &directory.path().join("invocation.lock"),
-        true,
     )
     .unwrap();
     check_timeout().unwrap();
