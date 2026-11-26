@@ -33,6 +33,11 @@ fn invalid_rule_configuration_aborts_before_analysis() {
             root.join("invalid-values.yml"),
         ),
         (
+            "invalid-declared-values",
+            root.clone(),
+            root.join("invalid-declared-values.yml"),
+        ),
+        (
             "semantic-errors",
             root.clone(),
             root.join("semantic-errors.yml"),
@@ -49,7 +54,40 @@ fn invalid_rule_configuration_aborts_before_analysis() {
         assert_eq!(result[label]["exitCode"], 2, "{label}: {result}");
         assert!(result[label]["report"].is_null(), "{label}: {result}");
     }
-    let declared = result["swift-test-policy-declared"]["stderr"]
+    let declared = result["invalid-declared-values"]["stderr"]
+        .as_str()
+        .unwrap_or("");
+    for id in [
+        "agents-md-max-size",
+        "ast-grep-ignore-freshness",
+        "bash-empty-array-nounset",
+        "config-path-references",
+        "coverage-producer-assertion-owner",
+        "csp-allowed-origins",
+        "dependabot-cooldown-policy",
+        "doc-consistency",
+        "file-extension-policy",
+        "integration-test-no-mocks",
+        "lockfile-allowlist",
+        "playwright-no-serial",
+        "pnpm-release-age-policy",
+        "production-dependency-declarations",
+        "production-exports-only-used-by-tests",
+        "server-route-client-boundary",
+        "shellcheck-runner",
+        "strict-package-layout",
+        "structured-config-policy",
+        "unique-exports",
+        "vite-optimize-deps-nested-imports",
+        "workspace-package-cycles",
+        "zsh-readonly-parameter",
+    ] {
+        assert!(
+            declared.contains(id),
+            "missing invalid declared value for {id}: {declared}"
+        );
+    }
+    let swift_declared = result["swift-test-policy-declared"]["stderr"]
         .as_str()
         .expect("invalid declared values");
     for marker in [
@@ -58,7 +96,10 @@ fn invalid_rule_configuration_aborts_before_analysis() {
         "test-no-dependency-pins",
         "test-no-live-repository-scan: fixtureDirs",
     ] {
-        assert!(declared.contains(marker), "{marker} missing: {declared}");
+        assert!(
+            swift_declared.contains(marker),
+            "{marker} missing: {swift_declared}"
+        );
     }
 }
 
