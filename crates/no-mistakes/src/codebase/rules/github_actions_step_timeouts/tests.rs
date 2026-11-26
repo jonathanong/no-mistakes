@@ -132,4 +132,40 @@ allow:
         !findings.iter().any(|f| f.message.contains("dynamic-fast")),
         "dynamic-fast should pass within its allow cap, got {findings:?}"
     );
+
+    let unallowed = run_files(
+        "action-caps",
+        r#"
+onlyConfiguredActions: true
+unanalyzable: report
+actionCaps:
+  - uses: actions/setup-node
+    maxMinutes: 5
+  - uses: Owner/Repo/SubPath@v1
+    maxMinutes: 3
+  - uses: bare-action
+    maxMinutes: 2
+"#,
+        &[".github/workflows/ci.yml"],
+    );
+    assert!(
+        unallowed
+            .iter()
+            .any(|f| f.message.contains("uses dynamic action")),
+        "expected unallowed dynamic-uses report, got {unallowed:?}"
+    );
+
+    let bad_yaml = run_files(
+        "bad-yaml",
+        "allow: [{step: '.github/workflows/ci.yml#a#1', reason: dup}, {step: '.github/workflows/ci.yml#a#1', reason: dup}]",
+        &[".github/workflows/ci.yml"],
+    );
+    assert!(
+        bad_yaml.iter().any(|f| f.message.contains("invalid YAML")),
+        "expected invalid YAML finding, got {bad_yaml:?}"
+    );
+    assert!(
+        bad_yaml.iter().any(|f| f.message.contains("duplicate")),
+        "expected duplicate allow finding, got {bad_yaml:?}"
+    );
 }

@@ -396,4 +396,65 @@ fn checks_edge_cases_fixture_composites_include_and_unreadable_paths() {
     );
     assert_eq!(diag.findings.len(), 1);
     assert_eq!(diag.findings[0].line, 4);
+
+    let main_fixture = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/github-actions-workflow-script-paths/fixture"),
+    );
+    let main_config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: super::RULE_ID.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("scriptDirs: [scripts, tools/ci]\n").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    assert!(super::check(&main_fixture.join("compliant"), &main_config)
+        .unwrap()
+        .is_empty());
+    assert!(!super::check(&main_fixture.join("reported"), &main_config)
+        .unwrap()
+        .is_empty());
+    assert!(
+        super::check(&main_fixture.join("unanalyzable"), &main_config)
+            .unwrap()
+            .is_empty()
+    );
+
+    let empty_dirs = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: super::RULE_ID.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("scriptDirs: []\n").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    assert!(super::check(&main_fixture, &empty_dirs).unwrap().is_empty());
+
+    let compiled = compile_yaml("scriptDirs: [scripts]\n").unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    let run_ctx = super::diagnostics::RunCtx {
+        root: &main_fixture,
+        sources: &sources,
+        compiled: &compiled,
+        unanalyzable: Unanalyzable::Report,
+        rule_message: None,
+        defer_suppression: false,
+    };
+    let no_jobs = super::workflow::check_source(
+        &run_ctx,
+        &main_fixture.join(".github/workflows/no-jobs.yml"),
+        ".github/workflows/no-jobs.yml",
+        "on:\n  pull_request:\n    paths: ['apps/**']\n",
+    );
+    assert!(no_jobs.findings.is_empty());
+    let bad_trigger = super::workflow::check_source(
+        &run_ctx,
+        &main_fixture.join(".github/workflows/bad-trigger.yml"),
+        ".github/workflows/bad-trigger.yml",
+        "on: 42\njobs: {}\n",
+    );
+    assert_eq!(bad_trigger.findings.len(), 1);
 }
