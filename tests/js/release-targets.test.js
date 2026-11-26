@@ -485,7 +485,7 @@ test("release publication requires both parallel validation suites", () => {
     sampled +
       'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test-integration',
     sampled + 'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" doc',
-    sampled + "cargo publish --dry-run --locked -p no-mistakes",
+    sampled + "cargo publish --dry-run --locked --workspace",
     "pnpm run build:js",
   ])
     assert.ok(rust.includes(`run: ${command}\n`), command);
