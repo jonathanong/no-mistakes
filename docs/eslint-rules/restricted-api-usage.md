@@ -202,15 +202,21 @@ and excluded contract-test cases then preserve the intended prevention policy.
   TypeScript wrappers. Reads report before aliasing, construction, `.call` /
   `.apply` forwarding, or tagged templates can hide the restricted API.
 - Destructuring reports the matching key, including renamed, defaulted,
-  `for...of`, and assignment patterns, and a static computed key.
+  `for...of`, and assignment patterns, and a static computed key. The local
+  binding keeps that imported name, so a later call of the local is the same
+  restricted import.
 - Type-only re-exports are ignored. Dynamic imports and global `require` loads
   of a configured source ask for a static named import, including when a custom
   message is configured.
 - Assigning the whole namespace to another variable also asks for a static named
   import before the original binding is hidden. A rest destructure copies the
   whole namespace and reports the rest element with the same static import rewrite.
-- The rule does not propagate aliases after the reported access, inspect nested
-  namespace objects, or resolve dynamic member keys or module specifiers.
+- A plain assignment such as `const alias = ns.member` is not followed past that
+  member, and nested namespace objects are not inspected. A dynamic member of a
+  resolved namespace, `import name = require("pkg")`, or `require("pkg")` module is
+  `unanalyzable` instead of a pass. A static key, including a static computed key,
+  `require("pkg").name`, and `const { name } = require("pkg")` are judged. Dynamic
+  module specifiers stay unresolved.
 - Import declarations remain findings even when matching calls are independently
   suppressed. A target matching both selectors reports a namespace call at its
   member access once.

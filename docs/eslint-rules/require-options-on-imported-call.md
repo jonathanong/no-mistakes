@@ -100,12 +100,14 @@ client.chat.responses.create({ signal });
     name to the imported factory names allowed as its value. When the property
     is present and its value is a call or `new` of anything else, the call is
     reported as `invalidOptionValue`. A factory resolves through named,
-    renamed (`import { approvedAgent as make }`), default and namespace
-    imports (`agents.approvedAgent()`). Only a call or `new` whose callee
-    resolves to an imported binding outside the list is reported. A callee
-    that is not an import (`factory.create()`, `this.make()`, a local
-    function) or is shadowed is not judged, and neither are member
-    expressions, conditionals, spreads and other non-call values. A plain
+    renamed (`import { approvedAgent as make }`), default
+    (`import fetchItem from "pkg"` and `import { default as fetchItem }`, matching
+    callee name `default` or the local binding), namespace, `import agents = require("pkg")`, and
+    `require()` bindings (`agents.approvedAgent()`, `const { otherAgent } = require("pkg")`).
+    A static member of those modules is that exported name. Only a call or `new`
+    whose callee resolves to an imported binding outside the list is reported. A callee
+    that is not an import (`this.make()`, a local function) or is shadowed is not judged,
+    and neither are dynamic members, conditionals, spreads and other non-call values. A plain
     identifier value, whether shorthand (`{ agent }`) or `{ agent: agent }`,
     is rejected unless `allowShorthand` is `true`. Applies to imported, global
     and receiver targets.
@@ -189,8 +191,8 @@ the other file re-exports the global or selected receiver method. A parameter
 default such as `function run({ createResponse } = globalThis)` is not inferred,
 because the caller can pass another object.
 
-Default imports match the local binding name, including
-`import { default as local }`. Object destructure from a tracked namespace
+Default imports match the exported name `default` and the local binding name,
+including `import { default as local }`. Object destructure from a tracked namespace
 import or CommonJS namespace binding is followed when the property name is
 statically visible. CommonJS provenance supports `const`, `let`,
 and `var` bindings only when their binding has one initialization and no later

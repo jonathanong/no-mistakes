@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { logicalCall } = require("./module-mock-helpers");
 const helpers = require("./no-global-fetch-outside-helper-helpers");
 
@@ -79,8 +80,8 @@ module.exports = Object.assign(
       }
 
       function isIifeFunction(node) {
-        const parent = node?.parent;
-        return parent?.type === "CallExpression" && parent.callee === node;
+        const parent = unwrapTransparentParent(node)?.parent;
+        return parent?.type === "CallExpression" && unwrapExpression(parent.callee) === node;
       }
 
       function enterSwitch() {

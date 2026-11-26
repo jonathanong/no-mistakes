@@ -11,13 +11,14 @@ function importSpecifierName(specifier) {
 
 function requireSource(node, context) {
   const expression = unwrapExpression(node);
-  const source = literalString(unwrapExpression(expression?.arguments?.[0]));
+  if (expression?.type !== "CallExpression") return null;
+  const callee = unwrapExpression(expression.callee);
+  const source = literalString(unwrapExpression(expression.arguments?.[0]));
   if (
-    expression?.type !== "CallExpression" ||
-    expression.callee.type !== "Identifier" ||
-    expression.callee.name !== "require" ||
+    callee?.type !== "Identifier" ||
+    callee.name !== "require" ||
     source === null ||
-    isLocalRequire(expression.callee, context)
+    isLocalRequire(callee, context)
   ) {
     return null;
   }

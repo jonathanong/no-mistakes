@@ -7,33 +7,33 @@ Adjacent independent awaited reads add round trips. Configure the client's read 
 ## Disallowed
 
 ```ts
-import { cache as client } from '@app/cache';
-const first = await client.get('a');
-const second = await client.ttl('b');
-const third = Number(await client.ttl('c'));
-const fourth = JSON.parse((await client.get('d')) ?? '{}');
+import { cache as client } from "@app/cache";
+const first = await client.get("a");
+const second = await client.ttl("b");
+const third = Number(await client.ttl("c"));
+const fourth = JSON.parse((await client.get("d")) ?? "{}");
 ```
 
 ## Allowed
 
 ```ts
-import { cache as client } from '@app/cache';
-const first = await client.get('a');
+import { cache as client } from "@app/cache";
+const first = await client.get("a");
 const second = await client.get(first.nextKey);
-const values = await Promise.all([client.get('a'), client.ttl('b')]);
+const values = await Promise.all([client.get("a"), client.ttl("b")]);
 
 async function conditionalReads(enabled: boolean, cached: unknown) {
-  enabled && (await client.get('a'));
-  cached || (await client.get('b'));
-  cached ?? (await client.get('c'));
-  enabled ? await client.get('d') : await client.get('e');
-  if (enabled) await client.get('f');
+  enabled && (await client.get("a"));
+  cached || (await client.get("b"));
+  cached ?? (await client.get("c"));
+  enabled ? await client.get("d") : await client.get("e");
+  if (enabled) await client.get("f");
 }
 ```
 
 ## Options
 
-The options object accepts `clients` (exact local identifier names), `imports` (runtime named-import selectors with exact `source` and `imported` export names), required `readMethods` (exact method names), and `message` (custom diagnostic text). Import aliases are resolved by binding; type imports and shadowed import names do not match. A `clients` name explicitly asserts that contract for every binding with that local name, including parameters.
+The options object accepts `clients` (exact local identifier names), `imports` (runtime selectors with exact `source` and `imported` export names), required `readMethods` (exact method names), and `message` (custom diagnostic text). A selector matches a named import, a default import (`imported: "default"`), a namespace member, `import name = require(source)`, or a `require()` binding. Type imports and shadowed names do not match. A `clients` name explicitly asserts that contract for every binding with that local name, including parameters.
 
 ```js
 { 'no-mistakes/no-consecutive-unbatched-reads': ['error', {
@@ -57,9 +57,9 @@ Use the client's batch API or a suitable concurrent operation when ordering and 
 ## Suppression
 
 ```ts
-await client.get('a');
+await client.get("a");
 // no-mistakes-disable-next-line no-consecutive-unbatched-reads -- ordering required
-await client.ttl('b');
+await client.ttl("b");
 ```
 
 For multiple declarators, a directive on the declaration header covers the declaration; a directive on an individual declarator covers that read. Also supports `no-mistakes-disable-line`, a leading `no-mistakes-disable-file`, and ordinary ESLint/Oxlint suppression directives.

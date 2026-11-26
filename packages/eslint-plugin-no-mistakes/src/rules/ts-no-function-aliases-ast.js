@@ -23,17 +23,30 @@ function identifierName(node) {
   return node && node.type === "Identifier" ? node.name : null;
 }
 
+const BINDING_WRAPPERS = new Set([
+  "ChainExpression",
+  "ParenthesizedExpression",
+  "TSAsExpression",
+  "TSNonNullExpression",
+  "TSSatisfiesExpression",
+  "TSTypeAssertion",
+  "TSInstantiationExpression",
+]);
+
+function bindingSite(node) {
+  let current = node;
+  while (BINDING_WRAPPERS.has(current?.parent?.type)) current = current.parent;
+  return { parent: current?.parent ?? null, node: current };
+}
+
 function staticMemberName(member) {
-  if (!member.computed) return identifierName(member.property);
-  if (
-    member.property.type === "Literal" &&
-    ["string", "number"].includes(typeof member.property.value)
-  ) {
-    return String(member.property.value);
+  const property = unwrapExpression(member?.property);
+  if (!member?.computed) return identifierName(property);
+  if (property?.type === "Literal" && ["string", "number"].includes(typeof property.value)) {
+    return String(property.value);
   }
-  if (member.property.type === "TemplateLiteral" && member.property.expressions.length === 0) {
-    const quasi = member.property.quasis[0];
-    return quasi.value.cooked;
+  if (property?.type === "TemplateLiteral" && property.expressions.length === 0) {
+    return property.quasis[0].value.cooked;
   }
   return null;
 }
@@ -68,4 +81,5 @@ module.exports = {
   staticMemberName,
   callableTarget,
   isSameArgumentList,
+  bindingSite,
 };

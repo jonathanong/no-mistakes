@@ -86,14 +86,28 @@ function propsFromTypes(types, facts) {
   return props.size > 0 ? props : null;
 }
 const isIdentifier = (node) => node?.type === "Identifier";
+const VALUE_WRAPPERS = new Set([
+  "ChainExpression",
+  "TSAsExpression",
+  "TSTypeAssertion",
+  "TSNonNullExpression",
+  "TSSatisfiesExpression",
+  "TSInstantiationExpression",
+]);
+function unwrapValue(node) {
+  let current = node;
+  while (VALUE_WRAPPERS.has(current?.type)) current = current.expression;
+  return current;
+}
 function staticKey(node) {
-  if (!node) return null;
-  if (typeof node.name === "string" && node.type !== "Literal" && node.type !== "TemplateLiteral") {
-    return node.name;
+  const current = unwrapValue(node);
+  if (!current) return null;
+  if (typeof current.name === "string" && current.type !== "Literal" && current.type !== "TemplateLiteral") {
+    return current.name;
   }
-  if (node.type === "Literal") return String(node.value);
-  if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
-    return node.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join("");
+  if (current.type === "Literal") return String(current.value);
+  if (current.type === "TemplateLiteral" && current.expressions.length === 0) {
+    return current.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join("");
   }
   return null;
 }
@@ -103,28 +117,28 @@ const objectPropertyName = (property) => {
   return staticKey(property.key);
 };
 function memberRootAndProperty(node) {
-  let current = node;
-  while (
-    current?.type === "ChainExpression" ||
-    current?.type === "TSAsExpression" ||
-    current?.type === "TSTypeAssertion" ||
-    current?.type === "TSNonNullExpression"
-  ) {
-    current = current.expression;
-  }
+  const current = unwrapValue(node);
   if (current?.type !== "MemberExpression") return null;
-  if (current.computed && current.property?.type === "Identifier") return null;
-  const property = staticKey(current.property);
-  let object = current.object;
-  while (object?.type === "ChainExpression" || object?.type === "TSNonNullExpression") {
-    object = object.expression;
-  }
+  const propertyNode = unwrapValue(current.property);
+  if (current.computed && propertyNode?.type === "Identifier") return null;
+  const property = staticKey(propertyNode);
+  const object = unwrapValue(current.object);
   return isIdentifier(object) && property ? { object: object.name, property } : null;
 }
 function assertionType(node) {
-  return node?.type === "TSAsExpression" || node?.type === "TSTypeAssertion"
-    ? node.typeAnnotation
-    : null;
+  let current = node;
+  while (current) {
+    if (
+      current.type === "TSAsExpression" ||
+      current.type === "TSTypeAssertion" ||
+      current.type === "TSSatisfiesExpression"
+    ) {
+      return current.typeAnnotation;
+    }
+    if (!VALUE_WRAPPERS.has(current.type)) return null;
+    current = current.expression;
+  }
+  return null;
 }
 function resolveTypeProps(name, facts, seen = new Set()) {
   if (seen.has(name)) return null;
@@ -141,6 +155,7 @@ module.exports = {
   compilePatterns,
   isIdentifier,
   memberRootAndProperty,
+  unwrapValue,
   nullablePropsFromMembers,
   objectPropertyName,
   optionTypeAllowed,

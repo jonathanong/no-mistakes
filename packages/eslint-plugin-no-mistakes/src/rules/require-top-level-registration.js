@@ -33,18 +33,14 @@ module.exports = {
         const registered = program.body.some((statement) => {
           if (statement.type !== "ExpressionStatement") return false;
           const call = unwrapExpression(statement.expression);
-          if (
-            call.type !== "CallExpression" ||
-            call.optional ||
-            call.callee.type !== "Identifier" ||
-            call.arguments.length !== 1
-          )
+          const callee = unwrapExpression(call?.callee);
+          if (call?.type !== "CallExpression" || call.optional || call.arguments.length !== 1)
             return false;
           const callback = unwrapExpression(call.arguments[0]);
           return (
-            callback.type === "Identifier" &&
+            callback?.type === "Identifier" &&
             callback.name === options.callback &&
-            matchesRuntimeImport(call.callee, options.registrar, context)
+            matchesRuntimeImport(callee, options.registrar, context)
           );
         });
         const node = program.body[0] ?? program;

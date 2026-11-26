@@ -33,7 +33,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed, sourceFacts, p
     return consumers.some(
       (consumer) =>
         consumer.indexes.includes(index) &&
-        targetMatches(consumer.targets, target.source, target.calleeName),
+        targetMatches(consumer.targets, target.source, target.calleeNames ?? target.calleeName),
     );
   }
 
@@ -70,7 +70,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed, sourceFacts, p
     const name = property.key.name ?? property.key.value;
     return consumers.some(
       (consumer) =>
-        targetMatches(consumer.targets, target.source, target.calleeName) &&
+        targetMatches(consumer.targets, target.source, target.calleeNames ?? target.calleeName) &&
         consumer.properties.some(
           (slot) => slot.argumentIndex === index && slot.propertyNames.includes(name),
         ),

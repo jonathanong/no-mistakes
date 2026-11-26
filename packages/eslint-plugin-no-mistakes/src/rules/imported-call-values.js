@@ -1,45 +1,15 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { resolveImportedValue } = require("./configured-runtime-import");
 const { literalString, propertyName } = require("./module-mock-helpers");
 
-function findVariable(sourceCode, node, name) {
-  for (let scope = sourceCode.getScope(node); scope; scope = scope.upper) {
-    const variable = scope.set.get(name);
-    if (variable) return variable;
-  }
-  return null;
-}
-
-function importBinding(sourceCode, node, name) {
-  const def = findVariable(sourceCode, node, name)?.defs[0];
-  if (def?.type !== "ImportBinding" || def.parent?.importKind === "type") return null;
-  return def.node;
-}
-
-function memberName(member) {
-  return member.computed
-    ? literalString(unwrapExpression(member.property))
-    : propertyName(member.property);
-}
-
-// Resolves a factory callee to its exported name through named, renamed,
-// default, and namespace imports. A shadowed or non-import binding resolves to null (unjudged).
+// Resolves a factory callee to its exported name. A shadowed or non-import
+// binding resolves to null (unjudged). A dynamic member of a known module does too.
 function importedFactoryName(sourceCode, callee) {
-  const node = unwrapExpression(callee);
-  if (node?.type === "Identifier") {
-    const spec = importBinding(sourceCode, node, node.name);
-    if (spec?.type === "ImportSpecifier") {
-      return propertyName(spec.imported);
-    }
-    return spec?.type === "ImportDefaultSpecifier" ? node.name : null;
-  }
-  if (node?.type !== "MemberExpression" || node.object.type !== "Identifier") return null;
-  const spec = importBinding(sourceCode, node, node.object.name);
-  if (spec?.type === "ImportNamespaceSpecifier" || spec?.type === "ImportDefaultSpecifier") {
-    return memberName(node);
-  }
-  return null;
+  const resolved = resolveImportedValue(callee, { sourceCode });
+  if (!resolved || resolved.unresolved) return null;
+  return resolved.names || [resolved.imported];
 }
 
 function staticKey(property) {
@@ -62,8 +32,8 @@ function valueAllowed(sourceCode, property, allowed, allowShorthand) {
   const value = unwrapExpression(property.value);
   if (value?.type === "Identifier") return allowShorthand;
   if (value?.type !== "CallExpression" && value?.type !== "NewExpression") return true;
-  const name = importedFactoryName(sourceCode, value.callee);
-  return name === null || allowed.includes(name);
+  const names = importedFactoryName(sourceCode, value.callee);
+  return names === null || names.some((name) => allowed.includes(name));
 }
 
 function invalidValueProperties(argument, target, sourceCode) {

@@ -2,17 +2,31 @@
 const { unwrapExpression } = require("./async-ast");
 const { resolveVariable, memberPropertyName, isLocalRequire } = require("./async-target-bindings");
 const { literalString, logicalCall } = require("./module-mock-helpers");
-const { ARGV, identity, concatenate, fileUrlArgument } = require("./argv-main-fragments");
+const {
+  ARGV,
+  identity,
+  concatenate,
+  fileUrlArgument,
+  staticIndexOne,
+  objectPatternKey,
+  isProcessSpecifier,
+  isProcessRequire,
+} = require("./argv-main-fragments");
 
 function globalName(node, name, context) {
-  if (node?.type !== "Identifier" || node.name !== name) return false;
-  return !resolveVariable(node, context)?.defs.length;
+  const current = unwrapExpression(node);
+  if (current?.type !== "Identifier" || current.name !== name) return false;
+  return !resolveVariable(current, context)?.defs.length;
 }
 function nodeProcess(node, context) {
   if (globalName(node, "process", context)) return true;
   if (node?.type !== "Identifier") return false;
   const variable = resolveVariable(node, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (def?.node?.type === "TSImportEqualsDeclaration" && def.node.importKind !== "type") {
+    const ref = def.node.moduleReference;
+    return ref?.type === "TSExternalModuleReference" && isProcessSpecifier(ref.expression);
+  }
   if (def?.type === "ImportBinding") {
     return (
       ["ImportDefaultSpecifier", "ImportNamespaceSpecifier"].includes(def.node.type) &&
@@ -22,12 +36,8 @@ function nodeProcess(node, context) {
   const init = unwrapExpression(def?.node.init);
   return (
     def?.parent?.kind === "const" &&
-    def.node.id.type === "Identifier" &&
-    init?.type === "CallExpression" &&
-    init.callee.type === "Identifier" &&
-    init.callee.name === "require" &&
-    !isLocalRequire(init.callee, context) &&
-    ["process", "node:process"].includes(literalString(init.arguments[0]))
+    def.node?.id?.type === "Identifier" &&
+    isProcessRequire(init, context, isLocalRequire)
   );
 }
 const MAIN = 2;
@@ -111,14 +121,14 @@ function createClassifier(context, wrappers) {
     }
     if (node.type === "MemberExpression") {
       const name = memberPropertyName(node);
+      const target = unwrapExpression(node.object);
       if (
-        node.object.type === "MetaProperty" &&
-        node.object.meta.name === "import" &&
-        node.object.property.name === "meta" &&
+        target?.type === "MetaProperty" &&
+        target.meta.name === "import" &&
+        target.property.name === "meta" &&
         ["url", "filename"].includes(name)
       )
         return MAIN;
-      const target = unwrapExpression(node.object);
       if (name === "href" && globalName(target?.callee, "URL", context)) {
         const constructed = fileUrlArgument(target, (argument) => classify(argument, depth + 1));
         if (constructed) return constructed;
@@ -135,6 +145,7 @@ function createClassifier(context, wrappers) {
         return object;
     }
     if (node.type === "CallExpression") {
+      if (isProcessRequire(node, context, isLocalRequire)) return PROCESS;
       const invoked = logicalCall(node);
       if (!invoked) return 0;
       const callee = unwrapExpression(invoked.callee);
@@ -182,24 +193,6 @@ function createClassifier(context, wrappers) {
     return 0;
   }
   return (node) => value(node, 0);
-}
-function staticIndexOne(node) {
-  if (!node) return false;
-  if (node.type === "Literal") return node.value === 1 || node.value === "1";
-  return literalString(node) === "1";
-}
-
-function objectPatternKey(pattern, name) {
-  for (const property of pattern.properties) {
-    if (property.type !== "Property") continue;
-    const value =
-      property.value.type === "AssignmentPattern" ? property.value.left : property.value;
-    if (value.type !== "Identifier" || value.name !== name) continue;
-    if (property.key.type === "Identifier" && !property.computed) return property.key.name;
-    if (property.key.type === "Literal") return String(property.key.value);
-    return literalString(property.key);
-  }
-  return null;
 }
 
 module.exports = { createClassifier, ARGV, MAIN };

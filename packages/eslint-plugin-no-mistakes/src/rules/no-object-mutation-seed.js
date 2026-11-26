@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrap } = require("./no-object-mutation-ast");
 const { callable, lookup, shared } = require("./no-object-mutation-values");
 
 function functionStatements(node) {
@@ -43,8 +44,18 @@ function hoistedFn(node, scope) {
   return null;
 }
 
+function seedImportEquals(statement, scope) {
+  if (statement.type !== "TSImportEqualsDeclaration" || statement.importKind === "type") return;
+  if (statement.id?.type !== "Identifier") return;
+  const ref = statement.moduleReference;
+  const source = unwrap(ref?.type === "TSExternalModuleReference" ? ref.expression : null);
+  if (source?.type !== "Literal") return;
+  scope.cells.set(statement.id.name, { kind: "import", tag: shared("import") });
+}
+
 function seedImports(program, scope) {
   for (const statement of program.body) {
+    seedImportEquals(statement, scope);
     if (statement.type !== "ImportDeclaration" || statement.importKind === "type") {
       continue;
     }

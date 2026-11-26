@@ -64,8 +64,8 @@ function tagForCallExpression(node, context, aliasMap, config) {
   const calleeTag = tagForExpression(node.callee, context, aliasMap, config);
   if (calleeTag?.kind === "create-require") return { kind: "require-fn" };
   const isRequireFn = calleeTag?.kind === "require-fn";
-  if (!isRequireFn && !isUnshadowedRequire(node.callee, context)) return null;
-  const specifier = literalString(node.arguments[0]);
+  if (!isRequireFn && !isUnshadowedRequire(unwrapExpression(node.callee), context)) return null;
+  const specifier = literalString(unwrapExpression(node.arguments[0]));
   if (!specifier) return null;
   // A require()'d CREATE_REQUIRE_MODULES object is tracked whether or not
   // the config separately bans anything from it, so its createRequire

@@ -36,8 +36,11 @@ Remove the unnecessary `await`, or collect async work with `map` and await
 ## Limits
 
 The checked methods are `sort`, `toSorted`, `every`, `findIndex`, `slice`, and
-`toSpliced`. The receiver must be a known array literal or a stable `const`
-alias, so an unknown parameter such as `users` is outside the rule's evidence.
+`toSpliced`. The receiver must be a known array literal, a stable `const` alias
+of one, or a `let`/`var` whose initializer is an array literal and which is not
+reassigned before the call. An unknown parameter such as `users` is outside the
+rule's evidence. A cast around the awaited call and a static computed method
+name are the same call.
 
 `const { sort } = items; await sort()` is not the same call: destructuring a method drops the receiver. `.apply` with a non-literal argument list is not rewritten. `const alias = items as number[]` is still `items`. A shadowed spelling does not hide that array: `const values = []; { const alias = values; { const values = alias; await values.sort(); } }` is still the outer array.
 

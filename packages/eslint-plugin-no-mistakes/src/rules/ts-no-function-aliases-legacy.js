@@ -1,5 +1,7 @@
 "use strict";
 
+const { bindingSite } = require("./ts-no-function-aliases-ast");
+
 // Keep the released unwrapping boundary here. Expanded analysis may accept
 // additional syntax, but that must not change v0.95.0 identifier decisions.
 function unwrapReleased(expression) {
@@ -30,8 +32,9 @@ function identifierName(node) {
 }
 
 function assignmentWrapperName(node) {
-  if (node.parent?.type !== "AssignmentExpression" || node.parent.right !== node) return null;
-  const left = node.parent.left;
+  const found = bindingSite(node);
+  if (found.parent?.type !== "AssignmentExpression" || found.parent.right !== found.node) return null;
+  const left = found.parent.left;
   if (left.type === "Identifier") return left.name;
   if (left.type === "MemberExpression" && !left.computed) return identifierName(left.property);
   if (left.type === "MemberExpression" && left.property.type === "Literal") {
@@ -41,8 +44,11 @@ function assignmentWrapperName(node) {
 }
 
 function variableWrapperName(node) {
-  return node.parent?.type === "VariableDeclarator" && node.parent.id.type === "Identifier"
-    ? node.parent.id.name
+  const found = bindingSite(node);
+  return found.parent?.type === "VariableDeclarator" &&
+    found.parent.init === found.node &&
+    found.parent.id.type === "Identifier"
+    ? found.parent.id.name
     : null;
 }
 

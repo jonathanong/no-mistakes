@@ -1,6 +1,6 @@
 "use strict";
 
-const { findContainingFunction, unwrapTransparentParent } = require("./async-ast");
+const { findContainingFunction, unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { memberPropertyName } = require("./async-targets");
 
 function statement(node) {
@@ -56,8 +56,8 @@ function collectionAnchor(push) {
   if (
     call?.type === "CallExpression" &&
     call.arguments[0] === unwrapTransparentParent(fn) &&
-    call.callee.type === "MemberExpression" &&
-    memberPropertyName(call.callee) === "forEach"
+    unwrapExpression(call.callee)?.type === "MemberExpression" &&
+    memberPropertyName(unwrapExpression(call.callee)) === "forEach"
   ) {
     const invocation = statement(call);
     if (!unconditional(call, invocation) || invocation.type === "IfStatement") return null;
@@ -95,17 +95,18 @@ function callbackReturnsNormally(node) {
 }
 
 function isMapCall(node) {
+  const callee = unwrapExpression(node?.callee);
   return (
     node?.type === "CallExpression" &&
-    node.callee.type === "MemberExpression" &&
-    ["map", "flatMap"].includes(memberPropertyName(node.callee))
+    callee?.type === "MemberExpression" &&
+    ["map", "flatMap"].includes(memberPropertyName(callee))
   );
 }
 
 function isMapCallback(fn) {
   const value = unwrapTransparentParent(fn);
   const call = value.parent;
-  return isMapCall(call) && call.arguments[0] === value;
+  return isMapCall(call) && unwrapExpression(call?.arguments?.[0]) === fn;
 }
 
 function callbackCompletes(push) {

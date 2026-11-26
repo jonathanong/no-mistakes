@@ -54,8 +54,10 @@ enqueueEmail(user.id)
   .catch(() => undefined);
 ```
 
-Assertions require global `expect` with no local declaration, or a direct named `expect` import
-from Vitest or Jest. The matcher must be awaited, returned, or otherwise handled;
+Assertions require global `expect` with no local declaration, or a binding whose local
+name is `expect` reached from Vitest or Jest as a named import, namespace member,
+`import vt = require("vitest")`, or `const { expect } = require("vitest")`.
+`import { expect as trustedExpect }` is not that assertion. The matcher must be awaited, returned, or otherwise handled;
 an assertion with no promise disposition still reports. A terminal `.catch` statement counts when
 its handler is a stable function and the chain contains only standard promise
 methods. Missing handlers, opaque calls in the chain, and promises dropped inside
@@ -181,7 +183,7 @@ conditional return or throw cannot prove that later return executes.
 }
 ```
 
-Same-file namespace members, a default import of the configured module, a single `const` alias, a string or expression-free template member, an optional call, a comma callee, and `.call` or a literal-array `.apply` are the same callee.
+Same-file namespace members, a default import (callee name `default` or the local binding), a single `const` alias, a string or expression-free template member, an optional call, a comma callee, a cast around an immediately invoked function, and `.call` or a literal-array `.apply` are the same callee. `await Promise.all([run()] as const)`, `run().catch(() => {}) as Promise<void>`, and `Promise.all(pending as Promise<void>[])` are handled when the inner call is.
 
 ## Fix
 

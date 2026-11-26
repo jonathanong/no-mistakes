@@ -73,7 +73,7 @@ allowed because calling them produces an iterator rather than an ignored
 
 ## Limits
 
-`const { catch: fail } = work; fail(() => {})` is not the same call: destructuring a method drops the receiver. `.apply` with a non-literal argument list is not rewritten.
+`const { catch: fail } = work; fail(() => {})` is not the same call: destructuring a method drops the receiver. A static computed `catch` key is still `catch`, and `allowedCalleeNamePatterns` matches a static computed callee such as `obj["cleanup" as const]()`. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 
