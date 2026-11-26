@@ -1,0 +1,167 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/broken/package.json",
+          "line": 1,
+          "message": "packages/broken/package.json: cannot verify dependency policy because this manifest could not be read or parsed: EOF while parsing an object at line 2 column 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/invalid-utf8/package.json",
+          "line": 1,
+          "message": "packages/invalid-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/valid/package.json",
+          "line": 1,
+          "message": "packages/valid/package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "{\"overrides\":{\"bad\":\"1.0.0\"}}"
+        }
+      ],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "advisories",
+          "file": "packages/suppressed-utf8/package.json",
+          "line": 1,
+          "reason": "packages/suppressed-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 47. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "sourceFile": "packages/suppressed-utf8/package.json"
+        },
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "advisories",
+          "file": "packages/suppressed/package.json",
+          "line": 1,
+          "reason": "packages/suppressed/package.json: cannot verify dependency policy because this manifest could not be read or parsed: expected value at line 1 column 1. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "sourceFile": "packages/suppressed/package.json",
+          "sourceLine": "// no-mistakes-disable-file pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/suppressed-utf8/package.json",
+          "line": 1,
+          "message": "directive for `pnpm-overrides-ban` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "pnpm-overrides-ban"
+        },
+        {
+          "file": "packages/suppressed/package.json",
+          "line": 1,
+          "message": "directive for `pnpm-overrides-ban` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file pnpm-overrides-ban",
+          "target": "pnpm-overrides-ban"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/valid/package.json",
+          "line": 1,
+          "message": "packages/valid/package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "{\"overrides\":{\"bad\":\"1.0.0\"}}"
+        }
+      ],
+      "suppressed": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/broken/package.json",
+          "line": 1,
+          "message": "packages/broken/package.json: cannot verify dependency policy because this manifest could not be read or parsed: EOF while parsing an object at line 2 column 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/invalid-utf8/package.json",
+          "line": 1,
+          "message": "packages/invalid-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/valid/package.json",
+          "line": 1,
+          "message": "packages/valid/package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "{\"overrides\":{\"bad\":\"1.0.0\"}}"
+        }
+      ],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "filesystem",
+          "file": "packages/suppressed-utf8/package.json",
+          "line": 1,
+          "reason": "packages/suppressed-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 47. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "sourceFile": "packages/suppressed-utf8/package.json"
+        },
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "filesystem",
+          "file": "packages/suppressed/package.json",
+          "line": 1,
+          "reason": "packages/suppressed/package.json: cannot verify dependency policy because this manifest could not be read or parsed: expected value at line 1 column 1. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "sourceFile": "packages/suppressed/package.json",
+          "sourceLine": "// no-mistakes-disable-file pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
