@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "complete": true,
+  "unclassified": [],
+  "fixtures": {
+    "changed": ["portrait"],
+    "attributePaths": ["/size"]
+  }
+}

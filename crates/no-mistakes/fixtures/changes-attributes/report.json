@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "complete": true,
+  "unclassified": [],
+  "fixtures": {
+    "changed": ["portrait", "empty-list", "empty-pointer", "bad-pointer", "bad-escape", "added"],
+    "added": ["added"],
+    "attributePaths": {
+      "portrait": ["/portrait/~1label~0"],
+      "empty-list": [],
+      "empty-pointer": [""],
+      "bad-pointer": ["size"],
+      "bad-escape": ["/~2"],
+      "added": ["/size"],
+      "unknown": ["/size"]
+    }
+  },
+  "legacy": {
+    "changed": ["existing"]
+  }
+}

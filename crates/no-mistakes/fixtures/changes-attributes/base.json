@@ -1,0 +1,10 @@
+{
+  "portrait": {
+    "crops": [1, 2],
+    "radius": 0.100000000000000001,
+    "trimmed": true,
+    "/label~": "First",
+    "width": 80
+  },
+  "": false
+}

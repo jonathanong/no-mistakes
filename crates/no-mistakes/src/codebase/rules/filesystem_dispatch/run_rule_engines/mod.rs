@@ -19,6 +19,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         session,
         ..
     } = request;
+    if rule_id == REACT_NO_NESTED_BUTTONS_AND_LINKS {
+        return nested_controls::check_prepared(root, config, files, facts, sources, session);
+    }
     if rule_id == VITEST_DEFAULT_EXCLUDES {
         return vitest_default_excludes::check_prepared(
             root, config, files, facts, sources, session,

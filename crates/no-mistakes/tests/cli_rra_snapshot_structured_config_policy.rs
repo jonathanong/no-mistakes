@@ -155,3 +155,15 @@ fn structured_config_policy_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn check_json_snapshot_structured_config_merge_location_unavailable() {
+    assert_saved_fixture(
+        "structured_config_merge_location_unavailable",
+        &[(
+            "unavailable_location",
+            root("merge-location-unavailable"),
+            cfg("merge-location-unavailable.yml"),
+        )],
+    );
+}
