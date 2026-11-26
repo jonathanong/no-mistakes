@@ -1307,8 +1307,7 @@ jobs:
             pkgs+=(no-mistakes-invocation)
           fi
           pkgs+=(no-mistakes)
-          for i in "${!pkgs[@]}"; do
-            pkg="${pkgs[$i]}"
+          for pkg in "${pkgs[@]}"; do
             if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then
               echo "$pkg $version is already published on crates.io; skipping"
             else
@@ -1320,18 +1319,6 @@ jobs:
               else
                 exit 1
               fi
-            fi
-            if (( i + 1 < ${#pkgs[@]} )); then
-              for (( attempt = 1; attempt <= 24; attempt++ )); do
-                if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then
-                  break
-                fi
-                if (( attempt == 24 )); then
-                  echo "::error::$pkg $version did not appear on crates.io index in time" >&2
-                  exit 1
-                fi
-                sleep 5
-              done
             fi
           done
 
