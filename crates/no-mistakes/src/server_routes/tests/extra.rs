@@ -42,23 +42,11 @@ fn implicit_invalid_tsconfig_falls_back_but_explicit_errors() {
 }
 
 #[test]
-fn malformed_v2_config_falls_back_to_unconfigured_scan() {
-    let report = analyze_project(&fixture("malformed-config"), None, &[]).unwrap();
-
-    assert!(report
-        .routes
-        .iter()
-        .any(|route| route.route == "/api/users/*" && route.method == "get"));
-}
-
-#[test]
-fn invalid_project_route_globs_fall_back_to_unconfigured_scan() {
-    let report = analyze_project(&fixture("invalid-route-glob"), None, &[]).unwrap();
-
-    assert!(report
-        .routes
-        .iter()
-        .any(|route| route.route == "/api/users/*" && route.method == "get"));
+fn server_routes_rejects_invalid_discovered_configuration() {
+    let rejected_syntax = analyze_project(&fixture("malformed-config"), None, &[]).unwrap_err();
+    assert!(rejected_syntax.to_string().contains(".no-mistakes.yml"));
+    let rejected_glob = analyze_project(&fixture("invalid-route-glob"), None, &[]).unwrap_err();
+    assert!(rejected_glob.to_string().contains(".routes[0]"));
 }
 
 #[test]

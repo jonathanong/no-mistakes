@@ -34,6 +34,17 @@ ignored, untracked fragments do not contribute to the merged config.
 If multiple files with the same discovered stem exist under `--root`, loading
 fails so agents do not guess which config is authoritative.
 
+Loading rejects unknown keys in the root document, filesystem settings,
+projects and their queue, tRPC, and rewrite settings, the queue and effect
+registries, per-rule test targets, and the CI and validation command settings.
+Use mappings for named settings and quote a YAML path or option name when it
+looks like a boolean or number. Configured project route, queue wait, tRPC
+router, and validation command globs are checked at load. Rules that target
+a project must use a name declared under `projects`. The CLI reports invalid
+configurations with exit code 2 before analysis. Existing files may retain
+the historical top-level `version: 2` and `ignoreRoutes` keys. Configure
+route exclusions in `tests.playwright.ignoreRoutes`.
+
 The same [rule effort policy](README.md) applies to options in a fragment or
 an explicitly selected configuration file.
 

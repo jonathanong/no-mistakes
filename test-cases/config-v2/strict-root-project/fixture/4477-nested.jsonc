@@ -1,0 +1,4 @@
+{
+  // CI settings require a named object.
+  "ci": [["workflows"], []],
+}

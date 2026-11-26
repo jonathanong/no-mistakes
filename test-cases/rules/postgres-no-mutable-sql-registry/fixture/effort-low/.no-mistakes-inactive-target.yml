@@ -6,6 +6,5 @@ rules:
       effort: low
       include: ["src/decidable.ts"]
   - rule: postgres-no-mutable-sql-registry
-    projects: [not-configured]
     options:
       executorNames: deliberately-not-a-list

@@ -1,0 +1,3 @@
+example:
+  type: library
+  incldue: ["src/**"]

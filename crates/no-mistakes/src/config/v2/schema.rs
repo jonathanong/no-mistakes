@@ -21,20 +21,20 @@ pub use provenance::ConfigProvenance;
 pub(crate) mod postgres_executors;
 mod project_postgres;
 mod queues;
+mod react_traits;
+pub use react_traits::ReactTraitsConfig;
 mod rule_targets;
 mod string_or_list;
 mod tests_config;
-
-pub use queues::{
-    EnqueueFactory, EnqueuePropertySelector, EnqueueSelector, JobSchedulerFactory,
-    ProjectWaitScopes, QueueFactoryRoles, QueueNameFactory, QueueWaitPatterns, WorkerFactory,
-};
-
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use effects::{EffectKindConfig, EffectReturnedMemberConfig, EffectTargetConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use project_postgres::{
     ProjectPostgresConfig, ProjectPostgresExecutors, ProjectPostgresTrustedSqlTag,
+};
+pub use queues::{
+    EnqueueFactory, EnqueuePropertySelector, EnqueueSelector, JobSchedulerFactory,
+    ProjectWaitScopes, QueueFactoryRoles, QueueNameFactory, QueueWaitPatterns, WorkerFactory,
 };
 pub use tests_config::{
     DartConfig, DotnetConfig, DotnetProjectConfig, ElixirConfig, GoConfig, ImpactConfig,
@@ -45,8 +45,14 @@ pub use tests_config::{
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct NoMistakesConfig {
+    #[doc(hidden)]
+    #[serde(rename = "version", skip_serializing)]
+    pub legacy_version: serde::de::IgnoredAny,
+    #[doc(hidden)]
+    #[serde(rename = "ignoreRoutes", skip_serializing)]
+    pub legacy_ignore_routes: serde::de::IgnoredAny,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effort: Option<super::Effort>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -102,13 +108,6 @@ pub struct NoMistakesConfig {
     pub changes: ChangesConfig,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct ReactTraitsConfig {
-    pub frontend_root: Option<String>,
-    pub assert_no_fetch: Option<bool>,
-}
-
 #[path = "schema/queues_job_state.rs"]
 pub(crate) mod queues_job_state;
 #[path = "schema/queues_retention.rs"]
@@ -120,13 +119,13 @@ pub use queues_retention::{JobRetentionKey, UnboundedJobRetentionConfig};
 pub use queues_top::{QueueIncludeTestsConfig, QueuesTopLevelConfig};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct FilesystemConfig {
     pub skip_directories: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Project {
     #[serde(rename = "type")]
     pub type_: Option<ProjectType>,
@@ -142,6 +141,7 @@ pub struct Project {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct RewriteRule {
     pub source: String,
     pub destination: String,
@@ -161,7 +161,7 @@ pub enum ProjectType {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct QueueConfig {
     pub enqueues: Vec<String>,
     pub workers: Vec<String>,
@@ -180,7 +180,6 @@ pub enum StringOrList {
     One(String),
     Many(Vec<String>),
 }
-
 include!("schema/rules.rs");
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Default, PartialEq, Eq)]

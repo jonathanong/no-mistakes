@@ -4,63 +4,43 @@ use std::collections::BTreeMap;
 
 use super::super::schema::PlaywrightSelectorWrapper;
 
+use crate::config::source_locations::ConfigPath;
+
 #[derive(Debug)]
-struct InvalidGlob {
-    label: String,
-    origin: crate::config::source_locations::ConfigPath,
-    pattern: String,
-    error: globset::Error,
+struct InvalidConfigField {
+    origin: ConfigPath,
+    message: String,
 }
 
-impl std::fmt::Display for InvalidGlob {
+impl std::fmt::Display for InvalidConfigField {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            formatter,
-            "{}: contains invalid glob `{}`: {}",
-            self.label, self.pattern, self.error
-        )
+        formatter.write_str(&self.message)
     }
 }
 
-impl std::error::Error for InvalidGlob {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&self.error)
-    }
+impl std::error::Error for InvalidConfigField {}
+
+pub(super) fn field_error(origin: ConfigPath, message: String) -> anyhow::Error {
+    InvalidConfigField { origin, message }.into()
 }
 
 pub(super) fn validate_globs(
     patterns: &[String],
     label: &str,
-    origin: impl Fn(usize) -> crate::config::source_locations::ConfigPath,
+    origin: impl Fn(usize) -> ConfigPath,
 ) -> Result<()> {
     for (index, pattern) in patterns.iter().enumerate() {
         GlobBuilder::new(pattern.trim_start_matches("./"))
             .literal_separator(false)
             .build()
-            .map_err(|error| InvalidGlob {
-                label: format!("{label}[{index}]"),
-                origin: origin(index),
-                pattern: pattern.clone(),
-                error,
+            .map_err(|error| {
+                field_error(
+                    origin(index),
+                    format!("{label}[{index}]: contains invalid glob `{pattern}`: {error}"),
+                )
             })?;
     }
     Ok(())
-}
-
-pub(super) fn annotate(
-    error: anyhow::Error,
-    source: &str,
-    path: &std::path::Path,
-) -> anyhow::Error {
-    let Some(invalid) = error.downcast_ref::<InvalidGlob>() else {
-        return error;
-    };
-    // The authoritative parser already accepted the syntax. Provenance is
-    // best-effort and must never introduce a new configuration rejection.
-    let line = crate::config::source_locations::ConfigLocations::parse(source, path)
-        .and_then(|locations| locations.line(&invalid.origin))
-        .unwrap_or(1);
-    anyhow::anyhow!("{}:{line}: {error}", path.display())
 }
 
 pub(super) fn annotate_with_origin(
@@ -69,7 +49,7 @@ pub(super) fn annotate_with_origin(
         &crate::config::source_locations::ConfigPath,
     ) -> Option<(std::path::PathBuf, usize)>,
 ) -> anyhow::Error {
-    let Some(invalid) = error.downcast_ref::<InvalidGlob>() else {
+    let Some(invalid) = error.downcast_ref::<InvalidConfigField>() else {
         return error;
     };
     let Some((path, line)) = origin(&invalid.origin) else {

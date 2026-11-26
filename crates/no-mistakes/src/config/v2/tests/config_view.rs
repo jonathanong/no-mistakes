@@ -102,18 +102,7 @@ fn config_view_project_rules() {
 }
 
 #[test]
-fn config_view_unknown_project_targets_are_empty() {
-    let cfg = load_v2_config(&fixture("unknown-rule-project-target"), None).unwrap();
-    let view = ConfigView::new(&cfg);
-    assert!(cfg.rule_applications("unique-exports").is_empty());
-    assert!(view.project_rules("missing").is_empty());
-    assert!(view.enabled_rules_for("missing").is_empty());
-}
-
-#[test]
 fn rule_configured_requires_an_effective_target() {
-    let unknown_project = load_v2_config(&fixture("unknown-rule-project-target"), None).unwrap();
-    assert!(!unknown_project.rule_configured("unique-exports"));
     let repository = load_v2_config(&fixture("repository-and-project-rule"), None).unwrap();
     assert!(repository.rule_configured("unique-exports"));
     let test_target = load_v2_config(&fixture("rule-test-target"), None).unwrap();

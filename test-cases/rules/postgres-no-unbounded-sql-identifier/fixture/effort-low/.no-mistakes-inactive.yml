@@ -7,7 +7,6 @@ rules:
       include: ["src/**/*.ts"]
       exclude: ["src/excluded.ts"]
   - rule: postgres-no-unbounded-sql-identifier
-    projects: [missing]
     options:
       effort: max
       executorNames: 12

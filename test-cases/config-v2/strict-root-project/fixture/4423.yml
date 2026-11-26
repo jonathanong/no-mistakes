@@ -1,0 +1,3 @@
+projects:
+  example:
+    routes: ["[broken"]

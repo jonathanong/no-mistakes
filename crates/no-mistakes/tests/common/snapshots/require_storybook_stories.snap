@@ -647,18 +647,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "missing_project": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
-  },
   "options_include": {
     "exitCode": 1,
     "report": {
@@ -2247,18 +2235,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "components/Card.tsx#Card"
         }
       ],
-      "warnings": []
-    }
-  },
-  "unknown_project": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
       "warnings": []
     }
   },

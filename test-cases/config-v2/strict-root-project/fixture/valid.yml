@@ -1,0 +1,25 @@
+version: 2
+test_plan:
+  vitest:
+    fullSuiteTriggers:
+      ignoreChangedTests: [python]
+    dependencies:
+      ignoreChangedTests: [go]
+projects:
+  example:
+    type: library
+    root: "true"
+    routes: ["src/**/*.ts"]
+    queues:
+      waitScopes: ["src/**/*.ts"]
+    trpc:
+      routers: ["src/**/*.ts"]
+    postgres:
+      unanalyzableSql: fail
+queues:
+  requiredJobOptions: ["12"]
+rules:
+  - rule: banned-paths
+    projects: [example]
+    include: ["true"]
+    enabled: false

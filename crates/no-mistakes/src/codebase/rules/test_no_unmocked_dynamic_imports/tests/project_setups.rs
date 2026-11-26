@@ -1,4 +1,5 @@
 use super::*;
+use std::path::Path;
 
 #[test]
 fn selected_vitest_exclusions_apply_per_execution() {
@@ -40,10 +41,6 @@ fn selected_vitest_exclusions_apply_per_execution() {
             vec!["shared/example.test.mts"],
         ),
         (".no-mistakes-include.yml", vec!["shared/example.test.mts"]),
-        (
-            ".no-mistakes-missing-app-include.yml",
-            vec!["shared/example.test.mts"],
-        ),
     ] {
         let config_path = root.join(config_file);
         let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
@@ -179,7 +176,6 @@ fn explicit_project_setups_use_imported_helpers_without_cross_project_leakage() 
             ".no-mistakes-runner-playwright-only.yml",
             vec!["web/covered.test.mts"],
         ),
-        (".no-mistakes-stale-app.yml", vec!["web/covered.test.mts"]),
         (
             ".no-mistakes-cjs-helper.yml",
             vec!["other/uncovered.test.mts", "web/genuine.test.mts"],
@@ -431,5 +427,22 @@ fn unnamed_vitest_and_implicit_jest_keep_their_independent_executions() {
                 assert_eq!(finding.target.as_deref(), Some("src/target.mts"));
             }
         }
+    }
+}
+
+
+#[test]
+fn runner_targets_do_not_hide_undeclared_resource_projects() {
+    let selected = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/selected-vitest-excludes/fixture");
+    for (root, config) in [
+        (selected, ".no-mistakes-missing-app-include.yml"),
+        (project_fixture(), ".no-mistakes-stale-app.yml"),
+    ] {
+        let error = crate::config::v2::load_v2_config(&root, Some(Path::new(config))).unwrap_err();
+        assert!(
+            error.to_string().contains("undeclared project `missing`"),
+            "{error}"
+        );
     }
 }

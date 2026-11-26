@@ -1,0 +1,4 @@
+rules:
+  - rule: playwright-coverage
+    tests:
+      vitset: [example]

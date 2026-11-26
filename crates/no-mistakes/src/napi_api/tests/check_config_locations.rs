@@ -26,7 +26,7 @@ fn config_locations_check_and_project_keep_authored_entries_and_rule_names() {
         (
             "locations-shapes",
             ".no-mistakes.yml",
-            vec![4, 5, 7, 10, 13, 19, 25, 26],
+            vec![2, 4, 5, 7, 10, 13, 19, 25, 26],
         ),
         ("locations-targeted", ".no-mistakes.yml", vec![8]),
         ("locations-custom", "policy.yml", vec![7]),
