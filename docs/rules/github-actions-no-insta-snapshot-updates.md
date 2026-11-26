@@ -20,11 +20,12 @@ scripts in files directly under `.github/workflows/`.
   `--force-update-snapshots`. Direct `cargo-insta` invocations are covered
   too. Arguments after `--` belong to the test runner. Findings point to the
   step's `run:` key.
-- Opaque `run:` scripts use the same unanalyzable policy when the script
-  mentions Insta or the command or execution arguments are dynamic. An
-  unknown runner or shell, a literal `source` of an unrelated setup file,
-  or an expression used as data by a literal unrelated command can appear
-  in an ordinary step without producing a diagnostic.
+- In supported shells, opaque `run:` scripts use the unanalyzable policy
+  when the script mentions Insta or the command or execution arguments are
+  dynamic. A literal `source` of an unrelated setup file and expressions
+  passed as data to a literal unrelated command stay outside the check.
+  In unsupported or unknown shells, only an Insta reference in the script
+  text triggers that policy. Ordinary PowerShell assignments pass.
 - Other inputs the rule cannot decide statically — unreadable or non-UTF-8 workflow
   files, unparsable workflow YAML (reported at the parser's line), non-mapping
   workflow documents, `jobs`, jobs, steps, or `env:` values (such as

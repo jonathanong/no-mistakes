@@ -660,14 +660,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/run.yml",
-          "line": 42,
-          "message": "job \"windows\" step 3 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
-          "rule": "github-actions-no-insta-snapshot-updates",
-          "sourceLine": "- run: ${{ vars.RUN_COMMAND }}",
-          "target": "unanalyzable"
-        },
-        {
-          "file": ".github/workflows/run.yml",
           "line": 49,
           "message": "job \"custom\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
           "rule": "github-actions-no-insta-snapshot-updates",
@@ -960,14 +952,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "job \"windows\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
           "rule": "github-actions-no-insta-snapshot-updates",
           "sourceLine": "- run: cargo insta test",
-          "target": "unanalyzable"
-        },
-        {
-          "file": ".github/workflows/run.yml",
-          "line": 42,
-          "message": "job \"windows\" step 3 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
-          "rule": "github-actions-no-insta-snapshot-updates",
-          "sourceLine": "- run: ${{ vars.RUN_COMMAND }}",
           "target": "unanalyzable"
         },
         {
@@ -1313,14 +1297,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-no-insta-snapshot-updates",
           "sourceLine": "- run: cargo insta accept",
           "target": "accept"
-        },
-        {
-          "file": ".github/workflows/run.yml",
-          "line": 42,
-          "message": "job \"windows\" step 3 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
-          "rule": "github-actions-no-insta-snapshot-updates",
-          "sourceLine": "- run: ${{ vars.RUN_COMMAND }}",
-          "target": "unanalyzable"
         },
         {
           "file": ".github/workflows/run.yml",

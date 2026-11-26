@@ -52,13 +52,13 @@ fn check_step(run: &Value, step: &Mapping, job: &Value, workflow: &Value) -> Vec
     let Some(script) = run.as_str() else {
         return vec![Unknown("sets `run` to a non-string value")];
     };
-    let checks = commands::checks(script);
-    if !checkable_shell(step, job, workflow)
-        && (commands::mentions_insta(script) || !checks.is_empty())
-    {
-        return vec![Unknown("uses an unsupported or unknown shell")];
+    if checkable_shell(step, job, workflow) {
+        commands::checks(script)
+    } else if commands::mentions_insta(script) {
+        vec![Unknown("uses an unsupported or unknown shell")]
+    } else {
+        Vec::new()
     }
-    checks
 }
 
 fn checkable_shell(step: &Mapping, job: &Value, workflow: &Value) -> bool {
