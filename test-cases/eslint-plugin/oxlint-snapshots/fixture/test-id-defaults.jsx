@@ -1,0 +1,1 @@
+function A(props) { const { "data-pw": dataPw = "save" } = props; const { "data-testid": dynamic = id } = props; let { "data-qa": mutable = "open" } = props; { const dataPw = id; return <><button data-pw={dataPw} /><button data-pw={dynamic} /><button data-pw={mutable} /></>; } }
