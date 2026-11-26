@@ -90,9 +90,9 @@ function fetchCallee(node, context, seen) {
 }
 
 function fetchInvocation(node, context) {
-  const invoked = logicalCall(node);
+  const invoked = logicalCall(node, (callee) => fetchCallee(callee, context), true);
   if (!invoked?.callee || !fetchCallee(invoked.callee, context)) return null;
-  return invoked.arguments;
+  return invoked;
 }
 
 function isFetchCall(node, context) {

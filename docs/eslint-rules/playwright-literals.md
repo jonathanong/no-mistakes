@@ -41,8 +41,9 @@ find(`save-${user.id}`);
   `["data-testid", "data-pw"]`.
 - `allowDefaultedProps` permits a prop with a literal default; it defaults to
   `true`.
-- `allowStaticTemplates` permits expression-free template literals; it defaults
-  to `false`.
+- `allowStaticTemplates` defaults to `false`. Enable it to permit interpolated
+  templates that contain a nonempty literal fragment. Templates without
+  substitutions already count as literals. [Template classification](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/helpers.js#L59-L73).
 
 ## Fix
 

@@ -1,0 +1,44 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "categories": { "correctness": "off" },
+  "globals": { "accessKind": "readonly" },
+  "overrides": [
+    {
+      "files": ["**/playwright-*.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-test-timeout-cap": ["error", { "unknownValues": "finding" }]
+      }
+    },
+    {
+      "files": ["**/vitest-*.test.ts"],
+      "rules": { "no-mistakes/vitest-timeout-cap": ["error", { "unknownValues": "finding" }] }
+    },
+    {
+      "files": ["**/async-import-equals-mock.ts"],
+      "rules": {
+        "no-mistakes/async-call-disposition": [
+          "error",
+          {
+            "targets": [
+              { "sourceSpecifierPatterns": ["@fixture/jobs"], "calleeNamePatterns": ["enqueue"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/correlated-global.js"],
+      "rules": {
+        "no-mistakes/postgres-no-correlated-sql-builder": [
+          "error",
+          { "builderMethods": ["append"], "tagNames": ["sql"] }
+        ]
+      }
+    }
+  ]
+}

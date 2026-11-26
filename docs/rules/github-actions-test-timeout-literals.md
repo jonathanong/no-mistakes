@@ -100,9 +100,9 @@ expect(step?.['timeout-minutes']).toBe(10)
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no `options.unanalyzable` channel. It regex-scans the selected test sources for `timeout-minutes` fragments and for `expect(...).toBe`, `toEqual`, `toStrictEqual`, and `toContain`. It does not parse workflow YAML.
+The rule scans readable test sources for `timeout-minutes` fragments and
+`expect(...).toBe`, `toEqual`, `toStrictEqual`, and `toContain` assertions.
+It skips unreadable files and does not use `options.unanalyzable`. [Test source scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_test_timeout_literals/scan.rs#L8-L36).
 
 Equality and containment assertions may span lines. Their finding starts at `expect(`; a reasoned allow entry for a multiline assertion uses the exact reported `target`, preserving internal newlines. The target includes the full source lines enclosing the matched timeout expression.
 

@@ -80,7 +80,7 @@ function invalidValueProperties(argument, target, sourceCode) {
 }
 
 function exceedsMaxArguments(target, args) {
-  if (args.some((arg) => arg.type === "SpreadElement")) return false;
+  if (!args || args.some((arg) => arg?.type === "SpreadElement")) return false;
   return Number.isInteger(target.maxArguments) && args.length > target.maxArguments;
 }
 

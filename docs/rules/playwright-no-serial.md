@@ -81,8 +81,8 @@ When a spec calls `<binding>.describe.configure(...)` or
 `<binding>.describe.serial(...)` on an imported binding that cannot be resolved
 to Playwright's `test` (such as an opaque wrapper, an ambiguous or cyclic
 export, or an unrelated imported object with a `.describe.configure` method),
-the rule never drops it silently: it records an `incomplete` entry naming the
-file, line, and binding rather than a finding. Add the export to
+a call setting `mode: "serial"` or invoking `.describe.serial()` produces an
+`incomplete` entry naming the file, line, and binding. [Serial candidates](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_reliability/ast/calls.rs#L147-L172) and [unresolved receivers](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_reliability/findings.rs#L51-L59). Add the export to
 `options.fixtures` if it is a Playwright fixture, or exclude/suppress the file
 if it is not. The rule also records `incomplete` when it can find Playwright
 provenance but cannot resolve the whole receiver, for example through later

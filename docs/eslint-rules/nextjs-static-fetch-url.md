@@ -22,7 +22,12 @@ await fetch(`/api/users`);
 
 This rule has no options.
 
-`globalThis`, `window`, `self`, and `global` `fetch`, a string or expression-free template member, a single `const` alias, `const { fetch }` from those roots, an optional call, and `.call` or a literal-array `.apply` are the same call. `.call` and `.apply` shift the arguments.
+The rule recognizes global `fetch`, including static member access on
+`globalThis`, `window`, `self`, and `global`, and `const` aliases or destructured bindings
+of those references. Optional calls are supported.
+
+For `.call` and `.apply`, the rule checks the forwarded URL position. An opaque argument list or a spread that can occupy the URL position
+produces a finding for a recognized `fetch` target.
 
 ## Fix
 
@@ -31,7 +36,7 @@ small static wrapper when the relationship should be analyzable.
 
 ## Limits
 
-`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A computed identifier key is not the `fetch` property, including when that identifier is spelled `fetch`: `const fetch = "setTimeout"; const { [fetch]: schedule } = globalThis`. `const request = fetch as typeof fetch` is still `fetch`. `(globalThis as typeof globalThis).fetch` and `const { fetch: request } = globalThis as typeof globalThis` are still the global `fetch`.
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. A computed identifier key is not the `fetch` property, including when that identifier is spelled `fetch`: `const fetch = "setTimeout"; const { [fetch]: schedule } = globalThis`. `const request = fetch as typeof fetch` is still `fetch`. `(globalThis as typeof globalThis).fetch` and `const { fetch: request } = globalThis as typeof globalThis` are still the global `fetch`.
 
 ## Suppression
 

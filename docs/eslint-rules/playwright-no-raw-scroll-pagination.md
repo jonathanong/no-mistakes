@@ -4,7 +4,7 @@
 
 `InfiniteScroll` components commonly gate their `IntersectionObserver` behind
 a **one-shot** `scroll` listener mounted in a deferred effect. A spec that
-awaits a cursor-paginated request or response but drives scrolling with a
+contains a cursor-paginated wait call but drives scrolling with a
 single raw `window.scrollTo`/`scroll`/`scrollBy` call (bare or `window.`-
 qualified) can fire that scroll before the effect commits — the synthetic
 scroll is lost forever, and the wait for the next page burns its full
@@ -16,15 +16,15 @@ global: a project's own locally-declared or imported `scrollTo`/`scroll`/
 of its name.
 
 The two conditions are correlated at the file level, deliberately: a raw
-scroll call anywhere in a spec is flagged as soon as the file also awaits a
-cursor-paginated request anywhere, rather than requiring the two to appear in
-the same block or test. A spec mixing a legitimate raw scroll (testing
+scroll call anywhere in a spec is flagged when the file also contains a
+cursor-paginated `waitForRequest` or `waitForResponse` call. The rule does
+not require the promise to be awaited or the calls to share a block or test. [Wait call detection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-no-raw-scroll-pagination.js#L134-L147) and [file-level matching](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-no-raw-scroll-pagination.js#L191-L218). A spec mixing a legitimate raw scroll (testing
 scroll-to-top, say) with an unrelated paginated wait elsewhere in the same
 file is a rare shape, and file-level correlation is what a single-pass
 traversal without cross-block control-flow analysis can express — the
 alternative is exactly the kind of scope no static rule can promise. The
-awaited predicate is also only scanned when it's written inline as the
-call's own argument; a predicate extracted to a named function
+rule inspects the wait call's first argument directly. A predicate extracted
+to a named function
 (`page.waitForRequest(isNextPageRequest)`) is not resolved back to that
 function's body and is not scanned.
 
@@ -77,7 +77,7 @@ await waitForNextPage;
 
 ```ts
 // e2e/scroll-top.spec.ts
-// No paginated wait anywhere in this file — a raw scroll here is just testing scroll-to-top.
+// With no paginated wait call, a raw scroll can test scroll-to-top.
 await page.evaluate(() => window.scrollTo(0, 0));
 ```
 

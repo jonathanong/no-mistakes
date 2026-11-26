@@ -37,6 +37,7 @@ function createScalarCopyWrite(context, evaluate) {
   }
   function property(node, name, active, plain = false) {
     node = unwrapExpression(node);
+    if (!node) return null;
     if (node.type === "Identifier") {
       const variable = resolveVariable(node, context);
       const def = variable?.defs[0];

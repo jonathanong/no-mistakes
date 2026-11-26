@@ -64,8 +64,23 @@ function guardsOf(func, methods, tags, context) {
   return found;
 }
 
-function variableId(variable) {
-  return `${variable.name}:${variable.defs[0].node.range[0]}`;
+function groupGuards(guards, context) {
+  const selectors = new Map();
+  for (const guard of guards) {
+    const selector = resolveVariable(guard.selector, context);
+    const builder = resolveVariable(guard.builder, context);
+    if (!selector || !builder) continue;
+
+    let builders = selectors.get(selector);
+    if (!builders) {
+      builders = new Map();
+      selectors.set(selector, builders);
+    }
+    const group = builders.get(builder) ?? [];
+    group.push(guard);
+    builders.set(builder, group);
+  }
+  return [...selectors.values()].flatMap((builders) => [...builders.values()]);
 }
 
 module.exports = rule(
@@ -98,17 +113,7 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, RULE_ID);
 
     function check(func) {
-      const groups = new Map();
-      for (const guard of guardsOf(func, methods, tags, context)) {
-        const selector = resolveVariable(guard.selector, context);
-        const builder = resolveVariable(guard.builder, context);
-        if (!selector || !builder) continue;
-        const id = `${variableId(selector)}|${variableId(builder)}`;
-        const group = groups.get(id) ?? [];
-        group.push(guard);
-        groups.set(id, group);
-      }
-      for (const group of groups.values()) {
+      for (const group of groupGuards(guardsOf(func, methods, tags, context), context)) {
         if (group.length < 2 || completeGuards(group, func) || suppressed(group[0].node)) continue;
         context.report({
           node: group[0].node,

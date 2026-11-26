@@ -17,10 +17,8 @@ Action files that cannot grant a token are skipped.
 
 The rule scans `jobs.*.steps` in `.github/workflows/*.{yml,yaml}`. A file in
 a subdirectory of `.github/workflows/` is not a workflow GitHub runs, so it
-is ignored. Composite and other action files under
-`.github/actions/**/action.{yml,yaml}` are read and then skipped: those files
-have no job permissions of their own, and a pasted `permissions` or
-`workflow_call` key is not applied by GitHub.
+is ignored. The rule excludes files under `.github/actions/` before reading
+their contents. Those files have no job permissions of their own. [Workflow selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/diagnostics.rs#L58-L63).
 
 Only actual `actions/checkout` steps are judged: a valid `pull_request_target`
 workflow without a checkout produces no finding. It reports a credential-
@@ -325,8 +323,12 @@ is treated like omitted `with`.
 
 Credential diagnostics name the file, job, step, and a static rewrite: set
 `with.persist-credentials: false`, or use the default token with literal
-read-only permissions. Ref diagnostics require a base repository, a base-side
-ref, AND literal false. Invalid YAML reports its parser error and line;
+read-only permissions. For ref findings, the diagnostic recommends a base
+repository, a base-side ref, and literal false. Credential and ref verdicts
+are independent. A provable base checkout with the default token, read-only
+permissions, and literal or omitted persistence satisfies both. [Credential verdict](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/inputs.rs#L17-L37) and [ref diagnostics](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/checkout.rs#L51-L79).
+
+Invalid YAML reports its parser error and line;
 job and step are `unknown` because the document could not be parsed.
 Repair the YAML before relying on a clean result. Suppression comments apply
 to both findings and advisories; malformed YAML supports file suppression
