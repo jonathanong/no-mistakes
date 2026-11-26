@@ -1,5 +1,6 @@
 use crate::codebase::ts_source::SourceStore;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 mod manifest;
 mod targets;
@@ -38,18 +39,29 @@ enum Platforms {
 
 impl PackageIndex {
     pub(super) fn from_files(all_files: &[PathBuf], sources: &SourceStore) -> Self {
-        let mut packages: Vec<_> = all_files
+        let manifests = all_files
             .iter()
             .filter(|path| path.file_name().and_then(|n| n.to_str()) == Some("Package.swift"))
             .filter_map(|manifest_path| {
                 let root = manifest_path.parent()?.to_path_buf();
-                let state = match sources.read_source_path(manifest_path) {
-                    Ok(source) => parse_manifest(&root, &source),
-                    Err(_) => {
+                Some((root, sources.read_source_path(manifest_path).ok()))
+            });
+        Self::from_manifests(manifests)
+    }
+
+    pub(super) fn from_manifests(
+        manifests: impl IntoIterator<Item = (PathBuf, Option<Arc<str>>)>,
+    ) -> Self {
+        let mut packages: Vec<_> = manifests
+            .into_iter()
+            .map(|(root, source)| {
+                let state = match source {
+                    Some(source) => parse_manifest(&root, &source),
+                    None => {
                         PackageState::Uncertain("cannot read Package.swift for this Swift file")
                     }
                 };
-                Some(PackageInfo { root, state })
+                PackageInfo { root, state }
             })
             .collect();
         packages.sort_by(|a, b| {
@@ -181,15 +193,5 @@ fn classify_platform(item: &str) -> PlatformKind {
             }
         }
         _ => PlatformKind::Unknown,
-    }
-}
-
-#[cfg(test)]
-pub(super) fn parse_manifest_for_test(root: &Path, source: &str) -> PackageIndex {
-    PackageIndex {
-        packages: vec![PackageInfo {
-            root: root.to_path_buf(),
-            state: parse_manifest(root, source),
-        }],
     }
 }
