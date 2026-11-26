@@ -1,0 +1,57 @@
+version: 2
+rules:
+  - rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      maxDepth: deep
+  - rule: required-local-docs
+    scope: repository
+    options:
+      codeExtensions: ".ts"
+  - rule: package-json-nested-workspace-coverage
+    scope: repository
+    options:
+      roots: apps
+  - rule: package-json-registry-only
+    scope: repository
+    options:
+      scopes: packages/widget
+  - rule: package-json-required-fields
+    scope: repository
+    options:
+      requireScopedName: "yes"
+  - rule: package-json-workspace-coverage
+    scope: repository
+    options:
+      requireNamedPackage: "yes"
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        - root: packages
+          requireAnyOf:
+            - README.md
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      directChild: "yes"
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    options:
+      extensions: ".ts"
+  - rule: no-git-identity-mutation
+    scope: repository
+    options:
+      excludePaths: "generated/**"
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    options:
+      allow: ["[scripts"]
+  - rule: no-sparse-checkout
+    scope: repository
+    options:
+      include: ["[workflows"]
+  - rule: no-test-git-sha
+    scope: repository
+    options:
+      allowedContexts: ["("]

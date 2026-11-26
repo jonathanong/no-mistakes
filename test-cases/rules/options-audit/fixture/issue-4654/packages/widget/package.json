@@ -1,0 +1,9 @@
+{
+  "name": "@sample/widget",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./index.js"
+  }
+}
