@@ -1,0 +1,4 @@
+packages: ["packages/*"]
+# no-mistakes-disable-next-line pnpm-overrides-ban
+overrides:
+  fixture-dependency: 1.2.3

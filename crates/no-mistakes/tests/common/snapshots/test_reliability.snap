@@ -1293,6 +1293,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "serial-disable-line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "browser/grid.ts",
+          "line": 5,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "static-shapes": {
     "exitCode": 1,
     "report": {

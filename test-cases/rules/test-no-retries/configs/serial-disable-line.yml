@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+    testInclude: [browser/*.ts]
+rules:
+  - rule: playwright-no-serial
+    scope: repository
