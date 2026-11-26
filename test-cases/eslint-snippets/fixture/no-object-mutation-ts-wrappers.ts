@@ -34,6 +34,24 @@ export function escapeThroughWrappedBinding(value: number) {
   local.value = value + 1;
 }
 
+export function reassignLocalThroughWrappedIdentifier(param: { value: number }) {
+  let local: { value: number } | undefined = { value: 0 };
+  (local as { value: number }) = param;
+  local.value = 1;
+}
+
+export function reassignLocalThroughNonNullIdentifier(param: { value: number }) {
+  let local: { value: number } | undefined = { value: 0 };
+  local! = param;
+  local.value = 1;
+}
+
+export function reassignLocalThroughParenthesizedIdentifier(param: { value: number }) {
+  let local = { value: 0 };
+  (local) = param;
+  local.value = 1;
+}
+
 export function buildLocal(value: number) {
   const local: { value?: number; other?: number; items?: number[] } = {};
   (local.value as number) = value;

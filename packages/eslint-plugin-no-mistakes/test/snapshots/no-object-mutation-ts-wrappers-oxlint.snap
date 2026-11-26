@@ -131,5 +131,26 @@
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-ts-wrappers.ts",
     "line": 34,
     "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-ts-wrappers.ts",
+    "line": 40,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-ts-wrappers.ts",
+    "line": 46,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-ts-wrappers.ts",
+    "line": 52,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
   }
 ]
