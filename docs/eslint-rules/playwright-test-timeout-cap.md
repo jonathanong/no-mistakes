@@ -132,6 +132,10 @@ the rule does not pretend shifted parameters are still TestInfo. Immutable alias
 of these callbacks preserve that distinction. Receiver-only bound callbacks retain
 locally legal false/short slow behavior, independently of inherited-slot findings.
 
+TypeScript external import-equals declarations resolve as namespaces for the
+SDK and configured registration packages. A missing options argument on
+`test.extend` or `test.describe.configure` follows `unknownValues`.
+
 The public default import and namespace `.default` identify test only for
 `@playwright/test`, never arbitrary helper defaults. Named callbacks, const callback
 aliases and function declarations acquire TestInfo only through a collected
