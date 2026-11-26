@@ -1,6 +1,8 @@
+use super::merge_availability::MergeAvailability;
 use super::evaluate::Index;
 use super::LocatedFinding;
 use super::{job_finding as finding, Options, StepSelector};
+use crate::codebase::workflow_topology::artifact_types::ArtifactDeclaration;
 use crate::codebase::workflow_topology::model::{
     WorkflowStep, WorkflowTopology, WorkflowTopologyEdge,
 };
@@ -9,9 +11,10 @@ pub(super) fn lint(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
+    availability: &MergeAvailability<'_>,
 ) -> Vec<LocatedFinding> {
-    let mut findings = artifact_edges(topology, index, opts);
-    findings.extend(step_orders(index, opts));
+    let mut findings = step_orders(index, opts, availability);
+    findings.extend(artifact_edges(topology, index, opts, availability));
     findings
 }
 
@@ -19,19 +22,12 @@ fn artifact_edges(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
+    availability: &MergeAvailability<'_>,
 ) -> Vec<LocatedFinding> {
+    let artifacts_known = availability.artifacts_known();
     opts.required_artifact_edges
         .iter()
-        .map(|rule| {
-            let label = match &rule.match_kind {
-                Some(kind) => format!("{} -> {}: {} [{kind}]", rule.from, rule.to, rule.name),
-                None => format!("{} -> {}: {}", rule.from, rule.to, rule.name),
-            };
-            if !index.jobs.contains_key(rule.from.as_str())
-                || !index.jobs.contains_key(rule.to.as_str())
-            {
-                return finding(&rule.to, format!("required artifact edge missing: {label}"));
-            }
+        .filter_map(|rule| {
             let present = topology.edges.iter().any(|edge| match edge {
                 WorkflowTopologyEdge::Artifact(artifact) => {
                     artifact.from == rule.from
@@ -45,18 +41,44 @@ fn artifact_edges(
                 _ => false,
             });
             if present {
-                finding(&rule.to, String::new())
-            } else {
-                finding(&rule.to, format!("required artifact edge missing: {label}"))
+                return None;
             }
+            if !artifacts_known
+                && !artifact_endpoint_missing(index, availability, &rule.from, true)
+                && !artifact_endpoint_missing(index, availability, &rule.to, false)
+            {
+                return None;
+            }
+            let label = match &rule.match_kind {
+                Some(kind) => format!("{} -> {}: {} [{kind}]", rule.from, rule.to, rule.name),
+                None => format!("{} -> {}: {}", rule.from, rule.to, rule.name),
+            };
+            Some(finding(&rule.to, format!("required artifact edge missing: {label}")))
         })
-        .filter(|finding| !finding.finding.message.is_empty())
         .collect()
 }
 
-fn step_orders(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
+fn artifact_endpoint_missing(
+    index: &Index<'_>,
+    availability: &MergeAvailability<'_>,
+    job: &str,
+    upload: bool,
+) -> bool {
+    let Some(job) = index.jobs.get(job) else {
+        return availability.job_membership_known(job);
+    };
+    availability.artifact_steps_known(&job.id)
+        && job.steps.iter().all(|step| {
+            !matches!((&step.artifact, upload),
+                (Some(ArtifactDeclaration::Upload(_)), true)
+                    | (Some(ArtifactDeclaration::Download(_)), false))
+        })
+}
+
+fn step_orders(index: &Index<'_>, opts: &Options, availability: &MergeAvailability<'_>) -> Vec<LocatedFinding> {
     opts.step_orders
         .iter()
+        .filter(|rule| availability.steps_known(&rule.job_id, index.jobs.contains_key(rule.job_id.as_str())))
         .filter_map(|rule| {
             let Some(job) = index.jobs.get(rule.job_id.as_str()) else {
                 return Some(finding(

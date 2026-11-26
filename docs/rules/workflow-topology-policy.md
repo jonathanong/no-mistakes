@@ -339,12 +339,16 @@ has no source map. A forbidden-event finding in a tagged file is reported
 on line 1. A multi-document file is not one workflow, so its events are
 not reported.
 
-The topology parser expands plain YAML 1.1 merge keys throughout the
-document before reading triggers, concurrency, jobs, and steps. Quoted
-`"<<"` keys remain literal. A merge that cannot be applied is reported as
-a malformed workflow even when it appears only inside a job or step. A
-`<<` key the parser cannot match to its source location also makes the
-workflow malformed.
+The topology parser expands source-classified plain YAML 1.1 merge keys
+before reading triggers, concurrency, jobs, and steps. Source-classified
+quoted `"<<"` keys remain literal. An invalid merge value is reported as a
+malformed workflow. A decoded `<<` key the parser cannot match to its
+source location leaves that mapping incomplete. The rule follows
+`options.unanalyzable` for the merge and still checks explicit events, jobs,
+and other policy inputs the merge cannot change. For example, a job merge
+can supply a missing `steps` key, but an explicit `steps` list takes
+precedence and is still checked. Write the merged keys explicitly to
+restore analysis.
 
 This expansion is an offline analysis convention. GitHub Actions supports
 anchors and aliases under YAML 1.2. Use an alias for a whole mapping or
