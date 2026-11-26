@@ -98,6 +98,9 @@ Findings use `table:<name>`. Shape texts start with `(shape <name>)`.
 
 ## Options and defaults
 
+The loader rejects unknown keys in `shapes` entries and their column and trigger
+requirements.
+
 `schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `shapes` defaults to `[]`. Each shape `name`
 is required and unique. `tablePattern` is a required regex. A required column
 has exactly one of `name` or `namePattern`. `references: []` is an error.

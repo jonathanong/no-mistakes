@@ -1,4 +1,4 @@
-use super::RuleValidator;
+use super::{RuleDef, RuleValidator, ValidationContext};
 use crate::codebase::rules;
 
 pub(super) const VALIDATORS: &[RuleValidator] = &[
@@ -13,10 +13,7 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
     ),
     (
         rules::postgres_no_mutable_sql_registry::RULE_ID,
-        |rule, _| {
-            rules::postgres_sql_cross_file::compile(&rule.rule, &rule.strict_rule_options()?)
-                .map(drop)
-        },
+        cross_file_options,
     ),
     (rules::postgres_no_offset::RULE_ID, |rule, _| {
         rules::postgres_no_offset::compile_options(&rule.strict_rule_options()?).map(drop)
@@ -41,10 +38,7 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
     ),
     (
         rules::postgres_no_unbounded_sql_identifier::RULE_ID,
-        |rule, _| {
-            rules::postgres_sql_cross_file::compile(&rule.rule, &rule.strict_rule_options()?)
-                .map(drop)
-        },
+        cross_file_options,
     ),
     (rules::postgres_object_naming::RULE_ID, |rule, _| {
         rules::postgres_object_naming::compile::compile(
@@ -91,3 +85,11 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         .map(drop)
     }),
 ];
+
+fn cross_file_options(rule: &RuleDef, _context: &ValidationContext<'_>) -> anyhow::Result<()> {
+    // Project materialization owns this key and rejects authored copies of it.
+    if rule.options.get("sqlIncludeLocked").is_none() {
+        crate::config::v2::validate_low_alias(rule)?;
+    }
+    rules::postgres_sql_cross_file::compile(&rule.rule, &rule.strict_rule_options()?).map(drop)
+}

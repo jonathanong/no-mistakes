@@ -117,3 +117,27 @@ fn csp_allowed_origins_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn csp_allowed_origins_invalid_options_fail_early_with_exit_2() {
+    let root = rules_path("csp-allowed-origins", "fixture", "errors");
+    for (config, expected) in [
+        ("unknown-option.yml", "bogusOption"),
+        ("empty-csp-files.yml", "requires non-empty options.cspFiles"),
+        ("blank-csp-file.yml", "must be nonempty paths"),
+        ("invalid-self-origin.yml", "must be a valid origin"),
+    ] {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["--lock-timeout", "0", "--jobs", "1", "check", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(config))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert_eq!(output.status.code(), Some(2), "{config}: {stderr}");
+        assert!(output.stdout.is_empty(), "{config}: {stderr}");
+        assert!(stderr.contains(expected), "{config}: {stderr}");
+    }
+}
