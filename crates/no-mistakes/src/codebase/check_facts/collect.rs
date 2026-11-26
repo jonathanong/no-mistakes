@@ -56,6 +56,7 @@ fn collect_check_facts_inner(
         graph: plan.graph,
         call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),
+        nested_control_paths: Arc::clone(&plan.nested_control_paths),
         vitest_default_exclude_paths: Arc::clone(&plan.vitest_default_exclude_paths),
         test_reliability_paths: Arc::clone(&plan.test_reliability_paths),
         playwright_fixture_support: plan.playwright_fixture_support,

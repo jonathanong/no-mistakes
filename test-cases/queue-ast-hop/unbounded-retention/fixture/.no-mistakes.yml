@@ -3,4 +3,4 @@ queues:
   requiredJobOptions: [attempts, removeOnFail]
   unboundedJobRetention:
     require: [removeOnComplete, removeOnFail]
-    allowPaths: ["allowed/**"]
+    allowPaths: ["allowed/**", "./allowed-dot.ts"]

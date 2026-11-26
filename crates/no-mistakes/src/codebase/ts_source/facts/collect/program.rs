@@ -39,6 +39,9 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     let (record_waits, queue_semantic) =
         queue_waits::prepare(path, plan, context, source, program, semantic.is_none());
     let semantic = semantic.or(queue_semantic.as_ref());
+    if let (Some(index), None) = (&context.fixture_reads, &parse_error) {
+        index.record(path, source, program, semantic);
+    }
     let module_bindings = (plan.module_bindings || plan.call_arguments).then(|| {
         Arc::new(match semantic {
             Some(built) => module_facts::extract_from_semantic(

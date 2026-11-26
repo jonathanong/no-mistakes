@@ -1,3 +1,4 @@
+use crate::codebase::ts_source::FixtureReadIndex;
 use globset::GlobSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -17,38 +18,7 @@ pub struct TsFactContext {
     pub visible_files: Option<Arc<crate::fx::PathSet>>,
     pub(crate) server_route_filter: Option<ServerRouteFactFilter>,
     pub(crate) trpc_router_glob: Option<GlobSet>,
-}
-
-#[derive(Clone)]
-pub(crate) struct ServerRouteFactFilter {
-    glob: GlobSet,
-    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
-}
-
-impl std::fmt::Debug for ServerRouteFactFilter {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ServerRouteFactFilter")
-            .field("test_filter", &self.test_filter.is_some())
-            .finish_non_exhaustive()
-    }
-}
-
-impl ServerRouteFactFilter {
-    pub(crate) fn new(
-        glob: GlobSet,
-        test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
-    ) -> Self {
-        Self { glob, test_filter }
-    }
-
-    fn is_match(&self, root: &Path, path: &Path) -> bool {
-        path.strip_prefix(root)
-            .is_ok_and(|rel| self.glob.is_match(rel))
-            && !self
-                .test_filter
-                .as_ref()
-                .is_some_and(|filter| filter.is_match(root, path))
-    }
+    pub(crate) fixture_reads: Option<Arc<FixtureReadIndex>>,
 }
 
 #[derive(Debug, Clone)]
@@ -152,6 +122,7 @@ impl TsFactContext {
             .take()
             .or(other.server_route_filter);
         self.trpc_router_glob = self.trpc_router_glob.take().or(other.trpc_router_glob);
+        self.fixture_reads = self.fixture_reads.take().or(other.fixture_reads);
         let mut visible = self
             .visible_files
             .take()
@@ -206,6 +177,7 @@ impl Default for TsFactContext {
             visible_files: None,
             server_route_filter: None,
             trpc_router_glob: None,
+            fixture_reads: None,
         }
     }
 }

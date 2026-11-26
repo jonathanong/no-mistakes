@@ -13,9 +13,6 @@ const DEFAULTS_AMBIGUOUS: &str =
     "job options were not judged because defaultJobOptions is ambiguous across multiple queue definitions";
 const NAME_OPEN: &str = "job options were not judged because the queue name did not resolve";
 
-const RETENTION_DEFAULTS_OPEN: &str =
-    "unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known";
-
 pub(crate) fn judge_into_facts(
     root: &Path,
     facts: &mut HashMap<PathBuf, FileFacts>,
@@ -53,7 +50,7 @@ pub(crate) fn judge_into_facts(
         let covered = retention::covered_keys(root, path, retention_policy, allow.as_ref());
         for site in &file.job_option_sites {
             if let Some(retention_policy) = retention_policy {
-                let (finding, unknown_defaults) = retention::judge_site(
+                let judgment = retention::judge_site(
                     root,
                     path,
                     site,
@@ -61,18 +58,18 @@ pub(crate) fn judge_into_facts(
                     allow.as_ref(),
                     &defaults,
                 );
-                if let Some(note) = finding {
+                if let Some(note) = judgment.finding {
                     notes.push(Note {
                         path: note.path,
                         line: note.finding.line,
                         body: NoteBody::Finding(note.finding),
                     });
                 }
-                if unknown_defaults {
+                for message in judgment.abstentions.into_iter().flatten() {
                     notes.push(Note {
                         path: path.clone(),
                         line: site.line,
-                        body: NoteBody::Abstention(RETENTION_DEFAULTS_OPEN),
+                        body: NoteBody::Abstention(message),
                     });
                 }
             }

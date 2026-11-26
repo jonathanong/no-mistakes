@@ -1,7 +1,7 @@
 use crate::queue::extract_helpers::{binding_name, literal_expr, JobFrame};
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, BindingPattern, Expression, FormalParameters, Function, Statement,
+    ArrowFunctionExpression, BindingPattern, Expression, FormalParameters, Function,
     SwitchStatement,
 };
 use oxc_ast_visit::{walk, Visit};
@@ -26,6 +26,7 @@ pub(crate) fn visit_function<'a>(
     super::dedup::mask_parameters(visitor, &func.params);
     crate::queue::number_scope::hide_params(visitor, &func.params);
     let worker = enter_worker(visitor, func.span);
+    visitor.note_rate_limit_function(func);
     enter_job(visitor, &func.params, func.span);
     walk::walk_function(visitor, func, flags);
     visitor.job_frames = frames;
@@ -46,6 +47,7 @@ pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunct
     super::dedup::mask_parameters(visitor, &arrow.params);
     crate::queue::number_scope::hide_params(visitor, &arrow.params);
     let worker = enter_worker(visitor, arrow.span);
+    visitor.note_rate_limit_parameters(arrow.span, &arrow.params);
     enter_job(visitor, &arrow.params, arrow.span);
     walk::walk_arrow_function_expression(visitor, arrow);
     visitor.job_frames = frames;
@@ -95,7 +97,7 @@ pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStat
         }
         crate::queue::number_scope::prepare_statements(visitor, &case.consequent);
         for statement in &case.consequent {
-            visit_statement(visitor, statement);
+            visitor.visit_statement(statement);
         }
         visitor.current_case = previous;
     }
@@ -193,8 +195,4 @@ fn bound_ident<'a>(pattern: &'a BindingPattern<'a>) -> Option<&'a str> {
 
 fn case_label(visitor: &QueueVisitor<'_>, test: Option<&Expression<'_>>) -> Option<String> {
     literal_expr(test?, &visitor.const_strings)
-}
-
-fn visit_statement<'a>(visitor: &mut QueueVisitor<'a>, statement: &Statement<'a>) {
-    visitor.visit_statement(statement);
 }
