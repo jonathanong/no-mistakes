@@ -117,3 +117,50 @@ fn missing_validator_returns_an_internal_error_instead_of_no_options_fallback() 
         "{error}"
     );
 }
+
+#[test]
+fn strict_rule_options_handles_non_struct_targets_and_enum_error_paths() {
+    #[derive(serde::Deserialize)]
+    enum Mode {
+        Variant { count: usize },
+    }
+    #[derive(Default, serde::Deserialize)]
+    struct EnumOptions {
+        mode: Option<Mode>,
+    }
+
+    let raw_rule: RuleDef = serde_yaml::from_str("rule: example\noptions:\n  flag: true").unwrap();
+    let value: serde_yaml::Value = raw_rule.strict_rule_options().unwrap();
+    assert_eq!(value["flag"].as_bool(), Some(true));
+
+    let ok_rule: RuleDef =
+        serde_yaml::from_str("rule: example\noptions:\n  mode: !Variant\n    count: 1").unwrap();
+    let ok: EnumOptions = ok_rule.strict_rule_options().unwrap();
+    assert!(matches!(ok.mode, Some(Mode::Variant { count: 1 })));
+
+    let bad_enum_rule: RuleDef = serde_yaml::from_str(
+        "rule: example\nname: enum-case\noptions:\n  mode: !Variant\n    count: bad",
+    )
+    .unwrap();
+    let error = bad_enum_rule
+        .strict_rule_options::<EnumOptions>()
+        .err()
+        .unwrap()
+        .to_string();
+    assert!(error.contains("application `enum-case`"), "{error}");
+    assert!(error.contains("options.mode.Variant.count"), "{error}");
+}
+
+#[test]
+fn push_application_errors_without_origin_or_fallback_keeps_raw_message() {
+    let mut out = Vec::new();
+    push_application_errors(
+        Path::new("."),
+        &NoMistakesConfig::default(),
+        0,
+        None,
+        BTreeSet::from(["raw application error".to_string()]),
+        &mut out,
+    );
+    assert_eq!(out, vec!["raw application error"]);
+}
