@@ -162,9 +162,9 @@ test("each archive build selects one compile shard", () =>
         readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.shard`), "utf8").trim(),
         String(shard),
       );
-      assert.match(
-        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.rustc-wrapper`), "utf8"),
-        /standalone-shard-rustc\.sh/,
+      assert.equal(
+        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.rustc-wrapper`), "utf8").trim(),
+        path.join(__dirname, `standalone-shard-rustc-${shard}.sh`),
       );
     }
   }));

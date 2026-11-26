@@ -72,10 +72,12 @@ function run(mode, bundle, index, total, env = process.env) {
       if (shardEnv.NM_TEST_SHARD) throw new Error("standalone compile shard is already selected");
       shardEnv.NM_TEST_SHARD = String(shard);
       const wrapper = path.join(__dirname, "standalone-shard-rustc.sh");
+      // Cargo fingerprints workspace artifacts by the wrapper path.
+      shardEnv.RUSTC_WORKSPACE_WRAPPER = path.join(__dirname, `standalone-shard-rustc-${shard}.sh`);
       if (shardEnv.RUSTC_WRAPPER && shardEnv.RUSTC_WRAPPER !== wrapper) {
         shardEnv.NM_INNER_RUSTC_WRAPPER = shardEnv.RUSTC_WRAPPER;
       }
-      shardEnv.RUSTC_WRAPPER = wrapper;
+      shardEnv.RUSTC_WRAPPER = "";
     }
     const child = spawnSync("cargo", args, { env: shardEnv, stdio: "inherit" });
     if (child.error) throw child.error;

@@ -27,7 +27,7 @@
     "head_branch": "ci/cold-build"
   },
   "artifactInventory": {
-    "total_count": 8,
+    "total_count": 10,
     "artifacts": [
       {
         "name": "linux-runtime-cli",
@@ -60,7 +60,17 @@
         "expires_at": "2099-01-01T00:00:00Z"
       },
       {
-        "name": "standalone-library",
+        "name": "standalone-library-1",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "standalone-library-2",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "standalone-library-3",
         "expired": false,
         "expires_at": "2099-01-01T00:00:00Z"
       },
