@@ -5,7 +5,7 @@ import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-ch
 describe.skipIf(process.platform !== "linux")(
   "public collector and data factory SDK contracts",
   () => {
-    it.each(["beforeAll", "afterAll"])(
+    it.concurrent.each(["beforeAll", "afterAll"])(
       fixtureTemplate("review-public-surfaces.test-template-4.txt"),
       async (hook) => {
         const result = await fixture(
@@ -17,7 +17,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it.each(["describe.each", "suite.for"])(
+    it.concurrent.each(["describe.each", "suite.for"])(
       "retains hook-shaped callable table rows through %s",
       async (registration) => {
         const result = await fixture(
@@ -28,7 +28,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it("preserves private static APIs on actual public SDK runner subclasses", async () => {
+    it.concurrent("preserves private static APIs on actual public SDK runner subclasses", async () => {
       const result = await fixture(
         fixtureSource("review-public-surfaces.test-18.txt"),
         undefined,
@@ -38,7 +38,7 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(false);
     });
-    it("retains valid returned-test hooks and rejects overcap test registration", async () => {
+    it.concurrent("retains valid returned-test hooks and rejects overcap test registration", async () => {
       const result = await fixture(fixtureSource("review-public-surfaces.test-19.txt"));
       expect(result.code, result.output).toBe(0);
       expect(result.marker).toBe("continued");

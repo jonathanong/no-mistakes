@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
 export const fixture = resolve(
@@ -79,45 +82,69 @@ export const realScenarios = [
   },
 ];
 
+function buildRealScenarioCommand(typeAware, scenario) {
+  const paths = scenario.files || Object.keys(scenario.lines);
+  for (const name of paths) assert.ok(existsSync(resolve(fixture, name)), name);
+  return {
+    args: [
+      resolve(testDirectory, "../../../node_modules/oxlint/bin/oxlint"),
+      ...(typeAware ? ["--type-aware"] : []),
+      "--deny-warnings",
+      "--config",
+      resolve(fixture, scenario.config),
+      "--format",
+      "json",
+      ...paths.map((name) => resolve(fixture, name)),
+    ],
+    options: {
+      encoding: "utf8",
+      maxBuffer: 8 * 1024 * 1024,
+      env: {
+        ...process.env,
+        NODE_OPTIONS: `${process.env.NODE_OPTIONS || ""} --require=${JSON.stringify(resolve(handoff, "forbid-program.cjs"))}`,
+      },
+    },
+  };
+}
+
+function assertRealScenarioResult(scenario, status, stdout, stderr) {
+  assert.equal(status, 1, stderr || stdout);
+  const diagnostics = JSON.parse(stdout).diagnostics;
+  const actual = diagnostics
+    .map((item) => [
+      relative(fixture, resolve(item.filename || ".")).replaceAll("\\", "/"),
+      item.labels?.[0]?.span?.line,
+      item.code,
+    ])
+    .sort();
+  const expected = Object.entries(scenario.lines)
+    .flatMap(([name, lines]) => lines.map((line) => [name, line, ruleCode]))
+    .sort();
+  assert.deepEqual(actual, expected, scenario.config);
+}
+
 export function runRealGate(typeAware = true, scenarios = realScenarios) {
   for (const scenario of scenarios) {
-    const paths = scenario.files || Object.keys(scenario.lines);
-    for (const name of paths) assert.ok(existsSync(resolve(fixture, name)), name);
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(testDirectory, "../../../node_modules/oxlint/bin/oxlint"),
-        ...(typeAware ? ["--type-aware"] : []),
-        "--deny-warnings",
-        "--config",
-        resolve(fixture, scenario.config),
-        "--format",
-        "json",
-        ...paths.map((name) => resolve(fixture, name)),
-      ],
-      {
-        encoding: "utf8",
-        maxBuffer: 8 * 1024 * 1024,
-        env: {
-          ...process.env,
-          NODE_OPTIONS: `${process.env.NODE_OPTIONS || ""} --require=${JSON.stringify(resolve(handoff, "forbid-program.cjs"))}`,
-        },
-      },
-    );
-    assert.equal(result.status, 1, result.stderr || result.stdout);
-    const diagnostics = JSON.parse(result.stdout).diagnostics;
-    const actual = diagnostics
-      .map((item) => [
-        relative(fixture, resolve(item.filename || ".")).replaceAll("\\", "/"),
-        item.labels?.[0]?.span?.line,
-        item.code,
-      ])
-      .sort();
-    const expected = Object.entries(scenario.lines)
-      .flatMap(([name, lines]) => lines.map((line) => [name, line, ruleCode]))
-      .sort();
-    assert.deepEqual(actual, expected, scenario.config);
+    const { args, options } = buildRealScenarioCommand(typeAware, scenario);
+    const result = spawnSync(process.execPath, args, options);
+    assertRealScenarioResult(scenario, result.status, result.stdout, result.stderr);
   }
+}
+
+export async function runRealScenarioAsync(typeAware, scenario) {
+  const { args, options } = buildRealScenarioCommand(typeAware, scenario);
+  let status = 0;
+  let stdout = "";
+  let stderr = "";
+  try {
+    ({ stdout, stderr } = await execFileAsync(process.execPath, args, options));
+  } catch (error) {
+    if (typeof error?.code !== "number") throw error;
+    status = error.code;
+    stdout = error.stdout || "";
+    stderr = error.stderr || "";
+  }
+  assertRealScenarioResult(scenario, status, stdout, stderr);
 }
 
 // The standalone command is deliberately run before any typed/untyped ESLint test.

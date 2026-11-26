@@ -5,7 +5,7 @@ import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-ch
 describe.skipIf(process.platform !== "linux")(
   "real SDK config runner module routing (unqualified source proposals)",
   () => {
-    it.each([false, true])(
+    it.concurrent.each([false, true])(
       "worker-loads the final own-field runner; standalone=%s",
       async (standalone) => {
         const result = await fixture(
@@ -23,7 +23,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it.each([false, true])(
+    it.concurrent.each([false, true])(
       "worker-loads the native default and retains importFile; standalone=%s",
       async (standalone) => {
         const result = await fixture(
@@ -41,7 +41,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it.each([false, true])(
+    it.concurrent.each([false, true])(
       "rejects final own-field config overcap; standalone=%s",
       async (standalone) => {
         const result = await fixture(
@@ -61,7 +61,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it("rejects the native-default resolved config before body", async () => {
+    it.concurrent("rejects the native-default resolved config before body", async () => {
       const result = await fixture(
         fixtureSource("runner-route.test-34.txt"),
         fixtureTemplate("runner-route.test-template-1.txt"),
@@ -75,7 +75,7 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.marker).toBeUndefined();
       expect(result.forcedCleanup).toBe(false);
     });
-    it("rejects post-extension task overcap on the worker-loaded final runner", async () => {
+    it.concurrent("rejects post-extension task overcap on the worker-loaded final runner", async () => {
       const result = await fixture(
         fixtureSource("runner-route.test-35.txt"),
         undefined,
@@ -89,7 +89,7 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.marker).toBeUndefined();
       expect(result.forcedCleanup).toBe(false);
     });
-    it.each([false, true])(
+    it.concurrent.each([false, true])(
       "rejects hook overcap before body; nativeDefault=%s",
       async (nativeDefault) => {
         const result = await fixture(
@@ -106,7 +106,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it.each(["mergedOverride", "cliOverride"])(
+    it.concurrent.each(["mergedOverride", "cliOverride"])(
       "rejects %s of the policy-selected runner",
       async (kind) => {
         const result = await fixture(

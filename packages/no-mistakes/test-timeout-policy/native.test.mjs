@@ -5,7 +5,7 @@ import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-ch
 describe.skipIf(process.platform !== "linux")(
   "native Vitest registration and runtime deadlines",
   () => {
-    it.each([
+    it.concurrent.each([
       fixtureTemplate("native.test-template-19.txt"),
       fixtureTemplate("native.test-template-18.txt"),
       fixtureTemplate("native.test-template-17.txt"),
@@ -25,7 +25,7 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.output).toContain("must be positive, finite and at most 30000 ms");
       expect(result.marker).toBeUndefined();
     });
-    it.each(["30001", "0", "-1", "NaN", "Infinity"])(
+    it.concurrent.each(["30001", "0", "-1", "NaN", "Infinity"])(
       "rejects opaque runtime configuration through a setter alias: %s",
       async (timeout) => {
         const result = await fixture(fixtureTemplate("native.test-template-11.txt", [timeout]));
@@ -35,7 +35,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.marker).toBeUndefined();
       },
     );
-    it.each(["0", "-1", "NaN", "Infinity", "30001"])(
+    it.concurrent.each(["0", "-1", "NaN", "Infinity", "30001"])(
       "rejects a resolved standalone project timeout before collection: %s",
       async (timeout) => {
         const result = await fixture(
@@ -47,21 +47,21 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.marker).toBeUndefined();
       },
     );
-    it("guards context completion hooks before their timers are created", async () => {
+    it.concurrent("guards context completion hooks before their timers are created", async () => {
       const result = await fixture(fixtureSource("native.test-7.txt"));
       expect(result.code).toBe(1);
       expect(result.signal).toBeNull();
       expect(result.output).toContain("must be positive, finite and at most 30000 ms");
       expect(result.marker).toBeUndefined();
     });
-    it("rejects raw native config writes through the runner configuration", async () => {
+    it.concurrent("rejects raw native config writes through the runner configuration", async () => {
       const result = await fixture(fixtureSource("native.test-8.txt"));
       expect(result.code).toBe(1);
       expect(result.signal).toBeNull();
       expect(result.output).toContain("must be positive, finite and at most 30000 ms");
       expect(result.marker).toBeUndefined();
     });
-    it.each([
+    it.concurrent.each([
       fixtureTemplate("native.test-template-10.txt"),
       fixtureTemplate("native.test-template-9.txt"),
       fixtureTemplate("native.test-template-8.txt"),
@@ -77,7 +77,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.marker).toBeUndefined();
       },
     );
-    it.each([
+    it.concurrent.each([
       fixtureTemplate("native.test-template-7.txt"),
       fixtureTemplate("native.test-template-6.txt"),
     ])("rejects a delegated extension invalidating the original task: %s", async (mutation) => {
@@ -94,7 +94,7 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.extensionMarker).toBe("called");
       expect(result.marker).toBeUndefined();
     });
-    it("rejects an invalid raw deadline before an extension can mask it", async () => {
+    it.concurrent("rejects an invalid raw deadline before an extension can mask it", async () => {
       const result = await fixture(
         fixtureSource("native.test-10.txt"),
         undefined,
@@ -108,19 +108,18 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.extensionMarker).toBeUndefined();
       expect(result.marker).toBeUndefined();
     });
-    it.each([false, true])(
+    it.concurrent.each([false, true])(
       "routes package and path aliases with preserveSymlinks=%s",
       async (preserveSymlinks) => {
-        for (const specifier of ["deadline-helper", "registration-alias"]) {
-          const result = await fixture(
-            fixtureTemplate("native.test-template-4.txt", [specifier]),
-            undefined,
-            "",
-            {
+        const results = await Promise.all(
+          ["deadline-helper", "registration-alias"].map((specifier) =>
+            fixture(fixtureTemplate("native.test-template-4.txt", [specifier]), undefined, "", {
               preserveSymlinks,
               source: fixtureTemplate("native.test-template-3.txt"),
-            },
-          );
+            }),
+          ),
+        );
+        for (const result of results) {
           expect(result.signal).toBeNull();
           expect(result.code).toBe(1);
           expect(result.output).toContain(
@@ -130,13 +129,13 @@ describe.skipIf(process.platform !== "linux")(
         }
       },
     );
-    it("preserves around-hook execution with the composed context guard", async () => {
+    it.concurrent("preserves around-hook execution with the composed context guard", async () => {
       const result = await fixture(fixtureSource("native.test-11.txt"));
       expect(result.code, result.output).toBe(0);
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(false);
     });
-    it.each([false, true])(
+    it.concurrent.each([false, true])(
       "preserves legal package helpers with symlinks=%s",
       async (preserveSymlinks) => {
         const result = await fixture(fixtureSource("native.test-12.txt"), undefined, "", {
@@ -148,7 +147,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it.each(["aroundAll", "aroundEach"])(
+    it.concurrent.each(["aroundAll", "aroundEach"])(
       "retains native %s short-hang termination",
       async (hook) => {
         const result = await fixture(fixtureTemplate("native.test-template-1.txt", [hook]));
@@ -159,7 +158,7 @@ describe.skipIf(process.platform !== "linux")(
         expect(result.forcedCleanup).toBe(false);
       },
     );
-    it("retains native short-hang termination", async () => {
+    it.concurrent("retains native short-hang termination", async () => {
       const result = await fixture(fixtureSource("native.test-13.txt"));
       expect(result.signal).toBeNull();
       expect(result.code).toBe(1);
@@ -167,34 +166,45 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(false);
     });
-    it("accepts the inclusive configured ceiling and aliases", async () => {
+    it.concurrent("accepts the inclusive configured ceiling and aliases", async () => {
       const result = await fixture(fixtureSource("native.test-14.txt"));
       expect(result.signal).toBeNull();
       expect(result.code, result.output).toBe(0);
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(false);
     });
-    it("forwards exactly the validated options snapshot", async () => {
+    it.concurrent("forwards exactly the validated options snapshot", async () => {
       const result = await fixture(fixtureSource("native.test-15.txt"));
       expect(result.signal).toBeNull();
       expect(result.code).toBe(1);
       expect(result.output).toMatch(/timed out/i);
       expect(result.marker).toBe("continued");
     });
-    it("preserves an undefined optional deadline and typed fixture data", async () => {
+    it.concurrent("preserves an undefined optional deadline and typed fixture data", async () => {
       const result = await fixture(fixtureSource("native.test-16.txt"));
       expect(result.signal).toBeNull();
       expect(result.code, result.output).toBe(0);
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(false);
     });
-    it("uses separate outer containment for a blocked event loop", { timeout: 10000 }, async () => {
-      const result = await fixture(fixtureSource("native.test-17.txt"), undefined, "", undefined, {
-        allowSignal: true,
-      });
-      expect(result.signal).toBe("SIGKILL");
-      expect(result.marker).toBe("continued");
-      expect(result.forcedCleanup).toBe(true);
-    });
+    it.concurrent(
+      "uses separate outer containment for a blocked event loop",
+      { timeout: 10000 },
+      async () => {
+        const result = await fixture(
+          fixtureSource("native.test-17.txt"),
+          undefined,
+          "",
+          undefined,
+          {
+            allowSignal: true,
+            watchdogMs: 2500,
+          },
+        );
+        expect(result.signal).toBe("SIGKILL");
+        expect(result.marker).toBe("continued");
+        expect(result.forcedCleanup).toBe(true);
+      },
+    );
   },
 );

@@ -804,9 +804,6 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
       - name: Run JavaScript tests
         timeout-minutes: 4
         run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/4 --reporter=blob
@@ -937,9 +934,6 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
       - name: Download Linux runtime
         timeout-minutes: 6
         env:
@@ -2161,10 +2155,6 @@ jobs:
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
-
       - name: Run native CLI smoke test
         timeout-minutes: 2
         shell: bash
@@ -2290,10 +2280,6 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
 
       - name: Run native CLI smoke test
         timeout-minutes: 2
@@ -2501,10 +2487,6 @@ jobs:
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
-
       - name: Run analyzeProject on a saved fixture
         timeout-minutes: 2
         run: node .github/scripts/smoke.cjs macos napi target/debug/no-mistakes.node
@@ -2664,10 +2646,6 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
 
       - name: Run analyzeProject on a saved fixture
         timeout-minutes: 2
