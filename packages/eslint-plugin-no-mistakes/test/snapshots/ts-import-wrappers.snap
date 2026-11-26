@@ -515,6 +515,21 @@
       "rule": "server-require-nullable-fetch-wrapper"
     },
     {
+      "file": "nullable-overload.ts",
+      "findings": [],
+      "name": "overloaded local callee",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
       "file": "nullable-satisfies.ts",
       "findings": [
         {
@@ -688,6 +703,14 @@
           }
         ],
         "name": "iife.tsx",
+        "options": null
+      }
+    ],
+    "nullable-overload": [
+      {
+        "file": "nullable-overload.ts",
+        "findings": [],
+        "name": "nullable-overload.ts",
         "options": null
       }
     ],

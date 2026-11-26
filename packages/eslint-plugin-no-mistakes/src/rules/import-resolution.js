@@ -106,6 +106,18 @@ function factFromDef(def, name, context, seen) {
   return destructureFact(def.node, name, context, seen);
 }
 
+function defMayBeImport(def, context, seen) {
+  if (def?.type === "ImportBinding") return true;
+  if (def?.type !== "Variable" || !def.node?.init) return false;
+  const init = unwrapSequence(def.node.init);
+  if (!init) return false;
+  if (requireModule(init, context) !== undefined) return true;
+  if (init.type !== "Identifier" || seen.has(init.name)) return false;
+  seen.add(init.name);
+  const variable = resolveVariable(init, context);
+  return Boolean(variable?.defs.some((item) => defMayBeImport(item, context, seen)));
+}
+
 function importFact(node, context, seen = new Set()) {
   const current = unwrapSequence(node);
   if (!current || !context?.sourceCode?.getScope) return null;
@@ -119,6 +131,12 @@ function importFact(node, context, seen = new Set()) {
   seen.add(current.name);
   const variable = resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return null;
+  if (
+    variable.defs.length !== 1 &&
+    !variable.defs.some((def) => defMayBeImport(def, context, new Set([current.name])))
+  ) {
+    return null;
+  }
   if (variable.defs.length !== 1) return { unresolved: true };
   const def = variable.defs[0];
   const direct = factFromDef(def, current.name, context, seen);
@@ -166,4 +184,5 @@ module.exports = {
   importSpellings,
   reportsUnanalyzable,
   rootIdentifier,
+  typeOnlyImport,
 };

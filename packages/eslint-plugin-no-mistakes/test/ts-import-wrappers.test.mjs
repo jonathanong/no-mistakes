@@ -150,6 +150,16 @@ describe("typescript import wrappers", () => {
         "server-require-nullable-fetch-wrapper",
         { getterCalleePatterns: ["^api\\.getUser$"], requiredWrapperCallee: "withNullable" },
       ),
+      eslintCase(
+        "overloaded local callee",
+        "nullable-overload.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
       eslintCase("wrapped jsx iife", "iife.tsx", "react-no-iife-in-jsx"),
     ];
 
@@ -206,6 +216,7 @@ describe("typescript import wrappers", () => {
     expect(
       cases.find((item) => item.name === "satisfies nullable getter").findings.map((f) => f.line),
     ).toEqual([5, 6, 8]);
+    expect(cases.find((item) => item.name === "overloaded local callee").findings).toEqual([]);
     expect(
       cases.find((item) => item.name === "wrapped jsx iife").findings.map((f) => f.line),
     ).toEqual([3, 4, 5]);
@@ -239,6 +250,7 @@ describe("typescript import wrappers", () => {
         "nullable-unresolved.ts",
       ]),
       "nullable-user": oxlintOn(".oxlintrc-nullable-user.json", ["nullable-satisfies.ts"]),
+      "nullable-overload": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-overload.ts"]),
       iife: oxlintOn(".oxlintrc-iife.json", ["iife.tsx"]),
     };
     assert.equal(
@@ -250,6 +262,11 @@ describe("typescript import wrappers", () => {
       oxlint["script-ignore"].status,
       0,
       JSON.stringify(oxlint["script-ignore"].findings),
+    );
+    assert.equal(
+      oxlint["nullable-overload"].status,
+      0,
+      JSON.stringify(oxlint["nullable-overload"].findings),
     );
     assert.equal(
       oxlint.script.findings.find((item) => item.file === "app/page.tsx").findings.length,

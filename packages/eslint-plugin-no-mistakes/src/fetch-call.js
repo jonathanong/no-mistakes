@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./rules/async-ast");
+const { typeOnlyImport } = require("./rules/import-resolution");
 const { logicalCall, memberPropertyName, propertyName } = require("./rules/module-mock-helpers");
 
 const LOCAL_BINDING_TYPES = new Set([
@@ -12,13 +13,6 @@ const LOCAL_BINDING_TYPES = new Set([
   "ClassName",
 ]);
 const FETCH_ROOTS = new Set(["globalThis", "window", "self", "global"]);
-
-function typeOnlyImport(def) {
-  return (
-    def?.type === "ImportBinding" &&
-    (def.node?.importKind === "type" || def.parent?.importKind === "type")
-  );
-}
 
 function shadowsFetch(def) {
   return LOCAL_BINDING_TYPES.has(def?.type) && !typeOnlyImport(def);
