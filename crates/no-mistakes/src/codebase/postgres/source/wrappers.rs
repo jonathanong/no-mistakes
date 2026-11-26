@@ -18,7 +18,7 @@ mod restoration;
 mod semantics;
 mod span;
 use span::span;
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0, nm_shard_postgres_source)))]
 mod tests;
 use super::completeness::statement as complete;
 pub(super) use options::prepare;
