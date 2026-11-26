@@ -134,6 +134,10 @@ test.beforeAll(async () => {
 });
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`test-no-shared-state`](test-no-shared-state.md) tracks shared _mutable_
