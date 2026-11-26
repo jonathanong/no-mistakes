@@ -1,7 +1,9 @@
 //! Inverted diagnostics hooks for `no-mistakes-invocation`.
 
 use std::fmt::Arguments;
-use std::sync::{Arc, OnceLock};
+use std::io::{self, Write};
+use std::sync::{mpsc, Arc, OnceLock};
+use std::time::Duration;
 
 pub trait DiagnosticsObserver: Send + Sync {
     fn progress_enabled(&self) -> bool;
@@ -59,9 +61,46 @@ fn render_timeout_stderr_with(
         Some(hooks) => hooks.render_timeout_stderr(observer, message),
         None => match observer {
             Some(observer) => observer.render_timeout_stderr(message),
-            None => eprintln!("error: {message}"),
+            None => write_bounded_stderr(format!("error: {message}\n")),
         },
     }
+}
+
+fn write_bounded_stderr(text: String) {
+    let (completed, receiver) = mpsc::channel();
+    let _ = std::thread::Builder::new()
+        .name("no-mistakes-timeout-stderr".to_string())
+        .spawn(move || {
+            if let Ok(mut writer) = duplicate_stderr() {
+                let _ = writer.write_all(text.as_bytes());
+                let _ = writer.flush();
+            }
+            let _ = completed.send(());
+        });
+    let _ = receiver.recv_timeout(Duration::from_millis(25));
+}
+
+#[cfg(unix)]
+fn duplicate_stderr() -> io::Result<std::fs::File> {
+    use std::os::fd::AsFd;
+    std::io::stderr()
+        .as_fd()
+        .try_clone_to_owned()
+        .map(std::fs::File::from)
+}
+
+#[cfg(windows)]
+fn duplicate_stderr() -> io::Result<std::fs::File> {
+    use std::os::windows::io::AsHandle;
+    std::io::stderr()
+        .as_handle()
+        .try_clone_to_owned()
+        .map(std::fs::File::from)
+}
+
+#[cfg(not(any(unix, windows)))]
+fn duplicate_stderr() -> io::Result<impl Write> {
+    Ok(std::io::stderr())
 }
 
 #[cfg(test)]

@@ -65,7 +65,11 @@ impl DiagnosticsHooks for FakeHooks {
 fn unregistered_hooks_use_plain_stderr_and_observer_fallback() {
     assert!(current_observer_from(None).is_none());
     print_stderr_with(None, format_args!("plain message"));
-    render_timeout_stderr_with(None, None, "plain timeout".to_string());
+    {
+        // A locked stderr must not deadlock the unregistered timeout fallback.
+        let _lock = std::io::stderr().lock();
+        render_timeout_stderr_with(None, None, "plain timeout".to_string());
+    }
 
     let observer = FakeObserver::new(true);
     assert!(observer.progress_enabled());
