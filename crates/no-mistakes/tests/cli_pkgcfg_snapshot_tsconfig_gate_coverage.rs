@@ -33,6 +33,11 @@ fn tsconfig_gate_coverage_json_matches_snapshot() {
             config("missing-ci.yml"),
         ),
         (
+            "line_suppression",
+            gate_root("line-suppression"),
+            PathBuf::new(),
+        ),
+        (
             "missing_local",
             gate_root("missing-local"),
             config("missing-local.yml"),
