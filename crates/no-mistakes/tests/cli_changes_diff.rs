@@ -125,7 +125,7 @@ fn changes_diff_rejects_reserved_categories_and_ambiguous_templates() {
         ),
         (
             "invalid-id.yml",
-            "fromPath requires exactly one {id} placeholder",
+            "changes.categories.fixtures.id.fromPath: `fixtures/{id}/{id}.json` requires exactly one {id} placeholder",
         ),
     ] {
         let output = run(
@@ -133,7 +133,7 @@ fn changes_diff_rejects_reserved_categories_and_ambiguous_templates() {
             &root.join("head"),
             Some(&root.join(name)),
         );
-        assert!(!output.status.success());
+        assert_eq!(output.status.code(), Some(2), "{name}");
         let stderr = String::from_utf8(output.stderr).unwrap();
         assert!(stderr.contains(message), "{stderr}");
     }
@@ -145,11 +145,20 @@ fn changes_diff_rejects_invalid_rules_even_when_the_roots_match() {
     for (name, message) in [
         (
             "invalid-exclude.yml",
-            r#"changes category "inputs" exclude"#,
+            "changes.categories.inputs.exclude[0]: contains invalid glob",
         ),
-        ("invalid-paths.yml", r#"changes category "inputs" paths"#),
-        ("empty-glob.yml", "empty glob"),
-        ("missing-rule-paths.yml", "rule requires paths"),
+        (
+            "invalid-paths.yml",
+            "changes.categories.inputs.paths[0]: contains invalid glob",
+        ),
+        (
+            "empty-glob.yml",
+            "changes.categories.inputs.paths[0]: empty glob",
+        ),
+        (
+            "missing-rule-paths.yml",
+            "changes.categories.inputs.rules[0].paths must not be empty",
+        ),
         (
             "incomplete-key-options.yml",
             "array and idField must be supplied together",
