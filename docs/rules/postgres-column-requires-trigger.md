@@ -52,6 +52,9 @@ Findings use the object ref `table:<name>`.
 
 ## Options and defaults
 
+The loader rejects unknown keys in `requirements` entries. Use `forEachRow` to
+configure trigger granularity.
+
 `schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `requirements` defaults to `[]`, and with that
 default the rule reports nothing. Each requirement's `column` and `function`
 are required and non-empty. `timing` defaults to `before` (`before`, `after`,

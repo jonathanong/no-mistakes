@@ -90,6 +90,9 @@ complete `allowedMigrations` entry. Stale allowlist entries also fail.
 
 ## Options and defaults
 
+The loader rejects unknown keys in `allowedMigrations` entries. Use `default` to
+match a column default.
+
 An omitted or empty `sqlInclude` becomes `**/*.sql` when it is not locked by a postgres project scope. A locked empty project list stays empty. `allowedMigrations` defaults to an empty
 list, meaning no add-column operation is allowed. Entries compare `path`,
 `table`, `column`, `type`, `nullable`, and optional `default` exactly.

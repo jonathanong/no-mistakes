@@ -1,0 +1,24 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-sql-shape-policy",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "**/*.sql"
+        ],
+        "bannedShapes": [
+          "literal-limit"
+        ],
+        "shapeOptions": {
+          "literalLimit": {
+            "allowedValus": [
+              9
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

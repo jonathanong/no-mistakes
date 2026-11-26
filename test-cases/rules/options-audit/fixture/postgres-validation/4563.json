@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-column-requires-trigger",
+      "scope": "repository",
+      "options": {
+        "schemaCatalogPath": "schema.json",
+        "requirements": [
+          {
+            "column": "updated_at",
+            "function": "fn_touch_orders",
+            "timing": "before",
+            "events": [
+              "update"
+            ],
+            "forEachrRow": false
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -70,6 +70,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/cache.yml",
           "line": 19,
+          "message": "Cache `restore-keys` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- fallback-${{ format('{0}', hashFiles(format('{0}', 'nested/**'), 'assets/*/')) }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 19,
           "message": "Cache `restore-keys` calls hashFiles with broad pattern `assets/*/`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
           "rule": "github-actions-cache-key-policy",
           "sourceLine": "- fallback-${{ format('{0}', hashFiles(format('{0}', 'nested/**'), 'assets/*/')) }}"
@@ -80,6 +88,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Cache `restore-keys` calls hashFiles with broad pattern `it's, odd)/**`. Hash exact dependency paths so source changes do not invalidate the cache, or list the exact pattern in allowedHashFilesPatterns.",
           "rule": "github-actions-cache-key-policy",
           "sourceLine": "- fallback-${{ format('{0}', hashFiles(format('{0}', 'nested/**'), 'assets/*/')) }}"
+        },
+        {
+          "file": ".github/workflows/cache.yml",
+          "line": 24,
+          "message": "Cache `key` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock', 'packages/**/widgets.lock', 'src/*.json', env.pattern, env['bracket/**'], '**' && env.pattern) }}-${{ 'hashFiles(''quoted/**'')' }}",
+          "target": "unanalyzable"
         },
         {
           "file": ".github/workflows/cache.yml",

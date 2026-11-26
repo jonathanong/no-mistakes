@@ -1,0 +1,18 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-no-unbounded-sql-identifier",
+      "scope": "repository",
+      "options": {
+        "importSpecifier": "@example/db",
+        "unanalyzableSql": "ignore",
+        "identifierSources": [
+          {
+            "name": "assertIdentifier",
+            "modul": "@example/identifiers"
+          }
+        ]
+      }
+    }
+  ]
+}

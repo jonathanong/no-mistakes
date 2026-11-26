@@ -11,6 +11,10 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         decode::<rules::ast_grep_ignore_freshness::Options>,
     ),
     (
+        rules::CSP_ALLOWED_ORIGINS,
+        decode::<rules::csp_allowed_origins::options::Options>,
+    ),
+    (
         rules::declared_payload_compatibility::RULE_ID,
         decode::<rules::declared_payload_compatibility::DeclaredPayloadCompatibilityOptions>,
     ),
