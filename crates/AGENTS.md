@@ -1,9 +1,8 @@
 <!-- cspell:ignore rustc -->
-## Workspace crates
-- `crates/no-mistakes` — CLI, N-API, graph, rules; re-exports `no-mistakes-ts-facts` (`ast`, `fx`, `jsx`, `fixture_reads`, `builtin_receivers`, `module_facts`, `extract`).
-- `crates/no-mistakes-ts-facts` — pure OXC TS AST parsing, `module_facts`, and `extract` + `extract_value_flow` (no `no-mistakes` dep; `hooks.rs`).
 ## Performance Guidelines
+
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
+Pure OXC TS parsing, module facts, and value-flow extraction live in `crates/no-mistakes-ts-facts` and must not depend on `no-mistakes`.
 
 ### Core architecture invariants
 
