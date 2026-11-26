@@ -341,7 +341,13 @@ fn postgres_annotation_excluded_callers_check_json_snapshot() {
             .join(name);
         (name, root.clone(), root.join(".no-mistakes.yml"))
     });
-    assert_saved_fixture("postgres_annotation_excluded_callers", &cases);
+    // The large fixture shares the runner with other instrumented checks.
+    assert_saved_fixture_report(
+        "postgres_annotation_excluded_callers",
+        &cases,
+        &[],
+        &["--timeout", "90"],
+    );
 }
 
 #[test]
