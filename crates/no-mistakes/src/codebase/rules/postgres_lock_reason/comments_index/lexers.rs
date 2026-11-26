@@ -61,13 +61,7 @@ pub(super) fn scan_sql_quoted(
     col += 1;
     while i < bytes.len() {
         if escape && bytes[i] == b'\\' {
-            if bytes.get(i + 1) == Some(&b'\n') {
-                line += 1;
-                col = 1;
-            } else {
-                col += 2;
-            }
-            i = (i + 2).min(bytes.len());
+            i = scan_escaped(bytes, i, &mut line, &mut col);
         } else if bytes[i] == quote {
             i += 1;
             col += 1;
@@ -134,13 +128,7 @@ pub(super) fn scan_js_quoted(
     col += 1;
     while i < bytes.len() {
         if bytes[i] == b'\\' {
-            if bytes.get(i + 1) == Some(&b'\n') {
-                line += 1;
-                col = 1;
-            } else {
-                col += 2;
-            }
-            i = (i + 2).min(bytes.len());
+            i = scan_escaped(bytes, i, &mut line, &mut col);
         } else if bytes[i] == quote {
             return (i + 1, line, col + 1);
         } else if bytes[i] == b'\n' {
@@ -165,13 +153,7 @@ pub(super) fn scan_js_template(
 ) -> (usize, usize, usize) {
     while i < bytes.len() {
         if bytes[i] == b'\\' {
-            if bytes.get(i + 1) == Some(&b'\n') {
-                line += 1;
-                col = 1;
-            } else {
-                col += 2;
-            }
-            i = (i + 2).min(bytes.len());
+            i = scan_escaped(bytes, i, &mut line, &mut col);
         } else if bytes[i] == b'`' {
             index.mark_code(line, col);
             return (i + 1, line, col + 1);
@@ -190,6 +172,16 @@ pub(super) fn scan_js_template(
         }
     }
     (bytes.len(), line, col)
+}
+
+fn scan_escaped(bytes: &[u8], i: usize, line: &mut usize, col: &mut usize) -> usize {
+    if bytes.get(i + 1) == Some(&b'\n') {
+        *line += 1;
+        *col = 1;
+    } else {
+        *col += 2;
+    }
+    (i + 2).min(bytes.len())
 }
 
 fn is_ident(b: u8) -> bool {

@@ -292,3 +292,192 @@ fn embedded_routine_and_parse_failure_report_unanalyzable_gaps() {
         f.file == "app.ts" && f.message.contains("SQL could not be parsed completely")
     }));
 }
+
+#[test]
+fn lexers_cover_escapes_dollar_quotes_templates_and_unterminated_inputs() {
+    let sql = concat!(
+        "SELECT E'esc\\'\\\\\\nnext', 'it''s\nline', \"col\"\"name\", $1, $plain, 'é',\n",
+        "$tag$\n-- lock-reason: prevents: fake; writer: fake\n$tag$\n",
+        "FROM jobs FOR UPDATE\n;\n",
+        "/* outer\n /* inner */ \n lock-reason: prevents: p; writer: w */\n",
+        "SELECT id FROM jobs\n;\n",
+        "SELECT $$unterminated",
+    );
+    let sql_index = CommentIndex::for_sql(sql);
+    assert_eq!(
+        sql_index.status_for_sql_statement(1, 1, 5),
+        ReasonStatus::Absent
+    );
+    assert_eq!(
+        sql_index.status_for_sql_statement(10, 1, 10),
+        ReasonStatus::Valid
+    );
+    assert_eq!(
+        CommentIndex::for_sql("/* unterminated").status_for_sql_statement(1, 1, 1),
+        ReasonStatus::Absent
+    );
+
+    let ts = concat!(
+        "/* block\n * lock-reason: prevents: dup; writer: worker */\n",
+        "const a = 'esc\\'\\\nline';\n",
+        "const b = `tmpl \\` \\\n ${ { x: { y: 1 } } } \n tail`;\n",
+        "const c = 'é';\n",
+        "const d = \"unterminated\n",
+    );
+    let ts_index = CommentIndex::for_ts(ts);
+    assert_eq!(ts_index.status_for_ts_line(3), ReasonStatus::Valid);
+    assert_eq!(ts_index.status_for_ts_line(5), ReasonStatus::Absent);
+    assert_eq!(
+        CommentIndex::for_ts("const u = `unterminated").status_for_ts_line(1),
+        ReasonStatus::Absent
+    );
+    assert_eq!(
+        CommentIndex::for_ts("/* unterminated").status_for_ts_line(1),
+        ReasonStatus::Absent
+    );
+}
+
+#[test]
+fn reason_status_merge_and_multi_tag_parsing_cover_all_branches() {
+    assert_eq!(
+        parse_reason_text("lock-reason: incomplete\nlock-reason: prevents: dup; writer: worker"),
+        ReasonStatus::Valid
+    );
+    assert_eq!(
+        ReasonStatus::Absent.merge(ReasonStatus::MissingBoth),
+        ReasonStatus::MissingBoth
+    );
+    assert_eq!(
+        ReasonStatus::MissingBoth.merge(ReasonStatus::Absent),
+        ReasonStatus::MissingBoth
+    );
+    assert_eq!(
+        ReasonStatus::MissingBoth.merge(ReasonStatus::MissingWriter),
+        ReasonStatus::MissingWriter
+    );
+    assert_eq!(
+        ReasonStatus::MissingWriter.merge(ReasonStatus::MissingBoth),
+        ReasonStatus::MissingWriter
+    );
+    assert_eq!(
+        ReasonStatus::MissingWriter.merge(ReasonStatus::MissingPrevents),
+        ReasonStatus::MissingPrevents
+    );
+    assert_eq!(
+        ReasonStatus::MissingPrevents.merge(ReasonStatus::MissingWriter),
+        ReasonStatus::MissingPrevents
+    );
+    assert_eq!(
+        ReasonStatus::MissingPrevents.merge(ReasonStatus::Valid),
+        ReasonStatus::Valid
+    );
+    assert_eq!(
+        ReasonStatus::Valid.merge(ReasonStatus::Absent),
+        ReasonStatus::Valid
+    );
+    for status in [
+        ReasonStatus::Absent,
+        ReasonStatus::MissingBoth,
+        ReasonStatus::MissingPrevents,
+        ReasonStatus::MissingWriter,
+        ReasonStatus::Valid,
+    ] {
+        assert!(!comment::reason_message("a.sql", 1, "for-update", status).is_empty());
+    }
+}
+
+#[test]
+fn findings_and_options_cover_undeclared_executors_legacy_policy_and_unreadable_sql() {
+    use crate::codebase::postgres::{SqlFunctionCallFact, UndeclaredExecutorType};
+    use crate::config::v2::Unanalyzable;
+
+    let mut out = Vec::new();
+    let undeclared = vec![
+        UndeclaredExecutorType {
+            type_name: "Db".into(),
+            module: "@example/db".into(),
+            line: 2,
+            span: (0, 1),
+            receiver_name: "db".into(),
+            owner: None,
+            explicit_annotation: true,
+            configured_type: true,
+            known_type: false,
+        },
+        UndeclaredExecutorType {
+            type_name: "Pool".into(),
+            module: "pg".into(),
+            line: 3,
+            span: (0, 1),
+            receiver_name: "pool".into(),
+            owner: None,
+            explicit_annotation: true,
+            configured_type: false,
+            known_type: true,
+        },
+        UndeclaredExecutorType {
+            type_name: String::new(),
+            module: String::new(),
+            line: 4,
+            span: (0, 1),
+            receiver_name: "tx".into(),
+            owner: None,
+            explicit_annotation: false,
+            configured_type: false,
+            known_type: false,
+        },
+    ];
+    findings::push_undeclared_executors("app.ts", &undeclared, &mut out);
+    assert_eq!(out.len(), 3);
+    assert!(out[0].message.contains("configured executor receiver"));
+    assert!(out[1].message.contains("undeclared executor type"));
+    assert!(out[2].message.contains("has no declared executor type"));
+
+    let compiled = CompiledOptions::from_rule(
+        &rule_config(serde_json::json!({
+            "trustedSqlTags": [{ "module": "@example/sql", "name": "sql" }],
+            "helpers": ["lock_row"],
+        }))
+        .rules[0],
+    )
+    .unwrap();
+    assert!(compiled.scans_executors());
+    assert!(!findings::matches_sql_helper(
+        &compiled,
+        &SqlFunctionCallFact {
+            name_parts: Vec::new(),
+            line: 1,
+            column: 1,
+            clause: None,
+        }
+    ));
+
+    for (raw, expected) in [
+        ("report", Unanalyzable::Report),
+        ("fail", Unanalyzable::Report),
+        ("advise", Unanalyzable::Advise),
+        ("ignore", Unanalyzable::Ignore),
+    ] {
+        let cfg = rule_config(serde_json::json!({ "unanalyzableSql": raw }));
+        assert_eq!(resolve_unanalyzable(&cfg, &cfg.rules[0]).unwrap(), expected);
+    }
+
+    let invalid = rule_config(serde_json::json!({
+        "helpers": ["  "],
+        "unanalyzableSql": "bogus",
+    }));
+    let mut errors = Vec::new();
+    collect_config_errors(Path::new("."), None, &invalid, &mut errors);
+    assert_eq!(errors.len(), 2);
+
+    let root = fixture("error");
+    let cfg = rule_config(serde_json::json!({
+        "executorNames": [],
+        "sqlInclude": ["sql/**/*.sql"],
+        "unanalyzable": "report",
+    }));
+    let missing_findings = check_with_files(&root, &cfg, &[root.join("sql/missing.sql")]).unwrap();
+    assert!(missing_findings
+        .iter()
+        .any(|f| f.message.contains("SQL source could not be read")));
+}

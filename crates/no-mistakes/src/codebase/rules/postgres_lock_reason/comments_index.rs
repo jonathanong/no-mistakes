@@ -144,10 +144,6 @@ impl CommentIndex {
     }
 
     fn mark_code(&mut self, line: usize, col: usize) {
-        if line >= self.first_code_col.len() {
-            self.first_code_col.resize(line + 1, 0);
-            self.last_code_col.resize(line + 1, 0);
-        }
         if self.first_code_col[line] == 0 || col < self.first_code_col[line] {
             self.first_code_col[line] = col;
         }

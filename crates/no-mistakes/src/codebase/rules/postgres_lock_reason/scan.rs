@@ -67,14 +67,7 @@ fn native(
         let comments = match &comment_index {
             Some(index) => index,
             None => {
-                let Ok(source) = sources.read_source_path(path) else {
-                    out.unanalyzable.push(unanalyzable_finding(
-                        rel,
-                        1,
-                        "SQL source could not be read",
-                    ));
-                    return Ok(out);
-                };
+                let source = sources.read_source_path(path)?;
                 comment_index.insert(CommentIndex::for_sql(&source))
             }
         };
@@ -130,15 +123,10 @@ fn typescript(
             if !options.matches_helper(&call.callee, terminal) {
                 continue;
             }
-            let Some(comments) = load_ts_comments(path, sources, &mut ts_comments) else {
-                out.unanalyzable.push(unanalyzable_finding(
-                    rel,
-                    call.line as usize,
-                    "TypeScript source could not be read",
-                ));
-                return Ok(out);
-            };
-            let status = comments.status_for_ts_line(call.line as usize);
+            let status = load_ts_comments(path, sources, &mut ts_comments)
+                .map_or(super::comment::ReasonStatus::Absent, |comments| {
+                    comments.status_for_ts_line(call.line as usize)
+                });
             push_reason_finding(rel, call.line as usize, "helper", status, &mut out.findings);
         }
     }
