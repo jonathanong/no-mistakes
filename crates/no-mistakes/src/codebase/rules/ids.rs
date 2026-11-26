@@ -80,6 +80,7 @@ pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_lock_written_rows_only::RULE_ID as POSTGRES_LOCK_WRITTEN_ROWS_ONLY;
 pub use super::postgres_materialized_view_shape::RULE_ID as POSTGRES_MATERIALIZED_VIEW_SHAPE;
 pub use super::postgres_no_add_column::RULE_ID as POSTGRES_NO_ADD_COLUMN;
+pub use super::postgres_no_duplicate_keyed_lookups::RULE_ID as POSTGRES_NO_DUPLICATE_KEYED_LOOKUPS;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
 pub use super::postgres_no_mutable_sql_registry::RULE_ID as POSTGRES_NO_MUTABLE_SQL_REGISTRY;
 pub use super::postgres_no_offset::RULE_ID as POSTGRES_NO_OFFSET;

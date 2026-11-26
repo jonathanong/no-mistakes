@@ -27,7 +27,10 @@ pub fn profile_sql_include(rule_id: &str, patterns: Vec<String>, locked: bool) -
 fn keeps_empty_sql_include(rule_id: &str) -> bool {
     matches!(
         rule_id,
-        "postgres-explicit-columns" | "postgres-bounded-statements" | "postgres-no-offset"
+        "postgres-explicit-columns"
+            | "postgres-bounded-statements"
+            | "postgres-no-offset"
+            | "postgres-no-duplicate-keyed-lookups"
     )
 }
 

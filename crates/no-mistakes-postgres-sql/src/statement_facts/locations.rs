@@ -22,6 +22,8 @@ pub enum SqlFactSite {
     Function(usize),
     Write(usize),
     JsonWrite(usize),
+    DuplicateKeyedLookup(usize),
+    DuplicateKeyedLookupFirst(usize),
     Grouping(usize, usize),
     WriteColumn(usize, String),
     Insert(usize),

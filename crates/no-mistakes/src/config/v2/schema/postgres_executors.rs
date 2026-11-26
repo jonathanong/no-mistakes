@@ -11,6 +11,7 @@ pub(crate) const RULE_IDS: &[&str] = &[
     "postgres-required-predicates",
     "postgres-sql-shape-policy",
     "postgres-no-offset",
+    "postgres-no-duplicate-keyed-lookups",
     "postgres-no-transformed-uuid-predicates",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
@@ -31,6 +32,7 @@ pub(crate) const ALL_RULE_IDS: &[&str] = &[
     "postgres-required-predicates",
     "postgres-sql-shape-policy",
     "postgres-no-offset",
+    "postgres-no-duplicate-keyed-lookups",
     "postgres-no-transformed-uuid-predicates",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
@@ -115,5 +117,6 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-no-generated-column-writes",
     "postgres-require-query-annotation",
     "postgres-json-relation-ids",
+    "postgres-no-duplicate-keyed-lookups",
     "postgres-grouping-not-aggregation",
 ];

@@ -23,6 +23,7 @@ pub mod postgres_lock_ordering;
 pub mod postgres_lock_written_rows_only;
 pub mod postgres_materialized_view_shape;
 pub mod postgres_no_add_column;
+pub mod postgres_no_duplicate_keyed_lookups;
 pub mod postgres_no_generated_column_writes;
 pub mod postgres_no_mutable_sql_registry;
 pub mod postgres_no_offset;

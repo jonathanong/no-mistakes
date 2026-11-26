@@ -4,7 +4,6 @@ use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-
 mod generated_predicates;
 mod grouping;
 mod naming;
@@ -17,7 +16,6 @@ use schema::{
 };
 mod lock_inventory;
 mod no_offset;
-
 use naming::{
     array_columns, bounded_statements, column_naming, explicit_columns, finite_text, object_naming,
     required_predicates, status_lifecycle, table_shape,
@@ -157,6 +155,9 @@ fn run_naming_and_query_rules(
             ),
         },
         POSTGRES_NO_OFFSET => no_offset::run(root, config, files, sources, facts),
+        POSTGRES_NO_DUPLICATE_KEYED_LOOKUPS => {
+            no_offset::dup_lookups(root, config, files, sources, facts)
+        }
         POSTGRES_NO_TRANSFORMED_UUID_PREDICATES => match facts {
             Some(facts) => {
                 postgres_no_transformed_uuid_predicates::check_with_files_sources_and_facts(
@@ -185,14 +186,9 @@ fn run_naming_and_query_rules(
             status_lifecycle(root, config, files, sources, facts)
         }
         POSTGRES_TABLE_SHAPE => table_shape(root, config, files, sources, facts),
-        POSTGRES_IDEMPOTENT_INSERT => match facts {
-            Some(facts) => postgres_idempotent_insert::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => postgres_idempotent_insert::check_with_files_and_sources(
-                root, config, files, sources,
-            ),
-        },
+        POSTGRES_IDEMPOTENT_INSERT => {
+            no_offset::idempotent_insert(root, config, files, sources, facts)
+        }
         _ => return None,
     })
 }

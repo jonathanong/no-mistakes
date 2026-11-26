@@ -1,0 +1,237 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 4,
+          "message": "Merge duplicate table lookups: queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT tier FROM accounts WHERE id = o.account_id) AS account_tier,",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 6,
+          "message": "Merge duplicate table lookups: queries/check.sql:6: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 5); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT p2.handle FROM profiles p2 WHERE o.owner_id = p2.id) AS owner_handle",
+          "target": "profiles"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_sql_unscanned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled_by_config": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "distinct_and_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/queries.ts",
+          "line": 44,
+          "message": "src/queries.ts:44: postgres-no-duplicate-keyed-lookups application #0 has unresolved SQL for duplicate-keyed-lookups: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "return query(rawSql);",
+          "target": "duplicate-keyed-lookups"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/queries.ts",
+          "line": 8,
+          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id) AS account_tier",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/queries.ts",
+          "line": 8,
+          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id) AS account_tier",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/queries.ts",
+          "line": 44,
+          "message": "src/queries.ts:44: executed SQL is not statically recoverable, so duplicate keyed lookups cannot be checked; pass static SQL or set unanalyzable: advise or ignore",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "return query(rawSql);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/queries.ts",
+          "line": 8,
+          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id) AS account_tier",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "joins_and_mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 12,
+          "message": "queries/check.sql:12: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 14); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT p2.avatar_url FROM profiles p2 WHERE p2.id = o.owner_id) AS owner_avatar",
+          "target": "profiles"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 22,
+          "message": "queries/check.sql:22: duplicate keyed lookup of `accounts` on `id = CAST(o.raw_account_id AS UUID)` (already looked up at line 21); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN accounts a2 ON a2.id = CAST(o.raw_account_id AS uuid);",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 7,
+          "message": "queries/check.sql:7: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 6); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN accounts a2 ON o.account_id = a2.id;",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scalar_subqueries": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 4,
+          "message": "queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT tier FROM accounts WHERE id = o.account_id) AS account_tier,",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 6,
+          "message": "queries/check.sql:6: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 5); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT p2.handle FROM profiles p2 WHERE o.owner_id = p2.id) AS owner_handle",
+          "target": "profiles"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sql_suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 15,
+          "message": "queries/check.sql:15: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 14); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN profiles p2 ON p2.id = o.owner_id;",
+          "target": "profiles"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

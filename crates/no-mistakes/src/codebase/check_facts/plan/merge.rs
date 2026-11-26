@@ -123,6 +123,7 @@ impl CheckFactPlan {
         self.postgres_bounds |= other.postgres_bounds;
         self.postgres_lock_inventory |= other.postgres_lock_inventory;
         self.postgres_json_writes |= other.postgres_json_writes;
+        self.postgres_duplicate_keyed_lookups |= other.postgres_duplicate_keyed_lookups;
         self.postgres_grouping |= other.postgres_grouping;
         self.postgres_index_probes |= other.postgres_index_probes;
         self.postgres_body_bounds |= other.postgres_body_bounds;

@@ -100,6 +100,7 @@ macro_rules! filesystem_rules {
             POSTGRES_LOCK_ORDERING => postgres_lock_ordering::check_with_files => "",
             POSTGRES_LOCK_INVENTORY => postgres_lock_inventory::check_with_files => "",
             POSTGRES_NO_OFFSET => postgres_no_offset::check_with_files => "",
+            POSTGRES_NO_DUPLICATE_KEYED_LOOKUPS => postgres_no_duplicate_keyed_lookups::check_with_files => "",
             POSTGRES_NO_TRANSFORMED_UUID_PREDICATES => postgres_no_transformed_uuid_predicates::check_with_files => "",
             POSTGRES_IDENTIFIER_LENGTH => postgres_identifier_length::check_with_files => "",
             POSTGRES_ARRAY_COLUMNS => postgres_array_columns::check_with_files => "",

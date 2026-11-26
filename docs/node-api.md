@@ -1230,6 +1230,14 @@ type and takes precedence over `unanalyzableSql`. Its `report` mode also emits
 advice and `ignore` suppresses diagnostic advice. Proven grouping findings stay
 advisory in every mode.
 
+The opt-in [`postgres-no-duplicate-keyed-lookups`](rules/postgres-no-duplicate-keyed-lookups.md)
+rule runs through the existing asynchronous `check()` and `analyzeProject()`
+check report APIs; it adds no runtime export. Import
+`PostgresNoDuplicateKeyedLookupsOptions` and
+`PostgresNoDuplicateKeyedLookupsUnanalyzableSql` from `no-mistakes`. It shares
+the request-scoped prepared SQL facts, `unanalyzable` policy, and suppression
+directives with CLI `check`.
+
 ### PostgreSQL lock inventory
 
 `await postgresLockInventory({ root, config, writeBaseline: false })` returns

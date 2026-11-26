@@ -24,6 +24,14 @@ pub(super) fn collect(
     for (i, fact) in facts.json_writes.iter().enumerate() {
         out.insert(Site::JsonWrite(i), fact.line, fact.column_position);
     }
+    for (i, fact) in facts.duplicate_keyed_lookups.iter().enumerate() {
+        out.insert(Site::DuplicateKeyedLookup(i), fact.line, fact.column);
+        out.insert(
+            Site::DuplicateKeyedLookupFirst(i),
+            fact.first_line,
+            fact.first_column,
+        );
+    }
     for (i, fact) in facts.transformed_column_uses.iter().enumerate() {
         out.insert(Site::TransformedColumn(i), fact.line, fact.column_position);
         out.insert(

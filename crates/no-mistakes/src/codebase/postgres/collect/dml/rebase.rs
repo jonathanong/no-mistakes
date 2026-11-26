@@ -16,11 +16,11 @@ pub(crate) fn rebase_embedded_lines(
         origins: call
             .sql_source_positions
             .iter()
-            .map(|position| {
+            .map(|p| {
                 (
-                    position.sql_line as usize,
-                    position.sql_column as usize,
-                    position.source_line as usize,
+                    p.sql_line as usize,
+                    p.sql_column as usize,
+                    p.source_line as usize,
                 )
             })
             .collect(),
@@ -83,6 +83,11 @@ pub(crate) fn rebase_embedded_lines(
     for (i, write) in facts.json_writes.iter_mut().enumerate() {
         write.line = physical_line(SqlFactSite::JsonWrite(i), write.line, write.column_position);
     }
+    for (i, l) in facts.duplicate_keyed_lookups.iter_mut().enumerate() {
+        let first = SqlFactSite::DuplicateKeyedLookupFirst(i);
+        l.line = physical_line(SqlFactSite::DuplicateKeyedLookup(i), l.line, l.column);
+        l.first_line = physical_line(first, l.first_line, l.first_column);
+    }
     for (i, select) in facts.selects.iter_mut().enumerate() {
         select.line = physical_line(SqlFactSite::Select(i), select.line, 1);
         for (j, relation) in select.relations.iter_mut().enumerate() {
@@ -113,11 +118,8 @@ pub(crate) fn rebase_embedded_lines(
         use_.line = physical_line(SqlFactSite::MutationColumn(i), use_.line, 1);
     }
     for (i, use_) in facts.transformed_column_uses.iter_mut().enumerate() {
-        use_.line = physical_line(
-            SqlFactSite::TransformedColumn(i),
-            use_.line,
-            use_.column_position,
-        );
+        let site = SqlFactSite::TransformedColumn(i);
+        use_.line = physical_line(site, use_.line, use_.column_position);
     }
     for (i, star) in facts.returning_stars.iter_mut().enumerate() {
         star.line = physical_line(SqlFactSite::ReturningStar(i), star.line, 1);
@@ -135,7 +137,6 @@ pub(crate) fn rebase_embedded_lines(
     rebase_source_lines(facts, &source_line);
     facts.variant_locations = locations;
 }
-
 fn policy_lines(
     facts: &mut SqlStatementFileFacts,
     line: &impl Fn(SqlFactSite, usize, usize) -> usize,
@@ -156,7 +157,6 @@ fn policy_lines(
         statement.line = line(SqlFactSite::StatementKind(i), statement.line, 1);
     }
 }
-
 fn grouping_identity(
     call: &EmbeddedSqlCall,
     site: &SqlFactSite,

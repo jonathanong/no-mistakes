@@ -17,6 +17,7 @@ require("./api-tests/declarations-live-repository-scan");
 require("./api-tests/declarations-postgres");
 require("./api-tests/postgres-lock-inventory");
 require("./api-tests/declarations-grouping");
+require("./api-tests/declarations-duplicate-keyed-lookups");
 require("./api-tests/declarations-graph");
 require("./api-tests/declarations-queue-factories");
 require("./api-tests/declarations-executor-diagnostics");
@@ -505,6 +506,7 @@ test("PostgreSQL executor options expose additive selection and final exclusions
     "postgres-mutable-sql-registry-types.d.ts",
     "postgres-json-relation-ids-types.d.ts",
     "postgres-grouping-not-aggregation-types.d.ts",
+    "postgres-duplicate-keyed-lookups-types.d.ts",
     "postgres-uuid-predicate-types.d.ts",
     "postgres-unbounded-identifier-types.d.ts",
   ]) {

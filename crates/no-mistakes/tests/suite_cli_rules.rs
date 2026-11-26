@@ -341,6 +341,8 @@ mod cli_postgres_option_validation;
 mod cli_postgres_rule_timings;
 #[path = "cli_postgres_snapshot_materialized_view_shape.rs"]
 mod cli_postgres_snapshot_materialized_view_shape;
+#[path = "cli_postgres_snapshot_no_duplicate_keyed_lookups.rs"]
+mod cli_postgres_snapshot_no_duplicate_keyed_lookups;
 #[path = "cli_postgres_unused_disables.rs"]
 mod cli_postgres_unused_disables;
 

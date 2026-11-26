@@ -84,6 +84,7 @@ pub(in super::super) fn sql_policy_rule(rule: &str) -> bool {
             | "postgres-idempotent-insert"
             | "postgres-lock-ordering"
             | "postgres-lock-written-rows-only"
+            | "postgres-no-duplicate-keyed-lookups"
             | "postgres-no-generated-column-writes"
             | "postgres-no-offset"
             | "postgres-no-transformed-uuid-predicates"

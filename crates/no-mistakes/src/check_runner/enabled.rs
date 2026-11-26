@@ -119,6 +119,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         postgres_bounds: false,
         postgres_lock_inventory: false,
         postgres_json_writes: false,
+        postgres_duplicate_keyed_lookups: false,
         postgres_grouping: false,
         postgres_body_bounds: false,
         postgres_index_probes: false,

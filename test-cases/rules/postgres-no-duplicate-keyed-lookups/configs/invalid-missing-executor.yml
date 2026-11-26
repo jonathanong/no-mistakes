@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-no-duplicate-keyed-lookups
+    scope: repository
+    options:
+      sqlInclude: ["queries/**/*.sql"]

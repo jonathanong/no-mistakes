@@ -16,6 +16,7 @@ mod fallback;
 mod insert;
 mod insert_source;
 mod json_writes;
+mod keyed_lookups;
 mod limit;
 mod lines;
 #[doc(hidden)]

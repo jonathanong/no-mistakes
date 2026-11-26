@@ -99,6 +99,7 @@ rules:
   - {rule: postgres-lock-written-rows-only, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-materialized-view-shape, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-no-add-column, scope: repository, options: {bogusOption: true}}
+  - {rule: postgres-no-duplicate-keyed-lookups, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-no-generated-column-writes, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-no-mutable-sql-registry, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-no-offset, scope: repository, options: {bogusOption: true}}

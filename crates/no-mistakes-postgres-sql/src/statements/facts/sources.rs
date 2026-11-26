@@ -7,6 +7,7 @@ pub struct StatementPolicySources<'a> {
     pub bind_values: super::super::bounds::BindValues,
     pub collect_lock_inventory: bool,
     pub collect_json_writes: bool,
+    pub collect_duplicate_keyed_lookups: bool,
     pub collect_grouping: bool,
     pub grouping_complete: Option<&'a [bool]>,
     pub collect_index_probes: bool,

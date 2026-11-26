@@ -3,6 +3,7 @@ mod debug;
 mod grouping;
 mod iteration;
 mod json_writes;
+mod keyed_lookups;
 mod locations;
 mod parse_failures;
 mod select;
@@ -17,6 +18,7 @@ pub use bounds::{
 pub use grouping::SqlGroupingQuery;
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 pub use json_writes::SqlJsonWriteFact;
+pub use keyed_lookups::SqlDuplicateKeyedLookupFact;
 #[doc(hidden)]
 pub use locations::SqlLocationDemand;
 pub use locations::{SqlFactPosition, SqlFactSite, SqlVariantLocations};
@@ -58,6 +60,7 @@ pub struct SqlStatementFileFacts {
     /// Syntactic write targets; catalog resolution happens after preparation.
     pub writes: Vec<SqlWriteFact>,
     pub json_writes: Vec<SqlJsonWriteFact>,
+    pub duplicate_keyed_lookups: Vec<SqlDuplicateKeyedLookupFact>,
     #[doc(hidden)]
     pub grouping_queries: Vec<SqlGroupingQuery>,
     pub inserts: Vec<SqlInsertFact>,

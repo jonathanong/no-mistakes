@@ -128,6 +128,9 @@ and [`postgres-required-predicates`](../rules/postgres-required-predicates.md#ef
 also support `low` with the bounded SQL helper subset. Unsupported shapes follow
 the shared unanalyzable policy; selected `.sql` files retain their existing
 analysis. See the [bounded helper contract](../postgres-facts/low-helper-recovery.md).
+The opt-in [`postgres-no-duplicate-keyed-lookups`](../rules/postgres-no-duplicate-keyed-lookups.md)
+rule runs on configured embedded TS/JS SQL and `sqlInclude` files, using the
+same shared prepared SQL facts, disable directives, and `unanalyzable` policy.
 For eligible bounded `postgres-no-offset` source selections with
 `reportUnusedDisableDirectives: ignore`, prepared SQL facts
 start at files selected by the rule and follow only resolved import/re-export

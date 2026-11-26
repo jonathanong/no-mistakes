@@ -201,3 +201,32 @@ fn github_actions_cache_setup_policy_is_in_the_public_inventory() {
         assert!(read(&root.join(file)).contains(rule), "{file}");
     }
 }
+
+#[test]
+fn postgres_no_duplicate_keyed_lookups_is_documented() {
+    let rule = no_mistakes::codebase::rules::POSTGRES_NO_DUPLICATE_KEYED_LOOKUPS;
+    assert_eq!(rule, "postgres-no-duplicate-keyed-lookups");
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let body = read(&root.join(format!("docs/rules/{rule}.md")));
+    for phrase in [
+        "off by default",
+        "sqlInclude",
+        "unanalyzable",
+        "## Valid example",
+        "## Counterexample",
+        "## Fix",
+        "## Suppression",
+    ] {
+        assert!(body.contains(phrase), "missing {phrase}");
+    }
+    for path in [
+        "docs/rules/README.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}

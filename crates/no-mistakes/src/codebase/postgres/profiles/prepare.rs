@@ -75,6 +75,7 @@ pub(crate) fn prepare_rule_sql_facts(
                 "postgres-no-test-state-mutation"
                     | "postgres-lock-inventory"
                     | "postgres-sql-shape-policy"
+                    | "postgres-no-duplicate-keyed-lookups"
                     | "postgres-require-query-annotation"
                     | "postgres-lock-ordering"
                     | "postgres-lock-written-rows-only"
@@ -116,6 +117,7 @@ pub(crate) fn prepare_rule_sql_facts(
                 .rule_applications("postgres-json-relation-ids")
                 .iter()
                 .any(|rule| rule.options.get("idKeyPattern").is_some()),
+        postgres_duplicate_keyed_lookups: rule_ids.contains(&"postgres-no-duplicate-keyed-lookups"),
         postgres_grouping: rule_ids.contains(&"postgres-grouping-not-aggregation")
             && super::plan::grouping_requested(config),
         postgres_index_probes: rule_ids.contains(&"postgres-required-predicates"),
