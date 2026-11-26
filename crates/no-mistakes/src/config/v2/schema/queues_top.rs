@@ -15,6 +15,10 @@ pub(crate) mod queues_include_tests;
 pub use queues_include_tests::QueueIncludeTestsConfig;
 use queues_include_tests::{deserialize_include_tests, serialize_include_tests};
 
+fn normalize_allow_path(pattern: &str) -> &str {
+    pattern.trim_start_matches("./")
+}
+
 pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
     if patterns.is_empty() {
         return None;
@@ -23,7 +27,10 @@ pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
     crate::queue::allow_paths_test_hook::note_build();
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
-        if let Ok(glob) = GlobBuilder::new(pattern).literal_separator(false).build() {
+        if let Ok(glob) = GlobBuilder::new(normalize_allow_path(pattern))
+            .literal_separator(false)
+            .build()
+        {
             builder.add(glob);
         }
     }
@@ -32,7 +39,7 @@ pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
 
 pub(super) fn validate_allow_paths(key: &str, patterns: &[String]) -> Result<(), String> {
     for pattern in patterns {
-        GlobBuilder::new(pattern)
+        GlobBuilder::new(normalize_allow_path(pattern))
             .literal_separator(false)
             .build()
             .map_err(|error| format!("invalid {key} glob `{pattern}`: {error}"))?;

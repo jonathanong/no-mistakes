@@ -374,6 +374,9 @@ mod cli_check_queue_diagnostics;
 #[path = "cli_check_queue_rate_limit.rs"]
 mod cli_check_queue_rate_limit;
 
+#[path = "cli_check_queue_shared_rate_limit.rs"]
+mod cli_check_queue_shared_rate_limit;
+
 #[path = "cli_check_rules_no_single_enqueue_in_loop.rs"]
 mod cli_check_rules_no_single_enqueue_in_loop;
 

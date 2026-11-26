@@ -45,6 +45,7 @@ pub(crate) fn source_may_have_queue_facts(
         b"getFailed",
         b"getCompleted",
         b"getJobs",
+        b"RateLimitError",
         b"export *",
     ];
     STATIC_NEEDLES
