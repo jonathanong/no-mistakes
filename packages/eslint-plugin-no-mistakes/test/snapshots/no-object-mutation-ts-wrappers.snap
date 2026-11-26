@@ -1,0 +1,218 @@
+[
+  {
+    "file": "no-object-mutation-ts-wrappers.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 22,
+        "endLine": 8,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 8,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 9,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 9,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 10,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 10,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 11,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 11,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 37,
+        "endLine": 12,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 12,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 33,
+        "endLine": 13,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 13,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 24,
+        "endLine": 14,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 14,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 25,
+        "endLine": 15,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 15,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 24,
+        "endLine": 16,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 16,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 22,
+        "endColumn": 33,
+        "endLine": 17,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 17,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 24,
+        "endLine": 18,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 18,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 25,
+        "endLine": 19,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 19,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 24,
+        "endLine": 20,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 20,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 15,
+        "endLine": 21,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 21,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 30,
+        "endLine": 21,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 21,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 18,
+        "endLine": 22,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 22,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 19,
+        "endLine": 23,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 23,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 20,
+        "endLine": 26,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 26,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 26,
+        "endLine": 34,
+        "file": "no-object-mutation-ts-wrappers.ts",
+        "line": 34,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  }
+]
