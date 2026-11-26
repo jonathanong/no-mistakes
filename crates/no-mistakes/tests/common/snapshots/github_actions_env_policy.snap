@@ -117,6 +117,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "null": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 12,
+          "message": ".github/workflows/ci.yml: job \"example\" step 2 sets env `SAMPLE_MODE` to `enabled`. Set `SAMPLE_MODE` to ``. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "SAMPLE_MODE: enabled",
+          "target": "SAMPLE_MODE"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {

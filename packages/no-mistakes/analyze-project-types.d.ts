@@ -29,6 +29,7 @@ import type {
   SwiftOptions,
 } from "./report-types";
 import type {
+  GitDiffRevisions,
   LockfileDiffOptions,
   TestsImpactOptions,
   TestsPlanDocumentOptions,
@@ -141,7 +142,11 @@ export type AnalyzeProjectReportRequest =
   | ({ type: "ciImpact"; id?: string } & BatchedRootConfigOptions<CiImpactOptions>)
   | ({ type: "ciEnv"; id?: string } & BatchedRootConfigOptions<CiEnvOptions>)
   | ({ type: "ciTopology"; id?: string } & BatchedRootConfigOptions<CiTopologyOptions>)
-  | ({ type: "impactedChecks"; id?: string } & BatchedRootTsConfigOptions<ImpactedChecksOptions>)
+  | ({
+      type: "impactedChecks";
+      id?: string;
+    } & BatchedRootTsConfigOptions<ImpactedChecksOptions> &
+      GitDiffRevisions)
   | ({
       type: "infraResourceRefs" | "infraOutputs" | "infraTestFor";
       id?: string;

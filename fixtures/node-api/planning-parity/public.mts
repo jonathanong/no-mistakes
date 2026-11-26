@@ -18,6 +18,8 @@ void analyzeProject({ reports: [{ type: "impactedChecks", ...revisions }] });
 void impactedChecks({ head: "HEAD" });
 // @ts-expect-error A head revision needs a base.
 void testsPlan({ framework: "vitest", head: "HEAD" });
+// @ts-expect-error Batched impacted checks also need a base.
+void analyzeProject({ reports: [{ type: "impactedChecks", head: "HEAD" }] });
 // @ts-expect-error Batched planning also needs a base when head is present.
 void analyzeProject({ reports: [{ type: "testsPlan", head: "HEAD" }] });
 

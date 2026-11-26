@@ -26,6 +26,7 @@ const linuxFiles = [
   "packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js",
   "packages/no-mistakes/scripts/type-import-order-api.test.js",
   "packages/no-mistakes/scripts/planning-impact-cli.test.js",
+  "packages/no-mistakes/scripts/planning-parity-api.test.js",
   "packages/no-mistakes/scripts/postgres-source-api.test.js",
   "packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js",
   "packages/no-mistakes/scripts/postgres-quantified-api.test.js",
