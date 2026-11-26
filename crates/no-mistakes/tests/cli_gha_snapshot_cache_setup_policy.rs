@@ -11,12 +11,18 @@ fn github_actions_cache_setup_policy_matches_snapshot() {
         "cache-only",
         "setup-only",
         "external-action",
+        "unavailable",
     ]
     .map(|mode| {
+        let (fixture, config) = if mode == "unavailable" {
+            ("unavailable", "report")
+        } else {
+            ("workflows", mode)
+        };
         (
             mode,
-            rules_path(RULE, "fixture", "workflows"),
-            rules_path(RULE, "configs", &format!("{mode}.yml")),
+            rules_path(RULE, "fixture", fixture),
+            rules_path(RULE, "configs", &format!("{config}.yml")),
         )
     });
     let result = assert_saved_fixture_report("github_actions_cache_setup_policy", &cases, &[], &[]);
@@ -42,6 +48,11 @@ fn github_actions_cache_setup_policy_matches_snapshot() {
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["target"], "cache-key-shape");
     assert_eq!(rows[0]["file"], "tools/actions/example/action.yml");
+    let unavailable = &result["unavailable"];
+    assert_eq!(unavailable["exitCode"], 1);
+    let rows = unavailable["report"]["rules"].as_array().unwrap();
+    assert_eq!(rows.len(), 2);
+    assert!(rows.iter().all(|row| row["target"] == "unanalyzable"));
     for (mode, expected) in [
         ("cache-only", "cache-key-shape"),
         ("setup-only", "setup-deadline"),

@@ -595,5 +595,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "unavailable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/invalid-jobs.yml",
+          "line": 1,
+          "message": ".github/workflows/invalid-jobs.yml:1: workflow jobs must be a mapping",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "name: Widgets",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/invalid-utf8.yml",
+          "line": 3,
+          "message": ".github/workflows/invalid-utf8.yml:3: cannot read YAML source",
+          "rule": "github-actions-cache-setup-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
   }
 }
