@@ -1,0 +1,166 @@
+{
+  "reportUnusedAllowEntries": "ignore",
+  "rules": [
+    {
+      "rule": "postgres-no-unbounded-sql-identifier",
+      "scope": "repository",
+      "options": {
+        "importSpecifier": "@example/db",
+        "unanalyzableSql": "ignore",
+        "identifierValidators": [
+          {
+            "name": "assertIdentifier",
+            "module": "@example/identifiers",
+            "argument": 0
+          }
+        ],
+        "identifierSources": [
+          {
+            "name": "identifier",
+            "module": "@example/identifiers"
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-no-mutable-sql-registry",
+      "scope": "repository",
+      "options": {
+        "importSpecifier": "@example/db",
+        "unanalyzableSql": "advise"
+      }
+    },
+    {
+      "rule": "postgres-required-predicates",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "**/*.sql"
+        ],
+        "relations": [
+          {
+            "table": "orders",
+            "requireColumns": [
+              "account_id"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-table-shape",
+      "scope": "repository",
+      "options": {
+        "schemaCatalogPath": "schema.json",
+        "shapes": [
+          {
+            "name": "example",
+            "tablePattern": "^orders$",
+            "requiredColumns": [
+              {
+                "name": "account_id",
+                "type": "uuid"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-sql-shape-policy",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "**/*.sql"
+        ],
+        "bannedShapes": [
+          "literal-limit"
+        ],
+        "shapeOptions": {
+          "literalLimit": {
+            "allowedValues": [
+              9
+            ]
+          }
+        }
+      }
+    },
+    {
+      "rule": "postgres-no-generated-column-writes",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "**/*.sql"
+        ],
+        "extraGeneratedColumns": [
+          {
+            "table": "orders",
+            "column": "generated_marker"
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-sql-fragment-escape",
+      "scope": "repository",
+      "options": {
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-no-add-column",
+      "scope": "repository",
+      "options": {
+        "sqlInclude": [
+          "**/*.sql"
+        ],
+        "allowedMigrations": [
+          {
+            "path": "example.sql",
+            "table": "orders",
+            "column": "status",
+            "type": "TEXT",
+            "nullable": false,
+            "default": "'pending'"
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-column-requires-trigger",
+      "scope": "repository",
+      "options": {
+        "schemaCatalogPath": "schema.json",
+        "requirements": [
+          {
+            "column": "updated_at",
+            "function": "touch_orders",
+            "timing": "before",
+            "events": [
+              "update"
+            ],
+            "forEachRow": true
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-object-naming",
+      "scope": "repository",
+      "options": {
+        "schemaCatalogPath": "schema.json",
+        "doubleUnderscore": {
+          "allowPattern": "^orders__slice$"
+        }
+      }
+    }
+  ]
+}

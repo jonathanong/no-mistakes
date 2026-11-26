@@ -14,6 +14,7 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
     (
         rules::postgres_no_mutable_sql_registry::RULE_ID,
         |rule, _| {
+            crate::config::v2::validate_low_alias(rule)?;
             rules::postgres_sql_cross_file::compile(&rule.rule, &rule.strict_rule_options()?)
                 .map(drop)
         },
@@ -42,6 +43,7 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
     (
         rules::postgres_no_unbounded_sql_identifier::RULE_ID,
         |rule, _| {
+            crate::config::v2::validate_low_alias(rule)?;
             rules::postgres_sql_cross_file::compile(&rule.rule, &rule.strict_rule_options()?)
                 .map(drop)
         },

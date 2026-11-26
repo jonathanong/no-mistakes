@@ -707,6 +707,10 @@ throws, then interpolate that helper. Keep values in tagged binds.
 
 ## Options and defaults
 
+The loader rejects unknown keys in `identifierValidators` and
+`identifierSources`. Use `module` to restrict a declaration to one import. The
+legacy `unanalyzableSql` option accepts `fail`, `advise`, and `ignore`.
+
 `importSpecifier` defaults to empty and must be set (or set `executorNames`) to
 select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is

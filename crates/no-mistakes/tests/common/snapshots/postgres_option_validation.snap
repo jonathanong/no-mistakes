@@ -1,0 +1,89 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "4390": {
+    "exitCode": 2,
+    "stderr": "error: 4390.json:13: invalid options for rule `postgres-no-unbounded-sql-identifier` at options.identifierValidators[0].modul: unknown field `modul`, expected one of `module`, `name`, `argument`\n"
+  },
+  "4391": {
+    "exitCode": 2,
+    "stderr": "error: 4391.json:12: invalid options for rule `postgres-no-unbounded-sql-identifier` at options.identifierSources[0].modul: unknown field `modul`, expected `module` or `name`\n"
+  },
+  "4393": {
+    "exitCode": 2,
+    "stderr": "error: 4393.json:14: invalid options for rule `postgres-required-predicates` at options.relations[0].requireColums: unknown field `requireColums`, expected one of `table`, `require`, `requireColumns`\n"
+  },
+  "4395": {
+    "exitCode": 2,
+    "stderr": "error: 4395.json:15: invalid options for rule `postgres-table-shape` at options.shapes[0].requiredColumns[0].foreginKey: unknown field `foreginKey`, expected one of `name`, `namePattern`, `type`, `nullable`, `foreignKey`, `onDelete`, `references`\n"
+  },
+  "4395-2": {
+    "exitCode": 2,
+    "stderr": "error: 4395-2.json:17: invalid options for rule `postgres-table-shape` at options.shapes[0].unexpectedField: unknown field `unexpectedField`, expected one of `name`, `tablePattern`, `requiredColumns`, `primaryKeyTypes`, `forbiddenColumns`, `requiredTriggers`\n"
+  },
+  "4396": {
+    "exitCode": 2,
+    "stderr": "error: 4396.json:16: invalid options for rule `postgres-sql-shape-policy` at options.shapeOptions.literalLimit.allowedValus: unknown field `allowedValus`, expected `allowedValues`\n"
+  },
+  "4396-2": {
+    "exitCode": 2,
+    "stderr": "error: 4396-2.json:15: invalid options for rule `postgres-sql-shape-policy` at options.shapeOptions.unexpectedField: unknown field `unexpectedField`, expected one of `bannedFunctionCall`, `literalLimit`, `keysetOnlySweep`\n"
+  },
+  "4397": {
+    "exitCode": 2,
+    "stderr": "error: 4397.json:14: invalid options for rule `postgres-no-generated-column-writes` at options.extraGeneratedColumns[0].colum: unknown field `colum`, expected `table` or `column`\n"
+  },
+  "4399": {
+    "exitCode": 2,
+    "stderr": "error: 4399.json:7: postgres-sql-fragment-escape: options.trustedSqlTags[0].module must be nonblank\n"
+  },
+  "4399-2": {
+    "exitCode": 2,
+    "stderr": "error: 4399-2.json:7: postgres-sql-fragment-escape: options.trustedSqlTags[0].name must be nonblank\n"
+  },
+  "4559": {
+    "exitCode": 2,
+    "stderr": "error: 4559.json:8: postgres-no-unbounded-sql-identifier: invalid options.unanalyzableSql\n"
+  },
+  "4559-2": {
+    "exitCode": 2,
+    "stderr": "error: 4559-2.json:8: postgres-no-unbounded-sql-identifier: invalid options.unanalyzableSql\n"
+  },
+  "4560": {
+    "exitCode": 2,
+    "stderr": "error: 4560.json:8: postgres-no-mutable-sql-registry: invalid options.unanalyzableSql\n"
+  },
+  "4560-2": {
+    "exitCode": 2,
+    "stderr": "error: 4560-2.json:8: postgres-no-mutable-sql-registry: invalid options.unanalyzableSql\n"
+  },
+  "4561": {
+    "exitCode": 2,
+    "stderr": "error: 4561.json:8: postgres-required-predicates: options.sqlInclude: invalid sqlInclude glob \"[\": error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4562": {
+    "exitCode": 2,
+    "stderr": "error: 4562.json:17: invalid options for rule `postgres-no-add-column` at options.allowedMigrations[0].defualt: unknown field `defualt`, expected one of `path`, `table`, `column`, `type`, `nullable`, `default`\n"
+  },
+  "4563": {
+    "exitCode": 2,
+    "stderr": "error: 4563.json:16: invalid options for rule `postgres-column-requires-trigger` at options.requirements[0].forEachrRow: unknown field `forEachrRow`, expected one of `column`, `function`, `timing`, `events`, `forEachRow`, `allowColumnList`\n"
+  },
+  "4564": {
+    "exitCode": 2,
+    "stderr": "error: 4564.json:9: invalid options for rule `postgres-object-naming` at options.doubleUnderscore.allowPatern: unknown field `allowPatern`, expected `allowPattern`\n"
+  },
+  "valid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -26,8 +26,8 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         rules::postgres_require_named_constraints::RULE_ID,
         decode::<rules::simple_schema_rule::Options>,
     ),
-    (
-        rules::postgres_sql_fragment_escape::RULE_ID,
-        decode::<rules::postgres_sql_fragment_escape::Options>,
-    ),
+    (rules::postgres_sql_fragment_escape::RULE_ID, |rule, _| {
+        let options: rules::postgres_sql_fragment_escape::Options = rule.strict_rule_options()?;
+        options.validate()
+    }),
 ];

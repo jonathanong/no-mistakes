@@ -186,6 +186,9 @@ export const tables = { users: "app.users" } as const;
 
 ## Options and defaults
 
+The loader validates the legacy `unanalyzableSql` option. Use `fail`, `advise`,
+or `ignore`.
+
 `importSpecifier` defaults to empty and must be set (or set `executorNames`) to
 select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is
