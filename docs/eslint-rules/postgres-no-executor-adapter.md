@@ -508,9 +508,14 @@ safe. The rule does not follow a stored object or array (properties can
 change), a property read, a spread element, a getter or setter, or a private
 method. It does not follow `read.bind` passed without calling it, or `.bind`
 on a callback. `read?.bind(null)` and `read.bind?.(null)` are that bind when
-the chain runs. A string or expression-free template key is the same member
-(`db["read"]`, ``db[`read`]``, `read["call"]`, ``read[`apply`]``). A computed
-identifier key (`db[name]`, `read[name]`) is not a static name. `.bind`
+the chain runs. A string, expression-free template, or immutable `const` string
+binding is a static key (`db["read"]`, ``db[`read`]``, `const key = "read" as
+const; db[key]`, `read["call"]`, ``read[`apply`]``). Namespace provenance is
+preserved through TypeScript casts (`const alias = db as typeof db`), `const`
+rest copies (`const { ...rest } = db`), object spreads (`{ ...db }`), and
+nested destructuring (`const { nested: { read } } = { nested: db }`). A
+non-`const` or parameter computed identifier key (`db[name]`, `read[name]`) is
+not a static name. `.bind`
 with arguments after `this` (`read.bind(null, account)`) is not followed:
 those arguments are prepended, and `read(sql`…`)` would drop them. A function
 declaration that is assigned, or that shares its scope with direct `eval`, is

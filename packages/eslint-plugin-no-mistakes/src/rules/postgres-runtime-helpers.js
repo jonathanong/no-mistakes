@@ -1,32 +1,11 @@
 "use strict";
 
 const { repoRelativeFilename } = require("./module-mock-helpers");
-const {
-  DEFAULT_CHUNK_FUNCTION_NAMES,
-  DEFAULT_EXECUTOR_NAMES,
-  DEFAULT_IMPORT_SPECIFIER,
-  QUERY_PROPERTY,
-  TRANSACTION_COMMAND,
-  TRANSACTION_IMPORTS,
-  calleeName,
-  executorBindings,
-  executorOptionDefaults,
-  executorOptionSchema,
-  firstCallArgument,
-  isDatabaseCall,
-  isManualTransactionText,
-  memberPropertyName,
-} = require("./postgres-executor");
-const {
-  childNodes,
-  executedQueryText,
-  quasiText,
-  resolveVariable,
-  sqlStatementBindings,
-  sqlText,
-  templateSqlText,
-  unwrapTs,
-} = require("./postgres-query-text");
+const postgresExecutor = require("./postgres-executor");
+const postgresQueryText = require("./postgres-query-text");
+
+const { firstCallArgument, isDatabaseCall, memberPropertyName } = postgresExecutor;
+const { childNodes, quasiText, resolveVariable, unwrapTs } = postgresQueryText;
 
 const SCREAMING_CASE = /^[A-Z][A-Z0-9_]*$/;
 
@@ -72,19 +51,32 @@ function isReassignedBinding(variable) {
   return (variable?.references ?? []).some((reference) => reference.isWrite() && !reference.init);
 }
 
-function isStaticallyBounded(source, chunkFunctionNames, context) {
+function isStaticallyBounded(source, chunkFunctionNames, context, seen = new Set()) {
   source = unwrapTs(source);
   if (!source) return false;
-  if (source.type === "ArrayExpression") return true;
+  if (source.type === "ArrayExpression") {
+    return (source.elements ?? []).every(
+      (element) =>
+        !element ||
+        element.type !== "SpreadElement" ||
+        isStaticallyBounded(element.argument, chunkFunctionNames, context, seen),
+    );
+  }
   if (source.type === "Identifier" && SCREAMING_CASE.test(source.name)) return true;
   if (source.type === "CallExpression" && isChunkCall(source, chunkFunctionNames)) return true;
   if (source.type === "Identifier" && context) {
     const variable = resolveVariable(source, context);
-    const def = variable?.defs?.find(
+    if (!variable || seen.has(variable)) return false;
+    const def = variable.defs?.find(
       (item) => item.type === "Variable" && item.node?.id?.type === "Identifier",
     );
     const init = def?.node?.init;
-    if (init && init !== source) return isStaticallyBounded(init, chunkFunctionNames, null);
+    if (init && init !== source) {
+      if (isReassignedBinding(variable)) return false;
+      const nextSeen = new Set(seen);
+      nextSeen.add(variable);
+      return isStaticallyBounded(init, chunkFunctionNames, context, nextSeen);
+    }
     const iterated = forOfRightHandSide(def?.node);
     if (iterated) {
       if (isReassignedBinding(variable)) return false;
@@ -183,30 +175,12 @@ function callbackContainsExecutor(callback, bindings, context) {
 }
 
 module.exports = {
-  DEFAULT_CHUNK_FUNCTION_NAMES,
-  DEFAULT_EXECUTOR_NAMES,
-  DEFAULT_IMPORT_SPECIFIER,
-  QUERY_PROPERTY,
-  TRANSACTION_COMMAND,
-  TRANSACTION_IMPORTS,
+  ...postgresExecutor,
+  ...postgresQueryText,
   callbackContainsExecutor,
-  calleeName,
-  childNodes,
   containsDatabaseCall,
-  executedQueryText,
-  executorBindings,
-  executorOptionDefaults,
-  executorOptionSchema,
-  firstCallArgument,
-  isDatabaseCall,
-  isManualTransactionText,
   isOwnerFile,
   isPromiseAllCallee,
   isStaticallyBounded,
   mapCallArgument,
-  resolveVariable,
-  sqlStatementBindings,
-  sqlText,
-  templateSqlText,
-  unwrapTs,
 };

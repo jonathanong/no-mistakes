@@ -4,6 +4,11 @@ const { resolveVariable } = require("./postgres-query-text");
 const { memberPropertyName } = require("./postgres-executor");
 const { propertyText } = require("./postgres-no-executor-adapter-logic");
 const {
+  findBindingPath,
+  projectPath,
+  resolveNamespaceForKey,
+} = require("./postgres-no-executor-adapter-namespace");
+const {
   TS_ASSERTIONS,
   constInitializer,
   variableIsImportedExecutor,
@@ -46,18 +51,8 @@ function isProvenQueryMember(node, context, bindings, options) {
   return provenQueryReceiver(node.object, context, bindings, options, new Set()) === true;
 }
 
-function patternKey(property) {
-  if (property.computed) return propertyText({ computed: true, property: property.key });
-  const key = property.key;
-  if (key?.type === "Identifier") return key.name;
-  if (key?.type === "Literal" && typeof key.value === "string") {
-    return key.value;
-  }
-  return null;
-}
-
-// `import * as db` then `db.read` is the named export. A computed identifier
-// key is not that export. The module source has to be the configured module.
+// `import * as db` then `db.read` is the named export. A non-const computed
+// identifier key is not that export. The module source has to be the configured module.
 function namespaceImport(identifier, context, importSpecifier) {
   const variable = resolveVariable(identifier, context);
   if (!variable || variable.defs.length !== 1) {
@@ -81,24 +76,28 @@ function namespaceExecutor(node, context, options) {
   if (node?.type !== "MemberExpression") {
     return null;
   }
-  const name = propertyText(node);
+  const name = propertyText(node, context);
   if (!name || !(options.executorNames ?? []).includes(name)) {
     return null;
   }
-  let object = node.object;
-  while (object && TS_ASSERTIONS.has(object.type)) object = object.expression;
-  if (object?.type !== "Identifier") {
-    return null;
-  }
-  if (!namespaceImport(object, context, options.importSpecifier)) {
+  if (
+    !resolveNamespaceForKey(
+      node.object,
+      name,
+      context,
+      options.importSpecifier,
+      namespaceImport,
+      new Set(),
+    )
+  ) {
     return null;
   }
   return { name: context.sourceCode.getText(node), kind: "member", aliasable: false };
 }
 
 // `const { query } = tx` is `tx.query` when `tx` is a proven receiver.
-// `const { read } = db` is the namespace export. A default, `let`, or a
-// computed identifier key can bind something else.
+// `const { read } = db` (or a nested/wrapped namespace destructure) is the
+// namespace export. A default, `let`, or non-const computed key can bind something else.
 function destructuredExecutor(identifier, context, bindings, options) {
   const variable = resolveVariable(identifier, context);
   if (!variable || variable.defs.length !== 1) {
@@ -112,36 +111,31 @@ function destructuredExecutor(identifier, context, bindings, options) {
   if (declarator?.id?.type !== "ObjectPattern") {
     return null;
   }
-  const property = declarator.id.properties.find(
-    (item) => item.type === "Property" && item.value === def.name,
+  const path = findBindingPath(declarator.id, def.name, context);
+  const last = path?.at(-1);
+  if (last?.kind !== "prop") {
+    return null;
+  }
+  const owner = projectPath(
+    declarator.init,
+    path.slice(0, -1),
+    last.key,
+    context,
+    new Set([variable]),
   );
-  if (!property) {
-    return null;
-  }
-  const key = patternKey(property);
-  // The unmatched key returns from the else. A fallthrough is not counted.
-  if (key) {
-    return destructuredKey(identifier, declarator, key, context, bindings, options);
-  } else {
-    return null;
-  }
+  return owner ? destructuredKey(identifier, owner, last.key, context, bindings, options) : null;
 }
 
-function destructuredKey(identifier, declarator, key, context, bindings, options) {
-  let object = declarator.init;
-  while (object && TS_ASSERTIONS.has(object.type)) object = object.expression;
-  if (object?.type !== "Identifier") {
-    return null;
-  }
+function destructuredKey(identifier, owner, key, context, bindings, options) {
   if (
-    namespaceImport(object, context, options.importSpecifier) &&
-    options.executorNames.includes(key)
+    options.executorNames.includes(key) &&
+    resolveNamespaceForKey(owner, key, context, options.importSpecifier, namespaceImport, new Set())
   ) {
     return { name: identifier.name, kind: "identifier", aliasable: true };
   }
   if (
     key === "query" &&
-    provenQueryReceiver(object, context, bindings, options, new Set()) === true
+    provenQueryReceiver(owner, context, bindings, options, new Set()) === true
   ) {
     return { name: identifier.name, kind: "identifier", aliasable: false };
   }

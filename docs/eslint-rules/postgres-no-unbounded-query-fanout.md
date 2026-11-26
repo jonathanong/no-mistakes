@@ -125,11 +125,12 @@ are also not followed. Rewrite these to the static calls above.
 
 ## Fix
 
-Use a static array, a SCREAMING_CASE bounded collection, sequential work, or a
-configured chunk helper before the mapped executor calls. Only the loop
-variable itself is bounded: `for (const ids of chunkArray(...))`. A `let` or
-`var` declared in the loop body, or a reassigned loop binding, is still
-unbounded.
+Use a static array (whose spread operands are themselves statically bounded), a
+SCREAMING_CASE bounded collection, sequential work, or a configured chunk
+helper before the mapped executor calls. `[...rows]` and `[0, ...rows]` stay
+unbounded unless `rows` is statically bounded. Only the loop variable itself is
+bounded: `for (const ids of chunkArray(...))`. A `let` or `var` declared in the
+loop body, or a reassigned binding, is still unbounded.
 
 ## Suppression
 
