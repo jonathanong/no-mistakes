@@ -60,7 +60,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if !self.deps_match_cached(&cached) {
             return None;
         }
-        Some(self.install_cached_module(path, module_id, &cached))
+        self.install_cached_module(path, module_id, &cached)
     }
 
     fn deps_match_cached(&self, cached: &CachedModule) -> bool {
@@ -76,7 +76,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let Some(&dep_base) = self.modules.get(&dep_mod) else {
                 continue;
             };
-            let current = &self.scopes[dep_base + slot];
+            let Some(current) = self.scopes.get(dep_base + slot) else {
+                return false;
+            };
             let expected = &cached.dep_scopes[index];
             if current.same_bindings(expected) {
                 continue;
@@ -93,27 +95,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         path: &Path,
         module_id: ModuleId,
         cached: &CachedModule,
-    ) -> Environment {
+    ) -> Option<Environment> {
         for &dep_id in &cached.deps {
             if !self.modules.contains_key(&dep_id) {
                 let dep_path = self.module_ids().path(dep_id).to_path_buf();
                 let dep_cached = {
-                    let shared = self.modules.shared.as_ref().expect("SharedInit active");
-                    let entry = shared
-                        .entries
-                        .get(&dep_id)
-                        .expect("cached module dependency must exist in SharedInit");
+                    let shared = self.modules.shared.as_ref()?;
+                    let entry = shared.entries.get(&dep_id)?;
                     let SharedEntry::Pure(cached) = entry.value() else {
-                        unreachable!("cached module dependency must be Pure")
+                        return None;
                     };
                     Arc::clone(cached)
                 };
-                self.install_cached_module(&dep_path, dep_id, &dep_cached);
+                if !self.deps_match_cached(&dep_cached) {
+                    return None;
+                }
+                self.install_cached_module(&dep_path, dep_id, &dep_cached)?;
             }
         }
         let mut remap = Vec::with_capacity(cached.dep_refs.len() + cached.own_scopes.len());
         for &(dep_mod, slot) in &cached.dep_refs {
-            let dep_base = self.modules[&dep_mod];
+            let &dep_base = self.modules.get(&dep_mod)?;
             remap.push(dep_base + slot);
         }
         let base = self.scopes.len();
@@ -128,7 +130,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if let Some(observer) = crate::diagnostics::current() {
             observer.increment("postgres.annotation.shared_init.cache_hits", 1);
         }
-        base
+        Some(base)
     }
 }
 

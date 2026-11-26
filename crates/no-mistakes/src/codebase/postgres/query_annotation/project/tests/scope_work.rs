@@ -220,3 +220,19 @@ fn unrelated_large_excluded_test_modules_are_pruned_before_evaluation() {
     assert_eq!(work["postgres.annotation.excluded_roots_retained"], 0);
     assert_eq!(work["postgres.annotation.excluded_roots_pruned"], 64);
 }
+
+#[test]
+fn lazy_transitive_shared_init_never_panics_and_matches_main() {
+    let (report, diagnostics) =
+        observed_check(&fixture("helper-tracing-shared-init-lazy-transitive"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.roots_after_scoping"], 3);
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.builds"], 3);
+    assert!(
+        work["postgres.annotation.shared_init.cache_hits"] >= 3,
+        "{work:?}"
+    );
+}

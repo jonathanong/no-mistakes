@@ -33,11 +33,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             before_events: self.event_log.len(),
             before_invalidated: self.invalidated_builders.len(),
             before_builder_updates: self.builder_updates.len(),
-            before_captured_prefix: self
-                .captured_bindings
-                .keys()
-                .filter(|&&frame| frame <= env)
-                .count(),
+            before_captured_prefix: self.captured_prefix_count(env),
         })
     }
 
@@ -47,42 +43,37 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: Environment,
         guard: SharedCaptureGuard,
     ) {
-        let shared = &guard.shared;
+        let entries = &guard.shared.entries;
         if !self.is_clean_shared_init(env, &guard) {
-            shared
-                .entries
-                .entry(module_id)
-                .or_insert(SharedEntry::Impure);
+            entries.entry(module_id).or_insert(SharedEntry::Impure);
             return;
         }
-        match self.build_cached_module(shared, module_id, env) {
+        match self.build_cached_module(&guard.shared, module_id, env) {
             BuildOutcome::Ready(cached) => {
-                shared
-                    .entries
+                entries
                     .entry(module_id)
                     .or_insert_with(|| SharedEntry::Pure(Arc::new(cached)));
             }
             BuildOutcome::Defer => {}
             BuildOutcome::Impure => {
-                shared
-                    .entries
-                    .entry(module_id)
-                    .or_insert(SharedEntry::Impure);
+                entries.entry(module_id).or_insert(SharedEntry::Impure);
             }
         }
     }
 
-    fn is_clean_shared_init(&self, env: Environment, guard: &SharedCaptureGuard) -> bool {
-        let captured_prefix = self
-            .captured_bindings
+    fn captured_prefix_count(&self, env: Environment) -> usize {
+        self.captured_bindings
             .keys()
             .filter(|&&frame| frame <= env)
-            .count();
+            .count()
+    }
+
+    fn is_clean_shared_init(&self, env: Environment, guard: &SharedCaptureGuard) -> bool {
         self.untrusted_array_intrinsics == guard.before_untrusted
             && self.event_log.len() == guard.before_events
             && self.invalidated_builders.len() == guard.before_invalidated
             && self.builder_updates.len() == guard.before_builder_updates
-            && captured_prefix == guard.before_captured_prefix
+            && self.captured_prefix_count(env) == guard.before_captured_prefix
             && !self.scopes[env].contains_reference()
     }
 
@@ -108,12 +99,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut seen = FxHashSet::default();
         let mut raw_dep_scopes = Vec::new();
         for &dep in all_deps.iter().filter(|d| self.modules.contains_key(d)) {
-            collect_dep_refs(shared, dep, &mut seen, &mut dep_refs, &mut raw_dep_scopes);
+            if !collect_dep_refs(shared, dep, &mut seen, &mut dep_refs, &mut raw_dep_scopes) {
+                return BuildOutcome::Defer;
+            }
         }
         let mut eval_to_canon = FxHashMap::default();
         let mut canon_to_eval = Vec::with_capacity(dep_refs.len());
         for (index, &(dep_id, slot)) in dep_refs.iter().enumerate() {
-            let eval_env = self.modules[&dep_id] + slot;
+            let Some(eval_env) = self
+                .modules
+                .get(&dep_id)
+                .map(|&base| base + slot)
+                .filter(|&env_idx| env_idx < self.scopes.len())
+            else {
+                return BuildOutcome::Defer;
+            };
             eval_to_canon.insert(eval_env, index);
             canon_to_eval.push(eval_env);
         }
@@ -151,39 +151,38 @@ fn collect_dep_refs(
     seen: &mut FxHashSet<ModuleId>,
     dep_refs: &mut Vec<(ModuleId, usize)>,
     raw_dep_scopes: &mut Vec<Scope>,
-) {
+) -> bool {
     if !seen.insert(dep) {
-        return;
+        return true;
     }
     let cached = {
-        let entry = shared
-            .entries
-            .get(&dep)
-            .expect("pure dependency must exist in SharedInit");
+        let Some(entry) = shared.entries.get(&dep) else {
+            return false;
+        };
         let SharedEntry::Pure(cached) = entry.value() else {
-            unreachable!("pure dependency must be Pure")
+            return false;
         };
         Arc::clone(cached)
     };
-    for &sub in &cached.deps {
-        collect_dep_refs(shared, sub, seen, dep_refs, raw_dep_scopes);
+    for &(sub, _) in &cached.dep_refs {
+        if !collect_dep_refs(shared, sub, seen, dep_refs, raw_dep_scopes) {
+            return false;
+        }
     }
     let mut sub_remap = Vec::with_capacity(cached.dep_refs.len() + cached.own_scopes.len());
     for &(sub_id, sub_slot) in &cached.dep_refs {
-        let pos = dep_refs
-            .iter()
-            .position(|&(id, slot)| id == sub_id && slot == sub_slot)
-            .expect("transitive dep must be collected first");
+        let Some(pos) = dep_refs.iter().position(|&item| item == (sub_id, sub_slot)) else {
+            return false;
+        };
         sub_remap.push(pos);
     }
     let base = dep_refs.len();
-    for offset in 0..cached.own_scopes.len() {
-        sub_remap.push(base + offset);
-    }
+    sub_remap.extend(base..base + cached.own_scopes.len());
     for (slot, scope) in cached.own_scopes.iter().enumerate() {
         dep_refs.push((dep, slot));
         raw_dep_scopes.push(remap_scope(scope, &sub_remap));
     }
+    true
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

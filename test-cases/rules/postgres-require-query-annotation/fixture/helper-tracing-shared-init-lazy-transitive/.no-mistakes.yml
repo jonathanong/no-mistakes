@@ -1,0 +1,14 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: "@acme/psql"
+      include:
+        - "backend/**/*.{ts,mts}"
+      executorFactoryNames:
+        - createExecutor
+      executorFactoryTypeNames:
+        - DbExecutor
+      extraExecutorNames:
+        - runQuery
