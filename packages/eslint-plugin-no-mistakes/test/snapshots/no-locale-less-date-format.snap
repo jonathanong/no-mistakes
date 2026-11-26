@@ -316,6 +316,32 @@
     "rule": "no-locale-less-date-format"
   },
   {
+    "file": "no-locale-less-date-format/intl-unknown.mjs",
+    "findings": [],
+    "name": "dynamic constructor spreads and computed keys stay unknown by default",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "Intl.NumberFormat"
+      ],
+      "methods": []
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/dynamic-scope-intl.js",
+    "findings": [],
+    "name": "dynamic with scope leaves configured constructor namespace unknown by default",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ],
+      "methods": []
+    },
+    "rule": "no-locale-less-date-format",
+    "sourceType": "script"
+  },
+  {
     "file": "no-locale-less-date-format/missing-locale.mjs",
     "findings": [],
     "name": "empty methods disables default method matching",
@@ -728,6 +754,32 @@
     "rule": "no-locale-less-date-format"
   },
   {
+    "file": "no-locale-less-date-format/suppression-file.mjs",
+    "findings": [],
+    "name": "no-mistakes file suppression directive suppresses the entire file",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/suppressions.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/suppressions.mjs",
+        "line": 5,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "no-mistakes line and next-line suppression directives suppress findings",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
     "file": "no-locale-less-date-format/intl-constructors.mjs",
     "findings": [
       {
@@ -821,6 +873,215 @@
     "name": "TypeScript wrappers preserve method and locale classification",
     "options": null,
     "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/dynamic-scope-intl.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 28,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/dynamic-scope-intl.js",
+        "line": 2,
+        "message": "Cannot statically prove Intl.DateTimeFormat receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "unknownValues finding reports configured constructor in dynamic with scope",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ],
+      "methods": [],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format",
+    "sourceType": "script"
+  },
+  {
+    "file": "no-locale-less-date-format/intl-constructors.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 3,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 9,
+        "file": "no-locale-less-date-format/intl-constructors.mjs",
+        "line": 9,
+        "message": "Cannot statically prove Intl receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "unknownValues finding reports dynamic computed Intl constructor alongside missing locales",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "Intl.NumberFormat"
+      ],
+      "methods": [],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/intl-unknown.mjs",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/intl-unknown.mjs",
+        "line": 2,
+        "message": "Cannot statically prove Intl.DateTimeFormat receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 29,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/intl-unknown.mjs",
+        "line": 3,
+        "message": "Cannot statically prove Intl.NumberFormat receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 30,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/intl-unknown.mjs",
+        "line": 4,
+        "message": "Cannot statically prove Intl receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "unknownValues finding reports dynamic constructor spreads and computed keys while respecting shadowing and resolvedOptions",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "Intl.NumberFormat"
+      ],
+      "methods": [],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/unknown-locale.mjs",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/unknown-locale.mjs",
+        "line": 4,
+        "message": "Cannot statically prove toLocaleString receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 62,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/unknown-locale.mjs",
+        "line": 5,
+        "message": "Cannot statically prove toLocaleDateString receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "unknownValues finding reports spread first arguments on matched methods",
+    "options": {
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/dynamic-scope.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 39,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/dynamic-scope.js",
+        "line": 2,
+        "message": "Cannot statically prove toLocaleString receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 46,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/dynamic-scope.js",
+        "line": 6,
+        "message": "Cannot statically prove toLocaleString receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "unknownValues finding reports undefined in dynamic with and eval scopes",
+    "options": {
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format",
+    "sourceType": "script"
   },
   {
     "file": "no-locale-less-date-format/known-undefined.mjs",

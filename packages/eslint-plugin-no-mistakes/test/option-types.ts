@@ -1,5 +1,6 @@
 import plugin, {
   type NoTopLevelAwaitOptions,
+  type TestNoTypedEnqueueFakeOptions,
   type TestNoWallTimeAssertionsOptions,
   type NoLocaleLessDateFormatOptions,
   type PlaywrightTestTimeoutCapOptions,
@@ -33,6 +34,7 @@ export const dateFormatOptions: NoLocaleLessDateFormatOptions = {
   methods: ["toLocaleDateString"],
   constructors: ["Intl.DateTimeFormat"],
   allowUndefinedLocale: true,
+  unknownValues: "finding",
 };
 export const defaultDateFormatOptions: pluginRequire.NoLocaleLessDateFormatOptions = {};
 
@@ -43,6 +45,20 @@ export const invalidConstructors: NoLocaleLessDateFormatOptions = { constructors
 export const invalidAllowUndefinedLocale: NoLocaleLessDateFormatOptions = {
   // @ts-expect-error The undefined-locale option must be boolean.
   allowUndefinedLocale: "true",
+};
+export const invalidUnknownLocaleValues: NoLocaleLessDateFormatOptions = {
+  // @ts-expect-error Unknown value policy must be ignore or finding.
+  unknownValues: "warn",
+};
+
+export const enqueueFakeOptions: TestNoTypedEnqueueFakeOptions = {
+  singleExportPattern: "^enqueue[A-Z]",
+  moduleGlobs: ["./queue"],
+};
+export const defaultEnqueueFakeOptions: pluginRequire.TestNoTypedEnqueueFakeOptions = {};
+export const invalidEnqueueFakeOptions: TestNoTypedEnqueueFakeOptions = {
+  // @ts-expect-error Module globs must be strings.
+  moduleGlobs: [1],
 };
 
 export const rule = plugin.rules?.["postgres-no-executor-adapter"];
