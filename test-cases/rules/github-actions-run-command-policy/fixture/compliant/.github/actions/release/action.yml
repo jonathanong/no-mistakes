@@ -8,4 +8,4 @@ runs:
     - shell: bash
       run: $GITHUB_ACTION_PATH/build-images.sh --tag "$TAG"
     - shell: bash
-      run: "${{ github.action_path }}/scripts/publish.sh" --dry-run
+      run: '"${{ github.action_path }}/scripts/publish.sh" --dry-run'

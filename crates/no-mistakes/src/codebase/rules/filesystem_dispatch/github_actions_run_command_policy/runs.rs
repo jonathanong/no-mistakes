@@ -10,21 +10,18 @@ use crate::codebase::rules::{
 use crate::config::v2::Unanalyzable;
 use serde_yaml::Value;
 
-pub(super) fn check_source(
+pub(super) fn check_parsed(
     rel: &str,
     source: &str,
     action: bool,
+    value: &Value,
     compiled: &CompiledOptions,
     unanalyzable: Unanalyzable,
     rule_message: Option<&str>,
 ) -> AnalysisDiagnostics {
-    let source = source.trim_start_matches('\u{feff}');
-    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
-        return AnalysisDiagnostics::default();
-    };
     let located = step_run_lines(source, action);
     let mut diagnostics = AnalysisDiagnostics::default();
-    for body in run_scripts(action, &value) {
+    for body in run_scripts(action, value) {
         let step_lines = located
             .iter()
             .find(|item| item.job == body.job && item.step == body.step);

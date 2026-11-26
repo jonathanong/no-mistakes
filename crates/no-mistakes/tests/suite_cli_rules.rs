@@ -402,3 +402,7 @@ mod cli_config_rule_validation;
 
 #[path = "cli_react_nested_controls_snapshot.rs"]
 mod cli_react_nested_controls_snapshot;
+
+#[cfg(unix)]
+#[path = "cli_unreadable_rule_inputs.rs"]
+mod cli_unreadable_rule_inputs;
