@@ -1,8 +1,55 @@
+use crate::codebase::ci_workflows::{
+    ParsedWorkflowDocument, ParsedWorkflowSet, PreparedWorkflowTopologyInputs,
+    WorkflowDocumentError, WorkflowDocumentErrorKind,
+};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use std::path::Path;
+use std::sync::Arc;
 
 fn run(options: &str) -> AnalysisDiagnostics {
     let root = super::fixture("call-bindings");
     super::super::prepare::diagnostics_with_files(&root, &super::config(options), false).unwrap()
+}
+
+fn run_in_memory(options: &str, docs: &[(&str, Result<&str, &str>)]) -> AnalysisDiagnostics {
+    let parsed = ParsedWorkflowSet {
+        documents: docs
+            .iter()
+            .map(|(path, body)| ParsedWorkflowDocument {
+                path: (*path).to_string(),
+                value: match body {
+                    Ok(yaml) => serde_yaml::from_str(yaml).map_err(|err| WorkflowDocumentError {
+                        kind: WorkflowDocumentErrorKind::Parse,
+                        message: err.to_string(),
+                    }),
+                    Err(msg) => Err(WorkflowDocumentError {
+                        kind: WorkflowDocumentErrorKind::Parse,
+                        message: (*msg).to_string(),
+                    }),
+                },
+                source: body.ok().map(Arc::from),
+            })
+            .collect(),
+    };
+    let inputs = PreparedWorkflowTopologyInputs::new(
+        Path::new("."),
+        &Default::default(),
+        Arc::new(parsed),
+        ParsedWorkflowSet {
+            documents: Vec::new(),
+        },
+    );
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    super::super::diagnostics_prepared(
+        Path::new("."),
+        &super::config(options),
+        None,
+        &sources,
+        &inputs,
+        None,
+        false,
+    )
+    .unwrap()
 }
 
 #[test]
@@ -94,4 +141,116 @@ fn invalid_boolean_is_rejected_at_config_validation() {
     super::super::collect_config_errors(&root, None, &cfg, &mut errors);
     assert_eq!(errors.len(), 1, "{errors:?}");
     assert!(errors[0].contains("requireExplicitWorkflowCallBindings"));
+}
+
+#[test]
+fn reports_malformed_non_mapping_non_scalar_and_case_colliding_shapes() {
+    let callee_bad_shapes = r#"
+on:
+  workflow_call:
+    inputs: bad
+    secrets: [TOKEN]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+"#;
+    let callee_collisions = r#"
+on:
+  workflow_call:
+    inputs:
+      Env:
+        required: true
+      env:
+        required: true
+    secrets:
+      Token:
+        required: true
+      token:
+        required: true
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+"#;
+    let callee_normal = r#"
+on:
+  workflow_call:
+    inputs:
+      env:
+        required: true
+    secrets:
+      TOKEN:
+        required: true
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+"#;
+    let caller = r#"
+on: push
+jobs:
+  bad_callee:
+    uses: ./.github/workflows/bad-shapes.yml
+  colliding_callee:
+    uses: ./.github/workflows/collisions.yml
+  bad_caller_values:
+    uses: ./.github/workflows/normal.yml
+    with:
+      env:
+    secrets:
+      TOKEN: [1]
+  duplicate_caller_keys:
+    uses: ./.github/workflows/normal.yml
+    with: ${{ inputs.all }}
+    secrets:
+      TOKEN: a
+      token: b
+"#;
+    let output = run_in_memory(
+        "requireExplicitWorkflowCallBindings: true",
+        &[
+            (".github/workflows/malformed.yml", Err("invalid yaml")),
+            (".github/workflows/bad-shapes.yml", Ok(callee_bad_shapes)),
+            (".github/workflows/collisions.yml", Ok(callee_collisions)),
+            (".github/workflows/normal.yml", Ok(callee_normal)),
+            (".github/workflows/caller.yml", Ok(caller)),
+        ],
+    );
+    assert!(output
+        .findings
+        .iter()
+        .any(|f| f.message.contains("leaves required input `env` empty")));
+    let adv: Vec<&str> = output.advisories.iter().map(|f| f.message.as_str()).collect();
+    assert!(adv.iter().any(|m| m.contains("malformed.yml")), "{adv:#?}");
+    assert!(
+        adv.iter()
+            .any(|m| m.contains("sets `on.workflow_call.secrets`")),
+        "{adv:#?}"
+    );
+    assert!(
+        adv.iter()
+            .any(|m| m.contains("sets `on.workflow_call.inputs`")),
+        "{adv:#?}"
+    );
+    assert!(
+        adv.iter().any(|m| m.contains("declares case-colliding")),
+        "{adv:#?}"
+    );
+    assert!(
+        adv.iter().any(|m| m.contains("sets `secrets.TOKEN` to `a non-mapping value`")),
+        "{adv:#?}"
+    );
+    assert!(
+        adv.iter().any(|m| m.contains("sets `with` to `${{ inputs.all }}`")),
+        "{adv:#?}"
+    );
+    assert!(
+        adv.iter()
+            .any(|m| m.contains("duplicate case-colliding `secrets` keys")),
+        "{adv:#?}"
+    );
 }

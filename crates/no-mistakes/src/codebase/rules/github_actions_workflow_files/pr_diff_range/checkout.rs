@@ -12,13 +12,11 @@ pub(super) enum CheckoutState {
 }
 
 impl CheckoutState {
-    pub(super) fn initial(pull: bool, queue: bool) -> Self {
+    pub(super) fn initial(pull: bool, _queue: bool) -> Self {
         if pull {
             Self::MergeCommit
-        } else if queue {
-            Self::MergeGroup
         } else {
-            Self::Unknown
+            Self::MergeGroup
         }
     }
 }

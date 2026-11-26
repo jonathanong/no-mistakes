@@ -2,10 +2,9 @@ use super::checkout::CheckoutState;
 use super::diff::Form;
 use super::revisions::Revision;
 use super::verdicts_helpers::{
-    check_base_with_merge, check_cross_event, check_merge_parent, has_coalesced_mismatch,
-    is_baseref_merge_allowed, is_merge_group_consistent, is_merge_parent_consistent, is_same_side,
-    uses_unknown_checkout, MISMATCH_BASE_MERGE, MISMATCH_CROSS_EVENT, MISMATCH_SAME_SIDE,
-    TWO_DOT_PR, UNKNOWN_CHECKOUT, UNKNOWN_REVISION,
+    base_with_merge_verdict, has_coalesced_mismatch, is_same_side, merge_group_verdict,
+    merge_parent_verdict, uses_unknown_checkout, MISMATCH_BASE_MERGE, MISMATCH_CROSS_EVENT,
+    MISMATCH_SAME_SIDE, TWO_DOT_PR, UNKNOWN_CHECKOUT, UNKNOWN_REVISION,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -27,44 +26,7 @@ pub(super) fn judge_diff_pair(
     if !left.is_known() && !right.is_known() {
         return Verdict::Consistent;
     }
-    if !left.is_known() || !right.is_known() {
-        return Verdict::Unanalyzable(UNKNOWN_REVISION);
-    }
-    if uses_unknown_checkout(left, right, checkout) {
-        return Verdict::Unanalyzable(UNKNOWN_CHECKOUT);
-    }
-    if let Some(msg) = check_merge_parent(left, right, mixed, checkout) {
-        return Verdict::Mismatch(msg);
-    }
-    if is_merge_parent_consistent(left, right, mixed, checkout) {
-        return Verdict::Consistent;
-    }
-    if let Some(msg) = check_cross_event(left, right, pull, queue) {
-        return Verdict::Mismatch(msg);
-    }
-    if is_merge_group_consistent(left, right, pull, queue) {
-        return Verdict::Consistent;
-    }
-    if (left.is_pr_base() && right.is_pr_head()) || (right.is_pr_base() && left.is_pr_head()) {
-        if has_coalesced_mismatch(left, right) {
-            return Verdict::Mismatch(MISMATCH_CROSS_EVENT);
-        }
-        return if form == Form::ThreeDot {
-            Verdict::Consistent
-        } else {
-            Verdict::Mismatch(TWO_DOT_PR)
-        };
-    }
-    if let Some(msg) = check_base_with_merge(left, right, Some(form), mixed) {
-        return Verdict::Mismatch(msg);
-    }
-    if is_baseref_merge_allowed(left, right, form, mixed, checkout) {
-        return Verdict::Consistent;
-    }
-    if is_same_side(left, right) {
-        return Verdict::Mismatch(MISMATCH_SAME_SIDE);
-    }
-    Verdict::Consistent
+    judge_pair(left, right, Some(form), mixed, pull, queue, checkout)
 }
 
 pub(super) fn judge_explicit_pair(
@@ -75,35 +37,48 @@ pub(super) fn judge_explicit_pair(
     queue: bool,
     checkout: CheckoutState,
 ) -> Verdict {
-    if !base.is_known() || !head.is_known() {
+    judge_pair(base, head, None, mixed, pull, queue, checkout)
+}
+
+fn judge_pair(
+    a: Revision,
+    b: Revision,
+    form: Option<Form>,
+    mixed: bool,
+    pull: bool,
+    queue: bool,
+    checkout: CheckoutState,
+) -> Verdict {
+    if !a.is_known() || !b.is_known() {
         return Verdict::Unanalyzable(UNKNOWN_REVISION);
     }
-    if uses_unknown_checkout(base, head, checkout) {
+    if uses_unknown_checkout(a, b, checkout) {
         return Verdict::Unanalyzable(UNKNOWN_CHECKOUT);
     }
-    if let Some(msg) = check_merge_parent(base, head, mixed, checkout) {
-        return Verdict::Mismatch(msg);
+    if let Some(verdict) = merge_parent_verdict(a, b, mixed, checkout) {
+        return verdict;
     }
-    if is_merge_parent_consistent(base, head, mixed, checkout) {
-        return Verdict::Consistent;
+    if let Some(verdict) = merge_group_verdict(a, b, pull, queue) {
+        return verdict;
     }
-    if let Some(msg) = check_cross_event(base, head, pull, queue) {
-        return Verdict::Mismatch(msg);
-    }
-    if is_merge_group_consistent(base, head, pull, queue) {
-        return Verdict::Consistent;
-    }
-    if base.is_pr_base() && head.is_pr_head() {
-        return if has_coalesced_mismatch(base, head) {
-            Verdict::Mismatch(MISMATCH_CROSS_EVENT)
-        } else {
-            Verdict::Consistent
+    let pr_pair = if form.is_some() {
+        (a.is_pr_base() && b.is_pr_head()) || (b.is_pr_base() && a.is_pr_head())
+    } else {
+        a.is_pr_base() && b.is_pr_head()
+    };
+    if pr_pair {
+        if has_coalesced_mismatch(a, b) {
+            return Verdict::Mismatch(MISMATCH_CROSS_EVENT);
+        }
+        return match form {
+            None | Some(Form::ThreeDot) => Verdict::Consistent,
+            Some(Form::TwoDot | Form::Args) => Verdict::Mismatch(TWO_DOT_PR),
         };
     }
-    if let Some(msg) = check_base_with_merge(base, head, None, mixed) {
-        return Verdict::Mismatch(msg);
+    if let Some(verdict) = base_with_merge_verdict(a, b, form, mixed, checkout) {
+        return verdict;
     }
-    if is_same_side(base, head) {
+    if is_same_side(a, b) {
         return Verdict::Mismatch(MISMATCH_SAME_SIDE);
     }
     Verdict::Mismatch(MISMATCH_BASE_MERGE)

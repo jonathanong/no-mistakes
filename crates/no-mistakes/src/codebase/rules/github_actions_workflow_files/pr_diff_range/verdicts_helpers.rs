@@ -1,6 +1,7 @@
 use super::checkout::CheckoutState;
 use super::diff::Form;
 use super::revisions::Revision;
+use super::verdicts::Verdict;
 
 pub(super) const TWO_DOT_PR: &str = "diffs the pull request base against the head with a two-dot or \
     two-argument range, which also lists base-branch changes made after the branch point. \
@@ -46,55 +47,45 @@ pub(super) fn uses_unknown_checkout(a: Revision, b: Revision, checkout: Checkout
     uses_head && checkout == CheckoutState::Unknown
 }
 
-pub(super) fn check_merge_parent(
+pub(super) fn merge_parent_verdict(
     a: Revision,
     b: Revision,
     mixed: bool,
     checkout: CheckoutState,
-) -> Option<&'static str> {
-    let has_parent = matches!(a, Revision::MergeCommitBase) || matches!(b, Revision::MergeCommitBase);
-    if !has_parent {
+) -> Option<Verdict> {
+    let other = if matches!(a, Revision::MergeCommitBase) {
+        b
+    } else if matches!(b, Revision::MergeCommitBase) {
+        a
+    } else {
         return None;
-    }
-    let other = if matches!(a, Revision::MergeCommitBase) { b } else { a };
+    };
     if matches!(other, Revision::CheckedOutPrHead | Revision::CheckedOutPrBase)
-        || matches!(checkout, CheckoutState::PullRequestHead | CheckoutState::PullRequestBase)
+        || matches!(
+            checkout,
+            CheckoutState::PullRequestHead | CheckoutState::PullRequestBase
+        )
     {
-        return Some(MISMATCH_CHECKOUT_MERGE_PARENT);
+        return Some(Verdict::Mismatch(MISMATCH_CHECKOUT_MERGE_PARENT));
     }
-    if matches!(
-        other,
-        Revision::MergeCommitHead | Revision::MergeCommitSecondParent
-    ) || (!mixed && matches!(other, Revision::GithubSha))
-    {
-        return None;
-    }
-    Some(MISMATCH_MERGE_PARENT_HEAD)
+    let ok = checkout == CheckoutState::MergeCommit
+        && (matches!(
+            other,
+            Revision::MergeCommitHead | Revision::MergeCommitSecondParent
+        ) || (!mixed && matches!(other, Revision::GithubSha)));
+    Some(if ok {
+        Verdict::Consistent
+    } else {
+        Verdict::Mismatch(MISMATCH_MERGE_PARENT_HEAD)
+    })
 }
 
-pub(super) fn is_merge_parent_consistent(
-    a: Revision,
-    b: Revision,
-    mixed: bool,
-    checkout: CheckoutState,
-) -> bool {
-    let has_parent = matches!(a, Revision::MergeCommitBase) || matches!(b, Revision::MergeCommitBase);
-    if !has_parent || checkout != CheckoutState::MergeCommit {
-        return false;
-    }
-    let other = if matches!(a, Revision::MergeCommitBase) { b } else { a };
-    matches!(
-        other,
-        Revision::MergeCommitHead | Revision::MergeCommitSecondParent
-    ) || (!mixed && matches!(other, Revision::GithubSha))
-}
-
-pub(super) fn check_cross_event(
+pub(super) fn merge_group_verdict(
     a: Revision,
     b: Revision,
     pull: bool,
     queue: bool,
-) -> Option<&'static str> {
+) -> Option<Verdict> {
     let pair = [a, b];
     let has_mg_base = pair.contains(&Revision::MergeGroupBaseSha);
     let has_mg_head = pair.contains(&Revision::MergeGroupHeadSha);
@@ -104,24 +95,20 @@ pub(super) fn check_cross_event(
     let has_pr_head = pair
         .iter()
         .any(|r| matches!(r, Revision::PullRequestHeadSha | Revision::PullRequestHeadRef));
-    if (has_mg_base && has_pr_head) || (has_pr_base && has_mg_head) {
-        return Some(MISMATCH_CROSS_EVENT);
+    if (has_mg_base && has_pr_head)
+        || (has_pr_base && has_mg_head)
+        || (has_mg_base && pair.contains(&Revision::GithubSha) && pull && queue)
+    {
+        return Some(Verdict::Mismatch(MISMATCH_CROSS_EVENT));
     }
-    if has_mg_base && pair.contains(&Revision::GithubSha) && pull && queue {
-        return Some(MISMATCH_CROSS_EVENT);
-    }
-    None
-}
-
-pub(super) fn is_merge_group_consistent(a: Revision, b: Revision, pull: bool, queue: bool) -> bool {
-    let pair = [a, b];
-    (pair.contains(&Revision::MergeGroupBaseSha) && pair.contains(&Revision::MergeGroupHeadSha))
+    let ok = (has_mg_base && has_mg_head)
         || (queue
             && !pull
-            && pair.contains(&Revision::MergeGroupBaseSha)
-            && pair.iter().any(|r| {
-                matches!(r, Revision::GithubSha | Revision::CheckedOutMergeGroupHead)
-            }))
+            && has_mg_base
+            && pair
+                .iter()
+                .any(|r| matches!(r, Revision::GithubSha | Revision::CheckedOutMergeGroupHead)));
+    ok.then_some(Verdict::Consistent)
 }
 
 pub(super) fn has_coalesced_mismatch(a: Revision, b: Revision) -> bool {
@@ -130,12 +117,13 @@ pub(super) fn has_coalesced_mismatch(a: Revision, b: Revision) -> bool {
     a_coal != b_coal
 }
 
-pub(super) fn check_base_with_merge(
+pub(super) fn base_with_merge_verdict(
     a: Revision,
     b: Revision,
     form: Option<Form>,
     mixed: bool,
-) -> Option<&'static str> {
+    checkout: CheckoutState,
+) -> Option<Verdict> {
     let pair = [a, b];
     let has_merge = pair
         .iter()
@@ -147,36 +135,19 @@ pub(super) fn check_base_with_merge(
         .iter()
         .any(|r| matches!(r, Revision::PullRequestBaseSha | Revision::CoalescedBaseSha))
     {
-        return Some(MISMATCH_BASE_MERGE);
+        return Some(Verdict::Mismatch(MISMATCH_BASE_MERGE));
     }
     if pair.contains(&Revision::PullRequestBaseRef) {
-        let allowed_diff = !mixed && form == Some(Form::ThreeDot);
-        if !allowed_diff {
-            return Some(if form.is_some() {
-                MISMATCH_BASEREF_MERGE_FORM
-            } else {
-                MISMATCH_BASE_MERGE
-            });
-        }
+        let allowed = !mixed && form == Some(Form::ThreeDot) && checkout == CheckoutState::MergeCommit;
+        return Some(if allowed {
+            Verdict::Consistent
+        } else if form.is_some() {
+            Verdict::Mismatch(MISMATCH_BASEREF_MERGE_FORM)
+        } else {
+            Verdict::Mismatch(MISMATCH_BASE_MERGE)
+        });
     }
     None
-}
-
-pub(super) fn is_baseref_merge_allowed(
-    a: Revision,
-    b: Revision,
-    form: Form,
-    mixed: bool,
-    checkout: CheckoutState,
-) -> bool {
-    if mixed || form != Form::ThreeDot || checkout != CheckoutState::MergeCommit {
-        return false;
-    }
-    let pair = [a, b];
-    pair.contains(&Revision::PullRequestBaseRef)
-        && pair
-            .iter()
-            .any(|r| matches!(r, Revision::GithubSha | Revision::MergeCommitHead))
 }
 
 pub(super) fn is_same_side(a: Revision, b: Revision) -> bool {

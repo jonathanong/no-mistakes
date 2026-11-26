@@ -22,8 +22,7 @@ pub(super) fn check_declared_map(
     unanalyzable: &mut Vec<LocatedFinding>,
 ) {
     let provided = match raw.job_field(spec.caller_path, spec.job_key, spec.field) {
-        RawBindingMap::Absent => Vec::new(),
-        RawBindingMap::Inherit => return,
+        RawBindingMap::Absent | RawBindingMap::Inherit => Vec::new(),
         RawBindingMap::Mapping(entries) => entries,
         RawBindingMap::NonMapping(shape) => {
             unanalyzable.push(unanalyzable_job_field(
