@@ -1,5 +1,19 @@
 pub use super::advisory_rules::ADVISORY_RULE_IDS;
 pub use super::filesystem_dispatch::github_actions_run_command_policy;
+#[doc(hidden)]
+pub mod github_actions_no_poll_wait_job {
+    pub use super::super::github_actions_workflow_files::no_poll_wait_job::{
+        diagnostics_with_files_and_sources, RULE_ID,
+    };
+}
+
+#[doc(hidden)]
+pub mod github_actions_pr_diff_range {
+    pub use super::super::github_actions_workflow_files::pr_diff_range::{
+        diagnostics_with_files_and_sources, RULE_ID,
+    };
+}
+
 pub mod github_actions_env_policy {
     pub use super::super::github_actions_workflow_files::env_policy::{
         diagnostics_with_files_and_sources, RULE_ID,
@@ -59,7 +73,6 @@ pub use no_mistakes_rule_kernel::finding::{FindingCause, RuleFinding};
 pub(crate) use super::entrypoints::{
     borrowed_source_rule_entrypoints, diagnostic_source_rule_entrypoints,
     masked_source_rule_entrypoints, prepared_file_rule_facts, prepared_rule_entrypoints,
-    sourced_file_rule_entrypoints,
 };
 pub(crate) use super::masked_source::{scan_masked_file, scan_masked_files, MaskedFileContext};
 pub(crate) use super::postgres_findings::{LocatedRuleFinding, PostgresFindings};

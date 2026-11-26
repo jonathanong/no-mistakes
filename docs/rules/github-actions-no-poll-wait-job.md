@@ -37,7 +37,7 @@ These forms are silent:
 
 - `sleep` outside a loop.
 - A loop with no configured poll command, or a poll command with no `sleep`.
-- Invalid YAML, a stray `done`, and loops with no matching `done`. An
+- A stray `done` and loops with no matching `done`. An
   unfinished here-document can hide a closing `done`, so the rule only judges
   completed loops in that case.
 - A `for` loop, when `options.ignoreForLoops` is `true`. A `for` loop runs a
@@ -102,8 +102,11 @@ event that signals completion (`workflow_run` for another workflow,
 
 ### Unanalyzable inputs
 
-Invalid YAML and scripts the parser does not read produce no finding. They are
-not sent through `options.unanalyzable`.
+When a selected file has invalid YAML, the rule reports the parser location.
+The effective `unanalyzable` policy controls that diagnostic. Use `report`
+(the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
+Fix the YAML syntax so the rule can verify the file. Valid sibling files are
+still checked.
 
 ## Suppression
 

@@ -1,5 +1,5 @@
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
-use crate::codebase::rules::self;
+use crate::codebase::rules;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
@@ -70,11 +70,27 @@ pub fn diagnostics_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let raw_opts: options::Options = rule.strict_rule_options()?;
         let compiled = options::compile(&raw_opts)?;
-        let unanalyzable = resolve_unanalyzable(config, rule)?;
+        let explicit = rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some();
+        let shape_policy = resolve_unanalyzable(config, rule)?;
+        let yaml_policy = if explicit || compiled.strict_enabled() {
+            shape_policy
+        } else {
+            Unanalyzable::Report
+        };
         let files = rules::selected_rule_files(root, config, rule, all_files)?;
         let chunks: Vec<AnalysisDiagnostics> = files
             .par_iter()
-            .map(|path| scan_file(root, path, &compiled, sources, defer_suppression, unanalyzable))
+            .map(|path| {
+                scan_file(
+                    root,
+                    path,
+                    &compiled,
+                    sources,
+                    defer_suppression,
+                    shape_policy,
+                    yaml_policy,
+                )
+            })
             .collect();
         for chunk in chunks {
             output.append(chunk);
@@ -91,11 +107,12 @@ fn scan_file(
     compiled: &options::CompiledOptions,
     sources: &SourceStore,
     defer_suppression: bool,
-    unanalyzable: Unanalyzable,
+    shape_policy: Unanalyzable,
+    yaml_policy: Unanalyzable,
 ) -> AnalysisDiagnostics {
     let mut output = AnalysisDiagnostics::default();
     let rel = relative_slash_path(root, path);
-    if super::gha_kind(&rel).is_none() {
+    if super::gha_kind(&rel) != Some(false) {
         return output;
     }
     let Some(content) = rules::read_language_source(sources, path) else {
@@ -105,10 +122,16 @@ fn scan_file(
     {
         return output;
     }
-    let (findings, undecidable) = runs::check_source_with_options(&rel, &content, compiled);
-    output.findings = findings;
-    for finding in undecidable {
-        output.unanalyzable(unanalyzable, finding);
+    match super::parse_yaml(root, path, sources, &content, RULE_ID, true) {
+        Ok(value) => {
+            let (findings, undecidable) =
+                runs::check_parsed(&rel, content.trim_start_matches('\u{feff}'), &value, compiled);
+            output.findings = findings;
+            for finding in undecidable {
+                output.unanalyzable(shape_policy, finding);
+            }
+        }
+        Err(finding) => output.unanalyzable(yaml_policy, *finding),
     }
     if !defer_suppression {
         rules::suppress_rule_findings_with_source(&mut output.findings, &content);

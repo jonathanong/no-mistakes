@@ -101,7 +101,7 @@ a workflow, job, or step `env` assigns to that expression. This includes
 the supported pull-request and merge-group fallbacks above. [Revision extraction](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/pr_diff_range/exprs.rs#L32-L90). Anything not recognized as a diff range is
 silent: another command, a `git diff` flag that takes a separate value
 (`-U 3`, `--output file`), more than two revisions, a revision the rule does
-not know, here-document bodies, and invalid YAML. The scanner skips
+not know, and here-document bodies. The scanner skips
 here-document bodies in opener order, including when several open on the same
 line. A missing delimiter leaves earlier diff commands available for analysis.
 The fetch depth behind a three-dot diff is not judged.
@@ -217,15 +217,12 @@ In a workflow that also runs on `push` or `merge_group`, do not pair
 
 ### Unanalyzable inputs
 
-With no options set, invalid YAML and unrecognized commands produce no finding.
-When `requireConsistentRevisionPairs` is `true` or `revisionPairs` is
-non-empty, dynamic/unrecognized revisions in configured pairs or half-known
-`git diff` ranges, non-mapping or YAML-merged `env:` / `with:` blocks when
-matching `revisionPairs` are configured, `HEAD`/`HEAD^1` under an unresolved
-`actions/checkout` `with.ref`, and invalid workflow YAML are routed through
-`options.unanalyzable` (`advise` by default; `report` fails the check; `ignore`
-omits them). Line, next-line, and file suppression directives apply to both
-findings and advisories.
+Invalid YAML in a selected workflow is reported at the parser location.
+With no options set, the diagnostic defaults to a finding. When
+`requireConsistentRevisionPairs` is `true` or `revisionPairs` is non-empty,
+invalid YAML and ambiguous revision pairs default to an advisory.
+The effective `unanalyzable` policy controls both kinds of diagnostics.
+Line, next-line, and file suppression directives apply to findings and advisories.
 
 ## Suppression
 

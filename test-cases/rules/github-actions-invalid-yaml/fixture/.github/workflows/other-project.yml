@@ -1,0 +1,3 @@
+name: Invalid fixture
+on: pull_request
+jobs: [}

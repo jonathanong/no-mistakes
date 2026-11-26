@@ -144,14 +144,16 @@ fn kinds_and_missing_sources_are_skipped() {
     .is_empty());
     let sources = crate::codebase::rules::source_store_for_files(&[]);
     let root = Path::new("/missing");
-    let findings = super::super::github_actions_workflow_files::scan_files(
+    let (findings, failures) = super::super::github_actions_workflow_files::scan_yaml_files(
         root,
         &[PathBuf::from("README.md"), PathBuf::from(WORKFLOW)],
         &sources,
-        &|_, _| panic!("a missing source is not judged"),
-    )
-    .unwrap();
+        super::RULE_ID,
+        &gha_kind,
+        &|_, _, _, _| panic!("a missing source is not judged"),
+    );
     assert!(findings.is_empty());
+    assert!(failures.is_empty());
 }
 
 #[test]

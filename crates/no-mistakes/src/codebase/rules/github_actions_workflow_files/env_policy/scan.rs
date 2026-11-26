@@ -25,16 +25,7 @@ pub(super) fn check_file(
     {
         return Ok(AnalysisDiagnostics::default());
     }
-    let value = sources.parse_loaded_yaml(path, &source, false).map_err(|error| {
-        let mut finding = source_access::unanalyzable_source(
-            root,
-            path,
-            RULE_ID,
-            format_args!("YAML could not be parsed ({error})"),
-        );
-        finding.line = error.line();
-        Box::new(finding)
-    })?;
+    let value = super::super::parse_yaml(root, path, sources, &source, RULE_ID, false)?;
     let rel = relative_slash_path(root, path);
     let (findings, undecidable) = check_parsed(&rel, &source, &value, policy);
     let mut output = AnalysisDiagnostics {

@@ -1,0 +1,9 @@
+# no-mistakes-disable-file github-actions-action-timeout-pair
+# no-mistakes-disable-file github-actions-docker-host-ports
+# no-mistakes-disable-file github-actions-download-integrity
+# no-mistakes-disable-file github-actions-no-poll-wait-job
+# no-mistakes-disable-file github-actions-pr-diff-range
+# no-mistakes-disable-file github-actions-vitest-project-selection
+name: Invalid fixture
+on: pull_request
+jobs: [}

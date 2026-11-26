@@ -124,10 +124,26 @@ fn blank_poll_commands_are_configuration_errors() {
 fn unplaceable_and_folded_scripts_still_report_a_line() {
     let polls = polls();
     let flow = "jobs: {a: {steps: [{run: \"until gh run view 1; do sleep 1; done\"}]}}\n";
-    let found = super::runs::check_source(".github/workflows/ci.yml", flow, &polls, false);
+    let found = check_source(".github/workflows/ci.yml", flow, &polls, false);
     assert_eq!(found.iter().map(|hit| hit.line).collect::<Vec<_>>(), [1]);
     let folded = "jobs:\n  a:\n    steps:\n      - run: >\n          until gh run view 1;\n          do sleep 1; done\n";
-    let found = super::runs::check_source(".github/workflows/ci.yml", folded, &polls, false);
+    let found = check_source(".github/workflows/ci.yml", folded, &polls, false);
     assert_eq!(found.len(), 1);
     assert!(found[0].line >= 4, "{}", found[0].line);
+}
+
+fn check_source(
+    rel: &str,
+    source: &str,
+    polls: &[Vec<String>],
+    skip_for: bool,
+) -> Vec<RuleFinding> {
+    let Some(action) = super::super::gha_kind(rel) else {
+        return Vec::new();
+    };
+    let source = source.trim_start_matches('\u{feff}');
+    let Ok(value) = serde_yaml::from_str(source) else {
+        return Vec::new();
+    };
+    super::runs::check_parsed(rel, source, &value, action, polls, skip_for)
 }

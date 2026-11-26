@@ -56,7 +56,7 @@ not scanned, including when a space precedes the delimiter. A `docker run`
 after the terminator, or on the operator line after `|` or `&&`, is judged.
 A `run` value that
 is not a string is not a finding. A `-p` after the image is the container
-command, not a publish mapping. Invalid YAML is not a finding. Flow-style
+command, not a publish mapping. Flow-style
 steps that the line scan cannot place are reported on line 1.
 
 ## Options
@@ -128,7 +128,11 @@ flow list such as `ports: [6004]`, is not a finding.
 
 ### Unanalyzable inputs
 
-Invalid YAML and commands the parser does not read produce no finding. They are not sent through `options.unanalyzable`. Literal parsed publish mappings are judged.
+When a selected file has invalid YAML, the rule reports the parser location.
+The effective `unanalyzable` policy controls that diagnostic. Use `report`
+(the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
+Fix the YAML syntax so the rule can verify the file. Valid sibling files are
+still checked.
 
 ## Suppression
 

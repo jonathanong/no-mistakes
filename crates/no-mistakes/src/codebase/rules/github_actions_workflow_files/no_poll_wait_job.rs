@@ -1,5 +1,7 @@
 use crate::codebase::rules::self;
 use no_mistakes_rule_kernel::finding::RuleFinding;
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use crate::codebase::rules::file_diagnostics::{self, InputUncertainty};
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -34,23 +36,50 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    rules::run_sourced_file_rule(root, config, all_files, sources, RULE_ID, scan)
+    diagnostics_with_files_and_sources(root, config, all_files, sources, true)
+        .map(|output| output.findings)
 }
 
-fn scan(
+pub fn diagnostics_with_files_and_sources(
     root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
     sources: &SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let polls = compile(opts)?;
-    if polls.is_empty() {
-        return Ok(Vec::new());
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    let mut output = AnalysisDiagnostics::default();
+    for rule in config.rule_applications(RULE_ID) {
+        let opts: Options = rule.try_rule_options()?;
+        let files = rules::selected_rule_files(root, config, rule, all_files)?;
+        let polls = compile(&opts)?;
+        if polls.is_empty() {
+            continue;
+        }
+        let (mut findings, failures) = super::scan_yaml_files(
+            root,
+            &files,
+            sources,
+            RULE_ID,
+            &super::gha_kind,
+            &|rel, source, value, action| {
+                runs::check_parsed(rel, source, value, action, &polls, opts.ignore_for_loops)
+            },
+        );
+        if !defer_suppression {
+            rules::suppress_rule_findings_with_sources(root, &mut findings, sources);
+        }
+        output.findings.extend(findings);
+        output.append(file_diagnostics::application(
+            root,
+            sources,
+            config,
+            rule,
+            failures,
+            defer_suppression,
+            InputUncertainty::ReadOrParse,
+        )?);
     }
-    let skip_for = opts.ignore_for_loops;
-    super::scan_files(root, files, sources, &|rel, content| {
-        runs::check_source(rel, content, &polls, skip_for)
-    })
+    Ok(file_diagnostics::sorted(output))
 }
 
 pub(in crate::codebase::rules) fn compile(opts: &Options) -> Result<Vec<Vec<String>>> {

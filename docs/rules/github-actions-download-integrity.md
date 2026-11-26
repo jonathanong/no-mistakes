@@ -112,8 +112,7 @@ would introduce shell syntax remain unresolved.
 A host that is still `$`, `` ` ``, or `${{ }}` after that expansion is not
 judged. A literal untrusted host is judged even when the path still contains
 `$`, because the path is then not a proven checksum file. Flow-style steps the
-line scan cannot place are reported on line 1. Invalid YAML is not a finding,
-which is not a pass. Rewrite anchors, aliases, and flow style into ordinary
+line scan cannot place are reported on line 1. Rewrite anchors, aliases, and flow style into ordinary
 block-style `run` bodies when a finding lands on line 1 and the download is
 not on that line.
 
@@ -314,6 +313,12 @@ rules:
 ```
 
 ### Unanalyzable inputs
+
+When a selected file has invalid YAML, the rule reports the parser location.
+The effective `unanalyzable` policy controls that diagnostic. Use `report`
+(the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
+Fix the YAML syntax so the rule can verify the file. Valid sibling files are
+still checked. This applies at both effort levels.
 
 - At low effort, a downloader URL built from a variable, a dynamic option
   name such as `curl --$FLAG URL`, an unquoted dynamic option value, or an

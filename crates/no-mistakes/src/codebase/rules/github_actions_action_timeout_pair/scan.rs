@@ -7,8 +7,31 @@ use super::yaml::{
 use super::{AnalysisDiagnostics, CompiledOptions, RULE_ID};
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
+use rayon::prelude::*;
 use serde_yaml::{Mapping, Value};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+pub(super) fn scan_files(
+    root: &Path,
+    opts: &CompiledOptions,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> (AnalysisDiagnostics, Vec<RuleFinding>) {
+    let mut diagnostics = AnalysisDiagnostics::default();
+    let mut input_failures = Vec::new();
+    let chunks: Vec<_> = files
+        .par_iter()
+        .map(|path| check_file(root, path, opts, sources, defer_suppression))
+        .collect();
+    for chunk in chunks {
+        match chunk {
+            Ok(per_file) => diagnostics.append(per_file),
+            Err(finding) => input_failures.push(*finding),
+        }
+    }
+    (diagnostics, input_failures)
+}
 
 pub(super) fn check_file(
     root: &Path,
@@ -16,25 +39,25 @@ pub(super) fn check_file(
     opts: &CompiledOptions,
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
-) -> AnalysisDiagnostics {
+) -> Result<AnalysisDiagnostics, Box<RuleFinding>> {
     let rel = relative_slash_path(root, path);
     let Some(source) = super::super::read_language_source(sources, path) else {
-        return AnalysisDiagnostics::default();
+        return Ok(AnalysisDiagnostics::default());
     };
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
     {
-        return AnalysisDiagnostics::default();
+        return Ok(AnalysisDiagnostics::default());
     }
     let wrapper_rel = wrapper_rel(root, path, &opts.target_roots);
-    let mut diagnostics = match serde_yaml::from_str::<Value>(&source) {
-        Ok(value) => check_parsed(&rel, &wrapper_rel, &source, &value, opts),
-        Err(_) => AnalysisDiagnostics::default(),
-    };
+    let value = super::super::github_actions_workflow_files::parse_yaml(
+        root, path, sources, &source, RULE_ID, false,
+    )?;
+    let mut diagnostics = check_parsed(&rel, &wrapper_rel, &source, &value, opts);
     if !defer_suppression {
         super::super::suppress_rule_findings_for_path(sources, path, &mut diagnostics.findings);
         super::super::suppress_rule_findings_for_path(sources, path, &mut diagnostics.advisories);
     }
-    diagnostics
+    Ok(diagnostics)
 }
 
 pub(super) fn check_parsed(

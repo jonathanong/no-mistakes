@@ -1,4 +1,3 @@
-use super::runs::check_source;
 use super::{gha_kind, RULE_ID};
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
@@ -107,14 +106,16 @@ fn kinds_and_missing_sources_are_skipped() {
     assert!(check(WORKFLOW, "jobs: [\n").is_empty());
     let sources = crate::codebase::rules::source_store_for_files(&[]);
     let root = Path::new("/missing");
-    let findings = super::super::github_actions_workflow_files::scan_files(
+    let (findings, failures) = super::super::github_actions_workflow_files::scan_yaml_files(
         root,
         &[PathBuf::from("README.md"), PathBuf::from(WORKFLOW)],
         &sources,
-        &|_, _| panic!("a missing source is not judged"),
-    )
-    .unwrap();
+        super::RULE_ID,
+        &gha_kind,
+        &|_, _, _, _| panic!("a missing source is not judged"),
+    );
     assert!(findings.is_empty());
+    assert!(failures.is_empty());
 }
 
 #[test]
@@ -366,3 +367,14 @@ jobs:
 mod parser_edges_tests;
 #[path = "wrappers_fixture_tests.rs"]
 mod wrappers_fixture_tests;
+
+fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
+    let Some(action) = gha_kind(rel) else {
+        return Vec::new();
+    };
+    let source = source.trim_start_matches('\u{feff}');
+    let Ok(value) = serde_yaml::from_str(source) else {
+        return Vec::new();
+    };
+    super::runs::check_parsed(rel, source, &value, action)
+}

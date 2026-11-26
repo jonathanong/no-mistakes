@@ -24,6 +24,22 @@ const CHECKS: &[(&str, WorkflowCheck)] = &[
         rules::github_actions_action_timeout_pair::diagnostics_with_files_and_sources,
     ),
     (
+        rules::github_actions_docker_host_ports::RULE_ID,
+        rules::github_actions_docker_host_ports::diagnostics_with_files_and_sources,
+    ),
+    (
+        rules::github_actions_no_poll_wait_job::RULE_ID,
+        rules::github_actions_no_poll_wait_job::diagnostics_with_files_and_sources,
+    ),
+    (
+        rules::github_actions_pr_diff_range::RULE_ID,
+        rules::github_actions_pr_diff_range::diagnostics_with_files_and_sources,
+    ),
+    (
+        rules::github_actions_vitest_project_selection::RULE_ID,
+        rules::github_actions_vitest_project_selection::diagnostics_with_files_and_sources,
+    ),
+    (
         rules::github_actions_local_action_checkout::RULE_ID,
         rules::github_actions_local_action_checkout::diagnostics_with_files_and_sources,
     ),
