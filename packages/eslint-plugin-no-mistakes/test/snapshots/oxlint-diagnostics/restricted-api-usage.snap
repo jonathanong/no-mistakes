@@ -1,0 +1,93 @@
+[
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 4,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 5,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 6,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 18,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 7,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 8,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 45,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 8,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 9,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 20,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 11,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 14,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 16,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 23,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 17,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 4,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 18,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 4,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 19,
+    "message": "Use the static helper."
+  },
+  {
+    "code": "no-mistakes(restricted-api-usage)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+    "line": 20,
+    "message": "Use the static helper."
+  }
+]

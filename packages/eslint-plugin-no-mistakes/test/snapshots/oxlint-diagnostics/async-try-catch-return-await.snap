@@ -1,0 +1,135 @@
+[
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 13,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 22,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 32,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 7,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 42,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 53,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 62,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 71,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 81,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 91,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 104,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 112,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 120,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 128,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 137,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 145,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 153,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 161,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 169,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  },
+  {
+    "code": "no-mistakes(async-try-catch-return-await)",
+    "column": 5,
+    "file": "eslint-plugin/async-try-catch-return-await/fixture/invalid.ts",
+    "line": 177,
+    "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+  }
+]

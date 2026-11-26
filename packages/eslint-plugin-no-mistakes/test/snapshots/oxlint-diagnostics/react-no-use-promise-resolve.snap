@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(react-no-use-promise-resolve)",
+    "column": 1,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/react-use.jsx",
+    "line": 3,
+    "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+  }
+]

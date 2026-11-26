@@ -1,0 +1,44 @@
+[
+  {
+    "code": "no-mistakes(nextjs-static-fetch-method)",
+    "column": 30,
+    "file": "eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs",
+    "line": 3,
+    "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+  },
+  {
+    "code": "no-mistakes(nextjs-static-fetch-method)",
+    "column": 45,
+    "file": "eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs",
+    "line": 4,
+    "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+  },
+  {
+    "code": "no-mistakes(nextjs-static-fetch-method)",
+    "column": 45,
+    "file": "eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs",
+    "line": 5,
+    "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+  },
+  {
+    "code": "no-mistakes(nextjs-static-fetch-method)",
+    "column": 27,
+    "file": "eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs",
+    "line": 7,
+    "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+  },
+  {
+    "code": "no-mistakes(nextjs-static-fetch-method)",
+    "column": 36,
+    "file": "eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs",
+    "line": 8,
+    "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+  },
+  {
+    "code": "no-mistakes(nextjs-static-fetch-method)",
+    "column": 48,
+    "file": "eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs",
+    "line": 9,
+    "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed."
+  }
+]

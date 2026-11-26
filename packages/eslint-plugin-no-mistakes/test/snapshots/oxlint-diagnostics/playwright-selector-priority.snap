@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(playwright-selector-priority)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/playwright-selector-priority/bare-locator.spec.js",
+    "line": 4,
+    "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+  }
+]

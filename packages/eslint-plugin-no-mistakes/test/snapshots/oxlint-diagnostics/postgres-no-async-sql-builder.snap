@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/async-sql-builder.ts",
+    "line": 3,
+    "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered."
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "code": "no-mistakes(postgres-no-nonliteral-sql-registry-key)",
+    "column": 26,
+    "file": "eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+    "line": 7,
+    "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged."
+  },
+  {
+    "code": "no-mistakes(postgres-no-nonliteral-sql-registry-key)",
+    "column": 8,
+    "file": "eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+    "line": 8,
+    "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged."
+  },
+  {
+    "code": "no-mistakes(postgres-no-nonliteral-sql-registry-key)",
+    "column": 29,
+    "file": "eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+    "line": 9,
+    "message": "QUOTED[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"order items\": return \"order items\"; default: throw new Error(\"unknown\"); } })((flag ? \"order items\" : \"other\"))). A runtime own-key check is not judged."
+  }
+]

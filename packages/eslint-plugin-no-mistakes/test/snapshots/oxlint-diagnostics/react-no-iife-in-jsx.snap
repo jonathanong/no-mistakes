@@ -1,0 +1,16 @@
+[
+  {
+    "code": "no-mistakes(react-no-iife-in-jsx)",
+    "column": 13,
+    "file": "eslint-plugin/upstreamed-generic/fixture/invalid.tsx",
+    "line": 44,
+    "message": "Avoid IIFEs in JSX; extract the logic into a variable or component."
+  },
+  {
+    "code": "no-mistakes(react-no-iife-in-jsx)",
+    "column": 30,
+    "file": "eslint-plugin/upstreamed-generic/fixture/invalid.tsx",
+    "line": 45,
+    "message": "Avoid IIFEs in JSX; extract the logic into a variable or component."
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(no-delete-property)",
+    "column": 1,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/delete-property.tsx",
+    "line": 1,
+    "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable."
+  }
+]
