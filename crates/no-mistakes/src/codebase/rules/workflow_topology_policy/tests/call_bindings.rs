@@ -275,14 +275,95 @@ fn supports_repo_unanalyzable_custom_message_and_scalar_workflow_call() {
         .all(|f| f.message == "Bind workflow_call inputs and secrets explicitly."));
 
     let scalar_callee = "on: workflow_call\njobs:\n  ok:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ok\n";
-    let caller = "on: push\njobs:\n  call:\n    uses: ./.github/workflows/scalar.yml\n    with:\n    secrets:\n";
-    let clean = run_in_memory(
+    let typed_callee = r#"
+on:
+  workflow_call:
+    inputs:
+      count:
+        required: true
+        type: number
+      dry_run:
+        required: true
+        type: boolean
+    secrets:
+jobs:
+  ok:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+"#;
+    let caller = r#"
+on: push
+x-call: &remote_call
+  uses: owner/repo/.github/workflows/ci.yml@v1
+jobs:
+  call_scalar:
+    uses: ./.github/workflows/scalar.yml
+    with:
+    secrets:
+  call_typed:
+    uses: ./.github/workflows/typed.yml
+    with:
+      count: 3
+      dry_run: true
+  call_with_inherit:
+    uses: ./.github/workflows/typed.yml
+    with: inherit
+  call_non_scalar_with:
+    uses: ./.github/workflows/typed.yml
+    with:
+      count: { nested: 1 }
+      dry_run: true
+  call_dup_with:
+    uses: ./.github/workflows/typed.yml
+    with:
+      count: 1
+      COUNT: 2
+      dry_run: true
+  call_merged:
+    <<: *remote_call
+"#;
+    let extra = run_in_memory(
         "requireExplicitWorkflowCallBindings: true",
         &[
             (".github/workflows/scalar.yml", Ok(scalar_callee)),
+            (".github/workflows/typed.yml", Ok(typed_callee)),
             (".github/workflows/caller.yml", Ok(caller)),
         ],
     );
-    assert!(clean.findings.is_empty());
-    assert!(clean.advisories.is_empty());
+    assert!(extra.findings.is_empty(), "{:#?}", extra.findings);
+    let extra_adv: Vec<&str> = extra.advisories.iter().map(|f| f.message.as_str()).collect();
+    assert!(
+        extra_adv.iter().any(|m| m.contains("sets `with` to `inherit`")),
+        "{extra_adv:#?}"
+    );
+    assert!(
+        extra_adv
+            .iter()
+            .any(|m| m.contains("sets `with.count` to `a non-mapping value`")),
+        "{extra_adv:#?}"
+    );
+    assert!(
+        extra_adv
+            .iter()
+            .any(|m| m.contains("duplicate case-colliding `with` keys")),
+        "{extra_adv:#?}"
+    );
+    assert!(
+        extra_adv.iter().any(|m| m.contains("remote workflow")),
+        "{extra_adv:#?}"
+    );
+
+    let mut locations = super::super::locations::Locations::default();
+    let fallback_finding = super::super::call_bindings_map::job_field_finding(
+        ".github/workflows/caller-violations.yml#missing_all",
+        "missing_all",
+        "secrets",
+        "missing secrets".to_owned(),
+    );
+    let violation_file = root.join(".github/workflows/caller-violations.yml");
+    let violation_sources = crate::codebase::rules::source_store_for_files(&[violation_file]);
+    let located = locations.locate(&root, &violation_sources, vec![fallback_finding]);
+    assert_eq!(located.len(), 1);
+    assert!(located[0].line > 1, "expected job fallback line, got {}", located[0].line);
 }

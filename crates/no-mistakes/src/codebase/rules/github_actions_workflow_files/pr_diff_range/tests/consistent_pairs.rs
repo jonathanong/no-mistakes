@@ -1,6 +1,6 @@
-use super::options::{collect_config_errors, compile, Options};
-use super::runs::check_source_with_options;
-use super::RULE_ID;
+use super::super::options::{collect_config_errors, compile, CompiledOptions, Options};
+use super::super::runs::check_source_with_options;
+use super::super::RULE_ID;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 const WF: &str = ".github/workflows/ci.yml";
 
-fn compile_yaml(yaml: &str) -> super::options::CompiledOptions {
+fn compile_yaml(yaml: &str) -> CompiledOptions {
     let opts: Options = serde_yaml::from_str(yaml).unwrap();
     compile(&opts).unwrap()
 }
@@ -27,15 +27,18 @@ fn check(opts_yaml: &str, workflow_yaml: &str) -> (Vec<String>, Vec<String>) {
 fn consistent_pairs_allow_merge_commit_and_three_dot_pr_diffs() {
     let opts = "requireConsistentRevisionPairs: true";
     for workflow in [
-        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff HEAD^1 HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout/@v4\n      - run: git diff HEAD^1 HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n      - run: git diff HEAD HEAD^1\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n      - run: git diff HEAD^1 HEAD^2\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ''\n      - run: git diff HEAD^1 ${{ github.sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: refs/pull/${{ github.event.pull_request.number }}/merge\n      - run: git diff HEAD~1 HEAD\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.sha }}\n      - run: git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}\n",
-        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff origin/${{ github.base_ref }}...${{ github.sha }}\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff refs/remotes/origin/${{ github.base_ref }}...${{ github.sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n      - run: git diff ${{ github.event.pull_request.base.sha }}...HEAD\n",
-        "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff origin/${{ github.base_ref }}...${{ github.head_ref }}\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.head_ref }}\n      - run: git diff origin/${{ github.event.pull_request.base.ref }}...HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff origin/${{ github.base_ref }}...${{ github.event.pull_request.head.ref }}\n",
         "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}...${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}\n",
+        "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}...${{ github.event.merge_group.head_sha || github.event.pull_request.head.sha }}\n",
         "on: merge_group\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.merge_group.head_sha }}\n      - run: git diff ${{ github.event.merge_group.base_sha }} HEAD\n",
         "on: merge_group\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha }} ${{ github.event.merge_group.head_sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff foo bar\n",
@@ -56,14 +59,17 @@ fn consistent_pairs_reject_mismatched_base_merge_and_checkout_pairs() {
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff origin/${{ github.base_ref }} ${{ github.sha }}\n",
         "on: [pull_request, push]\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff origin/${{ github.base_ref }}...${{ github.sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - run: git diff HEAD^1 ${{ github.event.pull_request.head.sha }}\n",
-        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n      - run: git diff HEAD^1 HEAD\n",
-        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.base.sha }}\n      - run: git diff HEAD^1 HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.ref }}\n      - run: git diff HEAD^1 HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.base_ref }}\n      - run: git diff HEAD^1 HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.base.ref }}\n      - run: git diff ${{ github.event.pull_request.base.sha }} HEAD\n",
         "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha }}...${{ github.event.pull_request.head.sha }}\n",
         "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.merge_group.head_sha }}\n",
         "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha }} ${{ github.sha }}\n",
         "on: [pull_request, merge_group]\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}...${{ github.event.pull_request.head.sha }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.base.sha }} origin/${{ github.base_ref }}\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.pull_request.head.sha }} ${{ github.sha }}\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.base_sha }} ${{ github.event.merge_group.base_sha }}\n",
+        "on: merge_group\njobs:\n  a:\n    steps:\n      - run: git diff ${{ github.event.merge_group.head_sha }} HEAD\n",
     ] {
         let (findings, _) = check(opts, workflow);
         assert!(!findings.is_empty(), "expected mismatch for:\n{workflow}");
@@ -94,17 +100,20 @@ jobs:
       head-rev: ${{ github.event.pull_request.base.sha }}
   analyze:
     steps:
+      - uses: actions/setup-node@v4
       - uses: actions/checkout@v4
         with:
           ref:
       - env:
           DIFF_BASE: origin/${{ github.base_ref }}
-          DIFF_HEAD: ${{ github.sha }}
         run: |
-          node scripts/check.mjs --base=HEAD^1 --base=HEAD^1 --head=HEAD -- --base ignored
+          node scripts/check.mjs --base=HEAD^1 --base=HEAD^1 --head=HEAD --head=HEAD -- --base ignored
           node scripts/check.mjs --base HEAD^1 --base origin/${{ github.base_ref }} --head HEAD
+          node scripts/check.mjs --base HEAD^1 --head HEAD --head ${{ github.sha }}
           node scripts/check.mjs --base= --head HEAD
           node scripts/check.mjs --base ${{ github.event.pull_request.base.sha }} --head
+          node scripts/check.mjs --base "$UNSET_BASE" --head HEAD
+          node scripts/check.mjs --base ${{ github.event.pull_request.base.sha || github.sha }} --head HEAD
       - uses: ./.github/actions/analyze
         with:
           base-rev: 123
@@ -112,11 +121,13 @@ jobs:
 "#;
     let (findings, undecidable) = check(opts, workflow);
     assert_eq!(findings.len(), 3, "{findings:#?}");
-    assert_eq!(undecidable.len(), 4, "{undecidable:#?}");
+    assert_eq!(undecidable.len(), 7, "{undecidable:#?}");
 
     for unknown_checkout in [
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with: bad\n      - run: node x --base HEAD^1 --head HEAD\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: 123\n      - run: node x --base HEAD^1 --head HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: main\n      - run: node x --base HEAD^1 --head HEAD\n",
+        "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ inputs.ref }}\n      - run: node x --base HEAD^1 --head HEAD\n",
         "on: pull_request\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          '<<': { ref: main }\n      - run: node x --base HEAD^1 --head HEAD\n",
     ] {
         let (findings, undecidable) = check(opts, unknown_checkout);
@@ -136,6 +147,8 @@ fn invalid_yaml_and_file_suppression_follow_policy() {
         .join("../../test-cases/rules/github-actions-pr-diff-range/fixture/suppression");
     let root = crate::codebase::ts_resolver::normalize_path(&base);
     let files = vec![
+        root.join("README.md"),
+        root.join(".github/workflows/missing.yml"),
         root.join(".github/workflows/file-disabled.yml"),
         root.join(".github/workflows/suppressed.yml"),
     ];
@@ -147,17 +160,17 @@ fn invalid_yaml_and_file_suppression_follow_policy() {
         }],
         ..Default::default()
     };
-    let sources = crate::codebase::rules::source_store_for_files(&files);
-    let out = super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
-        .unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&files[2..]);
+    let out =
+        super::super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
+            .unwrap();
     assert_eq!(out.findings.len(), 1);
 
-    let dispatched =
-        crate::codebase::rules::github_actions_workflow_files::dispatch::run(
-            RULE_ID, &root, &config, &files, &sources, false,
-        )
-        .unwrap()
-        .unwrap();
+    let dispatched = crate::codebase::rules::github_actions_workflow_files::dispatch::run(
+        RULE_ID, &root, &config, &files, &sources, false,
+    )
+    .unwrap()
+    .unwrap();
     assert_eq!(dispatched.len(), 1);
 
     let mut repo_policy = config.clone();
@@ -170,7 +183,7 @@ fn invalid_yaml_and_file_suppression_follow_policy() {
     );
     let strict_files = vec![strict_root.join(".github/workflows/unanalyzable.yml")];
     let strict_sources = crate::codebase::rules::source_store_for_files(&strict_files);
-    let strict_out = super::diagnostics_with_files_and_sources(
+    let strict_out = super::super::diagnostics_with_files_and_sources(
         &strict_root,
         &repo_policy,
         &strict_files,

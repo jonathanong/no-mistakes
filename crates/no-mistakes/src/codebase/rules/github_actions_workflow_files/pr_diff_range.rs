@@ -118,5 +118,3 @@ fn scan_file(
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod tests_consistent_pairs;
