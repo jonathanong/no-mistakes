@@ -1,5 +1,5 @@
-use super::super::super::{check_source, default_compiled_options};
-use super::pins;
+use super::super::super::check_source;
+use super::{default_compiled_options, pins};
 
 #[test]
 fn homebrew_formulae_need_homebrew_context() {

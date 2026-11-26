@@ -64,12 +64,6 @@ impl CompiledOptions {
     }
 }
 
-#[cfg(test)]
-fn default_compiled_options() -> &'static CompiledOptions {
-    static DEFAULT: std::sync::OnceLock<CompiledOptions> = std::sync::OnceLock::new();
-    DEFAULT.get_or_init(|| compile_options(&Options::default()).unwrap())
-}
-
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let files = discover_files(root, &config.filesystem.skip_directories);
     check_with_files(root, config, &files)

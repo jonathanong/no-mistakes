@@ -1,11 +1,16 @@
 use super::super::patterns::DEFAULT_PATTERNS;
-use super::super::{check_source, default_compiled_options};
+use super::super::{check_source, compile_options, CompiledOptions, Options};
 use super::RUNTIME_PATTERNS;
 use regex::Regex;
 
 mod homebrew_tests;
 mod image_grammar_tests;
 mod uses_key_tests;
+
+pub(super) fn default_compiled_options() -> &'static CompiledOptions {
+    static DEFAULT: std::sync::OnceLock<CompiledOptions> = std::sync::OnceLock::new();
+    DEFAULT.get_or_init(|| compile_options(&Options::default()).unwrap())
+}
 
 fn pins(line: &str) -> Vec<String> {
     check_source("src/app.test.mts", line, default_compiled_options())

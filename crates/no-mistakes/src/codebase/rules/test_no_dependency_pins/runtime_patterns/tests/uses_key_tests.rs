@@ -2,7 +2,8 @@
 //! reported under (`exact action ref` or `versioned Homebrew formula`), never
 //! whether it is reported, so these tests compare reasons and not text.
 
-use super::super::super::{check_source, default_compiled_options};
+use super::super::super::check_source;
+use super::default_compiled_options;
 
 const ACTION_REF: &str = "exact action ref";
 const FORMULA: &str = "versioned Homebrew formula";

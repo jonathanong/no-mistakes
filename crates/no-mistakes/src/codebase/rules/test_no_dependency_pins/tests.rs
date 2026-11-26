@@ -267,6 +267,11 @@ fn custom_patterns_do_not_get_the_placeholder_exemption() {
     assert_eq!(pins, ["tool-0.0.0", "tool-2.0.0", "tool-3.0.0"]);
 }
 
+fn default_compiled_options() -> &'static CompiledOptions {
+    static DEFAULT: std::sync::OnceLock<CompiledOptions> = std::sync::OnceLock::new();
+    DEFAULT.get_or_init(|| compile_options(&Options::default()).unwrap())
+}
+
 fn default_pins(source: &str) -> Vec<String> {
     check_source("src/pin.test.mts", source, default_compiled_options())
         .into_iter()

@@ -1,6 +1,11 @@
-use super::super::{check_source, default_compiled_options};
+use super::super::{check_source, compile_options, CompiledOptions, Options};
 use super::DEFAULT_PATTERNS;
 use std::path::PathBuf;
+
+fn default_compiled_options() -> &'static CompiledOptions {
+    static DEFAULT: std::sync::OnceLock<CompiledOptions> = std::sync::OnceLock::new();
+    DEFAULT.get_or_init(|| compile_options(&Options::default()).unwrap())
+}
 
 fn refs(line: &str) -> Vec<String> {
     check_source("src/app.test.mts", line, default_compiled_options())
