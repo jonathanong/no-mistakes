@@ -6,7 +6,9 @@ route rule needs raw source for route candidates only. Its suppressed,
 malformed, and excluded route files remain candidates. Raw-source-only checking
 reports the malformed route because it does not parse it; the mixed check's
 fact parser rejects that malformed source. The invalid UTF-8 and dense ordinary
-modules are outside route demand, and the sibling route should not be read.
+modules are outside route demand. The suppression audit reads the selected
+applications without parsing them, so it reports the misspelled directive in
+the admin source and excludes the matching example in the sibling app.
 
 `mixed.yml` adds the caching rule as a source-fact consumer. That request must
 retain the ordinary source and parse work required by that rule while still

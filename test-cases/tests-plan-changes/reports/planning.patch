@@ -1,0 +1,6 @@
+diff --git a/src/example.ts b/src/example.ts
+--- a/src/example.ts
++++ b/src/example.ts
+@@ -1 +1 @@
+-export const identity = (id: string) => id;
++export const identity = (id: string) => id.trim();

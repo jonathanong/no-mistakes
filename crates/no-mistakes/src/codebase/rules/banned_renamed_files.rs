@@ -7,7 +7,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-mod matching;
+pub(in crate::codebase::rules) mod matching;
 
 pub const RULE_ID: &str = "banned-renamed-files";
 

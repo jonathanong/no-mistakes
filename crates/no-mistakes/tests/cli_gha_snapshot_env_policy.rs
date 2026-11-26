@@ -43,8 +43,22 @@ fn github_actions_env_policy_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "non-mapping-scopes"),
                 policy.clone(),
             ),
+            (
+                "null",
+                rules_path(RULE, "fixture", "null"),
+                rules_path(RULE, "configs", "null.yml"),
+            ),
             // 1 finding: line and next-line directives hide two of three.
-            ("disabled", rules_path(RULE, "fixture", "disabled"), policy),
+            (
+                "disabled",
+                rules_path(RULE, "fixture", "disabled"),
+                policy.clone(),
+            ),
+            (
+                "disabled_file",
+                rules_path(RULE, "fixture", "suppressions"),
+                policy,
+            ),
         ],
     );
 }

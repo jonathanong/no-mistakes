@@ -17,11 +17,11 @@ pub(super) struct Policy {
 }
 
 #[derive(Debug)]
-pub(super) struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     pub(super) projects: Vec<Policy>,
 }
 
-pub(super) fn compile(options: &Options) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile(options: &Options) -> Result<Compiled> {
     let mut seen = BTreeSet::new();
     let mut projects = Vec::new();
     for (index, entry) in options.projects.iter().enumerate() {

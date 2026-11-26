@@ -1,9 +1,9 @@
 import type { Unanalyzable } from "./traversal-types";
 
-export type GithubActionsEnvPolicyValue = string | number | boolean;
+export type GithubActionsEnvPolicyValue = string | number | boolean | null;
 
 export interface GithubActionsEnvPolicyOptions {
-  /** Env names mapped to the only value each may have where it is set. Defaults to {}. */
+  /** Env names mapped to their required value. Null is normalized to the empty string. */
   required?: Record<string, GithubActionsEnvPolicyValue>;
   /** Env names that must not appear. Defaults to []. */
   forbidden?: string[];

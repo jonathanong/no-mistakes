@@ -100,12 +100,9 @@ fn demand_validation_failure_retains_independent_filesystem_findings() {
     let snapshot = VisiblePathSnapshot::new(&root);
     let files = snapshot.paths_for(&root);
     let sources = snapshot.source_store_for(&root);
-    let config = crate::config::v2::load_v2_config_from_visible(
-        &root,
-        Some(&root.join("invalid-lint.yml")),
-        &files,
-    )
-    .unwrap();
+    let config: NoMistakesConfig =
+        serde_yaml::from_str(&std::fs::read_to_string(root.join("invalid-lint.yml")).unwrap())
+            .unwrap();
     let session = AnalysisSession::disabled();
     session.enable_partial_checks();
     let facts = crate::codebase::check_facts::CheckFactMap::default();

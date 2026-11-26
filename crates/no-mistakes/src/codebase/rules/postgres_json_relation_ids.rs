@@ -10,7 +10,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod fingerprint;
 mod scan;
 
@@ -37,7 +37,7 @@ pub(crate) struct Options {
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     schema_catalog_path: String,
     id_key_pattern: Option<Regex>,
     key_column_map: BTreeMap<String, String>,

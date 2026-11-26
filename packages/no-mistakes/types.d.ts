@@ -42,6 +42,7 @@ export type * from "./test-reliability-types";
 export type * from "./postgres-bounded-statements-types";
 export type * from "./query-reached-per-item-types";
 export type * from "./vitest-default-excludes-types";
+export type * from "./csp-allowed-origins-types";
 export type * from "./dependabot-cooldown-policy-types";
 export type * from "./pnpm-release-age-policy-types";
 export type * from "./shell-compatibility-types";

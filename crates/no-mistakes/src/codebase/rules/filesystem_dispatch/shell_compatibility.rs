@@ -17,7 +17,7 @@ pub use zsh::RULE_ID as ZSH_READONLY_PARAMETER;
 
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields)]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     files: Vec<String>,
 }
 
@@ -100,4 +100,9 @@ fn message(bash: bool, target: &str) -> String {
         "Zsh reserves `status` as the read-only exit status. Rename the variable to `exit_status`."
             .into()
     }
+}
+
+pub(in crate::codebase::rules) fn validate_options(id: &str, options: &Options) -> Result<()> {
+    GlobMatcher::new(&options.files, &format!("{id} options.files"))?;
+    Ok(())
 }

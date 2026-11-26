@@ -1,11 +1,15 @@
 use super::validate;
+use crate::codebase::ts_resolver::normalize_path;
 use std::path::{Path, PathBuf};
 
 fn load(name: &str) -> (String, PathBuf) {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/config-v2/rule-keys/fixture")
         .join(name);
-    (std::fs::read_to_string(&path).unwrap(), path)
+    (
+        std::fs::read_to_string(&path).unwrap(),
+        normalize_path(&path),
+    )
 }
 
 fn check(name: &str) -> anyhow::Result<()> {
@@ -126,4 +130,50 @@ fn grouping_rule_fragment_validation_preserves_advisory_only_policy() {
         let (source, path) = load(name);
         super::validate_fragment(&source, &path, "rules").unwrap();
     }
+}
+
+#[test]
+fn unknown_rule_ids_report_their_authored_location_and_closest_rule() {
+    for (name, line) in [
+        ("unknown-id.yml", 3),
+        ("unknown-id-map.jsonc", 4),
+        ("unknown-id-override.yml", 4),
+        ("unknown-id-override-map.yml", 4),
+        ("unknown-id-project.yml", 5),
+        ("unknown-id-repository.yml", 2),
+        ("unknown-id-disabled.yml", 2),
+    ] {
+        let (source, path) = load(name);
+        let error = validate(&source, &path).unwrap_err().to_string();
+        assert!(
+            error.starts_with(&format!("{}:{line}:", path.display())),
+            "{error}"
+        );
+        assert!(error.contains("unknown rule ID `unique-exprts`"), "{error}");
+        assert!(error.contains("Did you mean `unique-exports`?"), "{error}");
+    }
+}
+
+#[test]
+fn unknown_rule_ids_in_fragments_report_the_fragment_line() {
+    for (name, section, line) in [
+        ("unknown-id-fragment.yml", "rules", 1),
+        ("unknown-id-project-fragment.yml", "projects", 3),
+    ] {
+        let (source, path) = load(name);
+        let error = super::validate_fragment(&source, &path, section)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            error.starts_with(&format!("{}:{line}:", path.display())),
+            "{error}"
+        );
+        assert!(error.contains("unknown rule ID `unique-exprts`"), "{error}");
+        assert!(error.contains("Did you mean `unique-exports`?"), "{error}");
+    }
+}
+
+#[test]
+fn semantic_change_rules_are_not_analyzer_rule_applications() {
+    check("change-rule-is-not-analyzer-id.yml").unwrap();
 }

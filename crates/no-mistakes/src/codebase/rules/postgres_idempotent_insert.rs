@@ -6,7 +6,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
-mod options;
+pub(in crate::codebase::rules) mod options;
 pub(crate) use options::Options;
 mod scan;
 pub const RULE_ID: &str = "postgres-idempotent-insert";
@@ -119,7 +119,7 @@ fn check_with_files_sources_and_optional_facts(
     Ok(findings.finish())
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
     Ok(CompiledOptions {

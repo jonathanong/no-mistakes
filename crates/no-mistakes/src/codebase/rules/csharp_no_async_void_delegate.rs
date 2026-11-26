@@ -23,7 +23,7 @@ pub(crate) struct Options {
     pub(crate) message: Option<String>,
 }
 
-pub(super) struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     pub(super) constructors: Vec<regex::Regex>,
     pub(super) methods: Vec<regex::Regex>,
     pub(super) allow: FileAllow,
@@ -32,7 +32,7 @@ pub(super) struct CompiledOptions {
 
 super::masked_source_rule_entrypoints!(compile_options, is_csharp_file, scan::check_file);
 
-fn compile_options(opts: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: Options) -> Result<CompiledOptions> {
     let constructors = if opts.constructors.is_empty() {
         constructor_regexes(DEFAULT_CONSTRUCTORS.iter().copied())
     } else {

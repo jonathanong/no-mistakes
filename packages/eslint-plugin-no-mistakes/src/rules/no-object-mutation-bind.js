@@ -1,9 +1,10 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { joinValues } = require("./no-object-mutation-join");
 const { arrayParameter } = require("./no-object-mutation-receiver");
 const { considerWrite } = require("./no-object-mutation-write");
-const { literalKey, memberKey, staticKey } = require("./no-object-mutation-syntax");
+const { literalKey, memberKey, staticKey, unwrap } = require("./no-object-mutation-syntax");
 const {
   elementTag,
   freshCopy,
@@ -61,7 +62,13 @@ function bindingEscapes(scope, name) {
   return owner.isModule || owner.functionEnv !== scope.functionEnv;
 }
 
-function assignBinding(state, name, tag, scope) {
+function unwrapParens(node) {
+  let current = node;
+  while (current?.type === "ParenthesizedExpression") current = current.expression;
+  return current;
+}
+
+function assignBinding(state, name, tag, scope, join = false) {
   const owner = bindingScope(scope, name);
   const cell = owner?.cells.get(name);
   if (!cell || cell.kind === "import") {
@@ -74,53 +81,51 @@ function assignBinding(state, name, tag, scope) {
     cell.tag = moduleTag(tag);
     return;
   }
-  cell.tag = tag;
+  cell.tag = join ? joinValues(cell.tag, tag) : tag;
   cell.arrayParameter = false;
 }
 
 function assignPattern(state, pattern, tag, scope) {
-  if (pattern.type === "MemberExpression") {
-    considerWrite(state, api.visit(state, pattern.object, scope, "read"), pattern, {
+  const target = unwrap(pattern);
+  if (target.type === "MemberExpression") {
+    if (target.computed) api.visit(state, target.property, scope, "read");
+    considerWrite(state, api.visit(state, target.object, scope, "read"), target, {
       viaCall: false,
-      objectNode: pattern,
-      key: memberKey(pattern),
+      objectNode: target,
+      key: memberKey(target),
       rhs: tag,
       scope,
     });
     return;
   }
-  if (pattern.type === "Identifier") {
-    assignBinding(state, pattern.name, tag, scope);
+  if (target.type === "Identifier") {
+    assignBinding(state, target.name, tag, scope, unwrapParens(pattern) !== target);
     return;
   }
-  if (pattern.type === "AssignmentPattern") {
-    api.visit(state, pattern.right, scope, "read");
-    assignPattern(state, pattern.left, tag, scope);
+  if (target.type === "AssignmentPattern") {
+    api.visit(state, target.right, scope, "read");
+    assignPattern(state, target.left, tag, scope);
     return;
   }
-  if (pattern.type === "RestElement") {
-    assignPattern(state, pattern.argument, freshCopy(tag, scope), scope);
+  if (target.type === "RestElement") {
+    assignPattern(state, target.argument, freshCopy(tag, scope), scope);
     return;
   }
-  if (pattern.type === "ObjectPattern") {
-    for (const property of pattern.properties) {
+  if (target.type === "ObjectPattern") {
+    for (const property of target.properties) {
       if (property.type === "RestElement") {
         assignPattern(state, property.argument, freshCopy(tag, scope), scope);
         continue;
       }
       const key = property.computed ? literalKey(property.key) : staticKey(property.key);
-      if (property.computed) {
-        api.visit(state, property.key, scope, "read");
-      }
+      if (property.computed) api.visit(state, property.key, scope, "read");
       assignPattern(state, property.value, key ? readMember(tag, key) : tag, scope);
     }
     return;
   }
-  if (pattern.type === "ArrayPattern") {
-    for (const element of pattern.elements) {
-      if (element === null) {
-        continue;
-      }
+  if (target.type === "ArrayPattern") {
+    for (const element of target.elements) {
+      if (element === null) continue;
       assignPattern(state, element, elementTag(tag), scope);
     }
   }
@@ -192,9 +197,4 @@ function bindPattern(state, pattern, tag, scope, kind, objectNode) {
   }
 }
 
-module.exports = {
-  assignPattern,
-  bindingEscapes,
-  bindName,
-  bindPattern,
-};
+module.exports = { assignPattern, bindingEscapes, bindName, bindPattern };

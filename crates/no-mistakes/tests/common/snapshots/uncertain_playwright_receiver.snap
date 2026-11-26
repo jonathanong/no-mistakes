@@ -1,0 +1,77 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.mts",
+          "message": "tests/local.spec.mts:7: cannot verify whether `selected` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/wrapper.spec.mts",
+          "message": "tests/wrapper.spec.mts:9: cannot verify whether `wrappedCustom` is Playwright's `test` (fixture wrapper return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.mts",
+          "message": "tests/local.spec.mts:7: cannot verify whether `selected` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/wrapper.spec.mts",
+          "message": "tests/wrapper.spec.mts:6: cannot verify whether `wrapped` is Playwright's `test` (fixture wrapper return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/wrapper.spec.mts",
+          "message": "tests/wrapper.spec.mts:9: cannot verify whether `wrappedCustom` is Playwright's `test` (fixture wrapper return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/local.spec.mts",
+          "line": 10,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "direct.describe.configure({ retries: 2, mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/local.spec.mts",
+          "line": 10,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "direct.describe.configure({ retries: 2, mode: \"serial\" });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/local.spec.mts",
+          "line": 13,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "forwarded.describe.configure({ retries: 2, mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/local.spec.mts",
+          "line": 13,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "forwarded.describe.configure({ retries: 2, mode: \"serial\" });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

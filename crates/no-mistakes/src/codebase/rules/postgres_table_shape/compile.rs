@@ -41,7 +41,7 @@ pub(super) struct Banned {
     pub(super) message: String,
 }
 
-pub(super) fn compile(opts: &Options, message: Option<String>) -> Result<super::Compiled> {
+pub(in crate::codebase::rules) fn compile(opts: &Options, message: Option<String>) -> Result<super::Compiled> {
     crate::codebase::postgres::require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     let mut names = Vec::new();
     let mut shapes = Vec::new();

@@ -1,0 +1,8 @@
+unanalyzable: advise
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    include: [bad.rs, definite.rs]
+    options:
+      srcMax: 1
+      testMax: 1

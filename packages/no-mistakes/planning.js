@@ -83,13 +83,11 @@ function camelizeWhy(value) {
 }
 
 async function testsComment(options) {
-  const input = Buffer.from(JSON.stringify(await decamelizePlanOptions(options)));
-  return String(await native.testsCommentMarkdown(input));
+  return callJson(native.testsCommentMarkdown, await decamelizePlanOptions(options), String);
 }
 
 async function testsGraphMermaid(options) {
-  const input = Buffer.from(JSON.stringify(await decamelizePlanOptions(options)));
-  return String(await native.testsGraphMermaid(input));
+  return callJson(native.testsGraphMermaid, await decamelizePlanOptions(options), String);
 }
 
 const jsonApis = createJsonApis({

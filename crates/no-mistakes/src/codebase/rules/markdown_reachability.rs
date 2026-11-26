@@ -154,3 +154,9 @@ fn is_named(path: &Path, names: &BTreeSet<String>) -> bool {
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "markdown_reachability/tests.rs"]
 mod tests;
+
+pub(super) fn validate_options(options: &Options) -> Result<()> {
+    exclude_roots(&options.exclude_roots)?;
+    validate_max_depth(options.max_depth)?;
+    Ok(())
+}

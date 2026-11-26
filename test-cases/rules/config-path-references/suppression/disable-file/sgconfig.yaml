@@ -1,0 +1,3 @@
+# no-mistakes-disable-file config-path-references
+ruleDirs:
+  - ./missing/file-suppressed

@@ -20,6 +20,11 @@ fn github_actions_action_timeout_pair_json_matches_snapshot() {
                 paired.clone(),
             ),
             (
+                "suppressions",
+                rules_path(RULE, "fixture", "suppressions"),
+                paired.clone(),
+            ),
+            (
                 "quoted_nested_timeout",
                 rules_path(RULE, "fixture", "fail-nested"),
                 paired.clone(),

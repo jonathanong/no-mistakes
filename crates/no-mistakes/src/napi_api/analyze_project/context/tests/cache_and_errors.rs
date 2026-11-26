@@ -94,13 +94,13 @@ fn check_report_returns_a_rule_option_error() {
             "reports": [{"type": "check"}]
         }))
         .unwrap();
-    let context = super::AnalyzeProjectContext::prepare(&options).unwrap();
-    let report = context.project_report(&options.reports[0], &options).unwrap();
-    let report: serde_json::Value = serde_json::from_str(report.get()).unwrap();
-    assert!(report["incomplete"].as_array().unwrap().iter().any(|failure| {
-        failure["consumer"] == "postgres-bounded-statements"
-            && failure["message"].as_str().unwrap().contains("schemaCatalogPath: required")
-    }), "{report}");
+    let error = super::AnalyzeProjectContext::prepare(&options)
+        .err()
+        .expect("invalid config must abort batch preparation")
+        .to_string();
+    assert!(error.contains("broken.yml:4"), "{error}");
+    assert!(error.contains("postgres-bounded-statements"), "{error}");
+    assert!(error.contains("schemaCatalogPath: required"), "{error}");
 }
 
 #[test]

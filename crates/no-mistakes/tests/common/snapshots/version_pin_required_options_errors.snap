@@ -3,39 +3,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "empty_options": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "filesystem",
-          "message": "version-pin-consistency: sourceFile is required and must not be empty"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/empty.yml:3: version-pin-consistency: options.sourceFile is required and must not be empty\n"
   },
   "empty_source_file": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "filesystem",
-          "message": "version-pin-consistency: sourceFile is required and must not be empty"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/empty-source.yml:6: version-pin-consistency: options.sourceFile is required and must not be empty\n"
   }
 }

@@ -1,0 +1,9 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          true
+          bash -c bash" -c bash' -c "bash'" -c '"'"bash'"'"' -c '"'"'"'"'"'"'"example-tool
+      - run: bash -c bash' -c bash" -c 'bash"' -c '"'"'example-tool

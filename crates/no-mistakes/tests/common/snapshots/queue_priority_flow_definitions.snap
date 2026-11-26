@@ -1,0 +1,60 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "include-tests": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "queues-check: direct.ts:3 mixed-priority was not judged for queue \"reports\" because the flow queue has multiple definition files",
+        "queues-check: enqueue.ts:4 mixed-priority was not judged for queue \"orders\" because the flow queue has multiple definition files",
+        "queues-check: enqueue.ts:5 mixed-priority was not judged for queue \"reports\" because the flow queue has multiple definition files",
+        "queues-check: enqueue.ts:7 mixed-priority was not judged for queue \"orders\" because the flow queue has multiple definition files",
+        "queues-check: enqueue.ts:8 mixed-priority was not judged for queue \"reports\" because the flow queue has multiple definition files"
+      ]
+    }
+  },
+  "production": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"orders\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:7 (rush, priority 2)",
+          "queueFile": "queues.ts",
+          "queueName": "orders",
+          "sourceLine": "orders.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "rush",
+          "kind": "mixed-priority",
+          "line": 7,
+          "message": "queue \"orders\" mixes priority 0 and priority > 0; this producer sets priority 2 while other producers enqueue with priority 0: enqueue.ts:4 (plain)",
+          "queueFile": "queues.ts",
+          "queueName": "orders",
+          "sourceLine": "flow.add({ name: \"rush\", queueName: \"orders\", opts: { priority: 2 } });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "queues-check: direct.ts:3 mixed-priority was not judged for queue \"reports\" because the flow queue has multiple definition files",
+        "queues-check: enqueue.ts:5 mixed-priority was not judged for queue \"reports\" because the flow queue has multiple definition files",
+        "queues-check: enqueue.ts:8 mixed-priority was not judged for queue \"reports\" because the flow queue has multiple definition files"
+      ]
+    }
+  }
+}

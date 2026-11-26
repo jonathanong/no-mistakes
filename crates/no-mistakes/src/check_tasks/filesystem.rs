@@ -51,6 +51,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
         duration,
     })
 }
+mod csp_allowed_origins;
 mod download_integrity;
 mod finite_sets;
 mod github_actions;
@@ -60,6 +61,7 @@ mod nested_controls;
 mod partial;
 mod payload_compatibility;
 mod redirects;
+mod selected_sources;
 mod terraform;
 mod vitest_project_policy;
 fn run_remaining_filesystem_rules(

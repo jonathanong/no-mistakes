@@ -1,0 +1,19 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    frontendRoot: web/app
+    selectorRoots:
+      - web/app
+    selectors:
+      testIds:
+        - data-pw
+
+rules:
+  - rule: playwright-prefer-test-id-locators
+    tests:
+      playwright: [web]

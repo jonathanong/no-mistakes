@@ -128,6 +128,14 @@
     "name": "compiled synthetic case 15 (1)"
   },
   {
+    "file": "packages/no-mistakes/scripts/planning-parity-api.test.js",
+    "name": "compiled synthetic planning case (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/planning-parity-api.test.js",
+    "name": "compiled synthetic planning case (1)"
+  },
+  {
     "file": "packages/no-mistakes/scripts/postgres-source-api.test.js",
     "name": "compiled synthetic case 16 (0)"
   },

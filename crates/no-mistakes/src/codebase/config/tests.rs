@@ -102,8 +102,8 @@ fn load_codebase_config_uses_explicit_config_path() {
 
     let config = load_codebase_config_with_path(&root, Some(&config_path)).unwrap();
 
-    assert!(config.is_rule_enabled("active-rule"));
-    assert!(!config.is_rule_enabled("disabled-rule"));
+    assert!(config.is_rule_enabled("unique-exports"));
+    assert!(!config.is_rule_enabled("forbidden-calls"));
 }
 
 #[test]

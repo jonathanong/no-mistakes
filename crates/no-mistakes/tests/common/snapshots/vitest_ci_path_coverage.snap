@@ -23,6 +23,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/sibling.yml",
+          "line": 1,
+          "message": "src/sibling.ts: Vitest project `sibling` configured source path is not covered by CI path filters: .github/workflows/sibling.yml:sibling",
+          "rule": "vitest-ci-path-coverage",
+          "sourceLine": "name: CI",
+          "target": "src/sibling.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {

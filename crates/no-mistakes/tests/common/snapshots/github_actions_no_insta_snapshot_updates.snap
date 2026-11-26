@@ -153,7 +153,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "merge-keys": {
+  "dynamic-commands": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "job \"tools\" step 1 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "job \"tools\" step 2 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: '\"$dir/scanner\" git --redact'",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic-commands-report": {
     "exitCode": 1,
     "report": {
       "advisories": [],
@@ -162,6 +191,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "job \"tools\" step 1 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "job \"tools\" step 2 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: '\"$dir/scanner\" git --redact'",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "merge-keys": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
         {
           "file": ".github/workflows/merge.yml",
           "line": 3,
@@ -187,6 +240,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         }
       ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },
@@ -199,6 +257,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque-shell-script": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "job \"scripts\" step 1 invokes a shell with an opaque script, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: bash script.sh \"$ARGS\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque-shell-script-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "job \"scripts\" step 1 invokes a shell with an opaque script, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: bash script.sh \"$ARGS\"",
+          "target": "unanalyzable"
+        }
+      ],
       "warnings": []
     }
   },
@@ -282,12 +382,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "shells": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [
+      "advisories": [
         {
           "file": ".github/workflows/arguments.yml",
           "line": 15,
@@ -298,27 +393,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/defaults.yml",
-          "line": 10,
-          "message": "job \"workflow_default\" step 1 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
-          "rule": "github-actions-no-insta-snapshot-updates",
-          "sourceLine": "- run: cargo insta accept",
-          "target": "accept"
-        },
-        {
-          "file": ".github/workflows/defaults.yml",
           "line": 17,
           "message": "job \"job_default\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
           "rule": "github-actions-no-insta-snapshot-updates",
           "sourceLine": "- run: cargo insta test",
           "target": "unanalyzable"
-        },
-        {
-          "file": ".github/workflows/defaults.yml",
-          "line": 18,
-          "message": "job \"job_default\" step 2 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
-          "rule": "github-actions-no-insta-snapshot-updates",
-          "sourceLine": "- run: cargo insta test --accept",
-          "target": "--accept"
         },
         {
           "file": ".github/workflows/runners.yml",
@@ -338,6 +417,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/runners.yml",
+          "line": 30,
+          "message": "job \"group_opaque\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/defaults.yml",
+          "line": 10,
+          "message": "job \"workflow_default\" step 1 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/defaults.yml",
+          "line": 18,
+          "message": "job \"job_default\" step 2 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test --accept",
+          "target": "--accept"
+        },
+        {
+          "file": ".github/workflows/runners.yml",
           "line": 19,
           "message": "job \"macos_label\" step 1 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
           "rule": "github-actions-no-insta-snapshot-updates",
@@ -351,14 +460,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-no-insta-snapshot-updates",
           "sourceLine": "- run: cargo insta accept",
           "target": "accept"
-        },
-        {
-          "file": ".github/workflows/runners.yml",
-          "line": 30,
-          "message": "job \"group_opaque\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
-          "rule": "github-actions-no-insta-snapshot-updates",
-          "sourceLine": "- run: cargo insta accept",
-          "target": "unanalyzable"
         },
         {
           "file": ".github/workflows/runners.yml",
@@ -396,12 +497,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "unanalyzable": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [
+      "advisories": [
         {
           "file": ".github/workflows/expression.yml",
           "line": 9,
@@ -652,14 +748,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/run.yml",
-          "line": 40,
-          "message": "job \"windows\" step 2 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
-          "rule": "github-actions-no-insta-snapshot-updates",
-          "sourceLine": "- run: cargo insta accept",
-          "target": "accept"
-        },
-        {
-          "file": ".github/workflows/run.yml",
           "line": 49,
           "message": "job \"custom\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
           "rule": "github-actions-no-insta-snapshot-updates",
@@ -697,6 +785,20 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-no-insta-snapshot-updates",
           "sourceLine": "env: [a: b: c]",
           "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 40,
+          "message": "job \"windows\" step 2 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
         }
       ],
       "warnings": []
@@ -1343,14 +1445,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "unreadable": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [
+      "advisories": [
         {
           "file": ".github/workflows/invalid-utf8.yml",
           "line": 2,
@@ -1359,6 +1456,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         }
       ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },

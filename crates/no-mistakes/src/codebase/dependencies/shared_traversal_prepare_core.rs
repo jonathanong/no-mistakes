@@ -9,13 +9,18 @@ impl SharedTraversalContext {
         let TraversalPreparationContext {
             dataset,
             session,
+            config,
             include_check_plan,
             needs_reverse_graph,
             mut framework_plan,
         } = preparation;
         session.record_work("analysis.requests", 1);
         let root_visible_paths = dataset.paths_for(&root);
-        let config = (*session.config(&root, config_path)?).clone();
+        let config = match config {
+            Some(config) => config,
+            None => session.config(&root, config_path)?,
+        };
+        let config = (*config).clone();
         let mut build_plan = build_plan;
         if include_check_plan {
             if let Some(check_plan) = crate::codebase::rules::try_canonical_graph_plan(&config)? {

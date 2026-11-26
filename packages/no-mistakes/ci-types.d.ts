@@ -1,3 +1,5 @@
+import type { GitDiffRevisions } from "./test-types";
+
 // Types for the `ci` and `impacted-checks` commands. Option interfaces use
 // camelCase (deserialized with rename_all = "camelCase"); report interfaces use
 // snake_case to match the serde-serialized output.
@@ -20,28 +22,28 @@ export interface CiEnvOptions {
   var: string;
 }
 
-export interface ImpactedChecksOptions {
+export type ImpactedChecksOptions = GitDiffRevisions & {
   /** Project root. Defaults to the current working directory. */
   root?: string;
   /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
-  base?: string;
-  head?: string;
   changedFiles?: string[];
   changedFilesFile?: string;
-  /** Unified diff file path. Conflicts with `diffStdin` and `diffCommand`. */
+  /** Inline unified diff. Use at most one of diff, diffFile, diffStdin, and diffCommand. */
   diff?: string;
-  /** Read a unified diff from stdin. Conflicts with `diff` and `diffCommand`. */
+  /** Unified diff file path, relative to the Node process's current working directory. */
+  diffFile?: string;
+  /** Read a unified diff from stdin. */
   diffStdin?: boolean;
-  /** Shell command whose stdout is a unified diff. Conflicts with `diff` and `diffStdin`. */
+  /** Shell command whose stdout is a unified diff. */
   diffCommand?: string;
   /** Return configured generic commands only; skip test-framework discovery and selection. */
   genericOnly?: boolean;
   /** Include ordered analysis phase timings in the returned report. */
   timings?: boolean;
-}
+};
 
 export type TriggerMatch = "matched" | "always" | "not-matched" | "no-path-events";
 export type PermissionLevel = "read" | "write" | "none";

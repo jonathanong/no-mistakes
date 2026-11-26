@@ -1,0 +1,17 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          printf '%s' "$(
+            printf '%s' "$(
+              printf '%s' "$(
+                printf '%s' "$(
+                  printf '%s' "$(example-tool)"
+                )"
+              )"
+            )"
+          )"
+      - run: |
+          printf '%s' "$(printf '%s' "$(printf '%s' "$(printf '%s' "$(example-tool)")")")"

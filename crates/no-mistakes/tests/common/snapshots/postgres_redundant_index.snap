@@ -47,6 +47,39 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 26,
+          "message": "control_case.idx_control_case__topic_id: redundant index — its columns are a strict prefix of idx_control_case__topic_id__created_at with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX idx_control_case__topic_id ON control_case (topic_id);",
+          "target": "control_case.idx_control_case__topic_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "drop_index_other_schema": {
     "exitCode": 1,
     "report": {

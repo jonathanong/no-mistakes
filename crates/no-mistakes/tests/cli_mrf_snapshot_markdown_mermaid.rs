@@ -14,10 +14,17 @@ fn fixture_root() -> PathBuf {
 fn markdown_mermaid_json_matches_snapshot() {
     assert_saved_fixture(
         "markdown_mermaid_validation",
-        &[(
-            "saved_fixtures",
-            fixture_root(),
-            rules_path(RULE, "configs", "selected-files.yml"),
-        )],
+        &[
+            (
+                "saved_fixtures",
+                fixture_root(),
+                rules_path(RULE, "configs", "selected-files.yml"),
+            ),
+            (
+                "suppressions",
+                rules_path(RULE, "fixture", "suppressions"),
+                rules_path(RULE, "configs", "suppressions.yml"),
+            ),
+        ],
     );
 }

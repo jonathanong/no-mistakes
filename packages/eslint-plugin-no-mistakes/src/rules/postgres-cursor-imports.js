@@ -34,16 +34,28 @@ function namedCursorImport(context, identifier, helpers, config) {
   return isCursorExecutor(name, config) ? String(name) : null;
 }
 
+function importEqualsModule(node) {
+  if (
+    node?.type !== "TSImportEqualsDeclaration" ||
+    node.importKind === "type" ||
+    node.moduleReference?.type !== "TSExternalModuleReference" ||
+    node.moduleReference.expression?.type !== "Literal"
+  ) {
+    return null;
+  }
+  return node.moduleReference.expression.value;
+}
+
 function namespaceCursorImport(context, identifier, helpers, config) {
-  return (
-    identifier?.type === "Identifier" &&
-    Boolean(
-      importDefinition(
-        helpers.findVariable(context, identifier),
-        "ImportNamespaceSpecifier",
-        config,
-      ),
-    )
+  if (identifier?.type !== "Identifier") return false;
+  const variable = helpers.findVariable(context, identifier);
+  return Boolean(
+    importDefinition(variable, "ImportNamespaceSpecifier", config) ||
+    variable?.defs.find(
+      (definition) =>
+        definition.type === "ImportBinding" &&
+        isCursorModule(importEqualsModule(definition.node), config),
+    ),
   );
 }
 
@@ -62,6 +74,7 @@ function namespaceCursorMember(context, node, helpers, config) {
 }
 
 module.exports = {
+  importEqualsModule,
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,

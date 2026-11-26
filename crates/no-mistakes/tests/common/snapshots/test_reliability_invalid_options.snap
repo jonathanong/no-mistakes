@@ -3,147 +3,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "absolute-path": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "playwright-no-serial",
-          "message": "playwright-no-serial: allowlist[0]: path must be a non-empty repository-relative glob"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/absolute-path.yml:4: playwright-no-serial: allowlist[0]: path must be a non-empty repository-relative glob\n"
   },
   "both-selectors": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "playwright-no-serial",
-          "message": "playwright-no-serial: allowlist[0]: provide exactly one non-empty path or project"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/both-selectors.yml:4: playwright-no-serial: allowlist[0]: provide exactly one non-empty path or project\n"
   },
   "invalid-command": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "test-no-retries",
-          "message": "test-no-retries: testCommands[0] must be a non-empty literal argv prefix"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/invalid-command.yml:4: test-no-retries: testCommands[0] must be a non-empty literal argv prefix\n"
   },
   "invalid-fixture-export": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "playwright-no-serial",
-          "message": "playwright-no-serial: fixtures[0]: module must be a non-empty repository-relative path"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/invalid-fixture-export.yml:4: playwright-no-serial: fixtures[0]: module must be a non-empty repository-relative path\n"
   },
   "invalid-glob": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "test-no-retries",
-          "message": "test-no-retries: allowlist[0]: error parsing glob 'tests/[browser': unclosed character class; missing ']'"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/invalid-glob.yml:4: test-no-retries: allowlist[0]: error parsing glob 'tests/[browser': unclosed character class; missing ']'\n"
   },
   "negative-retry-cap": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "test-no-retries",
-          "message": "invalid options for rule `test-no-retries` at options.maxRetries: invalid value: integer `-1`, expected u64"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/negative-retry-cap.yml:5: invalid options for rule `test-no-retries` at options.maxRetries: invalid value: integer `-1`, expected u64\n"
   },
   "parent-path": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "test-no-retries",
-          "message": "test-no-retries: allowlist[0]: path must be a non-empty repository-relative glob"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/parent-path.yml:4: test-no-retries: allowlist[0]: path must be a non-empty repository-relative glob\n"
   },
   "unknown-serial-option": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "playwright-no-serial",
-          "message": "invalid options for rule `playwright-no-serial` at options.maxRetries: unknown field `maxRetries`, expected `allowlist` or `fixtures`"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid/unknown-serial-option.yml:5: invalid options for rule `playwright-no-serial` at options.maxRetries: unknown field `maxRetries`, expected `allowlist` or `fixtures`\n"
   }
 }

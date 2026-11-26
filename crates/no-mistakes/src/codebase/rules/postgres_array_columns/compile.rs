@@ -2,7 +2,7 @@ use super::Options;
 use crate::codebase::postgres::{require_catalog_path, AllowList, CatalogObjectRef};
 use anyhow::{bail, Result};
 
-pub(super) struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     pub(super) never: Vec<String>,
     pub(super) allow_types: Vec<String>,
     pub(super) allow_enums: bool,
@@ -18,7 +18,7 @@ impl Compiled {
     }
 }
 
-pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(super::RULE_ID, options.schema_catalog_path.trim())?;
     let overlap: Vec<&str> = options
         .allow_element_types

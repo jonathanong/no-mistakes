@@ -109,7 +109,7 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn validate_options(opts: &Options) -> Result<()> {
+pub(in crate::codebase::rules) fn validate_options(opts: &Options) -> Result<()> {
     for (index, entry) in opts.allow.iter().enumerate() {
         anyhow::ensure!(
             !entry.file.trim().is_empty(),

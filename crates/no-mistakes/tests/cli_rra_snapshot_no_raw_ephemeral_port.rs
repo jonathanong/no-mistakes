@@ -6,6 +6,7 @@ const RULE: &str = "no-raw-ephemeral-port";
 fn no_raw_ephemeral_port_json_matches_snapshot() {
     let empty = rules_path(RULE, "configs", "empty.yml");
     let include_py = rules_path(RULE, "configs", "include-py.yml");
+    let unavailable = rules_path("file-input-analysis", "fixture", "ports");
     assert_saved_fixture(
         "no_raw_ephemeral_port",
         &[
@@ -74,6 +75,21 @@ fn no_raw_ephemeral_port_json_matches_snapshot() {
                 "literal_recall_py",
                 rules_path(RULE, "fixture", "literal-recall"),
                 include_py,
+            ),
+            (
+                "unavailable_report",
+                unavailable.clone(),
+                rules_path(RULE, "configs", "unavailable-report.yml"),
+            ),
+            (
+                "unavailable_advise",
+                unavailable.clone(),
+                rules_path(RULE, "configs", "unavailable-advise.yml"),
+            ),
+            (
+                "unavailable_ignore",
+                unavailable,
+                rules_path(RULE, "configs", "unavailable-ignore.yml"),
             ),
             (
                 "literal_recall_allow_ts",

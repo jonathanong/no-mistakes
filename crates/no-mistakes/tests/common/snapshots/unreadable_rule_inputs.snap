@@ -1,0 +1,121 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "docs/unavailable.md",
+          "line": 1,
+          "message": "cannot verify required-doc-section: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "required-doc-section",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/unavailable.test.ts",
+          "line": 1,
+          "message": "cannot verify test-no-dependency-pins: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "test-no-dependency-pins",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/control.md",
+          "line": 1,
+          "message": "docs/control.md: missing required heading \"## Example\"",
+          "rule": "required-doc-section",
+          "sourceLine": "# Example"
+        },
+        {
+          "file": "tests/control.test.ts",
+          "import": "example/setup@v1.2.3",
+          "line": 1,
+          "message": "tests/control.test.ts:1: tests must not pin exact dependency versions (exact action ref): `example/setup@v1.2.3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: example/setup@v1.2.3');",
+          "target": "exact action ref"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/control.md",
+          "line": 1,
+          "message": "docs/control.md: missing required heading \"## Example\"",
+          "rule": "required-doc-section",
+          "sourceLine": "# Example"
+        },
+        {
+          "file": "tests/control.test.ts",
+          "import": "example/setup@v1.2.3",
+          "line": 1,
+          "message": "tests/control.test.ts:1: tests must not pin exact dependency versions (exact action ref): `example/setup@v1.2.3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: example/setup@v1.2.3');",
+          "target": "exact action ref"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/control.md",
+          "line": 1,
+          "message": "docs/control.md: missing required heading \"## Example\"",
+          "rule": "required-doc-section",
+          "sourceLine": "# Example"
+        },
+        {
+          "file": "docs/unavailable.md",
+          "line": 1,
+          "message": "cannot verify required-doc-section: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "required-doc-section",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/control.test.ts",
+          "import": "example/setup@v1.2.3",
+          "line": 1,
+          "message": "tests/control.test.ts:1: tests must not pin exact dependency versions (exact action ref): `example/setup@v1.2.3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: example/setup@v1.2.3');",
+          "target": "exact action ref"
+        },
+        {
+          "file": "tests/unavailable.test.ts",
+          "line": 1,
+          "message": "cannot verify test-no-dependency-pins: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "test-no-dependency-pins",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

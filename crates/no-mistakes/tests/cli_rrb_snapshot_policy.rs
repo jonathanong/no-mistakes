@@ -171,6 +171,10 @@ fn declared_payload_compatibility_json_matches_snapshot() {
         &[
             case("fail", &format!("{dir}/fail"), ".no-mistakes.yml"),
             case("pass", &format!("{dir}/pass"), ".no-mistakes.yml"),
+            case("report", &format!("{dir}/effort"), "report.yml"),
+            case("advise", &format!("{dir}/effort"), "advise.yml"),
+            case("ignore", &format!("{dir}/effort"), "ignore.yml"),
+            case("max", &format!("{dir}/effort"), "max.yml"),
         ],
     );
 }
@@ -192,11 +196,21 @@ fn doc_consistency_json_matches_snapshot() {
 fn finite_set_consistency_json_matches_snapshot() {
     assert_saved_fixture(
         "finite_set_consistency",
-        &[rule(
-            "glob_coverage",
-            "finite-set-consistency/fixture",
-            "../config/finite_set_consistency_glob_coverage_appears_in_cli_json.yml",
-        )],
+        &[
+            rule(
+                "glob_coverage",
+                "finite-set-consistency/fixture",
+                "../config/finite_set_consistency_glob_coverage_appears_in_cli_json.yml",
+            ),
+            rule(
+                "suppression",
+                "finite-set-consistency/suppression",
+                "check.yml",
+            ),
+            rule("report", "finite-set-consistency/effort", "report.yml"),
+            rule("advise", "finite-set-consistency/effort", "advise.yml"),
+            rule("ignore", "finite-set-consistency/effort", "ignore.yml"),
+        ],
     );
 }
 
@@ -208,6 +222,11 @@ fn lockfile_allowlist_json_matches_snapshot() {
         &[
             rule("fail", &format!("{dir}/fail"), ".no-mistakes.yml"),
             rule("pass", &format!("{dir}/pass"), ".no-mistakes.yml"),
+            rule(
+                "suppression",
+                &format!("{dir}/suppression"),
+                "../fail/.no-mistakes.yml",
+            ),
         ],
     );
 }

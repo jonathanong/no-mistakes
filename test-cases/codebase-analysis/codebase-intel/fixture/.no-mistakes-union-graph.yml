@@ -13,11 +13,9 @@ rules:
   - rule: queue-dashboard-reachability
     scope: repository
     options:
-      entrypoint: packages/api/src/index.mts
       queuePattern: packages/api/src/*.mts
       factorySpecifier: "@example/cache/glide-mq-factory"
       factoryFunction: createQueue
-      tsconfig: tsconfig.json
 
   - rule: forbidden-dependencies
     scope: repository
