@@ -16,7 +16,7 @@ const FILES: [&str; 2] = [".github/dependabot.yml", ".github/dependabot.yaml"];
 
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     minimum_days: Option<u64>,
     require_open_pull_requests_limit: bool,
     allowed_cooldown_excludes: Option<Vec<String>>,
@@ -45,14 +45,7 @@ pub(super) fn check_prepared(
     let paths = FILES.map(|file| root.join(file));
     rules::run_rule_applications(config, RULE_ID, |rule| {
         let options: Options = rule.try_rule_options()?;
-        let minimum_days = options.minimum_days.with_context(|| {
-            format!("{RULE_ID}: set options.minimumDays to a nonnegative integer")
-        })?;
-        let allowed = options
-            .allowed_cooldown_excludes
-            .as_deref()
-            .map(compile_excludes)
-            .transpose()?;
+        let (minimum_days, allowed) = compile_options(&options)?;
         let selected = rules::selected_rule_files_matching_with_sources(
             root,
             config,
@@ -100,6 +93,20 @@ pub(super) fn check_prepared(
         }
         Ok(findings)
     })
+}
+
+pub(in crate::codebase::rules) fn compile_options(
+    options: &Options,
+) -> Result<(u64, Option<GlobSet>)> {
+    let minimum_days = options
+        .minimum_days
+        .with_context(|| format!("{RULE_ID}: set options.minimumDays to a nonnegative integer"))?;
+    let allowed = options
+        .allowed_cooldown_excludes
+        .as_deref()
+        .map(compile_excludes)
+        .transpose()?;
+    Ok((minimum_days, allowed))
 }
 
 fn compile_excludes(patterns: &[String]) -> Result<GlobSet> {

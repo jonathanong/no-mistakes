@@ -72,10 +72,12 @@ fn unbounded_effort_scoped_literals_are_clear_and_loaders_remain_unknown() {
         .rules
         .iter()
         .all(|row| row.message.contains("unanalyzable at effort low")));
-    assert_eq!(
-        run(".no-mistakes-inactive.yml", false).rules,
-        run(".no-mistakes.yml", false).rules
-    );
+    let root = root();
+    let config = root.join(".no-mistakes-inactive.yml");
+    let error = no_mistakes::config::v2::load_v2_config(&root, Some(&config))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("executorNames"), "{error}");
 }
 #[test]
 fn unbounded_effort_project_scope_prunes_other_sources_before_parse() {

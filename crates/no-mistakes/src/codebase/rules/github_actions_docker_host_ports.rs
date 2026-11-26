@@ -16,7 +16,7 @@ pub const RULE_ID: &str = "github-actions-docker-host-ports";
 
 /// The rule has no options. A non-empty options map is rejected.
 #[derive(Debug, Default, Deserialize)]
-struct Options;
+pub(in crate::codebase::rules) struct Options;
 
 super::sourced_file_rule_entrypoints!();
 

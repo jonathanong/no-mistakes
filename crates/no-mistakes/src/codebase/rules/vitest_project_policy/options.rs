@@ -1,4 +1,5 @@
 use super::*;
+use anyhow::Context;
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -9,7 +10,7 @@ pub(crate) struct Options {
     pub(crate) forbidden: Vec<String>,
     pub(crate) required_exclude_globs: Vec<String>,
     pub(crate) parity: Vec<Parity>,
-    pub(crate) declared: Option<Declared>,
+    pub(super) declared: Option<Declared>,
 }
 
 #[derive(Deserialize, Default)]
@@ -64,13 +65,17 @@ impl Options {
                 patterns.push(helper.clone());
             }
         }
-        paths.extend(super::super::file_matching::matching_files(
-            root,
-            &patterns,
-            files,
-            &[],
-        )?);
+        paths.extend(
+            super::super::file_matching::matching_files(root, &patterns, files, &[])
+                .context("invalid options.helpers")?,
+        );
         Ok(paths)
+    }
+
+    pub(in crate::codebase::rules) fn validate_for_config_load(&self, root: &Path) -> Result<()> {
+        self.validate()?;
+        self.source_paths(root, &root.join(&self.config), &[])?;
+        Ok(())
     }
 
     pub(super) fn validate(&self) -> Result<()> {

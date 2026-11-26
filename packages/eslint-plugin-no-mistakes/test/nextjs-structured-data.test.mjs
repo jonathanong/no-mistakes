@@ -22,7 +22,7 @@ function lintCase(code, filename, option) {
 
 describe("nextjs structured data opt-in", () => {
   it("snapshots default allowance, opt-in diagnostics, and unchanged executable scripts", async () => {
-    const jsonld = fixture("jsonld.tsx");
+    const jsonld = fixture("app/page.tsx");
     const inlineBoot = readFileSync(
       resolve(
         __dirname,
@@ -78,9 +78,9 @@ describe("nextjs structured data opt-in", () => {
       },
     ];
     expect(
-      linter.verify(fixture("jsonld.tsx"), config, "app/page.tsx").map((item) => item.messageId),
+      linter.verify(fixture("app/page.tsx"), config, "app/page.tsx").map((item) => item.messageId),
     ).toEqual(["structuredData", "structuredData"]);
-    expect(linter.verify(fixture("jsonld.tsx"), config, "pages/page.tsx")).toEqual([]);
+    expect(linter.verify(fixture("app/page.tsx"), config, "pages/page.tsx")).toEqual([]);
     expect(
       linter.verify(fixture("structured-data.tsx"), config, "app/structured-data.tsx"),
     ).toEqual([]);
@@ -94,7 +94,7 @@ describe("nextjs structured data opt-in", () => {
     { structuredDataComponent: "StructuredData", unknown: true },
   ])("rejects invalid structured-data options %j", (options) => {
     expect(() =>
-      lint(fixture("jsonld.tsx"), { [ruleName]: ["error", options] }, "app/page.tsx"),
+      lint(fixture("app/page.tsx"), { [ruleName]: ["error", options] }, "app/page.tsx"),
     ).toThrow();
   });
 });

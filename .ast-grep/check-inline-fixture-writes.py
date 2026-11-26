@@ -24,6 +24,7 @@ import os
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,6 +36,9 @@ CFG_RULE = "no-inline-test-fixture-write-cfg"
 
 CFG_ATTR = re.compile(
     r"#\s*\[\s*cfg\(\s*(?:test\s*\)|(?:all|any)\((?:[^]\"']|\"[^\"]*\")*\btest\s*[,)])"
+)
+FILE_CFG_TEST = re.compile(
+    r"#!\s*\[\s*cfg\(\s*(?:test\s*\)|(?:all|any)\((?:[^]\"']|\"[^\"]*\")*\btest\s*[,)])"
 )
 NOT_TEST_ATTR = re.compile(
     r"#\s*\[\s*cfg\(\s*not\(\s*(?:test\b|(?:all|any)\((?:[^]\"']|\"[^\"]*\")*\btest\b)"
@@ -155,12 +159,13 @@ def parse_mod_decls(text: str) -> list[tuple[list[str], str, str | None]]:
         stripped = raw.strip()
         if not stripped or stripped.startswith("//"):
             continue
-        same = re.match(r"^((?:#\s*\[[^\]]*\]\s*)+)(\S.*)$", stripped)
-        if same and MOD_DECL.match(same.group(2).strip()):
-            attrs = pending + re.findall(r"#\s*\[[^\]]*\]", same.group(1))
-            take(attrs, same.group(2).strip())
-            pending = []
-            continue
+        if stripped.startswith("#"):
+            same = re.match(r"^((?:#\s*\[[^\]]*\]\s*)+)(\S.*)$", stripped)
+            if same and MOD_DECL.match(same.group(2).strip()):
+                attrs = pending + re.findall(r"#\s*\[[^\]]*\]", same.group(1))
+                take(attrs, same.group(2).strip())
+                pending = []
+                continue
         if stripped.startswith("#[") or stripped.startswith("#!["):
             pending.append(stripped)
             continue
@@ -175,7 +180,7 @@ def existing_mod_files(rel: str, name: str, path_attr: str | None) -> list[str]:
         if not candidate.is_file():
             continue
         try:
-            relative = candidate.resolve().relative_to(ROOT.resolve()).as_posix()
+            relative = candidate.resolve().relative_to(ROOT).as_posix()
         except ValueError:
             continue
         if not is_sample(relative):
@@ -183,17 +188,32 @@ def existing_mod_files(rel: str, name: str, path_attr: str | None) -> list[str]:
     return found
 
 
-def cfg_mod_targets(rel: str) -> list[str]:
-    text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
+@dataclass(frozen=True)
+class RustSource:
+    modules: list[tuple[list[str], str, str | None]]
+    file_cfg_test: bool
+    has_include: bool
+
+
+class RustSources:
+    def __init__(self) -> None:
+        self.files: dict[str, RustSource] = {}
+
+    def get(self, rel: str) -> RustSource:
+        if rel not in self.files:
+            text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
+            self.files[rel] = RustSource(
+                parse_mod_decls(text), bool(FILE_CFG_TEST.search(text)), "include!(" in text
+            )
+        return self.files[rel]
+
+
+def cfg_mod_targets(rel: str, source: RustSource) -> list[str]:
     targets: list[str] = []
-    for attrs, name, path_attr in parse_mod_decls(text):
+    for attrs, name, path_attr in source.modules:
         if any(CFG_ATTR.search(attr) for attr in attrs):
             targets.extend(existing_mod_files(rel, name, path_attr))
-    if re.search(
-        r"#!\s*\[\s*cfg\(\s*(?:test\s*\)|(?:all|any)\((?:[^]\"']|\"[^\"]*\")*\btest\s*[,)])",
-        text,
-    ):
-        # File-level `#![cfg(test)]` makes the whole module test-only.
+    if source.file_cfg_test:
         targets.append(rel)
     return targets
 
@@ -204,16 +224,15 @@ def module_dir(parent: Path) -> Path:
     return parent.parent / parent.stem
 
 
-def inherited_mod_targets(rel: str) -> list[str]:
+def inherited_mod_targets(rel: str, sources: RustSources) -> list[str]:
     """Child modules of a test file. Paths that leave its module directory stay out.
 
     Integration tests sometimes `#[path]` back at production modules. Those files
     are not test slices. `#[cfg(test)]` modules are collected separately.
     """
-    text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
     directory = module_dir(ROOT / rel).resolve()
     targets: list[str] = []
-    for attrs, name, path_attr in parse_mod_decls(text):
+    for attrs, name, path_attr in sources.get(rel).modules:
         if any(NOT_TEST_ATTR.search(attr) for attr in attrs):
             continue
         for relative in existing_mod_files(rel, name, path_attr):
@@ -225,8 +244,8 @@ def inherited_mod_targets(rel: str) -> list[str]:
     return targets
 
 
-def include_targets(files: list[str]) -> list[tuple[str, str]]:
-    interesting = [path for path in files if "include!(" in (ROOT / path).read_text(encoding="utf-8", errors="replace")]
+def include_targets(files: list[str], sources: RustSources) -> list[tuple[str, str]]:
+    interesting = [path for path in files if sources.get(path).has_include]
     found: list[tuple[str, str]] = []
     for start in range(0, len(interesting), 100):
         batch = interesting[start : start + 100]
@@ -247,30 +266,25 @@ def include_targets(files: list[str]) -> list[tuple[str, str]]:
     return found
 
 
-def close_test_files(seeds: set[str]) -> set[str]:
+def close_test_files(seeds: set[str], sources: RustSources) -> set[str]:
     seen = set(seeds)
-    queue = list(seeds)
-    while queue:
-        batch = queue[:100]
-        queue = queue[100:]
-        additions: list[str] = []
-        for parent, include in include_targets(batch):
+    frontier = sorted(seeds)
+    while frontier:
+        additions: set[str] = set()
+        for parent, include in include_targets(frontier, sources):
             candidate = (ROOT / parent).parent / include
             if not candidate.is_file():
                 continue
             try:
-                relative = candidate.resolve().relative_to(ROOT.resolve()).as_posix()
+                relative = candidate.resolve().relative_to(ROOT).as_posix()
             except ValueError:
                 continue
             if relative.endswith(".rs") and not is_sample(relative):
-                additions.append(relative)
-        for parent in batch:
-            additions.extend(inherited_mod_targets(parent))
-        for relative in additions:
-            if relative in seen:
-                continue
-            seen.add(relative)
-            queue.append(relative)
+                additions.add(relative)
+        for parent in frontier:
+            additions.update(inherited_mod_targets(parent, sources))
+        frontier = sorted(additions - seen)
+        seen.update(frontier)
     return seen
 
 
@@ -301,10 +315,12 @@ def collect_findings() -> dict[str, set[str]]:
         findings.setdefault(path, set()).add(call_class(row.get("text", "")))
 
     rust = [path for path in tracked_rust() if not is_sample(path)]
-    seeds = {path for path in rust if is_glob_test(path)}
+    sources = RustSources()
+    glob_tests = {path for path in rust if is_glob_test(path)}
+    seeds = set(glob_tests)
     for path in rust:
-        seeds.update(cfg_mod_targets(path))
-    extra = sorted(close_test_files(seeds) - {path for path in rust if is_glob_test(path)})
+        seeds.update(cfg_mod_targets(path, sources.get(path)))
+    extra = sorted(close_test_files(seeds, sources) - glob_tests)
     for start in range(0, len(extra), 100):
         batch = extra[start : start + 100]
         for row in ast_grep(

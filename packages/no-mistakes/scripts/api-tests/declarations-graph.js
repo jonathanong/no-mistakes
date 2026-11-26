@@ -1,3 +1,4 @@
+require("./declarations-planning-inputs");
 const { assert, test, readFileSync, join, packageRoot, repositoryRoot } = require("./context");
 
 test("executed PostgreSQL source extraction exposes its named async contract", () => {
@@ -137,31 +138,6 @@ test("Swift package base commands are an exported argv map", () => {
   assert.match(declarations, /\[packageRoot: string\]: string\[\];/);
   assert.match(targets, /Swift uses \{@link SwiftPackageBaseCommands\} or `\["swift", "test"\]`\./);
   assert.match(barrel, /export \* from "\.\/swift-command-types";/);
-});
-
-test("test plan declarations require current results but accept saved legacy plan documents", () => {
-  const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
-
-  for (const pattern of [
-    /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
-    /\n  changedFiles: string\[\];/,
-    /export type SavedTestPlan = TestPlan;/,
-    /planJson\?: SavedTestPlan \| string;/,
-    /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
-    /export interface TestsPlanOptionsBase \{/,
-    /export type TestsPlanOptions =/,
-    /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php"\n  \| "java"\n  \| "kotlin"\n  \| "elixir"\n  \| "dart"\n  \| "jest";/,
-    /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/,
-    /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/,
-    /limitPercent\?: never;[\s\S]*limitFiles\?: never;/,
-    /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false(?:;|\s*\})/,
-    /export interface TestPlanIncompleteness \{/,
-    /export type TestPlanIncompletenessKind = "dependency-baseline-missing";/,
-    /incomplete\?: TestPlanIncompleteness\[\];/,
-  ]) {
-    assert.match(declarations, pattern);
-  }
-  assert.doesNotMatch(declarations, /TestPlan\["incomplete"\]/);
 });
 
 test("graph declarations expose GitHub Actions workflow relationships and virtual nodes", () => {

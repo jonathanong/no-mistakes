@@ -1,0 +1,9 @@
+name: Database helper
+description: Start a synthetic database
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: docker run -p 5432:5432 postgres # no-mistakes-disable-line github-actions-docker-host-ports
+    - shell: bash
+      run: docker run -p 5432:5432 postgres

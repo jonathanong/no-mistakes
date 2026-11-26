@@ -14,7 +14,7 @@ pub(super) fn run(
 ) -> Result<AnalysisDiagnostics> {
     // Preserve the existing default-max dispatch without a config clone.
     if !enabled || !has_low_application(config)? {
-        return super::terraform::run(
+        return super::csp_allowed_origins::run(
             root,
             config,
             enabled,
@@ -43,7 +43,7 @@ pub(super) fn run(
     super::handled::mark(&mut remaining, |id| {
         id == rules::github_actions_download_integrity::RULE_ID
     });
-    let rest = super::terraform::run(
+    let rest = super::csp_allowed_origins::run(
         root,
         &remaining,
         enabled,

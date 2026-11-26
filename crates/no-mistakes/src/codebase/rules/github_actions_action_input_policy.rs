@@ -58,38 +58,31 @@ pub(crate) fn collect_config_errors(
     config: &NoMistakesConfig,
     errors: &mut Vec<String>,
 ) {
-    for (index, rule) in super::validate_options::indexed_rule_applications(config, RULE_ID) {
-        let mut app_errors = std::collections::BTreeSet::new();
-        if let Err(error) = super::path_filter::RulePathFilter::new(root, config, rule) {
-            app_errors.insert(format!("{error:#}"));
-        }
-        match rule.try_rule_options::<Options>() {
-            Ok(opts) => {
-                for pattern in &opts.include {
-                    if let Err(error) = globset::Glob::new(pattern.trim_start_matches("./")) {
-                        app_errors.insert(super::validate_options::format_invalid_option(
-                            RULE_ID,
-                            "include",
-                            pattern,
-                            format_args!("a valid glob ({error})"),
-                        ));
-                    }
-                }
-                policy::collect_errors(opts, &mut app_errors);
-            }
-            Err(error) => {
-                app_errors.insert(format!("{error:#}"));
-            }
-        }
-        super::validate_options::push_application_errors(
-            root,
-            config,
-            index,
-            config_path,
-            app_errors,
-            errors,
-        );
+    super::validate_options::collect_config_errors(root, config_path, config, RULE_ID, collect_application_errors, errors);
+}
+
+pub(super) fn collect_application_errors(
+    root: &Path,
+    config: &NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> Result<std::collections::BTreeSet<String>> {
+    let mut app_errors = std::collections::BTreeSet::new();
+    if let Err(error) = super::path_filter::RulePathFilter::new(root, config, rule) {
+        app_errors.insert(format!("{error:#}"));
     }
+    let opts = rule.strict_rule_options::<Options>()?;
+    for pattern in &opts.include {
+        if let Err(error) = globset::Glob::new(pattern.trim_start_matches("./")) {
+            app_errors.insert(super::validate_options::format_invalid_option(
+                RULE_ID,
+                "include",
+                pattern,
+                format_args!("a valid glob ({error})"),
+            ));
+        }
+    }
+    policy::collect_errors(opts, &mut app_errors);
+    Ok(app_errors)
 }
 
 pub(crate) fn check_with_files_and_sources(

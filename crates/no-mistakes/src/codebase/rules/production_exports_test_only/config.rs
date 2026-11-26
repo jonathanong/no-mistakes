@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     production_roots: Vec<String>,
     test_globs: Vec<String>,
     test_helper_roots: Vec<String>,
@@ -26,7 +26,7 @@ struct PlatformConsumedExports {
     exports: Vec<String>,
 }
 
-pub(super) struct Selection {
+pub(in crate::codebase::rules) struct Selection {
     pub(super) ignore_exports_used_in_file: bool,
     root: PathBuf,
     production_roots: Vec<PathBuf>,
@@ -37,7 +37,10 @@ pub(super) struct Selection {
 
 impl Selection {
     pub(super) fn new(root: &Path, application: &RuleDef) -> Result<Self> {
-        let options: Options = application.try_rule_options()?;
+        Self::from_options(root, application.try_rule_options()?)
+    }
+
+    pub(in crate::codebase::rules) fn from_options(root: &Path, options: Options) -> Result<Self> {
         if options.production_roots.is_empty() {
             bail!("{RULE_ID}: options.productionRoots must contain at least one configured production root");
         }

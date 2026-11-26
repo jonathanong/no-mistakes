@@ -45,40 +45,17 @@ test(
 );
 
 test(
-  "doc-consistency reports an invalid pattern as incomplete from CJS and ESM",
+  "doc-consistency rejects an invalid pattern before analysis from CJS and ESM",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const options = optionsFor("patterns-invalid");
-    const cjsReport = await cjs.check(options);
-    const esmReport = await esm.check(options);
-    const preparedReport = (
-      await cjs.analyzeProject({
-        ...options,
-        reports: [{ type: "check" }],
-      })
-    ).reports[0].result;
-    const esmPreparedReport = (
-      await esm.analyzeProject({
-        ...options,
-        reports: [{ type: "check" }],
-      })
-    ).reports[0].result;
-    const reports = [cjsReport, esmReport, preparedReport, esmPreparedReport];
-    for (const report of reports) {
-      assert.ok(report.incomplete?.length, "invalid scoped pattern must make the check incomplete");
-      assert.ok(
-        report.incomplete.some(
-          (failure) =>
-            failure.consumer === "doc-consistency" &&
-            failure.message.includes("bannedPatterns[0]") &&
-            failure.message.includes("invalid regex"),
-        ),
-      );
+    const error =
+      /\.no-mistakes\.yml:4: doc-consistency bannedPatterns\[0\]\.pattern is an invalid regex/;
+    for (const api of [cjs, esm]) {
+      await assert.rejects(api.check(options), error);
+      await assert.rejects(api.analyzeProject({ ...options, reports: [{ type: "check" }] }), error);
     }
-    assert.deepEqual(esmReport, cjsReport);
-    assert.deepEqual(preparedReport, cjsReport);
-    assert.deepEqual(esmPreparedReport, cjsReport);
   },
 );

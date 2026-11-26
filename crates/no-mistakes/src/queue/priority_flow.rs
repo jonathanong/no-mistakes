@@ -7,8 +7,10 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub(super) fn flow_queue_definitions<'a>(
+    root: &Path,
     facts: &'a HashMap<PathBuf, FileFacts>,
-    producers: &'a [InternalProducer],
+    producers: &[&'a InternalProducer],
+    test_scope: &ConfiguredTestScope,
 ) -> HashMap<&'a str, Option<&'a PathBuf>> {
     let flow_names = producers
         .iter()
@@ -21,7 +23,10 @@ pub(super) fn flow_queue_definitions<'a>(
     if flow_names.is_empty() {
         return definitions;
     }
-    for (path, file) in facts {
+    for (path, file) in facts
+        .iter()
+        .filter(|(path, _)| !test_scope.is_match(root, path))
+    {
         for queue in crate::queue::factory_resolve::defined_queue_names(file) {
             if flow_names.contains(queue) {
                 definitions

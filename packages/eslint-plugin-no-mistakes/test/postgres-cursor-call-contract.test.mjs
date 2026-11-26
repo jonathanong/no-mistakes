@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { resolve } from "node:path";
 import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { plugin } from "./helpers.mjs";
+import { __dirname, fixture, plugin } from "./helpers.mjs";
 
 const RULE = "postgres-cursor-call-contract";
+const FIXTURE_ROOT = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", RULE);
 const OPTIONS = {
   modules: ["@db/cursors", "@db/cursors/batches"],
   executors: ["runCursor", "runCursorBatches"],
@@ -323,10 +325,24 @@ const suite = {
       "src/annotated-sql-tag.js",
       trusted,
     ),
+    // accepts TypeScript import-equals bindings when called directly with annotated SQL.
+    cursorCase(
+      fixture(`${RULE}/import-equals-valid.ts`),
+      resolve(FIXTURE_ROOT, "import-equals-valid.ts"),
+    ),
   ],
   invalid: [
     // reports the configured cursor contract.
     ...invalid.map(({ file, code }) => cursorCase(code, file)),
+    // reports TypeScript import-equals cursor calls, dynamic members, and destructures.
+    cursorCase(
+      fixture(`${RULE}/import-equals-repro.ts`),
+      resolve(FIXTURE_ROOT, "import-equals-repro.ts"),
+    ),
+    cursorCase(
+      fixture(`${RULE}/import-equals-invalid.ts`),
+      resolve(FIXTURE_ROOT, "import-equals-invalid.ts"),
+    ),
     // reports staticQuery when the cursor call has no SQL argument.
     // One staticQuery finding.
     cursorCase(

@@ -84,6 +84,7 @@ impl SharedCheckContext {
             && !self.playwright_rules_enabled
             && !self.graph_rules_enabled
             && !self.prepared.config.audits_disable_directives()
+            && self.disable_directives.is_empty()
         {
             let mut results = crate::check_runner::empty_results([None]);
             results

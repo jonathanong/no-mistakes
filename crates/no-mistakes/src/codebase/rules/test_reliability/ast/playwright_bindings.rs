@@ -66,8 +66,8 @@ pub(crate) fn fixture_initializers<'a>(
             ValueTrace::Resolved(origin) => {
                 result.values.insert(export.local.clone(), origin);
             }
-            ValueTrace::Unresolved(_, candidates) => {
-                result.uncertain.insert(export.local.clone(), candidates);
+            ValueTrace::Unresolved(reason, candidates) => {
+                result.uncertain.insert(export.local.clone(), (reason, candidates));
             }
             ValueTrace::None => {}
         }

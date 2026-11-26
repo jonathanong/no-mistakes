@@ -237,9 +237,14 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
   const build = workflowJob("standalone-build");
   const shards = workflowJob("standalone-shards");
   const gate = workflowJob("tests-gate");
-  assert.equal(
-    stepBudgetSeconds(build, "Build standalone library without a CLI"),
-    current.standaloneBuildStep,
+  const compileSteps = [
+    "Build standalone library without a CLI",
+    "Build standalone library shard 2",
+    "Build standalone library shard 3",
+  ];
+  assert.deepEqual(
+    compileSteps.map((name) => stepBudgetSeconds(build, name)),
+    current.standaloneBuildSteps,
   );
   const stepBudget = stepBudgetSeconds(shards, stepName);
   assert.equal(stepBudget, 360);

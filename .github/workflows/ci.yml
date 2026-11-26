@@ -215,40 +215,6 @@ jobs:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up pnpm and Node.js (attempt 1 of 2)
-        id: pnpm-setup
-        continue-on-error: true
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
-          install: false
-      - name: Back off before Node.js setup attempt 2 of 2
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          # A timed-out cache restore can leave a partial store; the retry skips the cache.
-          rm -rf "$HOME/setup-pnpm/store"
-          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
-          sleep 5
-      - name: Retry pnpm and Node.js setup
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: false
-          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
-          install: false
-      - name: Install pnpm dependencies
-        timeout-minutes: 5
-        run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Validate Codecov config
-        timeout-minutes: 2
-        run: curl --data-binary @codecov.yml https://codecov.io/validate
       - name: Check committed binary files
         timeout-minutes: 2
         shell: bash
@@ -298,6 +264,40 @@ jobs:
             fail=1
           done < "$matches"
           exit "$fail"
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
+          install: false
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Validate Codecov config
+        timeout-minutes: 2
+        run: curl --data-binary @codecov.yml https://codecov.io/validate
       - name: Check Rust validation parity
         timeout-minutes: 2
         run: node --test .github/scripts/coverage-build-resources.test.cjs .github/scripts/release-rust-resources.test.cjs .github/scripts/release-rust-split.test.cjs .github/scripts/release-rust-split-workflow.test.cjs .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
@@ -422,7 +422,10 @@ jobs:
         with:
           shared-key: ${{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
           cache-workspace-crates: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          env-vars: NM_CI_RUST_CACHE_PROFILE
+          save-if: ${{ github.ref == 'refs/heads/main' && matrix.name != 'default-feature Clippy' }}
+        env:
+          NM_CI_RUST_CACHE_PROFILE: ${{ startsWith(matrix.command, 'cargo clippy ') && 'clippy-check' || '' }}
       - name: Install nextest
         if: ${{ matrix.name == 'PostgreSQL source identities' }}
         timeout-minutes: 3
@@ -2276,6 +2279,7 @@ jobs:
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+          NATIVE_WORKSPACE_CACHE_KEY: ${{ steps.native-workspace-cache.outputs.cache-matched-key }}
         run: |
           set -euo pipefail
           rm -rf target/native-build-diagnostics
@@ -2289,7 +2293,9 @@ jobs:
               raise SystemExit(f"expected {old!r} in {path}")
           path.write_text(text.replace(old, new, 1))
           PY
-          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          if [[ -n "$NATIVE_WORKSPACE_CACHE_KEY" ]]; then
+            node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          fi
           node .github/scripts/build-native.cjs
           cp target/debug/libno_mistakes.dylib target/debug/no-mistakes.node
 
@@ -2541,10 +2547,10 @@ jobs:
         timeout-minutes: 3
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-
           path: |
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
@@ -2557,16 +2563,31 @@ jobs:
           tool: cargo-nextest@0.9.151
       - name: Build standalone library without a CLI
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 20
+        timeout-minutes: 13
+        env:
+          WORKSPACE_CACHE_KEY: ${{ steps.standalone-lib-workspace-cache.outputs.cache-matched-key }}
         shell: bash
         run: |
           set -euo pipefail
-          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          if [[ -n "$WORKSPACE_CACHE_KEY" ]]; then
+            node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          fi
           printf 'standalone library build: cargo_jobs=%s dev_units=%s test_units=%s dev_debug=%s test_debug=%s incremental=%s shards=%s\n' \
             "$CARGO_BUILD_JOBS" "$CARGO_PROFILE_DEV_CODEGEN_UNITS" "$CARGO_PROFILE_TEST_CODEGEN_UNITS" \
             "$CARGO_PROFILE_DEV_DEBUG" "$CARGO_PROFILE_TEST_DEBUG" "$CARGO_INCREMENTAL" 3
-          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle
-          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 1
+      - name: Build standalone library shard 2
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 10
+        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 2
+      - name: Build standalone library shard 3
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 10
+        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 3
+      - name: Record standalone compiler inputs for cache publication
+        if: ${{ env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 2
+        run: node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
       - name: Save verified workspace artifacts
         if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
@@ -2577,13 +2598,39 @@ jobs:
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
             ${{ runner.temp }}/nm-standalone-lib-cargo-inputs
-      - name: Upload standalone library archive
+      - name: Upload standalone library archive 1
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: standalone-library
-          path: target/standalone-bundle
+          name: standalone-library-1
+          path: |
+            target/standalone-bundle/build.json
+            target/standalone-bundle/standalone-0.tar.zst
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - name: Upload standalone library archive 2
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: standalone-library-2
+          path: |
+            target/standalone-bundle/build.json
+            target/standalone-bundle/standalone-1.tar.zst
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - name: Upload standalone library archive 3
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: standalone-library-3
+          path: |
+            target/standalone-bundle/build.json
+            target/standalone-bundle/standalone-2.tar.zst
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
@@ -2617,7 +2664,7 @@ jobs:
         with:
           run-id: ${{ needs.standalone-build.outputs.artifact-run-id }}
           github-token: ${{ github.token }}
-          name: standalone-library
+          name: standalone-library-${{ matrix.shard }}
           path: target/standalone-bundle
       - name: Retry standalone library archive download
         if: ${{ !cancelled() && steps.standalone-download.outcome == 'failure' }}
@@ -2626,7 +2673,7 @@ jobs:
         with:
           run-id: ${{ needs.standalone-build.outputs.artifact-run-id }}
           github-token: ${{ github.token }}
-          name: standalone-library
+          name: standalone-library-${{ matrix.shard }}
           path: target/standalone-bundle
       - name: Start isolated PostgreSQL for catalog fixtures
         timeout-minutes: 5

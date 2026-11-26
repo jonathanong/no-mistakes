@@ -54,5 +54,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/e2e/app.spec.ts",
+          "line": 6,
+          "message": "Prefer getByTestId('save') over copy-coupled text locator getByText(Save); matched app element exposes data-pw=\"save\"",
+          "rule": "playwright-prefer-test-id-locators",
+          "sourceLine": "await page.getByText('Save').click();",
+          "target": "data-pw=save"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

@@ -40,6 +40,8 @@ fn markdown_link_display_text_json_matches_snapshot() {
         ("escaped_backtick_in_code", "escaped-backtick-code"),
         ("indented_opening_fence", "indented-opening-fence"),
         ("fence_info_backtick", "fence-info-backtick"),
+        ("disable_file", "disable-file"),
+        ("disable_lines", "disable-lines"),
         ("code_before_html_mask", "code-before-html-mask"),
         ("reference_edge_resolved", "reference-edge-resolved"),
         ("reference_edge_unclosed", "reference-edge-unclosed"),

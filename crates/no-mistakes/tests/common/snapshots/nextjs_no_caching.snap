@@ -2,6 +2,26 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 4,
+          "message": "Next.js caching configuration is unanalyzable at effort low; write literal fetch options, literal route segment exports, or a literal next.config object directly at the use site",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch(\"/widgets\", { cache: cacheMode });"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "fail": {
     "exitCode": 1,
     "report": {
@@ -164,6 +184,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Next.js `cacheHandlers` config is disabled; remove static caching",
           "rule": "nextjs-no-caching",
           "sourceLine": "cacheHandlers: {"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 4,
+          "message": "Next.js caching configuration is unanalyzable at effort low; write literal fetch options, literal route segment exports, or a literal next.config object directly at the use site",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch(\"/widgets\", { cache: cacheMode });"
         }
       ],
       "warnings": []

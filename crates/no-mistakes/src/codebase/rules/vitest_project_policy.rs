@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 mod declared;
 mod evaluate;
-mod options;
+pub(in crate::codebase::rules) mod options;
 use options::Options;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

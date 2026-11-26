@@ -1252,6 +1252,14 @@ keep PostgreSQL executor and resource bindings local to each body. Namespace
 `var` declarations hoist within that body without shadowing outer imports.
 
 
+TS/JS [`csp-allowed-origins`](rules/csp-allowed-origins.md) checks third-party
+browser origins (including protocol-relative `//host` and IPv6 literals) in JSX
+elements and `fetch`/`WebSocket`/`EventSource` calls against static CSP
+directives declared in `options.cspFiles` (first duplicate directive wins per
+policy, multiple policies intersect, optional `options.selfOrigins`, and shared
+`options.unanalyzable` for dynamic/unparsed URLs) through Rust, CLI `check`,
+async Node `check()`, and batched `analyzeProject()` checks.
+
 TS/JS [`vitest-default-excludes`](rules/vitest-default-excludes.md) checks
 literal discovery exclusions on a selected config (and its inline projects) and
 on `test`-shaped object literals in config factory modules matched by

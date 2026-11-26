@@ -1,0 +1,9 @@
+name: Download fixture
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          BASE_URL="https://example.invalid/base"
+          curl "$BASE_URL/tool.tgz"

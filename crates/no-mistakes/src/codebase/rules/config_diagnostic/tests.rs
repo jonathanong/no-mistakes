@@ -81,7 +81,10 @@ fn split_rule_options_keep_the_fragment_file_and_local_index() {
 fn dotted_option_paths_locate_the_authored_nested_entry() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/config-diagnostic-locations/fixture/nested-allow");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let path = root.join(".no-mistakes.yml");
+    let mut config: NoMistakesConfig =
+        serde_yaml::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    config.loaded_config_path = LoadedConfigPath(Some(path));
     let sources = crate::codebase::rules::source_store_for_files(&[]);
     let anchor = ConfigAnchor::resolve(&root, &config, Some(&sources), &config.rules[0]);
     assert_eq!(anchor.option_item_line("plural.ignorePatterns", 0), 8);

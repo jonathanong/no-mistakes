@@ -14,6 +14,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom.spec.ts",
+          "line": 1,
+          "message": "src/custom.spec.ts: Vitest test file does not map to any Vitest project",
+          "rule": "vitest-project-mapping",
+          "sourceLine": "test(\"custom\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "unmapped": {
     "exitCode": 1,
     "report": {

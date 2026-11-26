@@ -5,11 +5,11 @@ pub use super::test_plan::{
     TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 pub use crate::changes::config::{ChangeCategory, ChangeRule, ChangesConfig, IdRule, KeysOf};
-
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-
 mod applications;
+mod strict_rule_options;
+pub(crate) use strict_rule_options::OptionLocation;
 mod postgres_column_checks;
 pub use postgres_column_checks::*;
 mod ci_checks;
@@ -24,7 +24,6 @@ mod queues;
 mod rule_targets;
 mod string_or_list;
 mod tests_config;
-
 pub use queues::{
     EnqueueFactory, EnqueuePropertySelector, EnqueueSelector, JobSchedulerFactory,
     ProjectWaitScopes, QueueFactoryRoles, QueueNameFactory, QueueWaitPatterns, WorkerFactory,

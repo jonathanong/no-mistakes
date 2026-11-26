@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      fixtures:
+        - module: helpers/index.mts
+          export: createTest

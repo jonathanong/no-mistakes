@@ -46,6 +46,8 @@ fn postgres_constraint_validate_check_json_snapshot() {
             "fail-do-missing",
             "migration.yml",
         ),
+        ("disable_file", "disable-file", "migration.yml"),
+        ("disable_lines", "disable-lines", "migration.yml"),
     ]
     .map(|(label, fixture, config)| {
         (

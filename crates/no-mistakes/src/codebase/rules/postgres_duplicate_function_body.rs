@@ -14,7 +14,7 @@ pub const RULE_ID: &str = "postgres-duplicate-function-body";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     min_cluster_size: Option<i64>,
     min_tokens: Option<i64>,
@@ -64,7 +64,7 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
         .collect()
 }
 
-fn compile_options(opts: &Options, message: Option<String>) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     Ok(Compiled {
         schema_catalog_path: opts.schema_catalog_path.clone(),

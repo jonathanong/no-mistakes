@@ -29,6 +29,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "line": 4,
+          "message": "packages/app/package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "\"overrides\": {"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_next_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "line": 4,
+          "message": "packages/app/package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "\"overrides\": {"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail_duplicate_overrides": {
     "exitCode": 1,
     "report": {
