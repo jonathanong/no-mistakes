@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "crates/no-mistakes"
+    "crates/no-mistakes",
+    "crates/no-mistakes-postgres-sql"
 ]
 resolver = "2"
 

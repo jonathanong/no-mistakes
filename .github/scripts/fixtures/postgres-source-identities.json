@@ -11,7 +11,7 @@
     "run",
     "--locked",
     "-p",
-    "no-mistakes",
+    "no-mistakes-postgres-sql",
     "--lib",
     "--no-default-features",
     "--features",
@@ -21,7 +21,7 @@
     "0",
     "--build-jobs",
     "1",
-    "codebase::postgres::source::"
+    "source::"
   ],
   "localValidation": {
     "buildJobs": 8,

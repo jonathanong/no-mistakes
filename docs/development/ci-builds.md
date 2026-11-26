@@ -669,13 +669,15 @@ attribute on that child compiles it into no archive: the parent's shard skips
 the child, and the child's shard never loads the parent. Modules that
 production code or several shards call stay on plain `cfg(test)` and compile
 with every shard. A shard's
-`rustc` allows `dead_code` and `unused_imports` for the `no_mistakes` crate
+`rustc` allows `dead_code` and `unused_imports` for the `no_mistakes` and
+`no_mistakes_postgres_sql` crates
 only, because an item used solely by another shard is not dead in the full
 suite. `cargo clippy --all-targets` leaves `NM_TEST_SHARD` unset and still
-denies both lints. `crates/no-mistakes/build.rs` sets
+denies both lints. `crates/no-mistakes/build.rs` and
+`crates/no-mistakes-postgres-sql/build.rs` set
 `nm_shard_all` when `NM_TEST_SHARD` is unset, which is what local `cargo test`
 and clippy do. The standalone build sets `NM_TEST_SHARD` to `0`, `1`, and `2`
-on three sequential `cargo nextest archive` commands and writes
+on three sequential `cargo nextest archive --workspace --lib` commands and writes
 `standalone-0.tar.zst`, `standalone-1.tar.zst`, and `standalone-2.tar.zst`.
 Each consumer runs one of those archives and does not hash-partition it. The
 job also sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
@@ -1476,14 +1478,15 @@ ran all three unit-test slices (`0`, `1`, `2`) sequentially because the
 minutes compiling unrelated test modules three times (e.g., main run
 `45687283513`: 14m51s total, 8927 MiB peak `rustc` RSS, 340 runs covering 328
 unique tests with 6 plain `cfg(test)` tests repeated across slices). It now
-compiles once with `NM_TEST_SHARD=postgres-source` (`cfg(nm_shard_postgres_source)`),
-which includes only the `codebase::postgres::source` unit-test modules and
-shared plain `cfg(test)` modules under the same `--no-default-features` and
-`--features test-instrumentation` settings, 4096 codegen units, and zero debug
-info. The job retains its 30-minute step and 40-minute job bounds, and
-`postgres-source-identities.test.cjs` locks that every
-`codebase::postgres::source::` unit test compiles into the `postgres-source`
-slice. Run 45000861345 exhausted the job bound while the original whole-crate
+compiles `no-mistakes-postgres-sql` once with `NM_TEST_SHARD=postgres-source`
+(`cfg(nm_shard_postgres_source)`), which includes only the `source::`
+unit-test modules and shared plain `cfg(test)` modules under the same
+`--no-default-features` and `--features test-instrumentation` settings, 4096
+codegen units, and zero debug info, without compiling `no-mistakes`. The job
+retains its 30-minute step and 40-minute job bounds, and
+`postgres-source-identities.test.cjs` locks that every `source::` unit test in
+`no-mistakes-postgres-sql` compiles into the `postgres-source` slice. Run
+45000861345 exhausted the job bound while the original whole-crate
 quality command was still active; its runner did not upload the step log. The
 existing standalone memory measurements explain why compiling the entire test
 harness is unsafe on the hosted runner. Resource samples continue to wrap this

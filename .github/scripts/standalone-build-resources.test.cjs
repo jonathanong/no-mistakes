@@ -40,6 +40,7 @@ test("standalone library compilation stays inside the 16 GB runner", () => {
   assert.doesNotMatch(helper, /--partition/);
   const wrapper = readFileSync(join(root, ".github/scripts/standalone-shard-rustc.sh"), "utf8");
   assert.match(wrapper, /no_mistakes/);
+  assert.match(wrapper, /no_mistakes_postgres_sql/);
   assert.match(wrapper, /"-A" "dead_code"/);
   assert.match(wrapper, /"-A" "unused_imports"/);
   for (const value of Object.values(evidence.localFourCpu)) {
@@ -88,7 +89,11 @@ test("unit-test modules are split across three compile shards", () => {
   const modRe = /^(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z0-9_]+)\b/;
   const includeRe = /^include!\("([^"]+)"\)\s*;\s*$/;
   let helpers = 0;
-  for (const file of rustFiles(join(root, "crates/no-mistakes/src"))) {
+  const files = [
+    ...rustFiles(join(root, "crates/no-mistakes/src")),
+    ...rustFiles(join(root, "crates/no-mistakes-postgres-sql/src")),
+  ];
+  for (const file of files) {
     const lines = readFileSync(file, "utf8").split("\n");
     for (let index = 0; index < lines.length; index += 1) {
       const sharded = lines[index].match(shardLine);
@@ -115,9 +120,11 @@ test("unit-test modules are split across three compile shards", () => {
   for (const id of ["0", "1", "2"]) assert.ok(counts[id] >= total * 0.2, `${id}=${counts[id]}`);
   assert.ok(helpers > 0);
   assert.ok(helpers < 300, String(helpers));
-  const buildRs = readFileSync(join(root, "crates/no-mistakes/build.rs"), "utf8");
-  assert.match(buildRs, /nm_shard_all/);
-  assert.match(buildRs, /NM_TEST_SHARD must be 0, 1, 2, or postgres-source/);
+  for (const crate of ["no-mistakes", "no-mistakes-postgres-sql"]) {
+    const buildRs = readFileSync(join(root, `crates/${crate}/build.rs`), "utf8");
+    assert.match(buildRs, /nm_shard_all/);
+    assert.match(buildRs, /NM_TEST_SHARD must be 0, 1, 2, or postgres-source/);
+  }
 });
 
 test("nested test modules inherit the parent shard", () => {

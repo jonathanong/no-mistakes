@@ -10,7 +10,8 @@ This repository is a huge token sink. Thus, contributions are welcomed.
      `check-runner/` cases, so find the suite's loader with `rg` and add to the tree it reads.
    - Crate-local resolver, source-discovery, and workspace cases live in readable,
      named directories under `crates/no-mistakes/fixtures/`. Load them with
-     `crate::test_support::fixture_root`; use `materialize_saved_fixture` for an
+     `crate::test_support::fixture_root` (available in both `no-mistakes` and
+     `no-mistakes-postgres-sql`); use `materialize_saved_fixture` for an
      isolated copy before mutating files or initializing Git.
 
    Catalog rules listed in `SCHEMA_CATALOG_RULE_IDS` also update

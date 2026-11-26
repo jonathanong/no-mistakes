@@ -18,9 +18,10 @@ crate-type = ["rlib"]
 [features]
 default = ["mermaid-validation"]
 mermaid-validation = ["dep:merman-analysis"]
-test-instrumentation = []
+test-instrumentation = ["no-mistakes-postgres-sql/test-instrumentation"]
 
 [dependencies]
+no-mistakes-postgres-sql = { path = "../no-mistakes-postgres-sql" }
 htmlize = { version = "1.1", features = ["unescape"] }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
@@ -92,6 +93,7 @@ windows-sys = { version = "0.61", features = [
 assert_cmd = "2"
 criterion = { package = "codspeed-criterion-compat", version = "=5.0.1" }
 insta = "1.49.0"
+no-mistakes-postgres-sql = { path = "../no-mistakes-postgres-sql", features = ["test-instrumentation"] }
 predicates = "3"
 
 [build-dependencies]

@@ -6,7 +6,7 @@ const args = [
   "run",
   "--locked",
   "-p",
-  "no-mistakes",
+  "no-mistakes-postgres-sql",
   "--lib",
   "--no-default-features",
   "--features",
@@ -35,7 +35,7 @@ function run(env = process.env, spawn = spawnSync) {
   console.log(`PostgreSQL source identities: compile slice ${SHARD}`);
   const child = spawn(
     "cargo",
-    [...args, "--build-jobs", childEnv.CARGO_BUILD_JOBS, "codebase::postgres::source::"],
+    [...args, "--build-jobs", childEnv.CARGO_BUILD_JOBS, "source::"],
     { env: childEnv, stdio: "inherit" },
   );
   if (child.error) throw child.error;

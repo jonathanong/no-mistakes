@@ -1,0 +1,129 @@
+use crate::idents::{
+    ident_key, object_name_identity, object_name_key, unwrap_expr, visit_function_args,
+};
+use crate::schema::{column_metadata, table_metadata};
+use crate::types::SqlTableSchemaEvent;
+use sqlparser::ast::{
+    AlterTableOperation, ColumnDef, ColumnOption, Expr, FunctionArguments, ObjectType, Statement,
+};
+
+mod positions;
+mod transactions;
+pub(super) use positions::Positions;
+
+pub(super) fn record(
+    statement: &Statement,
+    positions: &mut Positions,
+    out: &mut Vec<SqlTableSchemaEvent>,
+) {
+    match statement {
+        Statement::CreateTable(table) => {
+            let source_order = positions.take("CREATE", &object_name_key(&table.name));
+            if !positions.executed(&source_order) {
+                return;
+            }
+            out.push(SqlTableSchemaEvent::Create {
+                temporary: table.temporary,
+                if_not_exists: table.if_not_exists,
+                columns_complete: table.query.is_none()
+                    && table.like.is_none()
+                    && table.clone.is_none()
+                    && table.inherits.is_none()
+                    && table.partition_of.is_none(),
+                line: positions.line(&source_order),
+                position_column: positions.column(&source_order),
+                source_order,
+                table: object_name_key(&table.name),
+                relation_key: object_name_identity(&table.name),
+                unqualified_table: super::relation(&table.name),
+                columns: table
+                    .columns
+                    .iter()
+                    .zip(table_metadata(table).columns)
+                    .map(|(definition, original)| {
+                        let mut column = event_column(definition);
+                        column.is_primary_key = original.is_primary_key;
+                        column
+                    })
+                    .collect(),
+            });
+        }
+        Statement::AlterTable(alter) => {
+            let source_order = positions.take("ALTER", &object_name_key(&alter.name));
+            if !positions.executed(&source_order) {
+                return;
+            }
+            for operation in &alter.operations {
+                if let AlterTableOperation::AddColumn {
+                    column_def,
+                    if_not_exists,
+                    ..
+                } = operation
+                {
+                    out.push(SqlTableSchemaEvent::AddColumn {
+                        table_if_exists: alter.if_exists,
+                        if_not_exists: *if_not_exists,
+                        line: positions.line(&source_order),
+                        position_column: positions.column(&source_order),
+                        source_order: source_order.clone(),
+                        table: object_name_key(&alter.name),
+                        relation_key: object_name_identity(&alter.name),
+                        unqualified_table: super::relation(&alter.name),
+                        column: event_column(column_def),
+                    });
+                }
+            }
+        }
+        Statement::Drop {
+            object_type: ObjectType::Table,
+            names,
+            ..
+        } => {
+            for name in names {
+                let source_order = positions.take("DROP", &object_name_key(name));
+                if !positions.executed(&source_order) {
+                    continue;
+                }
+                out.push(SqlTableSchemaEvent::Drop {
+                    line: positions.line(&source_order),
+                    position_column: positions.column(&source_order),
+                    source_order,
+                    table: object_name_key(name),
+                    relation_key: object_name_identity(name),
+                    unqualified_table: super::relation(name),
+                });
+            }
+        }
+        _ => {}
+    }
+}
+
+fn event_column(column: &ColumnDef) -> crate::SqlColumnMetadata {
+    let mut metadata = column_metadata(column);
+    metadata.name = ident_key(&column.name);
+    for option in &column.options {
+        if let ColumnOption::Generated {
+            generation_expr: Some(expr),
+            ..
+        } = &option.option
+        {
+            if let Expr::Function(function) = unwrap_expr(expr) {
+                if let FunctionArguments::List(list) = &function.args {
+                    metadata.generated_function_arg_columns.clear();
+                    visit_function_args(&list.args, &mut |expr| {
+                        let name = match unwrap_expr(expr) {
+                            Expr::Identifier(name) => Some(ident_key(name)),
+                            Expr::CompoundIdentifier(parts) => parts.last().map(ident_key),
+                            _ => None,
+                        };
+                        metadata.generated_function_arg_columns.extend(name);
+                    });
+                }
+            }
+        }
+    }
+    metadata
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;

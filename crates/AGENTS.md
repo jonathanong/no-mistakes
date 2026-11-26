@@ -3,6 +3,19 @@
 
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
 
+### Workspace crate boundaries
+
+- `crates/no-mistakes-postgres-sql` owns pure PostgreSQL SQL parsing,
+  statement/DML/locking/bound fact extraction, migration recovery, and SQL
+  identifier normalization. It must not depend on `no-mistakes`.
+- Host-side hooks (`CatalogLifecycleLookup` for catalog search-path/scalar
+  lookups and `source::record_global_rayon_threads` for Rayon pool sizing)
+  invert dependencies from `no-mistakes` into `no-mistakes-postgres-sql`.
+- `crates/no-mistakes/src/codebase/postgres/` owns TypeScript-embedded SQL,
+  schema catalogs, rule profiles, verdicts, and re-exports the public surface
+  of `no-mistakes-postgres-sql` so CLI, N-API, and Rust callers see unchanged
+  paths.
+
 ### Core architecture invariants
 
 - One pass per invocation: discover the file universe once, parse each TS/JS

@@ -23,6 +23,7 @@ mod locations;
 mod model;
 mod names;
 mod nesting;
+#[cfg(test)]
 mod order;
 mod partition;
 mod paths;
@@ -57,10 +58,10 @@ pub use model::{
     GeneratedKind, PartitionKey, PartitionKeyElement, PartitionStrategy, RelationKind,
     TriggerEvent, TriggerTiming,
 };
+#[cfg(test)]
 pub(crate) use order::{canonical_order_keys, order_by_ascending};
 use paths::catalog_path;
 pub(crate) use paths::normalize_catalog_path;
-pub(crate) use search_path::SearchPathResolution;
 use snapshot::Snapshot;
 
 #[derive(Debug, Clone, Default)]
@@ -196,4 +197,4 @@ impl SchemaCatalog {
     }
 }
 
-pub(crate) use names::{decoded_parts, normalize_identifier, normalize_table_name};
+pub(crate) use names::{decoded_parts, normalize_identifier};

@@ -32,7 +32,7 @@ test("the source filter compiles one bounded postgres-source test slice", () => 
   }
 });
 
-test("every codebase::postgres::source unit test compiles in the postgres-source slice", () => {
+test("every no-mistakes-postgres-sql source unit test compiles in the postgres-source slice", () => {
   const root = path.join(__dirname, "../..");
   const report = libraryShardCoverage(root);
   assert.deepEqual(report.missingPostgresSourceTests, []);

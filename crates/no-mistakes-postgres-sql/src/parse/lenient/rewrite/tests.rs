@@ -1,0 +1,211 @@
+use super::*;
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::tokenizer::Tokenizer;
+
+fn tokens(sql: &str) -> Vec<Token> {
+    Tokenizer::new(&PostgreSqlDialect {}, sql)
+        .tokenize()
+        .expect("tokenize")
+}
+
+#[test]
+fn strips_drop_index_concurrently() {
+    let mut parsed = tokens("DROP INDEX CONCURRENTLY IF EXISTS idx_history__topic_id");
+    rewrite_drop_index_concurrently(&mut parsed);
+    assert!(parsed
+        .iter()
+        .all(|token| keyword_of(token) != Some(Keyword::CONCURRENTLY)));
+    assert!(parsed
+        .iter()
+        .any(|token| keyword_of(token) == Some(Keyword::DROP)));
+}
+
+#[test]
+fn rewrites_chr_to_a_string_literal() {
+    let mut parsed = tokens("ESCAPE chr(92)");
+    rewrite_chr_calls(&mut parsed);
+    assert!(parsed.iter().any(|token| matches!(
+        token,
+        Token::SingleQuotedString(value) if value == "\\"
+    )));
+}
+
+#[test]
+fn strips_referential_set_column_lists_only() {
+    for sql in [
+        "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET NULL (result_id)",
+        "FOREIGN KEY (result_id, topic_id) REFERENCES parent (result_id, topic_id) ON DELETE SET NULL (result_id, topic_id)",
+        "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET DEFAULT (\"result_id\")",
+        "FOREIGN KEY (\"NULL\") REFERENCES parent (id) ON DELETE SET NULL (\"NULL\")",
+        "FOREIGN KEY (key) REFERENCES parent (id) ON DELETE SET NULL (key)",
+        "FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) ON DELETE SET NULL (result_id)",
+        "FOREIGN KEY (Result_Id) REFERENCES parent (id) ON DELETE SET NULL (result_id)",
+        "a int, FOREIGN KEY (a) REFERENCES parent(a), b int REFERENCES parent(b) ON DELETE SET NULL (b)",
+        "result_id numeric(10) REFERENCES parent(id) ON DELETE SET NULL (result_id)",
+        "result_id uuid NOT NULL REFERENCES parent(id) ON DELETE SET NULL (result_id)",
+        "ALTER TABLE child ADD COLUMN result_id uuid REFERENCES parent(id) ON DELETE SET NULL (result_id)",
+    ] {
+        let mut parsed = tokens(sql);
+        rewrite_referential_set_column_lists(&mut parsed);
+        assert!(action_column_list_removed(&parsed), "{sql}: {parsed:?}");
+    }
+}
+
+#[test]
+fn leaves_non_referential_parentheses() {
+    for sql in [
+        "ON DELETE SET NULL",
+        "ON DELETE CASCADE",
+        "ON DELETE SET RESTRICT",
+        "ON CONFLICT DO NOTHING",
+        "ALTER COLUMN result_id SET DEFAULT (gen_random_uuid())",
+        "REFERENCES parent (result_id) ON DELETE SET NULL",
+        "ON UPDATE SET NULL (result_id)",
+        "ON UPDATE SET DEFAULT (result_id, topic_id)",
+        "ON DELETE SET NULL ()",
+        "ON DELETE SET NULL (1)",
+        "ON DELETE SET NULL (NULL)",
+        "ON DELETE SET NULL (CURRENT_DATE)",
+        "ON DELETE SET NULL (ARRAY)",
+        "ON DELETE SET NULL (ANALYZE)",
+        "ON DELETE SET NULL (ISNULL)",
+        "FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) ON DELETE SET NULL (other_id)",
+        "FOREIGN KEY (\"Result\") REFERENCES parent (id) ON DELETE SET NULL (\"result\")",
+        "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET NULL (\"RESULT_ID\")",
+        "FOREIGN KEY (result_id, topic_id) REFERENCES parent (result_id, topic_id) ON DELETE SET NULL (result_id, result_id)",
+        "FOREIGN KEY (result_id, result_id) REFERENCES parent (result_id, result_id) ON DELETE SET NULL (result_id)",
+        "REFERENCES p (id); ON DELETE SET NULL (id)",
+        "REFERENCES p (id) ON DELETE SET NULL (id)",
+        ", uuid REFERENCES p (id) ON DELETE SET NULL (id)",
+        "ON DELETE SET NULL (key)",
+        "ON DELETE SET NULL (result_id + 1)",
+        "ON DELETE SET NULL (result_id,)",
+        "ON DELETE SET NULL (result_id",
+    ] {
+        let mut parsed = tokens(sql);
+        let before = parsed.clone();
+        rewrite_referential_set_column_lists(&mut parsed);
+        assert_eq!(parsed, before, "{sql}");
+    }
+}
+
+fn action_column_list_removed(tokens: &[Token]) -> bool {
+    let Some(value_at) = tokens.iter().rposition(|token| {
+        matches!(keyword_of(token), Some(Keyword::NULL | Keyword::DEFAULT))
+            && token_is_unquoted(token)
+    }) else {
+        return false;
+    };
+    tokens
+        .iter()
+        .skip(value_at + 1)
+        .find(|token| !matches!(token, Token::Whitespace(_)))
+        .is_none_or(|token| !matches!(token, Token::LParen))
+}
+
+fn token_is_unquoted(token: &Token) -> bool {
+    matches!(token, Token::Word(word) if word.quote_style.is_none())
+}
+
+#[test]
+fn leaves_chr_without_call_parens_or_a_numeric_arg() {
+    for sql in ["ESCAPE chr 92", "ESCAPE chr(id)"] {
+        let mut parsed = tokens(sql);
+        rewrite_chr_calls(&mut parsed);
+        assert!(
+            parsed.iter().any(|token| matches!(
+                token,
+                Token::Word(word) if word.value.eq_ignore_ascii_case("chr")
+            )),
+            "{sql}"
+        );
+    }
+}
+
+#[test]
+fn saved_chr_boundaries_rewrite_only_complete_unicode_scalar_calls() {
+    let fixture = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-compat/chr-boundaries.sql"
+    ));
+    let mut lines = fixture.lines();
+    let mut valid = tokens(lines.next().unwrap());
+    rewrite_chr_calls(&mut valid);
+    let values: Vec<_> = valid
+        .iter()
+        .filter_map(|token| match token {
+            Token::SingleQuotedString(value) => Some(value.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(values, ["A", "😀"]);
+    for sql in lines {
+        let before = tokens(sql);
+        let mut after = before.clone();
+        rewrite_chr_calls(&mut after);
+        rewrite_drop_index_concurrently(&mut after);
+        assert_eq!(after, before, "{sql}");
+    }
+}
+
+#[test]
+fn located_delete_column_rewrite_keeps_source_spans_and_referential_actions() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-compat/located-delete-columns.sql"
+    ));
+    let mut located = Tokenizer::new(&PostgreSqlDialect {}, sql)
+        .tokenize_with_location()
+        .unwrap();
+    let spans: Vec<_> = located.iter().map(|token| token.span).collect();
+    rewrite_referential_set_column_lists_located(&mut located);
+    assert_eq!(
+        located.iter().map(|token| token.span).collect::<Vec<_>>(),
+        spans
+    );
+    let parsed = sqlparser::parser::Parser::new(&PostgreSqlDialect {})
+        .with_tokens_with_locations(located)
+        .parse_statements()
+        .unwrap();
+    let sqlparser::ast::Statement::AlterTable(table) = &parsed[0] else {
+        panic!("expected ALTER TABLE")
+    };
+    let actions: Vec<_> = table
+        .operations
+        .iter()
+        .filter_map(|operation| match operation {
+            sqlparser::ast::AlterTableOperation::AddConstraint {
+                constraint: sqlparser::ast::TableConstraint::ForeignKey(key),
+                ..
+            } => key.on_delete.as_ref(),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        actions,
+        [
+            &sqlparser::ast::ReferentialAction::SetNull,
+            &sqlparser::ast::ReferentialAction::SetDefault
+        ]
+    );
+}
+
+#[test]
+fn incomplete_saved_heads_preserve_tokens_during_compatibility_rewrites() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-compat/incomplete-rewrite-heads.sql"
+    ));
+    for sql in sql.lines() {
+        let original = tokens(sql);
+        let mut rewritten = original.clone();
+        rewrite_chr_calls(&mut rewritten);
+        rewrite_drop_index_concurrently(&mut rewritten);
+        rewrite_referential_set_column_lists(&mut rewritten);
+        assert_eq!(rewritten, original, "{sql}");
+        assert!(
+            crate::parse::parse_postgres_sql(sql).is_err(),
+            "incomplete input must retain its parse failure: {sql}"
+        );
+    }
+}

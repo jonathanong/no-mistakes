@@ -1,0 +1,82 @@
+//! Standalone source facts: one prepared token inventory, one AST per statement.
+
+mod adjacent_strings;
+mod alter;
+mod batch_pool;
+pub use batch_pool::record_global_rayon_threads;
+mod begin_atomic;
+#[doc(hidden)]
+pub use begin_atomic::conceal_body_keyword;
+mod body;
+mod columns;
+mod completeness;
+mod conflict_calls;
+#[doc(hidden)]
+pub use conflict_calls::PolicyArbiter;
+pub(super) use conflict_calls::{
+    parse_program as parse_conflict_program, recover as recover_conflict_calls,
+};
+mod conditional;
+mod conditional_partial;
+mod conditional_source;
+mod constraint_spans;
+mod copy_stdin;
+mod ddl;
+mod diagnostics;
+mod dialect;
+mod drop_facts;
+mod execute;
+mod execute_preparation;
+mod expression_children;
+mod expression_identity;
+mod expression_roots;
+mod expressions;
+mod generated;
+mod index_only;
+mod indexes;
+mod insert;
+mod locations;
+mod metadata;
+mod metadata_preparation;
+mod parsing;
+mod procedural;
+mod procedural_classify;
+mod procedural_occurrences;
+mod procedural_omit;
+mod procedural_prepare;
+mod procedural_walk;
+mod projection;
+mod query;
+mod recovery;
+mod type_facts;
+mod types;
+mod wrappers;
+pub use types::*;
+#[doc(hidden)]
+pub use wrappers::explain_execution;
+
+/// Parse source text without a repository scan, catalog, or database connection.
+pub fn parse_postgres_source(source: &PostgresSqlSource) -> PostgresSqlFacts {
+    let locations = locations::Locations::new(&source.sql);
+    let prepared = super::parse::prepare_postgres_tokens(&source.sql);
+    parsing::collect_program(source, prepared, &locations, 0, false)
+}
+
+/// Batch independent sources while preserving input order and per-source ownership.
+pub fn parse_postgres_sources(sources: &[PostgresSqlSource]) -> Vec<PostgresSqlFacts> {
+    parse_postgres_sources_with_jobs(sources, 0)
+}
+
+#[doc(hidden)]
+pub fn parse_postgres_sources_with_jobs(
+    sources: &[PostgresSqlSource],
+    jobs: usize,
+) -> Vec<PostgresSqlFacts> {
+    use rayon::prelude::*;
+    batch_pool::install(jobs, || {
+        sources.par_iter().map(parse_postgres_source).collect()
+    })
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2, nm_shard_postgres_source)))]
+mod tests;
