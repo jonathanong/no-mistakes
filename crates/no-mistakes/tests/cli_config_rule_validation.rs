@@ -228,3 +228,65 @@ fn declared_option_values_reject_invalid_and_run_valid() {
         result["valid"]
     );
 }
+
+const DECLARED_OPTION_RULES: &[&str] = &[
+    "banned-paths",
+    "banned-renamed-files",
+    "csharp-max-lines-per-file",
+    "csharp-no-async-void-delegate",
+    "forbidden-dependencies",
+    "forbidden-lint-suppressions",
+    "forbidden-workspace-closure",
+    "github-actions-action-input-policy",
+    "github-actions-action-timeout-pair",
+    "github-actions-cache-key-policy",
+    "github-actions-cache-setup-policy",
+    "github-actions-composite-step-schema",
+    "github-actions-job-timeouts",
+    "github-actions-local-action-checkout",
+    "github-actions-max-inline-script-lines",
+    "github-actions-no-required-pr-path-filters",
+    "github-actions-pinned-hash",
+    "github-actions-script-expressions",
+    "github-actions-step-timeouts",
+    "github-actions-test-timeout-literals",
+    "github-actions-vitest-project-selection",
+    "markdown-child-links",
+    "markdown-eval-tests",
+    "markdown-link-display-text",
+    "markdown-structure-budget",
+];
+
+#[test]
+fn saved_declared_option_values_fail_closed_and_valid_values_run() {
+    let root = rules_path("options-audit", "fixture", "issue-4642");
+    let cases = [
+        (
+            "invalid-declared",
+            root.clone(),
+            root.join("invalid-declared.yml"),
+        ),
+        (
+            "valid-declared",
+            root.clone(),
+            root.join("valid-declared.yml"),
+        ),
+    ];
+    let result = assert_saved_fixture_report("declared_option_values_4642", &cases, &[], &[]);
+    assert_eq!(result["invalid-declared"]["exitCode"], 2, "{result}");
+    assert!(result["invalid-declared"]["report"].is_null(), "{result}");
+    let stderr = result["invalid-declared"]["stderr"].as_str().unwrap();
+    for rule in DECLARED_OPTION_RULES {
+        assert!(
+            stderr.contains(rule),
+            "missing invalid declared option for {rule}: {stderr}"
+        );
+    }
+    assert_eq!(result["valid-declared"]["exitCode"], 0, "{result}");
+    assert!(
+        result["valid-declared"]["report"]["rules"]
+            .as_array()
+            .is_some_and(Vec::is_empty),
+        "{result}"
+    );
+}

@@ -1,0 +1,123 @@
+version: 2
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+        - glob: "["
+          message: blocked
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      bannedBasenames:
+        - name: legacy
+          pattern: "("
+  - rule: csharp-max-lines-per-file
+    scope: repository
+    options:
+      excludes:
+        - "["
+  - rule: csharp-no-async-void-delegate
+    scope: repository
+    options:
+      allow:
+        - "["
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      relationships:
+        - sideways
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: []
+  - rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      dependencyTypes: runtime
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      include:
+        - "["
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    options:
+      stepTimeoutMinutes: -1
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    options:
+      caches: []
+  - rule: github-actions-cache-setup-policy
+    scope: repository
+    options:
+      caches: []
+      setup: []
+  - rule: github-actions-composite-step-schema
+    scope: repository
+    options:
+      allowedKeys: name
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      maxMinutes: -1
+  - rule: github-actions-local-action-checkout
+    scope: repository
+    options:
+      unanalyzable: nope
+  - rule: github-actions-max-inline-script-lines
+    scope: repository
+    options:
+      maxLines: 0
+  - rule: github-actions-no-required-pr-path-filters
+    scope: repository
+    options:
+      workflows:
+        - .github/workflows/*.yml
+  - rule: github-actions-pinned-hash
+    scope: repository
+    options:
+      images: 1
+  - rule: github-actions-script-expressions
+    scope: repository
+    options:
+      constantContexts:
+        - "("
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      maxMinutes: -1
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      allow:
+        - file: " "
+          text: "1000"
+          reason: fixture
+  - rule: github-actions-vitest-project-selection
+    scope: repository
+    options:
+      projects:
+        - project: web
+          workflows:
+            - /abs.yml
+  - rule: markdown-child-links
+    scope: repository
+    options:
+      groups:
+        - parents:
+            - "["
+          children:
+            - docs/*.md
+  - rule: markdown-eval-tests
+    scope: repository
+    options:
+      include: 1
+  - rule: markdown-link-display-text
+    scope: repository
+    options:
+      extensions: 1
+  - rule: markdown-structure-budget
+    scope: repository
+    options:
+      maxLines: -1

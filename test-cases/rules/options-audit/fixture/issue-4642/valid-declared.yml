@@ -1,0 +1,148 @@
+version: 2
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+        - glob: vendor/**
+          message: blocked
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      bannedBasenames:
+        - name: legacy
+          extensions:
+            - .js
+  - rule: csharp-max-lines-per-file
+    scope: repository
+    options:
+      srcMax: 200
+      excludes:
+        - "**/*.g.cs"
+  - rule: csharp-no-async-void-delegate
+    scope: repository
+    options:
+      methods:
+        - BeginInvokeOnMainThread
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - src/entry.ts
+      forbiddenModules:
+        - "@example/secret"
+      relationships:
+        - import
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files:
+        - src/**/*.ts
+      ruleIds:
+        - no-console
+  - rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages:
+        - "@example/widget"
+      forbidden:
+        - "@example/secret"
+      dependencyTypes:
+        - dependencies
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      include:
+        - .github/workflows/*.yml
+      actions:
+        - uses: actions/checkout
+          ban:
+            - token
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    options:
+      uses:
+        - actions/checkout
+      stepTimeoutMinutes: 10
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    options:
+      forbiddenPaths:
+        - node_modules
+  - rule: github-actions-cache-setup-policy
+    scope: repository
+    options:
+      setup:
+        - uses: actions/setup-node
+          maxMinutes: 5
+  - rule: github-actions-composite-step-schema
+    scope: repository
+    options:
+      include:
+        - .github/actions/**/action.yml
+      allowedKeys:
+        - name
+        - run
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      maxMinutes: 60
+  - rule: github-actions-local-action-checkout
+    scope: repository
+    options:
+      unanalyzable: report
+  - rule: github-actions-max-inline-script-lines
+    scope: repository
+    options:
+      maxLines: 10
+  - rule: github-actions-no-required-pr-path-filters
+    scope: repository
+    options:
+      workflows:
+        - .github/workflows/ci.yml
+  - rule: github-actions-pinned-hash
+    scope: repository
+    options:
+      images: false
+  - rule: github-actions-script-expressions
+    scope: repository
+    options:
+      constantContexts:
+        - "^runner\\.os$"
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      maxMinutes: 30
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options: {}
+  - rule: github-actions-vitest-project-selection
+    scope: repository
+    options:
+      projects:
+        - project: web
+          workflows:
+            - .github/workflows/ci.yml
+          nameFilters: allow
+  - rule: markdown-child-links
+    scope: repository
+    options:
+      groups:
+        - parents:
+            - docs/*.md
+          children:
+            - docs/**/*.md
+  - rule: markdown-eval-tests
+    scope: repository
+    options:
+      include:
+        - "**/*.test.ts"
+  - rule: markdown-link-display-text
+    scope: repository
+    options:
+      extensions:
+        - .md
+  - rule: markdown-structure-budget
+    scope: repository
+    options:
+      maxLines: 180
