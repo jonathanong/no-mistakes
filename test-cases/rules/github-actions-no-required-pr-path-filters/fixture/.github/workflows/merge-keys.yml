@@ -1,0 +1,7 @@
+x-shared: &shared
+  paths: ['src/**']
+on:
+  <<: *shared
+  pull_request:
+    <<: *shared
+jobs: {}

@@ -59,8 +59,9 @@ query wrapper supports recovery; the owner must preserve that wrapper's contract
 
 - `importSpecifier` identifies the database module and defaults to
   empty (configure your database module explicitly).
-- `executorNames` lists checked executor names and defaults to
-  `["query", "read", "write"]` only with a configured module; otherwise it is empty.
+- `executorNames` lists checked executor names. It defaults to `["query",
+  "read", "write"]` with a configured module. Without a module, supply
+  `executorNames` explicitly. An empty list selects no named executors. [Executor option validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/postgres-executor.js#L7-L21).
 - `executorFactoryNames` lists imports whose call result bound with `const`,
   `let`, `using`, or `await using` is an executor inside the declaring block. It
   defaults to `[]`.

@@ -32,10 +32,11 @@ a `git diff` whose range is:
   `github.event.pull_request.base.sha`, or `github.base_ref` (also written
   `origin/${{ github.base_ref }}`), with `github.sha`. This pairing is judged
   only when the workflow can also run on `push` or `merge_group`, where
-  `github.sha` means something else. In a workflow triggered only by
-  `pull_request` or `pull_request_target`, `github.sha` is the merge commit, so
-  `git diff origin/${{ github.base_ref }}...${{ github.sha }}` is a correct
-  change set and is not reported.
+  the same expression can refer to a different revision. The rule skips this
+  pairing when neither event is declared. For example, a `pull_request`-only
+  workflow can use
+  `git diff origin/${{ github.base_ref }}...${{ github.sha }}` to diff against
+  the PR merge commit. [Event gating](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/pr_diff_range/runs.rs#L128-L137).
 
 In a workflow triggered by `merge_group`, it reports a step that reads
 `github.event.pull_request.*`, which is empty there. A read through an `env`
@@ -95,8 +96,9 @@ BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.bas
 ```
 
 A range end is recognized when it is the expression itself, optionally behind
-`origin/`, or a `$NAME` / `${NAME}` variable that a workflow, job, or step
-`env` assigns to that expression. Anything not recognized as a diff range is
+`origin/` or `refs/remotes/origin/`, or a `$NAME` / `${NAME}` variable that
+a workflow, job, or step `env` assigns to that expression. This includes
+the supported pull-request and merge-group fallbacks above. [Revision extraction](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/pr_diff_range/exprs.rs#L32-L90). Anything not recognized as a diff range is
 silent: another command, a `git diff` flag that takes a separate value
 (`-U 3`, `--output file`), more than two revisions, a revision the rule does
 not know, here-document bodies, and invalid YAML. The scanner skips

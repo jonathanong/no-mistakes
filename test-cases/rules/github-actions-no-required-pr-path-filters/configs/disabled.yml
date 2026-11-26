@@ -1,0 +1,5 @@
+version: 2
+rules:
+  - rule: github-actions-no-required-pr-path-filters
+    enabled: false
+    scope: repository

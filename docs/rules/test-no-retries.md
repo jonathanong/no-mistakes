@@ -111,8 +111,9 @@ chains, repository-local wrapper functions that return their argument or its
 Playwright's `test` or its `.extend(...)` result. When a spec calls `<binding>.describe.configure(...)`
 on an imported binding that cannot be resolved to Playwright's `test` (such as
 an opaque wrapper, an ambiguous or cyclic export, or an unrelated imported
-object with a `.describe.configure` method), the rule never drops it silently:
-it records an `incomplete` entry naming the file, line, and binding. Add the
+object with a `.describe.configure` method), retry settings above the cap or
+with an unknown count produce an `incomplete` entry naming the file, line,
+and binding. [Retry candidates and unresolved receivers](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_reliability/findings.rs#L141-L164). Add the
 export to `options.fixtures` if it is a Playwright fixture, or exclude/suppress
 the file if it is not. When provenance survives through a receiver that cannot
 be fully traced, such as a later assignment or a mixed factory return, the

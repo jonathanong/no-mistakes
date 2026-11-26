@@ -15,6 +15,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT assume a unique job id prevents duplicate runs; it only dedupes enqueues. Make the work idempotent.
 - SHOULD NOT key dedup ids by entity alone when distinct events must each run. A retained job still holds its id.
 - MUST NOT size a global per-key cap as if it were per-process worker concurrency.
+- MUST NOT rely solely on per-worker concurrency or a schedule interval to prevent unsafe overlap between runs of a job. Separate workers, retries of stalled runs, and manual triggers can run concurrently. Make simultaneous runs safe or enforce exclusion across all entry points.
 - MUST NOT ship a job whose only failure recovery is the dead-letter queue; add a reconciler or document the accepted loss.
 - MUST NOT put secrets or personal data in payloads; pass ids.
 - SHOULD NOT put slow external work on a latency-sensitive request path when the caller can receive its result asynchronously.

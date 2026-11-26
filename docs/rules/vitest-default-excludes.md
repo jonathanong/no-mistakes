@@ -51,7 +51,12 @@ matched by `files`, its `test`-shaped object literals are checked once without
 duplicate findings.
 
 In both modes, the rule checks explicit `test.exclude` arrays. Leaving
-`exclude` unset preserves Vitest's defaults. The recognized
+`exclude` unset preserves Vitest's defaults. A spread can use a literal string
+array, a local `const` initialized to one, or a named import of an
+`export const` literal array from a relative module in the prepared file
+inventory. Renamed imports and `as const` array initializers work too. The
+rule follows lexical bindings and rejects arrays that are mutated or passed
+around in the declaring or importing module. The recognized
 `configDefaults.exclude` spread satisfies all configured `requiredGlobs`,
 including custom entries; no additional strings are needed. Recognition is
 syntactic and required glob matching is exact-string: a handwritten string is
@@ -63,9 +68,12 @@ In `config` mode, the rule skips callback configs, CommonJS exports,
 re-exported or indirect root bindings, external project config files,
 `mergeConfig`, `defineConfig` imported from `vite`, and Vitest workspace files.
 In both modes, it skips coverage exclusions, unrelated properties named
-`exclude`, properties followed by a later spread or dynamic key, arrays with
-unknown entries or unrecognized spreads, and conditional or call-based
-`exclude` values.
+`exclude`, properties followed by a later spread or dynamic key, arrays with unknown
+entries and no spread, and conditional or call-based `exclude` values. An
+array with a spread that cannot be resolved reports an `unanalyzable` finding
+on the `exclude` property when a required glob is still missing from the known entries. Rewrite the spread as a literal string array or
+reference a statically known const array. Package imports, re-exports, and
+runtime expressions in spreads are unanalyzable.
 
 ## Counterexample
 
@@ -75,8 +83,9 @@ Default-exported config:
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
 
+const extra = ['**/generated/**'];
 export default defineConfig({
-  test: { exclude: ['**/generated/**'] },
+  test: { exclude: ['**/node_modules/**', ...extra] },
 });
 ```
 

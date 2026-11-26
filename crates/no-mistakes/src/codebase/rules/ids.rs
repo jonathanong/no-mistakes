@@ -25,6 +25,7 @@ pub use super::github_actions_job_permissions::RULE_ID as GITHUB_ACTIONS_JOB_PER
 pub use super::github_actions_job_timeouts::RULE_ID as GITHUB_ACTIONS_JOB_TIMEOUTS;
 pub use super::github_actions_local_action_checkout::RULE_ID as GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT;
 pub use super::github_actions_no_insta_snapshot_updates::RULE_ID as GITHUB_ACTIONS_NO_INSTA_SNAPSHOT_UPDATES;
+pub use super::github_actions_no_required_pr_path_filters::RULE_ID as GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS;
 pub use super::github_actions_step_timeouts::RULE_ID as GITHUB_ACTIONS_STEP_TIMEOUTS;
 pub use super::github_actions_test_timeout_literals::RULE_ID as GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS;
 pub use super::github_actions_workflow_files::env_policy::RULE_ID as GITHUB_ACTIONS_ENV_POLICY;
@@ -116,6 +117,7 @@ pub use super::structured_config_policy::RULE_ID as STRUCTURED_CONFIG_POLICY;
 pub use super::swift_no_raw_print::RULE_ID as SWIFT_NO_RAW_PRINT;
 pub use super::swift_no_unguarded_darwin_import::RULE_ID as SWIFT_NO_UNGUARDED_DARWIN_IMPORT;
 pub use super::swift_viewmodel_main_actor::RULE_ID as SWIFT_VIEWMODEL_MAIN_ACTOR;
+pub use super::terraform_iam_no_undocumented_wildcards::RULE_ID as TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS;
 pub use super::test_email_domain_policy::RULE_ID as TEST_EMAIL_DOMAIN_POLICY;
 pub use super::test_fixture_size_cap::RULE_ID as TEST_FIXTURE_SIZE_CAP;
 pub use super::test_no_dependency_pins::RULE_ID as TEST_NO_DEPENDENCY_PINS;
@@ -141,3 +143,5 @@ pub use super::github_actions_workflow_files::pr_diff_range::RULE_ID as GITHUB_A
 
 pub use super::vitest_default_excludes::RULE_ID as VITEST_DEFAULT_EXCLUDES;
 pub use super::vitest_project_policy::RULE_ID as VITEST_PROJECT_POLICY;
+
+pub use super::github_actions_cache_setup_policy::RULE_ID as GITHUB_ACTIONS_CACHE_SETUP_POLICY;

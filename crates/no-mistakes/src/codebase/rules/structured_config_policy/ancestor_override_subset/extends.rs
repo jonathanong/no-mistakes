@@ -1,13 +1,13 @@
 use super::finding;
 use super::keys::Keys;
 use super::spec::{
-    extends_specs, is_package_specifier, MAX_EXTENDS_DEPTH, MAX_EXTENDS_OCCURRENCES,
+    MAX_EXTENDS_DEPTH, MAX_EXTENDS_OCCURRENCES, extends_specs, is_package_specifier,
 };
-use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_canonical_root;
+use crate::codebase::rules::file_diagnostics::ClassifiedInputFindings;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
-use crate::codebase::rules::RuleFinding;
+use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_canonical_root;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use crate::codebase::ts_source::{SourceStore, relative_slash_path};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -39,7 +39,7 @@ struct Walk<'a> {
     traversal_exhausted: bool,
     parsed_ancestors: &'a mut ParsedAncestorCache,
     ancestors: Vec<Ancestor>,
-    findings: &'a mut Vec<RuleFinding>,
+    result: &'a mut ClassifiedInputFindings,
 }
 
 pub(super) fn collect_ancestors(
@@ -48,7 +48,7 @@ pub(super) fn collect_ancestors(
     sources: &SourceStore,
     assertion: &ValueAssertion,
     keys: &Keys<'_>,
-    findings: &mut Vec<RuleFinding>,
+    result: &mut ClassifiedInputFindings,
     parsed_ancestors: &mut ParsedAncestorCache,
 ) -> Vec<Ancestor> {
     let mut walk = Walk {
@@ -63,7 +63,7 @@ pub(super) fn collect_ancestors(
         traversal_exhausted: false,
         parsed_ancestors,
         ancestors: Vec::new(),
-        findings,
+        result,
     };
     walk.visit(nested.path, nested.value);
     walk.ancestors
@@ -88,7 +88,7 @@ impl Walk<'_> {
     }
 
     fn invalid_extends(&mut self, detail: &str) {
-        self.findings.push(finding(
+        self.result.findings.push(finding(
             self.nested_rel,
             self.assertion,
             format!(
@@ -107,7 +107,7 @@ impl Walk<'_> {
         }
         if self.occurrences >= self.max_occurrences {
             self.traversal_exhausted = true;
-            self.findings.push(finding(
+            self.result.findings.push(finding(
                 self.nested_rel,
                 self.assertion,
                 format!(
@@ -120,7 +120,7 @@ impl Walk<'_> {
         self.occurrences += 1;
         let resolved = normalize_path(&from_dir.join(spec));
         if !resolved.exists() {
-            self.findings.push(finding(
+            self.result.findings.push(finding(
                 self.nested_rel,
                 self.assertion,
                 format!(
@@ -131,7 +131,7 @@ impl Walk<'_> {
             return;
         }
         let Some(resolved) = canonical_path_in_canonical_root(self.root, &resolved) else {
-            self.findings.push(finding(
+            self.result.findings.push(finding(
                 self.nested_rel,
                 self.assertion,
                 format!(
@@ -142,7 +142,7 @@ impl Walk<'_> {
             return;
         };
         if self.stack.len() >= MAX_EXTENDS_DEPTH {
-            self.findings.push(finding(
+            self.result.findings.push(finding(
                 self.nested_rel,
                 self.assertion,
                 format!(
@@ -153,7 +153,7 @@ impl Walk<'_> {
             return;
         }
         if self.stack.iter().any(|path| path == &resolved) {
-            self.findings.push(finding(
+            self.result.findings.push(finding(
                 self.nested_rel,
                 self.assertion,
                 format!(
@@ -174,32 +174,6 @@ impl Walk<'_> {
             path: resolved,
             value,
         });
-    }
-
-    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Arc<Value>> {
-        let Some(source) = super::super::super::read_language_source(self.sources, resolved) else {
-            self.findings.push(finding(
-                self.nested_rel,
-                self.assertion,
-                format!(
-                    "{}: ancestor-override-subset `{spec}` is missing",
-                    self.nested_rel
-                ),
-            ));
-            return None;
-        };
-        match self.parsed_ancestors.parse(resolved, &source) {
-            Ok(value) => Some(value),
-            Err(error) => {
-                let ancestor_rel = relative_slash_path(self.root, resolved);
-                self.findings.push(finding(
-                    &ancestor_rel,
-                    self.assertion,
-                    format!("{ancestor_rel}: {error}"),
-                ));
-                None
-            }
-        }
     }
 }
 

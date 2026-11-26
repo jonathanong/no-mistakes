@@ -42,7 +42,9 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
   is unknown: `fail` reports it, `advise` records a non-failing advisory, and
   `ignore` omits it. `INSERT ... DEFAULT VALUES` stays a clean finding, and its
   collected SQL verdict abstains with `unknown-relation-or-write-width`. A
-  zero-width value list stays clean, and a collected SQL verdict clears.
+  zero-width value list also produces no finding. Its SQL verdict clears
+  when the target column order is known and otherwise abstains with
+  `unknown-relation-or-write-width`. [Positional insert verdicts](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_generated_column_writes/scan/verdicts.rs#L59-L81).
   `INSERT ... SELECT *` covers every
   column, so an unknown order follows this policy and a known order stays a
   definite finding. `INSERT ... TABLE` does not parse as a supported source, so

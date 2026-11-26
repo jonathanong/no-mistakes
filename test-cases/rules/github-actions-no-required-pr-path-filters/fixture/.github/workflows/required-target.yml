@@ -1,0 +1,7 @@
+name: Verify
+'on': { pull_request_target: &filter { paths-ignore: ['docs/**'] } }
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/verify

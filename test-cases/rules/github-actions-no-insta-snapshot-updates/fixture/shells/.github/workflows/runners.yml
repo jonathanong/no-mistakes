@@ -1,0 +1,35 @@
+name: Runner shells
+on: [pull_request]
+jobs:
+  linux_labels:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - run: cargo insta test --accept
+  windows_labels:
+    runs-on: [self-hosted, windows, x64]
+    steps:
+      - run: cargo insta accept
+  dynamic_labels:
+    runs-on: [self-hosted, linux, "${{ matrix.label }}"]
+    steps:
+      - run: cargo insta accept
+  macos_label:
+    runs-on: macos-latest
+    steps:
+      - run: cargo insta accept
+  group_linux:
+    runs-on:
+      group: example-runners
+      labels: linux
+    steps:
+      - run: cargo insta accept
+  group_opaque:
+    runs-on:
+      group: example-runners
+    steps:
+      - run: cargo insta accept
+  container:
+    runs-on: ubuntu-latest
+    container: example.invalid/build:1
+    steps:
+      - run: cargo insta test

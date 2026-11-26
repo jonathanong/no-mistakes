@@ -1,0 +1,19 @@
+version: 2
+unanalyzable: advise
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [mixed.yml]
+          when:
+            - key: quoted.<<
+          requiredKeys: [quoted.missing, unanalyzable, misread.rest, receiver.fallback]
+          bannedKeys: [quoted.<<, merged.owner, misread.retained, receiver.retained, receiver.explicit, misread.<<, receiver.fallback]
+          valueAssertions:
+            - kind: equals
+              key: quoted
+              value: {"<<": another-literal}
+            - kind: equals
+              key: merged.owner
+              value: another-owner

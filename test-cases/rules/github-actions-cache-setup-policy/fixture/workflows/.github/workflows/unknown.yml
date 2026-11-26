@@ -1,0 +1,19 @@
+name: Orders
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ${{ inputs.action }}
+      - uses: example/cache@v2
+        with: ${{ inputs.cache }}
+      - uses: example/cache@v2
+        with:
+          path: ["${{ inputs.cache_path }}", .cache/widgets]
+          key: bad
+      - uses: example/cache@v2
+        with:
+          path: .cache/widgets
+          key: ${{ inputs.cache_key }}
+      - uses: example/setup-package-manager@v1
+        timeout-minutes: ${{ inputs.deadline }}

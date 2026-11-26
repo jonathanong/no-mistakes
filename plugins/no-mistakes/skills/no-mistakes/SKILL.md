@@ -365,6 +365,10 @@ body lines, joining backslash continuations, in workflow/composite `run` and `ac
 Move oversized scripts into files and invoke them; see the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-max-inline-script-lines.md).
 
+For `github-actions-cache-setup-policy`, configure action families and literal
+paths with ordered `keyPattern` templates, or set per-family `setup` deadline
+caps. [Rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-setup-policy.md)
+
 For `github-actions-cache-key-policy`, list each portable cache path with its lockfile and
 required key fragments such as `runner.os`, or list paths to ban entirely in `forbiddenPaths`
 (with optional `forbiddenPathsMessage`). `rejectRestoreKeys` defaults to true and
