@@ -67,9 +67,13 @@ is executed more than once. A mutable SQL binding, an imported SQL value, or a
 chain of SQL aliases is left alone.
 
 An explicit `TABLES[kind as keyof typeof TABLES]` assertion is left alone when
-the type query refers to that exact registry binding. A cast to another
-registry's keys or to `string` is still reported. This is a syntactic contract
-for the type checker and the caller to uphold, not runtime key validation.
+the type query refers to that exact registry binding. The same contract accepts
+`kind satisfies keyof typeof TABLES`, an angle-bracket assertion
+`<keyof typeof TABLES>kind`, and a non-null assertion around that cast
+(`(kind as keyof typeof TABLES)!`). Parentheses and a chain around the key are
+erased first. A cast to another registry's keys, to `string`, or of a different
+variable is still reported. This is a syntactic contract for the type checker
+and the caller to uphold, not runtime key validation.
 A plain `string` cast this way is trusted even when it names an unknown key;
 the rule does not validate that key at runtime.
 
@@ -91,7 +95,10 @@ empty. `executorFactoryNames` and `executorTypeNames` support scoped executor
 receivers, matching the other PostgreSQL rules. Both default to `[]`.
 `trustedSqlTags` defaults to `[]` and is accepted for shared configuration;
 each entry has `module` and `name`. This rule still judges registry lookups in
-executor arguments.
+executor arguments. `unanalyzable` is `advise` (the default), `report`, or
+`ignore`. A dynamic `require(flag)` with a non-static SQL argument is reported
+as `unanalyzable`. A static SQL string on that call stays quiet. `advise` and
+`report` use the same message. `ignore` omits only that finding.
 
 With `importSpecifier`, `.query` requires a proven configured import, scoped
 factory/type receiver, or stable alias. Unproven `this.query` and unrelated
@@ -101,7 +108,8 @@ client methods stay outside the rule. Without a module, explicit
 ## Limits
 
 The executor calls above include same-file immutable `const` aliases,
-value namespace imports from the configured module, and `const { query } = db` (or
+value namespace imports from the configured module, `const db = require("@example/db")`,
+`import db = require("@example/db")`, and `const { query } = db` (or
 another configured namespace export). String and expression-free template keys,
 optional calls, TypeScript wrappers, comma callees, `.call`, and `.apply` with a
 literal array are supported. A configured namespace export named `call` or

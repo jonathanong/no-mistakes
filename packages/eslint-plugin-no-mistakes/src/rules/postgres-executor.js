@@ -47,6 +47,7 @@ function executorOptionSchema(extraProperties = {}) {
           },
         },
       },
+      unanalyzable: { enum: ["advise", "report", "ignore"] },
       ...extraProperties,
     },
     additionalProperties: false,
@@ -72,6 +73,11 @@ function executorBindings(
   defaults.legacyAdapterScope = legacyAdapterScope;
   const { importSpecifier, executorNames } = defaults;
   bindings.scoped = collectScopedExecutors(program, defaults, filename, context);
+  // Only the adapter passes legacyAdapterScope. An inline `{ query: SessionExecutor }`
+  // member stays unproven until the type checker records it without `syntactic`.
+  if (arguments.length > 5) {
+    bindings.scoped = bindings.scoped.filter((entry) => !entry.syntactic);
+  }
   bindings.queryMembers = Boolean(importSpecifier) || executorNames.includes(QUERY_PROPERTY);
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;
@@ -144,6 +150,14 @@ function isDatabaseCall(call, bindings) {
   return call?.type === "CallExpression" && calleeName(call, bindings) != null;
 }
 
+function callDisposition(call, bindings) {
+  if (call?.type !== "CallExpression") return null;
+  const resolved = bindings?.resolveCall?.(call);
+  if (resolved?.unanalyzable) return "unresolved";
+  if (resolved?.name || calleeName(call, bindings) != null) return "call";
+  return null;
+}
+
 function firstCallArgument(call, bindings) {
   const argument = bindings?.resolveCall
     ? bindings.resolveCall(call)?.arguments[0]
@@ -162,6 +176,7 @@ module.exports = {
   TRANSACTION_COMMAND,
   TRANSACTION_IMPORTS,
   calleeName,
+  callDisposition,
   executorBindings,
   executorOptionDefaults,
   executorOptionSchema,

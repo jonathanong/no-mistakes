@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const helpers = require("./postgres-runtime-helpers");
 const { fanoutMapCall } = require("./postgres-fanout-calls");
+const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 
 const {
   callbackContainsExecutor,
@@ -29,6 +30,8 @@ module.exports = Object.assign(
         }),
       ],
       messages: {
+        unanalyzable:
+          "This mapped query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the fan-out can be judged. A dynamic module is not a clean result.",
         unboundedFanout:
           "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
       },
@@ -50,7 +53,12 @@ module.exports = Object.assign(
             fanoutMapCall(node, isPromiseAllCallee, context);
           if (!mapped) return;
           if (isStaticallyBounded(mapped.source, options.chunkFunctionNames, context)) return;
-          if (!callbackContainsExecutor(mapped.callback, bindings, context)) return;
+          const hit = callbackContainsExecutor(mapped.callback, bindings, context);
+          if (hit === "unresolved") {
+            reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
+            return;
+          }
+          if (hit !== true) return;
           context.report({ node, messageId: "unboundedFanout" });
         },
       };

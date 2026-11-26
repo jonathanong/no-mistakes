@@ -13,7 +13,9 @@ const {
   namespaceCursorMember,
   namespaceImportMember,
 } = require("./postgres-cursor-imports");
+const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 const {
+  UNRESOLVED_QUERY,
   directCallParent,
   isTypeQuery,
   queryHead,
@@ -53,7 +55,16 @@ function reportFinding(context, suppressed, descriptor) {
 function visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed) {
   const namedImport = namedCursorImport(context, node, helpers, options);
   const namespaceImport = namespaceCursorImport(context, node, helpers, options);
-  if (!namedImport && !namespaceImport) return;
+  if (namedImport === "unresolved" || namespaceImport === "unresolved") {
+    const expression = transparentParent(node);
+    const member =
+      expression.parent?.type === "MemberExpression" && expression.parent.object === expression;
+    if (!directCallParent(node) && !member && !suppressed(node)) {
+      reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
+    }
+    return;
+  }
+  if (namedImport == null && namespaceImport !== true) return;
   if (
     node.parent?.type === "ImportSpecifier" ||
     node.parent?.type === "ImportNamespaceSpecifier" ||
@@ -64,7 +75,8 @@ function visitCursorIdentifier(context, node, options, reportedDirectUses, suppr
     return;
   }
   const variable = helpers.findVariable(context, node);
-  if (!variable?.references.some((reference) => reference.identifier === node)) return;
+  const reference = variable?.references.find((item) => item.identifier === node);
+  if (!reference || reference.init) return;
   const expression = transparentParent(node);
   if (namespaceImport && namespaceImportMember(context, expression.parent, helpers, options)) {
     return;
@@ -82,7 +94,14 @@ function visitNamespaceMember(context, node, options, suppressed) {
     reportFinding(context, suppressed, { messageId: "staticNamespaceMember", node });
     return;
   }
-  if (namespaceCursorMember(context, node, helpers, options) && !directCallParent(node)) {
+  const cursorMember = namespaceCursorMember(context, node, helpers, options);
+  if (cursorMember === "unresolved") {
+    if (!directCallParent(node) && !suppressed(node)) {
+      reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
+    }
+    return;
+  }
+  if (cursorMember && !directCallParent(node)) {
     reportFinding(context, suppressed, { messageId: "directUse", node });
   }
 }
@@ -118,6 +137,7 @@ module.exports = rule(
               },
             },
           },
+          unanalyzable: { enum: ["advise", "report", "ignore"] },
         },
       },
     ],
@@ -128,6 +148,8 @@ module.exports = rule(
         "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
       staticNamespaceMember:
         "PostgreSQL namespace members must use a static property name so cursor use can be verified.",
+      unanalyzable:
+        "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result.",
     },
   },
   (context) => {
@@ -138,13 +160,25 @@ module.exports = rule(
     return {
       CallExpression(node) {
         const callee = helpers.unwrap(node.callee);
-        const executor =
-          namedCursorImport(context, callee, helpers, options) ||
-          namespaceCursorMember(context, callee, helpers, options);
+        const named = namedCursorImport(context, callee, helpers, options);
+        const member = namespaceCursorMember(context, callee, helpers, options);
+        if (named === "unresolved" || member === "unresolved") {
+          if (!suppressed(node)) {
+            reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
+          }
+          return;
+        }
+        const executor = named || member;
         if (!executor) return;
         const argument = node.arguments?.[0];
         const reportNode = argument ?? node;
         const head = argument ? queryHead(context, argument, helpers, options) : null;
+        if (head === UNRESOLVED_QUERY) {
+          if (!suppressed(reportNode)) {
+            reportUnanalyzable(context, reportNode, unanalyzablePolicy(context.options?.[0]));
+          }
+          return;
+        }
         if (head === null) {
           reportFinding(context, suppressed, { messageId: "staticQuery", node: reportNode });
           return;

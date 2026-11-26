@@ -1,0 +1,829 @@
+{
+  "postgres-cursor-call-contract": [
+    {
+      "file": "postgres-import-syntax/cursor-trusted.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executors": [
+            "runCursor"
+          ],
+          "modules": [
+            "@example/cursors"
+          ],
+          "trustedSqlTags": [
+            {
+              "module": "@example/sql",
+              "name": "sql"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/cursor-instantiation.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executors": [
+            "openCursor"
+          ],
+          "modules": [
+            "@example/cursors"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/cursor-local.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executors": [
+            "runCursor"
+          ],
+          "modules": [
+            "@example/cursors"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/cursor-dynamic.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executors": [
+            "runCursor"
+          ],
+          "modules": [
+            "@example/cursors"
+          ],
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/cursor-require.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 18,
+          "endLine": 5,
+          "file": "postgres-import-syntax/cursor-require.ts",
+          "line": 5,
+          "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+          "messageId": "staticQuery",
+          "ruleId": "no-mistakes/postgres-cursor-call-contract",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 6,
+          "file": "postgres-import-syntax/cursor-require.ts",
+          "line": 6,
+          "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+          "messageId": "staticQuery",
+          "ruleId": "no-mistakes/postgres-cursor-call-contract",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executors": [
+            "runCursor"
+          ],
+          "modules": [
+            "@example/cursors"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/cursor-dynamic.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 5,
+          "file": "postgres-import-syntax/cursor-dynamic.ts",
+          "line": 5,
+          "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-cursor-call-contract",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executors": [
+            "runCursor"
+          ],
+          "modules": [
+            "@example/cursors"
+          ]
+        }
+      ]
+    }
+  ],
+  "postgres-no-async-sql-builder": [
+    {
+      "file": "postgres-import-syntax/builder-local.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "builders": [
+            {
+              "callees": [
+                "sql"
+              ],
+              "source": "@example/sql"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/builder-dynamic.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "builders": [
+            {
+              "callees": [
+                "sql"
+              ],
+              "source": "@example/sql"
+            }
+          ],
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/builder-require.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 7,
+          "file": "postgres-import-syntax/builder-require.ts",
+          "line": 5,
+          "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+          "messageId": "removeAsync",
+          "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 11,
+          "file": "postgres-import-syntax/builder-require.ts",
+          "line": 9,
+          "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+          "messageId": "removeAsync",
+          "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 15,
+          "file": "postgres-import-syntax/builder-require.ts",
+          "line": 13,
+          "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+          "messageId": "removeAsync",
+          "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "builders": [
+            {
+              "callees": [
+                "sql"
+              ],
+              "source": "@example/sql"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/builder-wrappers.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 6,
+          "file": "postgres-import-syntax/builder-wrappers.ts",
+          "line": 4,
+          "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+          "messageId": "removeAsync",
+          "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 46,
+          "endLine": 9,
+          "file": "postgres-import-syntax/builder-wrappers.ts",
+          "line": 9,
+          "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+          "messageId": "removeAsync",
+          "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 15,
+          "file": "postgres-import-syntax/builder-wrappers.ts",
+          "line": 13,
+          "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+          "messageId": "removeAsync",
+          "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "builders": [
+            {
+              "callees": [
+                "sql"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/builder-dynamic.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 6,
+          "file": "postgres-import-syntax/builder-dynamic.ts",
+          "line": 4,
+          "message": "This SQL builder is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the async builder can be judged. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "builders": [
+            {
+              "callees": [
+                "sql"
+              ],
+              "source": "@example/sql"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "postgres-no-executor-adapter": [
+    {
+      "file": "postgres-import-syntax/adapter-local.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/adapter-dynamic.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/adapter-require.ts",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 12,
+          "endLine": 9,
+          "file": "postgres-import-syntax/adapter-require.ts",
+          "line": 9,
+          "message": "This call passes db.read into a helper. Name the executor inside the helper (`db.read(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 6,
+          "endLine": 10,
+          "file": "postgres-import-syntax/adapter-require.ts",
+          "line": 10,
+          "message": "This call passes r into a helper. Name the executor inside the helper (`r(sql`…`)`, or `const exec = r; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 11,
+          "endLine": 11,
+          "file": "postgres-import-syntax/adapter-require.ts",
+          "line": 11,
+          "message": "This call passes e.read into a helper. Name the executor inside the helper (`e.read(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/adapter-dynamic.ts",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 12,
+          "endLine": 8,
+          "file": "postgres-import-syntax/adapter-dynamic.ts",
+          "line": 8,
+          "message": "This passed executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the adapter can be judged. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-manual-transaction": [
+    {
+      "file": "postgres-import-syntax/manual-other.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/manual-dynamic.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/manual-require.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 5,
+          "file": "postgres-import-syntax/manual-require.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 6,
+          "file": "postgres-import-syntax/manual-require.ts",
+          "line": 6,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 7,
+          "file": "postgres-import-syntax/manual-require.ts",
+          "line": 7,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/manual-scoped.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 4,
+          "file": "postgres-import-syntax/manual-scoped.ts",
+          "line": 4,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "postgres-import-syntax/manual-scoped.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 35,
+          "endLine": 9,
+          "file": "postgres-import-syntax/manual-scoped.ts",
+          "line": 9,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorTypeNames": [
+            "Db"
+          ],
+          "importSpecifier": "./db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/manual-dynamic.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 4,
+          "file": "postgres-import-syntax/manual-dynamic.ts",
+          "line": 4,
+          "message": "This query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so a manual transaction can be judged. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 6,
+          "file": "postgres-import-syntax/manual-dynamic.ts",
+          "line": 6,
+          "message": "This query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so a manual transaction can be judged. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-nonliteral-sql-registry-key": [
+    {
+      "file": "postgres-import-syntax/registry-finite.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "./db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/registry-dynamic.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/registry-require.ts",
+      "findings": [
+        {
+          "column": 19,
+          "endColumn": 26,
+          "endLine": 7,
+          "file": "postgres-import-syntax/registry-require.ts",
+          "line": 7,
+          "message": "COLS[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"id\": return \"id\"; default: throw new Error(\"unknown\"); } })((k))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "postgres-import-syntax/registry-require.ts",
+          "line": 8,
+          "message": "COLS[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"id\": return \"id\"; default: throw new Error(\"unknown\"); } })((k))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 25,
+          "endLine": 9,
+          "file": "postgres-import-syntax/registry-require.ts",
+          "line": 9,
+          "message": "COLS[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"id\": return \"id\"; default: throw new Error(\"unknown\"); } })((k))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/registry-dynamic.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 6,
+          "file": "postgres-import-syntax/registry-dynamic.ts",
+          "line": 6,
+          "message": "This query executor is not a static import, require, or import-equals binding, and its SQL is not a static string. Write the module specifier as a string literal so the registry key can be judged. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-unbounded-query-fanout": [
+    {
+      "file": "postgres-import-syntax/fanout-dynamic.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/fanout-require.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 64,
+          "endLine": 6,
+          "file": "postgres-import-syntax/fanout-require.ts",
+          "line": 6,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 58,
+          "endLine": 7,
+          "file": "postgres-import-syntax/fanout-require.ts",
+          "line": 7,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 63,
+          "endLine": 8,
+          "file": "postgres-import-syntax/fanout-require.ts",
+          "line": 8,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/fanout-wrapped.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 41,
+          "endLine": 5,
+          "file": "postgres-import-syntax/fanout-wrapped.ts",
+          "line": 5,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/fanout-dynamic.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 64,
+          "endLine": 5,
+          "file": "postgres-import-syntax/fanout-dynamic.ts",
+          "line": 5,
+          "message": "This mapped query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the fan-out can be judged. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-pool-requires-error-listener": [
+    {
+      "file": "postgres-import-syntax/pool-listener-ok.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "postgres-import-syntax/pool-other.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "postgres-import-syntax/pool-dynamic.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "postgres-import-syntax/pool-import-equals.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 5,
+          "file": "postgres-import-syntax/pool-import-equals.ts",
+          "line": 5,
+          "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+          "messageId": "missingErrorListener",
+          "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 8,
+          "endLine": 6,
+          "file": "postgres-import-syntax/pool-import-equals.ts",
+          "line": 6,
+          "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+          "messageId": "missingErrorListener",
+          "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "postgres-import-syntax/pool-computed.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 3,
+          "file": "postgres-import-syntax/pool-computed.ts",
+          "line": 3,
+          "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+          "messageId": "missingErrorListener",
+          "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 6,
+          "file": "postgres-import-syntax/pool-computed.ts",
+          "line": 6,
+          "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+          "messageId": "missingErrorListener",
+          "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "postgres-import-syntax/pool-dynamic.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 4,
+          "file": "postgres-import-syntax/pool-dynamic.ts",
+          "line": 4,
+          "message": "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

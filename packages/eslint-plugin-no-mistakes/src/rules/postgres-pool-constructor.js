@@ -1,20 +1,16 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
-const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
-const { requireSource } = require("./async-target-sources");
+const { resolveVariable } = require("./async-target-bindings");
 const { memberPropertyName } = require("./logical-call");
-const { importedBinding } = require("./postgres-no-async-sql-builder-import");
+const { resolveModuleBinding } = require("./postgres-module-binding");
 const { staticKeyName } = require("./postgres-no-async-sql-builder-types");
 
 function namespaceSource(node, context) {
-  const expression = unwrapExpression(node);
-  const imported = importedBinding(expression, context);
-  if (imported?.kind === "default" || imported?.kind === "namespace") return imported.source;
-  return (
-    requireSource(expression, context) ??
-    requireSource(stableConstInitializer(expression, context, new Set()), context)
-  );
+  const binding = resolveModuleBinding(node, context);
+  if (!binding || (binding.kind !== "default" && binding.kind !== "namespace")) return null;
+  if (binding.status === "resolved") return binding.source;
+  return binding.source ? { unresolved: true, source: binding.source } : "unresolved";
 }
 
 function poolMemberSource(node, context) {
@@ -71,14 +67,26 @@ function localPoolSource(identifier, context) {
   return namespaceSource(source, context);
 }
 
+function poolSourceResult(source, modules) {
+  if (source?.unresolved) return modules.has(source.source) ? "unresolved" : false;
+  if (source === "unresolved") return "unresolved";
+  return modules.has(source);
+}
+
 function isPoolConstructor(node, context, modules) {
   const callee = unwrapExpression(node.callee);
+  if (!callee) return false;
   if (callee.type === "Identifier") {
-    const imported = importedBinding(callee, context);
-    const source = imported?.name === "Pool" ? imported.source : localPoolSource(callee, context);
-    return modules.has(source);
+    const binding = resolveModuleBinding(callee, context);
+    if (binding?.kind === "named" && binding.name === "Pool") {
+      return poolSourceResult(
+        binding.status === "unresolved" ? "unresolved" : binding.source,
+        modules,
+      );
+    }
+    return poolSourceResult(localPoolSource(callee, context), modules);
   }
-  return modules.has(poolMemberSource(callee, context));
+  return poolSourceResult(poolMemberSource(callee, context), modules);
 }
 
 module.exports = { isPoolConstructor };

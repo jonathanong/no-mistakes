@@ -36,8 +36,12 @@ runCursor("/* users */ SELECT * FROM users");
 - `modules` and `executors` identify cursor imports and required executor names;
   either empty list disables the rule. TypeScript `import ns = require("...")`
   bindings from a configured module are checked the same as `import * as ns from
-  "..."` (`export import ns = require("...")` is rejected; `import type ns =
-  require("...")` is ignored).
+  "..."`. `const cur = require("...")` and `const { runCursor } = require("...")`
+  are checked the same way. The binding declaration is not a use.
+  `export import ns = require("...")` is rejected; `import type ns =
+  require("...")` is ignored. A dynamic specifier is `unanalyzable` rather than
+  a trusted cursor. A parenthesized callee and a type-argument callee
+  (`(openCursor<Row>)("/* ok */ SELECT 1")`) unwrap to the same call.
 - `include`, `exclude`, and `includeFiles` scope files. `include` defaults to
   `**/*.{ts,mts,tsx,js,mjs}`; `includeFiles` wins over `exclude`.
 - `annotation` replaces the leading `/* name */` requirement.
@@ -49,7 +53,12 @@ runCursor("/* users */ SELECT * FROM users");
   matches `@example/db`; `@example/dbx` does not), including a rename such as
   `import { sql as dbSql }`. A default import is not enough. A shadowed or
   rebound local fails closed. The same name from another module stays untrusted.
-  An empty `module` or `name` matches nothing.
+  An empty `module` or `name` matches nothing. A namespace member
+  (`import * as s` then `s.sql`) and `const { sql } = require(module)` match
+  the same entry. A parenthesized type-argument tag is that tag. An unresolved
+  tag is not trusted.
+- `unanalyzable` is `advise` (the default), `report`, or `ignore`. `advise` and
+  `report` use the same message. `ignore` omits only that finding.
 
 ## Fix
 

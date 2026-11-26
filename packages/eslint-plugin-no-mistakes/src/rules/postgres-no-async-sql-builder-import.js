@@ -1,59 +1,22 @@
 "use strict";
 
-const { unwrapExpression } = require("./async-ast");
-const { resolveVariable } = require("./async-target-bindings");
-const { staticKeyName } = require("./postgres-no-async-sql-builder-types");
+const { resolveModuleBinding } = require("./postgres-module-binding");
 
 function importedBinding(identifier, context) {
-  if (identifier?.type !== "Identifier") return null;
-  const variable = resolveVariable(identifier, context);
-  const definition = variable?.defs.find(
-    (item) => item.type === "ImportBinding" && item.node.importKind !== "type",
-  );
-  const specifier = definition?.node;
-  const declaration = specifier?.parent;
-  if (
-    !specifier ||
-    declaration?.type !== "ImportDeclaration" ||
-    declaration.importKind === "type" ||
-    typeof declaration.source?.value !== "string"
-  ) {
-    return null;
-  }
-  if (specifier.type === "ImportNamespaceSpecifier") {
-    return { kind: "namespace", source: declaration.source.value };
-  }
-  if (specifier.type === "ImportDefaultSpecifier") {
-    return { kind: "default", source: declaration.source.value };
-  }
-  if (specifier.type !== "ImportSpecifier") return null;
-  const imported = specifier.imported;
-  const name = imported.type === "Identifier" ? imported.name : String(imported.value);
-  return { kind: name === "default" ? "default" : "named", source: declaration.source.value, name };
+  const binding = resolveModuleBinding(identifier, context);
+  if (!binding || binding.status !== "resolved" || binding.via === "destructure") return null;
+  if (binding.kind === "named")
+    return { kind: "named", source: binding.source, name: binding.name };
+  return { kind: binding.kind, source: binding.source };
 }
 
 // `const { sql } = db` is the imported member `db.sql`. A default on the
 // property can bind something else, and a computed identifier key is not static.
 function destructuredImport(identifier, context) {
-  const variable = resolveVariable(identifier, context);
-  if (!variable) return null;
-  if (variable.defs.length !== 1) return null;
-  const definition = variable.defs[0];
-  const declarator = definition.node;
-  if (definition.type !== "Variable") return null;
-  if (definition.parent.kind !== "const") return null;
-  if (declarator.id.type !== "ObjectPattern") return null;
-  const property = declarator.id.properties.find(
-    (item) => item.type === "Property" && item.value === definition.name,
-  );
-  if (!property) return null;
-  const key = staticKeyName(property);
-  if (!key) return null;
-  const imported = importedBinding(unwrapExpression(declarator.init), context);
-  if (imported?.kind === "namespace") {
-    return { name: key, source: imported.source };
-  }
-  return null;
+  const binding = resolveModuleBinding(identifier, context);
+  if (binding?.status !== "resolved" || binding.via !== "destructure") return null;
+  if (binding.kind !== "named") return null;
+  return { name: binding.name, source: binding.source };
 }
 
 module.exports = {

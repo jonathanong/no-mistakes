@@ -6,6 +6,7 @@ const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { literalString, memberPropertyName } = require("./logical-call");
 const { isPoolConstructor } = require("./postgres-pool-constructor");
+const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 const { isMemberWrite, memberEntry } = require("./postgres-pool-member");
 
 const RULE_ID = "postgres-pool-requires-error-listener";
@@ -59,13 +60,18 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        properties: { extraModules: { type: "array", items: { type: "string" } } },
+        properties: {
+          extraModules: { type: "array", items: { type: "string" } },
+          unanalyzable: { enum: ["advise", "report", "ignore"] },
+        },
         additionalProperties: false,
       },
     ],
     messages: {
       missingErrorListener:
         'Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.',
+      unanalyzable:
+        "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result.",
     },
   },
   (context) => {
@@ -102,7 +108,13 @@ module.exports = rule(
         if (hasListener) member.hasListener = true;
       },
       NewExpression(node) {
-        if (isPoolConstructor(node, context, modules) && !suppressed(node)) candidates.push(node);
+        if (suppressed(node)) return;
+        const pool = isPoolConstructor(node, context, modules);
+        if (pool === "unresolved") {
+          reportUnanalyzable(context, node, unanalyzablePolicy(context.options[0]));
+          return;
+        }
+        if (pool === true) candidates.push(node);
       },
       "Program:exit"() {
         for (const node of candidates) {

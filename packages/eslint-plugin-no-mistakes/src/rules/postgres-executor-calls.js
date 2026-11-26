@@ -1,5 +1,7 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
+const { moduleNamespace, resolveModuleBinding } = require("./postgres-module-binding");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 const { isScopedMember } = require("./postgres-scoped-executors");
 const { isProvenQueryMember } = require("./postgres-no-executor-adapter-member");
@@ -9,26 +11,6 @@ function immutableDefinition(identifier, context) {
   if (!variable || variable.defs.length !== 1) return null;
   if (variable.references.some((reference) => reference.isWrite() && !reference.init)) return null;
   return variable.defs[0];
-}
-
-function namespaceImport(node, context, options, seen = new Set()) {
-  node = unwrapTs(node);
-  if (node?.type !== "Identifier") return false;
-  const def = immutableDefinition(node, context);
-  if (!def || seen.has(def)) return false;
-  seen.add(def);
-  if (def.type === "ImportBinding") {
-    return (
-      def.node.type === "ImportNamespaceSpecifier" &&
-      def.parent.importKind !== "type" &&
-      (!options.importSpecifier || def.parent.source.value === options.importSpecifier)
-    );
-  }
-  return (
-    def.parent?.kind === "const" &&
-    def.node.id.type === "Identifier" &&
-    namespaceImport(def.node.init, context, options, seen)
-  );
 }
 
 function functionBody(fn) {
@@ -73,27 +55,29 @@ function executorCallResolver(
     if (node.type === "SequenceExpression") return target(node.expressions.at(-1), seen);
     if (node.type === "MemberExpression") {
       const name = memberName(node);
+      const object = unwrapExpression(node.object);
       if (
-        node.object.type === "Identifier" &&
-        isScopedMember(
-          bindings.scoped,
-          node.object.name,
-          name,
-          resolveVariable(node.object, context),
-        )
+        object?.type === "Identifier" &&
+        isScopedMember(bindings.scoped, object.name, name, resolveVariable(object, context))
       )
         return { name };
-      if (
-        name &&
-        options.executorNames.includes(name) &&
-        namespaceImport(node.object, context, options)
-      ) {
-        return { name };
+      if (name && options.executorNames.includes(name)) {
+        const namespace = moduleNamespace(object, context, options);
+        if (namespace === "unresolved") return { unanalyzable: true };
+        if (namespace === true) return { name };
       }
       return name === "query" && queryMember(node) ? { name } : null;
     }
     if (node.type !== "Identifier") return null;
     if (!resolveVariable(node, context) && bindings.has(node.name)) return { name: node.name };
+    const moduleBinding = resolveModuleBinding(node, context);
+    if (
+      moduleBinding?.status === "unresolved" &&
+      moduleBinding.kind === "named" &&
+      options.executorNames.includes(moduleBinding.name)
+    ) {
+      return { unanalyzable: true };
+    }
     const def = immutableDefinition(node, context);
     if (!def || seen.has(def)) return null;
     seen.add(def);
@@ -123,8 +107,11 @@ function executorCallResolver(
         computed: property.computed,
         property: property.key,
       });
-      if (name && options.executorNames.includes(name) && namespaceImport(init, context, options))
-        return { name };
+      if (name && options.executorNames.includes(name)) {
+        const namespace = moduleNamespace(init, context, options);
+        if (namespace === "unresolved") return { unanalyzable: true };
+        if (namespace === true) return { name };
+      }
       return name === "query" &&
         queryMember({
           type: "MemberExpression",
@@ -162,6 +149,7 @@ function executorCallResolver(
         args = array.elements;
       }
     }
+    if (found?.unanalyzable) return { unanalyzable: true, arguments: args };
     if (!found || args.some((arg) => arg.type === "SpreadElement")) return null;
     if (found.name) return { name: found.name, arguments: args };
     if (!forward || found.fn.params.some((param) => param.type !== "Identifier")) return null;
@@ -183,7 +171,11 @@ function executorCallResolver(
   }
   // A callback passed as a value retains executor identity, not an invocation's
   // Function.prototype.call/apply receiver or argument forwarding semantics.
-  resolve.reference = (expression) => Boolean(target(expression)?.name);
+  resolve.reference = (expression) => {
+    const found = target(expression);
+    if (found?.unanalyzable) return "unresolved";
+    return Boolean(found?.name);
+  };
   return resolve;
 }
 

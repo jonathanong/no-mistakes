@@ -103,6 +103,18 @@ replace it. The same destructuring support applies to configured compatible
 modules. Subpaths and cross-file re-exports are not inferred. This rule is
 opt-in and is not enabled by `configs.recommended` or `configs.strict`.
 
+`require("pg")`, `import pg = require("pg")`, and a `const` destructure of that
+module object are the same `Pool` as a named import. A computed key that is a
+string after a TypeScript assertion, such as `pg["Pool" as const]` or
+`pool["on" as const]("error", handler)`, is that static name. A `let` binding,
+a reassignment, a shadowed `require`, and a static import of another module are
+not a pool.
+
+`unanalyzable` is `advise` (the default), `report`, or `ignore`. A dynamic
+specifier such as `require(flag)` used as `new pg.Pool()` is reported with
+`unanalyzable` unless the policy is `ignore`. `advise` and `report` use the
+same message. `ignore` omits only that finding.
+
 ## Fix
 
 Bind the pool locally and attach its idle-client error listener where it is

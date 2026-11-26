@@ -2,7 +2,9 @@
 
 const WRAPPERS = new Set([
   "ChainExpression",
+  "ParenthesizedExpression",
   "TSAsExpression",
+  "TSInstantiationExpression",
   "TSSatisfiesExpression",
   "TSTypeAssertion",
   "TSNonNullExpression",

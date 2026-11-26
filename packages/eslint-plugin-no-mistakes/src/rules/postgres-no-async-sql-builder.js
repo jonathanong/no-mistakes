@@ -3,6 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { isTransparentExpression, traverse } = require("./async-ast");
+const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 const { contractFor } = require("./postgres-no-async-sql-builder-calls");
 const { collectTypes } = require("./postgres-no-async-sql-builder-types");
 const {
@@ -79,10 +80,13 @@ module.exports = rule(
               },
             },
           },
+          unanalyzable: { enum: ["advise", "report", "ignore"] },
         },
       },
     ],
     messages: {
+      unanalyzable:
+        "This SQL builder is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the async builder can be judged. A dynamic module is not a clean result.",
       removeAsync:
         "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
     },
@@ -95,7 +99,12 @@ module.exports = rule(
 
     function visit(node) {
       if (!node.async || node.generator || suppressed(node)) return;
-      if (!isConfiguredBuilder(node, builders, context) || functionSuspends(context, node)) return;
+      const configured = isConfiguredBuilder(node, builders, context);
+      if (configured === "unresolved") {
+        reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
+        return;
+      }
+      if (configured !== true || functionSuspends(context, node)) return;
       if (
         !returnsJudgedSql(context, node, builders) ||
         bodyHasUnjudgedEffect(context, node, builders)

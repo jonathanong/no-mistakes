@@ -1,6 +1,10 @@
 "use strict";
 
-const { findContainingFunction } = require("./async-ast");
+const {
+  findContainingFunction,
+  unwrapExpression,
+  unwrapTransparentParent,
+} = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { annotationContract, combine } = require("./postgres-no-async-sql-builder-types");
 
@@ -17,17 +21,17 @@ function hasLaterWrite(variable, ignored) {
 
 function boundVariable(func, context) {
   if (func.type === "FunctionDeclaration" && func.id) return resolveVariable(func.id, context);
-  const parent = func.parent;
+  const parent = unwrapTransparentParent(func).parent;
   if (
     parent?.type === "VariableDeclarator" &&
-    parent.init === func &&
+    unwrapExpression(parent.init) === func &&
     parent.id.type === "Identifier"
   ) {
     return resolveVariable(parent.id, context);
   }
   if (
     parent?.type === "AssignmentExpression" &&
-    parent.right === func &&
+    unwrapExpression(parent.right) === func &&
     parent.left.type === "Identifier"
   ) {
     return resolveVariable(parent.left, context);
@@ -45,7 +49,8 @@ function exportContract(func, context) {
   ) {
     return "unknown";
   }
-  const declarator = func.parent?.type === "VariableDeclarator" ? func.parent : null;
+  const owner = unwrapTransparentParent(func).parent;
+  const declarator = owner?.type === "VariableDeclarator" ? owner : null;
   return declarator && declarationExported(declarator.parent) ? "unknown" : "allows";
 }
 

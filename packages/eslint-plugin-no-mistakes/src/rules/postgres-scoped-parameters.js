@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./postgres-query-text");
 const { variableIsImportedExecutor } = require("./postgres-no-executor-adapter-binding");
 
@@ -21,8 +22,24 @@ function typeMatches(annotation, types, context, options) {
 }
 
 function propertyKeyName(key) {
-  if (key?.type === "Identifier") return key.name;
-  return key?.type === "Literal" ? String(key.value) : null;
+  const value = unwrapExpression(key);
+  if (value?.type === "Identifier") return value.name;
+  return value?.type === "Literal" ? String(value.value) : null;
+}
+
+function inlineTypeMembers(annotation, owner, types, context, options) {
+  const literal = annotation?.typeAnnotation;
+  if (literal?.type !== "TSTypeLiteral") return [];
+  const members = [];
+  for (const member of literal.members) {
+    if (member.type !== "TSPropertySignature") continue;
+    const key = propertyKeyName(member.key);
+    if (key && typeMatches(member.typeAnnotation, types, context, options)) {
+      // The type checker has not confirmed this member. The adapter ignores it.
+      members.push({ name: owner, property: key, syntactic: true });
+    }
+  }
+  return members;
 }
 
 function declaredProperties(target, context, options) {
@@ -60,6 +77,7 @@ function parameterExecutors(param, types, context, options) {
   const members = [];
   if (target.type === "Identifier") {
     if (typeMatches(target.typeAnnotation, types, context, options)) names.push(target.name);
+    members.push(...inlineTypeMembers(target.typeAnnotation, target.name, types, context, options));
     const declared = declaredProperties(target, context, options);
     for (const property of declared?.names ?? []) {
       if (declared.accepts(property)) members.push({ name: target.name, property });

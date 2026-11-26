@@ -1,6 +1,11 @@
 "use strict";
 
-const { isFunction, isTransparentExpression, unwrapExpression } = require("./async-ast");
+const {
+  isFunction,
+  isTransparentExpression,
+  unwrapExpression,
+  unwrapTransparentParent,
+} = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { propertyName } = require("./module-mock-helpers");
 const {
@@ -132,12 +137,13 @@ function conciseBodyContract(func, context, types, seen) {
 }
 
 function referenceUseContract(identifier, context, types) {
-  const parent = identifier.parent;
+  const expression = unwrapTransparentParent(identifier);
+  const parent = expression.parent;
   if (!parent || parent.type === "ExportSpecifier") return "unknown";
-  if (parent.type === "CallExpression" && parent.callee === identifier)
+  if (parent.type === "CallExpression" && parent.callee === expression)
     return callResultContract(parent, context, types);
-  if (parent.type === "CallExpression" && parent.arguments.includes(identifier)) {
-    return argumentParameterContract(identifier, context, types, callableReturnContract);
+  if (parent.type === "CallExpression" && parent.arguments.includes(expression)) {
+    return argumentParameterContract(expression, context, types, callableReturnContract);
   }
   return "unknown";
 }
@@ -165,7 +171,7 @@ function directValueContract(func, context, types) {
 // Class fields, methods, and object properties abstain. Heritage and object
 // escape are not modeled.
 function builderIsMember(func) {
-  const parent = func.parent;
+  const parent = unwrapTransparentParent(func).parent;
   return (
     parent.type === "MethodDefinition" ||
     parent.type === "PropertyDefinition" ||

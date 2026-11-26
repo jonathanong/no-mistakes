@@ -105,8 +105,10 @@ function resolveNamespaceForKey(node, key, context, importSpecifier, isDirectNam
       resolveNamespaceForKey(prop.node, key, context, importSpecifier, isDirectNamespace, seen)
     );
   }
-  if (current?.type !== "Identifier") return false;
-  if (isDirectNamespace(current, context, importSpecifier)) return true;
+  if (current?.type !== "Identifier") {
+    return isDirectNamespace(current, context, importSpecifier) === true;
+  }
+  if (isDirectNamespace(current, context, importSpecifier) === true) return true;
   const binding = constBinding(current, context, seen);
   if (!binding) return false;
   const nextSeen = new Set(seen);

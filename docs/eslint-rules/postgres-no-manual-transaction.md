@@ -80,12 +80,19 @@ query wrapper supports recovery; the owner must preserve that wrapper's contract
   package. If the package root cannot be determined, relative imports do not match.
 - `owners` is an absolute-suffix or repository-relative allowlist for the
   transaction lifecycle helper. It defaults to no owner exemptions.
+- `unanalyzable` is `advise` (the default), `report`, or `ignore`. A dynamic
+  `require(flag)` whose member is a configured executor is reported when the
+  SQL is missing or is transaction text. Other static SQL on that call stays
+  quiet. `advise` and `report` use the same message. `ignore` omits only that
+  finding. A traced local function with the same name stays quiet.
 
 ## Limits
 
 The executor calls above include same-file immutable `const` aliases,
-value namespace imports from the configured module, and `const { query } = db` (or
-another configured namespace export). String and expression-free template keys,
+value namespace imports from the configured module, `const db = require("@example/db")`,
+`import db = require("@example/db")`, and `const { query } = db` (or
+another configured namespace export). A `let`, a reassignment, a property
+default, and a computed key stay outside the check. String and expression-free template keys,
 optional calls, TypeScript wrappers, comma callees, `.call`, and `.apply` with a
 literal array are supported. A configured namespace export named `call` or
 `apply` is matched as that executor before function forwarding.
@@ -106,6 +113,11 @@ A computed identifier key (`const { [key]: q } = db`) or a property default
 `function run({ query: q } = db) { q(sql); }` is a parameter-default
 destructure, so its default does not prove the caller supplied that executor.
 A nested parameter named `query` shadows the configured import.
+A chain, a non-null assertion, parentheses, or a type assertion on the receiver
+still reaches a scoped member (`deps!.db`, `(deps as { db: Db }).db`). An inline
+parameter type `{ db: Db }` is collected when `executorTypeNames` includes `Db`.
+A computed key that is a string after an assertion (`{ ["db" as const]: db }`)
+is that property name.
 
 ### SQL value aliases
 
