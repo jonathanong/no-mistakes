@@ -55,6 +55,8 @@ declare namespace plugin {
 
   export type PostgresNoExecutorAdapterMode = "all" | "forwarding-only";
 
+  export type PostgresUnanalyzable = "advise" | "report" | "ignore";
+
   export interface PostgresNonWritingCallee {
     module: string;
     export: string;
@@ -68,10 +70,12 @@ declare namespace plugin {
     trustedSqlTags?: { module: string; name: string }[];
     mode?: PostgresNoExecutorAdapterMode;
     nonWritingCallees?: PostgresNonWritingCallee[];
+    unanalyzable?: PostgresUnanalyzable;
   }
 
   export interface PostgresPoolRequiresErrorListenerOptions {
     extraModules?: string[];
+    unanalyzable?: PostgresUnanalyzable;
   }
 
   export type RuleUnanalyzable = "finding" | "ignore";

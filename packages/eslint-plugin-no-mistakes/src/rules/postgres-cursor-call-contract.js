@@ -4,8 +4,8 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { findVariable, propertyName, unwrap } = require("./postgres-cursor-ast");
 const { matchesCursorFile, resolveCursorContractOptions } = require("./postgres-cursor-options");
+const { resolveModuleBinding } = require("./postgres-module-binding");
 const {
-  importEqualsModule,
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,
@@ -32,10 +32,15 @@ function isTypeOnlyExport(identifier) {
   );
 }
 
-function reExportsCursor(node, config) {
+function reExportsCursor(node, context, config) {
   if (node.exportKind === "type") return false;
   if (node.declaration?.type === "TSImportEqualsDeclaration") {
-    return isCursorModule(importEqualsModule(node.declaration), config);
+    const binding = resolveModuleBinding(node.declaration.id, context);
+    return (
+      binding?.status === "resolved" &&
+      binding.kind === "namespace" &&
+      isCursorModule(binding.source, config)
+    );
   }
   if (!isCursorModule(node.source?.value, config)) return false;
   if (node.type === "ExportAllDeclaration") return true;
@@ -194,12 +199,12 @@ module.exports = rule(
         visitNamespaceMember(context, node, options, suppressed);
       },
       ExportAllDeclaration(node) {
-        if (reExportsCursor(node, options)) {
+        if (reExportsCursor(node, context, options)) {
           reportFinding(context, suppressed, { messageId: "directUse", node });
         }
       },
       ExportNamedDeclaration(node) {
-        if (reExportsCursor(node, options)) {
+        if (reExportsCursor(node, context, options)) {
           reportFinding(context, suppressed, { messageId: "directUse", node });
         }
       },

@@ -10,30 +10,8 @@ function isCursorExecutor(name, config) {
   return typeof name === "string" && config.executors.has(name);
 }
 
-function importDefinition(variable, specifierType, config) {
-  return variable?.defs.find((definition) => {
-    const specifier = definition.node;
-    const declaration = definition.parent || specifier.parent;
-    return (
-      definition.type === "ImportBinding" &&
-      specifier.type === specifierType &&
-      specifier.importKind !== "type" &&
-      declaration?.type === "ImportDeclaration" &&
-      declaration.importKind !== "type" &&
-      isCursorModule(declaration.source?.value, config)
-    );
-  });
-}
-
 function namedCursorImport(context, identifier, helpers, config) {
   if (identifier?.type !== "Identifier") return null;
-  const imported = importDefinition(
-    helpers.findVariable(context, identifier),
-    "ImportSpecifier",
-    config,
-  )?.node.imported;
-  const importedName = imported?.name ?? imported?.value;
-  if (isCursorExecutor(importedName, config)) return String(importedName);
   const binding = resolveModuleBinding(identifier, context);
   if (binding?.kind !== "named" || !isCursorExecutor(binding.name, config)) return null;
   if (binding.status === "unresolved") {
@@ -42,32 +20,17 @@ function namedCursorImport(context, identifier, helpers, config) {
   return isCursorModule(binding.source, config) ? String(binding.name) : null;
 }
 
-function importEqualsModule(node) {
-  if (
-    node?.type !== "TSImportEqualsDeclaration" ||
-    node.importKind === "type" ||
-    node.moduleReference?.type !== "TSExternalModuleReference" ||
-    node.moduleReference.expression?.type !== "Literal"
-  ) {
-    return null;
-  }
-  return node.moduleReference.expression.value;
-}
-
-function namespaceCursorStatus(context, node, helpers, config) {
+function namespaceCursorStatus(context, node, config) {
   const binding = resolveModuleBinding(node, context);
   if (binding?.kind !== "namespace") return false;
   if (binding.status === "unresolved") {
     return !binding.source || isCursorModule(binding.source, config) ? "unresolved" : false;
   }
-  if (isCursorModule(binding.source, config)) return true;
-  if (node?.type !== "Identifier") return false;
-  const variable = helpers.findVariable(context, node);
-  return Boolean(importDefinition(variable, "ImportNamespaceSpecifier", config));
+  return isCursorModule(binding.source, config);
 }
 
 function namespaceCursorImport(context, identifier, helpers, config) {
-  return namespaceCursorStatus(context, identifier, helpers, config) === true;
+  return namespaceCursorStatus(context, identifier, config) === true;
 }
 
 function namespaceImportMember(context, node, helpers, config) {
@@ -83,7 +46,7 @@ function namespaceCursorMember(context, node, helpers, config) {
   if (member?.type !== "MemberExpression") return null;
   const name = helpers.propertyName(member);
   if (!isCursorExecutor(name, config)) return null;
-  const status = namespaceCursorStatus(context, helpers.unwrap(member.object), helpers, config);
+  const status = namespaceCursorStatus(context, helpers.unwrap(member.object), config);
   if (status === "unresolved") return "unresolved";
   return status === true ? String(name) : null;
 }
@@ -117,7 +80,6 @@ function sqlTagBindingStatus(context, tag, helpers, config) {
 }
 
 module.exports = {
-  importEqualsModule,
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,
