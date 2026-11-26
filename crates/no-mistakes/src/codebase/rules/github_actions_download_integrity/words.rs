@@ -20,6 +20,11 @@ pub(in crate::codebase::rules) struct Command {
 
 mod scan;
 
+pub(in crate::codebase::rules) struct HeredocBody {
+    pub(in crate::codebase::rules) range: Range<usize>,
+    pub(in crate::codebase::rules) quoted: bool,
+}
+
 pub(in crate::codebase::rules) struct Parse {
     pub(in crate::codebase::rules) commands: Vec<Command>,
     pub(in crate::codebase::rules) unterminated_heredoc: bool,
@@ -29,6 +34,7 @@ pub(in crate::codebase::rules) struct Parse {
     pub(super) skip_lines: Vec<usize>,
     // Character offsets in the unmodified shell source.
     pub(in crate::codebase::rules) heredoc_ranges: Vec<Range<usize>>,
+    pub(in crate::codebase::rules) heredoc_bodies: Vec<HeredocBody>,
 }
 
 pub(in crate::codebase::rules) fn parse(script: &str) -> Parse {
