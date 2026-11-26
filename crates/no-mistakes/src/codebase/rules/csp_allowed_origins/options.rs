@@ -1,7 +1,6 @@
 use super::{ParsedOrigin, RULE_ID};
 use crate::codebase::rules::path_filter::RulePathFilter;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::config::v2::schema::RuleDef;
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
 use serde::Deserialize;
@@ -10,43 +9,37 @@ use std::path::{Path, PathBuf};
 
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     #[serde(default)]
     csp_files: Vec<String>,
     #[serde(default)]
     self_origins: Vec<String>,
 }
 
-impl Options {
-    fn validate(&self) -> Result<Vec<ParsedOrigin>> {
-        anyhow::ensure!(
-            !self.csp_files.is_empty(),
-            "{RULE_ID} requires non-empty options.cspFiles naming the file(s) that declare your Content-Security-Policy"
-        );
-        anyhow::ensure!(
-            self.csp_files.iter().all(|path| !path.trim().is_empty()),
-            "{RULE_ID} options.cspFiles entries must be nonempty paths"
-        );
-        self.self_origins
-            .iter()
-            .map(|raw| {
-                let trimmed = raw.trim();
-                trimmed
-                    .contains("://")
-                    .then(|| ParsedOrigin::parse(trimmed))
-                    .flatten()
-                    .ok_or_else(|| {
-                        anyhow::anyhow!(
-                            "{RULE_ID} options.selfOrigins entry '{raw}' must be a valid origin (for example https://app.example.com)"
-                        )
-                    })
-            })
-            .collect()
+pub(in crate::codebase::rules) fn validate_options(options: &Options) -> Result<Vec<ParsedOrigin>> {
+    anyhow::ensure!(
+        !options.csp_files.is_empty(),
+        "{RULE_ID} requires non-empty options.cspFiles naming the file(s) that declare your Content-Security-Policy"
+    );
+    anyhow::ensure!(
+        options.csp_files.iter().all(|path| !path.trim().is_empty()),
+        "{RULE_ID} options.cspFiles entries must be nonempty paths"
+    );
+    let mut self_origins = Vec::with_capacity(options.self_origins.len());
+    for raw in &options.self_origins {
+        let trimmed = raw.trim();
+        let origin = trimmed
+            .contains("://")
+            .then(|| ParsedOrigin::parse(trimmed))
+            .flatten()
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "{RULE_ID} options.selfOrigins entry '{raw}' must be a valid origin (for example https://app.example.com)"
+                )
+            })?;
+        self_origins.push(origin);
     }
-}
-
-pub(in crate::codebase::rules) fn validate_options(rule: &RuleDef) -> Result<()> {
-    rule.strict_rule_options::<Options>()?.validate().map(drop)
+    Ok(self_origins)
 }
 
 pub(super) struct Application<'a> {
@@ -78,7 +71,7 @@ pub(super) fn applications<'a>(
     for rule in rules {
         let options: Options = rule.try_rule_options()?;
         let unanalyzable = config.effective_rule_analysis(rule)?.unanalyzable;
-        let self_origins = options.validate()?;
+        let self_origins = validate_options(&options)?;
         let mut csp_files = Vec::with_capacity(options.csp_files.len());
         let mut csp_set = BTreeSet::new();
         for raw in options.csp_files {

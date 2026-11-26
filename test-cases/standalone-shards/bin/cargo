@@ -28,7 +28,7 @@ if [[ "$mode" == archive ]]; then
   fi
   fixture_dir="$(cd -- "$(dirname -- "$0")/.." && pwd)"
   printf '%s\n' "${NM_TEST_SHARD-}" > "${archive}.shard"
-  printf '%s\n' "${RUSTC_WRAPPER-}" > "${archive}.rustc-wrapper"
+  printf '%s\n' "${RUSTC_WORKSPACE_WRAPPER-}" > "${archive}.rustc-wrapper"
   cp "$fixture_dir/archive.fixture" "$archive"
 elif [[ "$mode" == run ]]; then
   if [[ "${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER:-}" != "$STANDALONE_FIXTURE_RUNNER" ]]; then
