@@ -402,10 +402,11 @@ fn queue_retention_and_listing_followups_check_json_snapshot() {
     assert!(advisories.iter().all(|row| row["file"] == "listing.ts"));
 
     let warnings = report["warnings"].as_array().unwrap();
-    assert_eq!(warnings.len(), 5, "{warnings:?}");
+    assert_eq!(warnings.len(), 19, "{warnings:?}");
     for (location, rule) in [
         ("enqueue.ts:8", "unbounded-job-retention"),
         ("enqueue.ts:13", "unbounded-job-retention"),
+        ("enqueue.ts:13", "mixed-priority"),
         ("listing.ts:45", "job-state-as-record"),
         ("listing.ts:59", "job-state-as-record"),
         ("listing.ts:91", "job-state-as-record"),
