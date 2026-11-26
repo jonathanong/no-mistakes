@@ -2,6 +2,7 @@
 
 const { functionFromExpression, nonEmptyStrings } = require("./component-functions");
 const { collectTopLevelDefinition } = require("./exported-component-definitions");
+const { unwrapExpression } = require("./rules/async-ast");
 
 const DEFAULT_COMPONENT_NAME_PATTERN = "^[A-Z]";
 const DEFAULT_WRAPPERS = ["memo", "forwardRef", "observer"];
@@ -157,7 +158,7 @@ function collectDefaultExport(statement, definitions, defaultExports, components
   if (!opts.exportTypes.has("default")) {
     return;
   }
-  const declaration = statement.declaration;
+  const declaration = unwrapExpression(statement.declaration);
   if (declaration.type === "Identifier") {
     defaultExports.add(declaration.name);
     return;

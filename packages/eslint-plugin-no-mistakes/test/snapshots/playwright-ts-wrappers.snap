@@ -1,0 +1,1126 @@
+{
+  "eslint": [
+    {
+      "file": "literals-calls.spec.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 36,
+          "endLine": 6,
+          "file": "literals-calls.spec.ts",
+          "line": 6,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 34,
+          "endLine": 7,
+          "file": "literals-calls.spec.ts",
+          "line": 7,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 34,
+          "endLine": 8,
+          "file": "literals-calls.spec.ts",
+          "line": 8,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 39,
+          "endLine": 9,
+          "file": "literals-calls.spec.ts",
+          "line": 9,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        },
+        {
+          "column": 31,
+          "endColumn": 40,
+          "endLine": 10,
+          "file": "literals-calls.spec.ts",
+          "line": 10,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 19,
+          "endLine": 12,
+          "file": "literals-calls.spec.ts",
+          "line": 12,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 37,
+          "endLine": 13,
+          "file": "literals-calls.spec.ts",
+          "line": 13,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-literals calls (#4385)",
+      "options": null,
+      "rule": "playwright-literals"
+    },
+    {
+      "file": "literals.tsx",
+      "findings": [
+        {
+          "column": 56,
+          "endColumn": 78,
+          "endLine": 11,
+          "file": "literals.tsx",
+          "line": 11,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-literals JSX (#4385)",
+      "options": null,
+      "rule": "playwright-literals"
+    },
+    {
+      "file": "naming-convention.tsx",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 30,
+          "endLine": 3,
+          "file": "naming-convention.tsx",
+          "line": 3,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+          "messageId": "naming",
+          "ruleId": "no-mistakes/playwright-naming-convention",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 41,
+          "endLine": 4,
+          "file": "naming-convention.tsx",
+          "line": 4,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+          "messageId": "naming",
+          "ruleId": "no-mistakes/playwright-naming-convention",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 49,
+          "endLine": 5,
+          "file": "naming-convention.tsx",
+          "line": 5,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+          "messageId": "naming",
+          "ruleId": "no-mistakes/playwright-naming-convention",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 33,
+          "endLine": 6,
+          "file": "naming-convention.tsx",
+          "line": 6,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+          "messageId": "naming",
+          "ruleId": "no-mistakes/playwright-naming-convention",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 34,
+          "endLine": 7,
+          "file": "naming-convention.tsx",
+          "line": 7,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+          "messageId": "naming",
+          "ruleId": "no-mistakes/playwright-naming-convention",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-naming-convention (#4387)",
+      "options": null,
+      "rule": "playwright-naming-convention"
+    },
+    {
+      "file": "no-empty.tsx",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 23,
+          "endLine": 3,
+          "file": "no-empty.tsx",
+          "line": 3,
+          "message": "Test ID must not be empty.",
+          "messageId": "empty",
+          "ruleId": "no-mistakes/playwright-no-empty",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 34,
+          "endLine": 4,
+          "file": "no-empty.tsx",
+          "line": 4,
+          "message": "Test ID must not be empty.",
+          "messageId": "empty",
+          "ruleId": "no-mistakes/playwright-no-empty",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 42,
+          "endLine": 5,
+          "file": "no-empty.tsx",
+          "line": 5,
+          "message": "Test ID must not be empty.",
+          "messageId": "empty",
+          "ruleId": "no-mistakes/playwright-no-empty",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 26,
+          "endLine": 6,
+          "file": "no-empty.tsx",
+          "line": 6,
+          "message": "Test ID must not be empty.",
+          "messageId": "empty",
+          "ruleId": "no-mistakes/playwright-no-empty",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 27,
+          "endLine": 7,
+          "file": "no-empty.tsx",
+          "line": 7,
+          "message": "Test ID must not be empty.",
+          "messageId": "empty",
+          "ruleId": "no-mistakes/playwright-no-empty",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-no-empty (#4392)",
+      "options": null,
+      "rule": "playwright-no-empty"
+    },
+    {
+      "file": "prefer-get-by-test-id.spec.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 38,
+          "endLine": 3,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 3,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 47,
+          "endLine": 4,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 4,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 55,
+          "endLine": 5,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 5,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 45,
+          "endLine": 6,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 6,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 47,
+          "endLine": 7,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 7,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 45,
+          "endLine": 8,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 8,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 50,
+          "endLine": 9,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 9,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 51,
+          "endLine": 10,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 10,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-prefer-get-by-test-id (#4403)",
+      "options": null,
+      "rule": "playwright-prefer-get-by-test-id"
+    },
+    {
+      "file": "exported-component.tsx",
+      "findings": [
+        {
+          "column": 20,
+          "endColumn": 27,
+          "endLine": 5,
+          "file": "exported-component.tsx",
+          "line": 5,
+          "message": "Exported component 'Base' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 27,
+          "endLine": 5,
+          "file": "exported-component.tsx",
+          "line": 5,
+          "message": "Exported component 'Card' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 36,
+          "endLine": 6,
+          "file": "exported-component.tsx",
+          "line": 6,
+          "message": "Exported component 'Direct' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        },
+        {
+          "column": 53,
+          "endColumn": 60,
+          "endLine": 9,
+          "file": "exported-component.tsx",
+          "line": 9,
+          "message": "Exported component 'MemoCard' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 50,
+          "endLine": 10,
+          "file": "exported-component.tsx",
+          "line": 10,
+          "message": "Exported component 'InstCard' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        },
+        {
+          "column": 52,
+          "endColumn": 59,
+          "endLine": 11,
+          "file": "exported-component.tsx",
+          "line": 11,
+          "message": "Exported component 'AppliedCard' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-require-exported-component-attribute (#4405)",
+      "options": null,
+      "rule": "playwright-require-exported-component-attribute"
+    },
+    {
+      "file": "interactive-test-id.tsx",
+      "findings": [
+        {
+          "column": 6,
+          "endColumn": 9,
+          "endLine": 11,
+          "file": "interactive-test-id.tsx",
+          "line": 11,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 9,
+          "endLine": 12,
+          "file": "interactive-test-id.tsx",
+          "line": 12,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 9,
+          "endLine": 13,
+          "file": "interactive-test-id.tsx",
+          "line": 13,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 9,
+          "endLine": 14,
+          "file": "interactive-test-id.tsx",
+          "line": 14,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 18,
+          "endLine": 15,
+          "file": "interactive-test-id.tsx",
+          "line": 15,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 21,
+          "endLine": 16,
+          "file": "interactive-test-id.tsx",
+          "line": 16,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 19,
+          "endLine": 17,
+          "file": "interactive-test-id.tsx",
+          "line": 17,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 16,
+          "endLine": 18,
+          "file": "interactive-test-id.tsx",
+          "line": 18,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-require-interactive-test-id (#4408)",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "selector-priority.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 5,
+          "file": "selector-priority.spec.ts",
+          "line": 5,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 6,
+          "file": "selector-priority.spec.ts",
+          "line": 6,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 7,
+          "file": "selector-priority.spec.ts",
+          "line": 7,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 8,
+          "file": "selector-priority.spec.ts",
+          "line": 8,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 9,
+          "file": "selector-priority.spec.ts",
+          "line": 9,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 10,
+          "file": "selector-priority.spec.ts",
+          "line": 10,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 11,
+          "file": "selector-priority.spec.ts",
+          "line": 11,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 12,
+          "file": "selector-priority.spec.ts",
+          "line": 12,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 13,
+          "file": "selector-priority.spec.ts",
+          "line": 13,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 51,
+          "endLine": 14,
+          "file": "selector-priority.spec.ts",
+          "line": 14,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-selector-priority (#4409)",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "unique.tsx",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 42,
+          "endLine": 4,
+          "file": "unique.tsx",
+          "line": 4,
+          "message": "Test ID 'save' is already used in this file.",
+          "messageId": "duplicate",
+          "ruleId": "no-mistakes/playwright-unique",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 50,
+          "endLine": 5,
+          "file": "unique.tsx",
+          "line": 5,
+          "message": "Test ID 'save' is already used in this file.",
+          "messageId": "duplicate",
+          "ruleId": "no-mistakes/playwright-unique",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 34,
+          "endLine": 6,
+          "file": "unique.tsx",
+          "line": 6,
+          "message": "Test ID 'save' is already used in this file.",
+          "messageId": "duplicate",
+          "ruleId": "no-mistakes/playwright-unique",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 35,
+          "endLine": 7,
+          "file": "unique.tsx",
+          "line": 7,
+          "message": "Test ID 'save' is already used in this file.",
+          "messageId": "duplicate",
+          "ruleId": "no-mistakes/playwright-unique",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-unique (#4411)",
+      "options": null,
+      "rule": "playwright-unique"
+    }
+  ],
+  "oxlint": [
+    {
+      "file": "literals-calls.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 27,
+          "file": "literals-calls.spec.ts",
+          "line": 6,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        },
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 25,
+          "file": "literals-calls.spec.ts",
+          "line": 7,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        },
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 25,
+          "file": "literals-calls.spec.ts",
+          "line": 8,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        },
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 30,
+          "file": "literals-calls.spec.ts",
+          "line": 9,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        },
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 31,
+          "file": "literals-calls.spec.ts",
+          "line": 10,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        },
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 10,
+          "file": "literals-calls.spec.ts",
+          "line": 12,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        },
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 18,
+          "file": "literals-calls.spec.ts",
+          "line": 13,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        }
+      ],
+      "name": "playwright-literals calls (#4385)",
+      "options": null,
+      "rule": "playwright-literals"
+    },
+    {
+      "file": "literals.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-literals)",
+          "column": 56,
+          "file": "literals.tsx",
+          "line": 11,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default."
+        }
+      ],
+      "name": "playwright-literals JSX (#4385)",
+      "options": null,
+      "rule": "playwright-literals"
+    },
+    {
+      "file": "naming-convention.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-naming-convention)",
+          "column": 13,
+          "file": "naming-convention.tsx",
+          "line": 3,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$."
+        },
+        {
+          "code": "no-mistakes(playwright-naming-convention)",
+          "column": 13,
+          "file": "naming-convention.tsx",
+          "line": 4,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$."
+        },
+        {
+          "code": "no-mistakes(playwright-naming-convention)",
+          "column": 13,
+          "file": "naming-convention.tsx",
+          "line": 5,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$."
+        },
+        {
+          "code": "no-mistakes(playwright-naming-convention)",
+          "column": 13,
+          "file": "naming-convention.tsx",
+          "line": 6,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$."
+        },
+        {
+          "code": "no-mistakes(playwright-naming-convention)",
+          "column": 13,
+          "file": "naming-convention.tsx",
+          "line": 7,
+          "message": "Test ID 'BadName' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$."
+        }
+      ],
+      "name": "playwright-naming-convention (#4387)",
+      "options": null,
+      "rule": "playwright-naming-convention"
+    },
+    {
+      "file": "no-empty.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-empty)",
+          "column": 13,
+          "file": "no-empty.tsx",
+          "line": 3,
+          "message": "Test ID must not be empty."
+        },
+        {
+          "code": "no-mistakes(playwright-no-empty)",
+          "column": 13,
+          "file": "no-empty.tsx",
+          "line": 4,
+          "message": "Test ID must not be empty."
+        },
+        {
+          "code": "no-mistakes(playwright-no-empty)",
+          "column": 13,
+          "file": "no-empty.tsx",
+          "line": 5,
+          "message": "Test ID must not be empty."
+        },
+        {
+          "code": "no-mistakes(playwright-no-empty)",
+          "column": 13,
+          "file": "no-empty.tsx",
+          "line": 6,
+          "message": "Test ID must not be empty."
+        },
+        {
+          "code": "no-mistakes(playwright-no-empty)",
+          "column": 13,
+          "file": "no-empty.tsx",
+          "line": 7,
+          "message": "Test ID must not be empty."
+        }
+      ],
+      "name": "playwright-no-empty (#4392)",
+      "options": null,
+      "rule": "playwright-no-empty"
+    },
+    {
+      "file": "prefer-get-by-test-id.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 14,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 3,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        },
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 14,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 4,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        },
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 14,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 5,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        },
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 14,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 6,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        },
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 23,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 7,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        },
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 21,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 8,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        },
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 26,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 9,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        },
+        {
+          "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+          "column": 27,
+          "file": "prefer-get-by-test-id.spec.ts",
+          "line": 10,
+          "message": "Prefer getByTestId('submit') for exact test ID selectors."
+        }
+      ],
+      "name": "playwright-prefer-get-by-test-id (#4403)",
+      "options": null,
+      "rule": "playwright-prefer-get-by-test-id"
+    },
+    {
+      "file": "exported-component.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-exported-component-attribute)",
+          "column": 20,
+          "file": "exported-component.tsx",
+          "line": 5,
+          "message": "Exported component 'Base' must return JSX containing one of: data-pw."
+        },
+        {
+          "code": "no-mistakes(playwright-require-exported-component-attribute)",
+          "column": 20,
+          "file": "exported-component.tsx",
+          "line": 5,
+          "message": "Exported component 'Card' must return JSX containing one of: data-pw."
+        },
+        {
+          "code": "no-mistakes(playwright-require-exported-component-attribute)",
+          "column": 29,
+          "file": "exported-component.tsx",
+          "line": 6,
+          "message": "Exported component 'Direct' must return JSX containing one of: data-pw."
+        },
+        {
+          "code": "no-mistakes(playwright-require-exported-component-attribute)",
+          "column": 53,
+          "file": "exported-component.tsx",
+          "line": 9,
+          "message": "Exported component 'MemoCard' must return JSX containing one of: data-pw."
+        },
+        {
+          "code": "no-mistakes(playwright-require-exported-component-attribute)",
+          "column": 43,
+          "file": "exported-component.tsx",
+          "line": 10,
+          "message": "Exported component 'InstCard' must return JSX containing one of: data-pw."
+        },
+        {
+          "code": "no-mistakes(playwright-require-exported-component-attribute)",
+          "column": 52,
+          "file": "exported-component.tsx",
+          "line": 11,
+          "message": "Exported component 'AppliedCard' must return JSX containing one of: data-pw."
+        }
+      ],
+      "name": "playwright-require-exported-component-attribute (#4405)",
+      "options": null,
+      "rule": "playwright-require-exported-component-attribute"
+    },
+    {
+      "file": "interactive-test-id.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 11,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 12,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 13,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 14,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 15,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 16,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 17,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 6,
+          "file": "interactive-test-id.tsx",
+          "line": 18,
+          "message": "Interactive elements should have a test ID."
+        }
+      ],
+      "name": "playwright-require-interactive-test-id (#4408)",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "selector-priority.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 5,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 6,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 7,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 8,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 9,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 10,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 11,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 12,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 13,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "selector-priority.spec.ts",
+          "line": 14,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "playwright-selector-priority (#4409)",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "unique.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-unique)",
+          "column": 13,
+          "file": "unique.tsx",
+          "line": 4,
+          "message": "Test ID 'save' is already used in this file."
+        },
+        {
+          "code": "no-mistakes(playwright-unique)",
+          "column": 13,
+          "file": "unique.tsx",
+          "line": 5,
+          "message": "Test ID 'save' is already used in this file."
+        },
+        {
+          "code": "no-mistakes(playwright-unique)",
+          "column": 13,
+          "file": "unique.tsx",
+          "line": 6,
+          "message": "Test ID 'save' is already used in this file."
+        },
+        {
+          "code": "no-mistakes(playwright-unique)",
+          "column": 13,
+          "file": "unique.tsx",
+          "line": 7,
+          "message": "Test ID 'save' is already used in this file."
+        }
+      ],
+      "name": "playwright-unique (#4411)",
+      "options": null,
+      "rule": "playwright-unique"
+    }
+  ]
+}
