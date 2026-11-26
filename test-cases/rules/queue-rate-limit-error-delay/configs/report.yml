@@ -6,9 +6,13 @@ rules:
       unanalyzable: report
       targets:
         - module: glide-mq
-          export: RateLimitError
-        - module: glide-mq
           export: Worker.RateLimitError
+          instanceDelayProperty: delayMs
+        - module: glide-mq
+          export: BroadcastWorker.RateLimitError
+          instanceDelayProperty: delayMs
+        - module: glide-mq
+          export: GroupRateLimitError
         - module: ./src/custom-error
           export: ProviderRateLimitError
           delayArgument: 1

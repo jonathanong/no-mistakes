@@ -65,7 +65,7 @@ pub(super) fn scan(input: &ScanInput<'_>) -> Result<AnalysisDiagnostics> {
                 .iter()
                 .filter(|target| target_matches(graph, target, site, resolved))
             {
-                match judge_arguments(call_args.values, call_args.absent, target) {
+                match judge_arguments(&call_args, target) {
                     DelayVerdict::Valid => {}
                     DelayVerdict::Missing(detail) => {
                         diagnostics.findings.push(missing_finding(
@@ -96,12 +96,9 @@ pub(super) fn scan(input: &ScanInput<'_>) -> Result<AnalysisDiagnostics> {
         if suspect.is_empty() {
             continue;
         }
-        let all_valid = suspect.iter().all(|target| {
-            matches!(
-                judge_arguments(call_args.values, call_args.absent, target),
-                DelayVerdict::Valid
-            )
-        });
+        let all_valid = suspect
+            .iter()
+            .all(|target| matches!(judge_arguments(&call_args, target), DelayVerdict::Valid));
         if !all_valid {
             let detail = format!(
                 "callee `{}` could not be resolved to determine whether it is a configured rate-limit error",

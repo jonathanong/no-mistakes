@@ -3,9 +3,15 @@ import type {
   QueueRateLimitErrorDelayTarget,
 } from "no-mistakes";
 
-const target: QueueRateLimitErrorDelayTarget = {
+const instanceTarget: QueueRateLimitErrorDelayTarget = {
   module: "glide-mq",
-  export: "RateLimitError",
+  export: "Worker.RateLimitError",
+  instanceDelayProperty: "delayMs",
+};
+
+const positionalTarget: QueueRateLimitErrorDelayTarget = {
+  module: "glide-mq",
+  export: "GroupRateLimitError",
   delayArgument: 0,
 };
 
@@ -17,7 +23,7 @@ const objectTarget: QueueRateLimitErrorDelayTarget = {
 };
 
 const options: QueueRateLimitErrorDelayOptions = {
-  targets: [target, objectTarget],
+  targets: [instanceTarget, positionalTarget, objectTarget],
   unanalyzable: "advise",
 };
 

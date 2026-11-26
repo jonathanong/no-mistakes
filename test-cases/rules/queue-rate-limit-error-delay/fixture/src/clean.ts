@@ -1,34 +1,50 @@
-import { RateLimitError, Worker } from "glide-mq";
-import { RateLimitError as OtherRateLimitError } from "other-queue-lib";
+import { BroadcastWorker, GroupRateLimitError, Worker } from "glide-mq";
 import { ProviderRateLimitError } from "./custom-error";
 
-class LocalRateLimitError extends Error {}
-
-function parseRetryAfter(header: string): number {
-  return Number(header) * 1000;
+class LocalRateLimitError extends Error {
+  constructor() {
+    super("local");
+  }
 }
 
-export function triggerClean(retryAfterMs: number, header: string): never {
-  if (retryAfterMs > 0) {
-    throw new RateLimitError(retryAfterMs);
+export function cleanWorkerRateLimitCases(retryAfterMs: number): never {
+  if (Math.random() > 0.85) {
+    throw Object.assign(new Worker.RateLimitError(), { delayMs: retryAfterMs });
   }
-  if (header.length > 0) {
-    throw new RateLimitError(parseRetryAfter(header));
+  if (Math.random() > 0.7) {
+    throw Object.assign(new Worker.RateLimitError(), { delayMs: 5000 });
   }
-  if (header === "static") {
-    throw new RateLimitError(5000);
+  if (Math.random() > 0.55) {
+    const err = new Worker.RateLimitError();
+    (err as { delayMs?: number }).delayMs = retryAfterMs;
+    throw err;
   }
-  if (header === "worker") {
-    throw Worker.RateLimitError(2500);
+  if (Math.random() > 0.4) {
+    const err = new Worker.RateLimitError();
+    (err as { delayMs?: number })["delayMs"] = 2500;
+    void err.message;
+    throw err;
   }
-  if (header === "custom-dynamic") {
+  if (Math.random() > 0.25) {
+    const err = new Worker.RateLimitError();
+    Object.assign(err, { delayMs: retryAfterMs });
+    throw err;
+  }
+  const broadcastErr = Object.assign(new BroadcastWorker.RateLimitError(), {
+    delayMs: retryAfterMs,
+  });
+  throw broadcastErr;
+}
+
+export function cleanGroupAndCustomCases(retryAfterMs: number): never {
+  if (Math.random() > 0.75) {
+    throw new GroupRateLimitError(5000);
+  }
+  if (Math.random() > 0.5) {
+    throw new GroupRateLimitError(retryAfterMs);
+  }
+  if (Math.random() > 0.25) {
     throw new ProviderRateLimitError("429", { retryAfterMs });
-  }
-  if (header === "custom-literal") {
-    throw new ProviderRateLimitError("429", { retryAfterMs: 1500 });
-  }
-  if (header === "other-pkg") {
-    throw new OtherRateLimitError();
   }
   throw new LocalRateLimitError();
 }

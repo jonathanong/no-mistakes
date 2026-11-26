@@ -157,6 +157,8 @@ pub struct PathProvenance {
     pub route_sites: Vec<RouteSite>,
     pub registry_dispatches: Vec<(u32, String, Option<String>, String)>,
     pub absent_or_non_finite_args: FxHashMap<u32, Vec<(usize, Option<String>)>>,
+    pub instance_properties: FxHashMap<u32, super::instance_properties::InstancePropertyEvidence>,
+    pub dynamic_scope: bool,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouteSite {
@@ -165,11 +167,9 @@ pub struct RouteSite {
     pub kind: RouteKind,
     pub detail: String,
 }
-
 pub fn line_in(source: &str, offset: u32) -> u32 {
     crate::syntax_helpers::byte_offset_to_line(source, offset as usize)
 }
-
 impl RouteSite {
     pub fn at(source: &str, start: u32, kind: RouteKind, detail: impl Into<String>) -> Self {
         Self {
@@ -180,7 +180,6 @@ impl RouteSite {
         }
     }
 }
-
 /// Why a route into a parameter root cannot be enumerated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RouteKind {
@@ -191,7 +190,6 @@ pub enum RouteKind {
     ViMock,
     NonDirect,
 }
-
 impl PathProvenance {
     pub(super) fn poison_env(&mut self) {
         self.env_unknown_write = true;

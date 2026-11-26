@@ -1,5 +1,5 @@
-import { RateLimitError } from "glide-mq";
+import { Worker } from "glide-mq";
 
 export function excludedCall(): never {
-  throw new RateLimitError();
+  throw new Worker.RateLimitError();
 }

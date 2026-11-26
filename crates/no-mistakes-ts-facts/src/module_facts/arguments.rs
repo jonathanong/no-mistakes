@@ -5,7 +5,9 @@ use oxc_semantic::Semantic;
 use serde_json::Value;
 mod absent;
 mod aliases;
+mod instance_properties;
 use aliases::AliasSafety;
+pub use instance_properties::{InstancePropertyEvidence, InstancePropertyValue};
 mod path_origin;
 mod path_origin_equality;
 mod path_value;
@@ -109,6 +111,9 @@ pub(super) fn collect(
         if !absent.is_empty() {
             provenance.absent_or_non_finite_args.insert(offset, absent);
         }
+        if let Some(evidence) = projector.collect_instance_properties(node.id()) {
+            provenance.instance_properties.insert(offset, evidence);
+        }
         let path = callee.and_then(|call| projector.call_path(call, &imported));
         result.insert(
             offset,
@@ -120,8 +125,10 @@ pub(super) fn collect(
         );
     }
     if dynamic_scope {
+        provenance.dynamic_scope = true;
         provenance.call_guards.clear();
         provenance.absent_or_non_finite_args.clear();
+        provenance.instance_properties.clear();
         for call in result.values_mut() {
             call.values.fill(ArgumentValue::Unknown);
             call.spread_from = Some(0);

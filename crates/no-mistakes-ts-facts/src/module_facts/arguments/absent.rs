@@ -17,45 +17,44 @@ impl<'a> Projector<'a, '_> {
                 out.push((index, None));
                 continue;
             }
-            if let Some(object) = self.closed_object_expr(expr, 0) {
-                let mut prop_states: FxHashMap<String, bool> = FxHashMap::default();
-                let mut closed = true;
-                for property in &object.properties {
-                    let ObjectPropertyKind::ObjectProperty(property) = property else {
-                        closed = false;
-                        break;
-                    };
-                    if property.kind != PropertyKind::Init || property.method || property.computed {
-                        closed = false;
-                        break;
-                    }
-                    let Some(key) = crate::ast::property_key_name(&property.key) else {
-                        closed = false;
-                        break;
-                    };
-                    if key == "__proto__" || key.len() > 128 {
-                        closed = false;
-                        break;
-                    }
-                    let bad = self.is_absent_or_non_finite(&property.value, 0);
-                    prop_states.insert(key.into_owned(), bad);
-                }
-                if closed {
-                    let mut bad_keys: Vec<String> = prop_states
-                        .into_iter()
-                        .filter_map(|(k, bad)| bad.then_some(k))
-                        .collect();
-                    bad_keys.sort();
-                    for key in bad_keys {
-                        out.push((index, Some(key)));
-                    }
+            if let Some(keys) = self
+                .closed_object_expr(expr, 0)
+                .and_then(|object| self.closed_object_absent_keys(object))
+            {
+                for key in keys {
+                    out.push((index, Some(key)));
                 }
             }
         }
         out
     }
 
-    fn is_absent_or_non_finite(&mut self, expr: &Expression<'a>, depth: usize) -> bool {
+    fn closed_object_absent_keys(
+        &mut self,
+        object: &'a ObjectExpression<'a>,
+    ) -> Option<Vec<String>> {
+        let mut prop_states: FxHashMap<String, bool> = FxHashMap::default();
+        for property in &object.properties {
+            let ObjectPropertyKind::ObjectProperty(property) = property else {
+                return None;
+            };
+            let key =
+                (property.kind == PropertyKind::Init && !property.method && !property.computed)
+                    .then(|| crate::ast::property_key_name(&property.key))
+                    .flatten()
+                    .filter(|key| key != "__proto__" && key.len() <= 128)?;
+            let bad = self.is_absent_or_non_finite(&property.value, 0);
+            prop_states.insert(key.into_owned(), bad);
+        }
+        let mut bad_keys: Vec<String> = prop_states
+            .into_iter()
+            .filter_map(|(k, bad)| bad.then_some(k))
+            .collect();
+        bad_keys.sort();
+        Some(bad_keys)
+    }
+
+    pub(super) fn is_absent_or_non_finite(&mut self, expr: &Expression<'a>, depth: usize) -> bool {
         if depth >= 16 || !self.take() {
             return false;
         }
@@ -63,7 +62,10 @@ impl<'a> Projector<'a, '_> {
             Expression::UnaryExpression(unary) => match unary.operator {
                 UnaryOperator::Void => true,
                 UnaryOperator::UnaryNegation | UnaryOperator::UnaryPlus => {
-                    self.is_unshadowed_global(&unary.argument, &["Infinity", "NaN"])
+                    matches!(
+                        unary.argument.get_inner_expression(),
+                        Expression::Identifier(id) if self.is_unshadowed_ident(id, &["Infinity", "NaN"])
+                    )
                 }
                 _ => false,
             },
@@ -71,16 +73,14 @@ impl<'a> Projector<'a, '_> {
                 if self.is_unshadowed_ident(id, &["undefined", "NaN", "Infinity"]) {
                     return true;
                 }
-                let Some(reference) = id.reference_id.get() else {
-                    return false;
-                };
-                let Some(symbol) = self.semantic.scoping().get_reference(reference).symbol_id()
+                let Some(symbol) = id
+                    .reference_id
+                    .get()
+                    .and_then(|r| self.semantic.scoping().get_reference(r).symbol_id())
+                    .filter(|&symbol| self.immutable_binding(symbol))
                 else {
                     return false;
                 };
-                if !self.immutable_binding(symbol) {
-                    return false;
-                }
                 self.const_init_for_symbol(symbol, id.span.start)
                     .is_some_and(|init| self.is_absent_or_non_finite(init, depth + 1))
             }
@@ -88,7 +88,7 @@ impl<'a> Projector<'a, '_> {
         }
     }
 
-    fn closed_object_expr(
+    pub(super) fn closed_object_expr(
         &mut self,
         expr: &'a Expression<'a>,
         depth: usize,
@@ -99,12 +99,10 @@ impl<'a> Projector<'a, '_> {
         match expr.get_inner_expression() {
             Expression::ObjectExpression(object) if object.properties.len() <= 256 => Some(object),
             Expression::Identifier(id) => {
-                let reference = id.reference_id.get()?;
-                let symbol = self
-                    .semantic
-                    .scoping()
-                    .get_reference(reference)
-                    .symbol_id()?;
+                let symbol = id
+                    .reference_id
+                    .get()
+                    .and_then(|r| self.semantic.scoping().get_reference(r).symbol_id())?;
                 if !self.immutable_binding(symbol) || !self.safe_uses(symbol, depth + 1) {
                     return None;
                 }
@@ -115,24 +113,15 @@ impl<'a> Projector<'a, '_> {
         }
     }
 
-    fn is_unshadowed_global(&self, expr: &Expression<'_>, names: &[&str]) -> bool {
-        match expr.get_inner_expression() {
-            Expression::Identifier(id) => self.is_unshadowed_ident(id, names),
-            _ => false,
-        }
-    }
-
     fn is_unshadowed_ident(&self, id: &IdentifierReference<'_>, names: &[&str]) -> bool {
-        if !names.contains(&id.name.as_str()) {
-            return false;
-        }
-        id.reference_id.get().is_some_and(|r| {
-            self.semantic
-                .scoping()
-                .get_reference(r)
-                .symbol_id()
-                .is_none()
-        })
+        names.contains(&id.name.as_str())
+            && id.reference_id.get().is_some_and(|r| {
+                self.semantic
+                    .scoping()
+                    .get_reference(r)
+                    .symbol_id()
+                    .is_none()
+            })
     }
 
     fn const_init_for_symbol(
@@ -150,9 +139,8 @@ impl<'a> Projector<'a, '_> {
         let BindingPattern::BindingIdentifier(binding) = &decl.id else {
             return None;
         };
-        if binding.symbol_id.get() != Some(symbol) || use_start < decl.span.end {
-            return None;
-        }
-        decl.init.as_ref()
+        (binding.symbol_id.get() == Some(symbol) && use_start >= decl.span.end)
+            .then_some(decl.init.as_ref())
+            .flatten()
     }
 }

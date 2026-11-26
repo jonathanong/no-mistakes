@@ -1,13 +1,50 @@
-import { RateLimitError } from "glide-mq";
-import { RateLimitError as StarRateLimitError } from "./star-barrel";
+import { GroupRateLimitError, Worker } from "glide-mq";
+import { Worker as BarrelWorker } from "./barrel";
+import { GroupRateLimitError as StarGroupRateLimitError } from "./star-barrel";
 import { ProviderRateLimitError, type ProviderLimitOptions } from "./custom-error";
 
+declare function attachDelay(err: Error): void;
+
+export function triggerWorkerUnanalyzable(
+  flag: boolean,
+  extra: Record<string, unknown>,
+  key: string,
+): Error {
+  if (flag && Math.random() > 0.8) {
+    throw Object.assign(new Worker.RateLimitError(), extra);
+  }
+  if (flag && Math.random() > 0.6) {
+    throw Object.assign(new Worker.RateLimitError(), { ...extra });
+  }
+  if (flag && Math.random() > 0.4) {
+    const conditional = new Worker.RateLimitError();
+    if (flag) {
+      (conditional as { delayMs?: number }).delayMs = 5000;
+    }
+    throw conditional;
+  }
+  if (flag && Math.random() > 0.2) {
+    const escaped = new Worker.RateLimitError();
+    attachDelay(escaped);
+    throw escaped;
+  }
+  if (flag) {
+    const computed = new Worker.RateLimitError();
+    (computed as unknown as Record<string, unknown>)[key] = 5000;
+    throw computed;
+  }
+  return new Worker.RateLimitError();
+}
+
 export function triggerSpread(args: [number?]): never {
-  throw new RateLimitError(...args);
+  throw new GroupRateLimitError(...args);
 }
 
 export function triggerStarReexport(): never {
-  throw new StarRateLimitError();
+  if (Math.random() > 0.5) {
+    throw new BarrelWorker.RateLimitError();
+  }
+  throw new StarGroupRateLimitError();
 }
 
 export function triggerOpaqueOptions(opts: ProviderLimitOptions): never {
@@ -18,10 +55,10 @@ export function triggerOpaqueOptions(opts: ProviderLimitOptions): never {
 }
 
 export function triggerUnresolvedCallee(dynamicPkg: {
-  RateLimitError: new (delayMs?: number) => Error;
+  GroupRateLimitError: new (delayMs?: number) => Error;
 }): never {
   if (Math.random() > 0.5) {
-    throw new dynamicPkg.RateLimitError(5000);
+    throw new dynamicPkg.GroupRateLimitError(5000);
   }
-  throw new dynamicPkg.RateLimitError();
+  throw new dynamicPkg.GroupRateLimitError();
 }

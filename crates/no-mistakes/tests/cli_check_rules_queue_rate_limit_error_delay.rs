@@ -11,6 +11,7 @@ fn queue_rate_limit_error_delay_check_json_snapshot() {
     let base = fixture_base();
     let root = base.join("fixture");
     let configs = base.join("configs");
+    let glide_mq_root = base.join("glide-mq-worker-rate-limit/fixture");
     let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "queue_rate_limit_error_delay",
         &[
@@ -18,6 +19,11 @@ fn queue_rate_limit_error_delay_check_json_snapshot() {
             ("advise", root.clone(), configs.join("advise.yml")),
             ("report", root.clone(), configs.join("report.yml")),
             ("ignore", root.clone(), configs.join("ignore.yml")),
+            (
+                "glide-mq-worker-rate-limit",
+                glide_mq_root.clone(),
+                glide_mq_root.join(".no-mistakes.yml"),
+            ),
         ],
         &[],
         &[],
@@ -71,6 +77,13 @@ fn queue_rate_limit_error_delay_check_json_snapshot() {
             .len(),
         advise_rules.len()
     );
+
+    assert_eq!(reports["glide-mq-worker-rate-limit"]["exitCode"], 1);
+    let gmq_rules = reports["glide-mq-worker-rate-limit"]["report"]["rules"]
+        .as_array()
+        .unwrap();
+    assert_eq!(gmq_rules.len(), 3, "{gmq_rules:?}");
+    assert!(gmq_rules.iter().all(|row| row["file"] == "src/invalid.ts"));
 }
 
 #[test]

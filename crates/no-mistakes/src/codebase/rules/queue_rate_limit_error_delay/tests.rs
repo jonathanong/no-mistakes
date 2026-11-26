@@ -1,12 +1,16 @@
 use super::format::{missing_finding, unanalyzable_finding};
-use super::judge::{call_arguments, judge_arguments, DelayVerdict};
-use super::options::{collect_application_errors, validate, Options, Target, TargetInput};
+use super::judge::{call_arguments, judge_arguments, CallDelayArgs, DelayVerdict};
+use super::options::{
+    collect_application_errors, validate, DelaySpec, Options, Target, TargetInput,
+};
 use super::{check_with_catalog, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{ResolvedCallSite, ResolvedCallTarget};
 use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan, TsFileFacts};
-use crate::codebase::ts_source::module_facts::arguments::{ArgumentValue, ArgumentValues};
+use crate::codebase::ts_source::module_facts::arguments::{
+    ArgumentValue, ArgumentValues, InstancePropertyEvidence, InstancePropertyValue,
+};
 use crate::codebase::ts_source::module_facts::{ModuleDiagnostic, TypeScriptModuleFacts};
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 use crate::fx::FxHashMap;
@@ -14,62 +18,99 @@ use serde_json::json;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-fn target(delay_argument: usize, delay_property: Option<&str>) -> Target {
+fn arg_target(delay_argument: usize, delay_property: Option<&str>) -> Target {
     Target {
         module: "glide-mq".to_string(),
-        export: "RateLimitError".to_string(),
-        delay_argument,
-        delay_property: delay_property.map(str::to_string),
+        export: "GroupRateLimitError".to_string(),
+        delay: DelaySpec::Argument {
+            index: delay_argument,
+            property: delay_property.map(str::to_string),
+        },
+    }
+}
+
+fn instance_target(prop: &str) -> Target {
+    Target {
+        module: "glide-mq".to_string(),
+        export: "Worker.RateLimitError".to_string(),
+        delay: DelaySpec::InstanceProperty(prop.to_string()),
+    }
+}
+
+fn call_args<'a>(
+    values: Option<&'a ArgumentValues>,
+    absent: Option<&'a [(usize, Option<String>)]>,
+    instance: Option<&'a InstancePropertyEvidence>,
+) -> CallDelayArgs<'a> {
+    CallDelayArgs {
+        values,
+        absent,
+        instance,
+        dynamic_scope: false,
     }
 }
 
 #[test]
-fn options_validation_rejects_empty_blank_duplicate_and_out_of_range() {
+fn options_validation_rejects_empty_blank_duplicate_conflicts_and_out_of_range() {
+    let base = |module: &str, export: &str| TargetInput {
+        module: module.into(),
+        export: export.into(),
+        delay_argument: None,
+        delay_property: None,
+        instance_delay_property: None,
+    };
     assert!(validate(&Options::default()).is_err());
     assert!(validate(&Options {
+        targets: vec![base(" ", "GroupRateLimitError")],
+    })
+    .is_err());
+    assert!(validate(&Options {
         targets: vec![TargetInput {
-            module: " ".into(),
-            export: "RateLimitError".into(),
-            delay_argument: 0,
-            delay_property: None,
+            delay_argument: Some(32),
+            ..base("glide-mq", "GroupRateLimitError")
         }],
     })
     .is_err());
     assert!(validate(&Options {
         targets: vec![TargetInput {
-            module: "glide-mq".into(),
-            export: "RateLimitError".into(),
-            delay_argument: 32,
-            delay_property: None,
-        }],
-    })
-    .is_err());
-    assert!(validate(&Options {
-        targets: vec![TargetInput {
-            module: "glide-mq".into(),
-            export: "RateLimitError".into(),
-            delay_argument: 0,
             delay_property: Some("  ".into()),
+            ..base("glide-mq", "GroupRateLimitError")
+        }],
+    })
+    .is_err());
+    assert!(validate(&Options {
+        targets: vec![TargetInput {
+            instance_delay_property: Some("  ".into()),
+            ..base("glide-mq", "Worker.RateLimitError")
+        }],
+    })
+    .is_err());
+    assert!(validate(&Options {
+        targets: vec![TargetInput {
+            delay_argument: Some(0),
+            instance_delay_property: Some("delayMs".into()),
+            ..base("glide-mq", "Worker.RateLimitError")
         }],
     })
     .is_err());
     assert!(validate(&Options {
         targets: vec![
+            base("glide-mq", "GroupRateLimitError"),
             TargetInput {
-                module: "glide-mq".into(),
-                export: "RateLimitError".into(),
-                delay_argument: 0,
-                delay_property: None,
-            },
-            TargetInput {
-                module: "glide-mq".into(),
-                export: "RateLimitError".into(),
-                delay_argument: 1,
-                delay_property: None,
+                delay_argument: Some(1),
+                ..base("glide-mq", "GroupRateLimitError")
             },
         ],
     })
     .is_err());
+    let valid = validate(&Options {
+        targets: vec![TargetInput {
+            instance_delay_property: Some("delayMs".into()),
+            ..base("glide-mq", "Worker.RateLimitError")
+        }],
+    })
+    .unwrap();
+    assert_eq!(valid[0].delay, DelaySpec::InstanceProperty("delayMs".into()));
 }
 
 fn config_messages(config: &NoMistakesConfig) -> Vec<String> {
@@ -113,7 +154,8 @@ rules:
     options:
       targets:
         - module: glide-mq
-          export: RateLimitError
+          export: Worker.RateLimitError
+          instanceDelayProperty: delayMs
 "#;
     let valid_config: NoMistakesConfig = serde_yaml::from_str(valid_yaml).unwrap();
     let ok_errors = config_messages(&valid_config);
@@ -121,105 +163,153 @@ rules:
 }
 
 #[test]
-fn judge_arguments_classifies_missing_positive_invalid_and_unanalyzable() {
-    let pos0 = target(0, None);
+fn judge_arguments_classifies_positional_object_and_instance_property_targets() {
+    let pos0 = arg_target(0, None);
     let empty = ArgumentValues {
         values: vec![],
         spread_from: None,
         path: None,
     };
     assert!(matches!(
-        judge_arguments(Some(&empty), None, &pos0),
+        judge_arguments(&call_args(Some(&empty), None, None), &pos0),
         DelayVerdict::Missing(_)
     ));
     assert!(matches!(
-        judge_arguments(None, None, &pos0),
+        judge_arguments(&call_args(None, None, None), &pos0),
         DelayVerdict::Unanalyzable(_)
     ));
-
     let spread = ArgumentValues {
         values: vec![ArgumentValue::Unknown],
         spread_from: Some(0),
         path: None,
     };
     assert!(matches!(
-        judge_arguments(Some(&spread), None, &pos0),
+        judge_arguments(&call_args(Some(&spread), None, None), &pos0),
         DelayVerdict::Unanalyzable(_)
     ));
-
     let positive = ArgumentValues {
         values: vec![ArgumentValue::Scalar(json!(5000))],
         spread_from: None,
         path: None,
     };
     assert_eq!(
-        judge_arguments(Some(&positive), None, &pos0),
+        judge_arguments(&call_args(Some(&positive), None, None), &pos0),
         DelayVerdict::Valid
     );
-
     let zero = ArgumentValues {
         values: vec![ArgumentValue::Scalar(json!(0))],
         spread_from: None,
         path: None,
     };
     assert!(matches!(
-        judge_arguments(Some(&zero), None, &pos0),
+        judge_arguments(&call_args(Some(&zero), None, None), &pos0),
         DelayVerdict::Missing(_)
     ));
-
     let dynamic_ok = ArgumentValues {
         values: vec![ArgumentValue::Unknown],
         spread_from: None,
         path: None,
     };
     assert_eq!(
-        judge_arguments(Some(&dynamic_ok), None, &pos0),
+        judge_arguments(&call_args(Some(&dynamic_ok), None, None), &pos0),
         DelayVerdict::Valid
     );
     assert!(matches!(
-        judge_arguments(Some(&dynamic_ok), Some(&[(0, None)]), &pos0),
+        judge_arguments(&call_args(Some(&dynamic_ok), Some(&[(0, None)]), None), &pos0),
         DelayVerdict::Missing(_)
     ));
 
-    let prop_target = target(0, Some("retryAfterMs"));
+    let prop_target = arg_target(0, Some("retryAfterMs"));
     let mut obj = FxHashMap::default();
-    obj.insert(
-        "retryAfterMs".to_string(),
-        ArgumentValue::Scalar(json!(1500)),
-    );
+    obj.insert("retryAfterMs".to_string(), ArgumentValue::Scalar(json!(1500)));
     let valid_obj = ArgumentValues {
         values: vec![ArgumentValue::Object(obj)],
         spread_from: None,
         path: None,
     };
     assert_eq!(
-        judge_arguments(Some(&valid_obj), None, &prop_target),
+        judge_arguments(&call_args(Some(&valid_obj), None, None), &prop_target),
         DelayVerdict::Valid
     );
     assert!(matches!(
-        judge_arguments(Some(&dynamic_ok), None, &prop_target),
+        judge_arguments(&call_args(Some(&dynamic_ok), None, None), &prop_target),
         DelayVerdict::Unanalyzable(_)
     ));
     assert!(matches!(
-        judge_arguments(Some(&dynamic_ok), Some(&[(0, None)]), &prop_target),
+        judge_arguments(&call_args(Some(&dynamic_ok), Some(&[(0, None)]), None), &prop_target),
         DelayVerdict::Missing(_)
     ));
     assert!(matches!(
-        judge_arguments(Some(&positive), None, &prop_target),
+        judge_arguments(&call_args(Some(&positive), None, None), &prop_target),
         DelayVerdict::Missing(_)
     ));
     let mut bad_prop = FxHashMap::default();
-    bad_prop.insert(
-        "retryAfterMs".to_string(),
-        ArgumentValue::Scalar(json!("soon")),
-    );
+    bad_prop.insert("retryAfterMs".to_string(), ArgumentValue::Scalar(json!("soon")));
     let bad_prop_obj = ArgumentValues {
         values: vec![ArgumentValue::Object(bad_prop)],
         spread_from: None,
         path: None,
     };
     assert!(matches!(
-        judge_arguments(Some(&bad_prop_obj), None, &prop_target),
+        judge_arguments(&call_args(Some(&bad_prop_obj), None, None), &prop_target),
+        DelayVerdict::Missing(_)
+    ));
+
+    let inst = instance_target("delayMs");
+    assert!(matches!(
+        judge_arguments(&call_args(None, None, None), &inst),
+        DelayVerdict::Unanalyzable(_)
+    ));
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&empty), None, None), &inst),
+        DelayVerdict::Missing(_)
+    ));
+    let mut props = FxHashMap::default();
+    props.insert("delayMs".to_string(), InstancePropertyValue::Positive);
+    let good_ev = InstancePropertyEvidence {
+        properties: props,
+        opaque_mutation: false,
+    };
+    assert_eq!(
+        judge_arguments(&call_args(Some(&empty), None, Some(&good_ev)), &inst),
+        DelayVerdict::Valid
+    );
+    let mut inv_props = FxHashMap::default();
+    inv_props.insert("delayMs".to_string(), InstancePropertyValue::Invalid);
+    let inv_ev = InstancePropertyEvidence {
+        properties: inv_props,
+        opaque_mutation: false,
+    };
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&empty), None, Some(&inv_ev)), &inst),
+        DelayVerdict::Missing(_)
+    ));
+    let mut abs_props = FxHashMap::default();
+    abs_props.insert("delayMs".to_string(), InstancePropertyValue::AbsentOrNonFinite);
+    let abs_ev = InstancePropertyEvidence {
+        properties: abs_props,
+        opaque_mutation: false,
+    };
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&empty), None, Some(&abs_ev)), &inst),
+        DelayVerdict::Missing(_)
+    ));
+    let opaque_ev = InstancePropertyEvidence {
+        properties: FxHashMap::default(),
+        opaque_mutation: true,
+    };
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&empty), None, Some(&opaque_ev)), &inst),
+        DelayVerdict::Unanalyzable(_)
+    ));
+    let mut other_props = FxHashMap::default();
+    other_props.insert("code".to_string(), InstancePropertyValue::Invalid);
+    let other_ev = InstancePropertyEvidence {
+        properties: other_props,
+        opaque_mutation: false,
+    };
+    assert!(matches!(
+        judge_arguments(&call_args(Some(&empty), None, Some(&other_ev)), &inst),
         DelayVerdict::Missing(_)
     ));
 }
@@ -248,7 +338,7 @@ fn call_arguments_and_format_and_entry_guards_handle_edge_cases() {
         line: 3,
         caller: None,
         caller_id: None,
-        source_callee: "RateLimitError".to_string(),
+        source_callee: "Worker.RateLimitError".to_string(),
         invocation: InvocationKind::Construct,
         target: ResolvedCallTarget::Unknown,
         alternatives: Vec::new(),
@@ -257,7 +347,7 @@ fn call_arguments_and_format_and_entry_guards_handle_edge_cases() {
         returned_member_from: Vec::new(),
         target_node: None,
     };
-    let t = target(0, None);
+    let t = instance_target("delayMs");
     let missing = missing_finding(
         Path::new("/repo"),
         &app,
@@ -279,18 +369,13 @@ fn call_arguments_and_format_and_entry_guards_handle_edge_cases() {
     assert!(unan.import.is_none());
 
     let empty_cfg = NoMistakesConfig::default();
-    let empty_res = check_with_catalog(
-        Path::new("/repo"),
-        &empty_cfg,
-        None,
-        &CheckFactMap::default(),
-        None,
-    )
-    .unwrap();
+    let empty_res =
+        check_with_catalog(Path::new("/repo"), &empty_cfg, None, &CheckFactMap::default(), None)
+            .unwrap();
     assert!(empty_res.findings.is_empty());
 
     let active_cfg: NoMistakesConfig = serde_yaml::from_str(
-        "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    options:\n      targets:\n        - module: glide-mq\n          export: RateLimitError\n",
+        "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    options:\n      targets:\n        - module: glide-mq\n          export: Worker.RateLimitError\n          instanceDelayProperty: delayMs\n",
     )
     .unwrap();
     assert!(check_with_catalog(
@@ -323,7 +408,6 @@ fn absent_arg_projection_handles_signed_non_finite_const_objects_and_guards() {
         .expect("path provenance");
     let entries: Vec<&Vec<(usize, Option<String>)>> =
         provenance.absent_or_non_finite_args.values().collect();
-    // -Infinity, +NaN, and UNSET_OBJ ({ retryAfterMs: undefined })
     assert_eq!(entries.len(), 3, "{entries:?}");
     assert!(entries
         .iter()
@@ -348,8 +432,8 @@ fn candidate_targets_parse_failures_and_config_errors_are_covered() {
     assert!(unsafe_args.values.is_none() && unsafe_args.absent.is_none());
 
     for yaml in [
-        "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    options:\n      unanalyzable: bogus\n      targets:\n        - module: glide-mq\n          export: RateLimitError\n",
-        "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    options:\n      unknownField: 1\n      targets:\n        - module: glide-mq\n          export: RateLimitError\n",
+        "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    options:\n      unanalyzable: bogus\n      targets:\n        - module: glide-mq\n          export: Worker.RateLimitError\n          instanceDelayProperty: delayMs\n",
+        "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    options:\n      unknownField: 1\n      targets:\n        - module: glide-mq\n          export: Worker.RateLimitError\n          instanceDelayProperty: delayMs\n",
         "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    options:\n      targets: []\n",
     ] {
         let cfg: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();

@@ -1,6 +1,8 @@
-use super::options::Target;
+use super::options::{DelaySpec, Target};
 use crate::codebase::ts_source::facts::TsFileFacts;
-use crate::codebase::ts_source::module_facts::arguments::{ArgumentValue, ArgumentValues};
+use crate::codebase::ts_source::module_facts::arguments::{
+    ArgumentValue, ArgumentValues, InstancePropertyEvidence, InstancePropertyValue,
+};
 use serde_json::Value;
 
 pub(super) type AbsentSlot = (usize, Option<String>);
@@ -8,6 +10,8 @@ pub(super) type AbsentSlot = (usize, Option<String>);
 pub(super) struct CallDelayArgs<'a> {
     pub(super) values: Option<&'a ArgumentValues>,
     pub(super) absent: Option<&'a [AbsentSlot]>,
+    pub(super) instance: Option<&'a InstancePropertyEvidence>,
+    pub(super) dynamic_scope: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,68 +22,108 @@ pub(super) enum DelayVerdict {
 }
 
 pub(super) fn call_arguments(facts: &TsFileFacts, offset: u32) -> CallDelayArgs<'_> {
+    let empty = CallDelayArgs {
+        values: None,
+        absent: None,
+        instance: None,
+        dynamic_scope: false,
+    };
     if facts.operational_error.is_some() || facts.parse_error.is_some() || facts.fatal_parse_error {
-        return CallDelayArgs {
-            values: None,
-            absent: None,
-        };
+        return empty;
     }
     let Some(module) = facts.module_bindings.as_deref() else {
-        return CallDelayArgs {
-            values: None,
-            absent: None,
-        };
+        return empty;
     };
     if !module
         .diagnostics
         .iter()
         .all(crate::codebase::ts_source::module_facts::argument_safe_diagnostic)
     {
-        return CallDelayArgs {
-            values: None,
-            absent: None,
-        };
+        return empty;
     }
-    let values = module
-        .call_arguments
-        .as_deref()
-        .and_then(|m| m.get(&offset));
-    let absent = module
-        .path_provenance
-        .as_deref()
+    let values = module.call_arguments.as_deref().and_then(|m| m.get(&offset));
+    let provenance = module.path_provenance.as_deref();
+    let absent = provenance
         .and_then(|p| p.absent_or_non_finite_args.get(&offset))
         .map(Vec::as_slice);
-    CallDelayArgs { values, absent }
+    let instance = provenance.and_then(|p| p.instance_properties.get(&offset));
+    let dynamic_scope = provenance.is_some_and(|p| p.dynamic_scope);
+    CallDelayArgs {
+        values,
+        absent,
+        instance,
+        dynamic_scope,
+    }
 }
 
-pub(super) fn judge_arguments(
+pub(super) fn judge_arguments(args: &CallDelayArgs<'_>, target: &Target) -> DelayVerdict {
+    match &target.delay {
+        DelaySpec::Argument { index, property } => {
+            judge_argument_delay(args.values, args.absent, *index, property.as_deref())
+        }
+        DelaySpec::InstanceProperty(prop) => judge_instance_property(args, prop),
+    }
+}
+
+fn judge_instance_property(args: &CallDelayArgs<'_>, prop: &str) -> DelayVerdict {
+    if args.values.is_none() || args.dynamic_scope {
+        return DelayVerdict::Unanalyzable(
+            "call arguments and instance properties could not be statically analyzed".to_string(),
+        );
+    }
+    let Some(evidence) = args.instance else {
+        return DelayVerdict::Missing(format!(
+            "does not attach required `{prop}` delay property on the constructed instance"
+        ));
+    };
+    match evidence.properties.get(prop) {
+        Some(InstancePropertyValue::Positive) => DelayVerdict::Valid,
+        Some(InstancePropertyValue::Invalid) => {
+            DelayVerdict::Missing(format!("instance property `{prop}` must be a positive duration"))
+        }
+        Some(InstancePropertyValue::AbsentOrNonFinite) => DelayVerdict::Missing(format!(
+            "instance property `{prop}` is undefined or non-finite"
+        )),
+        None if evidence.opaque_mutation => DelayVerdict::Unanalyzable(format!(
+            "constructed instance escapes or is mutated opaquely, so `{prop}` could not be verified"
+        )),
+        None => DelayVerdict::Missing(format!(
+            "does not attach required `{prop}` delay property on the constructed instance"
+        )),
+    }
+}
+
+fn judge_argument_delay(
     arguments: Option<&ArgumentValues>,
     absent_slots: Option<&[AbsentSlot]>,
-    target: &Target,
+    pos: usize,
+    property: Option<&str>,
 ) -> DelayVerdict {
     let Some(arguments) = arguments else {
         return DelayVerdict::Unanalyzable(
             "call arguments could not be statically analyzed".to_string(),
         );
     };
-    let pos = target.delay_argument;
     if arguments.spread_from.is_some_and(|start| pos >= start) {
         return DelayVerdict::Unanalyzable(format!(
             "spread argument at or before argument {pos} hides whether a delay is supplied"
         ));
     }
     let Some(value) = arguments.values.get(pos) else {
-        return DelayVerdict::Missing(missing_delay_detail(target));
+        return DelayVerdict::Missing(match property {
+            Some(prop) => format!("omits options argument {pos} with required `{prop}` delay"),
+            None => format!("omits delay argument at position {pos}"),
+        });
     };
     if has_absent_slot(absent_slots, pos, None) {
-        return DelayVerdict::Missing(match &target.delay_property {
+        return DelayVerdict::Missing(match property {
             Some(prop) => format!(
                 "options argument {pos} is undefined instead of providing a positive `{prop}` delay"
             ),
             None => format!("delay argument {pos} is undefined or non-finite"),
         });
     }
-    match &target.delay_property {
+    match property {
         None => judge_scalar_delay(value, pos),
         Some(prop) => judge_property_delay(value, absent_slots, pos, prop),
     }
@@ -146,14 +190,4 @@ fn has_absent_slot(absent_slots: Option<&[AbsentSlot]>, pos: usize, prop: Option
             .iter()
             .any(|(index, key)| *index == pos && key.as_deref() == prop)
     })
-}
-
-fn missing_delay_detail(target: &Target) -> String {
-    match &target.delay_property {
-        Some(prop) => format!(
-            "omits options argument {} with required `{prop}` delay",
-            target.delay_argument
-        ),
-        None => format!("omits delay argument at position {}", target.delay_argument),
-    }
 }
