@@ -39,17 +39,12 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    super::check_with_source_store(root, config, files, check_with_files_and_sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-) -> Result<Vec<RuleFinding>> {
-    diagnostics_with_files_sources_and_facts(root, config, files, sources, None, false)
-        .map(|diagnostics| diagnostics.findings)
+    super::check_with_source_store(root, config, files, |root, config, files, sources| {
+        Ok(
+            diagnostics_with_files_sources_and_facts(root, config, files, sources, None, false)?
+                .findings,
+        )
+    })
 }
 
 #[doc(hidden)]
@@ -61,13 +56,14 @@ pub fn diagnostics_with_files_sources_and_facts(
     facts: Option<&CheckFactMap>,
     defer_suppression: bool,
 ) -> Result<AnalysisDiagnostics> {
-    let local_facts = match facts {
-        Some(_) => None,
-        None => Some(super::prepare_sql_rule_facts(
-            root, config, files, sources, RULE_ID,
-        )?),
+    let owned_facts;
+    let facts = match facts {
+        Some(prepared) => prepared,
+        None => {
+            owned_facts = super::prepare_sql_rule_facts(root, config, files, sources, RULE_ID)?;
+            &owned_facts
+        }
     };
-    let facts = facts.or(local_facts.as_ref()).expect("prepared facts");
     let context = PreparedRuleContext::new(root, config, files, sources, facts);
     let mut diagnostics = AnalysisDiagnostics::default();
     for (index, rule) in config.rule_applications(RULE_ID).into_iter().enumerate() {
