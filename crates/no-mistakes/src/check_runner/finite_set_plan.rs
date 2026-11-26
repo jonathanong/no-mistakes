@@ -9,6 +9,7 @@ pub(crate) struct PreparedFactDemand {
     call_site_files: Vec<PathBuf>,
     comment_files: Vec<PathBuf>,
     vitest_default_exclude_files: Vec<PathBuf>,
+    csp_allowed_origins_files: Vec<PathBuf>,
     nested_control_files: Vec<PathBuf>,
     test_reliability_files: Vec<PathBuf>,
     postgres_explain_write_files: Vec<PathBuf>,
@@ -54,6 +55,8 @@ impl PreparedFactDemand {
             no_mistakes::codebase::rules::vitest_default_excludes::required_files(
                 root, config, files,
             )?;
+        plan.csp_allowed_origins_paths =
+            no_mistakes::codebase::rules::csp_allowed_origins::required_files(root, config, files)?;
         plan.nested_control_paths = no_mistakes::codebase::rules::nested_controls::required_files(
             root, config, files, sources,
         )?;
@@ -69,6 +72,7 @@ impl PreparedFactDemand {
         self.test_reliability_files = plan.test_reliability_paths.keys().cloned().collect();
         self.vitest_default_exclude_files =
             plan.vitest_default_exclude_paths.iter().cloned().collect();
+        self.csp_allowed_origins_files = plan.csp_allowed_origins_paths.iter().cloned().collect();
         Ok(())
     }
     pub(crate) fn needs_shared_facts(&self) -> bool {
@@ -77,6 +81,7 @@ impl PreparedFactDemand {
             || !self.call_site_files.is_empty()
             || !self.comment_files.is_empty()
             || !self.vitest_default_exclude_files.is_empty()
+            || !self.csp_allowed_origins_files.is_empty()
             || !self.nested_control_files.is_empty()
             || !self.test_reliability_files.is_empty()
             || !self.postgres_explain_write_files.is_empty()
@@ -98,6 +103,7 @@ impl PreparedFactDemand {
         requested.extend(self.companion_import_files.iter().cloned());
         requested.extend(self.runner_config_files.iter().cloned());
         requested.extend(self.vitest_default_exclude_files.iter().cloned());
+        requested.extend(self.csp_allowed_origins_files.iter().cloned());
         requested.extend(self.nested_control_files.iter().cloned());
         requested.extend(self.test_reliability_files.iter().cloned());
         requested.extend(self.postgres_explain_write_files.iter().cloned());
@@ -141,12 +147,15 @@ pub(crate) fn prepare(
     plan.require_call_site_paths(&files);
     plan.vitest_default_exclude_paths =
         no_mistakes::codebase::rules::vitest_default_excludes::required_files(root, config, &[])?;
+    plan.csp_allowed_origins_paths =
+        no_mistakes::codebase::rules::csp_allowed_origins::required_files(root, config, &[])?;
     let mut demand = PreparedFactDemand {
         companion_import_files: Vec::new(),
         has_companion_plan: false,
         call_site_files: files,
         comment_files: plan.lint_suppression_paths.iter().cloned().collect(),
         vitest_default_exclude_files: plan.vitest_default_exclude_paths.iter().cloned().collect(),
+        csp_allowed_origins_files: plan.csp_allowed_origins_paths.iter().cloned().collect(),
         nested_control_files: Vec::new(),
         test_reliability_files: Vec::new(),
         postgres_explain_write_files: Vec::new(),

@@ -1,0 +1,6 @@
+{
+  // Rule maps must name a known ID even though v2 uses application lists.
+  "rules": {
+    "unique-exprts": { "enabled": true }
+  }
+}

@@ -1,0 +1,6 @@
+rules:
+  - rule: ast-grep-ignore-freshness
+    scope: repository
+    options:
+      files:
+        - custom/widgets.yml

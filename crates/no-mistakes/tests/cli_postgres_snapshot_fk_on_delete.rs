@@ -31,6 +31,16 @@ fn postgres_require_fk_on_delete_json_matches_snapshot() {
                 config.clone(),
             ),
             (
+                "disable_file",
+                rules_path("postgres-require-fk-on-delete", "fixture", "disable-file"),
+                config.clone(),
+            ),
+            (
+                "disable_line",
+                rules_path("postgres-require-fk-on-delete", "fixture", "disable-lines"),
+                config.clone(),
+            ),
+            (
                 "explicit_actions_pass",
                 rules_path("postgres-require-fk-on-delete", "fixture", "pass"),
                 config.clone(),

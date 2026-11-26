@@ -14,6 +14,7 @@ fn file_extension_policy_json_matches_snapshot() {
             "cases/banned-extension-in-scope-flagged",
             "backend-js-ts.yml",
         ),
+        ("disable_file", "cases/disable-file", "backend-js-ts.yml"),
         (
             "allowed_mts",
             "cases/allowed-extension-passes",

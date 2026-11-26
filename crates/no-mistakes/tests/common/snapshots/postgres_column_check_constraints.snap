@@ -453,94 +453,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "bad_glob": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "postgres-column-check-constraints contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/bad-glob.yml:5: postgres-column-check-constraints contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'\n"
   },
   "bad_mode": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "invalid options for rule `postgres-column-check-constraints` at options.mode: unknown field `mode`, expected one of `schemaCatalogPath`, `columns`, `allow`"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/bad-mode.yml:11: invalid options for rule `postgres-column-check-constraints` at options.mode: unknown field `mode`, expected one of `schemaCatalogPath`, `columns`, `allow`\n"
   },
   "bad_predicate": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "invalid options for rule `postgres-column-check-constraints` at options.columns[0].require: unknown variant `positive`, expected `non-negative`"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/bad-predicate.yml:10: invalid options for rule `postgres-column-check-constraints` at options.columns[0].require: unknown variant `positive`, expected `non-negative`\n"
   },
   "bad_reason": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "postgres-column-check-constraints option allow: entry column:metrics.missing_count needs a reason"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/bad-reason.yml:11: postgres-column-check-constraints option allow: entry column:metrics.missing_count needs a reason\n"
   },
   "bad_type": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "postgres-column-check-constraints options.columns.types: unsupported integer type text; use smallint, integer, or bigint"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/bad-type.yml:7: postgres-column-check-constraints options.columns.types: unsupported integer type text; use smallint, integer, or bigint\n"
   },
   "custom": {
     "exitCode": 0,
@@ -862,22 +792,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "duplicate_allow": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "postgres-column-check-constraints option allow: duplicate entry column:metrics.missing_count"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/duplicate-allow.yml:11: postgres-column-check-constraints option allow: duplicate entry column:metrics.missing_count\n"
   },
   "empty_options": {
     "exitCode": 0,
@@ -892,40 +808,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "empty_pattern": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "postgres-column-check-constraints options.columns: pattern and types must be nonempty"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/empty-pattern.yml:7: postgres-column-check-constraints options.columns: pattern and types must be nonempty\n"
   },
   "empty_types": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "postgres-column-check-constraints options.columns: pattern and types must be nonempty"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/empty-types.yml:7: postgres-column-check-constraints options.columns: pattern and types must be nonempty\n"
   },
   "excluded": {
     "exitCode": 0,
@@ -1181,22 +1069,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "invalid_allow": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "postgres-column-check-constraints",
-          "message": "postgres-column-check-constraints options.allow.column: expected table.column, got missing"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid-allow.yml:11: postgres-column-check-constraints options.allow.column: expected table.column, got missing\n"
   },
   "line_disable": {
     "exitCode": 0,

@@ -278,17 +278,11 @@ fn version_pin_required_options_are_hard_errors() {
             .args(["--format", "json"])
             .output()
             .unwrap();
-        assert_eq!(output.status.code(), Some(1));
+        assert_eq!(output.status.code(), Some(2));
+        assert!(output.stdout.is_empty());
         let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(stderr.contains(RULE), "{stderr}");
         assert!(stderr.contains("sourceFile is required"), "{stderr}");
-        let report: serde_json::Value = serde_json::from_slice(&output.stdout)
-            .unwrap_or_else(|error| panic!("{error}: {stderr}"));
-        let failures = report["incomplete"].as_array().unwrap();
-        assert_eq!(failures.len(), 1, "{report}");
-        assert_eq!(failures[0]["consumer"], "filesystem", "{report}");
-        let message = failures[0]["message"].as_str().unwrap();
-        assert!(message.contains(RULE), "{report}");
-        assert!(message.contains("sourceFile is required"), "{report}");
     }
     assert_saved_fixture("version_pin_required_options_errors", &cases);
 }

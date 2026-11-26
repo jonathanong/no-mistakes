@@ -14,6 +14,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 5,
+          "message": "tsconfig.json: @agents/control targets backend/agents/control.ts, which does not exist on disk",
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/control\": [\"backend/agents/control.ts\"]"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "empty_base": {
     "exitCode": 0,
     "report": {

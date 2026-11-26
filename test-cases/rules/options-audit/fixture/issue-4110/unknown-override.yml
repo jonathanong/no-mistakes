@@ -1,0 +1,5 @@
+version: 2
+overrides:
+  - include: [src/**]
+    rules:
+      github-actions-download-integrit: false

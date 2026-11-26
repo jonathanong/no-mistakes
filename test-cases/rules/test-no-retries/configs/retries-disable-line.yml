@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-retries
+    scope: repository
+    options:
+      maxRetries: 1
+      testCommands:
+        - [pnpm, test:unit]

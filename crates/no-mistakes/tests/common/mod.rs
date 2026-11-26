@@ -16,6 +16,10 @@ pub fn fixture(name: &str) -> PathBuf {
 
 pub fn run(args: &[&str]) -> Output {
     Command::new(bin())
+        .env(
+            "CARGO_BIN_EXE_no-mistakes",
+            env!("CARGO_BIN_EXE_no-mistakes"),
+        )
         .args(args)
         .output()
         .expect("no-mistakes should run")

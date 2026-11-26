@@ -676,6 +676,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/db/action.yml",
+          "line": 9,
+          "message": ".github/actions/db/action.yml:9: composite step 2 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "run: docker run -p 5432:5432 postgres",
+          "target": "composite"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "wrappers-variables": {
     "exitCode": 1,
     "report": {

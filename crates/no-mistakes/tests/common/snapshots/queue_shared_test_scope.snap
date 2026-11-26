@@ -33,6 +33,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable-directives": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "src/producer.ts",
+          "job": "create",
+          "kind": "unbounded-job-retention",
+          "line": 4,
+          "message": "unbounded job retention: removeOnComplete, removeOnFail unset",
+          "queueFile": "src/queue.ts",
+          "queueName": "orders",
+          "sourceLine": "await ordersQueue.add(\"create\", { id });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "include-all-tests": {
     "exitCode": 1,
     "report": {

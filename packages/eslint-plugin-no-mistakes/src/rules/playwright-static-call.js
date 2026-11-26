@@ -1,6 +1,7 @@
 "use strict";
 
 const { literalString } = require("../helpers");
+const { unwrapExpression } = require("./async-ast");
 const { patternKey, resolveAlias, variableFor } = require("./playwright-static-call-alias");
 
 const SELECTOR_METHODS = new Set([
@@ -29,14 +30,16 @@ const SELECTOR_METHODS = new Set([
 ]);
 
 function memberName(node) {
-  if (!node || node.type !== "MemberExpression") return null;
-  if (node.computed && node.property?.type === "Identifier") return null;
-  if (!node.computed && typeof node.property?.name === "string") return node.property.name;
-  return literalString(node.property);
+  const target = unwrapExpression(node);
+  if (!target || target.type !== "MemberExpression") return null;
+  const property = unwrapExpression(target.property);
+  if (target.computed && property?.type === "Identifier") return null;
+  if (!target.computed && typeof target.property?.name === "string") return target.property.name;
+  return literalString(property);
 }
 
 function methodFromCallee(callee, context, seen = new Set()) {
-  while (callee?.type === "ChainExpression") callee = callee.expression;
+  callee = unwrapExpression(callee);
   const direct = memberName(callee);
   if (direct) return direct;
   if (callee?.type !== "Identifier") return null;
@@ -52,7 +55,7 @@ function methodFromCallee(callee, context, seen = new Set()) {
 // single-write alias of another function. The resolved target is used only
 // when the spelled callee is not itself configured.
 function configuredFactory(callee, context, factoryNames, seen = new Set()) {
-  while (callee?.type === "ChainExpression") callee = callee.expression;
+  callee = unwrapExpression(callee);
   if (callee?.type === "Identifier" && factoryNames.has(callee.name)) return callee.name;
   const direct = memberName(callee);
   if (direct && factoryNames.has(direct)) return direct;
@@ -68,7 +71,7 @@ function invokedCall(node) {
   let callee = node.callee;
   let args = node.arguments || [];
   for (let depth = 0; depth < 4; depth += 1) {
-    while (callee?.type === "ChainExpression") callee = callee.expression;
+    callee = unwrapExpression(callee);
     if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
       callee = callee.expressions[callee.expressions.length - 1];
       continue;
@@ -82,7 +85,7 @@ function invokedCall(node) {
       args = args.slice(1);
       continue;
     }
-    const list = args[1]?.type === "ChainExpression" ? args[1].expression : args[1];
+    const list = unwrapExpression(args[1]);
     if (
       list?.type !== "ArrayExpression" ||
       list.elements.some((element) => !element || element.type === "SpreadElement")
@@ -92,11 +95,12 @@ function invokedCall(node) {
     callee = callee.object;
     args = list.elements;
   }
-  while (callee?.type === "ChainExpression") callee = callee.expression;
+  callee = unwrapExpression(callee);
   return { callee, arguments: args };
 }
 
 function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
+  node = unwrapExpression(node);
   if (node?.type !== "Identifier") return false;
   const variable = variableFor(node, context);
   if (!variable || variable.defs.length !== 1) return false;
@@ -105,11 +109,13 @@ function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
     return namespaces.has(node.name);
   }
   const alias = resolveAlias(node, context, seen);
-  if (alias?.init?.type !== "Identifier") return false;
-  return isNamespaceBinding(alias.init, context, namespaces, seen);
+  const init = unwrapExpression(alias?.init);
+  if (init?.type !== "Identifier") return false;
+  return isNamespaceBinding(init, context, namespaces, seen);
 }
 
 function isTestBinding(node, context, testNames, seen = new Set()) {
+  node = unwrapExpression(node);
   if (node?.type !== "Identifier") return false;
   const variable = variableFor(node, context);
   if (!variable || variable.defs.length === 0) return testNames.has(node.name);
@@ -117,27 +123,26 @@ function isTestBinding(node, context, testNames, seen = new Set()) {
   if (def.type === "Parameter") return false;
   if (def.type === "ImportBinding") return testNames.has(node.name);
   const alias = resolveAlias(node, context, seen);
-  if (alias?.init?.type !== "Identifier") return false;
-  return isTestBinding(alias.init, context, testNames, seen);
+  const init = unwrapExpression(alias?.init);
+  if (init?.type !== "Identifier") return false;
+  return isTestBinding(init, context, testNames, seen);
 }
 
 function isBeforeAllCall(node, testNames, namespaces, context) {
   const invoked = invokedCall(node);
   if (!invoked) return false;
-  let callee = invoked.callee;
-  while (callee?.type === "ChainExpression") callee = callee.expression;
+  const callee = unwrapExpression(invoked.callee);
   if (memberName(callee) !== "beforeAll") return false;
-  let object = callee.object;
-  while (object?.type === "ChainExpression") object = object.expression;
+  const object = unwrapExpression(callee.object);
   if (object?.type === "Identifier") {
     return (
       isTestBinding(object, context, testNames) || isNamespaceBinding(object, context, namespaces)
     );
   }
-  if (memberName(object) === "test" && object?.object?.type === "Identifier") {
+  const parent = unwrapExpression(object?.object);
+  if (memberName(object) === "test" && parent?.type === "Identifier") {
     return (
-      isTestBinding(object.object, context, testNames) ||
-      isNamespaceBinding(object.object, context, namespaces)
+      isTestBinding(parent, context, testNames) || isNamespaceBinding(parent, context, namespaces)
     );
   }
   return false;

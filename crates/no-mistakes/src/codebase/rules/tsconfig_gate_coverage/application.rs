@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(serde::Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     /// Reasoned exemptions keyed by the repository-relative tsconfig path.
     pub(super) allow_projects: BTreeMap<String, String>,
 }

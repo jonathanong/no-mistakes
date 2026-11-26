@@ -30,6 +30,7 @@ pub(super) fn scan_scopes(
     root: &Path,
     scopes: &BTreeMap<PathBuf, BTreeSet<&str>>,
     sources: &SourceStore,
+    audit_hygiene: bool,
 ) -> (Vec<PreparedComment>, Vec<RuleFinding>) {
     let per_file: Vec<_> = scopes
         .par_iter()
@@ -39,29 +40,32 @@ pub(super) fn scan_scopes(
                 Err(error) => {
                     return (
                         Vec::new(),
-                        Some(read_failure(root, path, UNUSED_DISABLE_DIRECTIVE, &error)),
+                        audit_hygiene
+                            .then(|| read_failure(root, path, UNUSED_DISABLE_DIRECTIVE, &error)),
                     );
                 }
             };
             let file = relative_slash_path(root, path);
             let comments = audit_directives_for_path(&source, path)
                 .into_iter()
-                .map(|(named, ineffective)| {
-                    let status = if ineffective {
+                .filter_map(|(named, ineffective)| {
+                    let status = if audit_hygiene && ineffective {
                         DirectiveStatus::IneffectivePlacement
+                    } else if !known_rule(&named.rule) {
+                        DirectiveStatus::Unknown
+                    } else if !audit_hygiene {
+                        return None;
                     } else if enabled.contains(named.rule.as_str()) {
                         DirectiveStatus::Enabled
-                    } else if known_rule(&named.rule) {
-                        DirectiveStatus::Disabled
                     } else {
-                        DirectiveStatus::Unknown
+                        DirectiveStatus::Disabled
                     };
-                    PreparedComment {
+                    Some(PreparedComment {
                         file: file.clone(),
                         rule: named.rule,
                         directive: project(named.directive),
                         status,
-                    }
+                    })
                 })
                 .collect();
             (comments, None)

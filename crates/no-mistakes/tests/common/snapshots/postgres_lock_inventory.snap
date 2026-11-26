@@ -161,6 +161,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable-directives": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "new PostgreSQL lock site (helper, 0f9a5ed25b78d6f62695ae18dbb9e3b6#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "await lockAccountRow(id);",
+          "target": "helper"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "effort-max": {
     "exitCode": 1,
     "report": {

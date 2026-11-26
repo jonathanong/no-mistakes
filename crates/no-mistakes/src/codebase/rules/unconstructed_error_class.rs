@@ -8,7 +8,7 @@
 mod analysis;
 mod ancestry;
 mod check;
-mod config;
+pub(in crate::codebase::rules) mod config;
 mod diagnostics;
 
 pub const RULE_ID: &str = "unconstructed-error-class";

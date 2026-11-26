@@ -4,10 +4,10 @@ use serde::Deserialize;
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct Options {
-    pub producers: Vec<Function>,
-    pub assertions: Vec<Import>,
-    pub ownership: Vec<Ownership>,
+pub(in crate::codebase::rules) struct Options {
+    pub(super) producers: Vec<Function>,
+    pub(super) assertions: Vec<Import>,
+    pub(super) ownership: Vec<Ownership>,
     pub max_depth: Option<usize>,
     pub max_nodes: Option<usize>,
 }

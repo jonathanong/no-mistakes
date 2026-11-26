@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 mod baseline;
 mod embedded;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod report;
 mod scan;
 #[cfg(test)]

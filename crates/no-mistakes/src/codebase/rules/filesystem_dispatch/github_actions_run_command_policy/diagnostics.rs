@@ -1,12 +1,16 @@
 use super::options::{self, Options};
 use super::runs;
 use super::RULE_ID;
-use crate::codebase::rules::{self, analysis_policy::AnalysisDiagnostics};
+use crate::codebase::rules::{
+    self, analysis_policy::AnalysisDiagnostics, source_access, RuleFinding,
+};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
 use rayon::prelude::*;
+use serde_yaml::Value;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(super) fn run(
     root: &Path,
@@ -34,15 +38,23 @@ pub(super) fn run(
             .filter_map(|path| {
                 let rel = relative_slash_path(root, path);
                 let action = rules::github_actions_workflow_files::gha_kind(&rel)?;
-                let content = rules::read_language_source(sources, path)?;
-                Some(runs::check_source(
-                    &rel,
-                    &content,
-                    action,
-                    &compiled,
-                    unanalyzable,
-                    rule.message.as_deref(),
-                ))
+                let parsed = load_file(root, path, sources);
+                Some(match parsed {
+                    Ok((source, value)) => runs::check_parsed(
+                        &rel,
+                        source.trim_start_matches('\u{feff}'),
+                        action,
+                        &value,
+                        &compiled,
+                        unanalyzable,
+                        rule.message.as_deref(),
+                    ),
+                    Err(finding) => {
+                        let mut diagnostics = AnalysisDiagnostics::default();
+                        diagnostics.unanalyzable(unanalyzable, *finding);
+                        diagnostics
+                    }
+                })
             })
             .collect();
         for chunk in chunks {
@@ -56,6 +68,29 @@ pub(super) fn run(
     rules::sort_findings(&mut output.findings);
     rules::sort_findings(&mut output.advisories);
     Ok(output)
+}
+
+fn load_file(
+    root: &Path,
+    path: &Path,
+    sources: &SourceStore,
+) -> Result<(Arc<str>, Arc<Value>), Box<RuleFinding>> {
+    let source = sources
+        .read_source_path(path)
+        .map_err(|error| Box::new(source_access::read_failure(root, path, RULE_ID, &error)))?;
+    let value = sources
+        .parse_loaded_yaml(path, &source, true)
+        .map_err(|error| {
+            let mut finding = source_access::unanalyzable_source(
+                root,
+                path,
+                RULE_ID,
+                format_args!("YAML could not be parsed ({error})"),
+            );
+            finding.line = error.line();
+            Box::new(finding)
+        })?;
+    Ok((source, value))
 }
 
 fn resolve_unanalyzable(

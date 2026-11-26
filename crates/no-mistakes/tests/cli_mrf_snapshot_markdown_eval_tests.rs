@@ -13,6 +13,11 @@ fn markdown_eval_tests_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "fail"),
                 included.clone(),
             ),
+            (
+                "disable_file",
+                rules_path(RULE, "fixture", "disable-file"),
+                included.clone(),
+            ),
             ("spawn_free", rules_path(RULE, "fixture", "pass"), included),
             (
                 "exact_allow",

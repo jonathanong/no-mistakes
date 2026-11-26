@@ -1,11 +1,12 @@
 "use strict";
 
 const { literalString } = require("../helpers");
+const { unwrapExpression } = require("./async-ast");
 
 function patternKey(property) {
-  const key = property.key;
-  if (property.computed && key.type === "Identifier") return null;
-  if (!property.computed && typeof key.name === "string") return key.name;
+  const key = unwrapExpression(property.key);
+  if (property.computed && key?.type === "Identifier") return null;
+  if (!property.computed && typeof property.key?.name === "string") return property.key.name;
   return literalString(key);
 }
 

@@ -22,7 +22,7 @@ pub(crate) struct Options {
     /// Regexes whose matching literal is an intentional generated/ref-shape assertion.
     pub(crate) allowed_contexts: Vec<String>,
 }
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     contexts: Vec<Regex>,
     audit: Option<ExceptionAudit>,
     sha: Regex,
@@ -87,7 +87,7 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn compile_options(options: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(options: Options) -> Result<CompiledOptions> {
     let contexts = options
         .allowed_contexts
         .iter()

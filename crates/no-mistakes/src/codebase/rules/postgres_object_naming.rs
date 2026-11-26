@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod compile_spelling;
 mod expand;
 mod name_flags;

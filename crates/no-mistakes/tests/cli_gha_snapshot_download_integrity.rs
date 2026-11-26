@@ -34,6 +34,11 @@ fn github_actions_download_integrity_json_matches_snapshot() {
                 rules_path(RULE, "configs", "abstain.yml"),
             ),
             (
+                "disabled_file",
+                rules_path(RULE, "fixture", "suppressions"),
+                rules_path(RULE, "configs", "abstain.yml"),
+            ),
+            (
                 "edges",
                 rules_path(RULE, "fixture", "edges"),
                 rules_path(RULE, "configs", "edges.yml"),

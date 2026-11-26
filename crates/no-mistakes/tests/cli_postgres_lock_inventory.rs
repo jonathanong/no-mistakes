@@ -57,6 +57,9 @@ fn postgres_lock_inventory_check_json_snapshot() {
     .to_vec();
     let root = rules_path("postgres-lock-inventory", "fixture", "gap-multiplicity");
     cases.push(("effort-max", root.clone(), root.join("effort.yml")));
+    let suppression = rules_path("postgres-lock-inventory", "fixture", "disable-directives");
+    let config = rules_path("postgres-lock-inventory", "fixture", "added").join(".no-mistakes.yml");
+    cases.push(("disable-directives", suppression, config));
     let reports = assert_saved_fixture_report("postgres_lock_inventory", &cases, &[], &[]);
     assert_eq!(reports["added"]["exitCode"], 1);
     assert_eq!(

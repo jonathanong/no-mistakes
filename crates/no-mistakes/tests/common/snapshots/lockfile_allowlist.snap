@@ -53,5 +53,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [],
       "warnings": []
     }
+  },
+  "suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/lockfile-allowlist/fixture/fail/.no-mistakes.yml",
+          "import": "lockfile-allowlist",
+          "line": 5,
+          "message": "stale lockfile-allowlist allowed entry `pnpm-lock.yaml` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowed: [pnpm-lock.yaml]",
+          "target": "pnpm-lock.yaml"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
   }
 }

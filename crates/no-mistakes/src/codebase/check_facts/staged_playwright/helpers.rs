@@ -38,6 +38,7 @@ pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
         call_site_paths: plan.call_site_paths.clone(),
         nested_control_paths: plan.nested_control_paths.clone(),
         vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
+        csp_allowed_origins_paths: plan.csp_allowed_origins_paths.clone(),
         test_reliability_paths: plan.test_reliability_paths.clone(),
         playwright_fixture_support: plan.playwright_fixture_support,
         graph_context: plan.graph_context.clone(),
@@ -50,6 +51,7 @@ pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
     !plan.call_site_paths.is_empty()
         || !plan.nested_control_paths.is_empty()
         || !plan.vitest_default_exclude_paths.is_empty()
+        || !plan.csp_allowed_origins_paths.is_empty()
         || !plan.test_reliability_paths.is_empty()
         || plan.imports
         || plan.forbidden_call_arguments.is_some()

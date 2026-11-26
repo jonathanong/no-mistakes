@@ -21,9 +21,14 @@ fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/rule-analysis-policy/fixture")
 }
+fn authored_config(root: &Path, name: &str) -> NoMistakesConfig {
+    let source = std::fs::read_to_string(root.join(name)).unwrap();
+    serde_yaml::from_str(&source).unwrap()
+}
+
 fn prepare(name: &str, support: &[RuleEffortSupport]) -> NoMistakesConfig {
     let root = fixture();
-    let mut config = crate::config::v2::load_v2_config(&root, Some(Path::new(name))).unwrap();
+    let mut config = authored_config(&root, name);
     let mut files = vec![root.join("src/covered.ts"), root.join("src/outside.ts")];
     if name == "suppressed.yml" {
         files.extend(
@@ -158,7 +163,7 @@ fn partner_validation_reads_sources_only_when_low_is_effective() {
         ("covered.yml", Some(Effort::Max), 0),
         ("covered.yml", None, 2),
     ] {
-        let mut config = crate::config::v2::load_v2_config(&root, Some(Path::new(name))).unwrap();
+        let mut config = authored_config(&root, name);
         config.effort_override = override_effort;
         let sources = super::super::source_store_for_files(&files);
         prepare_rule_analysis_with_support(&root, &mut config, &files, &sources, ADOPTERS).unwrap();
@@ -174,8 +179,7 @@ fn every_relevant_partner_suppression_form_disables_the_low_assumption() {
         "suppressed-line.ts",
         "suppressed-next.ts",
     ] {
-        let mut config =
-            crate::config::v2::load_v2_config(&root, Some(Path::new("suppressed.yml"))).unwrap();
+        let mut config = authored_config(&root, "suppressed.yml");
         let files = [root.join("src").join(name)];
         let sources = super::super::source_store_for_files(&files);
         prepare_rule_analysis_with_support(&root, &mut config, &files, &sources, ADOPTERS).unwrap();

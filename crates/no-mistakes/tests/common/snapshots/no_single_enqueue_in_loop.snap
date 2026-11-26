@@ -272,5 +272,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 8,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item);",
+          "target": "./widgets#enqueueItem"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

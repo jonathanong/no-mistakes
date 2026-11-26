@@ -2,7 +2,7 @@
 mod expressions;
 mod graph;
 pub(crate) mod low;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod provenance;
 mod sql;
 mod validators;

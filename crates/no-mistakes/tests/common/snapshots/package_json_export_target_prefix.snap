@@ -138,21 +138,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "invalid-options": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "filesystem",
-          "message": "invalid options for rule `package-json-export-target-prefix` at options.unexpected: unknown field `unexpected`, there are no fields"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../configs/invalid-options.yml:7: invalid options for rule `package-json-export-target-prefix` at options.unexpected: unknown field `unexpected`, there are no fields\n"
   }
 }

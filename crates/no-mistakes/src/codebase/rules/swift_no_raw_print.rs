@@ -17,7 +17,7 @@ pub(crate) struct Options {
     pub(crate) message: Option<String>,
 }
 
-pub(super) struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     pub(super) print: regex::Regex,
     pub(super) allow: FileAllow,
     pub(super) message: String,
@@ -25,7 +25,7 @@ pub(super) struct CompiledOptions {
 
 super::masked_source_rule_entrypoints!(compile_options, is_swift_file, scan::check_file);
 
-fn compile_options(opts: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         print: regex::Regex::new(r"(?:^|[^\w.])(?:Swift\.)?print\s*\(").expect("print pattern"),
         allow: FileAllow::new(&opts.allow, &format!("{RULE_ID} allow"))?,

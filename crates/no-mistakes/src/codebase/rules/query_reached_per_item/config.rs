@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     pub(super) effects: Vec<String>,
     pub(super) allow: Vec<Allowance>,
     pub(super) exempt_capped_cursor_page_reads: bool,

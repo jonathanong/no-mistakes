@@ -40,6 +40,7 @@ fn vite_optimize_deps_nested_imports_json_matches_snapshot() {
         case("bundle_flags", "bundle-flags"),
         case("declared_builtins", "declared-builtins"),
         case("asset_imports", "asset-imports"),
+        case("suppression", "suppression"),
         case("nested_conditions", "nested-conditions"),
         case("duplicate_names", "duplicate-names"),
         case("include_chains", "include-chains"),

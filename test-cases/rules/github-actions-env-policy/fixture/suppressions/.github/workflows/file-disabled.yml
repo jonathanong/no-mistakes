@@ -1,0 +1,10 @@
+# no-mistakes-disable-file github-actions-env-policy
+name: Env policy fixture
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo example
+        env:
+          NODE_OPTIONS: --inspect

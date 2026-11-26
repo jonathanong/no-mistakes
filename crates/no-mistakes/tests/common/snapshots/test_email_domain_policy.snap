@@ -41,5 +41,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/services/emails/send.test.mts",
+          "import": "sibling@example.com",
+          "line": 7,
+          "message": "backend/services/emails/send.test.mts: test email fixtures must not use `example.com`; use `tests+<hash>@example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "\"sibling@example.com\",",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

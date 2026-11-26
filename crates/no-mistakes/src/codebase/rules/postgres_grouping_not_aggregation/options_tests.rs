@@ -88,7 +88,10 @@ fn grouping_unanalyzable_options_accept_default_and_normalized_ignore() {
 
 #[test]
 fn invalid_sql_modes_are_rejected_and_advisory_aliases_compile() {
-    let config = load("invalid.yml");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/config/postgres-grouping-policy");
+    let config: NoMistakesConfig =
+        serde_yaml::from_str(&std::fs::read_to_string(root.join("invalid.yml")).unwrap()).unwrap();
     let opts: Options = config.rules[0].try_rule_options().unwrap();
     let error = compile::options(&opts).err().unwrap().to_string();
     assert!(error.contains("unanalyzableSql must be"), "{error}");

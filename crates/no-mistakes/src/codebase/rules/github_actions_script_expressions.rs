@@ -67,7 +67,7 @@ pub fn diagnostics_with_files_and_sources(
 
 mod diagnostics;
 
-fn compile_patterns(opts: &Options) -> Result<Vec<Regex>> {
+pub(in crate::codebase::rules) fn compile_patterns(opts: &Options) -> Result<Vec<Regex>> {
     let configured = opts
         .constant_contexts
         .clone()

@@ -11,7 +11,7 @@ pub const RULE_ID: &str = "postgres-status-with-lifecycle-timestamps";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     status_columns: Vec<String>,
     lifecycle_verbs: Vec<String>,
@@ -59,7 +59,7 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
         .collect()
 }
 
-fn compile_options(opts: &Options, message: Option<String>) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     let min_lifecycle_columns =
         usize::try_from(opts.min_lifecycle_columns.unwrap_or(2)).unwrap_or(0);

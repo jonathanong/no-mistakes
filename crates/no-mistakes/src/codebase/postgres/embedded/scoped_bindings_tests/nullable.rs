@@ -2,7 +2,9 @@ use super::*;
 
 fn fixture_options(path: &std::path::Path) -> serde_yaml::Value {
     let source = std::fs::read_to_string(path).unwrap();
-    let config = crate::config::v2::discover::parse_v2_config_quiet(&source, path).unwrap();
+    let config =
+        crate::config::v2::discover::parse_v2_config_quiet(path.parent().unwrap(), &source, path)
+            .unwrap();
     let rules = config.rule_applications("postgres-required-predicates");
     assert_eq!(rules.len(), 1, "{}", path.display());
     rules[0].options.clone()
@@ -17,7 +19,7 @@ fn nullable_fixture_profile() -> EmbeddedSqlOptions {
     // Low effort skips this rule's embedded profile. max.yml has the same options.
     let path = root.join("max.yml");
     let source = std::fs::read_to_string(&path).unwrap();
-    let config = crate::config::v2::discover::parse_v2_config_quiet(&source, &path).unwrap();
+    let config = crate::config::v2::discover::parse_v2_config_quiet(&root, &source, &path).unwrap();
     let mut profiles = crate::codebase::postgres::configured_embedded_sql_options(
         &config,
         &["postgres-required-predicates"],
