@@ -32,7 +32,8 @@ at or below its own cap.
   `.github/workflows/*.yaml` globs and `.github/actions/**/action.yml` or
   `action.yaml` under `.github/actions/`. The rule checks workflow steps,
   including children of `parallel`. Cache templates also apply to composite
-  actions. Setup deadlines apply only to workflows, where GitHub accepts
+  actions. An explicit include may select `action.yml` or `action.yaml`
+  in other directories. Setup deadlines apply only to workflows, where GitHub accepts
   step-level timeouts. Reusable job calls are outside its scope.
 
 Both policy lists default to empty. Configure at least one cache or setup policy. Options reject blank selectors,

@@ -17,7 +17,10 @@ pub(super) fn file(
     options: &Compiled,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
-    let Some(composite_file) = workflows::gha_kind(&rel) else {
+    let kind = workflows::gha_kind(&rel).or_else(|| {
+        matches!(rel.rsplit('/').next(), Some("action.yml" | "action.yaml")).then_some(true)
+    });
+    let Some(composite_file) = kind else {
         return Vec::new();
     };
     if composite_file && options.caches.is_empty() {

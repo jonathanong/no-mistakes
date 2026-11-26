@@ -4,7 +4,15 @@ const RULE: &str = "github-actions-cache-setup-policy";
 
 #[test]
 fn github_actions_cache_setup_policy_matches_snapshot() {
-    let cases = ["report", "advise", "ignore", "cache-only", "setup-only"].map(|mode| {
+    let cases = [
+        "report",
+        "advise",
+        "ignore",
+        "cache-only",
+        "setup-only",
+        "external-action",
+    ]
+    .map(|mode| {
         (
             mode,
             rules_path(RULE, "fixture", "workflows"),
@@ -28,6 +36,12 @@ fn github_actions_cache_setup_policy_matches_snapshot() {
         .as_array()
         .unwrap()
         .is_empty());
+    let external = &result["external-action"];
+    assert_eq!(external["exitCode"], 1);
+    let rows = external["report"]["rules"].as_array().unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["target"], "cache-key-shape");
+    assert_eq!(rows[0]["file"], "tools/actions/example/action.yml");
     for (mode, expected) in [
         ("cache-only", "cache-key-shape"),
         ("setup-only", "setup-deadline"),

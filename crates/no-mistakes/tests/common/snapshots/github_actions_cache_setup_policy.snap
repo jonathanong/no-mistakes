@@ -230,6 +230,52 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "external-action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/outside.yml",
+          "line": 1,
+          "message": "directive for `github-actions-cache-setup-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-cache-setup-policy",
+          "target": "github-actions-cache-setup-policy"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 37,
+          "message": "directive for `github-actions-cache-setup-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-cache-setup-policy",
+          "target": "github-actions-cache-setup-policy"
+        },
+        {
+          "file": ".github/workflows/steps.yml",
+          "line": 42,
+          "message": "directive for `github-actions-cache-setup-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "key: old # no-mistakes-disable-line github-actions-cache-setup-policy",
+          "target": "github-actions-cache-setup-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tools/actions/example/action.yml",
+          "line": 8,
+          "message": "tools/actions/example/action.yml:8: cache path `.cache/widgets` needs a key matching its configured keyPattern",
+          "rule": "github-actions-cache-setup-policy",
+          "sourceLine": "key: legacy",
+          "target": "cache-key-shape"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "ignore": {
     "exitCode": 1,
     "report": {
