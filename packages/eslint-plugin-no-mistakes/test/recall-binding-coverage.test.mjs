@@ -52,7 +52,7 @@ describe("fetch invocation recall branches", () => {
   it("reads static fetch members, aliases, and forwarded arguments", () => {
     expect(
       fetchInvocation({ type: "CallExpression", callee: fetchIdent, arguments: [] }, globalContext),
-    ).toEqual([]);
+    ).toMatchObject({ arguments: [] });
 
     const template = {
       type: "TemplateLiteral",
@@ -69,11 +69,13 @@ describe("fetch invocation recall branches", () => {
         member({ type: "Literal", value: "fetch" }, ident("globalThis")),
         globalContext,
       ),
-    ).toHaveLength(1);
+    ).toMatchObject({ arguments: [{ type: "Literal", value: "/api" }] });
     expect(
       fetchInvocation(member({ type: "Literal", value: 1 }, ident("globalThis")), globalContext),
     ).toBeNull();
-    expect(fetchInvocation(member(template, ident("self")), globalContext)).toHaveLength(1);
+    expect(fetchInvocation(member(template, ident("self")), globalContext)).toMatchObject({
+      arguments: [{ type: "Literal", value: "/api" }],
+    });
     expect(fetchInvocation(member(null, ident("global")), globalContext)).toBeNull();
     expect(
       fetchInvocation(
@@ -83,7 +85,7 @@ describe("fetch invocation recall branches", () => {
         }),
         globalContext,
       ),
-    ).toHaveLength(1);
+    ).toMatchObject({ arguments: [{ type: "Literal", value: "/api" }] });
 
     const shadowed = context([variable("window", { type: "Variable", node: {} })]);
     expect(
@@ -96,11 +98,11 @@ describe("fetch invocation recall branches", () => {
     });
     expect(
       fetchInvocation(member({ type: "Literal", value: "fetch" }, ident("global")), emptyDefs),
-    ).toHaveLength(1);
+    ).toMatchObject({ arguments: [{ type: "Literal", value: "/api" }] });
     const implicit = context([{ name: "self", defs: [{ type: "ImplicitGlobalVariable" }] }]);
     expect(
       fetchInvocation(member({ type: "Literal", value: "fetch" }, ident("self")), implicit),
-    ).toHaveLength(1);
+    ).toMatchObject({ arguments: [{ type: "Literal", value: "/api" }] });
     expect(
       fetchInvocation(
         member(
@@ -119,7 +121,7 @@ describe("fetch invocation recall branches", () => {
       },
       arguments: [],
     };
-    expect(fetchInvocation(sequence, globalContext)).toEqual([]);
+    expect(fetchInvocation(sequence, globalContext)).toMatchObject({ arguments: [] });
 
     const spreadCall = {
       type: "CallExpression",
@@ -130,18 +132,22 @@ describe("fetch invocation recall branches", () => {
       },
       arguments: [{ type: "SpreadElement" }],
     };
-    expect(fetchInvocation(spreadCall, globalContext)).toBeNull();
+    expect(fetchInvocation(spreadCall, globalContext)).toMatchObject({ arguments: null });
 
     const apply = (elements, list = { type: "ArrayExpression", elements }) => ({
       type: "CallExpression",
       callee: { type: "MemberExpression", property: ident("apply"), object: fetchIdent },
       arguments: [{ type: "Literal", value: null }, list],
     });
-    expect(fetchInvocation(apply([{ type: "Literal", value: "/api" }]), globalContext)).toEqual([
-      { type: "Literal", value: "/api" },
-    ]);
-    expect(fetchInvocation(apply([null]), globalContext)).toBeNull();
-    expect(fetchInvocation(apply([{ type: "SpreadElement" }]), globalContext)).toBeNull();
+    expect(
+      fetchInvocation(apply([{ type: "Literal", value: "/api" }]), globalContext),
+    ).toMatchObject({
+      arguments: [{ type: "Literal", value: "/api" }],
+    });
+    expect(fetchInvocation(apply([null]), globalContext)).toMatchObject({ arguments: [null] });
+    expect(fetchInvocation(apply([{ type: "SpreadElement" }]), globalContext)).toMatchObject({
+      arguments: [{ type: "SpreadElement" }],
+    });
     expect(
       fetchInvocation(
         apply([], {
@@ -150,7 +156,7 @@ describe("fetch invocation recall branches", () => {
         }),
         globalContext,
       ),
-    ).toEqual([]);
+    ).toMatchObject({ arguments: [] });
   });
 
   it("follows a const alias and a const destructure, and stops on unstable bindings", () => {
