@@ -3,13 +3,15 @@ json_binding!(tests_why_json, "testsWhyJson", tests_why_json_impl);
 json_binding!(
     tests_comment_markdown,
     "testsCommentMarkdown",
-    tests_comment_markdown_impl
+    tests_comment_markdown_impl,
+    text
 );
 json_binding!(tests_graph_json, "testsGraphJson", tests_graph_json_impl);
 json_binding!(
     tests_graph_mermaid,
     "testsGraphMermaid",
-    tests_graph_mermaid_impl
+    tests_graph_mermaid_impl,
+    text
 );
 json_binding!(tests_impact_json, "testsImpactJson", tests_impact_json_impl);
 json_binding!(

@@ -11,4 +11,5 @@ Use this in CI or review automation after `tests plan --format json`.
 
 Key options: positional plan JSON path and optional `--out`.
 
-Node API: `testsComment(options)`.
+Node API: `testsComment(options)`. Pass `collectDiagnostics("testsComment",
+options)` to collect phase timings alongside the Markdown string.

@@ -141,6 +141,10 @@ for (const check of report.checks) {
 }
 ```
 
-Node API: `impactedChecks(options)`. Pass `timings: true` to receive ordered
+Node API: `impactedChecks(options)`. Pass `diffFile` for the CLI's `--diff` file
+input or `diff` for inline unified diff content. Resolve a relative `diffFile`
+from the Node process's current working directory. Choose at most one patch
+source among `diff`, `diffFile`, `diffStdin: true`, and `diffCommand`. A `head`
+revision requires `base`. Pass `timings: true` to receive ordered
 `{ phase, duration_ms }` entries in the returned report; Node timing collection
 does not write progress to stderr.

@@ -104,7 +104,9 @@ export interface DiagnosticOperations {
   swiftTestTargets: typeof Api.swiftTestTargets;
   symbols: typeof Api.symbols;
   testsAudit: typeof Api.testsAudit;
+  testsComment: typeof Api.testsComment;
   testsGraph: typeof Api.testsGraph;
+  testsGraphMermaid: typeof Api.testsGraphMermaid;
   testsImpact: typeof Api.testsImpact;
   testsPlan: typeof Api.testsPlan;
   testsTargets: typeof Api.testsTargets;

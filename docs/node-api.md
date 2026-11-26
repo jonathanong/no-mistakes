@@ -635,7 +635,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `testsGraphMermaid` | `testsGraphMermaid(options)` |
 | `queueCheck` | `queueCheck(options)` |
 | `queueEdges` | `queueEdges(options)` |
-| `queueRelated` | `queueRelated(options)` |
+| `queueRelated` | `queueRelated(options)` accepts `QueueRelatedOptions` with at least one file or queue node in `files` |
 | `queues` | `queues(options)` |
 | `serverContracts` | `serverContracts(options)` |
 | `serverRouteEdges` | `serverRouteEdges(options)` |
@@ -824,7 +824,7 @@ through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
 no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`
 (including `runtimeAssets` entries, `TestNoLiveRepositoryScanRuntimeAsset`,
 and opt-in `analyzers` entries, `TestNoLiveRepositoryScanAnalyzer`),
-exported from `no-mistakes/types`. Runtime-asset reads are advisories with
+exported from `no-mistakes`. Runtime-asset reads are advisories with
 target `runtime asset` in the check report. A configured analyzer launch
 against the live working directory is an ordinary finding with target
 `analyzer subprocess`.
@@ -928,10 +928,10 @@ For a union-valued selector, arguments must satisfy every possible operation;
 otherwise narrow the selector before calling. For example, `"check" | "dependents"`
 requires options with `files`, even though a literal `"check"` needs no options.
 Selectors cover root analysis APIs, including `analyzeProject`, SQL extraction
-and parsing, and `lockStatus`. Utilities `version`, `diagnosticsSnapshot`,
-`createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts`, the collector
-itself, and raw Markdown helpers `testsComment` and `testsGraphMermaid` are
-excluded.
+and parsing, `lockStatus`, `testsComment`, and `testsGraphMermaid`. Both test-plan
+renderers return their ordinary strings as the collected result. The selector
+map excludes the collector itself and the `version`, `diagnosticsSnapshot`,
+`createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts` utilities.
 
 Phase records contain `label`, `wallMs`, user/system CPU milliseconds
 (`userMs`, `systemMs`), `utilization` as CPU/wall time, process-lifetime peak RSS
