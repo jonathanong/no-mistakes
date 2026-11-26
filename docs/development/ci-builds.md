@@ -13,10 +13,10 @@ non-Rust, 49m44s Rust):
 
 - `JavaScript policy` (`quality-js`): previously 4 `ubuntu-slim` jobs at 52s
   median each (~38s checkout/pnpm setup for 2s–18s checks, plus 2m19s median
-  wait each); combined into one `ubuntu-slim` job (measured 1m27s on run
-  `45781752900`: 46s setup + 1s formatting + 2s lint + 20s duplication + 10s
-  spelling). Later steps use `if: ${{ !cancelled() }}` so formatting, lint,
-  duplication, and spelling all report in one run.
+  wait each); combined into one `ubuntu-latest` job (1-vCPU `ubuntu-slim`
+  runners timed out running `jscpd` over 5k+ files and `pnpm/setup` in runs
+  `45876467292` and `45876841273`). Later steps use `if: ${{ !cancelled() }}`
+  so formatting, lint, duplication, and spelling all report in one run.
 - `cargo fmt --all -- --check`: previously a separate `ubuntu-latest` matrix
   entry in `quality-rust` (13s check, 26s total, 9m04s median wait); folded as
   a post-Clippy `if: ${{ !cancelled() }}` step in `all-feature Clippy` (2m26s
@@ -40,7 +40,7 @@ The current validation graph is organized as follows:
   and documentation link checks run independently. Rust quality uses separate
   matrix entries for each compiler/feature profile, with `cargo fmt --check`
   folded into the all-feature Clippy job; JavaScript formatting, lint,
-  duplication, and spelling checks run sequentially in one `ubuntu-slim` job
+  duplication, and spelling checks run sequentially in one `ubuntu-latest` job
   so they share one checkout and `pnpm install`.
 - JavaScript test shards use `ubuntu-latest`: the Oxlint plugin allocator
   aborts on `ubuntu-slim` in this suite, matching the

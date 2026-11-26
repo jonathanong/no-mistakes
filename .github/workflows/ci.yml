@@ -446,7 +446,7 @@ jobs:
         run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
   quality-js:
     name: JavaScript policy
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
       - name: Checkout
@@ -492,11 +492,11 @@ jobs:
         run: pnpm run lint:js
       - name: Check JavaScript duplication
         if: ${{ !cancelled() }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         run: pnpm run lint:duplicates
       - name: Check spelling
         if: ${{ !cancelled() }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         run: pnpm run lint:spell
   quality-links:
     name: Documentation links
