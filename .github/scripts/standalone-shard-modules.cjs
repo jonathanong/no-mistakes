@@ -162,7 +162,8 @@ function readCharLiteral(text, i) {
       if (j === hex || text[j] !== "}") return null;
       j += 1;
     } else if (text[j] === "x") {
-      if (!/[0-9a-fA-F]/.test(text[j + 1] || "") || !/[0-9a-fA-F]/.test(text[j + 2] || "")) return null;
+      if (!/[0-9a-fA-F]/.test(text[j + 1] || "") || !/[0-9a-fA-F]/.test(text[j + 2] || ""))
+        return null;
       j += 3;
     } else if (j < text.length) j += 1;
     else return null;
@@ -184,19 +185,24 @@ function readLifetime(text, i) {
 function shardOfAttrs(attrs) {
   let shards = new Set(ALL);
   let explicit = null;
+  let postgresSource = true;
   for (const attr of attrs) {
     const normalized = attr.replace(/\s+/g, "");
-    const match = normalized.match(/^#\[cfg\(all\(test,any\(nm_shard_all,nm_shard_([012])\)\)\)\]$/);
+    const match = normalized.match(
+      /^#\[cfg\(all\(test,any\(nm_shard_all,nm_shard_([012])(,nm_shard_postgres_source)?\)\)\)\]$/,
+    );
     if (match) {
       explicit = Number(match[1]);
       shards = new Set([...shards].filter((id) => id === explicit));
+      postgresSource = postgresSource && Boolean(match[2]);
       continue;
     }
     if (normalized === "#[cfg(test)]") continue;
-    if (normalized.startsWith("#[cfg(not(test))")) return { shards: null, explicit };
+    if (normalized.startsWith("#[cfg(not(test))"))
+      return { shards: null, explicit, postgresSource: false };
     if (normalized.includes("nm_shard_")) throw new Error(`unrecognized shard attr: ${attr}`);
   }
-  return { shards, explicit };
+  return { shards, explicit, postgresSource };
 }
 
 function pathFromAttrs(attrs) {
@@ -267,11 +273,13 @@ function skipItem(tokens, index, end) {
 function libraryShardCoverage(root, options = {}) {
   const nested = [];
   const droppedTests = [];
+  const missingPostgresSourceTests = [];
   const unresolved = [];
   const incomplete = [];
   const seen = new Set();
   const censused = new Set();
   let testCount = 0;
+  let postgresSourceTestCount = 0;
   const includeStack = [];
   const srcDir = options.srcDir ?? join(root, "crates/no-mistakes/src");
   const excluded = new Set(options.excluded ?? UNCOMPILED_SRC);
@@ -280,8 +288,13 @@ function libraryShardCoverage(root, options = {}) {
     : [join(srcDir, "lib.rs"), join(srcDir, "main.rs")];
   const relativeSrc = (file) => relative(srcDir, file).split("\\").join("/");
   const countsTests = (file) => !excluded.has(relativeSrc(file));
+  const isPostgresSourcePath = (modPath) =>
+    modPath.length >= 3 &&
+    modPath[0] === "codebase" &&
+    modPath[1] === "postgres" &&
+    modPath[2] === "source";
 
-  function walkFile(file, shards, childDir, included) {
+  function walkFile(file, shards, inPgSource, modPath, childDir, included) {
     if (!existsSync(file)) {
       unresolved.push(file);
       return;
@@ -293,13 +306,33 @@ function libraryShardCoverage(root, options = {}) {
     if (countThis) censused.add(file);
     if (included) includeStack.push(file);
     try {
-      walkTokens(tokens, 0, tokens.length, new Set(shards), file, dir, countThis);
+      walkTokens(
+        tokens,
+        0,
+        tokens.length,
+        new Set(shards),
+        inPgSource,
+        modPath,
+        file,
+        dir,
+        countThis,
+      );
     } finally {
       if (included) includeStack.pop();
     }
   }
 
-  function walkTokens(tokens, start, end, shards, physical, childDir, countThis) {
+  function walkTokens(
+    tokens,
+    start,
+    end,
+    shards,
+    inPgSource,
+    modPath,
+    physical,
+    childDir,
+    countThis,
+  ) {
     let i = start;
     while (i < end) {
       if (tokens[i].kind === "attr" && tokens[i].value.startsWith("#!")) {
@@ -352,6 +385,8 @@ function libraryShardCoverage(root, options = {}) {
         const nameTok = tokens[i + 1];
         const next = tokens[i + 2] ? tokens[i + 2].kind : null;
         const child = new Set([...shards].filter((id) => parsed.shards.has(id)));
+        const childPgSource = inPgSource && parsed.postgresSource;
+        const childPath = [...modPath, nameTok.value];
         if (parsed.explicit !== null && shards.size !== ALL.size) {
           nested.push({
             file: physical,
@@ -363,12 +398,13 @@ function libraryShardCoverage(root, options = {}) {
         }
         if (next === ";") {
           const resolved = resolveMod(physical, childDir, nameTok.value, pathFromAttrs(attrs));
-          if (!resolved || !existsSync(resolved.file)) unresolved.push(`${physical}:${nameTok.line}:${nameTok.value}`);
+          if (!resolved || !existsSync(resolved.file))
+            unresolved.push(`${physical}:${nameTok.line}:${nameTok.value}`);
           else {
-            const edge = `${resolved.file}|${[...child].sort().join("")}|${resolved.childDir}`;
+            const edge = `${resolved.file}|${[...child].sort().join("")}|${childPgSource ? 1 : 0}|${childPath.join("::")}|${resolved.childDir}`;
             if (!seen.has(edge)) {
               seen.add(edge);
-              walkFile(resolved.file, child, resolved.childDir, false);
+              walkFile(resolved.file, child, childPgSource, childPath, resolved.childDir, false);
             }
           }
           i += 3;
@@ -384,7 +420,17 @@ function libraryShardCoverage(root, options = {}) {
             else if (tokens[j].kind === "}") {
               depth -= 1;
               if (depth === 0) {
-                walkTokens(tokens, bodyStart, j, child, physical, join(childDir, nameTok.value), countThis);
+                walkTokens(
+                  tokens,
+                  bodyStart,
+                  j,
+                  child,
+                  childPgSource,
+                  childPath,
+                  physical,
+                  join(childDir, nameTok.value),
+                  countThis,
+                );
                 i = j + 1;
                 closed = true;
                 break;
@@ -396,13 +442,25 @@ function libraryShardCoverage(root, options = {}) {
           continue;
         }
       }
-      if (kind === "include" && tokens[i + 1] && tokens[i + 1].kind === "op" && tokens[i + 1].value === "!") {
-        if (tokens[i + 2] && tokens[i + 2].kind === "(" && tokens[i + 3] && tokens[i + 3].kind === "str") {
+      if (
+        kind === "include" &&
+        tokens[i + 1] &&
+        tokens[i + 1].kind === "op" &&
+        tokens[i + 1].value === "!"
+      ) {
+        if (
+          tokens[i + 2] &&
+          tokens[i + 2].kind === "(" &&
+          tokens[i + 3] &&
+          tokens[i + 3].kind === "str"
+        ) {
           const match = tokens[i + 3].value.match(/"([^"]+)"/);
           if (match && parsed.shards) {
             const inc = normalize(join(dirname(physical), match[1]));
             const child = new Set([...shards].filter((id) => parsed.shards.has(id)));
-            if (!includeStack.includes(inc)) walkFile(inc, child, dirname(inc), true);
+            const childPgSource = inPgSource && parsed.postgresSource;
+            if (!includeStack.includes(inc))
+              walkFile(inc, child, childPgSource, modPath, dirname(inc), true);
           }
           i += 5;
           if (i < end && tokens[i].kind === ";") i += 1;
@@ -413,12 +471,23 @@ function libraryShardCoverage(root, options = {}) {
         const isTest = attrs.some((attr) => isTestAttr(attr));
         if (isTest) {
           const child = new Set([...shards].filter((id) => parsed.shards.has(id)));
+          const childPgSource = inPgSource && parsed.postgresSource;
           if (child.size === 0) {
             droppedTests.push({
               file: physical,
               line: tokens[i].line,
               name: tokens[i + 1] ? tokens[i + 1].value : "?",
             });
+          }
+          if (isPostgresSourcePath(modPath)) {
+            postgresSourceTestCount += 1;
+            if (!childPgSource) {
+              missingPostgresSourceTests.push({
+                file: physical,
+                line: tokens[i].line,
+                name: tokens[i + 1] ? tokens[i + 1].value : "?",
+              });
+            }
           }
         }
       }
@@ -432,10 +501,12 @@ function libraryShardCoverage(root, options = {}) {
     }
   }
 
-  for (const entry of entries) walkFile(entry, ALL, null, false);
+  for (const entry of entries) walkFile(entry, ALL, true, [], null, false);
   return {
     nested,
     droppedTests,
+    missingPostgresSourceTests,
+    postgresSourceTestCount,
     unresolved,
     incomplete,
     testCount,

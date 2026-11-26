@@ -3,10 +3,11 @@ const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
 const { run } = require("./postgres-source-identities.cjs");
+const { libraryShardCoverage } = require("./standalone-shard-modules.cjs");
 const { workflowJob } = require("./workflow-contract.cjs");
 const fixture = require("./fixtures/postgres-source-identities.json");
 
-test("the source filter compiles all three bounded test slices", () => {
+test("the source filter compiles one bounded postgres-source test slice", () => {
   const calls = [];
   assert.equal(
     run({ RUSTFLAGS: "-D warnings" }, (command, args, options) => {
@@ -29,6 +30,13 @@ test("the source filter compiles all three bounded test slices", () => {
     assert.equal(call.env.RUSTFLAGS, "-D warnings");
     assert.equal(call.env.RUSTC_WRAPPER, path.join(__dirname, "standalone-shard-rustc.sh"));
   }
+});
+
+test("every codebase::postgres::source unit test compiles in the postgres-source slice", () => {
+  const root = path.join(__dirname, "../..");
+  const report = libraryShardCoverage(root);
+  assert.deepEqual(report.missingPostgresSourceTests, []);
+  assert.ok(report.postgresSourceTestCount >= 328, String(report.postgresSourceTestCount));
 });
 test("failed slices fail immediately instead of being retried or hidden", () => {
   let calls = 0;

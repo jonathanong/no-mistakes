@@ -7,7 +7,7 @@ compiler="$1"
 shift
 args=("$@")
 shard="${NM_TEST_SHARD-}"
-if [[ "$shard" == "0" || "$shard" == "1" || "$shard" == "2" ]]; then
+if [[ "$shard" == "0" || "$shard" == "1" || "$shard" == "2" || "$shard" == "postgres-source" ]]; then
   crate=""
   previous=""
   for arg in "$@"; do
