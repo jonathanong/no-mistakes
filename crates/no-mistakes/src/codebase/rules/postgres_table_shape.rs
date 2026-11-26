@@ -22,7 +22,7 @@ pub(in crate::codebase::rules) struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct ShapeOptions {
     name: String,
     table_pattern: String,
@@ -33,7 +33,7 @@ struct ShapeOptions {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct ColumnOptions {
     name: Option<String>,
     name_pattern: Option<String>,
@@ -46,7 +46,7 @@ struct ColumnOptions {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct TriggerOptions {
     function: String,
     timing: Option<String>,

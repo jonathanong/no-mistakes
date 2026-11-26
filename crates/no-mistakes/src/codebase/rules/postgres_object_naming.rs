@@ -94,7 +94,7 @@ pub(crate) struct DeniedToken {
 }
 
 #[derive(Deserialize, Clone, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct DoubleUnderscore {
     pub(crate) allow_pattern: Option<String>,
 }

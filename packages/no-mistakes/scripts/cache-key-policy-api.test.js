@@ -35,13 +35,32 @@ async function assertCheckParity(fixtureName, configName, expectedCount) {
   assert.equal(child.error, undefined);
   assert.equal(child.status, 1, child.stderr);
   assert.deepEqual(JSON.parse(child.stdout), report);
+  return report;
 }
 
 test(
   "broad cache key hash policy agrees across async Node APIs and CLI",
   { skip: !addon?.endsWith(".node") },
   async () => {
-    await assertCheckParity("broad-hash", "broad-hash.yml", 9);
+    await assertCheckParity("broad-hash", "broad-hash.yml", 11);
+  },
+);
+
+test(
+  "dynamic hash patterns remain advisory in async Node APIs and CLI",
+  { skip: !addon?.endsWith(".node") },
+  async () => {
+    const report = await assertCheckParity("dynamic-hash", "dynamic-hash-advise.yml", 1);
+    assert.deepEqual(
+      report.advisories
+        .filter((row) => row.rule === "github-actions-cache-key-policy")
+        .map((row) => [row.file, row.line, row.target]),
+      [
+        [".github/workflows/dynamic.yml", 18, "unanalyzable"],
+        [".github/workflows/mixed.yml", 18, "unanalyzable"],
+        [".github/workflows/mixed.yml", 19, "unanalyzable"],
+      ],
+    );
   },
 );
 

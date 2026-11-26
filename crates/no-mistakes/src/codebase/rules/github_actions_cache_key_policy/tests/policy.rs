@@ -1,4 +1,5 @@
 use super::super::*;
+use crate::codebase::rules::github_actions_workflow_files::gha_kind;
 use super::{assert_needles, assert_silent, expect_jobs, rows, source, widget_options};
 
 #[test]
@@ -179,7 +180,7 @@ fn assert_scanned_fixtures(findings: &[RuleFinding]) {
                 | "shift-output.yml"
                 | "indirect-output.yml"
         ) {
-            let proved = judge::judge(relative, &jobs, &widget_options(), None, &|_| None);
+            let proved = super::judge_findings(relative, &jobs, &widget_options(), None, &|_| None);
             assert!(proved.is_empty(), "{relative}: {proved:?}");
         }
     }
