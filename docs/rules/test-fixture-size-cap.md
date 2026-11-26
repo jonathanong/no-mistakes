@@ -85,7 +85,7 @@ unless they are listed.
 | Mode | Behavior |
 | --- | --- |
 | `per-element` (default) | Reports each oversized numeric literal at the top level of the table. Records, holes, spreads, nested arrays, and other non-literals are skipped. |
-| `all-elements` | Reports once on the opening bracket when there is at least one numeric cell and every numeric cell is a non-exempt integer cardinality above the threshold. Reads flat cells and cells in literal row arrays one level deep. Skips string, boolean, and null literals and holes. An unresolved cell, spread, record, deeper array, or invalid cardinality keeps the table silent. |
+| `all-elements` | Reports once on the opening bracket when there is at least one numeric cell and every numeric cell is a non-exempt integer cardinality above the threshold. Reads flat cells and cells in literal row arrays one level deep. Skips boolean and null literals and holes. String labels do not count as cells. The rule skips a duration in seconds matching a `daily` or `every <number><unit>` label, epoch-second values in rows labeled as periods, and compact dates alongside a `YYYY-MM-DD` string. Other numeric cells count normally. An unresolved cell, spread, record, deeper array, or invalid cardinality also keeps the table silent. |
 
 `scopes.tests` and `scopes.helpers` default to `[]`. Empty scopes scan
 nothing. A file is in scope when its repository-relative path matches either
@@ -102,6 +102,7 @@ const listed = new Array(1, 2, 3);
 it.each([{ port: 5432 }])("record %j", () => {});
 it.each([12, 1_600])("mixed size %i", () => {});
 it.each([[48], [1_800]])("mixed row %i", () => {});
+it.each([[86_400, "daily"], [7_200, "every 2h"]])("interval %i", () => {});
 // src/orders.ts
 export const rows = Array.from({ length: 5_000 }, () => ({ name: "order" }));
 ```

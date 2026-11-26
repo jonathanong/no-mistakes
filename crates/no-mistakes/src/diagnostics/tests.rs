@@ -398,3 +398,18 @@ fn rule_timings_follow_their_phase_and_sort_slowest_first() {
         ]
     );
 }
+
+#[test]
+fn invocation_hooks_bridge_observer_stderr_and_timeout_renderers() {
+    let observer = InvocationObserver::with_progress(false, true);
+    let _guard = InvocationGuard::install(Arc::clone(&observer));
+    let hooked = no_mistakes_invocation::hooks::current_observer().expect("registered observer");
+    assert!(hooked.progress_enabled());
+    hooked.render_progress_signal_stderr();
+    no_mistakes_invocation::hooks::print_stderr(format_args!("hooked stderr message"));
+    no_mistakes_invocation::hooks::render_timeout_stderr(
+        Some(hooked),
+        "hooked timeout".to_string(),
+    );
+    no_mistakes_invocation::hooks::render_timeout_stderr(None, "hooked plain timeout".to_string());
+}

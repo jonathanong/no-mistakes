@@ -1302,7 +1302,14 @@ jobs:
         run: |
           set -euo pipefail
           version="${{ needs.prepare.outputs.version }}"
-          pkgs=(no-mistakes-invocation no-mistakes-postgres-sql no-mistakes)
+          pkgs=()
+          if [ -d crates/no-mistakes-invocation ]; then
+            pkgs+=(no-mistakes-invocation)
+          fi
+          if [ -d crates/no-mistakes-postgres-sql ]; then
+            pkgs+=(no-mistakes-postgres-sql)
+          fi
+          pkgs+=(no-mistakes)
           for i in "${!pkgs[@]}"; do
             pkg="${pkgs[$i]}"
             if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then

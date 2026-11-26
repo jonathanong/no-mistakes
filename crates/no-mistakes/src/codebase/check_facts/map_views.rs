@@ -90,7 +90,20 @@ impl CheckFactMap {
             (Some(scope), None) | (None, Some(scope)) => Some(scope.clone()),
             (None, None) => None,
         };
+        let vitest_exclude_imports = self
+            .vitest_exclude_imports
+            .iter()
+            .filter(|(path, _)| !overwrite || !supplemental.ts.contains_key(path))
+            .chain(
+                supplemental
+                    .vitest_exclude_imports
+                    .iter()
+                    .filter(|(path, _)| overwrite || !self.ts.contains_key(path)),
+            )
+            .map(|(path, imports)| (path.clone(), imports.clone()))
+            .collect();
         Self {
+            vitest_exclude_imports,
             postgres_executor_warning_scans: Arc::clone(&self.postgres_executor_warning_scans),
             sql_application: self.sql_application.clone(),
             sql_verdicts: self.sql_verdicts.clone(),

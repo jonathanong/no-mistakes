@@ -1,11 +1,14 @@
 use super::{env_policy, no_poll_wait_job, pr_diff_range};
-use crate::codebase::rules::{github_actions_no_insta_snapshot_updates, RuleFinding};
+use crate::codebase::rules::{
+    github_actions_no_insta_snapshot_updates, github_actions_no_required_pr_path_filters,
+    RuleFinding,
+};
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-/// Run a workflow-script rule by id; `None` means the id is not one of them.
+/// Run a workflow rule handled by this dispatcher.
 pub(in crate::codebase::rules) fn run(
     rule_id: &str,
     root: &Path,
@@ -37,6 +40,11 @@ pub(in crate::codebase::rules) fn run(
         pr_diff_range::RULE_ID => Some(pr_diff_range::check_with_files_and_sources(
             root, config, files, sources,
         )),
+        github_actions_no_required_pr_path_filters::RULE_ID => Some(
+            github_actions_no_required_pr_path_filters::check_with_files_sources_and_deferred_suppression(
+                root, config, files, sources, defer_suppression,
+            ),
+        ),
         _ => None,
     }
 }

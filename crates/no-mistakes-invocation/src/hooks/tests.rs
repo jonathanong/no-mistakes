@@ -105,4 +105,5 @@ fn registered_hooks_receive_observer_stderr_and_timeout_calls() {
         *hooks.timeouts.lock().unwrap(),
         vec![(true, "hook timeout".to_string())]
     );
+    render_timeout_stderr(None, "public timeout fallback".to_string());
 }

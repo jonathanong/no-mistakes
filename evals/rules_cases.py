@@ -331,6 +331,53 @@ RULES_FLOWS = [
         "postgresql-rules",
         [
             (
+                "review-parent-key-update",
+                """
+                Review this PostgreSQL transaction for correctness when requests
+                run at the same time. Each request supplies a different label
+                and code for the same collection. There are no other writers.
+
+                ```sql
+                CREATE TABLE collections (
+                  id bigint PRIMARY KEY,
+                  code text NOT NULL UNIQUE
+                );
+                CREATE TABLE collection_labels (
+                  collection_id bigint NOT NULL REFERENCES collections(id),
+                  label text NOT NULL,
+                  PRIMARY KEY (collection_id, label)
+                );
+
+                BEGIN;
+                INSERT INTO collection_labels (collection_id, label)
+                  VALUES ($1, $2);
+                UPDATE collections SET code = $3 WHERE id = $1;
+                COMMIT;
+                ```
+                """,
+                [
+                    (
+                        "flags-parent-lock-upgrade",
+                        _r(
+                            """
+                            Passing: the review explains that the child INSERT's
+                            foreign-key check takes KEY SHARE on the same parent
+                            row in both transactions, and that updating the
+                            unique code needs a conflicting stronger row lock.
+                            It identifies the resulting deadlock and recommends
+                            updating the parent before inserting the child or
+                            taking the requisite parent lock before the INSERT.
+
+                            Failing: the review discusses only contention,
+                            retries or uniqueness errors, misses either lock in
+                            the cycle, or offers no change that prevents it.
+                            """,
+                            review=True,
+                        ),
+                    ),
+                ],
+            ),
+            (
                 "write-offset-pagination",
                 """
                 need listOrders for the orders screen. node-postgres, newest first,
@@ -503,6 +550,50 @@ RULES_FLOWS = [
     (
         "queue-rules",
         [
+            (
+                "review-job-self-overlap",
+                """
+                Review this BullMQ change before it ships. All worker replicas
+                register the same queue, and cron and the admin console both
+                add a fresh job for the same catalog. The worker reads a
+                snapshot and replaces the catalog file at a shared path.
+                A late write from an older snapshot can undo newer data.
+
+                ```diff
+                -export const refreshCatalog = (job: Job<CatalogJob>) =>
+                -  withCatalogLease(job.data.catalogId, () =>
+                -    rebuildCatalog(job.data.catalogId));
+                +export const refreshCatalog = (job: Job<CatalogJob>) =>
+                +  rebuildCatalog(job.data.catalogId);
+
+                 new Worker("catalog-refresh", refreshCatalog, { concurrency: 1 });
+                 // Nightly cron enqueues each catalog; sooner via admin refresh.
+                ```
+
+                The author says a worker processes one job at a time and the
+                job usually finishes in a minute. Is the removal safe?
+                """,
+                [
+                    (
+                        "flags-concurrent-catalog-runs",
+                        _r(
+                            """
+                            Passing: the review flags removal of the lease,
+                            explains that concurrency 1 is per worker and the
+                            schedule does not exclude runs (such as an admin
+                            run beside cron on two replicas), and asks to keep
+                            cross-run exclusion or make the shared write safe
+                            under simultaneous runs.
+
+                            Failing: the review accepts the removal or offers
+                            only enqueue deduplication, sequential idempotency,
+                            or a longer schedule interval as the fix.
+                            """,
+                            review=True,
+                        ),
+                    ),
+                ],
+            ),
             (
                 "write-bounded-sweep",
                 """
