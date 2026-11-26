@@ -21,10 +21,9 @@ impl RawWorkflows {
             let Ok(value) = &doc.value else {
                 continue;
             };
-            let expanded = expand_yaml_mapping_if_merged(value, doc.source.as_deref())
-                .map(std::borrow::Cow::into_owned)
-                .unwrap_or_else(|_| value.clone());
-            docs.insert(doc.path.clone(), expanded);
+            if let Ok(expanded) = expand_yaml_mapping_if_merged(value, doc.source.as_deref()) {
+                docs.insert(doc.path.clone(), expanded.into_owned());
+            }
         }
         Self { docs }
     }
@@ -54,11 +53,13 @@ impl RawWorkflows {
         workflow_path: &str,
         field: &str,
     ) -> Option<String> {
-        let doc = self.docs.get(workflow_path)?;
-        let on = doc
-            .get("on")
-            .or_else(|| doc.as_mapping()?.get(Value::Bool(true)))?;
-        let call = on.as_mapping()?.get("workflow_call")?.as_mapping()?;
+        let call = self
+            .docs
+            .get(workflow_path)?
+            .get("on")?
+            .as_mapping()?
+            .get("workflow_call")?
+            .as_mapping()?;
         let raw = call.get(field)?;
         (!raw.is_null() && !raw.is_mapping()).then(|| describe_value(raw))
     }

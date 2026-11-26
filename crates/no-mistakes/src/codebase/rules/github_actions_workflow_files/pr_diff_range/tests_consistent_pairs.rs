@@ -151,6 +151,64 @@ fn invalid_yaml_and_file_suppression_follow_policy() {
     let out = super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
         .unwrap();
     assert_eq!(out.findings.len(), 1);
+
+    let dispatched =
+        crate::codebase::rules::github_actions_workflow_files::dispatch::run(
+            RULE_ID, &root, &config, &files, &sources, false,
+        )
+        .unwrap()
+        .unwrap();
+    assert_eq!(dispatched.len(), 1);
+
+    let mut repo_policy = config.clone();
+    repo_policy.unanalyzable = Some(crate::config::v2::Unanalyzable::Report);
+    repo_policy.rules[0].options =
+        serde_yaml::from_str("requireConsistentRevisionPairs: true").unwrap();
+    let strict_root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/github-actions-pr-diff-range/fixture/consistent-pairs"),
+    );
+    let strict_files = vec![strict_root.join(".github/workflows/unanalyzable.yml")];
+    let strict_sources = crate::codebase::rules::source_store_for_files(&strict_files);
+    let strict_out = super::diagnostics_with_files_and_sources(
+        &strict_root,
+        &repo_policy,
+        &strict_files,
+        &strict_sources,
+        true,
+    )
+    .unwrap();
+    assert_eq!(strict_out.findings.len(), 2);
+    assert!(strict_out.advisories.is_empty());
+}
+
+#[test]
+fn partial_pairs_and_missing_jobs_stay_quiet() {
+    let env_only = "revisionPairs:\n  - baseEnv: DIFF_BASE\n    headEnv: DIFF_HEAD\n";
+    let no_jobs = "on: pull_request\nenv:\n  DIFF_BASE: ${{ github.event.pull_request.base.sha }}\n";
+    let (findings, undecidable) = check(env_only, no_jobs);
+    assert!(findings.is_empty());
+    assert!(undecidable.is_empty());
+
+    let partial = r#"
+on: pull_request
+jobs:
+  a:
+    env:
+      DIFF_BASE: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - nope
+      - env:
+          OTHER: 1
+        uses: ./.github/actions/x
+        with:
+          base-rev: HEAD^1
+      - run: echo ok
+"#;
+    let opts = "revisionPairs:\n  - baseEnv: DIFF_BASE\n    headEnv: DIFF_HEAD\n  - baseInput: base-rev\n    headInput: head-rev\n";
+    let (findings, undecidable) = check(opts, partial);
+    assert!(findings.is_empty());
+    assert!(undecidable.is_empty());
 }
 
 #[test]
@@ -165,8 +223,14 @@ fn invalid_revision_pair_options_are_rejected() {
         "revisionPairs:\n  - baseEnv: BASE\n    headFlag: --head\n",
         "revisionPairs:\n  - baseEnv: BASE\n    headEnv: BASE\n",
         "revisionPairs:\n  - baseEnv: 123BAD\n    headEnv: HEAD\n",
+        "revisionPairs:\n  - baseEnv: BASE\n    headEnv: 123BAD\n",
         "revisionPairs:\n  - baseInput: base\n",
+        "revisionPairs:\n  - headInput: head\n",
+        "revisionPairs:\n  - baseInput: ' '\n    headInput: head\n",
+        "revisionPairs:\n  - baseFlag: --base\n",
+        "revisionPairs:\n  - headFlag: --head\n",
         "revisionPairs:\n  - baseFlag: base\n    headFlag: --head\n",
+        "revisionPairs:\n  - baseFlag: --base\n    headFlag: head\n",
         "revisionPairs:\n  - baseFlag: '--a b'\n    headFlag: --head\n",
     ] {
         let cfg = NoMistakesConfig {

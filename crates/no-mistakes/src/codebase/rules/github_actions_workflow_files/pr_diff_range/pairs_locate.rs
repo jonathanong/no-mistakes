@@ -60,53 +60,42 @@ fn match_flag<'a>(words: &[&'a str], index: usize, flag: &str) -> Option<(Option
 }
 
 pub(super) fn env_pair_line(ctx: &PairContext<'_>, head: &str, base: &str) -> usize {
-    let doc = ctx.document.get_or_init(|| Document::parse(ctx.source));
-    let Some(doc) = doc.as_ref() else {
-        return ctx.located.map_or(1, |run| run.item_line);
-    };
-    if let Some(job) = ctx.job {
-        let step_idx = ctx.step_index.map_or(usize::MAX, |i| i.saturating_sub(1));
-        if let Some(line) = env_read::line(doc, job, step_idx, head)
-            .or_else(|| env_read::line(doc, job, step_idx, base))
-        {
-            return line;
-        }
-    }
-    let Some(root) = doc.roots().first().copied() else {
-        return 1;
-    };
-    doc.field(root, "env")
-        .and_then(|env| doc.field_line(env, head).or_else(|| doc.field_line(env, base)))
+    ctx.document
+        .get_or_init(|| Document::parse(ctx.source))
+        .as_ref()
+        .and_then(|doc| {
+            if let Some(job) = ctx.job {
+                let step_idx = ctx.step_index.map_or(usize::MAX, |i| i.saturating_sub(1));
+                env_read::line(doc, job, step_idx, head)
+                    .or_else(|| env_read::line(doc, job, step_idx, base))
+            } else {
+                let root = *doc.roots().first()?;
+                let env = doc.field(root, "env")?;
+                doc.field_line(env, head)
+                    .or_else(|| doc.field_line(env, base))
+            }
+        })
         .unwrap_or(1)
 }
 
 pub(super) fn with_pair_line(ctx: &PairContext<'_>, head: &str, base: &str) -> usize {
-    let doc = ctx.document.get_or_init(|| Document::parse(ctx.source));
-    let Some(doc) = doc.as_ref() else {
-        return 1;
-    };
-    let Some(root) = doc.roots().first().copied() else {
-        return 1;
-    };
-    let Some(job_name) = ctx.job else {
-        return 1;
-    };
-    let Some(job) = doc
-        .field(root, "jobs")
-        .and_then(|jobs| doc.field(jobs, job_name))
-    else {
-        return 1;
-    };
-    let owner = match ctx.step_index {
-        Some(index) => doc
-            .field(job, "steps")
-            .and_then(|steps| doc.sequence(steps))
-            .and_then(|steps| steps.get(index.saturating_sub(1)))
-            .copied()
-            .unwrap_or(job),
-        None => job,
-    };
-    doc.field(owner, "with")
-        .and_then(|with| doc.field_line(with, head).or_else(|| doc.field_line(with, base)))
+    ctx.document
+        .get_or_init(|| Document::parse(ctx.source))
+        .as_ref()
+        .and_then(|doc| {
+            let root = *doc.roots().first()?;
+            let job = doc.field(doc.field(root, "jobs")?, ctx.job?)?;
+            let owner = ctx
+                .step_index
+                .and_then(|index| {
+                    doc.sequence(doc.field(job, "steps")?)?
+                        .get(index.saturating_sub(1))
+                        .copied()
+                })
+                .unwrap_or(job);
+            let with = doc.field(owner, "with")?;
+            doc.field_line(with, head)
+                .or_else(|| doc.field_line(with, base))
+        })
         .unwrap_or(1)
 }

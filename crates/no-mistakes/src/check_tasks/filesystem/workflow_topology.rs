@@ -12,10 +12,10 @@ pub(super) fn run<'a>(
 ) -> Result<(Cow<'a, NoMistakesConfig>, AnalysisDiagnostics)> {
     let mut remaining = Cow::Borrowed(config);
     let mut output = AnalysisDiagnostics::default();
-    if !config.rule_configured(rules::WORKFLOW_TOPOLOGY_POLICY) {
-        return Ok((remaining, output));
-    }
-    let Some(inputs) = prepared.workflow_documents else {
+    let Some(inputs) = prepared
+        .workflow_documents
+        .filter(|_| config.rule_configured(rules::WORKFLOW_TOPOLOGY_POLICY))
+    else {
         return Ok((remaining, output));
     };
     let result = no_mistakes::perf_trace::filesystem_rule(rules::WORKFLOW_TOPOLOGY_POLICY, || {
@@ -29,14 +29,12 @@ pub(super) fn run<'a>(
             defer_suppression,
         )
     });
-    if let Some(session) = prepared.session {
-        if let Some(chunk) =
-            session.capture_check_result(rules::WORKFLOW_TOPOLOGY_POLICY, result)?
-        {
-            output.append(chunk);
-        }
-    } else {
-        output.append(result?);
+    let chunk = match prepared.session {
+        Some(session) => session.capture_check_result(rules::WORKFLOW_TOPOLOGY_POLICY, result)?,
+        None => Some(result?),
+    };
+    if let Some(chunk) = chunk {
+        output.append(chunk);
     }
     super::handled::mark(remaining.to_mut(), |rule| {
         rule == rules::WORKFLOW_TOPOLOGY_POLICY

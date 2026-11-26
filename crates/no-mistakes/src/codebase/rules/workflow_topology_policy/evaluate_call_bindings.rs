@@ -53,9 +53,7 @@ fn check_call(
     options: &Options,
     out: &mut CallBindingOutput,
 ) {
-    let Some((caller_path, job_key)) = call.from.rsplit_once('#') else {
-        return;
-    };
+    let (caller_path, job_key) = call.from.rsplit_once('#').unwrap_or((&call.from, ""));
     let is_inherit = matches!(call.bindings.secrets, WorkflowCallSecretsBinding::Inherit);
     if is_inherit && !options.forbid_secrets_inherit {
         out.findings.push(job_field_finding(
@@ -66,7 +64,7 @@ fn check_call(
                 .to_string(),
         ));
     }
-    if !call.local {
+    let (true, Some(callee_path)) = (call.local, call.to.as_deref()) else {
         if !is_inherit {
             out.unanalyzable.push(unanalyzable_job_field(
                 &call.from,
@@ -78,9 +76,6 @@ fn check_call(
                 ),
             ));
         }
-        return;
-    }
-    let Some(callee_path) = call.to.as_deref() else {
         return;
     };
     let Some(callee) = index.workflows.get(callee_path) else {

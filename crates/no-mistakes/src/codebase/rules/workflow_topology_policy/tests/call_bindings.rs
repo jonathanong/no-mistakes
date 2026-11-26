@@ -254,3 +254,35 @@ jobs:
         "{adv:#?}"
     );
 }
+
+#[test]
+fn supports_repo_unanalyzable_custom_message_and_scalar_workflow_call() {
+    let root = super::fixture("call-bindings");
+    let mut cfg = super::config("requireExplicitWorkflowCallBindings: true");
+    cfg.unanalyzable = Some(crate::config::v2::Unanalyzable::Report);
+    let reported = super::super::prepare::diagnostics_with_files(&root, &cfg, false).unwrap();
+    assert_eq!(reported.findings.len(), 11);
+    assert!(reported.advisories.is_empty());
+
+    cfg.rules[0].message = Some("Bind workflow_call inputs and secrets explicitly.".to_owned());
+    let output = super::super::prepare::diagnostics_with_files(&root, &cfg, false).unwrap();
+    // Three findings on missing_all (line 13) coalesce when replaced by one custom message.
+    assert_eq!(output.findings.len(), 9);
+    assert!(output.advisories.is_empty());
+    assert!(output
+        .findings
+        .iter()
+        .all(|f| f.message == "Bind workflow_call inputs and secrets explicitly."));
+
+    let scalar_callee = "on: workflow_call\njobs:\n  ok:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ok\n";
+    let caller = "on: push\njobs:\n  call:\n    uses: ./.github/workflows/scalar.yml\n    with:\n    secrets:\n";
+    let clean = run_in_memory(
+        "requireExplicitWorkflowCallBindings: true",
+        &[
+            (".github/workflows/scalar.yml", Ok(scalar_callee)),
+            (".github/workflows/caller.yml", Ok(caller)),
+        ],
+    );
+    assert!(clean.findings.is_empty());
+    assert!(clean.advisories.is_empty());
+}
