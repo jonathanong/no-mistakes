@@ -56,7 +56,7 @@ fn postgres_explain_write_rollback_check_json_snapshot() {
     let advisories = reports["transactions"]["report"]["advisories"]
         .as_array()
         .unwrap();
-    assert_eq!(advisories.len(), 4);
+    assert_eq!(advisories.len(), 6);
     assert!(advisories
         .iter()
         .all(|item| item["target"] == "unanalyzable"));
@@ -71,12 +71,22 @@ fn postgres_explain_write_rollback_check_json_snapshot() {
         .iter()
         .any(|item| item["file"] == "benchmarks/unparsed.sql"));
     assert_eq!(findings.len(), 25);
-    assert!(reports["unanalyzable_report"]["report"]["rules"]
+    let report_findings = reports["unanalyzable_report"]["report"]["rules"]
         .as_array()
-        .unwrap()
-        .iter()
-        .any(|finding| finding["file"] == "benchmarks/unparsed.sql"
-            && finding["target"] == "unanalyzable"));
+        .unwrap();
+    for file in [
+        "benchmarks/unparsed.sql",
+        "benchmarks/unparsed-explain.sql",
+        "benchmarks/unknown-keywords.sql",
+    ] {
+        assert!(report_findings.iter().any(|finding| {
+            finding["file"] == file && finding["target"] == "unanalyzable"
+        }), "{file}");
+    }
+    for file in ["benchmarks/no-explain-do.sql", "benchmarks/explain-in-trivia.sql"] {
+        assert!(!report_findings.iter().any(|finding| finding["file"] == file), "{file}");
+        assert!(!advisories.iter().any(|finding| finding["file"] == file), "{file}");
+    }
     assert!(reports["unanalyzable_ignore"]["report"]["advisories"]
         .as_array()
         .unwrap()

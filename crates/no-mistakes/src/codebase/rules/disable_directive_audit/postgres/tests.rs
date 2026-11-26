@@ -101,3 +101,29 @@ fn postgres_low_directive_audit_skips_missing_fact_profiles_and_source_inputs() 
     low::collect(&mut comments, &scope, &facts, &path, &key);
     assert!(comments.is_empty());
 }
+
+#[test]
+fn unparsed_file_does_not_emit_unused_disable_directive() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/react-no-nested-buttons-and-links/parse-error"),
+    );
+    let path = root.join("a-disabled.tsx");
+    let files = vec![path.clone()];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let config: NoMistakesConfig = serde_yaml::from_str(include_str!(
+        "../../../../../../../test-cases/rules/react-no-nested-buttons-and-links/configs/parse-error.yml"
+    ))
+    .unwrap();
+    let prepared = PreparedDisableDirectives::prepare(&root, &config, &files, &sources).unwrap();
+    let mut facts = CheckFactMap::default();
+    let unparsed = CheckFileFacts {
+        parse_error: Some("parsing a-disabled.tsx: Unexpected token".into()),
+        ..Default::default()
+    };
+    facts.ts.insert(path, Arc::new(unparsed));
+    let findings = prepared
+        .findings_with_postgres(&config, &files, &sources, &facts, &[])
+        .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}

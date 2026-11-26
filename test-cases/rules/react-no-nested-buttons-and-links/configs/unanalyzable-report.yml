@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: react-no-nested-buttons-and-links
+    scope: repository
+    exclude: ["outside/**"]
+    options:
+      unanalyzable: report

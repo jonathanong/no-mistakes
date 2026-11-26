@@ -2,6 +2,9 @@ use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[path = "cli_test_plan_changes/attributes.rs"]
+mod attributes;
+
 fn fixture() -> tempfile::TempDir {
     let root =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/tests-plan-changes");

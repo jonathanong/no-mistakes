@@ -60,6 +60,7 @@ fn collect_with_request(
     // Overlapping richer entries must receive call facts in their first pass,
     // without requesting call summaries from unrelated primary/graph files.
     plan.require_call_site_paths(&supplemental_call_sites);
+    let nested_control_paths = Arc::clone(&plan.nested_control_paths);
     let vitest_default_exclude_paths = Arc::clone(&plan.vitest_default_exclude_paths);
     let test_reliability_paths = Arc::clone(&plan.test_reliability_paths);
     // Main collection can admit these paths through production imports,
@@ -80,6 +81,7 @@ fn collect_with_request(
     // carries the requested call facts; only absent paths need the light pass.
     let missing: std::collections::BTreeSet<_> = supplemental_call_sites
         .iter()
+        .chain(nested_control_paths.iter())
         .chain(vitest_default_exclude_paths.iter())
         .chain(test_reliability_paths.keys())
         .filter(|path| !facts.ts.contains_key(path))
@@ -87,6 +89,7 @@ fn collect_with_request(
         .collect();
     if !missing.is_empty() {
         let mut plan = CheckFactPlan {
+            nested_control_paths,
             vitest_default_exclude_paths,
             test_reliability_paths,
             ..Default::default()
