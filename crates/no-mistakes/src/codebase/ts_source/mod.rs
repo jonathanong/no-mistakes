@@ -23,8 +23,6 @@ pub(crate) use file_id_map::{FileIdMap, FileIdMapIter, FileIdMapIterMut};
 pub(crate) use file_inventory::ClassifiedPath;
 #[doc(hidden)]
 pub use file_inventory::{FileClassification, FileId, FileInventory};
-#[cfg(test)]
-pub(crate) use no_mistakes_ts_facts::syntax_helpers::format_parse_diagnostic;
 pub use no_mistakes_ts_facts::syntax_helpers::{
     is_test_file, starts_with_use_client, static_property_key_name, unwrap_ts_wrappers,
 };
