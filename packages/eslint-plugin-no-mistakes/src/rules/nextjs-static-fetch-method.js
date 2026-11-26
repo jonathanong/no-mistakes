@@ -2,12 +2,24 @@
 
 const { fetchInvocation, isStaticString, literalString, rule } = require("../helpers");
 
-function isMethodKey(property) {
-  if (property.computed) return literalString(property.key) === "method";
-  return (
-    (property.key.type === "Identifier" && property.key.name === "method") ||
-    (property.key.type === "Literal" && property.key.value === "method")
-  );
+const { unwrapExpression } = require("./async-ast");
+const { argumentAt } = require("./logical-call");
+
+function effectiveMethod(object) {
+  for (let index = object.properties.length - 1; index >= 0; index -= 1) {
+    const property = object.properties[index];
+    if (property.type === "SpreadElement") {
+      const value = unwrapExpression(property.argument);
+      const method = value.type === "ObjectExpression" ? effectiveMethod(value) : property;
+      if (method) return method;
+      continue;
+    }
+    const key = unwrapExpression(property.key);
+    const name = property.computed ? literalString(key) : (key.name ?? key.value);
+    if (name === "method") return property.value;
+    if (property.computed && name === null && key.type !== "Literal") return key;
+  }
+  return null;
 }
 
 module.exports = rule(
@@ -25,14 +37,13 @@ module.exports = rule(
   },
   (context) => ({
     CallExpression(node) {
-      const args = fetchInvocation(node, context);
-      if (!args) return;
-      const opts = args[1];
-      if (!opts || opts.type !== "ObjectExpression") return;
-      const methodProp = opts.properties.findLast((p) => p.type === "Property" && isMethodKey(p));
-      if (!methodProp) return;
-      if (!isStaticString(methodProp.value)) {
-        context.report({ node: methodProp.value, messageId: "dynamic" });
+      const invocation = fetchInvocation(node, context);
+      if (!invocation) return;
+      const optionsArg = argumentAt(invocation.arguments, 1);
+      const opts = unwrapExpression(optionsArg);
+      const method = opts?.type === "ObjectExpression" ? effectiveMethod(opts) : null;
+      if (optionsArg === null || (method && !isStaticString(method))) {
+        context.report({ node: method ?? node, messageId: "dynamic" });
       }
     },
   }),

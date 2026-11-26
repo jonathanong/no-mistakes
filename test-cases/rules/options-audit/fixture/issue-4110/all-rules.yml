@@ -22,6 +22,7 @@ rules:
   - {rule: github-actions-action-input-policy, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-action-timeout-pair, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-cache-key-policy, scope: repository, options: {bogusOption: true}}
+  - {rule: github-actions-cache-setup-policy, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-checkout-credentials, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-composite-step-schema, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-docker-host-ports, scope: repository, options: {bogusOption: true}}

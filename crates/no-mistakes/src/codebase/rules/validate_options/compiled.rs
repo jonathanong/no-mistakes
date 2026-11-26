@@ -6,6 +6,12 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         rules::csharp_no_async_void_delegate::compile_options(rule.strict_rule_options()?).map(drop)
     }),
     (
+        rules::github_actions_cache_setup_policy::RULE_ID,
+        |rule, _| {
+            rules::github_actions_cache_setup_policy::validate_options(rule.strict_rule_options()?)
+        },
+    ),
+    (
         rules::github_actions_download_integrity::RULE_ID,
         |rule, _| {
             rules::github_actions_download_integrity::compile_hosts(&rule.strict_rule_options()?)

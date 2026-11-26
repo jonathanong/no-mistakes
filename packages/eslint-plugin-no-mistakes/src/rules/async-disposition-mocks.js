@@ -4,6 +4,7 @@ const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const {
   resolveVariable,
   stableConstInitializer,
+  staticImportSource,
   isReassigned,
 } = require("./async-target-bindings");
 const { mockInitializer } = require("./async-disposition-mock-bindings");
@@ -109,10 +110,10 @@ function frameworkObject(node, context, seen = new Set()) {
   if (!variable?.defs.length) return node.name === "vi" || node.name === "jest" ? "api" : null;
   const def = variable.defs[0];
   if (def.type === "ImportBinding") {
-    if (def.parent.importKind === "type" || def.node.importKind === "type") return null;
-    const source = def.parent.source.value;
+    const source = staticImportSource(def);
     if (source !== "vitest" && source !== "@jest/globals") return null;
-    if (def.node.type === "ImportNamespaceSpecifier") return source;
+    if (["ImportNamespaceSpecifier", "TSImportEqualsDeclaration"].includes(def.node.type))
+      return source;
     const name = def.node.imported?.name;
     return (source === "vitest" && name === "vi") || (source === "@jest/globals" && name === "jest")
       ? "api"

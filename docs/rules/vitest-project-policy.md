@@ -72,8 +72,8 @@ the same. Each entry must be a nonempty string. When the list is set, every
 literal `test.exclude` on the root config and on each literal `test.projects[]`
 entry must contain every configured string. Comparison is exact. Extra entries
 are allowed. A missing `exclude` stays silent, because Vitest's defaults still
-apply. An empty array, or any other fully known value that omits a configured
-string, is a finding. The finding names each missing string and says to add
+apply. An empty array, an array of strings missing a configured string, or
+a known non-array value is a finding. The finding names each missing string and says to add
 it to `test.exclude`.
 
 With `extends: true`, the inherited `exclude` is that project's array. A
@@ -81,9 +81,9 @@ project that does not set `exclude` and does not inherit one stays silent.
 This check does not open another config file: a string project path or other
 non-literal project entry is incomplete while the option is set. A non-literal
 `exclude` value is incomplete. An array that already contains every configured
-string still passes when another element is unknown. If a configured string is
-not yet present and an element is unknown, the array is incomplete rather than
-a finding.
+string still passes when another element is unknown or a non-string literal.
+If a required string is missing and the array contains such an element,
+the rule marks it incomplete. [Exclude evaluation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_project_policy/evaluate/exclude.rs#L51-L72).
 
 A spread whose argument is a conditional (`condition ? { ... } : { ... }`) or a
 logical expression (`condition && { ... }`, `condition || { ... }`,

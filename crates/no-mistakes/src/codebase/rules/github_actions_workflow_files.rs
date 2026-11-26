@@ -83,3 +83,24 @@ pub(super) fn unreadable_finding(
     }
     findings.pop()
 }
+
+pub(in crate::codebase::rules) fn interpolated_expression_end(value: &str) -> Option<usize> {
+    let bytes = value.as_bytes();
+    let mut index = 0;
+    let mut in_string = false;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\'' => {
+                if in_string && bytes.get(index + 1) == Some(&b'\'') {
+                    index += 2;
+                } else {
+                    in_string = !in_string;
+                    index += 1;
+                }
+            }
+            b'}' if !in_string && bytes.get(index + 1) == Some(&b'}') => return Some(index),
+            _ => index += 1,
+        }
+    }
+    None
+}
