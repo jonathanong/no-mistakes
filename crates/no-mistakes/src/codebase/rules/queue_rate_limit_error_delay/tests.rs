@@ -502,6 +502,13 @@ fn candidate_targets_parse_failures_and_config_errors_are_covered() {
         .as_deref()
         .and_then(|m| m.path_provenance.as_deref())
         .expect("path provenance");
-    assert!(!provenance.instance_properties.is_empty());
-    assert!(!provenance.call_derived_constructs.is_empty());
+    assert_eq!(provenance.call_derived_constructs.len(), 1);
+    assert!(provenance
+        .instance_properties
+        .values()
+        .any(|ev| ev.properties.get("delayMs") == Some(&InstancePropertyValue::Positive)));
+    assert!(provenance
+        .instance_properties
+        .values()
+        .any(|ev| ev.opaque_mutation));
 }
