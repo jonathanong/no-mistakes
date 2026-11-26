@@ -103,18 +103,51 @@ describe("call-binding recall", () => {
           "async-try-catch-return-await",
           languageOptions,
           {
+            valid: [
+              lintCase(
+                fixture("async-try-catch-return-await/suppressed-line.mjs"),
+                "suppressed-line.mjs",
+                handlers,
+              ),
+              lintCase(
+                fixture("async-try-catch-return-await/suppressed-next-line.mjs"),
+                "suppressed-next-line.mjs",
+                handlers,
+              ),
+              lintCase(
+                fixture("async-try-catch-return-await/suppressed-file.mjs"),
+                "suppressed-file.mjs",
+                handlers,
+              ),
+            ],
             invalid: [
               // 2 diagnostics.
               lintCase(fixture("async-try-catch-return-await/recall.mjs"), "recall.mjs", handlers),
+              // 1 diagnostic. Same return as the suppressed fixtures, with no directive.
+              lintCase(
+                fixture("async-try-catch-return-await/unsuppressed.mjs"),
+                "unsuppressed.mjs",
+                handlers,
+              ),
             ],
           },
         ),
         "await-array-methods": snapshotSuite("await-array-methods", languageOptions, {
+          valid: [
+            lintCase(fixture("await-array-methods/suppressed-line.mjs"), "suppressed-line.mjs"),
+            lintCase(
+              fixture("await-array-methods/suppressed-next-line.mjs"),
+              "suppressed-next-line.mjs",
+            ),
+            lintCase(fixture("await-array-methods/suppressed-file.mjs"), "suppressed-file.mjs"),
+          ],
           invalid: [
             // 6 diagnostics.
             lintCase(fixture("await-array-methods/recall.mjs"), "recall.mjs"),
             lintCase(fixture("await-array-methods/asserted-alias.ts"), "asserted-alias.ts"),
             lintCase(fixture("await-array-methods/shadowed-alias.mjs"), "shadowed-alias.mjs"),
+            // 1 diagnostic. Same await as the suppressed fixtures, with no directive.
+            lintCase(fixture("await-array-methods/unsuppressed.mjs"), "unsuppressed.mjs"),
           ],
         }),
         "gh-api-argument-safety": snapshotSuite("gh-api-argument-safety", languageOptions, {
@@ -124,6 +157,14 @@ describe("call-binding recall", () => {
           ],
         }),
         "module-mock-boundary": snapshotSuite("module-mock-boundary", languageOptions, {
+          valid: [
+            lintCase(fixture("module-mock-boundary/suppressed-line.mjs"), "suppressed-line.mjs"),
+            lintCase(
+              fixture("module-mock-boundary/suppressed-next-line.mjs"),
+              "suppressed-next-line.mjs",
+            ),
+            lintCase(fixture("module-mock-boundary/suppressed-file.mjs"), "suppressed-file.mjs"),
+          ],
           invalid: [
             // 1 diagnostic.
             lintCase(fixture("module-mock-boundary/dynamic-key.mjs"), "dynamic-key.mjs"),
@@ -150,12 +191,28 @@ describe("call-binding recall", () => {
               fixture("module-mock-preserve-exports/asserted-alias.ts"),
               "asserted-alias.ts",
             ),
+            // 1 diagnostic. Same internal mock as the suppressed fixtures, with no directive.
+            lintCase(fixture("module-mock-boundary/unsuppressed.mjs"), "unsuppressed.mjs"),
           ],
         }),
         "module-mock-preserve-exports": snapshotSuite(
           "module-mock-preserve-exports",
           languageOptions,
           {
+            valid: [
+              lintCase(
+                fixture("module-mock-preserve-exports/suppressed-line.mjs"),
+                "suppressed-line.mjs",
+              ),
+              lintCase(
+                fixture("module-mock-preserve-exports/suppressed-next-line.mjs"),
+                "suppressed-next-line.mjs",
+              ),
+              lintCase(
+                fixture("module-mock-preserve-exports/suppressed-file.mjs"),
+                "suppressed-file.mjs",
+              ),
+            ],
             invalid: [
               // 3 diagnostics.
               lintCase(fixture("module-mock-preserve-exports/recall.mjs"), "recall.mjs"),
@@ -185,6 +242,11 @@ describe("call-binding recall", () => {
               lintCase(
                 fixture("module-mock-preserve-exports/asserted-alias.ts"),
                 "asserted-alias.ts",
+              ),
+              // 1 diagnostic. Same internal mock as the suppressed fixtures, with no directive.
+              lintCase(
+                fixture("module-mock-preserve-exports/unsuppressed.mjs"),
+                "unsuppressed.mjs",
               ),
             ],
           },
@@ -303,6 +365,21 @@ describe("call-binding recall", () => {
                 requiredWrapperCallee: "wrap",
               }),
               lintCase(localAlias, "backend/users.ts", server),
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/suppressed-line.ts"),
+                "suppressed-line.ts",
+                server,
+              ),
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/suppressed-next-line.ts"),
+                "suppressed-next-line.ts",
+                server,
+              ),
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/suppressed-file.ts"),
+                "suppressed-file.ts",
+                server,
+              ),
             ],
             invalid: [
               // 6 diagnostics.
@@ -340,6 +417,12 @@ describe("call-binding recall", () => {
                   getterCalleePatterns: ["^rpc\\.call$"],
                   requiredWrapperCallee: "nullableEntity",
                 },
+              ),
+              // 1 diagnostic. Same getter as the suppressed fixtures, with no directive.
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/unsuppressed.ts"),
+                "unsuppressed.ts",
+                server,
               ),
             ],
           },

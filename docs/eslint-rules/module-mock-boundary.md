@@ -70,6 +70,10 @@ Another file's re-export is not visible here. `import { mock } from "./barrel.mj
 vi.mock("@app/payments", () => ({ charge: vi.fn() }));
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`module-mock-preserve-exports`](module-mock-preserve-exports.md) preserves

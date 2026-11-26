@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { baselineKey, baselineSet } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const {
@@ -30,6 +31,7 @@ module.exports = rule(
     const baseline = baselineSet(options.baseline);
     const mockAliases = createPreserveMockAliases(context);
     if (!pathAllowed(context.filename, options)) return {};
+    const suppressed = ruleSuppression(context, "module-mock-preserve-exports");
 
     function reportMockCall(
       node,
@@ -37,6 +39,7 @@ module.exports = rule(
       specifierNode = node.arguments[0],
       factory = node.arguments[1],
     ) {
+      if (suppressed(node)) return;
       if (!factory || factory.type === "ObjectExpression") return;
       const { dynamic, specifier } = moduleMockSpecifierArgument(specifierNode);
       if (dynamic || !specifier || !isInternalSpecifier(specifier, options)) return;

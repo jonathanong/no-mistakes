@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { baselineKey, baselineMap } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const { integrationAllows } = require("./module-mock-integration");
@@ -70,6 +71,7 @@ module.exports = rule(
     const tracker = createBaselineTracker(filename, options.baseline);
     const mockAliases = createMockAliases(context, MODULE_MOCK_METHODS);
     if (!pathAllowed(filename, options)) return {};
+    const suppressed = ruleSuppression(context, "module-mock-boundary");
 
     function reportIfDisallowed(
       node,
@@ -77,6 +79,7 @@ module.exports = rule(
       specifierNode = node.arguments[0],
       factory = node.arguments[1],
     ) {
+      if (suppressed(node)) return;
       const { dynamic, specifier } = moduleMockSpecifierArgument(specifierNode);
       if (dynamic) {
         if (options.requireLiteralSpecifiers === false) return;
@@ -131,6 +134,7 @@ module.exports = rule(
         reportIfDisallowed(node, alias.mock);
       },
       "Program:exit"(node) {
+        if (suppressed(node)) return;
         for (const entry of tracker.stale()) {
           context.report({
             node,

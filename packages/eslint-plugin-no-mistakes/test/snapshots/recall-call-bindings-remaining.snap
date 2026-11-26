@@ -269,6 +269,63 @@
   ],
   "async-try-catch-return-await": [
     {
+      "file": "suppressed-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "handlers": [
+            {
+              "calleeNamePatterns": [
+                "report"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/errors"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "suppressed-next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "handlers": [
+            {
+              "calleeNamePatterns": [
+                "report"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/errors"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "suppressed-file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "handlers": [
+            {
+              "calleeNamePatterns": [
+                "report"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/errors"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "file": "recall.mjs",
       "findings": [
         {
@@ -309,9 +366,58 @@
           ]
         }
       ]
+    },
+    {
+      "file": "unsuppressed.mjs",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 23,
+          "endLine": 5,
+          "file": "unsuppressed.mjs",
+          "line": 5,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "handlers": [
+            {
+              "calleeNamePatterns": [
+                "report"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/errors"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "await-array-methods": [
+    {
+      "file": "suppressed-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed-next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed-file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
     {
       "file": "recall.mjs",
       "findings": [
@@ -442,6 +548,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "unsuppressed.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 2,
+          "file": "unsuppressed.mjs",
+          "line": 2,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "gh-api-argument-safety": [
@@ -531,6 +655,24 @@
     }
   ],
   "module-mock-boundary": [
+    {
+      "file": "suppressed-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed-next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed-file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
     {
       "file": "dynamic-key.mjs",
       "findings": [
@@ -806,9 +948,45 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "unsuppressed.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 3,
+          "file": "unsuppressed.mjs",
+          "line": 3,
+          "message": "Module mock boundary does not allow mocking internal module \"./local\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "module-mock-preserve-exports": [
+    {
+      "file": "suppressed-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed-next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed-file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
     {
       "file": "recall.mjs",
       "findings": [
@@ -1061,6 +1239,24 @@
           "endLine": 4,
           "file": "asserted-alias.ts",
           "line": 4,
+          "message": "Module mock factory must spread the real module to preserve exports.",
+          "messageId": "preserve",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "unsuppressed.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 3,
+          "file": "unsuppressed.mjs",
+          "line": 3,
           "message": "Module mock factory must spread the real module to preserve exports.",
           "messageId": "preserve",
           "ruleId": "no-mistakes/module-mock-preserve-exports",
@@ -1862,6 +2058,45 @@
       ]
     },
     {
+      "file": "suppressed-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^serverApi\\.get$"
+          ],
+          "requiredWrapperCallee": "nullableEntity"
+        }
+      ]
+    },
+    {
+      "file": "suppressed-next-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^serverApi\\.get$"
+          ],
+          "requiredWrapperCallee": "nullableEntity"
+        }
+      ]
+    },
+    {
+      "file": "suppressed-file.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^serverApi\\.get$"
+          ],
+          "requiredWrapperCallee": "nullableEntity"
+        }
+      ]
+    },
+    {
       "file": "backend/users.ts",
       "findings": [
         {
@@ -2083,6 +2318,31 @@
         {
           "getterCalleePatterns": [
             "^rpc\\.call$"
+          ],
+          "requiredWrapperCallee": "nullableEntity"
+        }
+      ]
+    },
+    {
+      "file": "unsuppressed.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "unsuppressed.ts",
+          "line": 6,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^serverApi\\.get$"
           ],
           "requiredWrapperCallee": "nullableEntity"
         }
