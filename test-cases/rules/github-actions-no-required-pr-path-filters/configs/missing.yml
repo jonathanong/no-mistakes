@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: github-actions-no-required-pr-path-filters
+    scope: repository
+    options:
+      workflows:
+        - .github/workflows/renamed.yml
+        - .github/workflows/deleted.yml

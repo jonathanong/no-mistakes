@@ -1,5 +1,5 @@
-use super::{flush_command, Scan};
-use crate::codebase::shell_heredoc::{self, DelimiterStyle, Document, Operator};
+use super::{flush_command, HeredocBody, Scan};
+use crate::codebase::shell_heredoc::{self, CarriageReturn, Document, Operator};
 
 impl Scan<'_> {
     pub(super) fn redirection(&mut self) -> bool {
@@ -16,15 +16,13 @@ impl Scan<'_> {
                     self.index = operand;
                 }
                 Operator::Document { strip_tabs } => {
-                    let (delimiter, width) = shell_heredoc::char_delimiter(
-                        &self.chars[operand..],
-                        DelimiterStyle::LeadingQuote,
-                    );
+                    let (delimiter, width, quoted) =
+                        shell_heredoc::char_delimiter_quoted(&self.chars[operand..]);
                     let end = operand + width;
                     flush_command(&mut self.current, &mut self.commands);
                     self.current.anchor = self.index + 1;
                     self.heredoc_ranges.push(self.index..end);
-                    self.pending.push(Document { delimiter, strip_tabs });
+                    self.pending.push((Document { delimiter, strip_tabs }, quoted));
                     self.index = end;
                 }
             }
@@ -44,6 +42,35 @@ impl Scan<'_> {
         self.redirect_operand = true;
         self.index += length;
         true
+    }
+
+    pub(super) fn skip_heredocs(&mut self) {
+        let start = self.index + 1;
+        self.index = start;
+        self.line += 1;
+        for (opener, quoted) in self.pending.drain(..) {
+            let body_start = self.index;
+            let body = shell_heredoc::skip_body(
+                self.chars,
+                self.index,
+                opener.delimiter.chars(),
+                opener.strip_tabs,
+                CarriageReturn::BeforeNewline,
+            );
+            self.index = body.end;
+            self.line += body.newlines;
+            self.heredoc_bodies.push(HeredocBody {
+                range: body_start..body.end,
+                quoted,
+            });
+            if !body.terminated {
+                self.unterminated = true;
+                self.stop = true;
+                break;
+            }
+        }
+        self.heredoc_ranges.push(start..self.index);
+        self.current.anchor = self.index;
     }
 
     fn flush_before_redirect(&mut self) {

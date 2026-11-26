@@ -108,7 +108,8 @@ The key must also prove a digest of the configured lockfile, in either of these 
   expression that reads a `run` step output proven in that same action, and the cache key must
   read `steps.<step id>.outputs.<name>` for the workflow step's `id` and that declared output.
   A missing file, a non-composite action, an output with no `value`, a constant, or a nested
-  `uses` inside the action is not proof. `..` path segments are ignored.
+  `uses` inside the action is not proof. A local action reference with an
+  empty, `.`, or `..` path segment cannot supply the digest. [Local action path validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_cache_key_policy/local_action.rs#L70-L80).
 
 `rejectRestoreKeys` defaults to true. Any non-empty `restore-keys` value, including a YAML
 sequence, is a finding. An empty or missing value is allowed. Set `rejectRestoreKeys` to false to
@@ -116,8 +117,9 @@ allow prefix fallbacks.
 
 With `forbidBroadHashFiles: true`, the rule also checks each single-quoted string literal
 passed directly to `hashFiles` in a configured `actions/cache`, `actions/cache/restore`, or
-`actions/cache/save` step's `key` or `restore-keys`. `setup-*` `cache-dependency-path` inputs and
-steps other than `actions/cache` are out of scope. It reports a
+`actions/cache/save` step's `key` or `restore-keys` when its path matches
+a `caches` entry. Paths listed only in `forbiddenPaths` and `setup-*`
+`cache-dependency-path` inputs are outside this check. [Cache step selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_cache_key_policy/judge.rs#L17-L51). It reports a
 pattern containing `**` or ending in a standalone `*` path component, with or without a
 trailing slash. Examples include `**`, `src/**`, and `output/*`. Exact paths and suffix-specific
 patterns such as `src/*.json` pass. A single `**/` before the exact basename of any configured

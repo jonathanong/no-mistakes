@@ -109,6 +109,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "vitest.config.ts",
+          "line": 21,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [...excludes] } },",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 22,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [...unrelatedDefaults.exclude] } },",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 23,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [...typeDefaults.exclude] } },",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 24,
+          "message": "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [...typeDeclarationDefaults.exclude] } },",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "vitest.config.ts",
           "line": 27,
           "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
           "rule": "vitest-default-excludes",

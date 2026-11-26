@@ -1,16 +1,20 @@
 //! Aggregate-only suppression hygiene. Findings are appended after filtering.
-use super::suppression::{SuppressionDirective, SuppressionDirectiveKind};
+use super::suppression::SuppressionDirective;
 use super::{RuleFinding, SuppressedFinding};
 mod consumed;
+mod known_rules;
 mod postgres;
-use crate::codebase::ts_source::{
-    audit_directives_for_path, relative_slash_path, DisableDirective, SourceStore,
-};
+mod scan;
+use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{DisableDirectivePolicy, NoMistakesConfig};
 use anyhow::Result;
 #[doc(hidden)]
 pub use consumed::ConsumedDisableDirective;
-use rayon::prelude::*;
+use known_rules::known_rule;
+use scan::{
+    scan_scopes, DirectiveStatus, PreparedComment, INVALID_DISABLE_DIRECTIVE,
+    UNUSED_DISABLE_DIRECTIVE,
+};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -32,20 +36,7 @@ pub fn audit(
 pub struct PreparedDisableDirectives {
     root: PathBuf,
     comments: Vec<PreparedComment>,
-}
-
-struct PreparedComment {
-    file: String,
-    rule: String,
-    directive: SuppressionDirective,
-    status: DirectiveStatus,
-}
-
-enum DirectiveStatus {
-    Enabled,
-    Disabled,
-    Unknown,
-    IneffectivePlacement,
+    read_failures: Vec<RuleFinding>,
 }
 
 impl PreparedDisableDirectives {
@@ -59,6 +50,7 @@ impl PreparedDisableDirectives {
             return Ok(Self {
                 root: root.to_path_buf(),
                 comments: Vec::new(),
+                read_failures: Vec::new(),
             });
         }
         let mut scopes: BTreeMap<PathBuf, BTreeSet<&str>> = BTreeMap::new();
@@ -76,38 +68,11 @@ impl PreparedDisableDirectives {
             }
         }
 
-        let comments = scopes
-            .par_iter()
-            .flat_map_iter(|(path, enabled)| {
-                let Some(source) = super::suppression::read_directive_source(sources, path) else {
-                    return Vec::new();
-                };
-                let file = relative_slash_path(root, path);
-                audit_directives_for_path(&source, path)
-                    .into_iter()
-                    .map(|(named, ineffective)| {
-                        let status = if ineffective {
-                            DirectiveStatus::IneffectivePlacement
-                        } else if enabled.contains(named.rule.as_str()) {
-                            DirectiveStatus::Enabled
-                        } else if known_rule(&named.rule) {
-                            DirectiveStatus::Disabled
-                        } else {
-                            DirectiveStatus::Unknown
-                        };
-                        PreparedComment {
-                            file: file.clone(),
-                            rule: named.rule,
-                            directive: project(named.directive),
-                            status,
-                        }
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        let (comments, read_failures) = scan_scopes(root, &scopes, sources);
         Ok(Self {
             root: root.to_path_buf(),
             comments,
+            read_failures,
         })
     }
 
@@ -152,14 +117,14 @@ impl PreparedDisableDirectives {
                 )
             })
             .collect();
-        let mut findings = self.comments.iter().filter_map(|comment| {
+        let mut findings: Vec<_> = self.comments.iter().filter_map(|comment| {
             if matches!(comment.status, DirectiveStatus::Enabled) && unparsed_files.contains(&comment.file) { return None }
             if !matches!(comment.status, DirectiveStatus::IneffectivePlacement) && used.contains(&(comment.file.clone(), comment.rule.as_str(), comment.directive.clone())) { return None }
             let (rule, detail) = match comment.status {
-                DirectiveStatus::Enabled => ("unused-disable-directive", format!("directive for `{}` suppressed no findings in this invocation", comment.rule)),
-                DirectiveStatus::Disabled => ("invalid-disable-directive", format!("directive names disabled or out-of-scope rule `{}`", comment.rule)),
-                DirectiveStatus::IneffectivePlacement => ("invalid-disable-directive", format!("directive for `{}` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead", comment.rule)),
-                DirectiveStatus::Unknown => ("invalid-disable-directive", format!("directive names unknown rule `{}`", comment.rule)),
+                DirectiveStatus::Enabled => (UNUSED_DISABLE_DIRECTIVE, format!("directive for `{}` suppressed no findings in this invocation", comment.rule)),
+                DirectiveStatus::Disabled => (INVALID_DISABLE_DIRECTIVE, format!("directive names disabled or out-of-scope rule `{}`", comment.rule)),
+                DirectiveStatus::IneffectivePlacement => (INVALID_DISABLE_DIRECTIVE, format!("directive for `{}` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead", comment.rule)),
+                DirectiveStatus::Unknown => (INVALID_DISABLE_DIRECTIVE, format!("directive names unknown rule `{}`", comment.rule)),
             };
             Some(RuleFinding { causes: Vec::new(),
                 rule: rule.to_owned(), file: comment.file.clone(), line: comment.directive.line,
@@ -167,25 +132,11 @@ impl PreparedDisableDirectives {
                 import: None, target: Some(comment.rule.clone()),
             })
         }).collect();
+        findings.extend(self.read_failures.iter().cloned());
         super::sort_findings(&mut findings);
         findings
     }
 }
-
-fn project(directive: DisableDirective) -> SuppressionDirective {
-    let (kind, line) = match directive {
-        DisableDirective::File { line } => (SuppressionDirectiveKind::File, line),
-        DisableDirective::Line { line } => (SuppressionDirectiveKind::Line, line),
-        DisableDirective::NextLine { line } => (SuppressionDirectiveKind::NextLine, line),
-    };
-    SuppressionDirective {
-        kind,
-        line: line as usize,
-    }
-}
-
-mod known_rules;
-use known_rules::known_rule;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

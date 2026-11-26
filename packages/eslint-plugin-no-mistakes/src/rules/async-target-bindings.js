@@ -39,6 +39,20 @@ function resolveRuntimeVariable(node, context) {
   return null;
 }
 
+function staticImportSource(definition) {
+  if (definition?.type !== "ImportBinding") return null;
+  const { node, parent } = definition;
+  if (node.importKind === "type" || parent?.importKind === "type") return null;
+  if (node.type === "TSImportEqualsDeclaration") {
+    const reference = node.moduleReference;
+    return reference.type === "TSExternalModuleReference"
+      ? literalString(reference.expression)
+      : null;
+  }
+  const source = parent?.source?.value;
+  return typeof source === "string" ? source : null;
+}
+
 function isLocalRequire(id, context) {
   const variable = resolveVariable(id, context);
   return Boolean(variable?.defs.some((def) => def.type && def.type !== "ImplicitGlobalVariable"));
@@ -123,4 +137,5 @@ module.exports = {
   resolveVariable,
   resolveRuntimeVariable,
   stableConstInitializer,
+  staticImportSource,
 };

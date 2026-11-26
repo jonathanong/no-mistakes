@@ -15,6 +15,10 @@ pub(super) enum WrapperBody<'ast> {
 }
 
 impl<'ast> Bindings<'_, 'ast> {
+    pub(in super::super) fn is_function_def(&self, symbol: SymbolId) -> bool {
+        self.function_def(symbol).is_some()
+    }
+
     pub(super) fn function_def(
         &self,
         symbol: SymbolId,

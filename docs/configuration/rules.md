@@ -76,7 +76,8 @@ matching glob does not select files from an unselected project. Repository-scope
 applications use repository-relative paths.
 
 The cache-key policy (`github-actions-cache-key-policy`), action input policy
-(`github-actions-action-input-policy`), and Vitest default exclusion rule
+(`github-actions-action-input-policy`), required PR path-filter rule
+(`github-actions-no-required-pr-path-filters`), and Vitest default exclusion rule
 (`vitest-default-excludes`) treat invalid option values as configuration errors.
 `check` validates their options before any analysis runs, aborts with exit
 status 2 and empty stdout, and writes the diagnostic to stderr naming the config
@@ -522,6 +523,10 @@ defaults to workflow `.yml` and `.yaml` files and to
 `.github/actions/**/action.yml` and `.github/actions/**/action.yaml`. See the
 [action input policy](../rules/github-actions-action-input-policy.md#options-and-defaults).
 
+Enable [`github-actions-cache-setup-policy`](../rules/github-actions-cache-setup-policy.md)
+with `caches` to require an ordered authored key template or `setup` to
+cap deadlines by action family.
+
 For [`github-actions-action-timeout-pair`](../rules/github-actions-action-timeout-pair.md),
 enable `options.nestedBelowStepTimeout` and name the action input with
 `options.nestedInput` to require the action's own deadline in seconds to be
@@ -559,6 +564,12 @@ lists it.
 
 [`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md) has no
 options. It stays off until a configuration lists it.
+
+Set `options.workflows` to a required non-empty list of exact repository-relative
+paths directly under `.github/workflows` for workflows that supply required PR
+checks. Omitting `options.workflows`, passing an empty list, or passing a
+non-literal path fails configuration validation early with exit status 2.
+See [`github-actions-no-required-pr-path-filters`](../rules/github-actions-no-required-pr-path-filters.md).
 
 For [`github-actions-vitest-project-selection`](../rules/github-actions-vitest-project-selection.md),
 `options.projects` defaults to none. Each entry names a Vitest `project`, the
@@ -766,6 +777,12 @@ required. Optional `requiredGlobs` replaces the default list of
 `**/node_modules/**` and `**/.git/**`. Entries must be nonempty strings,
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
+
+### Terraform IAM wildcard resources
+
+[`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md) is opt-in.
+Select Terraform files with the standard rule scope and path filters.
+It supports the shared `options.unanalyzable` policy (`report` by default, `advise`, or `ignore`).
 
 ### Workspace package relative imports
 

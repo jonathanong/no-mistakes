@@ -165,11 +165,15 @@ function createTargetMatcher(
     return resolveCallee(init, seen);
   }
 
-  function resolveCallTarget(node) {
+  function resolveCallTarget(node, preserveOpaqueArguments = false) {
     if (node?.type !== "CallExpression") return null;
     const direct = resolveCallee(node.callee);
     if (direct) return { ...direct, arguments: node.arguments };
-    const invoked = logicalCall(node, strictLogicalCalls ? resolveCallee : undefined);
+    const invoked = logicalCall(
+      node,
+      strictLogicalCalls || preserveOpaqueArguments ? resolveCallee : undefined,
+      preserveOpaqueArguments,
+    );
     if (!invoked) return null;
     const forwarded = resolveCallee(invoked.callee);
     return forwarded ? { ...forwarded, arguments: invoked.arguments } : null;

@@ -92,6 +92,7 @@ words:
   - inout
   - invalidators
   - jsonc
+  - jsonencode
   - recordset
   - jscpd
   - Laravel

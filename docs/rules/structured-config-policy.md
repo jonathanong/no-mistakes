@@ -128,7 +128,7 @@ restated on the nested config are findings.
 
 ## Options and defaults
 
-`policies` is required and defaults to no checks when empty. Each policy may
+Omitting `policies` or supplying an empty list selects no checks. [Option defaults](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/structured_config_policy.rs#L18-L22). Each policy may
 set `files`, `requiredKeys`, `bannedKeys`, and `valueAssertions`; assertions
 support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 `string-prefix`, `string-glob`, `not-single-file`, `equals`, `equals-file`,
@@ -198,9 +198,11 @@ checked. A secondary document that cannot be read for any other reason is
 still reported as missing. Rule-level custom messages apply to these
 diagnostics.
 
-Structured-data parse errors remain definite findings under every policy.
-Only a source read failure is routed as uncertainty; the rule never treats
-an unavailable document as an absent optional config key.
+Structured-data parse errors and invalid YAML merge values remain definite
+findings under every policy. Source read failures and YAML `<<` keys whose
+source location cannot be matched are routed as uncertainty through
+`options.unanalyzable`; the rule never treats an unavailable document or an
+uncertain mapping as an absent optional config key.
 
 ## Suppression
 
@@ -237,9 +239,13 @@ dropped. The rule reports a merge that cannot be applied at the original
 `<<` key, including keys in flow mappings and anchored mappings that are
 aliased elsewhere. The finding uses `failed to apply YAML merge keys`.
 `options.unanalyzable` does not change that. If the parser cannot match a
-`<<` key to its source location, the rule reports a merge error at the start
-of the document. A quoted `"<<"` key is literal,
-as is a `<<` key in JSON or JSONC.
+decoded `<<` key to its source location, that mapping stays incomplete: the
+rule routes the unlocated merge diagnostic at the start of the document through
+`options.unanalyzable`, skips only checks that depend on unavailable keys in
+that mapping, and still enforces independently known keys and assertions. A
+source-classified quoted `"<<"` key is literal, as is a `<<` key in JSON or
+JSONC; when the source location scan stops before classifying a quoted `"<<"`
+key, that key is also treated as unanalyzable.
 
 ```yaml
 label: &label plain

@@ -198,7 +198,7 @@ describe("call-binding recall", () => {
         }),
         "nextjs-static-fetch-url": snapshotSuite("nextjs-static-fetch-url", languageOptions, {
           invalid: [
-            // 3 diagnostics.
+            // 4 diagnostics.
             lintCase(fixture("nextjs-static-fetch-url/recall.mjs"), "recall.mjs"),
             // 1 diagnostic.
             lintCase(

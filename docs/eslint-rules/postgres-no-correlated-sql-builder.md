@@ -51,6 +51,8 @@ export function byAccess(access: string) {
 }
 ```
 
+A declared global selector is checked as the same binding across its guards.
+
 One guard, two selectors, two builders, or an append that is not a string,
 template, or configured tag is not this pattern.
 

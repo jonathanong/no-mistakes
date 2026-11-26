@@ -4,6 +4,7 @@ const {
   resolveVariable,
   isReassigned,
   recordObjectPatternBindings,
+  staticImportSource,
 } = require("./async-target-bindings");
 const { literalString } = require("./module-mock-helpers");
 const HOOKS = new Set(["beforeAll", "beforeEach", "afterAll", "afterEach"]);
@@ -138,26 +139,25 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
     active.add(variable);
     try {
       const def = variable.defs[0];
-      if (def?.type === "ImportBinding" && modules.has(def.parent.source.value)) {
-        if (def.node.type === "ImportNamespaceSpecifier")
-          return { kind: "namespace", root: variable, source: def.parent.source.value };
+      const source = staticImportSource(def);
+      if (source && modules.has(source)) {
+        if (["ImportNamespaceSpecifier", "TSImportEqualsDeclaration"].includes(def.node.type))
+          return { kind: "namespace", root: variable, source };
         const imported = def.node.imported?.name ?? def.node.imported?.value;
         const key =
-          def.parent.source.value === "@playwright/test" &&
+          source === "@playwright/test" &&
           (def.node.type === "ImportDefaultSpecifier" || imported === "default")
             ? "test"
             : imported;
         const role =
-          def.parent.source.value === "@playwright/test" ||
-          ["test", "defineConfig", "mergeTests"].includes(key)
+          source === "@playwright/test" || ["test", "defineConfig", "mergeTests"].includes(key)
             ? undefined
-            : exportRoles[def.parent.source.value]?.[key];
+            : exportRoles[source]?.[key];
         if (role === "assertion" || role === "ordinary") return null;
         if (role === "opaque") return { kind: "opaque", root: variable };
         if (key === "test") return { kind: "test", root: variable, path: [] };
         if (key === "defineConfig" || key === "mergeTests") return { kind: key, root: variable };
-        if (def.parent.source.value !== "@playwright/test")
-          return { kind: "opaque", root: variable };
+        if (source !== "@playwright/test") return { kind: "opaque", root: variable };
       }
       if (def?.type === "Parameter") {
         const fn = def.node;

@@ -34,7 +34,7 @@ module.exports = {
         type: "object",
         properties: {
           allowInImportMetaMain: { type: "boolean" },
-          message: { type: "string", minLength: 1 },
+          message: { type: "string", pattern: "\\S" },
         },
         additionalProperties: false,
       },
@@ -75,6 +75,9 @@ module.exports = {
       AwaitExpression: check,
       ForOfStatement(node) {
         if (node.await) check(node);
+      },
+      VariableDeclaration(node) {
+        if (node.kind === "await using") check(node);
       },
     };
   },

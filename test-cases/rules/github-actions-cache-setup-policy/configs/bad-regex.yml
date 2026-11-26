@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: github-actions-cache-setup-policy
+    scope: repository
+    options:
+      caches:
+        - uses: example/cache
+          path: .cache/widgets
+          keyPattern: '['
+      setup:
+        - uses: example/setup-package-manager
+          maxMinutes: 3

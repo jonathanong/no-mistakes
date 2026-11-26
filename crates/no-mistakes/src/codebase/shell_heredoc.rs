@@ -1,7 +1,9 @@
 mod delimiter;
 mod unquote;
 
-pub(crate) use delimiter::{ascii_document, char_delimiter, line_opener, DelimiterStyle};
+pub(crate) use delimiter::{
+    ascii_document, char_delimiter, char_delimiter_quoted, line_opener, DelimiterStyle,
+};
 pub(crate) use unquote::unquote;
 
 pub(crate) struct Document {

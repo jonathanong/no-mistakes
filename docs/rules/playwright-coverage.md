@@ -178,7 +178,9 @@ Suppress a low-effort shape on its own line:
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+The rule uses `options.unanalyzable` for unresolved selector values only at
+effective low effort. [Policy selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rules.rs#L187-L191). At max effort, unsupported dynamic selectors are skipped in the missing-
+coverage check. [Coverage findings](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rule_findings/emit.rs#L37-L45).
 
 - Inputs this rule cannot prove (at low effort, selectors given by an identifier without a literal default, a ternary, template, helper call, or cross-file binding) follow `options.unanalyzable`:
   - `report` (default): fails as a finding, e.g. `web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low`.

@@ -1,14 +1,17 @@
 use super::scan;
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 use std::collections::BTreeSet;
+use std::ops::Range;
 
 pub(super) fn record_mutations(
-    slice: &str,
+    script: &str,
+    range: Range<usize>,
+    heredocs: &[scan::HeredocSpan],
     words: &[Word],
     mutated_vars: &mut BTreeSet<String>,
     mutated_all: &mut bool,
 ) {
-    if scan::has_complex_expansion(slice) {
+    if scan::has_complex_expansion_in_range(script, range, heredocs) {
         *mutated_all = true;
         return;
     }

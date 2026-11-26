@@ -1,0 +1,3 @@
+      setup:
+        - uses: example/setup-fixture
+          maxMinutes: 3

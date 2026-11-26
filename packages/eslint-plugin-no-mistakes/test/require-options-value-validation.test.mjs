@@ -51,10 +51,13 @@ describe("require-options-on-imported-call value validation", () => {
 
   it("skips the arity check when any argument is a spread", () => {
     const got = run("value-validation-spread", { maxArguments: 0 });
-    expect(got).toEqual(["5:tooManyArguments"]);
+    expect(got).toEqual(["4:missingOptions", "5:tooManyArguments"]);
   });
 
-  it("keeps today's output when the new options are absent", () => {
-    for (const name of Object.keys(files)) expect(run(name, modes.off)).toEqual([]);
+  it("checks for required options even without value and arity validation", () => {
+    for (const name of Object.keys(files)) {
+      const expected = name === "value-validation-spread" ? ["4:missingOptions"] : [];
+      expect(run(name, modes.off)).toEqual(expected);
+    }
   });
 });

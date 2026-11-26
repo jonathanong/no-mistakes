@@ -144,6 +144,7 @@ mod diagnostic_model;
 mod edge_model;
 mod node_model;
 
+pub(crate) use super::parse::merge_uncertainty::{JobMergeUncertainty, WorkflowMergeUncertainty};
 pub use diagnostic_model::{DiagnosticCode, Severity, WorkflowTopologyDiagnostic};
 pub use edge_model::{
     NeedsEdge, WorkflowCallBindings, WorkflowCallEdge, WorkflowCallSecretsBinding, WorkflowRunEdge,
