@@ -67,3 +67,112 @@ fn failed_named_graph_prerequisite_skips_only_its_original_application() {
         Some(Prerequisite::Ready(()))
     ));
 }
+
+#[test]
+fn rate_limit_delay_collect_handles_missing_graph_sessions_and_invalid_filters() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/queue-rate-limit-error-delay/glide-mq-worker-rate-limit/fixture"),
+    );
+    let mut bad_filter_cfg: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(
+        "version: 2\nrules:\n  - rule: queue-rate-limit-error-delay\n    scope: repository\n    include: ['[']\n    options:\n      targets:\n        - module: glide-mq\n          export: Worker.RateLimitError\n          instanceDelayProperty: delayMs\n",
+    )
+    .unwrap();
+    let shared = crate::codebase::check_facts::CheckFactMap {
+        files: vec![root.join("src/invalid.ts")],
+        ..Default::default()
+    };
+    fn req<'a>(
+        root: &'a Path,
+        shared: &'a crate::codebase::check_facts::CheckFactMap,
+        config: &'a crate::config::v2::NoMistakesConfig,
+        dependency_graph: Option<&'a DepGraph>,
+    ) -> GraphRuleRequest<'a> {
+        GraphRuleRequest {
+            root,
+            config,
+            config_path: None,
+            shared,
+            prepared_graph: None,
+            dependency_graph,
+            inferred_roots: None,
+            sources: None,
+            tsconfig_catalog: None,
+            prepared_vitest_projects: None,
+            prepared_playwright_projects: None,
+        }
+    }
+
+    let unready = crate::codebase::analysis_session::AnalysisSession::disabled();
+    unready.enable_partial_checks();
+    unready.set_check_prerequisite(
+        "codebase.canonical-graph",
+        Prerequisite::Failed(vec![CheckFailure {
+            consumer: queue_rate_limit_error_delay::RULE_ID.into(),
+            file: None,
+            property: None,
+            message: "canonical graph unavailable".into(),
+        }]),
+    );
+    let mut findings = Vec::new();
+    let mut advisories = Vec::new();
+    rate_limit_delay::collect(
+        &req(&root, &shared, &bad_filter_cfg, None),
+        Some(&unready),
+        &mut findings,
+        &mut advisories,
+    )
+    .unwrap();
+    assert!(findings.is_empty());
+
+    assert!(rate_limit_delay::collect(
+        &req(&root, &shared, &bad_filter_cfg, None),
+        None,
+        &mut findings,
+        &mut advisories,
+    )
+    .is_err());
+
+    let partial = crate::codebase::analysis_session::AnalysisSession::disabled();
+    partial.enable_partial_checks();
+    rate_limit_delay::collect(
+        &req(&root, &shared, &bad_filter_cfg, None),
+        Some(&partial),
+        &mut findings,
+        &mut advisories,
+    )
+    .unwrap();
+    assert!(!partial.check_failures().is_empty());
+
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths_dir: root.clone(),
+        ..Default::default()
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    assert!(rate_limit_delay::collect(
+        &req(&root, &shared, &bad_filter_cfg, Some(&graph)),
+        None,
+        &mut findings,
+        &mut advisories,
+    )
+    .is_err());
+
+    bad_filter_cfg.rules[0].include.clear();
+    rate_limit_delay::collect(
+        &req(&root, &shared, &bad_filter_cfg, Some(&graph)),
+        None,
+        &mut findings,
+        &mut advisories,
+    )
+    .unwrap();
+    assert!(findings.is_empty());
+}
