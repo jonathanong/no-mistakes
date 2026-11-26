@@ -1,0 +1,9 @@
+name: Dynamic commands
+on: [pull_request]
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          tool="$(mise where aqua:x/y)"; "$tool/y" run
+      - run: '"$dir/scanner" git --redact'
