@@ -1,5 +1,9 @@
 # `postgres-no-unbounded-sql-identifier`
 
+The Node declaration types the legacy `unanalyzableSql` option as
+`PostgresLegacyUnanalyzableSql` (`"fail"`, `"advise"`, or `"ignore"`).
+The current `unanalyzable` option spells the failing policy `"report"`.
+
 `executorNames` replaces the default `[query, read, write]` list; it does not
 extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
 and add names. Setting both options is a configuration error. When a replacement

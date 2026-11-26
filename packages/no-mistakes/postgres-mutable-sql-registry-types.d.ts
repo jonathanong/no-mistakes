@@ -1,3 +1,4 @@
+import type { PostgresLegacyUnanalyzableSql } from "./postgres-bounded-statements-types";
 import type { Effort, Unanalyzable } from "./traversal-types";
 
 /** Configuration for the `postgres-no-mutable-sql-registry` check rule. */
@@ -16,5 +17,5 @@ export interface PostgresNoMutableSqlRegistryOptions {
   trustedSqlTags?: { module: string; name: string }[];
   effort?: Effort;
   unanalyzable?: Unanalyzable;
-  unanalyzableSql?: Unanalyzable;
+  unanalyzableSql?: PostgresLegacyUnanalyzableSql;
 }

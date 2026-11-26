@@ -942,6 +942,8 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+  TypeScript callers can import `PostgresLegacyUnanalyzableSql` for the legacy
+  policy and `PostgresBoundedStatementKind` for the entries in `statements`.
 
 
 Native SQL parse failures selected by this rule remain visible as non-failing

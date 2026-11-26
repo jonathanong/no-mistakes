@@ -472,7 +472,7 @@ remain failures. See
 | `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
 | `postgres lock-inventory` | `postgresLockInventory(options)` |
-| `postgres catalog` | `generatePostgresCatalog(options)` |
+| `postgres catalog --output <path>` | `generatePostgresCatalog({ ...options, output: path })` |
 | Source-only library capability | `parsePostgresSql(sourceOrSources)` |
 | Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier, includeDiagnostics: true })` |
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
@@ -500,10 +500,10 @@ remain failures. See
 | `infra resource-refs\|outputs\|test-for`   | `infraResourceRefs`, `infraOutputs`, `infraTestFor`                                                                                                                                                                                                                        |
 | `swift importers\|test-targets`            | `swiftImporters`, `swiftTestTargets`                                                                                                                                                                                                                                       |
 | `changes diff` | `changesDiff({ baseRoot, headRoot, config })` |
-| `lockfile diff`                            | `lockfileDiff(options)`                                                                                                                                                                                                                                                    |
+| `lockfile diff` | `lockfileDiff(options)`. Set `includeWarnings: true` for entries plus structured binary-lockfile warnings. |
 | `ci impact`                                | `ciImpact(options)`                                                                                                                                                                                                                                                        |
 | `ci env`                                   | `ciEnv(options)`                                                                                                                                                                                                                                                           |
-| `ci topology`                              | `ciTopology(options)`                                                                                                                                                                                                                                                      |
+| `ci topology` | `ciTopology(options)`. Set `format: "mermaid"` for the same diagram text as the CLI. |
 | `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |

@@ -13,6 +13,7 @@ pub(crate) struct LockfileDiffOptions {
     pub base: Option<String>,
     pub head: Option<String>,
     pub lockfile: Option<String>,
+    pub include_warnings: bool,
 }
 
 #[derive(Serialize)]
@@ -22,6 +23,13 @@ struct LockfileDiffEntry {
     added: Vec<String>,
     removed: Vec<String>,
     changed: Vec<String>,
+}
+
+#[derive(Serialize)]
+struct LockfileDiffWarning {
+    code: &'static str,
+    lockfile: String,
+    message: String,
 }
 
 fn git_io_to_napi(error: std::io::Error) -> napi::Error {
@@ -74,23 +82,29 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
     };
 
     let mut entries = Vec::new();
+    let mut warnings = Vec::new();
 
     for lf_path in &lf_paths {
         let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        let Some(manager) = lockfile::detect_manager(basename) else {
-            if lockfile::is_binary_lockfile(basename) {
-                return Err(napi::Error::from_reason(format!(
-                    "`{}` is a binary lockfile and cannot be parsed for dependency changes",
-                    basename
-                )));
-            }
-            continue;
-        };
         let rel = lf_path
             .strip_prefix(&git_root)
             .unwrap_or(lf_path)
             .to_string_lossy()
             .replace('\\', "/");
+        let Some(manager) = lockfile::detect_manager(basename) else {
+            if lockfile::is_binary_lockfile(basename) {
+                let message = lockfile::binary_lockfile_warning(basename);
+                if !options.include_warnings {
+                    return Err(napi::Error::from_reason(message));
+                }
+                warnings.push(LockfileDiffWarning {
+                    code: "binary-lockfile",
+                    lockfile: rel,
+                    message,
+                });
+            }
+            continue;
+        };
         let new_content = if let Some(head) = options.head.as_deref() {
             match git_show_file(&git_root, head, &rel).map_err(git_io_to_napi)? {
                 Some(content) => content,
@@ -149,7 +163,14 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
         });
     }
 
-    Ok(crate::cli::json_string(&entries))
+    if options.include_warnings {
+        Ok(crate::cli::json_string(&serde_json::json!({
+            "entries": entries,
+            "warnings": warnings,
+        })))
+    } else {
+        Ok(crate::cli::json_string(&entries))
+    }
 }
 
 fn manager_name(m: PackageManager) -> &'static str {

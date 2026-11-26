@@ -2,8 +2,8 @@ use std::path::{Path, PathBuf};
 
 use super::options::{
     parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
-    CiTopologyImpactOptions, CiTopologyOptions, ConfigResolveOptions, ConfigResolveView,
-    FetchesOptions, ImpactedChecksOptions, ProjectOptions, TestsAuditOptions, TestsImpactOptions,
+    CiTopologyImpactOptions, ConfigResolveOptions, ConfigResolveView, FetchesOptions,
+    ImpactedChecksOptions, ProjectOptions, TestsAuditOptions, TestsImpactOptions,
     TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
@@ -12,6 +12,8 @@ include!("cli_parity_builders.rs");
 include!("cli_parity_check.rs");
 
 mod playwright_wrappers;
+mod topology;
+pub(crate) use topology::ci_topology_json_impl;
 
 pub(crate) use playwright_wrappers::{
     playwright_check_json_impl, playwright_edges_json_impl, playwright_related_json_impl,
@@ -119,18 +121,6 @@ pub(crate) fn ci_env_json_impl(options: serde_json::Value) -> napi::Result<Strin
         Path::new(&root),
         options.config.as_deref().map(Path::new),
         &var,
-    )
-    .map_err(to_napi_error)?;
-    to_pretty_json(&report)
-}
-
-pub(crate) fn ci_topology_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<CiTopologyOptions>(options)?;
-    let root = options.root.unwrap_or(String::from("."));
-    let report = crate::ci::topology_report(
-        Path::new(&root),
-        options.config.as_deref().map(Path::new),
-        &options.workflows,
     )
     .map_err(to_napi_error)?;
     to_pretty_json(&report)

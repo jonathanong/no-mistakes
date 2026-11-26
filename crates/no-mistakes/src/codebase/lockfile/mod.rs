@@ -71,6 +71,10 @@ pub fn is_binary_lockfile(basename: &str) -> bool {
     basename == "bun.lockb"
 }
 
+pub fn binary_lockfile_warning(basename: &str) -> String {
+    format!("`{basename}` is a binary lockfile and cannot be parsed for dependency changes")
+}
+
 pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPackage> {
     match manager {
         PackageManager::Npm => npm::parse(content),
