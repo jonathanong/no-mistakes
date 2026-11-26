@@ -75,9 +75,11 @@ pub(super) fn collect(
                 }
             }
         }
-        let (offset, arguments, callee) = match node.kind() {
-            AstKind::CallExpression(call) => (call.span.start, &call.arguments, Some(call)),
-            AstKind::NewExpression(call) => (call.span.start, &call.arguments, None),
+        let (offset, arguments, callee, new_callee) = match node.kind() {
+            AstKind::CallExpression(call) => (call.span.start, &call.arguments, Some(call), None),
+            AstKind::NewExpression(call) => {
+                (call.span.start, &call.arguments, None, Some(&call.callee))
+            }
             _ => continue,
         };
         let mut projector = Projector {
@@ -114,6 +116,9 @@ pub(super) fn collect(
         if let Some(evidence) = projector.collect_instance_properties(node.id()) {
             provenance.instance_properties.insert(offset, evidence);
         }
+        if new_callee.is_some_and(|c| instance_properties::is_call_derived_construct(semantic, c)) {
+            provenance.call_derived_constructs.insert(offset);
+        }
         let path = callee.and_then(|call| projector.call_path(call, &imported));
         result.insert(
             offset,
@@ -129,6 +134,7 @@ pub(super) fn collect(
         provenance.call_guards.clear();
         provenance.absent_or_non_finite_args.clear();
         provenance.instance_properties.clear();
+        provenance.call_derived_constructs.clear();
         for call in result.values_mut() {
             call.values.fill(ArgumentValue::Unknown);
             call.spread_from = Some(0);

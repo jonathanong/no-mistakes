@@ -11,6 +11,7 @@ pub(super) struct CallDelayArgs<'a> {
     pub(super) values: Option<&'a ArgumentValues>,
     pub(super) absent: Option<&'a [AbsentSlot]>,
     pub(super) instance: Option<&'a InstancePropertyEvidence>,
+    pub(super) call_derived_construct: bool,
     pub(super) dynamic_scope: bool,
 }
 
@@ -26,6 +27,7 @@ pub(super) fn call_arguments(facts: &TsFileFacts, offset: u32) -> CallDelayArgs<
         values: None,
         absent: None,
         instance: None,
+        call_derived_construct: false,
         dynamic_scope: false,
     };
     if facts.operational_error.is_some() || facts.parse_error.is_some() || facts.fatal_parse_error {
@@ -47,11 +49,14 @@ pub(super) fn call_arguments(facts: &TsFileFacts, offset: u32) -> CallDelayArgs<
         .and_then(|p| p.absent_or_non_finite_args.get(&offset))
         .map(Vec::as_slice);
     let instance = provenance.and_then(|p| p.instance_properties.get(&offset));
+    let call_derived_construct =
+        provenance.is_some_and(|p| p.call_derived_constructs.contains(&offset));
     let dynamic_scope = provenance.is_some_and(|p| p.dynamic_scope);
     CallDelayArgs {
         values,
         absent,
         instance,
+        call_derived_construct,
         dynamic_scope,
     }
 }

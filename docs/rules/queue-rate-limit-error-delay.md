@@ -125,7 +125,10 @@ target `unanalyzable`:
   `new ProviderRateLimitError("429", { ...opts })`).
 - Unresolved callees whose target is unknown and whose terminal member name or
   imported binding matches a configured target when the call is not already
-  proven valid (for example `new unknownClient.GroupRateLimitError()`).
+  proven valid (for example `new unknownClient.GroupRateLimitError()`), local
+  factory-built value exports (`export const ProviderRateLimitError = createError()`),
+  and `new Err()` constructions whose callee binding comes from a call
+  (`const Err = getErr()`).
 - Selected files whose arguments could not be analyzed (for example due to a
   parse failure or dynamic `eval`/`with` scope).
 

@@ -46,6 +46,7 @@ fn call_args<'a>(
         values,
         absent,
         instance,
+        call_derived_construct: false,
         dynamic_scope: false,
     }
 }

@@ -1,9 +1,11 @@
 import { GroupRateLimitError, Worker } from "glide-mq";
 import { Worker as BarrelWorker } from "./barrel";
+import { ProviderRateLimitError as FactoryProviderRateLimitError } from "./factory-error";
 import { GroupRateLimitError as StarGroupRateLimitError } from "./star-barrel";
 import { ProviderRateLimitError, type ProviderLimitOptions } from "./custom-error";
 
 declare function attachDelay(err: Error): void;
+declare function getErr(): new () => Error;
 
 export function triggerWorkerUnanalyzable(
   flag: boolean,
@@ -52,6 +54,14 @@ export function triggerOpaqueOptions(opts: ProviderLimitOptions): never {
     throw new ProviderRateLimitError("429", opts);
   }
   throw new ProviderRateLimitError("429", { ...opts });
+}
+
+export function triggerFactoryBuiltErrors(): never {
+  if (Math.random() > 0.5) {
+    throw new FactoryProviderRateLimitError("429");
+  }
+  const Err = getErr();
+  throw new Err();
 }
 
 export function triggerUnresolvedCallee(dynamicPkg: {

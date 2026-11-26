@@ -119,6 +119,28 @@ pub(super) fn static_string_expr<'a>(expr: &'a Expression<'a>) -> Option<&'a str
     }
 }
 
+pub(crate) fn is_call_derived_construct(semantic: &Semantic<'_>, callee: &Expression<'_>) -> bool {
+    match callee.get_inner_expression() {
+        Expression::CallExpression(_) => true,
+        Expression::Identifier(id) => id
+            .reference_id
+            .get()
+            .and_then(|r| semantic.scoping().get_reference(r).symbol_id())
+            .is_some_and(|symbol| {
+                let AstKind::VariableDeclarator(decl) = semantic
+                    .nodes()
+                    .kind(semantic.scoping().symbol_declaration(symbol))
+                else {
+                    return false;
+                };
+                decl.init.as_ref().is_some_and(|init| {
+                    matches!(init.get_inner_expression(), Expression::CallExpression(_))
+                })
+            }),
+        _ => false,
+    }
+}
+
 pub(super) fn sorted_symbol_refs(
     semantic: &Semantic<'_>,
     symbol: oxc_syntax::symbol::SymbolId,

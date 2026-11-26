@@ -1,6 +1,6 @@
 use super::format::{missing_finding, unanalyzable_finding};
 use super::judge::{call_arguments, judge_arguments, DelayVerdict};
-use super::matching::{candidate_targets, target_matches};
+use super::matching::{candidate_targets, has_local_value_export_target, target_matches};
 use super::options::Target;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::InvocationKind;
@@ -61,10 +61,12 @@ pub(super) fn scan(input: &ScanInput<'_>) -> Result<AnalysisDiagnostics> {
         };
         let call_args = call_arguments(ts_facts, site.offset);
         if !site.has_unknown_target() {
+            let mut matched_any = false;
             for target in targets
                 .iter()
                 .filter(|target| target_matches(graph, target, site, resolved))
             {
+                matched_any = true;
                 match judge_arguments(&call_args, target) {
                     DelayVerdict::Valid => {}
                     DelayVerdict::Missing(detail) => {
@@ -90,15 +92,27 @@ pub(super) fn scan(input: &ScanInput<'_>) -> Result<AnalysisDiagnostics> {
                     }
                 }
             }
-            continue;
+            if matched_any || !has_local_value_export_target(site) {
+                continue;
+            }
         }
         let suspect = candidate_targets(targets, site, ts_facts);
-        if suspect.is_empty() {
+        let check_targets: &[Target] = if !suspect.is_empty() {
+            &[]
+        } else if site.invocation == InvocationKind::Construct && call_args.call_derived_construct {
+            targets
+        } else {
             continue;
-        }
-        let all_valid = suspect
-            .iter()
-            .all(|target| matches!(judge_arguments(&call_args, target), DelayVerdict::Valid));
+        };
+        let all_valid = if !suspect.is_empty() {
+            suspect
+                .iter()
+                .all(|target| matches!(judge_arguments(&call_args, target), DelayVerdict::Valid))
+        } else {
+            check_targets
+                .iter()
+                .all(|target| matches!(judge_arguments(&call_args, target), DelayVerdict::Valid))
+        };
         if !all_valid {
             let detail = format!(
                 "callee `{}` could not be resolved to determine whether it is a configured rate-limit error",

@@ -1,5 +1,5 @@
 use super::options::Target;
-use crate::codebase::dependencies::graph::{DepGraph, ResolvedCallSite};
+use crate::codebase::dependencies::graph::{DepGraph, KnownCallTargetRef, ResolvedCallSite};
 use crate::codebase::rules::no_single_enqueue_in_loop::modules::{
     matches_resolved, ResolvedModules,
 };
@@ -15,6 +15,21 @@ pub(super) fn target_matches(
         || resolved
             .files(&target.module)
             .is_some_and(|files| matches_resolved(files, &target.export, site))
+}
+
+pub(super) fn has_local_value_export_target(site: &ResolvedCallSite) -> bool {
+    site.targets().any(|candidate| {
+        matches!(
+            candidate.target,
+            KnownCallTargetRef::ModuleExport {
+                specifier,
+                repository_target: None,
+                ..
+            } if specifier.starts_with('.')
+                || specifier.starts_with('/')
+                || specifier.starts_with('#')
+        )
+    })
 }
 
 pub(super) fn candidate_targets<'a>(

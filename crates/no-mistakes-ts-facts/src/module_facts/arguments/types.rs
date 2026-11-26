@@ -158,6 +158,7 @@ pub struct PathProvenance {
     pub registry_dispatches: Vec<(u32, String, Option<String>, String)>,
     pub absent_or_non_finite_args: FxHashMap<u32, Vec<(usize, Option<String>)>>,
     pub instance_properties: FxHashMap<u32, super::instance_properties::InstancePropertyEvidence>,
+    pub call_derived_constructs: crate::fx::FxHashSet<u32>,
     pub dynamic_scope: bool,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]

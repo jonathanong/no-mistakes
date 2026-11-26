@@ -7,6 +7,7 @@ use oxc_syntax::operator::AssignmentOperator;
 mod ast;
 
 pub use ast::{InstancePropertyEvidence, InstancePropertyValue};
+pub(super) use ast::is_call_derived_construct;
 
 impl<'a> Projector<'a, '_> {
     pub(super) fn collect_instance_properties(

@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "BarrelWorker.RateLimitError",
-          "line": 45,
+          "line": 47,
           "message": "queue-rate-limit-error-delay could not verify delay (callee `BarrelWorker.RateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new BarrelWorker.RateLimitError();",
@@ -17,8 +17,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/unanalyzable.ts",
+          "import": "Err",
+          "line": 64,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `Err` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new Err();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "FactoryProviderRateLimitError",
+          "line": 61,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `FactoryProviderRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new FactoryProviderRateLimitError(\"429\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
           "import": "GroupRateLimitError",
-          "line": 40,
+          "line": 42,
           "message": "queue-rate-limit-error-delay could not verify delay (spread argument at or before argument 0 hides whether a delay is supplied); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new GroupRateLimitError(...args);",
@@ -27,7 +45,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "ProviderRateLimitError",
-          "line": 52,
+          "line": 54,
           "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new ProviderRateLimitError(\"429\", opts);",
@@ -36,7 +54,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "ProviderRateLimitError",
-          "line": 54,
+          "line": 56,
           "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new ProviderRateLimitError(\"429\", { ...opts });",
@@ -45,7 +63,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "StarGroupRateLimitError",
-          "line": 47,
+          "line": 49,
           "message": "queue-rate-limit-error-delay could not verify delay (callee `StarGroupRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new StarGroupRateLimitError();",
@@ -54,7 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 14,
+          "line": 16,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw Object.assign(new Worker.RateLimitError(), extra);",
@@ -63,7 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 17,
+          "line": 19,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw Object.assign(new Worker.RateLimitError(), { ...extra });",
@@ -72,7 +90,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 20,
+          "line": 22,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const conditional = new Worker.RateLimitError();",
@@ -81,7 +99,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 27,
+          "line": 29,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const escaped = new Worker.RateLimitError();",
@@ -90,7 +108,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 32,
+          "line": 34,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const computed = new Worker.RateLimitError();",
@@ -99,7 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 36,
+          "line": 38,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "return new Worker.RateLimitError();",
@@ -108,7 +126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "dynamicPkg.GroupRateLimitError",
-          "line": 63,
+          "line": 73,
           "message": "queue-rate-limit-error-delay could not verify delay (callee `dynamicPkg.GroupRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new dynamicPkg.GroupRateLimitError();",
@@ -705,7 +723,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "BarrelWorker.RateLimitError",
-          "line": 45,
+          "line": 47,
           "message": "queue-rate-limit-error-delay could not verify delay (callee `BarrelWorker.RateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new BarrelWorker.RateLimitError();",
@@ -713,8 +731,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/unanalyzable.ts",
+          "import": "Err",
+          "line": 64,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `Err` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new Err();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
+          "import": "FactoryProviderRateLimitError",
+          "line": 61,
+          "message": "queue-rate-limit-error-delay could not verify delay (callee `FactoryProviderRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
+          "rule": "queue-rate-limit-error-delay",
+          "sourceLine": "throw new FactoryProviderRateLimitError(\"429\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unanalyzable.ts",
           "import": "GroupRateLimitError",
-          "line": 40,
+          "line": 42,
           "message": "queue-rate-limit-error-delay could not verify delay (spread argument at or before argument 0 hides whether a delay is supplied); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new GroupRateLimitError(...args);",
@@ -723,7 +759,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "ProviderRateLimitError",
-          "line": 52,
+          "line": 54,
           "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new ProviderRateLimitError(\"429\", opts);",
@@ -732,7 +768,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "ProviderRateLimitError",
-          "line": 54,
+          "line": 56,
           "message": "queue-rate-limit-error-delay could not verify delay (options argument 1 is not a closed object literal, so `retryAfterMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new ProviderRateLimitError(\"429\", { ...opts });",
@@ -741,7 +777,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "StarGroupRateLimitError",
-          "line": 47,
+          "line": 49,
           "message": "queue-rate-limit-error-delay could not verify delay (callee `StarGroupRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new StarGroupRateLimitError();",
@@ -750,7 +786,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 14,
+          "line": 16,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw Object.assign(new Worker.RateLimitError(), extra);",
@@ -759,7 +795,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 17,
+          "line": 19,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw Object.assign(new Worker.RateLimitError(), { ...extra });",
@@ -768,7 +804,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 20,
+          "line": 22,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const conditional = new Worker.RateLimitError();",
@@ -777,7 +813,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 27,
+          "line": 29,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const escaped = new Worker.RateLimitError();",
@@ -786,7 +822,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 32,
+          "line": 34,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const computed = new Worker.RateLimitError();",
@@ -795,7 +831,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
-          "line": 36,
+          "line": 38,
           "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "return new Worker.RateLimitError();",
@@ -804,7 +840,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unanalyzable.ts",
           "import": "dynamicPkg.GroupRateLimitError",
-          "line": 63,
+          "line": 73,
           "message": "queue-rate-limit-error-delay could not verify delay (callee `dynamicPkg.GroupRateLimitError` could not be resolved to determine whether it is a configured rate-limit error); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "throw new dynamicPkg.GroupRateLimitError();",
