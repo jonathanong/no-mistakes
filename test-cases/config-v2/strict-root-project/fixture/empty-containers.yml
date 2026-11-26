@@ -1,0 +1,7 @@
+rules: []
+projects:
+  example:
+    root: null
+    routes: []
+    postgres: null
+effects: {}

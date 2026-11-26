@@ -23,6 +23,7 @@ mod fragment_validation;
 mod fragments;
 mod merge_values;
 mod named_entries;
+mod strict_value;
 pub use declared::declared_config;
 mod sections;
 mod selection;

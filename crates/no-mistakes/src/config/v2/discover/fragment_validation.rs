@@ -4,6 +4,8 @@ use anyhow::Result;
 use serde_yaml::{Mapping, Value};
 use std::path::Path;
 
+use super::strict_value::StrictValue;
+
 pub(super) fn parse_document(document: &ConfigDocument) -> Result<Value> {
     if let Some(section) = &document.section {
         super::rule_keys::validate_fragment(&document.source, &document.path, section)?;
@@ -84,7 +86,7 @@ pub(super) fn deserialize(
     provenance: &super::super::schema::ConfigProvenance,
     documents: &[ConfigDocument],
 ) -> Result<NoMistakesConfig> {
-    serde_path_to_error::deserialize(value).map_err(|error| {
+    serde_path_to_error::deserialize(StrictValue(value)).map_err(|error| {
         let mut key = ConfigPath::default();
         for segment in error.path() {
             key = match segment {

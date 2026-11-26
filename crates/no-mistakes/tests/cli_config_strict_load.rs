@@ -49,6 +49,12 @@ fn invalid_root_and_project_configurations_exit_two_before_analysis() {
         ("4477-null.yml", "expected struct NoMistakesConfig"),
         ("4478.yml", "projects.example.postgres.unanalyzableSql"),
         ("4482.yml", "projects.example.trpc.routers[0]"),
+        ("null-rules.json", "rules: invalid type: null"),
+        ("null-projects.jsonc", "projects: invalid type: null"),
+        (
+            "null-project-routes.yml",
+            "projects.example.routes: invalid type: null",
+        ),
     ];
     for (config, expected) in cases {
         let out = check(&root, Some(config));
@@ -62,11 +68,31 @@ fn invalid_root_and_project_configurations_exit_two_before_analysis() {
         assert!(stderr.contains(expected), "{stderr}");
     }
 
-    for name in ["valid.yml", "empty.yml", "legacy-sql-policies.yml"] {
+    for name in [
+        "valid.yml",
+        "empty.yml",
+        "empty-containers.yml",
+        "legacy-sql-policies.yml",
+    ] {
         let valid = check(&root, Some(name));
         assert_eq!(valid.status.code(), Some(0), "{name}: {:?}", valid.stderr);
         assert!(serde_json::from_slice::<serde_json::Value>(&valid.stdout).is_ok());
     }
+}
+
+#[test]
+fn inherited_annotation_policy_uses_normalized_project_value() {
+    let root = fixture().join("../../../codebase-analysis/rule-analysis-policy/fixture");
+    let output = check(&root, Some("project-annotation-ignore.yml"));
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["rules"], serde_json::json!([]));
+    assert!(report["incomplete"].is_null(), "{report}");
 }
 
 #[test]

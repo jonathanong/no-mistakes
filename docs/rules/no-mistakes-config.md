@@ -72,6 +72,9 @@ rules:
     scope: repository
 ```
 
+Collection fields such as `rules` and `projects` require a list or mapping.
+Use `[]` for an empty list, `{}` for an empty mapping, or omit the field.
+
 ## Analysis
 
 ### Effort

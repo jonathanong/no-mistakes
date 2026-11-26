@@ -6,7 +6,9 @@ mod legacy;
 use legacy::legacy_policy;
 pub(super) use legacy::validate_inventory_policy;
 pub(crate) use legacy::validate_low_alias;
-pub(super) use legacy::{legacy_sql_options, sql_policy_rule, valid_project_sql_policy};
+pub(super) use legacy::{
+    annotation_project_sql_policy, legacy_sql_options, sql_policy_rule, valid_project_sql_policy,
+};
 mod fallback;
 pub use fallback::AnalysisFallback;
 
