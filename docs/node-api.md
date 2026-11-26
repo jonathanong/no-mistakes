@@ -31,6 +31,10 @@ Explicit integration-policy includes/excludes narrow test discovery while
 retaining imported helper summaries and parse diagnostics. This preparation
 change adds no invocation option, runtime export, or report field.
 
+Configured `github-actions-cache-setup-policy` uses the same authored key
+patterns, setup deadline caps, and unanalyzable policy in `check()` and
+`analyzeProject()`. [Rule options](rules/github-actions-cache-setup-policy.md)
+
 `ciTopology()` reports `unlocated-yaml-merge` when a YAML merge key cannot
 be matched to its location in the source. Workflow and structured-config
 checks route the uncertainty through their configured policy and retain
