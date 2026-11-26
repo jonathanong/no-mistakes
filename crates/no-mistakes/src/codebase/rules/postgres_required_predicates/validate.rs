@@ -1,8 +1,10 @@
 use super::{AllowEntry, Options, PartitionExemption, RULE_ID};
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use std::collections::BTreeSet;
 
 pub(super) fn check(opts: &Options) -> Result<()> {
+    crate::codebase::postgres::compile_sql_include(&opts.sql_include)
+        .with_context(|| format!("{RULE_ID}: options.sqlInclude"))?;
     for relation in &opts.relations {
         if relation
             .require_columns

@@ -11,7 +11,7 @@ mod scan;
 pub const RULE_ID: &str = "postgres-required-predicates";
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct RelationOption {
     pub(crate) table: String,
     pub(crate) require: Vec<String>,

@@ -18,7 +18,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Clone, Deserialize, Eq, Ord, PartialEq, PartialOrd)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct AllowedMigration {
     pub(crate) path: String,
     pub(crate) table: String,

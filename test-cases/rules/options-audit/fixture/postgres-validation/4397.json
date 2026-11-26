@@ -1,0 +1,20 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-no-generated-column-writes",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "**/*.sql"
+        ],
+        "extraGeneratedColumns": [
+          {
+            "table": "orders",
+            "colum": "generated_marker"
+          }
+        ]
+      }
+    }
+  ]
+}
