@@ -767,6 +767,12 @@ required. Optional `requiredGlobs` replaces the default list of
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
 
+### Terraform IAM wildcard resources
+
+[`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md) is opt-in.
+Select Terraform files with the standard rule scope and path filters.
+It supports the shared `options.unanalyzable` policy (`report` by default, `advise`, or `ignore`).
+
 ### Workspace package relative imports
 
 [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md) uses declared workspace

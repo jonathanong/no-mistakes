@@ -118,6 +118,7 @@ macro_rules! filesystem_rules {
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files => "",
             DOC_CONSISTENCY => doc_consistency::check_with_files => "",
             SHELLCHECK_RUNNER => shellcheck_runner::check_with_files => "",
+            TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS => terraform_iam_no_undocumented_wildcards::check_with_files => "",
         }
     };
 }

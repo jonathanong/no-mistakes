@@ -359,6 +359,10 @@ when both exist. Configure PR limits, exclusion globs, and ecosystem exemptions
 as needed. Exempt ecosystems skip every check, including the PR limit.
 Unreadable or malformed input appears in the JSON `incomplete` list.
 
+Enable [`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md)
+to require narrower resources or a suppression in selected Terraform IAM Allow
+statements. Findings point to the opening line of the `resources` attribute.
+
 Enable [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md)
 to report relative imports whose resolved targets cross declared workspace
 package boundaries. Select the importing files with the rule's scope and path

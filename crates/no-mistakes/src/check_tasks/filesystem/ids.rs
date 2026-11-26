@@ -89,6 +89,7 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::RUST_NO_INLINE_ALLOWS,
     rules::RUST_NO_INLINE_TESTS,
     rules::SHELLCHECK_RUNNER,
+    rules::TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS,
     rules::BASH_EMPTY_ARRAY_NOUNSET,
     rules::ZSH_READONLY_PARAMETER,
     rules::STRICT_PACKAGE_LAYOUT,

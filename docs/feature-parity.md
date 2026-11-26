@@ -52,6 +52,10 @@ checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
 floor, explicit PR limit check, exclusion globs, ecosystem exemptions, and
 incomplete-input diagnostics.
 
+The opt-in [`terraform-iam-no-undocumented-wildcards`](rules/terraform-iam-no-undocumented-wildcards.md)
+checks native Terraform and OpenTofu source through Rust, CLI `check`, and
+async Node `check()` or `analyzeProject()` check reports.
+
 [`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) checks recorded
 TS/JS imports against declared workspace ownership through Rust, CLI `check`,
 and async Node `check()` and `analyzeProject()` check reports.

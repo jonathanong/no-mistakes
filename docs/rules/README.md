@@ -190,6 +190,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |
 | [`swift-no-unguarded-darwin-import`](swift-no-unguarded-darwin-import.md)       | Gate Darwin imports in portable Swift test sources.                            |
 | [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md)                 | Require @MainActor on Swift classes whose names end with ViewModel.             |
+| [`terraform-iam-no-undocumented-wildcards`](terraform-iam-no-undocumented-wildcards.md) | Explain literal wildcard resource grants in Terraform IAM policy statements. |
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
 | [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |

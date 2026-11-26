@@ -1,0 +1,5 @@
+rules:
+  - rule: terraform-iam-no-undocumented-wildcards
+    scope: repository
+    include: ["policies/**"]
+    exclude: ["policies/excluded.tf"]
