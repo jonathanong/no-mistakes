@@ -29,7 +29,6 @@ import type {
   SwiftOptions,
 } from "./report-types";
 import type {
-  GitDiffRevisions,
   LockfileDiffOptions,
   TestsImpactOptions,
   TestsPlanDocumentOptions,
@@ -145,8 +144,7 @@ export type AnalyzeProjectReportRequest =
   | ({
       type: "impactedChecks";
       id?: string;
-    } & BatchedRootTsConfigOptions<ImpactedChecksOptions> &
-      GitDiffRevisions)
+    } & BatchedRootTsConfigOptions<ImpactedChecksOptions>)
   | ({
       type: "infraResourceRefs" | "infraOutputs" | "infraTestFor";
       id?: string;
