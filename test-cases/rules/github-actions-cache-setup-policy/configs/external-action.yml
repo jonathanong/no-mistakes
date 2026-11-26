@@ -1,0 +1,11 @@
+version: 2
+unanalyzable: report
+rules:
+  - rule: github-actions-cache-setup-policy
+    scope: repository
+    options:
+      include: [tools/actions/**/action.yml]
+      caches:
+        - uses: example/cache
+          path: .cache/widgets
+          keyPattern: 'pnpm-\$\{\{\s*runner\.os\s*\}\}-\$\{\{\s*runner\.arch\s*\}\}-\$\{\{\s*hashFiles\(''widgets\.lock''\)\s*\}\}'

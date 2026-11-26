@@ -1,0 +1,6 @@
+# no-mistakes-disable-file github-actions-cache-setup-policy
+on: push
+jobs:
+  verify:
+    steps:
+      - uses: example/setup-package-manager@v1

@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 mod lines;
 mod message;
-mod policy;
+pub(super) mod policy;
 mod scalar;
 mod scan;
 

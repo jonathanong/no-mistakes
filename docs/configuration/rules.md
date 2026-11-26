@@ -523,6 +523,10 @@ defaults to workflow `.yml` and `.yaml` files and to
 `.github/actions/**/action.yml` and `.github/actions/**/action.yaml`. See the
 [action input policy](../rules/github-actions-action-input-policy.md#options-and-defaults).
 
+Enable [`github-actions-cache-setup-policy`](../rules/github-actions-cache-setup-policy.md)
+with `caches` to require an ordered authored key template or `setup` to
+cap deadlines by action family.
+
 For [`github-actions-action-timeout-pair`](../rules/github-actions-action-timeout-pair.md),
 enable `options.nestedBelowStepTimeout` and name the action input with
 `options.nestedInput` to require the action's own deadline in seconds to be
