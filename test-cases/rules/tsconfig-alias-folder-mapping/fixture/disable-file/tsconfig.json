@@ -1,0 +1,8 @@
+// no-mistakes-disable-file tsconfig-alias-folder-mapping
+{
+  "compilerOptions": {
+    "paths": {
+      "@agents/widget": ["backend/agents/widget.ts"]
+    }
+  }
+}

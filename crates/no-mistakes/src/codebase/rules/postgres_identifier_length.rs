@@ -32,7 +32,7 @@ fn default_max_bytes() -> i64 {
     63
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     schema: PostgresSchemaOptions,
     max_bytes: usize,
 }
@@ -87,7 +87,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings)
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     if !(1..=63).contains(&opts.max_bytes) {
         bail!("{RULE_ID} option maxBytes: must be from 1 through 63");
     }

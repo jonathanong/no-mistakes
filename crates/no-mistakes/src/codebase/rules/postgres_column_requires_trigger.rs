@@ -16,14 +16,14 @@ pub const RULE_ID: &str = "postgres-column-requires-trigger";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     requirements: Vec<RequirementOptions>,
     allow: Vec<AllowEntry>,
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct RequirementOptions {
     column: String,
     function: String,
@@ -78,7 +78,7 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
         .collect()
 }
 
-fn compile_options(opts: &Options) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<Compiled> {
     require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     let requirements = opts
         .requirements

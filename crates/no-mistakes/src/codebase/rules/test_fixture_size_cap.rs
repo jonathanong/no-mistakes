@@ -18,7 +18,7 @@ const SCRIPT_EXTENSIONS: &[&str] = &[".cjs", ".cts", ".js", ".jsx", ".mjs", ".mt
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     pub(super) threshold: Option<u64>,
     pub(super) exemptions: Vec<u64>,
     pub(super) each_calls: Vec<String>,
@@ -41,7 +41,7 @@ pub(super) struct Scopes {
     pub(super) helpers: Vec<String>,
 }
 
-pub(super) struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     pub(super) threshold: Option<u64>,
     pub(super) exemptions: BTreeSet<u64>,
     pub(super) each_calls: Vec<(String, String)>,
@@ -109,7 +109,7 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-pub(super) fn compile_options(opts: &Options) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<Compiled> {
     let each_calls = opts
         .each_calls
         .iter()

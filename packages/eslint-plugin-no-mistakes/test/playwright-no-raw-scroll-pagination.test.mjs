@@ -170,7 +170,7 @@ const suite = {
   ],
   invalid: [
     {
-      code: fixture("playwright-no-raw-scroll-pagination/sentinel-receivers.spec.js"),
+      code: fixture("playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js"),
       filename: "e2e/sentinel-receivers.spec.js",
       options: [sentinelOptions],
     },

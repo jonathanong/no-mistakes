@@ -1,13 +1,9 @@
 use super::RULE_ID;
-use crate::codebase::rules::validate_options::{
-    format_invalid_option, indexed_rule_applications, push_application_errors,
-};
-use crate::config::v2::NoMistakesConfig;
+use crate::codebase::rules::validate_options::format_invalid_option;
 use anyhow::{bail, Result};
 use regex::Regex;
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::collections::BTreeMap;
 
 #[derive(Deserialize, Default)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
@@ -168,24 +164,4 @@ pub(super) fn normalized_path(path: &str) -> &str {
     path.strip_prefix("./")
         .unwrap_or(path)
         .trim_end_matches('/')
-}
-
-pub(crate) fn collect_config_errors(
-    root: &Path,
-    config_path: Option<&Path>,
-    config: &NoMistakesConfig,
-    output: &mut Vec<String>,
-) {
-    for (index, rule) in indexed_rule_applications(config, RULE_ID) {
-        if let Err(error) = rule.try_rule_options::<Options>().and_then(compile) {
-            push_application_errors(
-                root,
-                config,
-                index,
-                config_path,
-                BTreeSet::from([error.to_string()]),
-                output,
-            );
-        }
-    }
 }

@@ -45,6 +45,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`playwright-defaults`](playwright-defaults.md)                                                         | Require literal defaults for passed-through test IDs.         |
 | [`playwright-literals`](playwright-literals.md)                                                         | Require statically analyzable test-id values.                 |
 | [`playwright-naming-convention`](playwright-naming-convention.md)                                       | Enforce test-id naming.                                       |
+| [`playwright-no-browser-new-page`](playwright-no-browser-new-page.md)                                   | Require the configured shared page fixture instead of `browser.newPage()`. |
 | [`playwright-no-empty`](playwright-no-empty.md)                                                         | Reject empty test IDs.                                        |
 | [`playwright-no-hoisted-unique-token`](playwright-no-hoisted-unique-token.md)                           | Reject a unique token hoisted above a re-entrant `beforeAll`. |
 | [`playwright-no-raw-scroll-pagination`](playwright-no-raw-scroll-pagination.md)                         | Reject a raw scroll driving a cursor-paginated wait.          |

@@ -1,0 +1,13 @@
+version: 2
+unanalyzable: report
+rules:
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    options:
+      caches:
+        - path: .cache/example
+          lockfile: example.lock
+          keyParts: [runner.os]
+      allowHashFiles: true
+      forbidBroadHashFiles: false
+      rejectRestoreKeys: false

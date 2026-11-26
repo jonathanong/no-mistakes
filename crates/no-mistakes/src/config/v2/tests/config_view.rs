@@ -163,8 +163,8 @@ fn config_view_disabled_rule_excluded() {
     let cfg = load_v2_config(&fixture("disabled-rule"), None).unwrap();
     let view = ConfigView::new(&cfg);
     let rules = view.enabled_rules_for("backend");
-    assert!(rules.iter().any(|(id, _)| *id == "active-rule"));
-    assert!(!rules.iter().any(|(id, _)| *id == "disabled-rule"));
+    assert!(rules.iter().any(|(id, _)| *id == "unique-exports"));
+    assert!(!rules.iter().any(|(id, _)| *id == "forbidden-calls"));
 }
 
 #[test]

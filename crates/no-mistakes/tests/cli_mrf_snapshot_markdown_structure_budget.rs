@@ -58,8 +58,9 @@ fn markdown_structure_budget_json_matches_snapshot() {
             (
                 "baseline_changed",
                 fixture_root("baseline-changed"),
-                baseline,
+                baseline.clone(),
             ),
+            ("disable_file", fixture_root("disable-file"), baseline),
             (
                 "external_stale",
                 fixture_root("external-request"),

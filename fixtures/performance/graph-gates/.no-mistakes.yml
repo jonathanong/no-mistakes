@@ -52,11 +52,9 @@ rules:
   - rule: queue-dashboard-reachability
     scope: repository
     options:
-      entrypoint: apps/api/src/entry.ts
       queuePattern: apps/api/src/queues/*.ts
       factorySpecifier: "@fixture/queue-factory"
       factoryFunction: createQueue
-      tsconfig: tsconfig.json
   - rule: route-consistency
     scope: repository
     options:
@@ -71,9 +69,6 @@ rules:
         - apps/api/src/**/*.ts
   - rule: http-route-static-paths
     scope: repository
-    options:
-      backendPrefixes:
-        - "/api/v1/"
   - rule: http-call-static-paths
     scope: repository
     options:

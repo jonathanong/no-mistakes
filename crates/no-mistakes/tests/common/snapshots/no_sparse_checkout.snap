@@ -56,6 +56,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/check/action.yaml",
+          "line": 9,
+          "message": ".github/actions/check/action.yaml:9: composite action passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "sourceLine": "sparse-checkout: packages/widgets",
+          "target": "sparse-checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "review_locations": {
     "exitCode": 1,
     "report": {

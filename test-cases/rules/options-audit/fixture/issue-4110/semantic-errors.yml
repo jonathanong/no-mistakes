@@ -1,0 +1,154 @@
+version: 2
+rules:
+  - rule: require-storybook-stories
+    scope: repository
+    name: invalid-story-include
+    options:
+      include: ["[src"]
+  - rule: require-storybook-stories
+    scope: repository
+    name: invalid-story-exclude
+    options:
+      exclude: ["[generated"]
+  - rule: require-storybook-stories
+    scope: repository
+    name: invalid-story-glob
+    options:
+      stories: ["[stories"]
+  - rule: require-storybook-stories
+    scope: repository
+    name: invalid-story-allow
+    options:
+      allowFiles: {"[tests": "fixture"}
+  - rule: required-companion-imports
+    scope: repository
+    options:
+      sourceGlobs: ["[lib"]
+  - rule: required-doc-section
+    scope: repository
+    options:
+      glob: "[docs"
+      requiredHeading: "## Usage"
+  - rule: markdown-reachability
+    scope: repository
+    name: invalid-doc-exclude
+    options:
+      excludeRoots: [""]
+  - rule: markdown-reachability
+    scope: repository
+    name: invalid-doc-depth
+    options:
+      maxDepth: 0
+  - rule: swift-no-unguarded-darwin-import
+    scope: repository
+    options:
+      allow: ["[Swift"]
+  - rule: test-no-retries
+    scope: repository
+    name: invalid-test-fixture
+    options:
+      fixtures:
+        - {module: "../fixture.ts", export: test}
+  - rule: test-no-retries
+    scope: repository
+    name: invalid-factory-glob
+    options:
+      files: ["[factory"]
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      concurrencyPolicy:
+        build:
+          pending: newest
+  - rule: github-actions-env-policy
+    scope: repository
+    name: invalid-env-entry
+    options:
+      required: {RUN_MODE: [test]}
+  - rule: github-actions-env-policy
+    scope: repository
+    name: contradictory-env-entry
+    options:
+      required: {RUN_MODE: test}
+      forbidden: [RUN_MODE]
+  - rule: github-actions-no-poll-wait-job
+    scope: repository
+    options:
+      pollCommands: [" "]
+  - rule: postgres-no-offset
+    scope: repository
+    name: malformed-shared-sql-profile
+    options:
+      executorNames: []
+      rawSqlTags: false
+  - rule: postgres-no-offset
+    scope: repository
+    name: malformed-matcher-report
+    options:
+      executorNames: []
+      reportUnmatchedExecutorNames: invalid
+  - rule: no-single-enqueue-in-loop
+    scope: repository
+    name: invalid-enqueue-pattern
+    options:
+      singleExportPattern: "("
+  - rule: no-single-enqueue-in-loop
+    scope: repository
+    name: invalid-bulk-pattern
+    options:
+      bulkExportPattern: " "
+  - rule: no-single-enqueue-in-loop
+    scope: repository
+    name: invalid-enqueue-module-glob
+    options:
+      moduleGlobs: ["[queue"]
+  - rule: github-actions-run-command-policy
+    scope: repository
+    name: invalid-command-pattern
+    options:
+      commands:
+        - command: [tool]
+          forbidArgPatterns:
+            - pattern: "("
+  - rule: github-actions-run-command-policy
+    scope: repository
+    name: invalid-command-argument
+    options:
+      commands:
+        - command: [tool]
+          requireArgs: [true]
+  - rule: github-actions-env-policy
+    scope: repository
+    name: invalid-env-include
+    options:
+      include: ["[workflows"]
+  - rule: github-actions-run-command-policy
+    scope: repository
+    name: invalid-command-include
+    options:
+      include: ["[actions"]
+  - rule: github-actions-run-command-policy
+    scope: repository
+    name: blank-conditional-argument
+    options:
+      commands:
+        - command: [tool]
+          whenAnyArgs: [""]
+  - rule: github-actions-run-command-policy
+    scope: repository
+    name: empty-required-choice
+    options:
+      commands:
+        - command: [tool]
+          requireAnyArgs: [[]]
+  - rule: test-no-retries
+    scope: repository
+    name: blank-fixture-export
+    options:
+      fixtures:
+        - {module: "tests/fixture.ts", export: ""}
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      scopes:
+        helpers: ["[test-data"]

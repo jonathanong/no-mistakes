@@ -1,4 +1,4 @@
-# Isolate route/fact preparation; audit-on work has its own regression.
+# Silence stale suppression advice while auditing unknown rule IDs.
 reportUnusedDisableDirectives: ignore
 version: 2
 projects:

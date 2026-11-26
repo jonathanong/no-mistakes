@@ -1,0 +1,10 @@
+{
+  // A disabled application still contains an authored rule ID.
+  "version": 2,
+  "rules": [
+    {
+      "rule": "github-actions-download-integrit",
+      "enabled": false
+    }
+  ]
+}

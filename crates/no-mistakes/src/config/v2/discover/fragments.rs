@@ -86,7 +86,7 @@ pub(crate) fn parse_sources_quiet(
 ) -> Result<NoMistakesConfig> {
     if let [document] = documents {
         if document.section.is_none() {
-            return parse_single_document(document);
+            return parse_single_document(root, document);
         }
     }
     let (merged, provenance, deprecated) = merge_documents(root, documents)?;
@@ -95,11 +95,11 @@ pub(crate) fn parse_sources_quiet(
     let path = documents.first().map(|d| d.path.as_path()).unwrap_or(root);
     config.config_provenance = provenance;
     super::aliases::mark_deprecated(&mut config, &deprecated);
-    super::fragment_validation::finish(&mut config, documents, path)?;
+    super::fragment_validation::finish(root, &mut config, documents, path)?;
     Ok(config)
 }
 
-fn parse_single_document(document: &ConfigDocument) -> Result<NoMistakesConfig> {
+fn parse_single_document(root: &Path, document: &ConfigDocument) -> Result<NoMistakesConfig> {
     let value = super::fragment_validation::parse_document(document)?;
     let mut provenance = ConfigProvenance::default();
     record_provenance(
@@ -113,7 +113,13 @@ fn parse_single_document(document: &ConfigDocument) -> Result<NoMistakesConfig> 
     let documents = std::slice::from_ref(document);
     let mut config = super::fragment_validation::deserialize(value, &provenance, documents)?;
     super::fragment_validation::validate(&config, &provenance, documents, &document.path)?;
-    super::finish_config(&mut config, &document.path)?;
+    config.config_provenance = provenance;
+    super::finish_config(
+        root,
+        &mut config,
+        &document.path,
+        [(document.path.as_path(), document.source.as_str())],
+    )?;
     Ok(config)
 }
 

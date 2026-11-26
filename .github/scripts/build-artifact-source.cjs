@@ -75,7 +75,9 @@ async function resolveSource(env, fetchRun = fetch) {
     "native-runtime-aarch64-apple-darwin",
     "native-rust-archive-x86_64-pc-windows-msvc",
     "native-rust-archive-aarch64-apple-darwin",
-    "standalone-library",
+    "standalone-library-1",
+    "standalone-library-2",
+    "standalone-library-3",
     "rust-coverage-build",
   ];
   if (
@@ -99,7 +101,7 @@ async function resolveSource(env, fetchRun = fetch) {
     })
   )
     throw new Error(
-      "Build source must contain a complete inventory of at most 100 artifacts and all eight unexpired build archives",
+      "Build source must contain a complete inventory of at most 100 artifacts and all required unexpired build archives",
     );
   return { run_id: id, reuse: true };
 }

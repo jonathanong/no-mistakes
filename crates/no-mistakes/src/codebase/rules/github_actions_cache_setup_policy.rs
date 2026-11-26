@@ -10,7 +10,9 @@ mod scan;
 
 pub const RULE_ID: &str = "github-actions-cache-setup-policy";
 
-pub(crate) use options::collect_config_errors;
+pub(in crate::codebase::rules) fn validate_options(options: Options) -> Result<()> {
+    options::compile(options).map(drop)
+}
 pub use options::{CacheKeyShape, Options, SetupDeadline};
 
 super::diagnostic_source_rule_entrypoints!();

@@ -34,13 +34,13 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ExtraGeneratedColumn {
     pub(crate) table: String,
     pub(crate) column: String,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     include: GlobMatcher,
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
@@ -101,7 +101,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings.finish())
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     Ok(CompiledOptions {
         include,

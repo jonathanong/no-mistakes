@@ -6,7 +6,7 @@ use std::path::Path;
 
 use super::strict_value::StrictValue;
 
-pub(super) fn parse_document(document: &ConfigDocument) -> Result<Value> {
+pub(super) fn validate_document(document: &ConfigDocument) -> Result<()> {
     if let Some(section) = &document.section {
         super::rule_keys::validate_fragment(&document.source, &document.path, section)?;
         super::json_relation_map_keys::validate_fragment(
@@ -18,6 +18,11 @@ pub(super) fn parse_document(document: &ConfigDocument) -> Result<Value> {
         super::rule_keys::validate(&document.source, &document.path)?;
         super::json_relation_map_keys::validate(&document.source, &document.path)?;
     }
+    Ok(())
+}
+
+pub(super) fn parse_document(document: &ConfigDocument) -> Result<Value> {
+    validate_document(document)?;
     let mut value: Value = crate::config::parse_config(&document.source, &document.path)?;
     if document.section.is_none() {
         if value.is_null() {
@@ -52,12 +57,20 @@ pub(super) fn validate(
 }
 
 pub(super) fn finish(
+    root: &Path,
     config: &mut NoMistakesConfig,
     documents: &[ConfigDocument],
     path: &Path,
 ) -> Result<()> {
     validate(config, &config.config_provenance, documents, path)?;
-    super::finish_config(config, path)?;
+    super::finish_config(
+        root,
+        config,
+        path,
+        documents
+            .iter()
+            .map(|doc| (doc.path.as_path(), doc.source.as_str())),
+    )?;
     for (name, policy) in &mut config.tests.vitest.projects {
         let key = ConfigPath::default()
             .key("tests")

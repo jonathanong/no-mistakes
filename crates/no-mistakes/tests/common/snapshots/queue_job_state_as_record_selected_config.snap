@@ -65,5 +65,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [],
       "warnings": []
     }
+  },
+  "suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "usage.ts",
+          "line": 8,
+          "message": "queue job state from getJob() guards retry/remove/add; read durable work state from the database instead",
+          "rule": "queues-check",
+          "sourceLine": "if ((await job?.getState()) === \"failed\") await job.retry();"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
   }
 }

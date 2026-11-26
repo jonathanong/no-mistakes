@@ -1,0 +1,878 @@
+## async-try-catch-return-await
+eslint-plugin/async-try-catch-return-await/fixture/invalid.ts
+ESLint 13:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 22:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 32:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 42:7 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 53:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 62:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 71:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 81:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 91:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 104:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 112:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 120:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 128:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 137:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 145:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 153:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 161:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 169:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+ESLint 177:5 no-mistakes/async-try-catch-return-await (awaitReturn) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 13:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 22:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 32:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 42:7 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 53:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 62:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 71:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 81:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 91:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 104:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 112:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 120:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 128:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 137:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 145:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 153:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 161:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 169:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+Oxlint 177:5 no-mistakes(async-try-catch-return-await) Use return await inside this try block so rejections are handled by the configured catch handler.
+
+## await-array-methods
+eslint-snippets/fixture/await-array-methods/recall.mjs
+ESLint 3:1 no-mistakes/await-array-methods (awaited) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+ESLint 4:1 no-mistakes/await-array-methods (awaited) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+ESLint 5:1 no-mistakes/await-array-methods (awaited) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+ESLint 6:1 no-mistakes/await-array-methods (awaited) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+ESLint 7:1 no-mistakes/await-array-methods (awaited) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+ESLint 8:1 no-mistakes/await-array-methods (awaited) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+Oxlint 3:1 no-mistakes(await-array-methods) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+Oxlint 4:1 no-mistakes(await-array-methods) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+Oxlint 5:1 no-mistakes(await-array-methods) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+Oxlint 6:1 no-mistakes(await-array-methods) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+Oxlint 7:1 no-mistakes(await-array-methods) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+Oxlint 8:1 no-mistakes(await-array-methods) Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.
+
+## forbidden-member-chains
+eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs
+ESLint 1:1 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 2:1 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 3:1 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 4:1 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 5:1 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 6:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 7:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 8:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 9:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 10:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 11:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 12:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 13:1 no-mistakes/forbidden-member-chains (forbiddenChain) Toggle the drawer through the helper.
+ESLint 14:1 no-mistakes/forbidden-member-chains (forbiddenChain) Toggle the drawer through the helper.
+ESLint 15:1 no-mistakes/forbidden-member-chains (forbiddenChain) Do not read the numeric slot.
+ESLint 16:1 no-mistakes/forbidden-member-chains (forbiddenChain) Do not read the numeric slot.
+ESLint 17:1 no-mistakes/forbidden-member-chains (forbiddenChain) Do not read the numeric slot.
+ESLint 18:1 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 19:8 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 20:6 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 21:8 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 22:1 no-mistakes/forbidden-member-chains (forbiddenChain) Use the entry helper.
+ESLint 22:16 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 26:12 no-mistakes/forbidden-member-chains (forbiddenChain) Do not read the private slot.
+ESLint 29:12 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 32:12 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 35:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 36:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 37:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 38:9 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+Oxlint 1:1 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 2:1 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 3:1 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 4:1 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 5:1 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 6:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 7:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 8:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 9:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 10:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 11:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 12:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 13:1 no-mistakes(forbidden-member-chains) Toggle the drawer through the helper.
+Oxlint 14:1 no-mistakes(forbidden-member-chains) Toggle the drawer through the helper.
+Oxlint 15:1 no-mistakes(forbidden-member-chains) Do not read the numeric slot.
+Oxlint 16:1 no-mistakes(forbidden-member-chains) Do not read the numeric slot.
+Oxlint 17:1 no-mistakes(forbidden-member-chains) Do not read the numeric slot.
+Oxlint 18:1 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 19:8 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 20:6 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 21:8 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 22:1 no-mistakes(forbidden-member-chains) Use the entry helper.
+Oxlint 22:16 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 26:12 no-mistakes(forbidden-member-chains) Do not read the private slot.
+Oxlint 29:12 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 32:12 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 35:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 36:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 37:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 38:9 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+
+## gh-api-argument-safety
+eslint-snippets/fixture/gh-api-argument-safety/recall.mjs
+ESLint 4:27 no-mistakes/gh-api-argument-safety (endpointQuery) Use structured -f/-F fields instead of an endpoint query string.
+ESLint 6:19 no-mistakes/gh-api-argument-safety (endpointQuery) Use structured -f/-F fields instead of an endpoint query string.
+ESLint 7:35 no-mistakes/gh-api-argument-safety (endpointQuery) Use structured -f/-F fields instead of an endpoint query string.
+ESLint 8:29 no-mistakes/gh-api-argument-safety (endpointQuery) Use structured -f/-F fields instead of an endpoint query string.
+ESLint 9:30 no-mistakes/gh-api-argument-safety (endpointQuery) Use structured -f/-F fields instead of an endpoint query string.
+ESLint 10:28 no-mistakes/gh-api-argument-safety (endpointQuery) Use structured -f/-F fields instead of an endpoint query string.
+ESLint 13:37 no-mistakes/gh-api-argument-safety (endpointQuery) Use structured -f/-F fields instead of an endpoint query string.
+Oxlint 4:27 no-mistakes(gh-api-argument-safety) Use structured -f/-F fields instead of an endpoint query string.
+Oxlint 6:19 no-mistakes(gh-api-argument-safety) Use structured -f/-F fields instead of an endpoint query string.
+Oxlint 7:35 no-mistakes(gh-api-argument-safety) Use structured -f/-F fields instead of an endpoint query string.
+Oxlint 8:29 no-mistakes(gh-api-argument-safety) Use structured -f/-F fields instead of an endpoint query string.
+Oxlint 9:30 no-mistakes(gh-api-argument-safety) Use structured -f/-F fields instead of an endpoint query string.
+Oxlint 10:28 no-mistakes(gh-api-argument-safety) Use structured -f/-F fields instead of an endpoint query string.
+Oxlint 13:37 no-mistakes(gh-api-argument-safety) Use structured -f/-F fields instead of an endpoint query string.
+
+## module-mock-boundary
+eslint-snippets/fixture/module-mock-boundary/dynamic-key.mjs
+ESLint 8:1 no-mistakes/module-mock-boundary (boundary) Module mock boundary does not allow mocking internal module "./internal".
+Oxlint 8:1 no-mistakes(module-mock-boundary) Module mock boundary does not allow mocking internal module "./internal".
+
+## module-mock-preserve-exports
+eslint-snippets/fixture/module-mock-preserve-exports/recall.mjs
+ESLint 3:1 no-mistakes/module-mock-preserve-exports (preserve) Module mock factory must spread the real module to preserve exports.
+ESLint 4:1 no-mistakes/module-mock-preserve-exports (preserve) Module mock factory must spread the real module to preserve exports.
+ESLint 5:1 no-mistakes/module-mock-preserve-exports (preserve) Module mock factory must spread the real module to preserve exports.
+Oxlint 3:1 no-mistakes(module-mock-preserve-exports) Module mock factory must spread the real module to preserve exports.
+Oxlint 4:1 no-mistakes(module-mock-preserve-exports) Module mock factory must spread the real module to preserve exports.
+Oxlint 5:1 no-mistakes(module-mock-preserve-exports) Module mock factory must spread the real module to preserve exports.
+
+## nextjs-metadata-exports-location
+eslint-plugin/oxlint-snapshots/fixture/app/components/meta.tsx
+ESLint 2:1 no-mistakes/nextjs-metadata-exports-location (location) metadata and generateMetadata exports are only allowed in Next.js route segment files.
+Oxlint 2:1 no-mistakes(nextjs-metadata-exports-location) metadata and generateMetadata exports are only allowed in Next.js route segment files.
+
+## nextjs-no-manual-script-tags
+eslint-plugin/nextjs-structured-data/fixture/app/page.tsx
+ESLint 4:7 no-mistakes/nextjs-no-manual-script-tags (structuredData) Use <StructuredData> instead of a raw JSON-LD <script> tag.
+ESLint 9:7 no-mistakes/nextjs-no-manual-script-tags (structuredData) Use <StructuredData> instead of a raw JSON-LD <script> tag.
+Oxlint 4:7 no-mistakes(nextjs-no-manual-script-tags) Use <StructuredData> instead of a raw JSON-LD <script> tag.
+Oxlint 9:7 no-mistakes(nextjs-no-manual-script-tags) Use <StructuredData> instead of a raw JSON-LD <script> tag.
+
+## nextjs-static-fetch-method
+eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs
+ESLint 3:30 no-mistakes/nextjs-static-fetch-method (dynamic) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+ESLint 4:45 no-mistakes/nextjs-static-fetch-method (dynamic) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+ESLint 5:45 no-mistakes/nextjs-static-fetch-method (dynamic) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+ESLint 7:27 no-mistakes/nextjs-static-fetch-method (dynamic) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+ESLint 8:36 no-mistakes/nextjs-static-fetch-method (dynamic) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+ESLint 9:48 no-mistakes/nextjs-static-fetch-method (dynamic) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+Oxlint 3:30 no-mistakes(nextjs-static-fetch-method) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+Oxlint 4:45 no-mistakes(nextjs-static-fetch-method) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+Oxlint 5:45 no-mistakes(nextjs-static-fetch-method) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+Oxlint 7:27 no-mistakes(nextjs-static-fetch-method) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+Oxlint 8:36 no-mistakes(nextjs-static-fetch-method) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+Oxlint 9:48 no-mistakes(nextjs-static-fetch-method) fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.
+
+## nextjs-static-fetch-url
+eslint-plugin/oxlint-snapshots/fixture/fetch-url.js
+ESLint 1:7 no-mistakes/nextjs-static-fetch-url (dynamic) fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.
+Oxlint 1:7 no-mistakes(nextjs-static-fetch-url) fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.
+
+## no-argv-main-guard
+eslint-snippets/fixture/no-argv-main-guard/recall.mjs
+ESLint 4:5 no-mistakes/no-argv-main-guard (argvMain) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+ESLint 5:5 no-mistakes/no-argv-main-guard (argvMain) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+ESLint 6:5 no-mistakes/no-argv-main-guard (argvMain) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+ESLint 8:5 no-mistakes/no-argv-main-guard (argvMain) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+ESLint 10:5 no-mistakes/no-argv-main-guard (argvMain) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+ESLint 13:5 no-mistakes/no-argv-main-guard (argvMain) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+ESLint 14:5 no-mistakes/no-argv-main-guard (argvMain) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+Oxlint 4:5 no-mistakes(no-argv-main-guard) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+Oxlint 5:5 no-mistakes(no-argv-main-guard) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+Oxlint 6:5 no-mistakes(no-argv-main-guard) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+Oxlint 8:5 no-mistakes(no-argv-main-guard) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+Oxlint 10:5 no-mistakes(no-argv-main-guard) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+Oxlint 13:5 no-mistakes(no-argv-main-guard) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+Oxlint 14:5 no-mistakes(no-argv-main-guard) Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.
+
+## no-banned-import-outside-allowed-paths
+eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts
+ESLint 2:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 6:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createWatchProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 9:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 13:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 16:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "default" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+ESLint 19:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "invalidateAll" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+ESLint 22:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 25:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 30:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 38:3 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 43:3 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 52:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 56:3 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 61:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 63:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedReExport) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
+ESLint 66:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedReExport) Do not re-export banned import "createWatchProgram" from "typescript"; it stays reachable outside allowed paths.
+ESLint 69:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedReExport) Do not re-export banned import "*" from "@acme/rate-limit"; it stays reachable outside allowed paths.
+ESLint 71:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedReExport) Do not re-export banned import "*" from "typescript"; it stays reachable outside allowed paths.
+ESLint 75:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 78:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 85:5 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 93:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 110:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 117:3 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 132:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 144:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 154:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 160:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 166:10 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 181:7 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 188:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+ESLint 193:14 no-mistakes/no-banned-import-outside-allowed-paths (bannedReExport) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
+ESLint 198:5 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "default" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+Oxlint 2:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 6:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createWatchProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 9:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 13:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 16:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "default" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+Oxlint 19:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "invalidateAll" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+Oxlint 22:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 25:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 30:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 38:3 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 43:3 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 52:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 56:3 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 61:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 63:10 no-mistakes(no-banned-import-outside-allowed-paths) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
+Oxlint 66:10 no-mistakes(no-banned-import-outside-allowed-paths) Do not re-export banned import "createWatchProgram" from "typescript"; it stays reachable outside allowed paths.
+Oxlint 69:1 no-mistakes(no-banned-import-outside-allowed-paths) Do not re-export banned import "*" from "@acme/rate-limit"; it stays reachable outside allowed paths.
+Oxlint 71:1 no-mistakes(no-banned-import-outside-allowed-paths) Do not re-export banned import "*" from "typescript"; it stays reachable outside allowed paths.
+Oxlint 75:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 78:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 85:5 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 93:10 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 110:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 117:3 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 132:10 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 144:10 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 154:10 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 160:10 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 166:10 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 181:7 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 188:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
+Oxlint 193:14 no-mistakes(no-banned-import-outside-allowed-paths) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
+Oxlint 198:5 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "default" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+
+## no-comment-phrases
+eslint-snippets/fixture/no-comment-phrases/comments.mjs
+ESLint 1:1 no-mistakes/no-comment-phrases (invalidPattern) Invalid comment phrase pattern [: Invalid regular expression: /[/i: Unterminated character class
+Oxlint 1:1 no-mistakes(no-comment-phrases) Invalid comment phrase pattern [: Invalid regular expression: /[/i: Unterminated character class
+
+## no-consecutive-unbatched-reads
+eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts
+ESLint 5:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 10:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 15:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 20:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 25:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 30:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 35:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 41:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 46:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 50:1 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 54:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 59:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 64:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+ESLint 70:3 no-mistakes/no-consecutive-unbatched-reads (unbatchedReads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 5:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 10:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 15:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 20:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 25:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 30:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 35:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 41:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 46:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 50:1 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 54:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 59:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 64:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+Oxlint 70:3 no-mistakes(no-consecutive-unbatched-reads) Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.
+
+## no-delete-property
+eslint-plugin/oxlint-snapshots/fixture/delete-property.tsx
+ESLint 1:1 no-mistakes/no-delete-property (delete) Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.
+Oxlint 1:1 no-mistakes(no-delete-property) Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.
+
+## no-global-fetch-outside-helper
+eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts
+ESLint 1:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 2:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 3:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 4:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 5:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 8:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 11:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 14:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 18:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 21:10 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 26:2 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 27:2 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 28:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 29:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 30:2 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 31:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 34:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 38:3 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 43:3 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+ESLint 48:1 no-mistakes/no-global-fetch-outside-helper (globalFetch) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 1:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 2:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 3:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 4:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 5:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 8:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 11:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 14:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 18:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 21:10 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 26:2 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 27:2 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 28:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 29:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 30:2 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 31:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 34:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 38:3 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 43:3 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+Oxlint 48:1 no-mistakes(no-global-fetch-outside-helper) Move global fetch calls into a configured API/client helper so request behavior stays centralized.
+
+## no-import-only-test-files
+eslint-snippets/fixture/no-import-only-test-files/recall.test.js
+ESLint 1:1 no-mistakes/no-import-only-test-files (aggregate) Do not create aggregate test files that only import other test files; let the test runner discover those files directly.
+Oxlint 1:1 no-mistakes(no-import-only-test-files) Do not create aggregate test files that only import other test files; let the test runner discover those files directly.
+
+## no-inline-noop-promise-catch
+eslint-snippets/fixture/no-inline-noop-promise-catch/recall.mjs
+ESLint 1:26 no-mistakes/no-inline-noop-promise-catch (noopCatch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+ESLint 2:26 no-mistakes/no-inline-noop-promise-catch (noopCatch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+ESLint 3:45 no-mistakes/no-inline-noop-promise-catch (noopCatch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+ESLint 4:28 no-mistakes/no-inline-noop-promise-catch (noopCatch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+Oxlint 1:26 no-mistakes(no-inline-noop-promise-catch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+Oxlint 2:26 no-mistakes(no-inline-noop-promise-catch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+Oxlint 3:45 no-mistakes(no-inline-noop-promise-catch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+Oxlint 4:28 no-mistakes(no-inline-noop-promise-catch) Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.
+
+## no-locale-less-date-format
+eslint-snippets/fixture/no-locale-less-date-format/intl-constructors.mjs
+ESLint 1:1 no-mistakes/no-locale-less-date-format (explicitLocale) Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.
+ESLint 2:1 no-mistakes/no-locale-less-date-format (explicitLocale) Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.
+ESLint 3:1 no-mistakes/no-locale-less-date-format (explicitLocale) Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.
+ESLint 4:1 no-mistakes/no-locale-less-date-format (explicitLocale) Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.
+ESLint 9:1 no-mistakes/no-locale-less-date-format (unknownLocale) Cannot statically prove Intl receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.
+Oxlint 1:1 no-mistakes(no-locale-less-date-format) Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.
+Oxlint 2:1 no-mistakes(no-locale-less-date-format) Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.
+Oxlint 3:1 no-mistakes(no-locale-less-date-format) Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.
+Oxlint 4:1 no-mistakes(no-locale-less-date-format) Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale.
+Oxlint 9:1 no-mistakes(no-locale-less-date-format) Cannot statically prove Intl receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.
+
+## no-placeholder-never-type-exports
+eslint-plugin/oxlint-snapshots/fixture/placeholder.ts
+ESLint 1:27 no-mistakes/no-placeholder-never-type-exports (placeholder) Do not export placeholder never types. Define the real type or remove the export.
+Oxlint 1:27 no-mistakes(no-placeholder-never-type-exports) Do not export placeholder never types. Define the real type or remove the export.
+
+## no-top-level-await
+eslint-snippets/fixture/no-top-level-await/await-using.ts
+ESLint 1:1 no-mistakes/no-top-level-await (topLevelAwait) Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.
+ESLint 3:3 no-mistakes/no-top-level-await (topLevelAwait) Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.
+ESLint 10:3 no-mistakes/no-top-level-await (topLevelAwait) Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.
+Oxlint 1:1 no-mistakes(no-top-level-await) Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.
+Oxlint 3:3 no-mistakes(no-top-level-await) Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.
+Oxlint 10:3 no-mistakes(no-top-level-await) Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.
+
+## no-vitest-sequential
+eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts
+ESLint 4:2 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 5:2 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 6:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 7:2 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 8:2 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 9:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 10:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 11:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 12:2 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 14:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 15:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 16:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 17:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 18:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 19:1 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+ESLint 21:2 no-mistakes/no-vitest-sequential (sequential) Use parallel tests instead of .sequential.
+Oxlint 4:2 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 5:2 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 6:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 7:2 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 8:2 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 9:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 10:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 11:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 12:2 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 14:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 15:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 16:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 17:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 18:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 19:1 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+Oxlint 21:2 no-mistakes(no-vitest-sequential) Use parallel tests instead of .sequential.
+
+## playwright-assertion-timeout-cap
+eslint-snippets/fixture/playwright-assertion-timeout-cap/branches.spec.ts
+ESLint 23:1 no-mistakes/playwright-assertion-timeout-cap (timeout) Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.
+ESLint 29:1 no-mistakes/playwright-assertion-timeout-cap (timeout) Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.
+Oxlint 23:1 no-mistakes(playwright-assertion-timeout-cap) Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.
+Oxlint 29:1 no-mistakes(playwright-assertion-timeout-cap) Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.
+
+## playwright-consistent-attribute
+eslint-plugin/oxlint-snapshots/fixture/consistent-attribute.jsx
+ESLint 1:9 no-mistakes/playwright-consistent-attribute (attribute) Use 'data-pw' instead of 'data-testid' for test IDs.
+Oxlint 1:9 no-mistakes(playwright-consistent-attribute) Use 'data-pw' instead of 'data-testid' for test IDs.
+
+## playwright-defaults
+eslint-plugin/oxlint-snapshots/fixture/test-id-defaults.jsx
+ESLint 1:197 no-mistakes/playwright-defaults (default) Test ID prop passthrough must have a literal default.
+ESLint 1:224 no-mistakes/playwright-defaults (default) Test ID prop passthrough must have a literal default.
+ESLint 1:252 no-mistakes/playwright-defaults (default) Test ID prop passthrough must have a literal default.
+Oxlint 1:197 no-mistakes(playwright-defaults) Test ID prop passthrough must have a literal default.
+Oxlint 1:224 no-mistakes(playwright-defaults) Test ID prop passthrough must have a literal default.
+Oxlint 1:252 no-mistakes(playwright-defaults) Test ID prop passthrough must have a literal default.
+
+## playwright-naming-convention
+eslint-plugin/oxlint-snapshots/fixture/test-id-name.jsx
+ESLint 1:11 no-mistakes/playwright-naming-convention (naming) Test ID 'SaveButton' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.
+Oxlint 1:11 no-mistakes(playwright-naming-convention) Test ID 'SaveButton' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.
+
+## playwright-no-empty
+eslint-plugin/oxlint-snapshots/fixture/empty-test-id.jsx
+ESLint 1:11 no-mistakes/playwright-no-empty (empty) Test ID must not be empty.
+Oxlint 1:11 no-mistakes(playwright-no-empty) Test ID must not be empty.
+
+## playwright-no-hoisted-unique-token
+eslint-plugin/oxlint-snapshots/fixture/playwright/tests/tags/tag-limit.spec.mts
+ESLint 3:34 no-mistakes/playwright-no-hoisted-unique-token (hoisted) `suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.
+Oxlint 3:34 no-mistakes(playwright-no-hoisted-unique-token) `suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.
+
+## playwright-no-raw-scroll-pagination
+eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js
+ESLint 2:9 no-mistakes/playwright-no-raw-scroll-pagination (sentinelScroll) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+ESLint 3:9 no-mistakes/playwright-no-raw-scroll-pagination (sentinelScroll) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+ESLint 4:9 no-mistakes/playwright-no-raw-scroll-pagination (sentinelScroll) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+ESLint 5:9 no-mistakes/playwright-no-raw-scroll-pagination (sentinelScroll) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+ESLint 7:9 no-mistakes/playwright-no-raw-scroll-pagination (sentinelScroll) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+ESLint 9:9 no-mistakes/playwright-no-raw-scroll-pagination (sentinelScroll) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+Oxlint 2:9 no-mistakes(playwright-no-raw-scroll-pagination) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+Oxlint 3:9 no-mistakes(playwright-no-raw-scroll-pagination) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+Oxlint 4:9 no-mistakes(playwright-no-raw-scroll-pagination) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+Oxlint 5:9 no-mistakes(playwright-no-raw-scroll-pagination) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+Oxlint 7:9 no-mistakes(playwright-no-raw-scroll-pagination) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+Oxlint 9:9 no-mistakes(playwright-no-raw-scroll-pagination) scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.
+
+## playwright-no-swallowed-visibility
+eslint-snippets/fixture/playwright-no-swallowed-visibility/nested-try.mjs
+ESLint 22:5 no-mistakes/playwright-no-swallowed-visibility (swallowed) A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().
+ESLint 35:5 no-mistakes/playwright-no-swallowed-visibility (swallowed) A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().
+Oxlint 22:5 no-mistakes(playwright-no-swallowed-visibility) A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().
+Oxlint 35:5 no-mistakes(playwright-no-swallowed-visibility) A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().
+
+## playwright-prefer-get-by-test-id
+eslint-snippets/fixture/playwright-prefer-get-by-test-id/suppressed-drag.jsx
+ESLint 4:3 no-mistakes/playwright-prefer-get-by-test-id (prefer) Prefer getByTestId('target') for exact test ID selectors.
+Oxlint 4:3 no-mistakes(playwright-prefer-get-by-test-id) Prefer getByTestId('target') for exact test ID selectors.
+
+## playwright-require-exported-component-attribute
+eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx
+ESLint 2:10 no-mistakes/playwright-require-exported-component-attribute (missing) Exported component 'Save' must return JSX containing one of: data-pw.
+ESLint 8:10 no-mistakes/playwright-require-exported-component-attribute (missing) Exported component 'Memoed' must return JSX containing one of: data-pw.
+ESLint 12:10 no-mistakes/playwright-require-exported-component-attribute (missing) Exported component 'Forwarded' must return JSX containing one of: data-pw.
+ESLint 17:12 no-mistakes/playwright-require-exported-component-attribute (missing) Exported component 'Applied' must return JSX containing one of: data-pw.
+ESLint 22:17 no-mistakes/playwright-require-exported-component-attribute (missing) Exported component 'Other' must return JSX containing one of: data-pw.
+ESLint 26:10 no-mistakes/playwright-require-exported-component-attribute (missing) Exported component 'Later' must return JSX containing one of: data-pw.
+Oxlint 2:10 no-mistakes(playwright-require-exported-component-attribute) Exported component 'Save' must return JSX containing one of: data-pw.
+Oxlint 8:10 no-mistakes(playwright-require-exported-component-attribute) Exported component 'Memoed' must return JSX containing one of: data-pw.
+Oxlint 12:10 no-mistakes(playwright-require-exported-component-attribute) Exported component 'Forwarded' must return JSX containing one of: data-pw.
+Oxlint 17:12 no-mistakes(playwright-require-exported-component-attribute) Exported component 'Applied' must return JSX containing one of: data-pw.
+Oxlint 22:17 no-mistakes(playwright-require-exported-component-attribute) Exported component 'Other' must return JSX containing one of: data-pw.
+Oxlint 26:10 no-mistakes(playwright-require-exported-component-attribute) Exported component 'Later' must return JSX containing one of: data-pw.
+
+## playwright-selector-priority
+eslint-snippets/fixture/playwright-selector-priority/bare-locator.spec.js
+ESLint 4:1 no-mistakes/playwright-selector-priority (semantic) Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().
+Oxlint 4:1 no-mistakes(playwright-selector-priority) Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().
+
+## playwright-unique
+eslint-snippets/fixture/unique.jsx
+ESLint 3:11 no-mistakes/playwright-unique (duplicate) Test ID 'save' is already used in this file.
+ESLint 4:11 no-mistakes/playwright-unique (duplicate) Test ID 'save' is already used in this file.
+Oxlint 3:11 no-mistakes(playwright-unique) Test ID 'save' is already used in this file.
+Oxlint 4:11 no-mistakes(playwright-unique) Test ID 'save' is already used in this file.
+
+## postgres-cursor-call-contract
+eslint-plugin/oxlint-snapshots/fixture/src/raw-string.js
+ESLint 2:11 no-mistakes/postgres-cursor-call-contract (annotation) PostgreSQL cursor SQL must start with a static /* name */ annotation.
+Oxlint 2:11 no-mistakes(postgres-cursor-call-contract) PostgreSQL cursor SQL must start with a static /* name */ annotation.
+
+## postgres-no-async-sql-builder
+eslint-plugin/oxlint-snapshots/fixture/async-sql-builder.ts
+ESLint 3:1 no-mistakes/postgres-no-async-sql-builder (removeAsync) This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.
+Oxlint 3:1 no-mistakes(postgres-no-async-sql-builder) This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.
+
+## postgres-no-correlated-sql-builder
+eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts
+ESLint 6:3 no-mistakes/postgres-no-correlated-sql-builder (correlated) Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case "owned": case "member": case "all": case "literal":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+ESLint 15:3 no-mistakes/postgres-no-correlated-sql-builder (correlated) Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case "owned": case "member":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+ESLint 20:3 no-mistakes/postgres-no-correlated-sql-builder (correlated) Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case "owned": case "member":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+ESLint 26:5 no-mistakes/postgres-no-correlated-sql-builder (correlated) Independent appends on query can leave an unknown or empty path for flag. Return a complete statement from one switch (case "owned": case "member":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+Oxlint 6:3 no-mistakes(postgres-no-correlated-sql-builder) Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case "owned": case "member": case "all": case "literal":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+Oxlint 15:3 no-mistakes(postgres-no-correlated-sql-builder) Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case "owned": case "member":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+Oxlint 20:3 no-mistakes(postgres-no-correlated-sql-builder) Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case "owned": case "member":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+Oxlint 26:5 no-mistakes(postgres-no-correlated-sql-builder) Independent appends on query can leave an unknown or empty path for flag. Return a complete statement from one switch (case "owned": case "member":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.
+
+## postgres-no-executor-adapter
+eslint-snippets/fixture/executor-target/options.ts
+ESLint 10:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 11:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 12:20 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 13:21 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 14:21 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 15:25 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 16:23 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 17:19 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 18:21 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 19:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 20:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 21:15 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 22:21 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 23:21 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 24:18 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 25:18 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 26:20 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 27:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 28:20 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 30:26 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 31:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 32:16 no-mistakes/postgres-no-executor-adapter (forward) This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`named({ query: read })`) does not connect the statement to the executor, so analysis cannot see it.
+ESLint 34:9 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 35:20 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 36:20 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 37:18 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 38:17 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 40:23 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 41:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 42:17 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 43:18 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 44:28 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 45:28 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 46:30 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 47:31 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 52:33 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 53:33 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 54:35 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 55:36 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 57:30 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 58:21 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 59:26 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 60:25 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 61:16 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 62:23 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 63:20 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 67:26 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+ESLint 68:30 no-mistakes/postgres-no-executor-adapter (passed) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 10:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 11:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 12:20 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 13:21 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 14:21 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 15:25 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 16:23 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 17:19 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 18:21 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 19:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 20:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 21:15 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 22:21 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 23:21 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 24:18 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 25:18 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 26:20 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 27:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 28:20 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 30:26 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 31:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 32:16 no-mistakes(postgres-no-executor-adapter) This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`named({ query: read })`) does not connect the statement to the executor, so analysis cannot see it.
+Oxlint 34:9 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 35:20 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 36:20 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 37:18 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 38:17 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 40:23 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 41:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 42:17 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 43:18 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 44:28 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 45:28 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 46:30 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 47:31 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 52:33 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 53:33 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 54:35 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 55:36 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 57:30 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 58:21 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 59:26 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 60:25 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 61:16 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 62:23 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 63:20 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 67:26 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+Oxlint 68:30 no-mistakes(postgres-no-executor-adapter) This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.
+
+## postgres-no-manual-transaction
+eslint-snippets/fixture/postgres-2755/query-members.ts
+ESLint 6:1 no-mistakes/postgres-no-manual-transaction (manualTransaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+ESLint 7:1 no-mistakes/postgres-no-manual-transaction (manualTransaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+ESLint 9:1 no-mistakes/postgres-no-manual-transaction (manualTransaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+ESLint 18:5 no-mistakes/postgres-no-manual-transaction (manualTransaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+Oxlint 6:1 no-mistakes(postgres-no-manual-transaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+Oxlint 7:1 no-mistakes(postgres-no-manual-transaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+Oxlint 9:1 no-mistakes(postgres-no-manual-transaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+Oxlint 18:5 no-mistakes(postgres-no-manual-transaction) Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.
+
+## postgres-no-nonliteral-sql-registry-key
+eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts
+ESLint 7:26 no-mistakes/postgres-no-nonliteral-sql-registry-key (dynamicKey) TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case "orders": return "orders"; case "accounts": return "accounts"; default: throw new Error("unknown"); } })((kind))). A runtime own-key check is not judged.
+ESLint 8:8 no-mistakes/postgres-no-nonliteral-sql-registry-key (dynamicKey) TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case "orders": return "orders"; case "accounts": return "accounts"; default: throw new Error("unknown"); } })((kind))). A runtime own-key check is not judged.
+ESLint 9:29 no-mistakes/postgres-no-nonliteral-sql-registry-key (dynamicKey) QUOTED[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case "order items": return "order items"; default: throw new Error("unknown"); } })((flag ? "order items" : "other"))). A runtime own-key check is not judged.
+Oxlint 7:26 no-mistakes(postgres-no-nonliteral-sql-registry-key) TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case "orders": return "orders"; case "accounts": return "accounts"; default: throw new Error("unknown"); } })((kind))). A runtime own-key check is not judged.
+Oxlint 8:8 no-mistakes(postgres-no-nonliteral-sql-registry-key) TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case "orders": return "orders"; case "accounts": return "accounts"; default: throw new Error("unknown"); } })((kind))). A runtime own-key check is not judged.
+Oxlint 9:29 no-mistakes(postgres-no-nonliteral-sql-registry-key) QUOTED[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case "order items": return "order items"; default: throw new Error("unknown"); } })((flag ? "order items" : "other"))). A runtime own-key check is not judged.
+
+## postgres-no-unbounded-query-fanout
+eslint-snippets/fixture/postgres-2755/query-members.ts
+ESLint 11:3 no-mistakes/postgres-no-unbounded-query-fanout (unboundedFanout) Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.
+ESLint 12:3 no-mistakes/postgres-no-unbounded-query-fanout (unboundedFanout) Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.
+Oxlint 11:3 no-mistakes(postgres-no-unbounded-query-fanout) Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.
+Oxlint 12:3 no-mistakes(postgres-no-unbounded-query-fanout) Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.
+
+## postgres-pool-requires-error-listener
+eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js
+ESLint 7:21 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+ESLint 12:24 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+ESLint 13:28 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+ESLint 14:30 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+ESLint 17:10 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+ESLint 21:10 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+ESLint 24:14 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+ESLint 28:18 no-mistakes/postgres-pool-requires-error-listener (missingErrorListener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 7:21 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 12:24 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 13:28 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 14:30 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 17:10 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 21:10 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 24:14 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+Oxlint 28:18 no-mistakes(postgres-pool-requires-error-listener) Attach an "error" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.
+
+## react-no-iife-in-jsx
+eslint-plugin/upstreamed-generic/fixture/invalid.tsx
+ESLint 44:13 no-mistakes/react-no-iife-in-jsx (iife) Avoid IIFEs in JSX; extract the logic into a variable or component.
+ESLint 45:30 no-mistakes/react-no-iife-in-jsx (iife) Avoid IIFEs in JSX; extract the logic into a variable or component.
+Oxlint 44:13 no-mistakes(react-no-iife-in-jsx) Avoid IIFEs in JSX; extract the logic into a variable or component.
+Oxlint 45:30 no-mistakes(react-no-iife-in-jsx) Avoid IIFEs in JSX; extract the logic into a variable or component.
+
+## react-no-nullish-react-node
+eslint-plugin/react-no-nullish-react-node/fixture/invalid.tsx
+ESLint 14:8 no-mistakes/react-no-nullish-react-node (nullish) Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.
+ESLint 15:8 no-mistakes/react-no-nullish-react-node (nullish) Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.
+ESLint 28:6 no-mistakes/react-no-nullish-react-node (nullish) Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.
+Oxlint 14:8 no-mistakes(react-no-nullish-react-node) Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.
+Oxlint 15:8 no-mistakes(react-no-nullish-react-node) Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.
+Oxlint 28:6 no-mistakes(react-no-nullish-react-node) Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.
+
+## react-no-use-promise-resolve
+eslint-plugin/oxlint-snapshots/fixture/react-use.jsx
+ESLint 3:1 no-mistakes/react-no-use-promise-resolve (resolve) Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.
+Oxlint 3:1 no-mistakes(react-no-use-promise-resolve) Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.
+
+## require-options-on-imported-call
+eslint-snippets/fixture/require-options-on-imported-call/recall.mjs
+ESLint 4:1 no-mistakes/require-options-on-imported-call (missingOptions) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+ESLint 6:1 no-mistakes/require-options-on-imported-call (missingOptions) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+ESLint 7:1 no-mistakes/require-options-on-imported-call (missingOptions) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+ESLint 8:1 no-mistakes/require-options-on-imported-call (missingOptions) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+ESLint 9:1 no-mistakes/require-options-on-imported-call (missingOptions) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+ESLint 10:1 no-mistakes/require-options-on-imported-call (missingOptions) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+Oxlint 4:1 no-mistakes(require-options-on-imported-call) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+Oxlint 6:1 no-mistakes(require-options-on-imported-call) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+Oxlint 7:1 no-mistakes(require-options-on-imported-call) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+Oxlint 8:1 no-mistakes(require-options-on-imported-call) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+Oxlint 9:1 no-mistakes(require-options-on-imported-call) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+Oxlint 10:1 no-mistakes(require-options-on-imported-call) Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal.
+
+## require-top-level-registration
+eslint-snippets/fixture/client-contracts/registration-invalid.ts
+ESLint 1:1 no-mistakes/require-top-level-registration (registration) Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.
+Oxlint 1:1 no-mistakes(require-top-level-registration) Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.
+
+## restricted-api-usage
+eslint-snippets/fixture/restricted-api-usage/destructure.ts
+ESLint 4:9 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 5:9 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 6:9 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 7:18 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 8:9 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 8:45 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 9:9 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 11:20 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 16:14 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 17:23 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 18:4 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 19:4 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+ESLint 20:9 no-mistakes/restricted-api-usage (restrictedApi) Use the static helper.
+Oxlint 4:9 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 5:9 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 6:9 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 7:18 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 8:9 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 8:45 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 9:9 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 11:20 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 16:14 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 17:23 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 18:4 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 19:4 no-mistakes(restricted-api-usage) Use the static helper.
+Oxlint 20:9 no-mistakes(restricted-api-usage) Use the static helper.
+
+## server-require-nullable-fetch-wrapper
+eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts
+ESLint 11:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 14:50 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 17:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 21:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 25:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 29:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 32:42 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 38:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 42:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 47:41 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 50:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 56:10 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+ESLint 60:22 no-mistakes/server-require-nullable-fetch-wrapper (wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 11:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 14:50 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 17:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 21:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 25:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 29:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 32:42 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 38:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 42:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 47:41 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 50:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 56:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+Oxlint 60:22 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
+
+## test-no-typed-enqueue-fake
+eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts
+ESLint 9:1 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 10:1 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 11:1 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 12:1 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 13:1 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 14:12 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 15:12 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 16:12 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 17:12 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 18:15 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 19:15 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+ESLint 20:15 no-mistakes/test-no-typed-enqueue-fake (typedEnqueueFake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 9:1 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 10:1 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 11:1 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 12:1 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 13:1 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 14:12 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 15:12 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 16:12 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 17:12 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 18:15 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 19:15 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+Oxlint 20:15 no-mistakes(test-no-typed-enqueue-fake) Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.
+
+## test-no-wall-time-assertions
+eslint-snippets/fixture/test-no-wall-time-assertions/benchmarks/speed.test.js
+ESLint 1:1 no-mistakes/test-no-wall-time-assertions (wallTime) Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.
+Oxlint 1:1 no-mistakes(test-no-wall-time-assertions) Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.
+
+## ts-no-const-aliases
+eslint-plugin/ts-no-const-aliases/fixture/invalid.ts
+ESLint 3:7 no-mistakes/ts-no-const-aliases (alias) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+ESLint 4:14 no-mistakes/ts-no-const-aliases (alias) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+ESLint 5:7 no-mistakes/ts-no-const-aliases (alias) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+ESLint 6:3 no-mistakes/ts-no-const-aliases (alias) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+ESLint 9:7 no-mistakes/ts-no-const-aliases (alias) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+ESLint 10:7 no-mistakes/ts-no-const-aliases (alias) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+Oxlint 3:7 no-mistakes(ts-no-const-aliases) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+Oxlint 4:14 no-mistakes(ts-no-const-aliases) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+Oxlint 5:7 no-mistakes(ts-no-const-aliases) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+Oxlint 6:3 no-mistakes(ts-no-const-aliases) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+Oxlint 9:7 no-mistakes(ts-no-const-aliases) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+Oxlint 10:7 no-mistakes(ts-no-const-aliases) Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.
+
+## ts-no-export-renaming
+eslint-plugin/ts-no-export-renaming/fixture/invalid.ts
+ESLint 5:10 no-mistakes/ts-no-export-renaming (renamed) Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.
+ESLint 6:10 no-mistakes/ts-no-export-renaming (renamed) Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.
+ESLint 7:10 no-mistakes/ts-no-export-renaming (renamed) Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.
+Oxlint 5:10 no-mistakes(ts-no-export-renaming) Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.
+Oxlint 6:10 no-mistakes(ts-no-export-renaming) Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.
+Oxlint 7:10 no-mistakes(ts-no-export-renaming) Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.
+
+## ts-no-function-aliases
+eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs
+ESLint 3:8 no-mistakes/ts-no-function-aliases (alias) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+ESLint 5:27 no-mistakes/ts-no-function-aliases (alias) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+ESLint 6:43 no-mistakes/ts-no-function-aliases (alias) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+ESLint 8:17 no-mistakes/ts-no-function-aliases (alias) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+ESLint 10:8 no-mistakes/ts-no-function-aliases (alias) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+ESLint 12:22 no-mistakes/ts-no-function-aliases (alias) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+ESLint 14:26 no-mistakes/ts-no-function-aliases (alias) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+Oxlint 3:8 no-mistakes(ts-no-function-aliases) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+Oxlint 5:27 no-mistakes(ts-no-function-aliases) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+Oxlint 6:43 no-mistakes(ts-no-function-aliases) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+Oxlint 8:17 no-mistakes(ts-no-function-aliases) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+Oxlint 10:8 no-mistakes(ts-no-function-aliases) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+Oxlint 12:22 no-mistakes(ts-no-function-aliases) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+Oxlint 14:26 no-mistakes(ts-no-function-aliases) Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.
+
+## ts-preserve-null-option-defaults
+eslint-plugin/ts-preserve-null-option-defaults/fixture/invalid.ts
+ESLint 7:10 no-mistakes/ts-preserve-null-option-defaults (default) Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+ESLint 11:10 no-mistakes/ts-preserve-null-option-defaults (default) Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+ESLint 15:3 no-mistakes/ts-preserve-null-option-defaults (default) Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+ESLint 16:3 no-mistakes/ts-preserve-null-option-defaults (default) Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+Oxlint 7:10 no-mistakes(ts-preserve-null-option-defaults) Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+Oxlint 11:10 no-mistakes(ts-preserve-null-option-defaults) Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+Oxlint 15:3 no-mistakes(ts-preserve-null-option-defaults) Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+Oxlint 16:3 no-mistakes(ts-preserve-null-option-defaults) Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.
+
+## vitest-mock-test-file-naming
+eslint-snippets/fixture/vitest-mock-test-file-naming/recall.test.ts
+ESLint 1:1 no-mistakes/vitest-mock-test-file-naming (needsMock) Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.
+Oxlint 1:1 no-mistakes(vitest-mock-test-file-naming) Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.
+
+## vitest-timeout-cap
+eslint-snippets/fixture/vitest-timeout-cap/limits-parameter.ts
+ESLint 5:24 no-mistakes/vitest-timeout-cap (unknown) Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.
+Oxlint 5:24 no-mistakes(vitest-timeout-cap) Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.

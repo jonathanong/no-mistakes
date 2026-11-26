@@ -1,0 +1,23 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-no-add-column",
+      "scope": "repository",
+      "options": {
+        "sqlInclude": [
+          "**/*.sql"
+        ],
+        "allowedMigrations": [
+          {
+            "path": "example.sql",
+            "table": "orders",
+            "column": "status",
+            "type": "TEXT",
+            "nullable": false,
+            "defualt": "'pending'"
+          }
+        ]
+      }
+    }
+  ]
+}

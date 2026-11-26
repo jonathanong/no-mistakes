@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod check;
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod name;
 mod scan;
 
@@ -14,7 +14,7 @@ pub const RULE_ID: &str = "postgres-table-shape";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     shapes: Vec<ShapeOptions>,
     banned_table_patterns: Vec<BannedOptions>,
@@ -22,7 +22,7 @@ struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct ShapeOptions {
     name: String,
     table_pattern: String,
@@ -33,7 +33,7 @@ struct ShapeOptions {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct ColumnOptions {
     name: Option<String>,
     name_pattern: Option<String>,
@@ -46,7 +46,7 @@ struct ColumnOptions {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct TriggerOptions {
     function: String,
     timing: Option<String>,

@@ -118,6 +118,9 @@ pattern is omitted.
 
 ## Options and defaults
 
+The loader rejects unknown keys in the `doubleUnderscore` option. Use
+`allowPattern` to specify the exception regex.
+
 `schemaCatalogPath` is required and names a catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md). `patterns.<kind>` defaults to unset.
 `tableMinWords` defaults to unset and, when set, must be from 1 to 32.
 `checkConstraintBackedIndexes` defaults to

@@ -23,6 +23,7 @@ mod fragment_validation;
 mod fragments;
 mod merge_values;
 mod named_entries;
+mod rule_options;
 mod strict_value;
 pub use declared::declared_config;
 mod sections;
@@ -42,7 +43,6 @@ mod validation;
 use validation::validate_v2_config;
 mod swift_commands;
 mod targeted_triggers;
-
 /// Load the unified `.no-mistakes.yml` (or a recognized legacy config) from
 /// `root`, returning a [`NoMistakesConfig`].
 ///
@@ -51,8 +51,6 @@ mod targeted_triggers;
 /// 2. `.no-mistakes.{yaml,yml,json,jsonc}` in `root`.
 /// 3. Empty default.
 pub fn load_v2_config(root: &Path, cli_config: Option<&Path>) -> Result<NoMistakesConfig> {
-    // Bootstrap path: config is loaded before AnalysisSession/SourceStore exist.
-    // Prepared requests use `load_v2_config_from_source_store`.
     load_v2_config_with_path(root, cli_config).map(|(config, _)| config)
 }
 
@@ -65,7 +63,7 @@ pub(crate) fn load_v2_config_with_path(
             return load_v2_config_with_path_from_visible(root, cli_config, &[]);
         }
         if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
-            return Ok((parse_v2_config(&source, &path)?, Some(path)));
+            return Ok((parse_v2_config(root, &source, &path)?, Some(path)));
         }
         return Ok((NoMistakesConfig::default(), None));
     }
@@ -95,10 +93,8 @@ pub(crate) fn load_v2_config_with_path_from_visible(
         if !resolved.exists() {
             anyhow::bail!("config file does not exist: {}", resolved.display());
         }
-        // Snapshot-only bootstrap still precedes SourceStore; prepared analysis
-        // uses `load_v2_config_from_source_store`.
         let source = std::fs::read_to_string(&resolved)?;
-        return Ok((parse_v2_config(&source, &resolved)?, Some(resolved)));
+        return Ok((parse_v2_config(root, &source, &resolved)?, Some(resolved)));
     }
 
     let selection = select_config_from_visible(root, None, visible_paths)?;
@@ -134,8 +130,8 @@ pub(crate) fn effective_v2_config_path_from_visible(
     })
 }
 
-fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
-    let config = parse_v2_config_quiet(source, path)?;
+fn parse_v2_config(root: &Path, source: &str, path: &Path) -> Result<NoMistakesConfig> {
+    let config = parse_v2_config_quiet(root, source, path)?;
     emit_v2_deprecation_warnings(&config, path);
     Ok(config)
 }
@@ -143,17 +139,27 @@ fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
 /// Parse and validate v2 config without emitting compatibility warnings.
 /// Historical config comparisons use this so one request does not print a
 /// warning for a revision that is not its active configuration.
-pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
+pub(crate) fn parse_v2_config_quiet(
+    root: &Path,
+    source: &str,
+    path: &Path,
+) -> Result<NoMistakesConfig> {
     let document = ConfigDocument {
         path: path.to_path_buf(),
         section: None,
         source: source.to_owned(),
     };
-    parse_sources_quiet(path.parent().unwrap_or(Path::new(".")), &[document])
+    parse_sources_quiet(root, &[document])
 }
 
-fn finish_config(config: &mut NoMistakesConfig, path: &Path) -> Result<()> {
+fn finish_config<'a>(
+    root: &Path,
+    config: &mut NoMistakesConfig,
+    path: &Path,
+    documents: impl IntoIterator<Item = (&'a Path, &'a str)>,
+) -> Result<()> {
     super::postgres_project_scope::materialize(config)?;
+    rule_options::validate(root, config, path, documents)?;
     config.materialize_analysis_defaults()?;
     for policy in config.tests.vitest.projects.values_mut() {
         if !policy.setup_files.is_empty() {
@@ -179,11 +185,10 @@ pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathB
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod alias_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod fragment_selection_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod fragment_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-mod alias_tests;

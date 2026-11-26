@@ -14,11 +14,9 @@ rules:
 - rule: queue-dashboard-reachability
   scope: repository
   options:
-    entrypoint: apps/api/src/entrypoints/public-api.mts
     queuePattern: apps/api/src/queues/*.mts
     factorySpecifier: "@fixture/queue-factory"
     factoryFunction: createQueue
-    tsconfig: tsconfig.json
 tests:
   playwright:
     frontendRoot: apps/web/app

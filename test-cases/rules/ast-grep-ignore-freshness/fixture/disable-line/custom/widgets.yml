@@ -1,0 +1,7 @@
+id: custom-widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores:
+  - custom/missing.ts
+  - custom/suppressed.ts # no-mistakes-disable-line ast-grep-ignore-freshness

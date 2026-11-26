@@ -43,6 +43,12 @@ const suite = {
     shapeCase("silent.ts"),
     // Zero findings.
     shapeCase("names.ts", { importSpecifier: "@example/db", executorNames: ["read"] }),
+    // leaves excluded rest copies, overridden spreads, and non-const computed keys silent.
+    // Zero findings.
+    shapeCase("namespace-provenance-valid.ts", {
+      importSpecifier: "@example/db",
+      executorNames: ["read"],
+    }),
   ],
   invalid: [
     // reports the shapes whose rewrite is the executor call.
@@ -52,6 +58,11 @@ const suite = {
     shapeCase("edges.ts"),
     // reports namespace members, query destructures, and static call or apply.
     shapeCase("static-recall.ts", SCOPED),
+    // preserves namespace provenance across TS casts, rest copies, const keys, spreads, and nested destructures.
+    shapeCase("namespace-provenance.ts", {
+      importSpecifier: "@example/db",
+      executorNames: ["read"],
+    }),
     // Two findings.
     shapeCase("call-method.ts", { importSpecifier: "@example/db", executorNames: ["call"] }),
     // follows a proven query member through bind and new, and a broad query name.

@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
@@ -29,7 +29,7 @@ struct Options {
     helpers: Vec<String>,
 }
 
-pub(super) struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     pub(super) paths: RuleGlobFilter,
     pub(super) schema: PostgresSchemaOptions,
     pub(super) embedded: EmbeddedSqlOptions,
@@ -40,7 +40,10 @@ pub(super) struct CompiledOptions {
 
 impl CompiledOptions {
     pub(super) fn from_rule(rule: &crate::config::v2::schema::RuleDef) -> Result<Self> {
-        let opts: Options = rule.try_rule_options()?;
+        Self::from_options(rule.try_rule_options()?)
+    }
+
+    pub(in crate::codebase::rules) fn from_options(opts: Options) -> Result<Self> {
         let baseline_file = baseline::relative_path(
             opts.baseline_file
                 .as_deref()

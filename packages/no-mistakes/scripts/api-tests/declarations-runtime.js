@@ -137,3 +137,18 @@ test("analysis object result metadata compiles while pure and array APIs stay un
   assert.match(declarations, /export interface InvocationResultMetadata/);
   assert.match(declarations, /export type WithInvocationResult<T>/);
 });
+
+test("the no-mistakes package entry compiles with declaration checking enabled", () => {
+  const { createRequire } = require("node:module");
+  const ts = createRequire(require.resolve("@storybook/react"))("typescript");
+  const fixture = join(repositoryRoot, "fixtures/node-api/strict-package-entry/tsconfig.json");
+  const config = ts.readConfigFile(fixture, ts.sys.readFile);
+  assert.equal(config.error, undefined);
+  const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, join(fixture, ".."));
+  const program = ts.createProgram(parsed.fileNames, parsed.options);
+  const diagnostics = [...parsed.errors, ...ts.getPreEmitDiagnostics(program)];
+  assert.deepEqual(
+    diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+    [],
+  );
+});

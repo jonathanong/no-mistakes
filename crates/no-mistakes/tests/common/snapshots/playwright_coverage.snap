@@ -173,6 +173,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"control\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "export default function Page() {",
+          "target": "data-testid=control"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "ignore": {
     "exitCode": 1,
     "report": {

@@ -47,6 +47,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/components/Card.tsx",
+          "line": 1,
+          "message": "src/components/Card.tsx: companion files do not import @/components/Card",
+          "rule": "required-companion-imports",
+          "sourceLine": "export function Card() {",
+          "target": "@/components/Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "prepared_external": {
     "exitCode": 1,
     "report": {

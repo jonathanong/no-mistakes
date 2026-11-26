@@ -1,0 +1,563 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "categories": {
+    "correctness": "off"
+  },
+  "overrides": [
+    {
+      "files": ["eslint-plugin/async-try-catch-return-await/fixture/invalid.ts"],
+      "rules": {
+        "no-mistakes/async-try-catch-return-await": [
+          "error",
+          {
+            "handlers": [
+              {
+                "calleeNamePatterns": ["/^handle.*RateLimit$/"],
+                "sourceSpecifierPatterns": ["@app/rate-limit"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/await-array-methods/recall.mjs"],
+      "rules": {
+        "no-mistakes/await-array-methods": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs"],
+      "rules": {
+        "no-mistakes/forbidden-member-chains": [
+          "error",
+          {
+            "chains": [
+              {
+                "message": "Use the entry helper.",
+                "path": "records.entry"
+              },
+              {
+                "message": "Open the panel through the helper.",
+                "path": "*.panel.open"
+              },
+              {
+                "message": "Toggle the drawer through the helper.",
+                "path": ["drawer", "toggle"],
+                "receiver": "*"
+              },
+              {
+                "message": "Do not read the numeric slot.",
+                "path": "matrix.1"
+              },
+              {
+                "message": "Do not read the private slot.",
+                "path": "*.#slot"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/gh-api-argument-safety/recall.mjs"],
+      "rules": {
+        "no-mistakes/gh-api-argument-safety": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/module-mock-boundary/dynamic-key.mjs"],
+      "rules": {
+        "no-mistakes/module-mock-boundary": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/module-mock-preserve-exports/recall.mjs"],
+      "rules": {
+        "no-mistakes/module-mock-preserve-exports": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/app/components/meta.tsx"],
+      "rules": {
+        "no-mistakes/nextjs-metadata-exports-location": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/nextjs-structured-data/fixture/app/page.tsx"],
+      "rules": {
+        "no-mistakes/nextjs-no-manual-script-tags": [
+          "error",
+          {
+            "structuredDataComponent": "StructuredData"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/nextjs-static-fetch-method/recall.mjs"],
+      "rules": {
+        "no-mistakes/nextjs-static-fetch-method": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/fetch-url.js"],
+      "rules": {
+        "no-mistakes/nextjs-static-fetch-url": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/no-argv-main-guard/recall.mjs"],
+      "rules": {
+        "no-mistakes/no-argv-main-guard": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts"],
+      "rules": {
+        "no-mistakes/no-banned-import-outside-allowed-paths": [
+          "error",
+          {
+            "allowedPathPatterns": ["src/internal/**"],
+            "bannedImports": [
+              {
+                "module": "typescript",
+                "names": ["createProgram", "createWatchProgram"]
+              },
+              {
+                "module": "@acme/rate-limit",
+                "names": ["default", "invalidateAll"]
+              }
+            ],
+            "checkedPathPatterns": [
+              "**/eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/no-comment-phrases/comments.mjs"],
+      "rules": {
+        "no-mistakes/no-comment-phrases": [
+          "error",
+          {
+            "patterns": [
+              {
+                "flags": "i",
+                "pattern": "["
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts"],
+      "rules": {
+        "no-mistakes/no-consecutive-unbatched-reads": [
+          "error",
+          {
+            "imports": [
+              {
+                "imported": "cache",
+                "source": "@app/cache"
+              }
+            ],
+            "readMethods": ["get", "ttl", "exists"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/delete-property.tsx"],
+      "rules": {
+        "no-mistakes/no-delete-property": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts"],
+      "rules": {
+        "no-mistakes/no-global-fetch-outside-helper": [
+          "error",
+          {
+            "allowedPathPatterns": ["web/lib/api/**", "web/lib/client/**"],
+            "checkedPathPatterns": [
+              "**/eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/no-import-only-test-files/recall.test.js"],
+      "rules": {
+        "no-mistakes/no-import-only-test-files": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/no-inline-noop-promise-catch/recall.mjs"],
+      "rules": {
+        "no-mistakes/no-inline-noop-promise-catch": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/no-locale-less-date-format/intl-constructors.mjs"],
+      "rules": {
+        "no-mistakes/no-locale-less-date-format": [
+          "error",
+          {
+            "constructors": ["Intl.DateTimeFormat", "Intl.NumberFormat"],
+            "methods": [],
+            "unknownValues": "finding"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/placeholder.ts"],
+      "rules": {
+        "no-mistakes/no-placeholder-never-type-exports": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/no-top-level-await/await-using.ts"],
+      "rules": {
+        "no-mistakes/no-top-level-await": [
+          "error",
+          {
+            "allowInImportMetaMain": false
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts"],
+      "rules": {
+        "no-mistakes/no-vitest-sequential": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/playwright-assertion-timeout-cap/branches.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-assertion-timeout-cap": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/consistent-attribute.jsx"],
+      "rules": {
+        "no-mistakes/playwright-consistent-attribute": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/test-id-defaults.jsx"],
+      "rules": {
+        "no-mistakes/playwright-defaults": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/test-id-name.jsx"],
+      "rules": {
+        "no-mistakes/playwright-naming-convention": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/empty-test-id.jsx"],
+      "rules": {
+        "no-mistakes/playwright-no-empty": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/playwright/tests/tags/tag-limit.spec.mts"],
+      "rules": {
+        "no-mistakes/playwright-no-hoisted-unique-token": [
+          "error",
+          {
+            "tokenFactories": ["randomSuffix"]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js"
+      ],
+      "rules": {
+        "no-mistakes/playwright-no-raw-scroll-pagination": [
+          "error",
+          {
+            "sentinelLocatorNames": ["sentinel"],
+            "sentinelTestIds": ["load-more"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/playwright-no-swallowed-visibility/nested-try.mjs"],
+      "rules": {
+        "no-mistakes/playwright-no-swallowed-visibility": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/playwright-prefer-get-by-test-id/suppressed-drag.jsx"],
+      "rules": {
+        "no-mistakes/playwright-prefer-get-by-test-id": "error"
+      }
+    },
+    {
+      "files": [
+        "eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx"
+      ],
+      "rules": {
+        "no-mistakes/playwright-require-exported-component-attribute": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/playwright-selector-priority/bare-locator.spec.js"],
+      "rules": {
+        "no-mistakes/playwright-selector-priority": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/unique.jsx"],
+      "rules": {
+        "no-mistakes/playwright-unique": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/src/raw-string.js"],
+      "rules": {
+        "no-mistakes/postgres-cursor-call-contract": [
+          "error",
+          {
+            "executors": ["runCursor", "runCursorBatches"],
+            "modules": ["@db/cursors", "@db/cursors/batches"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/async-sql-builder.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-async-sql-builder": [
+          "error",
+          {
+            "builders": [
+              {
+                "callees": ["sql"],
+                "source": "@example/db"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-correlated-sql-builder": [
+          "error",
+          {
+            "builderMethods": ["append"],
+            "tagNames": ["sql"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/executor-target/options.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-executor-adapter": [
+          "error",
+          {
+            "executorTypeNames": ["QueryExecutor"],
+            "importSpecifier": "@example/db"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/postgres-2755/query-members.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-manual-transaction": [
+          "error",
+          {
+            "importSpecifier": "pg"
+          }
+        ],
+        "no-mistakes/postgres-no-unbounded-query-fanout": [
+          "error",
+          {
+            "importSpecifier": "pg"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-nonliteral-sql-registry-key": [
+          "error",
+          {
+            "importSpecifier": "@example/db"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js"],
+      "rules": {
+        "no-mistakes/postgres-pool-requires-error-listener": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/upstreamed-generic/fixture/invalid.tsx"],
+      "rules": {
+        "no-mistakes/react-no-iife-in-jsx": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/react-no-nullish-react-node/fixture/invalid.tsx"],
+      "rules": {
+        "no-mistakes/react-no-nullish-react-node": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/oxlint-snapshots/fixture/react-use.jsx"],
+      "rules": {
+        "no-mistakes/react-no-use-promise-resolve": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/require-options-on-imported-call/recall.mjs"],
+      "rules": {
+        "no-mistakes/require-options-on-imported-call": [
+          "error",
+          {
+            "targets": [
+              {
+                "calleeNamePatterns": ["validateUrl"],
+                "optionsPosition": 2,
+                "requiredProperties": ["timeoutMs", "signal"],
+                "sourceSpecifierPatterns": ["ssrf-guard/node"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/client-contracts/registration-invalid.ts"],
+      "rules": {
+        "no-mistakes/require-top-level-registration": [
+          "error",
+          {
+            "callback": "onStop",
+            "registrar": {
+              "imported": "register",
+              "source": "@app/lifecycle"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/restricted-api-usage/destructure.ts"],
+      "rules": {
+        "no-mistakes/restricted-api-usage": [
+          "error",
+          {
+            "targets": [
+              {
+                "destructureNamePattern": "^(enqueueReviewAndWait|addAndWait|waitUntilFinished)$",
+                "message": "Use the static helper."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts"],
+      "rules": {
+        "no-mistakes/server-require-nullable-fetch-wrapper": [
+          "error",
+          {
+            "getterCalleePatterns": ["^serverApi\\.get$"],
+            "nullableReturnTypeNames": ["MaybeUser"],
+            "requiredWrapperCallee": "nullableEntity"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts"],
+      "rules": {
+        "no-mistakes/test-no-typed-enqueue-fake": [
+          "error",
+          {
+            "moduleGlobs": ["./que*"],
+            "singleExportPattern": "^enqueue[A-Z]"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/test-no-wall-time-assertions/benchmarks/speed.test.js"],
+      "rules": {
+        "no-mistakes/test-no-wall-time-assertions": [
+          "error",
+          {
+            "allowedPaths": ["**/*.bench.js"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["eslint-plugin/ts-no-const-aliases/fixture/invalid.ts"],
+      "rules": {
+        "no-mistakes/ts-no-const-aliases": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/ts-no-export-renaming/fixture/invalid.ts"],
+      "rules": {
+        "no-mistakes/ts-no-export-renaming": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs"],
+      "rules": {
+        "no-mistakes/ts-no-function-aliases": "error"
+      }
+    },
+    {
+      "files": ["eslint-plugin/ts-preserve-null-option-defaults/fixture/invalid.ts"],
+      "rules": {
+        "no-mistakes/ts-preserve-null-option-defaults": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/vitest-mock-test-file-naming/recall.test.ts"],
+      "rules": {
+        "no-mistakes/vitest-mock-test-file-naming": "error"
+      }
+    },
+    {
+      "files": ["eslint-snippets/fixture/vitest-timeout-cap/limits-parameter.ts"],
+      "rules": {
+        "no-mistakes/vitest-timeout-cap": [
+          "error",
+          {
+            "unknownValues": "finding"
+          }
+        ]
+      }
+    }
+  ]
+}

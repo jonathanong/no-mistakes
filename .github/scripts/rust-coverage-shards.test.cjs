@@ -9,6 +9,7 @@ const {
   readdirSync,
   renameSync,
   rmSync,
+  statSync,
 } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
@@ -129,11 +130,24 @@ test("all shards merge without overwriting identical pool names and retain snaps
       "shard-1-no-mistakes-123_0.profraw",
       "shard-2-no-mistakes-123_0.profraw",
     ]);
-    for (const file of files)
-      assert.deepEqual(
-        readFileSync(join(env.CARGO_LLVM_COV_TARGET_DIR, file)),
-        readFileSync(join(fixtures, "profile.fixture")),
+    for (const index of [1, 2]) {
+      const staged = join(
+        env.CARGO_LLVM_COV_TARGET_DIR,
+        `shard-${index}-no-mistakes-123_0.profraw`,
       );
+      const downloaded = join(
+        input,
+        `rust-coverage-shard-${index}`,
+        "profiles",
+        "no-mistakes-123_0.profraw",
+      );
+      assert.deepEqual(readFileSync(staged), readFileSync(join(fixtures, "profile.fixture")));
+      assert.equal(
+        statSync(staged).ino,
+        statSync(downloaded).ino,
+        "same-filesystem staging reuses the profile inode",
+      );
+    }
     assert.equal(readFileSync(join(input, "references.txt"), "utf8").trim().split(/\s+/).length, 2);
     assert.match(readFileSync(join(input, "summary.md"), "utf8"), /1\/2 \| 0 \| 1/);
     assert.throws(() => collect(bundle, input, 2, env), /already contains profile data/);

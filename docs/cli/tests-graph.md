@@ -13,7 +13,10 @@ machine-readable relationship graph.
 Key options: positional plan JSON path, `--format mermaid|json` (default
 `mermaid`), and optional `--out`.
 
-Node APIs: `testsGraph(options)` and `testsGraphMermaid(options)`.
+Node APIs: `testsGraph(options)` and `testsGraphMermaid(options)`. Pass
+`collectDiagnostics("testsGraphMermaid", options)` to collect phase timings
+alongside the Mermaid string. The saved plan input accepts legacy plans that
+omit `changedFiles`.
 
 JSON graph edges retain optional `detail` provenance for `resource` edges,
 including their consumer file and literal call-site line. Mermaid output stays

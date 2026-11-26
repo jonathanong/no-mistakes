@@ -105,8 +105,17 @@ test("compiled legacy policies preserve project inheritance", { skip: !compiled 
       ["postgres-no-unbounded-sql-identifier", 5],
     ],
   );
-  for (const config of ["project-fail.yml", "opaque-legacy.yml"])
-    for (const api of [cjs, esm]) assert.deepEqual(await api.check({ root, config }), inherited);
+  for (const api of [cjs, esm]) {
+    assert.deepEqual(await api.check({ root, config: "project-fail.yml" }), inherited);
+    await assert.rejects(api.check({ root, config: "opaque-legacy.yml" }), ({ message }) => {
+      assert.match(message, /postgres-no-mutable-sql-registry: invalid options\.unanalyzableSql/);
+      assert.match(
+        message,
+        /postgres-no-unbounded-sql-identifier: invalid options\.unanalyzableSql/,
+      );
+      return true;
+    });
+  }
 });
 
 test("compiled checks reject unsupported effort", { skip: !compiled }, async () => {

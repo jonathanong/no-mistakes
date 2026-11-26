@@ -90,6 +90,22 @@ fn impacted_checks_json_returns_checks() {
 }
 
 #[test]
+fn impacted_checks_json_rejects_a_patch_file_with_stdin() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/tests-plan-changes");
+    let error = impacted_checks_json_impl(json!({
+        "root": root,
+        "diffFile": root.join("reports/planning.patch"),
+        "diffStdin": true
+    }))
+    .unwrap_err();
+
+    assert!(error
+        .reason
+        .contains("diff, diffFile, diffStdin, and diffCommand are mutually exclusive"));
+}
+
+#[test]
 fn impacted_checks_json_classifies_empty_results_without_stderr_side_effects() {
     let no_files = json!({ "root": impacted_checks_root() }).to_string();
     let no_files: serde_json::Value = serde_json::from_str(

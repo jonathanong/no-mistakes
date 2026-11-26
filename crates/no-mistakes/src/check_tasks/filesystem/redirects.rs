@@ -119,6 +119,10 @@ pub(super) fn run(
     } else {
         config
     };
+    let (config, selected_source_diagnostics) =
+        super::selected_sources::run(root, config, files, &prepared.sources, defer_suppression)?;
+    diagnostics.append(selected_source_diagnostics);
+    let config = config.as_ref();
     let mut remaining_required_files;
     let config = if config
         .rules

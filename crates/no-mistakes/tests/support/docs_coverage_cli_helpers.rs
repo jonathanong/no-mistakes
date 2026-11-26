@@ -247,6 +247,44 @@ fn inventories_the_requested_source_tree_without_git_commands() {
     );
 }
 
+pub(super) fn consumer_identifier_violations(
+    root: &Path,
+    denylist_file: &str,
+    tokens: &[&str],
+) -> Vec<String> {
+    use rayon::prelude::*;
+    let mut violations: Vec<String> = consumer_identifier_paths(root)
+        .into_par_iter()
+        .flat_map_iter(|path| {
+            let relative = path.strip_prefix(root).unwrap_or(&path);
+            if relative == Path::new(denylist_file) {
+                return Vec::new();
+            }
+            let bytes = std::fs::read(&path)
+                .unwrap_or_else(|err| panic!("failed to read {}: {err}", relative.display()));
+            let Ok(text) = String::from_utf8(bytes) else {
+                return Vec::new();
+            };
+            let lower = text.to_ascii_lowercase();
+            let mut found = Vec::new();
+            for (line, contents) in lower.lines().enumerate() {
+                for token in tokens {
+                    if contents.contains(token) {
+                        found.push(format!(
+                            "{}:{} contains a forbidden consumer identifier",
+                            relative.display(),
+                            line + 1
+                        ));
+                    }
+                }
+            }
+            found
+        })
+        .collect();
+    violations.sort();
+    violations
+}
+
 pub(super) fn consumer_identifier_paths(root: &Path) -> Vec<PathBuf> {
     ignore::WalkBuilder::new(root)
         .hidden(false)

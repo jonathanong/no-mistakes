@@ -35,6 +35,16 @@ fn postgres_no_add_column_check_json_snapshot() {
                 migration.clone(),
             ),
             (
+                "disable_file",
+                rules_path(rule, "fixture", "disable-file"),
+                migration.clone(),
+            ),
+            (
+                "disable_line",
+                rules_path(rule, "fixture", "disable-lines"),
+                migration.clone(),
+            ),
+            (
                 "create_table_and_add_constraint",
                 rules_path(rule, "fixture", "pass"),
                 migration,

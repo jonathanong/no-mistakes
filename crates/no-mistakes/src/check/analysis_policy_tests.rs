@@ -42,7 +42,10 @@ fn shared_unanalyzable_policies_route_actual_sql_failures_advisories_and_skips()
 
 #[test]
 fn shared_defaults_preserve_malformed_options_errors_instead_of_panicking() {
-    for name in ["malformed-options", "malformed-sequence"] {
+    for (name, kind) in [
+        ("malformed-options", "boolean"),
+        ("malformed-sequence", "sequence"),
+    ] {
         let execute = |config: String| {
             check_runner::run_all_with_options(
                 root(),
@@ -57,15 +60,16 @@ fn shared_defaults_preserve_malformed_options_errors_instead_of_panicking() {
         };
         let legacy = format!("{:#}", execute(format!("{name}-legacy.yml")));
         let shared = format!("{:#}", execute(format!("{name}.yml")));
-        assert_eq!(shared, legacy);
-        assert_eq!(
-            shared,
-            concat!(
-                "postgres-require-query-annotation option importSpecifier: ",
-                "set importSpecifier (or executorNames) to select executor calls; ",
-                "set executorNames: [] to scan only SQL files and native SQL ",
-                "(see docs/migrations/explicit-postgres-executors.md)"
-            )
+        let detail = format!(
+            "invalid options for rule `postgres-require-query-annotation` at options: invalid type: {kind}"
+        );
+        assert!(
+            legacy.contains(&format!("{name}-legacy.yml:4: {detail}")),
+            "{legacy}"
+        );
+        assert!(
+            shared.contains(&format!("{name}.yml:5: {detail}")),
+            "{shared}"
         );
     }
 }
@@ -113,7 +117,7 @@ fn supported_sql_aliases_preserve_inherited_cross_file_reports() {
         ]
     );
     let baseline = check_runner::json_value(&baseline);
-    for config in ["project-fail.yml", "opaque-legacy.yml"] {
+    for config in ["project-fail.yml"] {
         assert_eq!(
             check_runner::json_value(&report(config, None)),
             baseline,

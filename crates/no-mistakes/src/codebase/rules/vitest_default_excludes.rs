@@ -20,8 +20,8 @@ mod options;
 mod spreads;
 use extract::literal_glob;
 pub(crate) use extract::collect_prepared;
+pub(super) use options::collect_application_errors;
 pub(crate) use spreads::has_candidate_exports;
-pub(crate) use options::collect_config_errors;
 use options::{applications, Application, CheckMode};
 
 pub const RULE_ID: &str = "vitest-default-excludes";

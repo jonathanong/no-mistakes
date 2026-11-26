@@ -1,6 +1,6 @@
 [package]
 name = "no-mistakes"
-version = "0.109.122"
+version = "0.109.123"
 edition = "2021"
 rust-version = "1.97"
 # Explicit suites avoid statically linking the analyzer once per test source.
@@ -37,7 +37,7 @@ memchr = "2"
 # Merman 0.8 requires explicit diagram selection; validation supports every family.
 merman-analysis = { version = "=0.10.0", optional = true, features = ["all-diagrams"] }
 napi = { version = "3.9.0", features = ["napi8"] }
-napi-derive = "3.5.6"
+napi-derive = { version = "3.5.6", default-features = false, features = ["strict"] }
 num_cpus = "1.16"
 # Keep OXC crates aligned; the oxc-dependencies Dependabot group updates them together.
 oxc_allocator = "0.159.0"
@@ -48,10 +48,10 @@ oxc_parser = "0.159.0"
 oxc_span = "0.159.0"
 oxc_syntax = { version = "0.159.0", features = ["to_js_string"] }
 oxc_str = "0.159.0"
-proc-macro2 = { version = "1", features = ["span-locations"] }
+proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
 percent-encoding = "2.3"
 url = "2.5"
-pulldown-cmark = "0.13"
+pulldown-cmark = { version = "0.13", default-features = false }
 rayon = "1.10"
 regex = "1"
 regex-syntax = "0.8"
@@ -63,8 +63,8 @@ serde_path_to_error = "0.1"
 serde_yaml = "0.9"
 self_cell = "1.2.2"
 sqlparser = { version = "0.64", features = ["visitor", "serde"] }
-syn = { version = "3", features = ["full", "visit"] }
-toml = "1.1"
+syn = { version = "3", default-features = false, features = ["parsing", "printing", "full", "visit"] }
+toml = { version = "1.1", default-features = false, features = ["std", "parse", "serde"] }
 unicode-id-start = "1.4.0"
 wait-timeout = "0.2"
 tempfile = "3"
@@ -90,9 +90,9 @@ windows-sys = { version = "0.61", features = [
 
 [dev-dependencies]
 assert_cmd = "2"
-criterion = { package = "codspeed-criterion-compat", version = "=5.0.1" }
+criterion = { package = "codspeed-criterion-compat", version = "=5.0.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
 insta = "1.49.0"
-predicates = "3"
+predicates = { version = "3", default-features = false }
 
 [build-dependencies]
 napi-build = "2.3.2"

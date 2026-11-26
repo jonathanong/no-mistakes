@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod compile_spelling;
 mod expand;
 mod name_flags;
@@ -94,7 +94,7 @@ pub(crate) struct DeniedToken {
 }
 
 #[derive(Deserialize, Clone, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct DoubleUnderscore {
     pub(crate) allow_pattern: Option<String>,
 }

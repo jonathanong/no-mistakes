@@ -17,6 +17,9 @@ fn cli_commands_have_docs() {
     let mut inventories = Vec::new();
     for source_path in rust_sources(&source_dir) {
         let source = read(&source_path);
+        if !source.contains("subcommand") {
+            continue;
+        }
         for (parent, enum_name) in subcommand_enums(&source) {
             let block = enum_block(&source, &enum_name).unwrap_or_else(|| {
                 panic!(

@@ -342,13 +342,10 @@ fn run_all_surfaces_invalid_unique_exports_option_types() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/invalid-unique-exports-options");
 
-    let report = run_all(root, None, None).unwrap();
-    let message = report
-        .incomplete
-        .iter()
-        .map(|failure| failure.message.as_str())
-        .collect::<Vec<_>>()
-        .join("\n");
+    let message = run_all(root, None, None)
+        .err()
+        .expect("invalid options must abort check")
+        .to_string();
 
     assert!(message.contains("invalid options for rule `unique-exports`"));
     assert!(message.contains("options.uniqueAcrossTypesAndValues"));

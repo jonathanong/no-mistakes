@@ -311,6 +311,9 @@ mod cli_gha_snapshot_required_pr_path_filters;
 #[path = "cli_snapshot_dependabot_cooldown_policy.rs"]
 mod cli_snapshot_dependabot_cooldown_policy;
 
+#[path = "cli_snapshot_csp_allowed_origins.rs"]
+mod cli_snapshot_csp_allowed_origins;
+
 #[path = "cli_snapshot_vitest_default_excludes.rs"]
 mod cli_snapshot_vitest_default_excludes;
 #[path = "cli_snapshot_vitest_project_policy.rs"]
@@ -325,6 +328,8 @@ mod cli_postgres_snapshot_literal_comment_names;
 #[path = "cli_postgres_snapshot_declared_bounds.rs"]
 mod cli_postgres_snapshot_declared_bounds;
 
+#[path = "cli_postgres_option_validation.rs"]
+mod cli_postgres_option_validation;
 #[path = "cli_postgres_snapshot_materialized_view_shape.rs"]
 mod cli_postgres_snapshot_materialized_view_shape;
 #[path = "cli_postgres_unused_disables.rs"]
@@ -397,5 +402,12 @@ mod cli_suppression_index;
 #[path = "cli_queue_factory_wrappers.rs"]
 mod cli_queue_factory_wrappers;
 
+#[path = "cli_config_rule_validation.rs"]
+mod cli_config_rule_validation;
+
 #[path = "cli_react_nested_controls_snapshot.rs"]
 mod cli_react_nested_controls_snapshot;
+
+#[cfg(unix)]
+#[path = "cli_unreadable_rule_inputs.rs"]
+mod cli_unreadable_rule_inputs;

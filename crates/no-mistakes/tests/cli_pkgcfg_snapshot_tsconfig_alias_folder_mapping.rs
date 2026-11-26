@@ -50,6 +50,16 @@ fn tsconfig_alias_folder_mapping_json_matches_snapshot() {
                 config("check-exists.yml"),
             ),
             (
+                "disable_file",
+                fixture("disable-file"),
+                config("check-exists.yml"),
+            ),
+            (
+                "disable_line",
+                fixture("disable-line"),
+                config("check-exists.yml"),
+            ),
+            (
                 "exists_shape_without_check",
                 fixture("exists-fail"),
                 agents.clone(),
