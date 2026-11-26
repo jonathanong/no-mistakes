@@ -51,6 +51,20 @@ pub(in crate::codebase::rules) struct Options {
     trusted_sql_tags: Vec<TrustedSqlTag>,
 }
 
+impl Options {
+    pub(in crate::codebase::rules) fn validate(&self) -> Result<()> {
+        for (index, tag) in self.trusted_sql_tags.iter().enumerate() {
+            for (field, value) in [("module", &tag.module), ("name", &tag.name)] {
+                anyhow::ensure!(
+                    !value.trim().is_empty(),
+                    "{RULE_ID}: options.trustedSqlTags[{index}].{field} must be nonblank"
+                );
+            }
+        }
+        Ok(())
+    }
+}
+
 pub(crate) fn demands_analysis(config: &NoMistakesConfig) -> bool {
     config.rule_applications(RULE_ID).iter().any(|application| {
         application

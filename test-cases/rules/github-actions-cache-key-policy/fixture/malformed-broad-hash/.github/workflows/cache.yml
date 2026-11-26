@@ -9,7 +9,7 @@ jobs:
           path: .cache/widgets
           key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}-${{ hashFiles('retained/**') }}-${{ hashFiles('double/**', "invalid") }}
           restore-keys: |
-            widgets-${{ hashFiles('mismatched/**', env.pattern] }}
+            widgets-${{ hashFiles(env.pattern, 'mismatched/**'] }}
       - uses: actions/cache@v4
         with:
           path: .cache/widgets
