@@ -529,7 +529,9 @@ A `missing-job-option` finding lists the absent keys in `message`. Abstentions
 appear in the queue report diagnostics.
 `queues.unboundedJobRetention` is also configured in that file (selected by
 `config` in `queueCheck()`, `check()`, and `analyzeProject()`), emitting
-`unbounded-job-retention` findings. Exported types `QueueJobRetentionKey`,
+`unbounded-job-retention` findings. Undecided producer retention appears in
+`warnings` in `check()` and `analyzeProject()` check reports. Exported types
+`QueueJobRetentionKey`,
 `QueueUnboundedJobRetentionOptions`, and `QueueUnboundedJobRetentionConfig`
 describe its YAML shape.
 `queues.jobStateAsRecord` is opt-in configuration emitting advisory
