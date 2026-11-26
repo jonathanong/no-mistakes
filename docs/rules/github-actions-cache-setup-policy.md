@@ -5,6 +5,18 @@ selected setup actions need tighter step deadlines than other workflow steps.
 For example, a pnpm cache namespace can put the runner OS before the
 architecture and append the lockfile digest expression.
 
+## Why and when
+
+Reordering key segments changes the cache namespace. Apply the rule when
+workflows should reuse the same namespace and setup steps need an explicit
+deadline so a stalled install leaves time for the rest of the job.
+
+## What it requires
+
+A cache step that selects a configured path must use the prescribed key
+template. Each configured workflow setup action needs a literal deadline
+at or below its own cap.
+
 ## Options
 
 - `caches` lists policies with `uses`, `path`, and `keyPattern`. The
@@ -23,7 +35,7 @@ architecture and append the lockfile digest expression.
   actions. Setup deadlines apply only to workflows, where GitHub accepts
   step-level timeouts. Reusable job calls are outside its scope.
 
-Configure at least one cache or setup policy. Options reject blank selectors,
+Both policy lists default to empty. Configure at least one cache or setup policy. Options reject blank selectors,
 duplicate normalized selectors, invalid globs or regular expressions, and
 out-of-range caps. Invalid options fail at config load with exit 2. Remote
 action families use the same case matching as the action-input rule.
@@ -42,7 +54,7 @@ rules:
           maxMinutes: 3
 ```
 
-## Example
+## Valid example
 
 The cache key follows the configured order and the setup action has a two-minute deadline.
 
