@@ -1,5 +1,5 @@
 use super::super::patterns::DEFAULT_PATTERNS;
-use super::super::{check_source, compile_options, Options};
+use super::super::{check_source, default_compiled_options};
 use super::RUNTIME_PATTERNS;
 use regex::Regex;
 
@@ -8,8 +8,7 @@ mod image_grammar_tests;
 mod uses_key_tests;
 
 fn pins(line: &str) -> Vec<String> {
-    let options = compile_options(&Options::default()).unwrap();
-    check_source("src/app.test.mts", line, &options)
+    check_source("src/app.test.mts", line, default_compiled_options())
         .into_iter()
         .filter_map(|finding| finding.import)
         .collect()

@@ -1,10 +1,9 @@
-use super::super::{check_source, compile_options, Options};
+use super::super::{check_source, default_compiled_options};
 use super::DEFAULT_PATTERNS;
 use std::path::PathBuf;
 
 fn refs(line: &str) -> Vec<String> {
-    let options = compile_options(&Options::default()).unwrap();
-    check_source("src/app.test.mts", line, &options)
+    check_source("src/app.test.mts", line, default_compiled_options())
         .into_iter()
         .filter(|finding| finding.target.as_deref() == Some("exact action ref"))
         .filter_map(|finding| finding.import)
