@@ -1,8 +1,9 @@
 use super::{normalize_copy_data, normalize_table_queries, PostgresParseError};
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
-use sqlparser::tokenizer::TokenWithSpan;
+use sqlparser::tokenizer::{Location, Token, TokenWithSpan};
 use std::borrow::Cow;
 use std::cell::{Cell, OnceCell, Ref, RefCell};
 
@@ -35,21 +36,41 @@ impl<'a> PreparedSql<'a> {
         self.located().map_or(&[], Vec::as_slice)
     }
 
+    pub(crate) fn keyword_is_absent(&self, keyword: Keyword) -> bool {
+        self.located().is_ok_and(|tokens| {
+            !tokens.iter().any(|token| {
+                matches!(&token.token, Token::Word(word)
+                    if word.quote_style.is_none() && word.keyword == keyword)
+            })
+        })
+    }
+
     pub(crate) fn tokens_preserve_source_positions(&self) -> bool {
         let _ = self.located();
         self.source_positions_preserved.get()
     }
 
     pub(crate) fn parse(&self) -> Result<Vec<Statement>, PostgresParseError> {
-        self.parse_with_policy(false)
+        self.parse_with_policy(false, None)
     }
 
     /// Prepared checks retain auxiliary conflict syntax as facts, never public ASTs.
     pub(crate) fn parse_policy(&self) -> Result<Vec<Statement>, PostgresParseError> {
-        self.parse_with_policy(true)
+        self.parse_policy_with_locations(None)
     }
 
-    fn parse_with_policy(&self, policy: bool) -> Result<Vec<Statement>, PostgresParseError> {
+    pub(crate) fn parse_policy_with_locations(
+        &self,
+        locations: Option<&mut Vec<Location>>,
+    ) -> Result<Vec<Statement>, PostgresParseError> {
+        self.parse_with_policy(true, locations)
+    }
+
+    fn parse_with_policy(
+        &self,
+        policy: bool,
+        locations: Option<&mut Vec<Location>>,
+    ) -> Result<Vec<Statement>, PostgresParseError> {
         self.functions.borrow_mut().clear();
         self.policy_arbiters.borrow_mut().clear();
         let located = self.located().map_err(Clone::clone)?;
@@ -60,7 +81,7 @@ impl<'a> PreparedSql<'a> {
         let fetch = super::fetch_expression::prepare(&mut tokens);
         super::named_arguments::accept_infix(&mut tokens);
         let (mut statements, functions, arbiters) = if policy {
-            super::super::source::parse_conflict_program(tokens)
+            super::super::source::parse_conflict_program(tokens, locations)
         } else {
             super::super::source::conceal_body_keyword(&mut tokens);
             Parser::new(&PostgreSqlDialect {})

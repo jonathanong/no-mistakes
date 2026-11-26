@@ -1,0 +1,67 @@
+{
+  "id": "profile.avatar",
+  "dimensions": {
+    "size": 128,
+    "width": 128,
+    "height": 128,
+    "density": 2,
+    "aspect": "square"
+  },
+  "presentation": {
+    "alt": "Geometric avatar",
+    "title": "Profile image",
+    "caption": "Member avatar",
+    "theme": "light",
+    "background": "#f1f5f9",
+    "border": "#cbd5e1",
+    "rounded": true
+  },
+  "encoding": {
+    "format": "webp",
+    "quality": 90,
+    "colorSpace": "srgb",
+    "animated": false
+  },
+  "source": {
+    "url": "https://assets.example.invalid/profile/avatar.webp",
+    "checksum": "cafe33",
+    "region": "north",
+    "version": "2026.01"
+  },
+  "variants": [
+    {
+      "name": "thumbnail",
+      "width": 32,
+      "height": 32,
+      "url": "https://assets.example.invalid/profile/avatar-32.webp"
+    },
+    {
+      "name": "sidebar",
+      "width": 64,
+      "height": 64,
+      "url": "https://assets.example.invalid/profile/avatar-64.webp"
+    },
+    {
+      "name": "header",
+      "width": 256,
+      "height": 256,
+      "url": "https://assets.example.invalid/profile/avatar-256.webp"
+    }
+  ],
+  "attribution": {
+    "owner": "Sample member",
+    "rights": "example",
+    "license": "synthetic fixture"
+  },
+  "metadata": {
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-03T00:00:00Z",
+    "tags": [
+      "sample",
+      "avatar",
+      "geometric"
+    ],
+    "pinned": false,
+    "locale": "en"
+  }
+}

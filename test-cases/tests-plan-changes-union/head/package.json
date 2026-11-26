@@ -1,0 +1,7 @@
+{
+  "name": "union-fixture",
+  "private": true,
+  "dependencies": {
+    "widget-kit": "1.0.0"
+  }
+}

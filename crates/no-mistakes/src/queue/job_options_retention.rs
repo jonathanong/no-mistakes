@@ -7,6 +7,17 @@ use crate::config::v2::schema::JobRetentionKey;
 use globset::GlobSet;
 use std::path::{Path, PathBuf};
 
+const CALL_OPTIONS_OPEN: &str =
+    "unbounded-job-retention was not judged for call options because a required retention value is not statically known";
+const DEFAULTS_OPEN: &str =
+    "unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known";
+
+#[derive(Default)]
+pub(super) struct SiteJudgment {
+    pub finding: Option<RetentionNote>,
+    pub abstentions: [Option<&'static str>; 2],
+}
+
 pub(super) struct RetentionNote {
     pub path: PathBuf,
     pub finding: JobOptionFinding,
@@ -59,24 +70,21 @@ pub(super) fn judge_site(
     policy: &UnboundedRetentionPolicy,
     allow: Option<&GlobSet>,
     defaults: &DefaultsIndex,
-) -> (Option<RetentionNote>, bool) {
-    if is_allowed(root, path, allow) {
-        return (None, false);
-    }
-    if site.binding.is_some() && site.queue_name.is_none() {
-        return (None, false);
+) -> SiteJudgment {
+    let unresolved = site.binding.is_some() && site.queue_name.is_none();
+    if is_allowed(root, path, allow) || (unresolved && !defaults.has_unresolved_queue(path, site)) {
+        return SiteJudgment::default();
     }
     let mut explicit_unbounded = Vec::new();
     let mut unset = Vec::new();
+    let mut unknown_call_options = false;
     let mut unknown_defaults = false;
     for &key in &policy.require {
-        match site.evidence.retention.get(key) {
-            Some(RetentionValue::Unbounded) => explicit_unbounded.push(key),
-            Some(RetentionValue::Bounded | RetentionValue::Unknown) => {}
-            None => {
-                if site.evidence.open {
-                    continue;
-                }
+        match (site.evidence.retention.get(key), site.evidence.open) {
+            (Some(RetentionValue::Unbounded), _) => explicit_unbounded.push(key),
+            (Some(RetentionValue::Bounded), _) => {}
+            (Some(RetentionValue::Unknown), _) | (None, true) => unknown_call_options = true,
+            (None, false) => {
                 let evidence = if site.ambiguous_defaults {
                     None
                 } else {
@@ -90,10 +98,7 @@ pub(super) fn judge_site(
             }
         }
     }
-    if explicit_unbounded.is_empty() && unset.is_empty() {
-        return (None, unknown_defaults);
-    }
-    let note = RetentionNote {
+    let finding = (!(explicit_unbounded.is_empty() && unset.is_empty())).then(|| RetentionNote {
         path: path.to_path_buf(),
         finding: JobOptionFinding {
             kind: "unbounded-job-retention".to_string(),
@@ -103,8 +108,14 @@ pub(super) fn judge_site(
             job: site.job.clone(),
             message: format_producer_message(&explicit_unbounded, &unset),
         },
-    };
-    (Some(note), unknown_defaults)
+    });
+    SiteJudgment {
+        finding,
+        abstentions: [
+            unknown_call_options.then_some(CALL_OPTIONS_OPEN),
+            unknown_defaults.then_some(DEFAULTS_OPEN),
+        ],
+    }
 }
 
 pub(super) fn covered_keys(

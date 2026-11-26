@@ -45,7 +45,14 @@ pub(super) fn collect_with_scope(
     } else {
         None
     };
-    if let Some(sql_seeds) = sql_seeds {
+    let mut supplemental_plan = CheckFactPlan {
+        nested_control_paths: Arc::clone(&plan.nested_control_paths),
+        vitest_default_exclude_paths: Arc::clone(&plan.vitest_default_exclude_paths),
+        test_reliability_paths: Arc::clone(&plan.test_reliability_paths),
+        ..Default::default()
+    };
+    supplemental_plan.require_call_site_paths(supplemental_call_sites);
+    let mut map = if let Some(sql_seeds) = sql_seeds {
         let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_sql_seeds(
             session.session,
             vec![crate::codebase::check_facts::batch::BatchCheckFactRequest {
@@ -62,38 +69,33 @@ pub(super) fn collect_with_scope(
         .pop()
         .expect("one requested fact map");
         map.graph_files_complete = graph_files_complete;
-        return map;
-    }
-    session.record_work("check.fact_collections", 1);
-    let mut supplemental_plan = CheckFactPlan {
-        vitest_default_exclude_paths: Arc::clone(&plan.vitest_default_exclude_paths),
-        test_reliability_paths: Arc::clone(&plan.test_reliability_paths),
-        ..Default::default()
-    };
-    supplemental_plan.require_call_site_paths(supplemental_call_sites);
-    let mut map = if let Some(playwright) = playwright {
-        crate::codebase::check_facts::staged_playwright::collect_with_sources_and_session(
-            session,
-            root,
-            (files, graph_files, graph_files_complete),
-            plan,
-            playwright,
-            Arc::clone(&sources),
-            SupplementalFactInput {
-                facts: precollected,
-                call_sites: supplemental_call_sites,
-            },
-        )
+        map
     } else {
-        super::super::collect_check_facts_inner(
-            session,
-            root,
-            (files, graph_files, graph_files_complete),
-            plan,
-            playwright,
-            Arc::clone(&sources),
-            precollected,
-        )
+        session.record_work("check.fact_collections", 1);
+        if let Some(playwright) = playwright {
+            crate::codebase::check_facts::staged_playwright::collect_with_sources_and_session(
+                session,
+                root,
+                (files, graph_files, graph_files_complete),
+                plan,
+                playwright,
+                Arc::clone(&sources),
+                SupplementalFactInput {
+                    facts: precollected,
+                    call_sites: supplemental_call_sites,
+                },
+            )
+        } else {
+            super::super::collect_check_facts_inner(
+                session,
+                root,
+                (files, graph_files, graph_files_complete),
+                plan,
+                playwright,
+                Arc::clone(&sources),
+                precollected,
+            )
+        }
     };
     collect_missing(
         session,
@@ -118,6 +120,7 @@ fn collect_missing(
     // Keep the requested spelling as the address of a supplemental read failure.
     let missing: std::collections::BTreeSet<_> = supplemental_call_sites
         .iter()
+        .chain(plan.nested_control_paths.iter())
         .chain(plan.vitest_default_exclude_paths.iter())
         .chain(plan.test_reliability_paths.keys())
         .filter(|path| !facts.ts.contains_key(path))

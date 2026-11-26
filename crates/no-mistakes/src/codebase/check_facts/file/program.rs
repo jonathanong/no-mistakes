@@ -5,7 +5,6 @@ use super::should_store_source;
 use super::CheckFactVariant;
 use std::path::Path;
 use std::sync::Arc;
-
 pub(crate) fn collect_file_facts_from_program_with_discovery(
     variant: &CheckFactVariant<'_>,
     path: &Path,
@@ -13,6 +12,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
+    use crate::codebase::rules::nested_controls;
     let root = variant.root;
     let plan = variant.plan;
     let playwright = variant.playwright;
@@ -54,7 +54,6 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         stored_source.clone(),
     );
     let ts = prepared.ts;
-
     let react = ((plan.react
         && crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path))
         || plan.graph.react)
@@ -149,6 +148,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     );
     let symbols = ts.symbols.clone();
     CheckFileFacts {
+        nested_controls: nested_controls::collect(path, source, program, plan),
         fact_extraction_panicked: false,
         test_reliability: prepared.test_reliability,
         fixture_initializers: prepared.fixture_initializers,

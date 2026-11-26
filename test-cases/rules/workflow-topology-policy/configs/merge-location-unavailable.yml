@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      forbiddenEvents:
+        - pull_request_target
+      unlockedWorkflowReasons:
+        .github/workflows/long-tag.yml: "single-job lint has no overlapping work"

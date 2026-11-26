@@ -1,0 +1,5 @@
+DO $body$
+BEGIN
+  PERFORM 1;
+END
+$body$ LANGUAGE;

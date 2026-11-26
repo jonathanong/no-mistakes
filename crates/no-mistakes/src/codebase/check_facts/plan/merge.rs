@@ -13,6 +13,12 @@ impl CheckFactPlan {
         super::super::family_scope::include_scopes(self, &other);
         self.merge_call_site_paths(&other);
         self.playwright_fixture_support |= other.playwright_fixture_support;
+        if !other.nested_control_paths.is_empty()
+            && !Arc::ptr_eq(&self.nested_control_paths, &other.nested_control_paths)
+        {
+            Arc::make_mut(&mut self.nested_control_paths)
+                .extend(other.nested_control_paths.iter().cloned());
+        }
         if !other.test_reliability_paths.is_empty() {
             let paths = Arc::make_mut(&mut self.test_reliability_paths);
             for (path, demand) in other.test_reliability_paths.iter() {
@@ -93,6 +99,10 @@ impl CheckFactPlan {
         self.source |= other.source;
         self.raw_source |= other.raw_source;
         self.postgres_schema |= other.postgres_schema;
+        if !other.postgres_explain_write_rollback_paths.is_empty() {
+            Arc::make_mut(&mut self.postgres_explain_write_rollback_paths)
+                .extend(other.postgres_explain_write_rollback_paths.iter().cloned());
+        }
         self.embedded_sql |= other.embedded_sql;
         self.embedded_sql_options.extend(other.embedded_sql_options);
         self.embedded_sql_options.sort();

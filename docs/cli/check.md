@@ -30,6 +30,9 @@ from reaching tests transitively. Per-root `exceptions` allow specified file
 targets without pruning other reachable dependencies. The CLI uses the shared
 canonical graph and resolver for these checks.
 
+Configure [`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
+to flag write plans that can persist in explicitly selected standalone SQL scripts.
+
 The `postgres-sql-statement-policy` rule can ban extension version pins and
 cascading drops through `options.bannedClauses`. The setting applies to matching
 SQL files and configured executor calls. See the
@@ -76,6 +79,7 @@ and [playwright-coverage](../rules/playwright-coverage.md#effort).
 checked, and other ID expressions use the selected unanalyzable policy. This
 rule remains enabled when `tests.playwright.selectors.htmlIds` is `false`. See
 [the rule](../rules/playwright-unique-html-ids.md#effort).
+Enable [`react-no-nested-buttons-and-links`](../rules/react-no-nested-buttons-and-links.md) to check native HTML buttons and links in selected JSX and TSX files. The finding points to the inner control.
 Configure [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
 to report unconditional Darwin imports in selected Swift test files.
 

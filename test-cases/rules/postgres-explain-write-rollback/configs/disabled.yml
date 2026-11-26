@@ -1,0 +1,4 @@
+rules:
+  - rule: postgres-explain-write-rollback
+    enabled: false
+    scope: repository

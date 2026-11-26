@@ -1,0 +1,10 @@
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      widget-kit:
+        specifier: 1.0.0
+        version: 1.0.0
+packages:
+  widget-kit@1.0.0:
+    resolution: {integrity: sha512-widget-v1}

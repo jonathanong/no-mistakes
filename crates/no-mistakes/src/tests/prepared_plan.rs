@@ -26,6 +26,16 @@ mod request;
 use helpers::{test_framework, test_runner};
 pub(crate) mod revisions;
 
+pub(super) struct GraphInputs {
+    pub(super) tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
+    pub(super) graph_files: GraphFiles,
+    pub(super) graph_plan: GraphBuildPlan,
+    pub(super) prepared_graph_config: PreparedGraphConfig,
+    pub(super) prepared_test_projects:
+        Arc<no_mistakes::codebase::test_discovery::PreparedTestProjects>,
+    pub(super) test_filter: no_mistakes::codebase::test_filter::TestFileFilter,
+}
+
 /// Immutable, request-scoped inputs shared by direct test plans and the
 /// multi-framework impacted-check fanout.
 pub(crate) struct PreparedTestPlanInputs {
@@ -36,6 +46,7 @@ pub(crate) struct PreparedTestPlanInputs {
     pub(crate) config: NoMistakesConfig,
     config_path: Option<PathBuf>,
     pub(crate) collected: ChangedFiles,
+    changes_input: Option<super::plan::changes::ChangesInput>,
 }
 
 pub(crate) struct PreparedTestPlanRequest {
@@ -64,7 +75,7 @@ pub(crate) struct PreparedTestPlanRequest {
     test_filter: no_mistakes::codebase::test_filter::TestFileFilter,
     graph: OnceLock<std::result::Result<DepGraph, String>>,
     discovered_tests: Mutex<HashMap<TestFramework, std::result::Result<DiscoveredTests, String>>>,
-    changes_input: OnceLock<Option<super::plan::changes::ChangesInput>>,
+    changes_input: Option<super::plan::changes::ChangesInput>,
     config_invalidation: OnceLock<
         std::result::Result<Option<super::config_invalidation::ConfigInvalidation>, String>,
     >,

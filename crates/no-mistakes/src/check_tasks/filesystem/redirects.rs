@@ -1,3 +1,4 @@
+mod explain_write_rollback;
 mod nextjs;
 use super::*;
 use no_mistakes::codebase::rules::analysis_policy::AnalysisDiagnostics;
@@ -148,6 +149,14 @@ pub(super) fn run(
     let (config, manifest_diagnostics) =
         super::manifests::run(root, config, files, &prepared.sources, defer_suppression)?;
     diagnostics.append(manifest_diagnostics);
+    let config = config.as_ref();
+    let (config, nested_control_diagnostics) =
+        super::nested_controls::run(root, config, files, &prepared, facts, defer_suppression)?;
+    diagnostics.append(nested_control_diagnostics);
+    let config = config.as_ref();
+    let (config, explain_write_diagnostics) =
+        explain_write_rollback::run(root, config, files, &prepared, facts, defer_suppression)?;
+    diagnostics.append(explain_write_diagnostics);
     let config = config.as_ref();
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(

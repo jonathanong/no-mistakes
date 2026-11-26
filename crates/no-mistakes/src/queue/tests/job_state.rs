@@ -110,14 +110,16 @@ fn job_state_as_record_config_round_trip_and_validation() {
         .is_none());
 
     let custom: NoMistakesConfig = serde_yaml::from_str(
-        "version: 2\nqueues:\n  jobStateAsRecord:\n    allowPaths: ['apps/admin/**']\n",
+        "version: 2\nqueues:\n  jobStateAsRecord:\n    allowPaths: ['./apps/admin/**']\n",
     )
     .unwrap();
     let cfg = custom.queues.job_state_as_record.as_ref().unwrap();
-    assert_eq!(cfg.allow_paths, vec!["apps/admin/**".to_string()]);
-    assert!(cfg.allow_globset().is_some());
+    assert_eq!(cfg.allow_paths, vec!["./apps/admin/**".to_string()]);
+    assert!(cfg
+        .allow_globset()
+        .is_some_and(|set| set.is_match("apps/admin/view.ts")));
     let serialized = serde_yaml::to_string(&custom).unwrap();
-    assert!(serialized.contains("apps/admin/**"));
+    assert!(serialized.contains("./apps/admin/**"));
 
     assert!(serde_yaml::from_str::<NoMistakesConfig>(
         "version: 2\nqueues:\n  jobStateAsRecord:\n    allowPaths: ['[unclosed']\n",

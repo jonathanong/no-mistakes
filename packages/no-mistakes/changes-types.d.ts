@@ -1,10 +1,15 @@
 import type { WithInvocationOptions, WithInvocationResult } from "./invocation-types";
 
+/** Changed fixture IDs mapped to RFC 6901 JSON Pointers. */
+export type FixtureAttributePaths = Record<string, string[]>;
+
 /** Stable semantic IDs; all lists are sorted and deduplicated. */
 export interface KeyChanges {
   changed: string[];
   added: string[];
   removed: string[];
+  /** Omitted for IDs that require whole-fixture selection. */
+  attributePaths?: FixtureAttributePaths;
 }
 
 export type KeyedDiffFormat = "pnpm" | "npm" | "swift" | "nuget" | "json" | "strings" | "resx";
@@ -35,6 +40,12 @@ export interface ChangeCategory {
   tests?: string[];
   /** Literal match template with {id} or <id>; defaults to the ID itself. */
   match?: string;
+  /**
+   * User assertion that the match loader returns the parsed fixture JSON object
+   * unchanged and neither branches on nor exposes any other fixture state or
+   * side effects. Unverified statically; defaults to false (whole-fixture selection).
+   */
+  assertPureJsonLoader?: boolean;
   /** Named framework full-suite trigger, or full-suite. Defaults to full-suite. */
   fallback?: string;
 }
@@ -48,6 +59,7 @@ export interface ChangesReportMetadata {
   schemaVersion: 1;
   complete: boolean;
   unclassified: string[];
+  changedFiles?: string[];
   reasons?: string[];
 }
 
@@ -68,10 +80,11 @@ export function changesDiff<Categories extends string = never>(
 ): Promise<WithInvocationResult<ChangesReport<Categories>>>;
 
 /** Input artifacts may omit empty lists, but require at least one list per category. */
-export type ChangeIdsInput =
+export type ChangeIdsInput = { attributePaths?: FixtureAttributePaths } & (
   | { changed: string[]; added?: string[]; removed?: string[] }
   | { changed?: string[]; added: string[]; removed?: string[] }
-  | { changed?: string[]; added?: string[]; removed: string[] };
+  | { changed?: string[]; added?: string[]; removed: string[] }
+);
 
 export type ChangesInputReport<Categories extends string = never> = ChangesReportMetadata &
   Partial<Record<Categories, ChangeIdsInput>>;

@@ -23,7 +23,8 @@ test(
       removed: ["profile.legacy"],
     });
     assert.deepEqual(report.catalogs.changed, ["label.welcome", "retained", "shared"]);
-    assert.deepEqual(report.unclassified, [".notice", "ignored/data.txt"]);
+    assert.deepEqual(report.unclassified, []);
+    assert.deepEqual(report.changedFiles, [".notice", "ignored/data.txt"]);
     assert.deepEqual(await esm.changesDiff(options), report);
     const incomplete = await cjs.changesDiff({ ...options, baseRoot: join(root, "missing") });
     assert.equal(incomplete.complete, false);

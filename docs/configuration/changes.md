@@ -56,9 +56,13 @@ reports them as `changed` rather than `removed`).
 
 `exclude` is scoped per category: excluding a path in one category prevents only
 that category's rules from matching it. Another category whose `paths` match the
-path still classifies and diffs it, and any changed path matched by no category
-goes into `unclassified`. Category names `schemaVersion`, `complete`,
-`unclassified`, and `reasons` are reserved for report metadata.
+path still classifies and diffs it; if every matching category excludes it, or
+no rule in a matching category can classify it, the changed path goes into
+`unclassified` so `tests plan --changes` keeps its safety fallback active.
+Changed paths matched by no category's `paths` (such as ordinary source files)
+are recorded in `changedFiles` so `tests plan --changes` routes them through
+the import graph. Category names `schemaVersion`, `complete`, `unclassified`,
+`changedFiles`, and `reasons` are reserved for report metadata.
 
 `tests` limits the test sources searched for each ID. `match` is a literal
 substring template containing `{id}` or `<id>`; by default it searches for the
@@ -66,6 +70,30 @@ ID itself. All changed, added, and removed IDs participate. An unmatched ID
 uses `fallback`, either a named framework full-suite trigger or `full-suite`.
 An absent or unusable fallback selects the full suite. Matching borrows the
 prepared session's test universe and source store.
+
+By default (`assertPureJsonLoader: false`, or omitted), `changes diff` omits
+`attributePaths` and `tests plan --changes` selects every test matching the
+changed fixture (even if given a report carrying `attributePaths`).
+
+Setting `assertPureJsonLoader: true` is an explicit user assertion — not
+verified by static analysis of the loader implementation — that the configured
+`match` loader (a complete literal call such as `loadFixture("{id}")`) returns
+the parsed fixture JSON object unchanged, does not branch on or trigger side
+effects based on any fixture content or raw file text beyond that returned
+object, and does not expose any other view of the fixture (such as raw text,
+byte length, or derived state). Only when you assert that contract should you
+enable `assertPureJsonLoader: true`, allowing `changes diff` to record changed
+JSON Pointers in `attributePaths` and `tests plan --changes` to narrow
+selection to tests whose static reads overlap a changed path. If a loader
+reshapes fields (for example, returning `{ label: String(raw.size) }`),
+validates or hashes raw text, or has fixture-dependent side effects, leave
+`assertPureJsonLoader` unset (`false`) so all matching fixture tests remain
+selected. Even with `assertPureJsonLoader: true`, any non-literal loader call
+or non-call reference to the loader or its module export in a file (namespace
+import, renamed import, local re-binding, alias, passing as a value, re-export,
+dynamic `import()`, or `require()`) invalidates the file's proof and keeps
+every fixture test in that file selected. See
+[semantic change reports](../cli/tests-plan.md#semantic-change-reports).
 
 To replace a broad path trigger only when a valid semantic report is supplied:
 

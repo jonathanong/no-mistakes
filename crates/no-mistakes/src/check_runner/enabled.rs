@@ -63,6 +63,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         lint_suppression_paths: Default::default(),
         call_site_paths: Default::default(),
         production_import_paths: Default::default(),
+        nested_control_paths: Default::default(),
         vitest_default_exclude_paths: Default::default(),
         test_reliability_paths: Default::default(),
         playwright_fixture_support: false,
@@ -98,6 +99,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,
+        postgres_explain_write_rollback_paths: Default::default(),
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
         query_annotation: false,

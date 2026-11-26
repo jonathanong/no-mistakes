@@ -99,6 +99,8 @@ export interface PostgresCatalogForeignKey {
 export interface PostgresCompleteCatalogTable extends Omit<PostgresCatalogTable, "columns"> {
   columns: Record<string, PostgresCompleteCatalogColumn>;
   comment: string | null;
+  /** Whether PostgreSQL records a direct inheritance child or partition in any schema. */
+  hasDescendants?: boolean;
   /** `pg_get_partkeydef` text such as `RANGE (created_at)`; `null` unless partitioned. */
   physicalPartition: { key: string } | null;
   foreignKeys: Record<string, PostgresCatalogForeignKey>;

@@ -10,6 +10,8 @@ pub struct CheckFactPlan {
     pub imports: bool,
     #[doc(hidden)]
     pub postgres_executor_warning_scans: Arc<Vec<crate::codebase::postgres::ExecutorWarningScan>>,
+    #[doc(hidden)]
+    pub nested_control_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Exact configured files whose AST comments are requested.
     pub lint_suppression_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     #[doc(hidden)]
@@ -71,6 +73,8 @@ pub struct CheckFactPlan {
     #[doc(hidden)]
     pub raw_source_paths: super::FamilyPathScope,
     pub postgres_schema: bool,
+    #[doc(hidden)]
+    pub postgres_explain_write_rollback_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     pub embedded_sql: bool,
     /// Owned helper/callback summaries for the annotation-only projection.
     pub query_annotation: bool,

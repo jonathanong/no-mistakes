@@ -82,7 +82,11 @@ pub(super) fn collect<'a>(
                 &ts.exported_bindings,
             )
         })
-        .filter(|fixtures| !fixtures.values.is_empty() || !fixtures.wrappers.is_empty());
+        .filter(|fixtures| {
+            !fixtures.values.is_empty()
+                || !fixtures.uncertain.is_empty()
+                || !fixtures.wrappers.is_empty()
+        });
     let vitest_default_excludes = if collect_vitest {
         semantic
             .as_ref()

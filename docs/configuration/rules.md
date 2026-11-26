@@ -302,6 +302,8 @@ require a companion rule.
 also supports `low`: it checks literal HTML IDs and routes other ID expressions
 through the selected unanalyzable policy. This remains independent of
 `tests.playwright.selectors.htmlIds`, which controls coverage analysis.
+[`react-no-nested-buttons-and-links`](../rules/react-no-nested-buttons-and-links.md) checks native control nesting in selected JSX and TSX files. Use common scope and path filters. Its `options.unanalyzable` inherits repository `unanalyzable` when set and otherwise defaults to `advise`.
+
 Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
 rule on portable Swift test sources. Select those files with common
 `include` and `exclude` filters.
@@ -929,6 +931,13 @@ of an already materialized pool retain the source obligation without repeating
 it. It uses the same scoped
 SQL inputs, catalog and `columnBounds` declarations as the parent rule. See the
 [rule examples](../rules/postgres-bounded-statements.md#independent-candidate-bodies).
+
+[`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
+requires a nonempty `options.sqlInclude` list. Select standalone SQL scripts
+run with autocommit enabled, where each transaction can be understood from
+the script itself. `options.unanalyzable` (`report`, `advise`, or `ignore`;
+default `advise`) controls unparseable scripts, unknown savepoint targets, and
+dynamic read-only settings.
 
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 is opt-in and always advisory, even when severity is omitted. Explicit severity

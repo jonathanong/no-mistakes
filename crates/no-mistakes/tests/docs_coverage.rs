@@ -482,6 +482,24 @@ fn changes_diff_and_semantic_test_routing_have_public_docs() {
 }
 
 #[test]
+fn native_control_nesting_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::REACT_NO_NESTED_BUTTONS_AND_LINKS;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    for path in [
+        "docs/rules/README.md",
+        "docs/rules/react-no-nested-buttons-and-links.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
 fn package_json_export_target_prefix_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::PACKAGE_JSON_EXPORT_TARGET_PREFIX;
     let root = repo_root();

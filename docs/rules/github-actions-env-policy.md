@@ -117,18 +117,23 @@ rules:
 
 ### Unanalyzable inputs
 
-Invalid YAML is skipped and produces no finding. A file that cannot be read is
-skipped. The checker does not evaluate `${{ }}` expressions: a required name whose
+An unreadable file yields an unanalyzable diagnostic at line 1. Invalid YAML
+yields one at the parser's reported line, or at line 1 when the parser has no
+location. Set `rule.message` on the application to replace the diagnostic text.
+The checker does not evaluate `${{ }}` expressions: a required name whose
 value contains `${{` abstains from the mismatch check and records a diagnostic
 (for example `env: { BASH_ENV: ${{ vars.SHELL_INIT }} }` or
 `${{ matrix.init }}`). A non-mapping, non-null `env:` value at workflow, job, or
-step scope (such as `env: ${{ fromJSON(vars.EXTRA_ENV) }}`) is also reported as
-unanalyzable so dynamic mappings cannot bypass `forbidden` or `required` rules
-silently. `options.unanalyzable` controls both (`advise | report |
+step scope (such as `env: ${{ fromJSON(vars.EXTRA_ENV) }}`), non-mapping
+workflow documents, `jobs`, job entries, step entries, or composite `runs`,
+non-sequence `steps:` values, non-string `jobs` keys, and YAML merge keys
+(`<<:`) are also reported as unanalyzable so dynamic or opaque shapes cannot
+bypass `forbidden` or `required` rules silently. `options.unanalyzable`
+controls these diagnostics (`advise | report |
 ignore`, default `advise`): `advise` records a non-failing advisory, `report`
-makes it a failing finding, and `ignore` drops it. Write a literal `env:`
-mapping and literal required value to have them verified, or suppress the line
-when the expression is safe.
+makes it a failing finding, and `ignore` drops it. Write literal mappings,
+step sequences, and literal required values to have them verified, or suppress
+the line when the expression is safe.
 
 A ` #` inside a quoted key or value is not treated as a comment when locating
 finding lines.
@@ -140,4 +145,5 @@ applies the same require-or-ban policy to `with:` inputs.
 
 ## Invalid UTF-8
 
-Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray
+byte is still reported.

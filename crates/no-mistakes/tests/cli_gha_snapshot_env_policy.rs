@@ -36,8 +36,62 @@ fn github_actions_env_policy_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "dynamic-env"),
                 policy.clone(),
             ),
+            // 0 findings, 5 advisories: non-mapping `jobs`, job, step and non-sequence `steps`
+            // (including composite `runs.steps`) are unanalyzable rather than silently skipped.
+            (
+                "non-mapping-scopes",
+                rules_path(RULE, "fixture", "non-mapping-scopes"),
+                policy.clone(),
+            ),
             // 1 finding: line and next-line directives hide two of three.
             ("disabled", rules_path(RULE, "fixture", "disabled"), policy),
         ],
     );
+}
+
+#[test]
+fn github_actions_env_policy_invalid_yaml_json_matches_snapshot() {
+    let root = rules_path(RULE, "fixture", "invalid");
+    let cases = ["policy", "input-message", "ignore"].map(|config| {
+        (
+            config,
+            root.clone(),
+            rules_path(RULE, "configs", &format!("{config}.yml")),
+        )
+    });
+    assert_saved_fixture("github_actions_env_policy_invalid_yaml", &cases);
+}
+
+#[cfg(unix)]
+#[test]
+fn github_actions_env_policy_unreadable_json_matches_snapshot() {
+    let fixture =
+        super::saved_fixture::materialize_path(&rules_path(RULE, "fixture", "unreadable"));
+    let root = fixture.path().to_path_buf();
+    let workflow = ".github/workflows/ci.yml";
+    for args in [
+        &["init", "--quiet"][..],
+        &["add", "--force", "--", workflow],
+    ] {
+        let output = std::process::Command::new("git")
+            .current_dir(&root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    // A tracked workflow can become unreadable after discovery trusts its index mode.
+    std::fs::rename(root.join("unavailable-workflow.link"), root.join(workflow)).unwrap();
+    let cases = ["policy", "input-message", "ignore"].map(|config| {
+        (
+            config,
+            root.clone(),
+            rules_path(RULE, "configs", &format!("{config}.yml")),
+        )
+    });
+    assert_saved_fixture("github_actions_env_policy_unreadable", &cases);
 }
