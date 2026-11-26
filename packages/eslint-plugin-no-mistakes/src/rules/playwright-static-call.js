@@ -2,6 +2,7 @@
 
 const { literalString } = require("../helpers");
 const { unwrapExpression } = require("./async-ast");
+const { resolveModuleBinding } = require("./module-binding");
 const { patternKey, resolveAlias, variableFor } = require("./playwright-static-call-alias");
 
 const SELECTOR_METHODS = new Set([
@@ -99,11 +100,19 @@ function invokedCall(node) {
   return { callee, arguments: args };
 }
 
+function playwrightFact(node, context, seen) {
+  const fact = resolveModuleBinding(node, context, new Set(seen));
+  return fact?.source === "@playwright/test" ? fact : null;
+}
+
 function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
   node = unwrapExpression(node);
   if (node?.type !== "Identifier") return false;
+  const fact = playwrightFact(node, context, seen);
+  if (fact?.status === "namespace") return true;
+  if (fact?.status === "opaque" || fact?.status === "export") return false;
   const variable = variableFor(node, context);
-  if (!variable || variable.defs.length !== 1) return false;
+  if (!variable || variable.defs.length !== 1 || seen.has(variable)) return false;
   const def = variable.defs[0];
   if (def.type === "ImportBinding" && def.node.type === "ImportNamespaceSpecifier") {
     return namespaces.has(node.name);
@@ -117,6 +126,17 @@ function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
 function isTestBinding(node, context, testNames, seen = new Set()) {
   node = unwrapExpression(node);
   if (node?.type !== "Identifier") return false;
+  const fact = playwrightFact(node, context, seen);
+  if (fact?.status === "export") {
+    if (fact.exported === "default") return testNames.has(node.name);
+    return (
+      fact.exported === "test" ||
+      fact.exported === "it" ||
+      (fact.exported === "describe" && testNames.has(node.name))
+    );
+  }
+  if (fact?.status === "namespace") return testNames.has(node.name);
+  if (fact?.status === "opaque") return false;
   const variable = variableFor(node, context);
   if (!variable || variable.defs.length === 0) return testNames.has(node.name);
   const def = variable.defs[0];

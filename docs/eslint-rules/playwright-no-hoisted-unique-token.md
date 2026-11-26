@@ -100,6 +100,9 @@ test.beforeAll(async () => {
 - `tokenFactories` lists unique-token factory call names to track (for
   example `["randomSuffix"]`). It has no default, so the rule is inert until
   a project configures its own factory names.
+- `unanalyzable` is `finding` or `ignore`. It defaults to `finding`. A
+  `beforeAll` whose receiver is a dynamic member of `@playwright/test` reports
+  `unanalyzable` when that callback reads a tracked token.
 
 ## Fix
 
@@ -108,7 +111,7 @@ callback so a re-entry mints a fresh value instead of reusing the hoisted one.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A configured factory keeps its name when that binding aliases another function, as in `const randomSuffix = crypto.randomUUID`. A callback in `test.beforeAll.apply(test, [() => {}])` is still inside that hook. `function register(pw) { pw.test.beforeAll(() => {}) }` is not the imported namespace when `pw` is the parameter. `function register(test) { test.beforeAll(() => {}) }` is not the default import when `test` is the parameter. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A configured factory keeps its name when that binding aliases another function, as in `const randomSuffix = crypto.randomUUID`. A callback in `test.beforeAll.apply(test, [() => {}])` is still inside that hook. `function register(pw) { pw.test.beforeAll(() => {}) }` is not the imported namespace when `pw` is the parameter. `function register(test) { test.beforeAll(() => {}) }` is not the default import when `test` is the parameter. A computed identifier key is not a static name. `require("@playwright/test")` and `import pw = require("@playwright/test")` admit the file and the `test` binding, including outside an `e2e/` path. A factory initializer, hook callback, or `beforeAll` callee wrapped in `as`, `satisfies`, `!`, an angle-bracket assertion, an instantiation expression, or parentheses is still that call. A token minted inside a test callback stays shielded when that callback is wrapped the same way.
 
 Another file's re-export is not visible here.
 

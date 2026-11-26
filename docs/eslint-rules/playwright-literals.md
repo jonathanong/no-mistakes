@@ -52,7 +52,7 @@ needs a controlled override.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. `as`, `satisfies`, `!`, angle-bracket assertions, and parentheses around a literal test id or a `getByTestId` callee are transparent. A static computed method such as `page["getByTestId" as const]` is `getByTestId`.
 
 Another file's re-export is not visible here.
 

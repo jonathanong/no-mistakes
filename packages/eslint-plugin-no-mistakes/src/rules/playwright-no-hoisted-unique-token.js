@@ -2,27 +2,19 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
+const { reportUnanalyzable } = require("./module-binding");
+const { createHoistedModuleState } = require("./playwright-hoisted-module");
 const { isFunctionNode } = require("./test-no-shared-state-helpers");
 const { hasProperty, resolveVariable } = require("./test-no-shared-state-aliases");
-const {
-  calleeName,
-  importSpecifierName,
-  setupCallbackKind,
-} = require("./test-no-shared-state-callees");
+const { calleeName, setupCallbackKind } = require("./test-no-shared-state-callees");
 const { configuredFactory, invokedCall, isBeforeAllCall } = require("./playwright-static-call");
 const {
   collectEvents,
   writeReusesTrackedValue,
 } = require("./playwright-no-hoisted-unique-token-events");
 
-const PLAYWRIGHT_PATH_PATTERN =
-  /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|(?:^|[/\\])e2e\.(?:spec|test)\.[cm]?[jt]sx?$|\.pw\.(?:spec|test)\.[cm]?[jt]sx?$/;
-
 const TEST_BODY_NAMES = new Set(["test", "it"]);
-
-function isPlaywrightPath(filename) {
-  return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
-}
 
 function nearestOwnFunction(node) {
   for (let current = node.parent; current && current.type !== "Program"; current = current.parent) {
@@ -38,8 +30,14 @@ function nearestOwnFunction(node) {
 // and is exactly as re-entry-hazardous as module scope. `testCalleeNames` carries every local alias
 // of the imported `test`/`it`/`describe` bindings, so an aliased `import { test as pw } from
 // "@playwright/test"` is recognized the same as the bare names.
+function outerParent(node) {
+  let current = node?.parent;
+  while (isTransparentExpression(current)) current = current.parent;
+  return current;
+}
+
 function isSharedScopeShield(fn, testCalleeNames) {
-  const parent = fn.parent;
+  const parent = outerParent(fn);
   if (!parent || parent.type !== "CallExpression") return false;
   if (setupCallbackKind(parent, testCalleeNames)) return true;
   const callee = parent.callee;
@@ -55,7 +53,7 @@ function isSharedScopeShield(fn, testCalleeNames) {
 // never a hoisting hazard regardless of how many function boundaries separate it from the hook.
 function isWithinBeforeAllCallback(node, beforeAll) {
   for (let fn = nearestOwnFunction(node); fn; fn = nearestOwnFunction(fn)) {
-    let parent = fn.parent;
+    let parent = outerParent(fn);
     if (parent?.type === "ArrayExpression") parent = parent.parent;
     if (parent?.type === "CallExpression" && beforeAll(parent)) return true;
   }
@@ -102,57 +100,53 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        properties: { tokenFactories: { type: "array", items: { type: "string" } } },
+        properties: {
+          tokenFactories: { type: "array", items: { type: "string" } },
+          unanalyzable: { enum: ["finding", "ignore"] },
+        },
       },
     ],
     messages: {
       hoisted:
         "`{{name}}` is generated once by `{{factory}}()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `{{factory}}()` call to the first statement inside this `beforeAll` instead.",
+      unanalyzable:
+        "Cannot tell whether this beforeAll is Playwright's hook. Import or require @playwright/test with a static name so hoisted tokens can be checked.",
     },
   },
   (context) => {
-    let isPlaywrightFile = isPlaywrightPath(context.filename);
-    const tokenFactories = context.options?.[0]?.tokenFactories;
+    const option = context.options?.[0] ?? {};
+    const tokenFactories = option.tokenFactories;
+    const surfaceOpaque = reportUnanalyzable(option);
     if (!tokenFactories || tokenFactories.length === 0) return {};
     const suppressed = ruleSuppression(context, "playwright-no-hoisted-unique-token");
     const factoryNames = new Set(tokenFactories);
+    const moduleState = createHoistedModuleState(context);
+    const { namespaces, testCalleeNames } = moduleState;
 
     // declarator node -> factory name, for declarations not already shielded inside their own hook/test.
     const candidates = new Map();
     const beforeAllCallbacks = [];
-    // Local aliases of the imported `test`/`it`/`describe` bindings (e.g. `import { test as pw }`),
-    // so `pw.beforeAll(...)` is recognized the same as `test.beforeAll(...)`.
-    const testCalleeNames = new Set(["test", "it", "describe"]);
-    const namespaces = new Set();
+    const opaqueCallbacks = [];
     const beforeAll = (node) => {
       const kind = setupCallbackKind(node, testCalleeNames);
-      const callee = node.callee?.type === "ChainExpression" ? node.callee.expression : node.callee;
+      const callee = unwrapExpression(node.callee);
       if (kind === "before-once" && callee?.type === "Identifier") return true;
       return isBeforeAllCall(node, testCalleeNames, namespaces, context);
     };
 
     return {
       ImportDeclaration(node) {
-        if (node.source.value !== "@playwright/test") return;
-        isPlaywrightFile = true;
-        for (const specifier of node.specifiers) {
-          if (specifier.type === "ImportDefaultSpecifier" && specifier.local?.name) {
-            testCalleeNames.add(specifier.local.name);
-          }
-          if (specifier.type === "ImportNamespaceSpecifier" && specifier.local?.name) {
-            namespaces.add(specifier.local.name);
-          }
-          if (specifier.type !== "ImportSpecifier") continue;
-          const imported = importSpecifierName(specifier);
-          if (["describe", "it", "test"].includes(imported) && specifier.local?.name) {
-            testCalleeNames.add(specifier.local.name);
-          }
-        }
+        moduleState.admitImport(node);
+      },
+      TSImportEqualsDeclaration(node) {
+        moduleState.noteBinding(node.id);
       },
       VariableDeclarator(node) {
+        moduleState.noteBinding(node.id);
+        const init = unwrapExpression(node.init);
         const factory =
-          node.id.type === "Identifier" && node.init?.type === "CallExpression"
-            ? configuredFactory(invokedCall(node.init)?.callee, context, factoryNames)
+          node.id.type === "Identifier" && init?.type === "CallExpression"
+            ? configuredFactory(invokedCall(init)?.callee, context, factoryNames)
             : null;
         if (!factory) return;
         const fn = nearestOwnFunction(node);
@@ -164,13 +158,26 @@ module.exports = rule(
         }
       },
       CallExpression(node) {
-        if (!beforeAll(node)) return;
-        const args = invokedCall(node)?.arguments ?? node.arguments;
+        const args = (invokedCall(node)?.arguments ?? node.arguments).map((argument) =>
+          unwrapExpression(argument),
+        );
         const callback = args.find((argument) => isFunctionNode(argument));
-        if (callback) beforeAllCallbacks.push(callback);
+        if (!callback) return;
+        if (beforeAll(node)) beforeAllCallbacks.push(callback);
+        else if (surfaceOpaque && moduleState.opaqueBeforeAll(node)) {
+          opaqueCallbacks.push({ node, callback });
+        }
       },
       "Program:exit"() {
-        if (!isPlaywrightFile || candidates.size === 0) return;
+        if (!moduleState.isPlaywrightFile() || candidates.size === 0) return;
+        for (const { node, callback } of opaqueCallbacks) {
+          const events = [];
+          collectEvents(callback.body, events);
+          const readsCandidate = events.some((event) =>
+            resolveVariable(event.node, context)?.defs?.some((def) => candidates.has(def.node)),
+          );
+          if (readsCandidate) context.report({ node, messageId: "unanalyzable" });
+        }
         for (const callback of beforeAllCallbacks) {
           const events = [];
           collectEvents(callback.body, events);

@@ -1,0 +1,97 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "off"
+  },
+  "overrides": [
+    {
+      "files": ["e2e/assertion-imports.spec.ts", "e2e/assertion-wrappers.spec.ts", "e2e/assertion-opaque.spec.ts", "e2e/assertion-quiet.spec.ts"],
+      "rules": { "no-mistakes/playwright-assertion-timeout-cap": "error" }
+    },
+    {
+      "files": ["e2e/assertion-ignore.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-assertion-timeout-cap": ["error", { "unanalyzable": "ignore" }]
+      }
+    },
+    {
+      "files": ["e2e/test-timeout-require.spec.ts", "e2e/test-timeout-wrappers.spec.ts", "e2e/test-timeout-dynamic-ignore.spec.ts"],
+      "rules": { "no-mistakes/playwright-test-timeout-cap": "error" }
+    },
+    {
+      "files": ["playwright.config.ts"],
+      "rules": {
+        "no-mistakes/playwright-test-timeout-cap": [
+          "error",
+          { "configFiles": ["playwright.config.ts"], "unknownValues": "finding" }
+        ]
+      }
+    },
+    {
+      "files": ["e2e/test-timeout-dynamic-finding.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-test-timeout-cap": ["error", { "unknownValues": "finding" }]
+      }
+    },
+    {
+      "files": ["e2e/test-timeout-ban.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-test-timeout-cap": ["error", { "banOverrides": true }]
+      }
+    },
+    {
+      "files": ["e2e/hoisted-imports.spec.ts", "src/hoisted-require.ts", "e2e/hoisted-opaque.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-no-hoisted-unique-token": ["error", { "tokenFactories": ["makeToken"] }]
+      }
+    },
+    {
+      "files": ["e2e/hoisted-wrappers.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-no-hoisted-unique-token": ["error", { "tokenFactories": ["randomSuffix"] }]
+      }
+    },
+    {
+      "files": ["src/scroll-require.ts", "src/scroll-equals.ts"],
+      "rules": { "no-mistakes/playwright-no-raw-scroll-pagination": "error" }
+    },
+    {
+      "files": ["e2e/scroll-wrappers.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-no-raw-scroll-pagination": ["error", { "sentinelTestIds": ["feed-sentinel"] }]
+      }
+    },
+    {
+      "files": ["src/selector-require.ts", "src/selector-equals.ts"],
+      "rules": { "no-mistakes/playwright-selector-priority": "error" }
+    },
+    {
+      "files": ["src/defaults.tsx"],
+      "rules": { "no-mistakes/playwright-defaults": "error" }
+    },
+    {
+      "files": ["src/interactive-imports.tsx", "src/interactive-opaque.tsx"],
+      "rules": {
+        "no-mistakes/playwright-require-interactive-test-id": ["error", { "interactiveComponents": ["Button"] }]
+      }
+    },
+    {
+      "files": ["src/interactive-ignore.tsx"],
+      "rules": {
+        "no-mistakes/playwright-require-interactive-test-id": [
+          "error",
+          { "interactiveComponents": ["Button"], "unanalyzable": "ignore" }
+        ]
+      }
+    },
+    {
+      "files": ["swallowed.ts"],
+      "rules": { "no-mistakes/playwright-no-swallowed-visibility": "error" }
+    }
+  ]
+}

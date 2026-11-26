@@ -94,8 +94,9 @@ function createCarriers(context, evaluate, check, max, fixtureMax) {
   }
   function configRoots(option, exports, calls, bindings) {
     const checkedConfigs = new Set();
-    for (const node of exports) {
-      const api = node.type === "CallExpression" ? bindings.resolve(node.callee) : null;
+    for (const exported of exports) {
+      const node = unwrapExpression(exported);
+      const api = node?.type === "CallExpression" ? bindings.resolve(node.callee) : null;
       if (api?.kind === "defineConfig") {
         checkedConfigs.add(node);
         if (node.arguments.length === 1) config(evaluate(node.arguments[0]), node.arguments[0]);

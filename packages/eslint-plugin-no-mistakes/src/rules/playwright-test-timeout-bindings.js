@@ -6,23 +6,26 @@ const {
   recordObjectPatternBindings,
   staticImportSource,
 } = require("./async-target-bindings");
-const { literalString } = require("./module-mock-helpers");
+const { requireFact } = require("./module-binding");
+const { createStaticName } = require("./playwright-test-timeout-name");
 const HOOKS = new Set(["beforeAll", "beforeEach", "afterAll", "afterEach"]);
 const CHAINS = new Set(["only", "skip", "fixme", "fail", "describe", "parallel", "serial"]);
 
 function createBindings(context, modules, exportRoles = {}, calls = []) {
   const active = new Set();
+  const name = createStaticName(context);
   function callback(node, seen = new Set(), allowPartial = false) {
     node = unwrapExpression(node);
     if (isFunction(node)) return node;
+    const callee = unwrapExpression(node?.callee);
     if (
       node?.type === "CallExpression" &&
-      node.callee.type === "MemberExpression" &&
-      member(node.callee) === "bind"
+      callee?.type === "MemberExpression" &&
+      member(callee) === "bind"
     ) {
       const partial =
         node.arguments.length > 1 || node.arguments.some((arg) => arg.type === "SpreadElement");
-      return partial && !allowPartial ? null : callback(node.callee.object, seen, allowPartial);
+      return partial && !allowPartial ? null : callback(callee.object, seen, allowPartial);
     }
     if (node?.type !== "Identifier") return null;
     const variable = resolveVariable(node, context),
@@ -39,29 +42,6 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
       (call) =>
         call.arguments.some((arg) => callback(arg) === fn) && registration(resolve(call.callee)),
     );
-  }
-  function name(node, seen = new Set()) {
-    node = unwrapExpression(node);
-    // for-of, for-in, and pattern bindings have no initializer.
-    if (!node) return null;
-    const literal = literalString(node);
-    if (literal !== null) return literal;
-    if (node.type === "BinaryExpression" && node.operator === "+") {
-      const left = name(node.left, seen),
-        right = name(node.right, seen);
-      return left === null || right === null ? null : left + right;
-    }
-    if (node.type !== "Identifier") return null;
-    const variable = resolveVariable(node, context),
-      def = variable?.defs[0];
-    if (
-      seen.has(variable) ||
-      def?.type !== "Variable" ||
-      def.parent.kind !== "const" ||
-      isReassigned(node, context)
-    )
-      return null;
-    return name(def.node.init, new Set([...seen, variable]));
   }
   const member = (node) => (node.computed ? name(node.property) : node.property.name);
   function property(owner, key) {
@@ -100,8 +80,13 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
     if (!node) return null;
     if (node.type === "MemberExpression") return property(resolve(node.object), member(node));
     if (node.type === "CallExpression") {
+      const required = requireFact(node, context);
+      if (required?.status === "namespace" && modules.has(required.source)) {
+        return { kind: "namespace", root: node, source: required.source };
+      }
+      if (required?.status === "opaque") return { kind: "opaque", root: node };
       const callee = unwrapExpression(node.callee);
-      if (callee.type === "MemberExpression" && member(callee) === "bind") {
+      if (callee?.type === "MemberExpression" && member(callee) === "bind") {
         const target = resolve(callee.object),
           receiver = resolve(node.arguments[0]);
         if (target?.kind !== "method") return null;

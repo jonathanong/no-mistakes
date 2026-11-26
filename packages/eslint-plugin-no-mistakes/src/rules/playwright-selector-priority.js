@@ -2,6 +2,7 @@
 
 const { literalString, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { admitsPlaywrightModule } = require("./module-binding");
 const { invokedCall, methodFromCallee } = require("./playwright-static-call");
 
 const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
@@ -54,7 +55,16 @@ module.exports = rule(
     let isPlaywrightFile = isPlaywrightPath(context.filename);
     return {
       ImportDeclaration(node) {
-        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      TSImportEqualsDeclaration(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      VariableDeclarator(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      ExpressionStatement(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
       },
       CallExpression(node) {
         if (!isPlaywrightFile) return;

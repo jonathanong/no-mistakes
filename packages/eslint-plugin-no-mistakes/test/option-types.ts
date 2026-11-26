@@ -6,6 +6,10 @@ import plugin, {
   type PlaywrightTestTimeoutCapOptions,
   type PlaywrightNoBrowserNewPageOptions,
   type PlaywrightNoBrowserNewPageUnanalyzable,
+  type PlaywrightAssertionTimeoutCapOptions,
+  type PlaywrightNoHoistedUniqueTokenOptions,
+  type PlaywrightRequireInteractiveTestIdOptions,
+  type PlaywrightRuleUnanalyzable,
   type PlaywrightNoRawScrollPaginationOptions,
   type PostgresNoExecutorAdapterMode,
   type PostgresNonWritingCallee,
@@ -135,4 +139,39 @@ export const invalidBrowserNewPageUnanalyzable: PlaywrightNoBrowserNewPageOption
 export const invalidBrowserFixtureName: PlaywrightNoBrowserNewPageOptions = {
   // @ts-expect-error Fixture name must be a string.
   fixtureName: 42,
+};
+
+export const ruleUnanalyzable: PlaywrightRuleUnanalyzable = "ignore";
+export const assertionTimeoutOptions: PlaywrightAssertionTimeoutCapOptions = {
+  max: 10_000,
+  unanalyzable: ruleUnanalyzable,
+};
+export const defaultAssertionTimeoutOptions: pluginRequire.PlaywrightAssertionTimeoutCapOptions =
+  {};
+export const invalidAssertionTimeoutOptions: PlaywrightAssertionTimeoutCapOptions = {
+  // @ts-expect-error Unanalyzable policy must be finding or ignore.
+  unanalyzable: "warn",
+};
+
+export const hoistedTokenOptions: PlaywrightNoHoistedUniqueTokenOptions = {
+  tokenFactories: ["makeToken"],
+  unanalyzable: "finding",
+};
+export const defaultHoistedTokenOptions: pluginRequire.PlaywrightNoHoistedUniqueTokenOptions = {};
+export const invalidHoistedTokenOptions: PlaywrightNoHoistedUniqueTokenOptions = {
+  // @ts-expect-error Token factories must be strings.
+  tokenFactories: [false],
+};
+
+export const interactiveTestIdOptions: PlaywrightRequireInteractiveTestIdOptions = {
+  selectorAttributes: ["data-pw"],
+  interactiveComponents: ["Button"],
+  slotProps: ["asChild"],
+  unanalyzable: "finding",
+};
+export const defaultInteractiveTestIdOptions: pluginRequire.PlaywrightRequireInteractiveTestIdOptions =
+  {};
+export const invalidInteractiveTestIdOptions: PlaywrightRequireInteractiveTestIdOptions = {
+  // @ts-expect-error Unanalyzable policy must be finding or ignore.
+  unanalyzable: "warn",
 };

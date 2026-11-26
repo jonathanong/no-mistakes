@@ -56,6 +56,11 @@ await verify(page.getByRole("status")).toHaveText("Done", { timeout: 30_000 });
 
 - `max` is the largest permitted assertion timeout in milliseconds. It defaults
   to `10000`.
+- `unanalyzable` is `finding` or `ignore`. It defaults to `finding`. A dynamic
+  `require`, a computed destructure of `@playwright/test`, or an import from
+  another file in this project reports `unanalyzable` instead of guessing a
+  timeout. A binding this file can trace to a different package stays quiet.
+  Reassigned `let` bindings stay quiet.
 
 ## Fix
 
@@ -64,9 +69,9 @@ overall budget rather than increasing one assertion beyond the cap.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `pw.expect` counts only when `pw` is a namespace import from `@playwright/test` or a single-write alias of that namespace. A single-write `{ expect }` destructure of that namespace counts too. `const check = customAssertions.expect` is not that namespace. `const verify = check` still counts when `check` is a renamed `expect` import. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `pw.expect` counts only when `pw` is a namespace import from `@playwright/test`, `require("@playwright/test")`, `import pw = require("@playwright/test")`, or a single-write alias of that namespace. `import { "expect" as named }` counts too. A single-write `{ expect }` destructure of that namespace counts too. `const check = customAssertions.expect` is not that namespace. `const verify = check` still counts when `check` is a renamed `expect` import. TypeScript `as`, `satisfies`, `!`, angle-bracket assertions, instantiation expressions, and parentheses are transparent on the callee, the options object, the `timeout` key, and the number. A computed identifier key is not a static name.
 
-Another file's re-export is not visible here.
+An import from another file in this project is not resolved. With `unanalyzable` left at `finding`, the call reports `unanalyzable`.
 
 ```js
 // assertions.mjs
@@ -77,7 +82,7 @@ export { expect as verify } from "@playwright/test";
 // e2e/status.spec.js
 import { verify } from "../assertions.mjs";
 // The imported alias is not known to be Playwright expect in this file.
-verify(page.getByRole("status")).toBeVisible({ timeout: 30_000 });
+verify(page.getByRole("status")).toBeVisible({ timeout: 30_000 }); // unanalyzable
 ```
 
 ## Suppression

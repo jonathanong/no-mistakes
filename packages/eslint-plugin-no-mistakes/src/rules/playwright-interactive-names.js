@@ -2,6 +2,8 @@
 
 const { attributeName, INTERACTIVE_ELEMENTS, selectorLiteral } = require("../helpers");
 const { unwrapExpression } = require("./async-ast");
+const { importSpecifierName } = require("./async-target-sources");
+const { resolveModuleBinding } = require("./module-binding");
 
 function variableNamed(name, node, context) {
   let scope = context.sourceCode.getScope(node);
@@ -14,8 +16,24 @@ function variableNamed(name, node, context) {
 }
 
 function importedSpecifierName(specifier) {
-  if (specifier.type !== "ImportSpecifier") return null;
-  return specifier.imported.name;
+  if (specifier.type !== "ImportSpecifier" || !specifier.imported) return null;
+  return importSpecifierName(specifier);
+}
+
+function bindingIdentifier(variable) {
+  const def = variable?.defs?.[0];
+  if (def?.name?.type === "Identifier") return def.name;
+  if (def?.node?.type === "Identifier") return def.node;
+  if (def?.node?.id?.type === "Identifier") return def.node.id;
+  if (def?.node?.local?.type === "Identifier") return def.node.local;
+  return null;
+}
+
+function componentBinding(name, node, context) {
+  const variable = variableNamed(name, node, context);
+  if (!variable || variable.defs.length !== 1) return null;
+  const ident = bindingIdentifier(variable);
+  return ident ? resolveModuleBinding(ident, context) : null;
 }
 
 function rememberImport(specifier, importedNames) {
@@ -47,6 +65,9 @@ function bindingImportName(def) {
 }
 
 function mappedImport(name, node, context, importedNames) {
+  const fact = componentBinding(name, node, context);
+  if (fact?.status === "export") return fact.exported;
+  if (fact) return null;
   const variable = variableNamed(name, node, context);
   if (!variable || variable.defs.length !== 1) return null;
   const def = variable.defs[0];
@@ -117,6 +138,7 @@ function matchesAny(name, matchers) {
 }
 
 module.exports = {
+  componentBinding,
   importedSpecifierName,
   isInteractiveElement,
   jsxCandidateNames,

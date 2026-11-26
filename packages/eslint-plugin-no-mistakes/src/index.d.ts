@@ -20,14 +20,33 @@ declare namespace plugin {
     banOverrides?: boolean;
   }
 
-  export type PlaywrightNoBrowserNewPageUnanalyzable = "finding" | "ignore";
+  export type PlaywrightRuleUnanalyzable = "finding" | "ignore";
+
+  export type PlaywrightNoBrowserNewPageUnanalyzable = PlaywrightRuleUnanalyzable;
 
   export interface PlaywrightNoBrowserNewPageOptions {
     fixtureName?: string;
     browserFixtureName?: string;
     registrationPackages?: string[];
-    unanalyzable?: PlaywrightNoBrowserNewPageUnanalyzable;
+    unanalyzable?: PlaywrightRuleUnanalyzable;
     message?: string;
+  }
+
+  export interface PlaywrightAssertionTimeoutCapOptions {
+    max?: number;
+    unanalyzable?: PlaywrightRuleUnanalyzable;
+  }
+
+  export interface PlaywrightNoHoistedUniqueTokenOptions {
+    tokenFactories?: string[];
+    unanalyzable?: PlaywrightRuleUnanalyzable;
+  }
+
+  export interface PlaywrightRequireInteractiveTestIdOptions {
+    selectorAttributes?: string[];
+    interactiveComponents?: string[];
+    slotProps?: string[];
+    unanalyzable?: PlaywrightRuleUnanalyzable;
   }
 
   export interface PlaywrightNoRawScrollPaginationOptions {

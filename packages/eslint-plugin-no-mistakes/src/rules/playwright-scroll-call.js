@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { resolveAlias } = require("./playwright-static-call-alias");
 const { invokedCall, memberName, methodFromCallee } = require("./playwright-static-call");
@@ -11,13 +12,11 @@ function unbound(node, context) {
 }
 
 function globalScrollInit(declarator, context) {
-  const init = declarator.init;
+  const init = unwrapExpression(declarator.init);
   if (init?.type === "Identifier" && RAW_SCROLL_NAMES.has(init.name)) return unbound(init, context);
-  let object = init;
-  while (object?.type === "ChainExpression") object = object.expression;
+  const object = unwrapExpression(init);
   if (object?.type === "MemberExpression") {
-    const receiver =
-      object.object?.type === "ChainExpression" ? object.object.expression : object.object;
+    const receiver = unwrapExpression(object.object);
     return (
       receiver?.type === "Identifier" &&
       receiver.name === "window" &&
@@ -36,8 +35,7 @@ function globalScrollInit(declarator, context) {
 function isRawScrollCall(node, context) {
   const invoked = invokedCall(node);
   if (!invoked) return false;
-  let callee = invoked.callee;
-  while (callee?.type === "ChainExpression") callee = callee.expression;
+  const callee = unwrapExpression(invoked.callee);
   if (callee?.type === "Identifier") {
     const variable = resolveVariable(callee, context);
     if (!variable || variable.defs.length === 0) return RAW_SCROLL_NAMES.has(callee.name);
@@ -47,8 +45,7 @@ function isRawScrollCall(node, context) {
     return alias.kind !== "key" || RAW_SCROLL_NAMES.has(alias.key);
   }
   if (!RAW_SCROLL_NAMES.has(methodFromCallee(callee, context))) return false;
-  const object =
-    callee.object?.type === "ChainExpression" ? callee.object.expression : callee.object;
+  const object = unwrapExpression(callee.object);
   return object?.type === "Identifier" && object.name === "window" && unbound(object, context);
 }
 

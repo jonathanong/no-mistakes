@@ -1,32 +1,29 @@
 "use strict";
 
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
 const { memberName } = require("./playwright-static-call");
 const { resolveAlias, variableFor } = require("./playwright-static-call-alias");
 
 const LOCATOR_REFINEMENTS = new Set(["first", "last", "nth", "filter"]);
-const TS_WRAPPERS = new Set([
-  "TSAsExpression",
-  "TSSatisfiesExpression",
-  "TSNonNullExpression",
-  "TSTypeAssertion",
-  "TSInstantiationExpression",
-]);
 
 function sentinelSelector(argument) {
-  if (argument?.type === "Literal") return argument.value;
-  if (argument?.type === "TemplateLiteral" && argument.expressions.length === 0) {
-    return argument.quasis[0].value.cooked;
+  const target = unwrapExpression(argument);
+  if (target?.type === "Literal" && typeof target.value === "string") return target.value;
+  if (target?.type === "TemplateLiteral" && target.expressions.length === 0) {
+    return target.quasis[0]?.value.cooked ?? null;
   }
   return null;
 }
 
 function isSentinelScrollCall(node, context, locatorNames, testIds) {
-  if (memberName(node.callee) !== "scrollIntoViewIfNeeded") return false;
-  let receiver = node.callee.object;
+  const callee = unwrapExpression(node.callee);
+  if (memberName(callee) !== "scrollIntoViewIfNeeded") return false;
+  let receiver = callee?.object;
   let named = false;
   const seen = new Set();
   for (;;) {
-    if (receiver.type === "ChainExpression" || TS_WRAPPERS.has(receiver.type)) {
+    if (!receiver) return false;
+    if (isTransparentExpression(receiver)) {
       receiver = receiver.expression;
       continue;
     }
