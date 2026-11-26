@@ -159,6 +159,7 @@ fn changes_diff_rejects_invalid_rules_even_when_the_roots_match() {
             "missing-rule-paths.yml",
             "changes.categories.inputs.rules[0].paths must not be empty",
         ),
+        ("category-id-without-paths.yml", "rule requires paths"),
         (
             "incomplete-key-options.yml",
             "array and idField must be supplied together",

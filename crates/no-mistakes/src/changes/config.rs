@@ -1,4 +1,6 @@
 use crate::codebase::keyed_diff::{KeyFormat, KeyOptions};
+use anyhow::{anyhow, ensure, Result};
+use globset::{Glob, GlobBuilder};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -62,6 +64,14 @@ pub(crate) fn from_path_parts(template: &str) -> Option<(&str, &str)> {
     template
         .split_once("{id}")
         .filter(|(_, suffix)| !suffix.contains("{id}"))
+}
+
+pub(crate) fn compile_selection_glob(pattern: &str) -> Result<Glob> {
+    ensure!(!pattern.is_empty(), "empty glob");
+    GlobBuilder::new(pattern)
+        .literal_separator(true)
+        .build()
+        .map_err(|error| anyhow!("contains invalid glob `{pattern}`: {error}"))
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]

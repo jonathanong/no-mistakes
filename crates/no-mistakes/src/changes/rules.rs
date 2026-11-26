@@ -1,7 +1,7 @@
-use super::config::{from_path_parts, ChangesConfig, IdRule};
+use super::config::{compile_selection_glob, from_path_parts, ChangesConfig, IdRule};
 use crate::codebase::keyed_diff::KeyOptions;
 use anyhow::{bail, Context, Result};
-use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
+use globset::{GlobSet, GlobSetBuilder};
 
 pub(super) struct Rules<'a> {
     pub excludes: Vec<GlobSet>,
@@ -55,8 +55,9 @@ impl<'a> Rules<'a> {
             } else {
                 let mut builder = GlobSetBuilder::new();
                 for pattern in &category.exclude {
-                    add_glob(&mut builder, pattern)
+                    let glob = compile_selection_glob(pattern)
                         .with_context(|| format!("changes category {name:?} exclude"))?;
+                    builder.add(glob);
                 }
                 let index = excludes.len();
                 excludes.push(builder.build()?);
@@ -77,8 +78,9 @@ impl<'a> Rules<'a> {
                 let id = compile_id(id, &mut keyed)
                     .with_context(|| format!("changes category {name:?} ID rule"))?;
                 for pattern in paths {
-                    add_glob(&mut selectors, pattern)
+                    let glob = compile_selection_glob(pattern)
                         .with_context(|| format!("changes category {name:?} paths"))?;
+                    selectors.add(glob);
                     rules.push(Rule {
                         category: name,
                         exclude,
@@ -95,14 +97,6 @@ impl<'a> Rules<'a> {
             keyed,
         })
     }
-}
-
-fn add_glob(builder: &mut GlobSetBuilder, pattern: &str) -> Result<()> {
-    if pattern.is_empty() {
-        bail!("empty glob");
-    }
-    builder.add(GlobBuilder::new(pattern).literal_separator(true).build()?);
-    Ok(())
 }
 
 fn compile_id<'a>(id: Option<&'a IdRule>, keyed: &mut Vec<KeyOptions>) -> Result<Id<'a>> {

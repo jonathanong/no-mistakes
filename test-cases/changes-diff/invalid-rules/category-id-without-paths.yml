@@ -1,0 +1,5 @@
+changes:
+  categories:
+    inputs:
+      id:
+        fromPath: "inputs/{id}.json"
