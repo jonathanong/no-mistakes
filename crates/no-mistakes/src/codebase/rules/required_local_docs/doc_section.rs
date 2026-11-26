@@ -39,7 +39,8 @@ pub(crate) fn check_required_doc_section_with_files(
         .map(|output| output.findings)
 }
 
-pub(crate) fn diagnostics_with_files_and_sources(
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
