@@ -141,6 +141,10 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .find(|file| file.path.ends_with("user_test.exs"))
         .expect("test");
     assert!(test_file.route_handlers.is_empty());
+    assert!(facts
+        .files
+        .values()
+        .all(|file| { file.queue_enqueues.is_empty() && file.queue_workers.is_empty() }));
 }
 
 #[test]

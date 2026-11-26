@@ -217,6 +217,10 @@ fn rust_collects_use_and_declaration() {
         .values()
         .any(|file| file.module.as_deref() == Some("mail")));
     assert!(facts.declarations.contains_key("Welcome"));
+    assert!(facts
+        .files
+        .values()
+        .all(|file| { file.queue_enqueues.is_empty() && file.queue_workers.is_empty() }));
 }
 
 #[test]

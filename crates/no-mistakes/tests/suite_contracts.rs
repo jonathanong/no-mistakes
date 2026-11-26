@@ -8,6 +8,8 @@ mod ci_complexity_gate;
 mod ci_standalone_lib;
 #[path = "docs_coverage.rs"]
 mod docs_coverage;
+#[path = "docs_queue_declines.rs"]
+mod docs_queue_declines;
 #[path = "docs_rule_snippet_execution.rs"]
 mod docs_rule_snippet_execution;
 #[path = "support/integration_suites.rs"]

@@ -1,7 +1,11 @@
 # Queue configuration
 
 Queue analysis is explicit so agents can reason about producer/worker
-relationships without guessing project conventions. Use the top-level
+relationships without guessing project conventions. Swift, .NET, Java, Kotlin,
+Elixir, and Dart do not emit `queue-enqueue` or `queue-worker` edges: those
+docs name no static producer or worker. Rust facts record no jobs, so
+configured globs publish no Rust job edges. See
+[feature parity](../feature-parity.md). Use the top-level
 `queues.factories` entry for custom TypeScript queue wrappers, and put
 project-specific file scopes under `projects.<name>.queues`.
 

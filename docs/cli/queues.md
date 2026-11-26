@@ -9,6 +9,10 @@ conventions.
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony Messenger
 sites emit the same canonical `queue-enqueue` / `queue-worker` graph edges.
+Swift, .NET, Java, Kotlin, Elixir, and Dart do not emit `queue-enqueue` or
+`queue-worker` edges: those docs name no static producer or worker. Rust facts
+record no jobs, so configured globs publish no Rust job edges. See
+[feature parity](../feature-parity.md).
 `queues edges|related|check` projects those language edges from the same
 facts as the dependency graph. TypeScript baseline fields stay identical
 when language packages are configured on a TypeScript-only tree.

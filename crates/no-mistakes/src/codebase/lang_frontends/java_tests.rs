@@ -88,4 +88,8 @@ fn java_collects_package_imports_and_spring_routes() {
         .find(|file| file.path.ends_with("Computed.java"))
         .expect("computed");
     assert!(computed.route_handlers.is_empty());
+    assert!(facts
+        .files
+        .values()
+        .all(|file| { file.queue_enqueues.is_empty() && file.queue_workers.is_empty() }));
 }

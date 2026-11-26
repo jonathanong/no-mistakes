@@ -148,6 +148,11 @@ page.locator(`[data-testid="${id}"]`).click();
 Use `rg` for dynamic call-site discovery and prefer static literals when the
 relationship should be visible to agents.
 
+Swift, .NET, Java, Kotlin, Elixir, and Dart do not emit `queue-enqueue` or
+`queue-worker` edges: those docs name no static producer or worker. Rust facts
+record no jobs, so configured globs publish no Rust job edges. Those status
+cells are declined. Do not invent a framework for them.
+
 Text-based Playwright selector edges are approximate. Prefer exact configured
 test ID attributes and literal locator values for strong route/component
 coverage.
