@@ -1,0 +1,472 @@
+[
+  {
+    "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 15,
+        "endLine": 5,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 5,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 6,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 6,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 7,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 27,
+        "endLine": 8,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 8,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 36,
+        "endColumn": 48,
+        "endLine": 9,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 9,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 11,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 11,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 43,
+        "endLine": 12,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 12,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 46,
+        "endLine": 13,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 13,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 41,
+        "endColumn": 47,
+        "endLine": 18,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 18,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      }
+    ],
+    "name": "opaque-arguments.ts: default",
+    "options": null,
+    "rule": "nextjs-static-fetch-method"
+  },
+  {
+    "file": "nextjs-static-fetch-method/opaque-properties.ts",
+    "findings": [
+      {
+        "column": 21,
+        "endColumn": 33,
+        "endLine": 4,
+        "file": "nextjs-static-fetch-method/opaque-properties.ts",
+        "line": 4,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      },
+      {
+        "column": 37,
+        "endColumn": 40,
+        "endLine": 5,
+        "file": "nextjs-static-fetch-method/opaque-properties.ts",
+        "line": 5,
+        "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-method",
+        "severity": 2
+      }
+    ],
+    "name": "opaque-properties.ts: default",
+    "options": null,
+    "rule": "nextjs-static-fetch-method"
+  },
+  {
+    "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 14,
+        "endLine": 5,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 5,
+        "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-url",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 6,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 6,
+        "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-url",
+        "severity": 2
+      },
+      {
+        "column": 23,
+        "endColumn": 30,
+        "endLine": 7,
+        "file": "nextjs-static-fetch-url/opaque-arguments.ts",
+        "line": 7,
+        "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.",
+        "messageId": "dynamic",
+        "ruleId": "no-mistakes/nextjs-static-fetch-url",
+        "severity": 2
+      }
+    ],
+    "name": "opaque-arguments.ts: default",
+    "options": null,
+    "rule": "nextjs-static-fetch-url"
+  },
+  {
+    "file": "no-locale-less-date-format/dynamic-scope-aliases.js",
+    "findings": [],
+    "name": "dynamic-scope-aliases.js: default",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ]
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/dynamic-scope-aliases.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 14,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/dynamic-scope-aliases.js",
+        "line": 4,
+        "message": "Cannot statically prove toLocaleDateString receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 15,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/dynamic-scope-aliases.js",
+        "line": 5,
+        "message": "Cannot statically prove Intl.DateTimeFormat receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "dynamic-scope-aliases.js: finding",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/stable-aliases.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 6,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 15,
+        "endLine": 7,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 7,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 9,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 9,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 13,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 13,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 9,
+        "endLine": 14,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 14,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "stable-aliases.ts: default",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ]
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/stable-aliases.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 5,
+        "message": "Cannot statically prove toLocaleDateString receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 6,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 15,
+        "endLine": 7,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 7,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 8,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 8,
+        "message": "Cannot statically prove Intl.DateTimeFormat receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 9,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 9,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 13,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 13,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 9,
+        "endLine": 14,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 14,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 27,
+        "file": "no-locale-less-date-format/stable-aliases.ts",
+        "line": 27,
+        "message": "Cannot statically prove Intl receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "stable-aliases.ts: finding",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "require-options-on-imported-call/opaque-arguments.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 5,
+        "file": "require-options-on-imported-call/opaque-arguments.ts",
+        "line": 5,
+        "message": "Call 'enqueue' from '@fixture/jobs' must pass a statically visible options object at argument 2 containing any of: timeoutMs.",
+        "messageId": "missingOptions",
+        "ruleId": "no-mistakes/require-options-on-imported-call",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 6,
+        "file": "require-options-on-imported-call/opaque-arguments.ts",
+        "line": 6,
+        "message": "Call 'enqueue' from '@fixture/jobs' must pass a statically visible options object at argument 2 containing any of: timeoutMs.",
+        "messageId": "missingOptions",
+        "ruleId": "no-mistakes/require-options-on-imported-call",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 50,
+        "endLine": 7,
+        "file": "require-options-on-imported-call/opaque-arguments.ts",
+        "line": 7,
+        "message": "Call 'enqueue' from '@fixture/jobs' must pass a statically visible options object at argument 2 containing any of: timeoutMs.",
+        "messageId": "missingOptions",
+        "ruleId": "no-mistakes/require-options-on-imported-call",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 53,
+        "endLine": 8,
+        "file": "require-options-on-imported-call/opaque-arguments.ts",
+        "line": 8,
+        "message": "Call 'enqueue' from '@fixture/jobs' must pass a statically visible options object at argument 2 containing any of: timeoutMs.",
+        "messageId": "missingOptions",
+        "ruleId": "no-mistakes/require-options-on-imported-call",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 9,
+        "file": "require-options-on-imported-call/opaque-arguments.ts",
+        "line": 9,
+        "message": "Call 'enqueue' from '@fixture/jobs' must pass a statically visible options object at argument 2 containing any of: timeoutMs.",
+        "messageId": "missingOptions",
+        "ruleId": "no-mistakes/require-options-on-imported-call",
+        "severity": 2
+      }
+    ],
+    "name": "opaque-arguments.ts: default",
+    "options": {
+      "targets": [
+        {
+          "calleeNamePatterns": [
+            "enqueue"
+          ],
+          "optionsPosition": 2,
+          "requiredProperties": [
+            "timeoutMs"
+          ],
+          "sourceSpecifierPatterns": [
+            "@fixture/jobs"
+          ]
+        }
+      ]
+    },
+    "rule": "require-options-on-imported-call"
+  }
+]

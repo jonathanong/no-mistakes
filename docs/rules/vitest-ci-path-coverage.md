@@ -41,9 +41,9 @@ rules:
 ```
 
 The rule reads Vitest project `include` / `exclude` globs, plus
-`testPlan.vitest.fullSuiteTriggers.projects`, and checks tracked files selected
+`testPlan.vitest.fullSuiteTriggers.projects`, and checks visible files selected
 by those globs against path-filter action `with.filters` maps in workflow
-steps.
+steps. Visible files include untracked files outside ignored paths. [File discovery](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/ts_source/discovery/visible.rs#L1-L14) and [coverage scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_ci_path_coverage/scan.rs#L135-L145).
 
 For target-scoped `{ paths, targets }` triggers, the rule attributes each
 positive trigger path to the named Vitest runner projects. Ordered `!` paths
@@ -244,9 +244,10 @@ project input to the files CI really runs.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it compares configured Vitest includes with CI path filter patterns. Nothing is routed through `options.unanalyzable`.
+Unreadable or malformed workflow YAML, unreadable or malformed external
+filter YAML, and invalid filter globs produce ordinary findings. Filter
+values outside the recognized forms are skipped. The rule does not use
+`options.unanalyzable`. [Workflow reads](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_ci_path_coverage/workflow_filters.rs#L66-L89), [filter reads and glob validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_ci_path_coverage/workflow_filters/values.rs#L17-L57), and [filter selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_ci_path_coverage/workflow_filters/step.rs#L47-L62).
 
 ## Suppression
 

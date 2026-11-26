@@ -68,6 +68,7 @@ A callback's return also counts for `vi.fn`, `jest.fn`, and
 `jest.spyOn`, `vi.fn`, `jest.fn`, or `vi.mocked` result. These APIs pass the implementation's
 return value to the mock's caller. Imported aliases, framework namespaces such
 as `vitest.vi`, and unchanged `const` or `let` mock bindings are recognized.
+TypeScript external import-equals declarations also resolve to framework namespaces.
 
 ```ts
 import { enqueueEmail } from "@app/jobs";

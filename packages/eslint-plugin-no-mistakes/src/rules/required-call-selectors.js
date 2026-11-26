@@ -174,7 +174,7 @@ function createCallSelectors(context, options) {
       };
       const direct = collect(unwrapExpression(node.callee), node.arguments);
       if (direct.length) return direct;
-      const invoked = logicalCall(node, (callee) => collect(callee, []).length > 0);
+      const invoked = logicalCall(node, (callee) => collect(callee, []).length > 0, true);
       if (!invoked) return [];
       return collect(unwrapExpression(invoked.callee), invoked.arguments);
     },

@@ -13,9 +13,9 @@ setters, `test.info()` setters, `describe.configure` timeout fields, recognized
 configuration/project timeout fields and fixture tuple timeout options. It follows
 immutable aliases, renamed destructuring, namespace imports, bound setters with
 matching receivers and statically known computed names. Partially applied setters
-or slow methods remain unresolved findings; their pre-bound arguments are never
-replaced by later call arguments. Dynamic members on a
-proven framework API are opaque findings under `unknownValues: "finding"`.
+or slow methods and dynamic members on a proven framework API report as
+unresolved under `unknownValues: "finding"`. Later call arguments do not
+replace pre-bound arguments. [Unknown values](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L28-L34) and [bound setters](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L82-L106).
 
 ```ts
 import { test } from '@playwright/test';
@@ -92,8 +92,9 @@ an assertion that the legal slow operations exceed the cap.
   and `lock` only. Hooks (`beforeAll`, `beforeEach`, `afterAll`, `afterEach`)
   accept a title and a function. A `timeout` property on those calls has no
   effect and reports `noEffect`, which points at `test.setTimeout` or the
-  project configuration timeout. `test.configure({ timeout })` is not reported
-  because `test.configure` is not a Playwright API. This ban does not cover
+  project configuration timeout. `test.configure({ timeout })` produces no
+  override finding. It reports as an unrecognized framework API call under
+  `unknownValues: "finding"`. [Framework API checks](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L126-L137). This ban does not cover
   `expect(..., { timeout })` (owned by
   [`playwright-assertion-timeout-cap`](playwright-assertion-timeout-cap.md)),
   `page.waitFor*` timeouts, or `test.step` timeouts. Project configuration
@@ -114,7 +115,7 @@ test.slow(false); // Static false stays inert.
 test('widget loads', { timeout: 5_000 }, async () => {}); // Details timeout has no effect.
 test.beforeEach({ timeout: 5_000 }, async () => {}); // Hook timeout has no effect.
 test.describe.configure({ timeout: 5_000 }); // Suite override; reports with the ban.
-test.configure({ timeout: 5_000 }); // Not a Playwright API; not reported.
+test.configure({ timeout: 5_000 }); // Reports with unknownValues: "finding".
 test('items stay on the project deadline', async () => {}); // No override.
 ```
 
@@ -127,10 +128,14 @@ absence is not itself an invalid or disabled deadline.
 SDK `import { default as test }` has the same builtin identity as a default
 import; arbitrary helper defaults do not. Callback `.bind(thisArg)` preserves
 parameter positions. Pre-bound arguments or spread binding arguments instead
-produce an unresolved bound-callback carrier finding at the actual registration;
-the rule does not pretend shifted parameters are still TestInfo. Immutable aliases
+leave the callback carrier unresolved at the registration. It reports under
+`unknownValues: "finding"`. [Bound callback handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L99-L106). Immutable aliases
 of these callbacks preserve that distinction. Receiver-only bound callbacks retain
 locally legal false/short slow behavior, independently of inherited-slot findings.
+
+TypeScript external import-equals declarations resolve as namespaces for the
+SDK and configured registration packages. A missing options argument on
+`test.extend` or `test.describe.configure` follows `unknownValues`.
 
 The public default import and namespace `.default` identify test only for
 `@playwright/test`, never arbitrary helper defaults. Named callbacks, const callback
