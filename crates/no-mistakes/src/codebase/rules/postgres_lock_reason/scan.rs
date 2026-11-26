@@ -5,8 +5,8 @@ use super::findings::{
 };
 use super::options::CompiledOptions;
 use crate::codebase::check_facts::SqlFactContext;
-use crate::codebase::dependencies::extract::is_indexable;
-use crate::codebase::postgres::{compile_sql_include, matches_sql_include, SqlStatementFileFacts};
+use crate::codebase::postgres::{compile_sql_include, SqlStatementFileFacts};
+use crate::codebase::rules::postgres_lock_inventory::options::LockScanTarget;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
@@ -25,14 +25,9 @@ pub(super) fn collect(
         .par_iter()
         .filter_map(|path| {
             let rel = relative_slash_path(root, path);
-            if path.extension().is_some_and(|ext| ext == "sql")
-                && matches_sql_include(root, path, &sql)
-            {
-                Some(native(options, path, &rel, sources, facts))
-            } else if is_indexable(path) && (options.has_helpers() || options.scans_executors()) {
-                Some(typescript(options, path, &rel, sources, facts))
-            } else {
-                None
+            match options.classify_file(root, path, &sql)? {
+                LockScanTarget::Sql => Some(native(options, path, &rel, sources, facts)),
+                LockScanTarget::TypeScript => Some(typescript(options, path, &rel, sources, facts)),
             }
         })
         .collect::<Result<Vec<_>>>()?;

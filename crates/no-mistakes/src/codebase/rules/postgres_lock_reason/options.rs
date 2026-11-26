@@ -1,13 +1,10 @@
 use super::RULE_ID;
-use crate::codebase::postgres::{
-    compile_sql_include, effective_sql_include, embedded::ExecutorOption, EmbeddedSqlOptions,
-    PostgresSchemaOptions, TrustedSqlTag,
-};
-use crate::codebase::rules::RuleGlobFilter;
+use crate::codebase::postgres::{embedded::ExecutorOption, TrustedSqlTag};
+use crate::codebase::rules::postgres_lock_inventory::options::{LockScanInput, LockScanOptions};
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig, Unanalyzable};
-use anyhow::{ensure, Result};
+use anyhow::Result;
 use serde::Deserialize;
-use std::collections::BTreeSet;
+use std::ops::Deref;
 
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
@@ -26,69 +23,51 @@ struct Options {
     executor_options: Vec<ExecutorOption>,
     trusted_sql_tags: Vec<TrustedSqlTag>,
     helpers: Vec<String>,
+    schema_catalog_path: Option<String>,
     report_unmatched_executor_names: bool,
     unanalyzable_sql: Option<String>,
 }
 
 pub(super) struct CompiledOptions {
-    pub(super) paths: RuleGlobFilter,
-    pub(super) schema: PostgresSchemaOptions,
-    pub(super) embedded: EmbeddedSqlOptions,
-    helpers: BTreeSet<String>,
-    folded_sql_helpers: BTreeSet<String>,
+    scan: LockScanOptions,
+}
+
+impl Deref for CompiledOptions {
+    type Target = LockScanOptions;
+
+    fn deref(&self) -> &Self::Target {
+        &self.scan
+    }
 }
 
 impl CompiledOptions {
     pub(super) fn from_rule(rule: &RuleDef) -> Result<Self> {
         let opts: Options = rule.try_rule_options()?;
-        let helpers: BTreeSet<_> = opts.helpers.into_iter().collect();
-        ensure!(
-            helpers.iter().all(|name| !name.trim().is_empty()),
-            "{RULE_ID} helpers must be non-empty names"
+        let _ = (
+            &opts.schema_catalog_path,
+            opts.report_unmatched_executor_names,
+            &opts.unanalyzable_sql,
         );
-        let folded_sql_helpers = helpers
-            .iter()
-            .map(|name| name.to_ascii_lowercase())
-            .collect();
-        let mut embedded =
-            EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-                .with_extra_executor_names(opts.extra_executor_names.as_deref())
-                .with_exclude_executor_names(&opts.exclude_executor_names)
-                .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
-                .with_executor_option_properties(&opts.executor_option_properties)
-                .with_executor_options(&opts.executor_options)
-                .with_trusted_sql_tags(&opts.trusted_sql_tags)
-                .with_exact_constant_origins();
-        embedded.track_transaction_helpers = true;
-        let schema = PostgresSchemaOptions {
-            sql_include: effective_sql_include(&opts.sql_include, opts.sql_include_locked),
-        };
-        compile_sql_include(&schema.sql_include)?;
-        Ok(Self {
-            paths: RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
-            schema,
-            embedded,
-            helpers,
-            folded_sql_helpers,
-        })
-    }
-
-    pub(super) fn has_helpers(&self) -> bool {
-        !self.helpers.is_empty()
-    }
-
-    pub(super) fn matches_helper(&self, name: &str, terminal: &str) -> bool {
-        self.helpers.contains(name) || self.helpers.contains(terminal)
-    }
-
-    pub(super) fn matches_sql_helper(&self, name: &str, terminal: &str) -> bool {
-        self.matches_helper(name, terminal)
-            || self.folded_sql_helpers.contains(name)
-            || self.folded_sql_helpers.contains(terminal)
-    }
-
-    pub(super) fn scans_executors(&self) -> bool {
-        self.embedded.selects_executors() || !self.embedded.trusted_sql_tags.is_empty()
+        let scan = LockScanOptions::compile(
+            RULE_ID,
+            LockScanInput {
+                include: opts.include,
+                exclude: opts.exclude,
+                sql_include: opts.sql_include,
+                sql_include_locked: opts.sql_include_locked,
+                import_specifier: opts.import_specifier,
+                executor_names: opts.executor_names,
+                extra_executor_names: opts.extra_executor_names,
+                exclude_executor_names: opts.exclude_executor_names,
+                executor_factory_names: opts.executor_factory_names,
+                executor_type_names: opts.executor_type_names,
+                executor_option_properties: opts.executor_option_properties,
+                executor_options: opts.executor_options,
+                trusted_sql_tags: opts.trusted_sql_tags,
+                helpers: opts.helpers,
+            },
+        )?;
+        Ok(Self { scan })
     }
 }
 

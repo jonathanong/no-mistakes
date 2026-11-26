@@ -181,6 +181,8 @@ test("PostgreSQL lock reason exports its YAML options contract", () => {
   const declaration = readFileSync(join(packageRoot, "postgres-lock-reason-types.d.ts"), "utf8");
   assert.match(declaration, /export interface PostgresLockReasonOptions \{/);
   for (const field of [
+    "executorOptions?: { name: string }[];",
+    "trustedSqlTags?: { module: string; name: string }[];",
     "helpers?: string[];",
     "sqlInclude?: string[];",
     "unanalyzable?: Unanalyzable;",

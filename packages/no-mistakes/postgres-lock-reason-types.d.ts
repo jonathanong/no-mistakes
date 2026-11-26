@@ -22,6 +22,10 @@ export interface PostgresLockReasonOptions {
   executorTypeNames?: string[];
   /** Option property names on executor calls carrying SQL text. */
   executorOptionProperties?: string[];
+  /** Structured executor option properties carrying SQL text. */
+  executorOptions?: { name: string }[];
+  /** Trusted tagged template helpers whose interpolated SQL is scanned. */
+  trustedSqlTags?: { module: string; name: string }[];
   /** Configured TypeScript or SQL helper function names that acquire locks. */
   helpers?: string[];
   /** Policy for unresolved SQL, parse failures, stored routine bodies, or unresolved executors (default: "advise"). */

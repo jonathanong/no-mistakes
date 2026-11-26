@@ -481,3 +481,17 @@ fn findings_and_options_cover_undeclared_executors_legacy_policy_and_unreadable_
         .iter()
         .any(|f| f.message.contains("SQL source could not be read")));
 }
+
+#[test]
+fn project_scope_with_schema_catalog_path_loads_and_checks() {
+    let root = fixture("project-scope");
+    let session = AnalysisSession::new(None);
+    let config = session
+        .config(&root, Some(Path::new(".no-mistakes.yml")))
+        .unwrap();
+    let files = vec![root.join("sql/locks.sql"), root.join("src/app.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "sql/locks.sql");
+    assert_eq!(findings[0].line, 4);
+}
