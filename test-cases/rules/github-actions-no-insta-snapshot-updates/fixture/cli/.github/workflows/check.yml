@@ -1,0 +1,35 @@
+name: Snapshot tests
+on: [pull_request]
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo insta test --accept
+      - run: cargo insta accept
+      - run: cargo insta test
+      - run: cargo insta test --accept-unseen
+      - run: cargo +stable insta test --force-update-snapshots
+      - run: cargo insta approve
+      - run: cargo insta test -- --accept
+      - run: cargo insta accept --help
+      - run: cargo insta test --review
+      - run: pnpm vitest -u && pnpm jest -u
+      - run: |
+          # cargo insta accept
+          echo 'cargo insta test --accept'
+          cat <<'SCRIPT'
+          cargo insta accept
+          SCRIPT
+      - run: |
+          echo 'Checking snapshots'
+          cargo insta test \
+            --accept
+      - run: bash -c 'cargo insta accept'
+      - run: cargo-insta --color never accept
+      - run: cargo insta --color=never test --accept
+      - run: cargo -C . insta test --accept
+      - run: echo ready & cargo insta accept
+      - run: echo "$(cargo insta accept)"
+      - run: cargo test -- --accept
+      - run: cargo --help
+      - run: cargo insta pending-snapshots

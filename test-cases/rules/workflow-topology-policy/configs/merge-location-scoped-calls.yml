@@ -1,0 +1,29 @@
+version: 2
+unanalyzable: advise
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      exactCallerJobs:
+        ".github/workflows/contract.yml": [".github/workflows/entry.yml#explicit", ".github/workflows/entry.yml#pending"]
+        ".github/workflows/unknown.yml": [".github/workflows/entry.yml#unknown"]
+      concurrencyPolicy:
+        ".github/workflows/contract.yml#publish":
+          pending: fifo
+          cancellation: retain-running
+          scope: [fixed-resource]
+        ".github/workflows/entry.yml#pending":
+          pending: fifo
+          cancellation: retain-running
+          scope: [fixed-resource]
+      requiredJobs: [".github/workflows/unknown.yml#publish"]
+      forbiddenJobs: [".github/workflows/entry.yml#explicit"]
+      requiredTransitiveEdges:
+        - [".github/workflows/entry.yml#prepare", ".github/workflows/entry.yml#pending"]
+      requiredArtifactEdges:
+        - from: ".github/workflows/entry.yml#pending"
+          to: ".github/workflows/entry.yml#prepare"
+          name: bundle
+        - from: ".github/workflows/entry.yml#pending"
+          to: ".github/workflows/contract.yml#malformed"
+          name: bundle

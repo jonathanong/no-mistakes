@@ -24,6 +24,16 @@ pub fn diagnose_calls(
     edges: &[model::WorkflowTopologyEdge],
     diagnostics: &mut Vec<model::WorkflowTopologyDiagnostic>,
 ) {
+    let uncertain_callees: HashSet<_> = diagnostics
+        .iter()
+        .filter(|diagnostic| {
+            diagnostic
+                .merge_uncertainty
+                .as_ref()
+                .is_some_and(|scope| scope.callable)
+        })
+        .map(|diagnostic| diagnostic.workflow_path.clone())
+        .collect();
     for edge in edges {
         let model::WorkflowTopologyEdge::Calls(call) = edge else {
             continue;
@@ -41,17 +51,18 @@ pub fn diagnose_calls(
                 )
                 .with_job(&call.from),
             ),
-            Some(callee) if !callee.callable => diagnostics.push(
-                model::WorkflowTopologyDiagnostic::new(
-                    model::DiagnosticCode::NonCallableWorkflow,
-                    format!(
-                        "{} calls {to}, which does not declare workflow_call",
-                        call.from
-                    ),
-                    caller_path,
-                )
-                .with_job(&call.from),
-            ),
+            Some(callee) if !callee.callable && !uncertain_callees.contains(to) => diagnostics
+                .push(
+                    model::WorkflowTopologyDiagnostic::new(
+                        model::DiagnosticCode::NonCallableWorkflow,
+                        format!(
+                            "{} calls {to}, which does not declare workflow_call",
+                            call.from
+                        ),
+                        caller_path,
+                    )
+                    .with_job(&call.from),
+                ),
             _ => {}
         }
     }

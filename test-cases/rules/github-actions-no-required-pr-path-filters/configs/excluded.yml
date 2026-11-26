@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: github-actions-no-required-pr-path-filters
+    scope: repository
+    exclude:
+      - .github/workflows/required.yml
+    options:
+      workflows:
+        - .github/workflows/always.yml
+        - .github/workflows/required.yml

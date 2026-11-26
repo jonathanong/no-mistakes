@@ -73,6 +73,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         graph_files_complete,
         queue_paths: plan.queue.then(|| plan.queue_paths.clone()),
         ts: ts.map_values(Arc::new),
+        vitest_exclude_imports: Default::default(),
         graph_plan: if has_indexable_graph_only {
             plan.graph
         } else {

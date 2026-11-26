@@ -1,26 +1,31 @@
+use super::merge_availability::MergeAvailability;
 use super::evaluate::Index;
 use super::LocatedFinding;
 use super::{job_finding, workflow_finding as finding, Options};
 use crate::codebase::workflow_topology::model::WorkflowTopology;
 
+mod unlocked;
+
 pub(super) fn lint(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
+    availability: &MergeAvailability<'_>,
 ) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
-    findings.extend(edges(index, &opts.required_direct_edges, true, true));
-    findings.extend(edges(index, &opts.forbidden_direct_edges, true, false));
-    findings.extend(edges(index, &opts.required_transitive_edges, false, true));
-    findings.extend(edges(index, &opts.forbidden_transitive_edges, false, false));
-    findings.extend(fan_ins(index, opts));
-    findings.extend(callers(index, opts));
-    findings.extend(unlocked(topology, opts));
+    findings.extend(edges(index, availability, &opts.required_direct_edges, true, true));
+    findings.extend(edges(index, availability, &opts.forbidden_direct_edges, true, false));
+    findings.extend(edges(index, availability, &opts.required_transitive_edges, false, true));
+    findings.extend(edges(index, availability, &opts.forbidden_transitive_edges, false, false));
+    findings.extend(fan_ins(index, opts, availability));
+    findings.extend(callers(index, opts, availability));
+    findings.extend(unlocked::unlocked(topology, opts, availability));
     findings
 }
 
 fn edges(
     index: &Index<'_>,
+    availability: &MergeAvailability<'_>,
     rules: &[[String; 2]],
     direct: bool,
     required: bool,
@@ -29,6 +34,14 @@ fn edges(
     rules
         .iter()
         .filter_map(|[from, to]| {
+            let absence_known = if direct {
+                availability.direct_edge_known(from, to)
+            } else {
+                availability.transitive_edges_known(from) && availability.transitive_edges_known(to)
+            };
+            if required && !absence_known {
+                return None;
+            }
             if !index.jobs.contains_key(from.as_str()) || !index.jobs.contains_key(to.as_str()) {
                 return required.then(|| {
                     job_finding(to, format!("required {kind} edge missing: {from} -> {to}"))
@@ -54,9 +67,10 @@ fn edges(
         .collect()
 }
 
-fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
+fn fan_ins(index: &Index<'_>, opts: &Options, availability: &MergeAvailability<'_>) -> Vec<LocatedFinding> {
     opts.exact_fan_ins
         .iter()
+        .filter(|(job, _)| availability.needs_known(job))
         .map(|(job_id, expected)| {
             if !index.jobs.contains_key(job_id.as_str()) {
                 return job_finding(job_id, format!("exact fan-in target missing: {job_id}"));
@@ -80,7 +94,7 @@ fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
         .collect()
 }
 
-fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
+fn callers(index: &Index<'_>, opts: &Options, availability: &MergeAvailability<'_>) -> Vec<LocatedFinding> {
     if opts.exact_caller_jobs.is_empty() {
         return Vec::new();
     }
@@ -97,7 +111,7 @@ fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
         }
     }
     for path in opts.exact_caller_jobs.keys() {
-        if !callable.contains(&path.as_str()) {
+        if !callable.contains(&path.as_str()) && availability.callable_known(path) {
             findings.push(finding(path, format!("caller allowlist stale: {path}")));
         }
     }
@@ -112,7 +126,12 @@ fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
         let actual = index.direct_caller_jobs(path);
         let mut expected: Vec<&str> = expected.iter().map(String::as_str).collect();
         expected.sort_unstable();
-        if actual != expected {
+        let unexpected = actual.iter().any(|job| expected.binary_search(job).is_err());
+        let missing = expected.iter().any(|job| {
+            actual.binary_search(job).is_err()
+                && availability.caller_known(job, index.jobs.contains_key(job))
+        });
+        if unexpected || missing {
             findings.push(finding(
                 path,
                 format!(
@@ -121,54 +140,6 @@ fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
                     actual.join(", ")
                 ),
             ));
-        }
-    }
-    findings
-}
-
-fn unlocked(topology: &WorkflowTopology, opts: &Options) -> Vec<LocatedFinding> {
-    if opts.unlocked_workflow_reasons.is_empty() {
-        return Vec::new();
-    }
-    let mut findings = Vec::new();
-    let jobs: std::collections::HashMap<&str, _> = topology
-        .jobs
-        .iter()
-        .map(|job| (job.id.as_str(), job))
-        .collect();
-    for workflow in &topology.workflows {
-        let reason = opts.unlocked_workflow_reasons.get(&workflow.path);
-        let has_unlocked_job = workflow.concurrency.is_none()
-            && workflow.job_ids.iter().any(|id| {
-                jobs.get(id.as_str())
-                    .is_some_and(|job| job.concurrency.is_none())
-            });
-        if has_unlocked_job && reason.is_none() {
-            findings.push(finding(
-                &workflow.path,
-                format!("lock intent missing: {}", workflow.path),
-            ));
-        }
-        if !has_unlocked_job && reason.is_some() {
-            findings.push(finding(
-                &workflow.path,
-                format!("unlocked reason stale: {}", workflow.path),
-            ));
-        }
-        if reason.is_some_and(|value| value.trim().is_empty()) {
-            findings.push(finding(
-                &workflow.path,
-                format!("unlocked reason empty: {}", workflow.path),
-            ));
-        }
-    }
-    for path in opts.unlocked_workflow_reasons.keys() {
-        if !topology
-            .workflows
-            .iter()
-            .any(|workflow| workflow.path == *path)
-        {
-            findings.push(finding(path, format!("unlocked reason stale: {path}")));
         }
     }
     findings

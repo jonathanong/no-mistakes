@@ -1,7 +1,9 @@
-use super::value_at_key;
 use super::ValueAssertion;
-use crate::codebase::rules::structured_config_policy::paths::CanonicalInventory;
+use super::{partial, value_at_key};
 use crate::codebase::rules::RuleFinding;
+use crate::codebase::rules::file_diagnostics::ClassifiedInputFindings;
+use crate::codebase::rules::structured_config_policy::paths::CanonicalInventory;
+use crate::codebase::structured_value::PartialYaml;
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value;
 use std::path::Path;
@@ -12,9 +14,17 @@ mod lost;
 mod matching;
 mod spec;
 pub(in crate::codebase::rules::structured_config_policy) use extends::ParsedAncestorCache;
-use extends::{collect_ancestors, Nested};
+use extends::{Nested, collect_ancestors};
 use keys::Keys;
 use lost::lost_override_findings;
+
+pub(super) fn inputs_known(partial: &PartialYaml, assertion: &ValueAssertion) -> bool {
+    let keys = Keys::from_assertion(assertion);
+    [keys.extends, keys.rules].into_iter().all(|path| {
+        partial::key(partial.value(), path, Some(partial))
+            .is_some_and(|value| value.is_none_or(|value| !partial.contains_unknown(value)))
+    })
+}
 
 pub(super) fn check_ancestor_override_subset(
     nested_path: &Path,
@@ -24,28 +34,28 @@ pub(super) fn check_ancestor_override_subset(
     assertion: &ValueAssertion,
     canonical_paths: &CanonicalInventory,
     parsed_ancestors: &mut ParsedAncestorCache,
-) -> Vec<RuleFinding> {
+) -> ClassifiedInputFindings {
     let keys = Keys::from_assertion(assertion);
-    let mut findings = Vec::new();
+    let mut result = ClassifiedInputFindings::default();
     let Some(root) = canonical_paths.root() else {
-        findings.push(finding(
+        result.findings.push(finding(
             nested_rel,
             assertion,
             format!(
                 "{nested_rel}: ancestor-override-subset cannot resolve the repository root safely"
             ),
         ));
-        return findings;
+        return result;
     };
     let Some(nested_path) = canonical_paths.path(nested_path) else {
-        findings.push(finding(
+        result.findings.push(finding(
             nested_rel,
             assertion,
             format!(
                 "{nested_rel}: ancestor-override-subset nested config is outside the repository root"
             ),
         ));
-        return findings;
+        return result;
     };
     let ancestors = collect_ancestors(
         root,
@@ -57,7 +67,7 @@ pub(super) fn check_ancestor_override_subset(
         sources,
         assertion,
         &keys,
-        &mut findings,
+        &mut result,
         parsed_ancestors,
     );
     let nested_dir = nested_path.parent().unwrap_or(nested_path);
@@ -66,7 +76,7 @@ pub(super) fn check_ancestor_override_subset(
         .filter(|path| path != &nested_path && path.starts_with(nested_dir))
         .collect();
     let nested_rules = mapping_at(value, keys.rules);
-    findings.extend(lost_override_findings(
+    result.findings.extend(lost_override_findings(
         nested_rel,
         nested_dir,
         nested_rules,
@@ -75,7 +85,7 @@ pub(super) fn check_ancestor_override_subset(
         assertion,
         &keys,
     ));
-    findings
+    result
 }
 
 pub(super) fn mapping_at<'a>(value: &'a Value, key: &str) -> Option<&'a serde_yaml::Mapping> {
@@ -101,4 +111,19 @@ pub(super) fn finding(file: &str, assertion: &ValueAssertion, message: String) -
         import: None,
         target: Some(target),
     }
+}
+
+pub(super) fn validate_partial_extends(
+    partial: &PartialYaml,
+    rel: &str,
+    assertion: &ValueAssertion,
+) -> Option<RuleFinding> {
+    let keys = Keys::from_assertion(assertion);
+    partial::key(partial.value(), keys.extends, Some(partial))??;
+    let message = spec::extends_specs(partial.value(), keys.extends).err()?;
+    Some(finding(
+        rel,
+        assertion,
+        format!("{rel}: ancestor-override-subset extends {message}"),
+    ))
 }
