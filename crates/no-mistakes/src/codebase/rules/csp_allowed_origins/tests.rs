@@ -299,13 +299,12 @@ fn reports_invalid_options_unreadable_csp_files_and_unanalyzable_modes() {
         ("empty-csp-directives.yml", "no static CSP directives found"),
         ("broken-ts-csp.yml", "Repair the CSP file"),
     ] {
-        let cfg = crate::config::v2::load_v2_config_with_path(
+        let err = crate::config::v2::load_v2_config_with_path(
             &errors_root,
             Some(&errors_root.join(cfg_name)),
         )
-        .unwrap()
-        .0;
-        let err = check_with_files(&errors_root, &cfg, &[]).unwrap_err();
+        .and_then(|cfg| check_with_files(&errors_root, &cfg.0, &[]))
+        .unwrap_err();
         assert!(
             err.to_string().contains(expected),
             "{cfg_name}: unexpected error: {err}"

@@ -2,6 +2,9 @@ use super::RuleValidator;
 use crate::codebase::rules;
 
 pub(super) const VALIDATORS: &[RuleValidator] = &[
+    (rules::CSP_ALLOWED_ORIGINS, |rule, _| {
+        rules::csp_allowed_origins::validate_options(rule)
+    }),
     (rules::csharp_no_async_void_delegate::RULE_ID, |rule, _| {
         rules::csharp_no_async_void_delegate::compile_options(rule.strict_rule_options()?).map(drop)
     }),
