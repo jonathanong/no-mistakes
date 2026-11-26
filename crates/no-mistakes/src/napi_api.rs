@@ -45,6 +45,13 @@ macro_rules! json_binding {
             AsyncTask::new(JsonValueTask::new(options_json, $implementation))
         }
     };
+    ($rust_name:ident, $js_name:literal, $implementation:path, text) => {
+        #[cfg(not(coverage))]
+        #[cfg_attr(not(test), napi(js_name = $js_name))]
+        pub fn $rust_name(options_json: napi::bindgen_prelude::Buffer) -> AsyncTask<JsonValueTask> {
+            AsyncTask::new(JsonValueTask::new_text(options_json, $implementation))
+        }
+    };
     ($rust_name:ident, $js_name:literal, $implementation:path, string) => {
         #[cfg(not(coverage))]
         #[cfg_attr(not(test), napi(js_name = $js_name))]

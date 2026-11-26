@@ -146,7 +146,7 @@ test("test plan declarations require current results but accept saved legacy pla
   for (const pattern of [
     /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
     /\n  changedFiles: string\[\];/,
-    /export type SavedTestPlan = TestPlan;/,
+    /export type SavedTestPlan = Omit<TestPlan, "changedFiles"> & \{\s*changedFiles\?: string\[\];/,
     /planJson\?: SavedTestPlan \| string;/,
     /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
     /export interface TestsPlanOptionsBase \{/,

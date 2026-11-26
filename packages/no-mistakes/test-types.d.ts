@@ -256,7 +256,9 @@ export interface WhyStep {
 }
 
 /** A current or pre-`changedFiles` plan accepted by saved-plan document APIs. */
-export type SavedTestPlan = TestPlan;
+export type SavedTestPlan = Omit<TestPlan, "changedFiles"> & {
+  changedFiles?: string[];
+};
 
 export interface TestsPlanDocumentOptions {
   plan?: string;

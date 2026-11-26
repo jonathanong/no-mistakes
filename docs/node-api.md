@@ -927,10 +927,10 @@ For a union-valued selector, arguments must satisfy every possible operation;
 otherwise narrow the selector before calling. For example, `"check" | "dependents"`
 requires options with `files`, even though a literal `"check"` needs no options.
 Selectors cover root analysis APIs, including `analyzeProject`, SQL extraction
-and parsing, and `lockStatus`. Utilities `version`, `diagnosticsSnapshot`,
-`createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts`, the collector
-itself, and raw Markdown helpers `testsComment` and `testsGraphMermaid` are
-excluded.
+and parsing, `lockStatus`, `testsComment`, and `testsGraphMermaid`. Both test-plan
+renderers return their ordinary strings as the collected result. The selector
+map excludes the collector itself and the `version`, `diagnosticsSnapshot`,
+`createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts` utilities.
 
 Phase records contain `label`, `wallMs`, user/system CPU milliseconds
 (`userMs`, `systemMs`), `utilization` as CPU/wall time, process-lifetime peak RSS
