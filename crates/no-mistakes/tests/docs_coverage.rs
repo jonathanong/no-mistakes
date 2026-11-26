@@ -30,6 +30,8 @@ use cli_docs_helpers::{
 
 #[path = "support/docs_coverage_commands.rs"]
 mod docs_coverage_commands;
+#[path = "support/docs_coverage_csp_allowed_origins.rs"]
+mod docs_coverage_csp_allowed_origins;
 #[path = "support/docs_coverage_rules.rs"]
 mod docs_coverage_rules;
 #[path = "support/docs_coverage_test_reliability.rs"]

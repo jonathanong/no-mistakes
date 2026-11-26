@@ -32,6 +32,7 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::CONFIG_PATH_REFERENCES,
     rules::CSHARP_MAX_LINES_PER_FILE,
     rules::CSHARP_NO_ASYNC_VOID_DELEGATE,
+    rules::CSP_ALLOWED_ORIGINS,
     rules::DOC_CONSISTENCY,
     rules::FILE_EXTENSION_POLICY,
     rules::FINITE_SET_CONSISTENCY,

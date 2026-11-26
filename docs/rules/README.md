@@ -66,6 +66,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`config-path-references`](config-path-references.md)                         | Validate path strings in structured config files, including well-known presets. |
 | [`csharp-max-lines-per-file`](csharp-max-lines-per-file.md)                   | Cap C# source/test file length by physical lines.                               |
 | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md)           | Ban async lambdas passed to void Action APIs such as Command.                   |
+| [`csp-allowed-origins`](csp-allowed-origins.md)                               | Flag static third-party browser origins missing from declared CSP directives.   |
 | [`declared-payload-compatibility`](declared-payload-compatibility.md) | Check explicitly declared producer/consumer JSON payload schemas. |
 | [`dependabot-cooldown-policy`](dependabot-cooldown-policy.md)                   | Require a minimum cooldown on Dependabot update entries.                       |
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, banned text, and per-path regex bans.      |

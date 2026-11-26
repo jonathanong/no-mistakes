@@ -12,7 +12,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
-    use crate::codebase::rules::nested_controls;
+    use crate::codebase::rules::{csp_allowed_origins, nested_controls};
     let root = variant.root;
     let plan = variant.plan;
     let playwright = variant.playwright;
@@ -154,6 +154,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         fixture_initializers: prepared.fixture_initializers,
         lint_suppressions: plan.collect_lint_suppressions(path, program, source),
         vitest_default_excludes: prepared.vitest_default_excludes,
+        csp_allowed_origins: csp_allowed_origins::collect_for_plan(path, source, program, plan),
         ts: ts.into(),
         production_imports: None,
         source: stored_source,
