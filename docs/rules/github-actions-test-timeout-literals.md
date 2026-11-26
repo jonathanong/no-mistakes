@@ -12,6 +12,9 @@ in matching workflow tests.
 
 ## Options
 
+Each `include` entry must be a valid glob. Every `allow` entry requires nonblank
+`file`, `text`, and `reason` fields.
+
 `include` defaults to workflow `.test.mts` and `.test.ts` files. Each `allow`
 entry requires `file`, exact trimmed `text`, and a non-empty `reason`; no other
 rule-specific options exist.

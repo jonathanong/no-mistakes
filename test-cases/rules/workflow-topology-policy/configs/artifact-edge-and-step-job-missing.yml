@@ -7,7 +7,7 @@ rules:
         - from: ".github/workflows/pipeline.yml#build"
           to: ".github/workflows/pipeline.yml#test"
           name: dist
-          match: prefix
+          match: pattern
         - from: ".github/workflows/pipeline.yml#ghost"
           to: ".github/workflows/pipeline.yml#test"
           name: dist

@@ -1,0 +1,193 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "4494": {
+    "exitCode": 2,
+    "stderr": "error: 4494.yml:7: invalid options for rule `github-actions-pinned-hash` at options.excludePaths[0]: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4502": {
+    "exitCode": 2,
+    "stderr": "error: 4502.yml:5: invalid options for rule `github-actions-action-timeout-pair` at options.nestedInput: must be nonblank\n"
+  },
+  "4502-2": {
+    "exitCode": 2,
+    "stderr": "error: 4502-2.yml:8: invalid options for rule `github-actions-action-timeout-pair` at options.nestedInput: must be nonblank\n"
+  },
+  "4502-3": {
+    "exitCode": 2,
+    "stderr": "error: 4502-3.yml:8: invalid options for rule `github-actions-action-timeout-pair` at options.nestedInput: must be nonblank\n"
+  },
+  "4503": {
+    "exitCode": 2,
+    "stderr": "error: 4503.yml:7: invalid options for rule `github-actions-action-timeout-pair` at options.uses[0]: must be nonblank\n"
+  },
+  "4503-2": {
+    "exitCode": 2,
+    "stderr": "error: 4503-2.yml:7: invalid options for rule `github-actions-action-timeout-pair` at options.uses[0]: must be nonblank\n"
+  },
+  "4504": {
+    "exitCode": 2,
+    "stderr": "error: 4504.yml:7: invalid options for rule `github-actions-download-integrity` at options.trustedHosts[0]: trustedHosts entry `example.invalid:[str]` is not a host with an optional valid port\n"
+  },
+  "4504-2": {
+    "exitCode": 2,
+    "stderr": "error: 4504-2.yml:7: invalid options for rule `github-actions-download-integrity` at options.trustedHosts[0]: trustedHosts entry `example.invalid:65536` is not a host with an optional valid port\n"
+  },
+  "4504-3": {
+    "exitCode": 2,
+    "stderr": "error: 4504-3.yml:7: invalid options for rule `github-actions-download-integrity` at options.trustedHosts[0]: trustedHosts entry `example.invalid:` is not a host with an optional valid port\n"
+  },
+  "4504-4": {
+    "exitCode": 2,
+    "stderr": "error: 4504-4.yml:7: invalid options for rule `github-actions-download-integrity` at options.trustedHosts[0]: trustedHosts entry `[::1]:wrong` is not a host with an optional valid port\n"
+  },
+  "4504-5": {
+    "exitCode": 2,
+    "stderr": "error: 4504-5.yml:7: invalid options for rule `github-actions-download-integrity` at options.trustedHosts[0]: trustedHosts entry `[::bogus]:443` is not a host with an optional valid port\n"
+  },
+  "4504-6": {
+    "exitCode": 2,
+    "stderr": "error: 4504-6.yml:7: invalid options for rule `github-actions-download-integrity` at options.trustedHosts[0]: trustedHosts entry `[::1]wrong` is not a host with an optional valid port\n"
+  },
+  "4505": {
+    "exitCode": 2,
+    "stderr": "error: 4505.yml:6: invalid options for rule `github-actions-job-timeouts` at options.maxMinutes: must be positive\n"
+  },
+  "4506": {
+    "exitCode": 2,
+    "stderr": "error: 4506.yml:8: invalid options for rule `github-actions-job-timeouts` at options.allow[0].job: must select a job as workflow-path#job-id\n"
+  },
+  "4506-2": {
+    "exitCode": 2,
+    "stderr": "error: 4506-2.yml:8: invalid options for rule `github-actions-job-timeouts` at options.allow[0].job: must select a job as workflow-path#job-id\n"
+  },
+  "4506-3": {
+    "exitCode": 2,
+    "stderr": "error: 4506-3.yml:10: invalid options for rule `github-actions-job-timeouts` at options.allow[0].unexpectedField: unknown field `unexpectedField`, expected `job` or `maxMinutes`\n"
+  },
+  "4507": {
+    "exitCode": 2,
+    "stderr": "error: 4507.yml:9: invalid options for rule `github-actions-job-timeouts` at options.allow[0].maxMinutes: must be positive\n"
+  },
+  "4508": {
+    "exitCode": 2,
+    "stderr": "error: 4508.yml:6: invalid options for rule `github-actions-step-timeouts` at options.maxMinutes: must be positive\n"
+  },
+  "4509": {
+    "exitCode": 2,
+    "stderr": "error: 4509.yml:9: invalid options for rule `github-actions-step-timeouts` at options.allow[0].maxMinutes: must be in 1..=360\n"
+  },
+  "4509-2": {
+    "exitCode": 2,
+    "stderr": "error: 4509-2.yml:9: invalid options for rule `github-actions-step-timeouts` at options.allow[0].maxMinutes: must be in 1..=360\n"
+  },
+  "4510": {
+    "exitCode": 2,
+    "stderr": "error: 4510.yml:9: invalid options for rule `github-actions-step-timeouts` at options.allow[0].unexpectedField: unknown field `unexpectedField`, expected one of `step`, `reason`, `maxMinutes`\n"
+  },
+  "4512": {
+    "exitCode": 2,
+    "stderr": "error: 4512.yml:7: invalid options for rule `github-actions-test-timeout-literals` at options.allow[0].text: must be nonblank\n"
+  },
+  "4512-2": {
+    "exitCode": 2,
+    "stderr": "error: 4512-2.yml:8: invalid options for rule `github-actions-test-timeout-literals` at options.allow[0].text: must be nonblank\n"
+  },
+  "4512-3": {
+    "exitCode": 2,
+    "stderr": "error: 4512-3.yml:9: invalid options for rule `github-actions-test-timeout-literals` at options.allow[0].reason: must be nonblank\n"
+  },
+  "4512-4": {
+    "exitCode": 2,
+    "stderr": "error: 4512-4.yml:10: invalid options for rule `github-actions-test-timeout-literals` at options.allow[0].unexpectedField: unknown field `unexpectedField`, expected one of `file`, `text`, `reason`\n"
+  },
+  "4512-5": {
+    "exitCode": 2,
+    "stderr": "error: 4512-5.yml:9: invalid options for rule `github-actions-test-timeout-literals` at options.allow[0].reason: must be nonblank\n"
+  },
+  "4513": {
+    "exitCode": 2,
+    "stderr": "error: 4513.yml:9: invalid options for rule `workflow-topology-policy` at options.stepOrders[0].steps[0]: must specify id, uses, or name\n"
+  },
+  "4513-2": {
+    "exitCode": 2,
+    "stderr": "error: 4513-2.yml:10: invalid options for rule `workflow-topology-policy` at options.stepOrders[0].steps[0].unexpectedField: unknown field `unexpectedField`, expected one of `id`, `uses`, `name`\n"
+  },
+  "4513-3": {
+    "exitCode": 2,
+    "stderr": "error: 4513-3.yml:10: invalid options for rule `workflow-topology-policy` at options.stepOrders[0].unexpectedField: unknown field `unexpectedField`, expected `jobId` or `steps`\n"
+  },
+  "4515": {
+    "exitCode": 2,
+    "stderr": "error: 4515.yml:7: invalid options for rule `workflow-topology-policy` at options.requiredArtifactEdges[0].from: must be nonblank\n"
+  },
+  "4515-2": {
+    "exitCode": 2,
+    "stderr": "error: 4515-2.yml:10: invalid options for rule `workflow-topology-policy` at options.requiredArtifactEdges[0].match: must be exact, pattern, all, or possible\n"
+  },
+  "4515-3": {
+    "exitCode": 2,
+    "stderr": "error: 4515-3.yml:10: invalid options for rule `workflow-topology-policy` at options.requiredArtifactEdges[0].unexpectedField: unknown field `unexpectedField`, expected one of `from`, `to`, `name`, `match`\n"
+  },
+  "4516": {
+    "exitCode": 2,
+    "stderr": "error: 4516.yml:12: invalid options for rule `workflow-topology-policy` at options.concurrencyPolicy..github/workflows/sample.yml.unexpectedField: unknown field `unexpectedField`, expected one of `pending`, `cancellation`, `scope`\n"
+  },
+  "4517": {
+    "exitCode": 2,
+    "stderr": "error: 4517.yml:6: github-actions-checkout-credentials: options.defaultBranch must be a nonempty literal base branch name accepted by Git\n"
+  },
+  "4517-2": {
+    "exitCode": 2,
+    "stderr": "error: 4517-2.yml:6: github-actions-checkout-credentials: options.defaultBranch must be a nonempty literal base branch name accepted by Git\n"
+  },
+  "4517-3": {
+    "exitCode": 2,
+    "stderr": "error: 4517-3.yml:6: github-actions-checkout-credentials: options.defaultBranch must be a nonempty literal base branch name accepted by Git\n"
+  },
+  "4519": {
+    "exitCode": 2,
+    "stderr": "error: 4519.yml:7: invalid options for rule `github-actions-action-timeout-pair` at options.include[0]: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4520": {
+    "exitCode": 2,
+    "stderr": "error: 4520.yml:7: invalid options for rule `github-actions-composite-step-schema` at options.include[0]: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4521": {
+    "exitCode": 2,
+    "stderr": "error: 4521.yml:6: invalid options for rule `github-actions-env-policy`: options.include: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4523": {
+    "exitCode": 2,
+    "stderr": "error: 4523.yml:7: invalid options for rule `github-actions-test-timeout-literals` at options.include[0]: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4565": {
+    "exitCode": 2,
+    "stderr": "error: 4565.yml:7: invalid options for rule `github-actions-env-policy` at options.required.: must be nonblank\n"
+  },
+  "4566": {
+    "exitCode": 2,
+    "stderr": "error: 4566.yml:7: invalid options for rule `github-actions-env-policy` at options.forbidden[0]: must be nonblank\n"
+  },
+  "4567": {
+    "exitCode": 2,
+    "stderr": "error: 4567.yml:7: invalid options for rule `workflow-topology-policy` at options.requiredJobs[0]: must be nonblank\n"
+  },
+  "4568": {
+    "exitCode": 2,
+    "stderr": "error: 4568.yml:7: invalid options for rule `workflow-topology-policy` at options.forbiddenJobs[0]: must be nonblank\n"
+  },
+  "valid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
