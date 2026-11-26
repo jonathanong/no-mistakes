@@ -66,8 +66,8 @@ SELECT
   a1.display_name,
   a2.tier
 FROM orders o
-LEFT JOIN accounts a1 ON a1.id = uuidv7()
-LEFT JOIN accounts a2 ON a2.id = uuidv7();
+LEFT JOIN accounts a1 ON a1.id = coalesce(o.override_id, uuidv7())
+LEFT JOIN accounts a2 ON a2.id = coalesce(o.override_id, uuidv7());
 
 SELECT
   o.id,

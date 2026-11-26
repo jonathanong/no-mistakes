@@ -251,8 +251,8 @@ fn excludes_unvetted_functions_quoted_types_distinct_limits_column_aliases_and_j
 
         SELECT o.id, a1.name, a2.tier
         FROM orders o
-        LEFT JOIN accounts a1 ON a1.id = uuidv7()
-        LEFT JOIN accounts a2 ON a2.id = uuidv7();
+        LEFT JOIN accounts a1 ON a1.id = coalesce(o.override_id, uuidv7())
+        LEFT JOIN accounts a2 ON a2.id = coalesce(o.override_id, uuidv7());
 
         SELECT o.id,
             (SELECT a1.name FROM accounts a1 WHERE a1.id = app.next_lookup_id(o.id)),
