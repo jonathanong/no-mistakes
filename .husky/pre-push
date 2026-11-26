@@ -12,8 +12,9 @@ if ! git fetch "$remote_url" main >/dev/null 2>&1; then
   echo "Please check your network/authentication and retry."
   exit 1
 fi
+base=$(git rev-parse --verify "FETCH_HEAD^{commit}") || exit 1
 
-while read local_ref local_sha remote_ref remote_sha
+while read -r local_ref local_sha _
 do
   case "$local_ref" in
     refs/heads/*) ;;
@@ -26,8 +27,8 @@ do
   fi
 
   # Check if the branch being pushed is behind the push destination's main.
-  behind_count=$(git rev-list --count "$local_sha"..FETCH_HEAD)
-  if [ "$behind_count" -gt 0 ]; then
+  if ! git merge-base --is-ancestor "$local_sha" "$base"; then
+    behind_count=$(git rev-list --count "$local_sha..$base") || exit 1
     echo "Error: Branch '${local_ref#refs/heads/}' is behind $remote main by $behind_count commit(s)."
     echo "Please rebase onto the push destination's main before pushing."
     exit 1
@@ -52,26 +53,27 @@ if [ ! -x "$oxfmt" ] || [ ! -x "$oxlint" ]; then
   exit 1
 fi
 
-# cargo fmt and clippy share target/, so they stay sequential. Other checks
-# are independent and run in parallel. Call oxfmt/oxlint directly to skip
-# `pnpm run` lockfile + prepare overhead.
+# Rustfmt only reads source in check mode. The fixture baseline and AST rules
+# also only read source, so each can run independently.
 
 fail=0
 
-echo "Running ast-grep..."
-(
-  ast-grep test --skip-snapshot-tests &&
-    ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg &&
-    python3 .ast-grep/check-inline-fixture-writes.py --base FETCH_HEAD
-) </dev/null &
-pid_ast=$!
+echo "Running ast-grep rule tests..."
+ast-grep test --skip-snapshot-tests </dev/null &
+pid_ast_test=$!
+echo "Running ast-grep source scan..."
+ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg </dev/null &
+pid_ast_scan=$!
+echo "Checking the inline fixture baseline..."
+python3 .ast-grep/check-inline-fixture-writes.py --base "$base" </dev/null &
+pid_fixtures=$!
 
-echo "Running cargo fmt + clippy..."
-(
-  cargo fmt --all -- --check &&
-    cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
-) </dev/null &
-pid_rust=$!
+echo "Running cargo fmt..."
+cargo fmt --all -- --check </dev/null &
+pid_fmt=$!
+echo "Running Clippy..."
+cargo clippy --locked --workspace --all-targets --all-features -- -D warnings </dev/null &
+pid_clippy=$!
 
 echo "Running oxfmt check..."
 "$oxfmt" --check packages/ vitest.config.js </dev/null &
@@ -85,8 +87,11 @@ echo "Running CSpell..."
 pnpm run lint:spell </dev/null &
 pid_cspell=$!
 
-wait "$pid_ast" || fail=1
-wait "$pid_rust" || fail=1
+wait "$pid_ast_test" || fail=1
+wait "$pid_ast_scan" || fail=1
+wait "$pid_fixtures" || fail=1
+wait "$pid_fmt" || fail=1
+wait "$pid_clippy" || fail=1
 wait "$pid_oxfmt" || fail=1
 wait "$pid_oxlint" || fail=1
 wait "$pid_cspell" || fail=1
