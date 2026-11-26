@@ -10,6 +10,7 @@ pub(crate) struct PreparedFactDemand {
     comment_files: Vec<PathBuf>,
     vitest_default_exclude_files: Vec<PathBuf>,
     csp_allowed_origins_files: Vec<PathBuf>,
+    nested_control_files: Vec<PathBuf>,
     test_reliability_files: Vec<PathBuf>,
     postgres_explain_write_files: Vec<PathBuf>,
     runner_config_files: Vec<PathBuf>,
@@ -56,6 +57,10 @@ impl PreparedFactDemand {
             )?;
         plan.csp_allowed_origins_paths =
             no_mistakes::codebase::rules::csp_allowed_origins::required_files(root, config, files)?;
+        plan.nested_control_paths = no_mistakes::codebase::rules::nested_controls::required_files(
+            root, config, files, sources,
+        )?;
+        self.nested_control_files = plan.nested_control_paths.iter().cloned().collect();
         plan.test_reliability_paths =
             no_mistakes::codebase::rules::test_reliability::required_files(
                 root, config, files, sources,
@@ -77,6 +82,7 @@ impl PreparedFactDemand {
             || !self.comment_files.is_empty()
             || !self.vitest_default_exclude_files.is_empty()
             || !self.csp_allowed_origins_files.is_empty()
+            || !self.nested_control_files.is_empty()
             || !self.test_reliability_files.is_empty()
             || !self.postgres_explain_write_files.is_empty()
             || !self.runner_config_files.is_empty()
@@ -98,6 +104,7 @@ impl PreparedFactDemand {
         requested.extend(self.runner_config_files.iter().cloned());
         requested.extend(self.vitest_default_exclude_files.iter().cloned());
         requested.extend(self.csp_allowed_origins_files.iter().cloned());
+        requested.extend(self.nested_control_files.iter().cloned());
         requested.extend(self.test_reliability_files.iter().cloned());
         requested.extend(self.postgres_explain_write_files.iter().cloned());
         ordered_path_intersection(&requested, &discovered)
@@ -149,6 +156,7 @@ pub(crate) fn prepare(
         comment_files: plan.lint_suppression_paths.iter().cloned().collect(),
         vitest_default_exclude_files: plan.vitest_default_exclude_paths.iter().cloned().collect(),
         csp_allowed_origins_files: plan.csp_allowed_origins_paths.iter().cloned().collect(),
+        nested_control_files: Vec::new(),
         test_reliability_files: Vec::new(),
         postgres_explain_write_files: Vec::new(),
         runner_config_files: plan

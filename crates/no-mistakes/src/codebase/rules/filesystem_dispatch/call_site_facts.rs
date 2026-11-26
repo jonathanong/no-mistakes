@@ -9,18 +9,20 @@ use crate::codebase::check_facts::{
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 
-pub(super) fn needs_prepared_facts(config: &NoMistakesConfig) -> bool {
+pub(super) fn requires_shared_facts(config: &NoMistakesConfig) -> bool {
+    use super::*;
     [
-        super::FORBIDDEN_LINT_SUPPRESSIONS,
-        super::VITEST_DEFAULT_EXCLUDES,
-        super::CSP_ALLOWED_ORIGINS,
-        super::PRODUCTION_DEPENDENCY_DECLARATIONS,
-        super::REQUIRED_COMPANION_IMPORTS,
+        FORBIDDEN_LINT_SUPPRESSIONS,
+        REACT_NO_NESTED_BUTTONS_AND_LINKS,
+        VITEST_DEFAULT_EXCLUDES,
+        CSP_ALLOWED_ORIGINS,
+        PRODUCTION_DEPENDENCY_DECLARATIONS,
+        REQUIRED_COMPANION_IMPORTS,
     ]
     .iter()
     .chain(crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS)
-    .any(|rule_id| super::rule_enabled(config, rule_id))
-        || super::test_reliability::configured(config)
+    .any(|rule_id| rule_enabled(config, rule_id))
+        || test_reliability::configured(config)
 }
 
 pub(super) fn prepare_call_site_facts(
@@ -54,6 +56,8 @@ pub(super) fn prepare_call_site_facts(
         super::vitest_default_excludes::required_files(root, config, files)?;
     plan.csp_allowed_origins_paths =
         super::csp_allowed_origins::required_files(root, config, files)?;
+    plan.nested_control_paths =
+        super::nested_controls::required_files(root, config, files, sources)?;
     plan.test_reliability_paths =
         super::test_reliability::required_files(root, config, files, sources)?;
     plan.playwright_fixture_support = plan
@@ -79,6 +83,7 @@ pub(super) fn prepare_call_site_facts(
     if plan.lint_suppression_paths.is_empty()
         && plan.vitest_default_exclude_paths.is_empty()
         && plan.csp_allowed_origins_paths.is_empty()
+        && plan.nested_control_paths.is_empty()
         && plan.test_reliability_paths.is_empty()
         && !needs_call_sites
         && plan.companion_import_plans.is_empty()
@@ -96,6 +101,7 @@ pub(super) fn prepare_call_site_facts(
     files.extend(plan.lint_suppression_paths.iter().cloned());
     files.extend(plan.vitest_default_exclude_paths.iter().cloned());
     files.extend(plan.csp_allowed_origins_paths.iter().cloned());
+    files.extend(plan.nested_control_paths.iter().cloned());
     files.extend(plan.test_reliability_paths.keys().cloned());
     files.extend(plan.production_import_paths.iter().cloned());
     files.extend(plan.postgres_explain_write_rollback_paths.iter().cloned());

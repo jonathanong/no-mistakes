@@ -1,11 +1,17 @@
 use crate::queue::cycles::self_dedup_findings;
 use crate::queue::extract::FileFacts;
+use crate::queue::extract_model::RateLimitSiteKind;
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
 use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::{Diagnostic, DiagnosticKind, QueueKey, Severity};
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
+
+#[path = "rate_limit_resolve.rs"]
+mod resolve_exports;
+
+pub(in crate::queue) use resolve_exports::resolve;
 
 pub(super) fn findings(
     root: &Path,
@@ -47,6 +53,7 @@ fn shared_rate_limits(
             let worker = file_workers[site.worker_index];
             judge(
                 (root, path, site.line, test_scope),
+                &site.kind,
                 worker,
                 producers,
                 &mut checks,
@@ -59,11 +66,30 @@ fn shared_rate_limits(
 
 fn judge(
     (root, path, line, test_scope): (&Path, &Path, usize, &ConfiguredTestScope),
+    kind: &RateLimitSiteKind,
     worker: &InternalWorker,
     producers: &[InternalProducer],
     checks: &mut Vec<CheckFinding>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
+    if *kind != RateLimitSiteKind::Confirmed {
+        if let Some(queue) = &worker.queue {
+            if matches!(
+                job_names(root, queue, producers, test_scope),
+                JobNames::Known(names) if names.len() <= 1
+            ) {
+                return;
+            }
+        }
+        diagnostics.push(Diagnostic {
+            kind: DiagnosticKind::CheckAbstention,
+            severity: Severity::Warning,
+            file: relative_string(root, path),
+            line,
+            message: "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged".to_string(),
+        });
+        return;
+    }
     let Some(queue) = &worker.queue else {
         diagnostics.push(abstain(
             root,

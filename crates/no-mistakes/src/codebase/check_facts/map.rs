@@ -131,6 +131,7 @@ impl CheckFactMap {
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
     pub(crate) fact_extraction_panicked: bool,
+    pub(crate) nested_controls: Option<Vec<crate::codebase::rules::nested_controls::Location>>,
     pub(crate) test_reliability: Vec<crate::codebase::rules::test_reliability::Location>,
     pub(crate) fixture_initializers: Option<
         crate::codebase::rules::test_reliability::playwright_provenance::FixtureInitializers,

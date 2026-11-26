@@ -1,5 +1,13 @@
 use serde_yaml::{Mapping, Value};
 
+#[derive(Clone, Copy)]
+pub(super) enum KeyLocation {
+    Merge(usize),
+    Literal,
+}
+
+pub(super) type KeyLocationResult = Result<KeyLocation, (usize, String)>;
+
 /// Copy YAML 1.1 merge keys into their parent mapping, in place.
 ///
 /// `serde_yaml` resolves aliases and then leaves `<<` as an ordinary key. An
@@ -9,19 +17,19 @@ use serde_yaml::{Mapping, Value};
 /// not a mapping, or a sequence of mappings, cannot be applied and is returned
 /// as an error instead of being dropped.
 pub(crate) fn expand_merge_keys(value: &mut Value) -> Result<(), String> {
-    expand_located(value, &|_| Some(0)).map_err(|(_, message)| message)
+    expand_located(value, &|_| Ok(KeyLocation::Merge(0))).map_err(|(_, message)| message)
 }
 
 pub(super) fn expand_located(
     value: &mut Value,
-    line_for_key: &impl Fn(&Value) -> Option<usize>,
+    locate_key: &impl Fn(&str) -> KeyLocationResult,
 ) -> Result<(), (usize, String)> {
     let mut pending = vec![value];
     while let Some(value) = pending.pop() {
         match value {
             Value::Mapping(mapping) => {
-                if let Some((merge, line)) = take_merge(mapping, line_for_key) {
-                    merge_sources(mapping, merge, line, line_for_key)?;
+                if let Some((merge, line)) = take_merge(mapping, locate_key)? {
+                    merge_sources(mapping, merge, line, locate_key)?;
                 }
                 let start = pending.len();
                 pending.extend(mapping.values_mut());
@@ -37,28 +45,34 @@ pub(super) fn expand_located(
 
 fn take_merge(
     mapping: &mut Mapping,
-    line_for_key: &impl Fn(&Value) -> Option<usize>,
-) -> Option<(Value, usize)> {
+    locate_key: &impl Fn(&str) -> KeyLocationResult,
+) -> Result<Option<(Value, usize)>, (usize, String)> {
     if !mapping.contains_key("<<") {
-        return None;
+        return Ok(None);
     }
-    let key = mapping.keys().find(|key| key.as_str() == Some("<<"))?;
-    let line = line_for_key(key)?;
-    mapping.shift_remove("<<").map(|merge| (merge, line))
+    let key = mapping
+        .keys()
+        .filter_map(Value::as_str)
+        .find(|key| *key == "<<")
+        .expect("mapping contains the string key");
+    match locate_key(key)? {
+        KeyLocation::Literal => Ok(None),
+        KeyLocation::Merge(line) => Ok(mapping.shift_remove("<<").map(|merge| (merge, line))),
+    }
 }
 
 fn merge_sources(
     mapping: &mut Mapping,
     merge: Value,
     line: usize,
-    line_for_key: &impl Fn(&Value) -> Option<usize>,
+    locate_key: &impl Fn(&str) -> KeyLocationResult,
 ) -> Result<(), (usize, String)> {
     let mut pending = Vec::new();
     push_merge_sources(merge, &mut pending).map_err(|message| (line, message))?;
     // Each source's explicit keys win over its own merge, which is consumed
     // before later sequence sources. No merge source is copied or revisited.
     while let Some(mut source) = pending.pop() {
-        if let Some((merge, line)) = take_merge(&mut source, line_for_key) {
+        if let Some((merge, line)) = take_merge(&mut source, locate_key)? {
             push_merge_sources(merge, &mut pending).map_err(|message| (line, message))?;
         }
         for (key, value) in source {

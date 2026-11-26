@@ -117,8 +117,10 @@ rules:
 
 ### Unanalyzable inputs
 
-Invalid YAML is skipped and produces no finding. A file that cannot be read is
-skipped. The checker does not evaluate `${{ }}` expressions: a required name whose
+An unreadable file yields an unanalyzable diagnostic at line 1. Invalid YAML
+yields one at the parser's reported line, or at line 1 when the parser has no
+location. Set `rule.message` on the application to replace the diagnostic text.
+The checker does not evaluate `${{ }}` expressions: a required name whose
 value contains `${{` abstains from the mismatch check and records a diagnostic
 (for example `env: { BASH_ENV: ${{ vars.SHELL_INIT }} }` or
 `${{ matrix.init }}`). A non-mapping, non-null `env:` value at workflow, job, or
@@ -143,4 +145,5 @@ applies the same require-or-ban policy to `with:` inputs.
 
 ## Invalid UTF-8
 
-Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray
+byte is still reported.

@@ -90,22 +90,15 @@ pub(super) fn ts_source(source: Option<std::sync::Arc<str>>) -> TsFileFacts {
     }
 }
 
-fn requires_path_scoped_parse(plan: &CheckFactPlan, path: &Path) -> bool {
-    plan.lint_suppression_paths.contains(path)
-        || plan.vitest_default_exclude_paths.contains(path)
-        || plan.csp_allowed_origins_paths.contains(path)
-        || plan.test_reliability_paths.contains_key(path)
-        || plan.requires_call_sites(path)
-        || plan.production_import_paths.contains(path)
-}
-
 pub(super) fn requires_parse(
     root: &Path,
     plan: &CheckFactPlan,
     path: &Path,
     playwright: Option<&PlaywrightFactPlan>,
 ) -> bool {
-    requires_path_scoped_parse(plan, path)
+    scoped_rule_requires_parse(plan, path)
+        || plan.requires_call_sites(path)
+        || plan.production_import_paths.contains(path)
         || plan
             .postgres_executor_warning_scans
             .iter()
@@ -139,4 +132,12 @@ pub(super) fn requires_parse(
         }
         || plan.source
         || (!plan.raw_source && playwright.is_none())
+}
+
+fn scoped_rule_requires_parse(plan: &CheckFactPlan, path: &Path) -> bool {
+    plan.lint_suppression_paths.contains(path)
+        || plan.nested_control_paths.contains(path)
+        || plan.vitest_default_exclude_paths.contains(path)
+        || plan.csp_allowed_origins_paths.contains(path)
+        || plan.test_reliability_paths.contains_key(path)
 }

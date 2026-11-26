@@ -6,9 +6,13 @@ use crate::tests::{TestFramework, TestPlanGroupResult};
 use clap::ValueEnum;
 use no_mistakes::changes::ChangesReport;
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
+use no_mistakes::codebase::ts_source::{FixtureReadIndex, SourceStore};
+use no_mistakes::config::v2::NoMistakesConfig;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
+mod attributes;
 mod fallback;
 mod matching;
 mod selection;
@@ -21,14 +25,15 @@ pub(super) use selection::apply;
 pub(crate) struct ChangesInput {
     file: String,
     pub(crate) report: Result<ChangesReport, String>,
+    fixture_reads: Option<Arc<FixtureReadIndex>>,
 }
 
 impl ChangesInput {
     pub(crate) fn load_from_parts(
         args: &super::PlanArgs,
         root: &Path,
-        config: &no_mistakes::config::v2::NoMistakesConfig,
-        sources: &no_mistakes::codebase::ts_source::SourceStore,
+        config: &NoMistakesConfig,
+        sources: &SourceStore,
     ) -> Option<Self> {
         let path = no_mistakes::config::resolve(root, args.changes.as_ref()?);
         let file = relative_path(root, &path);
@@ -40,7 +45,19 @@ impl ChangesInput {
                     .map_err(|error| format!("Invalid changes report `{file}`: {error}"))
             })
             .and_then(|report| validate_report(report, config));
-        Some(Self { file, report })
+        let fixture_reads = report
+            .as_ref()
+            .ok()
+            .and_then(|report| attributes::index(root, config, report));
+        Some(Self {
+            file,
+            report,
+            fixture_reads,
+        })
+    }
+
+    pub(crate) fn fixture_reads(&self) -> Option<&Arc<FixtureReadIndex>> {
+        self.fixture_reads.as_ref().filter(|_| self.report.is_ok())
     }
 
     pub(super) fn has_work(&self) -> bool {
@@ -55,7 +72,7 @@ impl ChangesInput {
 
 fn validate_report(
     report: ChangesReport,
-    config: &no_mistakes::config::v2::NoMistakesConfig,
+    config: &NoMistakesConfig,
 ) -> Result<ChangesReport, String> {
     if report.schema_version != 1 {
         return Err(format!(

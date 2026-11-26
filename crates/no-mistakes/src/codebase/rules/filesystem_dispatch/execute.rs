@@ -71,7 +71,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
-    let owned_facts = if facts.is_none() && super::call_site_facts::needs_prepared_facts(config) {
+    let owned_facts = if facts.is_none() && call_site_facts::requires_shared_facts(config) {
         super::entrypoints::prepare_call_site_facts(root, config, files, &prepared.sources)?
     } else {
         None

@@ -10,6 +10,8 @@ pub struct CheckFactPlan {
     pub imports: bool,
     #[doc(hidden)]
     pub postgres_executor_warning_scans: Arc<Vec<crate::codebase::postgres::ExecutorWarningScan>>,
+    #[doc(hidden)]
+    pub nested_control_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Exact configured files whose AST comments are requested.
     pub lint_suppression_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     #[doc(hidden)]

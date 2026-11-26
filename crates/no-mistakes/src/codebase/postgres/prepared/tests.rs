@@ -222,12 +222,14 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
     let explain_only = root.join("cases/benchmarks/suppressions.sql");
     let writes_only = root.join("cases/other/outside.sql");
     let unparsed = root.join("cases/benchmarks/unparsed.sql");
+    let no_explain = root.join("cases/benchmarks/no-explain-do.sql");
     let missing = root.join("missing.sql");
     let files = [
         shared.clone(),
         explain_only.clone(),
         writes_only.clone(),
         unparsed.clone(),
+        no_explain.clone(),
         missing.clone(),
     ];
     let sources = crate::codebase::rules::source_store_for_files(&files);
@@ -241,6 +243,7 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
             postgres_sql_include: vec![
                 "example/benchmarks/update.sql".into(),
                 "cases/benchmarks/unparsed.sql".into(),
+                "cases/benchmarks/no-explain-do.sql".into(),
             ],
             postgres_write_sql_include: vec!["cases/other/outside.sql".into()],
             postgres_explain_write_rollback_paths: Arc::new(
@@ -248,6 +251,7 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
                     shared.clone(),
                     explain_only.clone(),
                     unparsed.clone(),
+                    no_explain.clone(),
                     missing.clone(),
                 ]
                 .into_iter()
@@ -282,6 +286,10 @@ fn explain_write_plans_share_sources_and_preserve_native_projection_scopes() {
     let unparsed_plans = facts.explain_write_rollback(&unparsed).unwrap();
     assert!(unparsed_plans.writes.is_empty());
     assert_eq!(unparsed_plans.unanalyzable.len(), 1);
+    assert!(facts.statements(&no_explain, None).unwrap()[0].parse_failed);
+    let no_explain_plans = facts.explain_write_rollback(&no_explain).unwrap();
+    assert!(no_explain_plans.writes.is_empty());
+    assert!(no_explain_plans.unanalyzable.is_empty());
     assert_eq!(
         facts.explain_write_rollback[&missing]
             .as_ref()

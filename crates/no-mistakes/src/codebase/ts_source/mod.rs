@@ -13,6 +13,10 @@ pub(crate) mod builtin_receivers;
 
 mod file_id_map;
 mod file_inventory;
+mod fixture_read_index;
+mod fixture_reads;
+#[doc(hidden)]
+pub use fixture_read_index::{FixtureReadIndex, FixtureReadScope};
 mod parser_diagnostic;
 mod path_order;
 mod path_remapper;

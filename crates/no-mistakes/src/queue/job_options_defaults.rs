@@ -1,5 +1,5 @@
 use super::super::extract_model::{
-    FileFacts, JobOptionEvidence, JobOptionSite, LocalQueue, QueueDefaultOptions,
+    FileFacts, JobOptionEvidence, JobOptionSite, LocalQueue, ProducerBinding, QueueDefaultOptions,
 };
 use super::super::extract_visitor::QueueVisitor;
 use super::super::source::line_number;
@@ -7,8 +7,8 @@ use super::site::{evidence_at, push_site};
 use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
-use std::collections::HashMap;
-use std::path::PathBuf;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 #[path = "job_options_default_read.rs"]
 mod read;
@@ -101,9 +101,18 @@ enum IndexedDefaults {
 pub(super) struct DefaultsIndex {
     by_file_queue: HashMap<(PathBuf, String), IndexedDefaults>,
     by_declaration: HashMap<(PathBuf, u32), JobOptionEvidence>,
+    unresolved_declarations: HashMap<PathBuf, HashSet<u32>>,
 }
 
 impl DefaultsIndex {
+    pub(super) fn has_unresolved_queue(&self, path: &Path, site: &JobOptionSite) -> bool {
+        matches!(site.binding, Some(ProducerBinding::Local(declaration))
+            if self
+                .unresolved_declarations
+                .get(path)
+                .is_some_and(|declarations| declarations.contains(&declaration)))
+    }
+
     pub(super) fn lookup_evidence(
         &self,
         site: &JobOptionSite,
@@ -137,9 +146,14 @@ pub(super) fn resolved_default_queue_name(
 pub(super) fn index_defaults(facts: &HashMap<PathBuf, FileFacts>) -> DefaultsIndex {
     let mut by_file_queue: HashMap<(PathBuf, String), IndexedDefaults> = HashMap::new();
     let mut by_declaration: HashMap<(PathBuf, u32), JobOptionEvidence> = HashMap::new();
+    let mut unresolved_declarations: HashMap<PathBuf, HashSet<u32>> = HashMap::new();
     for (path, file) in facts {
         for defaults in &file.queue_defaults {
             let Some(name) = resolved_default_queue_name(file, defaults) else {
+                unresolved_declarations
+                    .entry(path.clone())
+                    .or_default()
+                    .insert(defaults.declaration);
                 continue;
             };
             by_declaration.insert(
@@ -155,5 +169,6 @@ pub(super) fn index_defaults(facts: &HashMap<PathBuf, FileFacts>) -> DefaultsInd
     DefaultsIndex {
         by_file_queue,
         by_declaration,
+        unresolved_declarations,
     }
 }

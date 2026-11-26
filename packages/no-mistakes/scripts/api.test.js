@@ -639,6 +639,9 @@ test("GitHub Actions run command policy exports named option types", () => {
 test("changes diff and planner changes have exported public contracts", () => {
   const changes = readFileSync(join(packageRoot, "changes-types.d.ts"), "utf8");
   assert.match(changes, /export interface KeyChanges/);
+  assert.match(changes, /export type FixtureAttributePaths = Record<string, string\[\]>/);
+  assert.match(changes, /attributePaths\?: FixtureAttributePaths/);
+  assert.match(changes, /assertPureJsonLoader\?: boolean;/);
   assert.match(changes, /export interface ChangesDiffOptions/);
   assert.match(changes, /export type ChangesReport/);
   assert.match(changes, /changedFiles\?: string\[\];/);

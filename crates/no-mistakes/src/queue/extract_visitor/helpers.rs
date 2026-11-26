@@ -13,6 +13,7 @@ impl QueueVisitor<'_> {
         let source = js_literal(&import.source).into_owned();
         let queue_pkg = is_queue_package(&source);
         self.facts.has_queue_package_import |= queue_pkg;
+        self.note_rate_limit_import(import, queue_pkg);
         let Some(specifiers) = &import.specifiers else {
             return;
         };
@@ -112,6 +113,7 @@ impl QueueVisitor<'_> {
         self.worker_rate_limit
             .note_worker_span(new_expr.span.start, index);
         if let Some(arg) = new_expr.arguments.get(1) {
+            self.note_constructor_rate_limit_processor(&new_expr.callee, arg, index);
             let span = arg.span();
             self.processor_spans.push((span.start, span.end, index));
         }

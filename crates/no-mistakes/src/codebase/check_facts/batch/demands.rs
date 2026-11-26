@@ -16,6 +16,7 @@ pub(super) fn demands_by_path(
             forbidden_call_arguments: request.plan.forbidden_call_arguments.clone(),
             graph: request.plan.graph,
             call_site_paths: request.plan.call_site_paths.clone(),
+            nested_control_paths: request.plan.nested_control_paths.clone(),
             vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
             csp_allowed_origins_paths: request.plan.csp_allowed_origins_paths.clone(),
             test_reliability_paths: request.plan.test_reliability_paths.clone(),
@@ -63,6 +64,7 @@ pub(super) fn demands_by_path(
             .vitest_default_exclude_paths
             .iter()
             .chain(request.plan.csp_allowed_origins_paths.iter())
+            .chain(request.plan.nested_control_paths.iter())
             .chain(request.plan.test_reliability_paths.keys())
             .filter(|path| !plans.contains_key(path.as_path()))
             .cloned()
@@ -92,6 +94,7 @@ pub(super) fn demands_by_path(
         supplemental.retain(|path| !is_owned_config(path));
         if !supplemental.is_empty() {
             let supplemental_plan = CheckFactPlan {
+                nested_control_paths: request.plan.nested_control_paths.clone(),
                 vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
                 csp_allowed_origins_paths: request.plan.csp_allowed_origins_paths.clone(),
                 test_reliability_paths: request.plan.test_reliability_paths.clone(),
