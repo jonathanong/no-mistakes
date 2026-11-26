@@ -40,17 +40,26 @@ pub(super) fn legacy_policy(rule: &RuleDef) -> Result<Option<Unanalyzable>> {
             _ => None,
         }
     } else {
-        match value.trim().to_ascii_lowercase().as_str() {
-            "fail" | "" => Some(Unanalyzable::Report),
-            "report" if rule.rule == "postgres-grouping-not-aggregation" => {
-                Some(Unanalyzable::Advise)
-            }
-            "advise" => Some(Unanalyzable::Advise),
-            "ignore" => Some(Unanalyzable::Ignore),
-            _ => None,
-        }
+        normalized_sql_policy(
+            value,
+            (rule.rule == "postgres-grouping-not-aggregation").then_some(Unanalyzable::Advise),
+        )
     };
     Ok(mode)
+}
+
+pub(in super::super) fn valid_project_sql_policy(value: &str) -> bool {
+    normalized_sql_policy(value, Some(Unanalyzable::Report)).is_some()
+}
+
+fn normalized_sql_policy(value: &str, report_mode: Option<Unanalyzable>) -> Option<Unanalyzable> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "fail" | "" => Some(Unanalyzable::Report),
+        "report" => report_mode,
+        "advise" => Some(Unanalyzable::Advise),
+        "ignore" => Some(Unanalyzable::Ignore),
+        _ => None,
+    }
 }
 
 pub(crate) fn validate_low_alias(rule: &RuleDef) -> Result<()> {

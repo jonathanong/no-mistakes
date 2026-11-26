@@ -100,7 +100,9 @@ projects:
 rule `options.sqlInclude`, `options.include`, and `schemaCatalogPath` are
 repository-relative. `importSpecifier` and `unanalyzableSql` are not paths.
 Project-level `postgres.unanalyzableSql` retains its existing SQL-specific
-name, value vocabulary, and inheritance behavior for PostgreSQL rules. The
+name and inheritance behavior for PostgreSQL rules. Config load accepts
+`report`, `advise`, `ignore`, and the legacy `fail` and empty string values.
+It checks policy names case-insensitively and ignores surrounding whitespace. The
 shared `unanalyzable` policy (`report`, `advise`, or `ignore`) is configured at
 the repository or rule-application level; it is separate from this legacy
 project setting.

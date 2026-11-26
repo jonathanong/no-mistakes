@@ -62,7 +62,7 @@ fn invalid_root_and_project_configurations_exit_two_before_analysis() {
         assert!(stderr.contains(expected), "{stderr}");
     }
 
-    for name in ["valid.yml", "empty.yml"] {
+    for name in ["valid.yml", "empty.yml", "legacy-sql-policies.yml"] {
         let valid = check(&root, Some(name));
         assert_eq!(valid.status.code(), Some(0), "{name}: {:?}", valid.stderr);
         assert!(serde_json::from_slice::<serde_json::Value>(&valid.stdout).is_ok());
