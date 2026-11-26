@@ -1,15 +1,16 @@
 use super::env_read;
-use crate::codebase::rules::github_actions_download_integrity::words::{parse, Command, Word};
+use crate::codebase::rules::github_actions_download_integrity::words::{parse, Command};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Range;
 
 mod branch;
+mod consume;
 mod control;
 mod eval;
 mod mutations;
 mod scan;
 
-use control::{drop_leading_bangs, drop_leading_word, keyword, unsupported_control, update_double_bracket};
+use control::{keyword, unsupported_control, update_double_bracket};
 
 pub(super) fn excluded_on_merge_group(
     script: &str,
@@ -26,13 +27,18 @@ pub(super) fn excluded_on_merge_group(
         return Vec::new();
     }
     let positions: Vec<_> = script.char_indices().map(|(index, _)| index).collect();
+    let to_byte = |pos: usize| positions.get(pos).copied().unwrap_or(script.len());
     let heredocs: Vec<_> = parsed
         .heredoc_ranges
         .iter()
-        .map(|range| {
-            let start = positions.get(range.start).copied().unwrap_or(script.len());
-            let end = positions.get(range.end).copied().unwrap_or(script.len());
-            start..end
+        .map(|range| to_byte(range.start)..to_byte(range.end))
+        .collect();
+    let heredoc_bodies: Vec<_> = parsed
+        .heredoc_bodies
+        .iter()
+        .map(|body| scan::HeredocSpan {
+            range: to_byte(body.range.start)..to_byte(body.range.end),
+            quoted: body.quoted,
         })
         .collect();
     let mut scan = GuardScan {
@@ -40,6 +46,7 @@ pub(super) fn excluded_on_merge_group(
         commands: &parsed.commands,
         positions: &positions,
         heredocs,
+        heredoc_bodies,
         env,
         mutated_vars: BTreeSet::new(),
         mutated_all: false,
@@ -60,20 +67,21 @@ pub(super) fn references_outside(script: &str, name: &str, excluded: &[Range<usi
     env_read::references(&script[cursor..], name)
 }
 
-pub(super) struct GuardScan<'a> {
-    pub(super) script: &'a str,
-    pub(super) commands: &'a [Command],
-    pub(super) positions: &'a [usize],
-    pub(super) heredocs: Vec<Range<usize>>,
-    pub(super) env: &'a BTreeMap<String, String>,
-    pub(super) mutated_vars: BTreeSet<String>,
-    pub(super) mutated_all: bool,
-    pub(super) excluded: Vec<Range<usize>>,
+struct GuardScan<'a> {
+    script: &'a str,
+    commands: &'a [Command],
+    positions: &'a [usize],
+    heredocs: Vec<Range<usize>>,
+    heredoc_bodies: Vec<scan::HeredocSpan>,
+    env: &'a BTreeMap<String, String>,
+    mutated_vars: BTreeSet<String>,
+    mutated_all: bool,
+    excluded: Vec<Range<usize>>,
 }
 
-pub(super) struct BranchState {
-    pub(super) depth: usize,
-    pub(super) in_double_bracket: bool,
+struct BranchState {
+    depth: usize,
+    in_double_bracket: bool,
 }
 
 impl<'a> GuardScan<'a> {
@@ -103,7 +111,9 @@ impl<'a> GuardScan<'a> {
                 break;
             }
             mutations::record_mutations(
-                slice,
+                self.script,
+                self.slice_range(idx),
+                &self.heredoc_bodies,
                 &self.commands[idx].words,
                 &mut self.mutated_vars,
                 &mut self.mutated_all,
@@ -112,7 +122,7 @@ impl<'a> GuardScan<'a> {
         }
     }
 
-    pub(super) fn slice_range(&self, idx: usize) -> Range<usize> {
+    fn slice_range(&self, idx: usize) -> Range<usize> {
         let start = self.positions[self.commands[idx].anchor];
         let end = self
             .commands
@@ -121,74 +131,15 @@ impl<'a> GuardScan<'a> {
         start..end
     }
 
-    pub(super) fn slice(&self, idx: usize) -> &'a str {
+    fn slice(&self, idx: usize) -> &'a str {
         self.script[self.slice_range(idx)].trim_start()
     }
 
-    pub(super) fn has_arithmetic_at(&self, idx: usize) -> bool {
+    fn has_arithmetic_at(&self, idx: usize) -> bool {
         scan::has_arithmetic_in_range(self.script, self.slice_range(idx), &self.heredocs)
     }
 
-    pub(super) fn consume_nested(
-        &mut self,
-        slice: &str,
-        words: &[Word],
-        record: bool,
-        state: &mut BranchState,
-    ) -> bool {
-        let (slice, words) = match keyword(slice) {
-            "then" => (slice[4..].trim_start(), drop_leading_word(words, "then")),
-            "else" => (slice[4..].trim_start(), drop_leading_word(words, "else")),
-            "elif" if state.depth > 0 => (slice[4..].trim_start(), drop_leading_word(words, "elif")),
-            _ => (slice, words),
-        };
-        self.consume_body(slice, words, record, state)
-    }
-
-    pub(super) fn consume_body(
-        &mut self,
-        mut slice: &str,
-        mut words: &[Word],
-        record: bool,
-        state: &mut BranchState,
-    ) -> bool {
-        let was_in_bracket = state.in_double_bracket;
-        update_double_bracket(words, &mut state.in_double_bracket);
-        loop {
-            let trimmed = slice
-                .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
-            match keyword(trimmed) {
-                "if" => {
-                    state.depth += 1;
-                    slice = trimmed[2..].trim_start();
-                    words = drop_leading_word(drop_leading_bangs(words), "if");
-                }
-                "fi" if state.depth > 0 => {
-                    state.depth -= 1;
-                    slice = trimmed[2..].trim_start();
-                    words = drop_leading_word(drop_leading_bangs(words), "fi");
-                    if words.is_empty() {
-                        if record && scan::has_complex_expansion(slice) {
-                            self.mutated_all = true;
-                        }
-                        return true;
-                    }
-                }
-                _ => {
-                    if unsupported_control(trimmed, was_in_bracket) {
-                        return false;
-                    }
-                    if record {
-                        mutations::record_mutations(
-                            slice,
-                            words,
-                            &mut self.mutated_vars,
-                            &mut self.mutated_all,
-                        );
-                    }
-                    return true;
-                }
-            }
-        }
+    fn has_complex_expansion(&self, range: Range<usize>) -> bool {
+        scan::has_complex_expansion_in_range(self.script, range, &self.heredoc_bodies)
     }
 }

@@ -34,8 +34,8 @@ fn quoted_and_tab_stripped_delimiters_close_in_order() {
     assert!(ascii_first.strip_tabs);
     let second: Vec<_> = opener.rsplit_once("<<").unwrap().1.chars().collect();
     assert_eq!(
-        char_delimiter(&second, DelimiterStyle::LeadingQuote),
-        ("SECOND".into(), second.len())
+        char_delimiter_quoted(&second),
+        ("SECOND".into(), second.len(), true)
     );
     assert_eq!(
         char_delimiter(&second, DelimiterStyle::StripQuotes),
@@ -132,4 +132,19 @@ fn ascii_delimiters_keep_shell_word_and_recovery_rules() {
     assert_eq!(unicode.delimiter, "EOF\u{a0}TAG");
     assert!(ascii_document(openers.next().unwrap(), false).is_none());
     assert!(ascii_document(openers.next().unwrap(), false).is_none());
+}
+
+#[test]
+fn char_delimiter_quoted_distinguishes_quoted_and_unquoted_forms() {
+    let parse = |raw: &str| {
+        let chars: Vec<char> = raw.chars().collect();
+        char_delimiter_quoted(&chars)
+    };
+    assert_eq!(parse("EOF\n"), ("EOF".into(), 3, false));
+    assert_eq!(parse(" 'EOF' > out"), ("EOF".into(), 6, true));
+    assert_eq!(parse("\"EOF\";"), ("EOF".into(), 5, true));
+    assert_eq!(parse("\\EOF\n"), ("EOF".into(), 4, true));
+    assert_eq!(parse("E'O'F\n"), ("EOF".into(), 5, true));
+    assert_eq!(parse("'EOF"), ("EOF".into(), 4, false));
+    assert_eq!(parse("\\\n"), (String::new(), 0, false));
 }

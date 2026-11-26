@@ -1,5 +1,5 @@
-use crate::codebase::shell_heredoc::{self, CarriageReturn, Document};
-use super::{flush_command, push_char, skip_arithmetic, Command, Parse, Range};
+use crate::codebase::shell_heredoc::Document;
+use super::{flush_command, push_char, skip_arithmetic, Command, HeredocBody, Parse, Range};
 
 mod comment;
 mod redirection;
@@ -20,8 +20,9 @@ struct Scan<'a> {
     quoting: Option<char>,
     current: Command,
     commands: Vec<Command>,
-    pending: Vec<Document>,
+    pending: Vec<(Document, bool)>,
     heredoc_ranges: Vec<Range<usize>>,
+    heredoc_bodies: Vec<HeredocBody>,
     unterminated: bool,
     stop: bool,
     collect_skips: bool,
@@ -55,6 +56,7 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
         commands: Vec::new(),
         pending: Vec::new(),
         heredoc_ranges: Vec::new(),
+        heredoc_bodies: Vec::new(),
         unterminated: false,
         stop: false,
         collect_skips,
@@ -75,6 +77,7 @@ pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {
         substitutions: scan.substitutions,
         skip_lines: scan.skip_lines,
         heredoc_ranges: scan.heredoc_ranges,
+        heredoc_bodies: scan.heredoc_bodies,
     }
 }
 
@@ -155,30 +158,6 @@ impl<'a> Scan<'a> {
         }
         self.index += 1;
         true
-    }
-
-    fn skip_heredocs(&mut self) {
-        let start = self.index + 1;
-        self.index = start;
-        self.line += 1;
-        for opener in self.pending.drain(..) {
-            let body = shell_heredoc::skip_body(
-                self.chars,
-                self.index,
-                opener.delimiter.chars(),
-                opener.strip_tabs,
-                CarriageReturn::BeforeNewline,
-            );
-            self.index = body.end;
-            self.line += body.newlines;
-            if !body.terminated {
-                self.unterminated = true;
-                self.stop = true;
-                break;
-            }
-        }
-        self.heredoc_ranges.push(start..self.index);
-        self.current.anchor = self.index;
     }
 
     fn whitespace(&mut self, ch: char) -> bool {
