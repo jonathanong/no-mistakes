@@ -1,7 +1,7 @@
 use super::options::Target;
-use crate::codebase::dependencies::graph::{DepGraph, KnownCallTargetRef, ResolvedCallSite};
+use crate::codebase::dependencies::graph::{DepGraph, ResolvedCallSite};
 use crate::codebase::rules::no_single_enqueue_in_loop::modules::{
-    matches_resolved, matches_resolved_candidate, ResolvedModules,
+    matches_resolved, ResolvedModules,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 
@@ -18,11 +18,9 @@ pub(super) fn target_matches(
 }
 
 pub(super) fn candidate_targets<'a>(
-    graph: &DepGraph,
     targets: &'a [Target],
     site: &ResolvedCallSite,
     ts_facts: &TsFileFacts,
-    resolved: &ResolvedModules,
 ) -> Vec<&'a Target> {
     let terminal = callee_terminal(&site.source_callee);
     let imported = imported_terminal(ts_facts, &site.source_callee);
@@ -30,19 +28,7 @@ pub(super) fn candidate_targets<'a>(
         .iter()
         .filter(|target| {
             let name = Some(target.terminal_name());
-            terminal == name
-                || imported == name
-                || site.targets().any(|candidate| {
-                    graph.candidate_matches_module_export(&target.module, &target.export, candidate)
-                        || resolved.files(&target.module).is_some_and(|files| {
-                            matches_resolved_candidate(files, &target.export, candidate.target)
-                        })
-                        || matches!(
-                            candidate.target,
-                            KnownCallTargetRef::ModuleExport { export_path, .. }
-                                if callee_terminal(export_path) == name
-                        )
-                })
+            terminal == name || imported == name
         })
         .collect()
 }

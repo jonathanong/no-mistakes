@@ -92,7 +92,7 @@ pub(super) fn scan(input: &ScanInput<'_>) -> Result<AnalysisDiagnostics> {
             }
             continue;
         }
-        let suspect = candidate_targets(graph, targets, site, ts_facts, resolved);
+        let suspect = candidate_targets(targets, site, ts_facts);
         if suspect.is_empty() {
             continue;
         }
