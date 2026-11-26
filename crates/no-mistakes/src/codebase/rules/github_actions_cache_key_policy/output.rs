@@ -1,8 +1,8 @@
 use super::output_syntax::{
-    brace_open, command_assign, heredoc_end, heredoc_start, inline_assign, shell_assignment,
-    strip_subst, unquote, var_ref,
+    brace_open, command_assign, inline_assign, shell_assignment, strip_subst, unquote, var_ref,
 };
 use super::text::{command_hashes_lockfile, shell_line};
+use crate::codebase::shell_heredoc::{line_opener, trimmed_body_lines};
 use crate::fx::{fx_set, FxHashSet};
 
 #[path = "group.rs"]
@@ -89,12 +89,11 @@ pub(super) fn events(run: &str) -> Vec<Event> {
     while index < lines.len() {
         let line = lines[index].trim();
         if !starts_group(line) {
-            if let Some((delim, strip, quoted)) = heredoc_start(line) {
-                let active = writes_output(line, &outputs);
-                index += 1;
-                while index < lines.len() && !heredoc_end(lines[index], &delim, strip) {
-                    if active {
-                        if let Some((name, value)) = inline_assign(lines[index]) {
+            if let Some((document, quoted)) = line_opener(line) {
+                let (body, consumed) = trimmed_body_lines(&lines[index + 1..], &document);
+                if writes_output(line, &outputs) {
+                    for line in body {
+                        if let Some((name, value)) = inline_assign(line) {
                             events.push(Event::Write(Write {
                                 name,
                                 value,
@@ -102,11 +101,8 @@ pub(super) fn events(run: &str) -> Vec<Event> {
                             }));
                         }
                     }
-                    index += 1;
                 }
-                if index < lines.len() {
-                    index += 1;
-                }
+                index += consumed + 1;
                 continue;
             }
         }

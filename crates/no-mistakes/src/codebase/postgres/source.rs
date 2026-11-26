@@ -49,6 +49,7 @@ mod type_facts;
 mod types;
 mod wrappers;
 pub use types::*;
+pub(super) use wrappers::explain_execution;
 
 /// Parse source text without a repository scan, catalog, or database connection.
 pub fn parse_postgres_source(source: &PostgresSqlSource) -> PostgresSqlFacts {
@@ -72,5 +73,5 @@ pub(crate) fn parse_postgres_sources_with_jobs(
     })
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2, nm_shard_postgres_source)))]
 mod tests;

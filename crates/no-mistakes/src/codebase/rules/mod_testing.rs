@@ -6,6 +6,8 @@ pub mod test_fixture_size_cap;
 pub mod test_no_dependency_pins;
 pub mod test_no_live_repository_scan;
 pub mod test_no_unmocked_dynamic_imports;
+#[doc(hidden)]
+pub mod test_reliability;
 pub mod vitest_ci_path_coverage;
 pub mod vitest_default_excludes;
 pub mod vitest_project_mapping;

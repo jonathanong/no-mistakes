@@ -35,6 +35,9 @@ mod cli_check_rule_severity;
 #[path = "cli_rule_recall_audit.rs"]
 mod cli_rule_recall_audit;
 
+#[path = "cli_check_cross_package_relative_imports.rs"]
+mod cli_check_cross_package_relative_imports;
+
 #[path = "cli_shell_compatibility.rs"]
 mod cli_shell_compatibility;
 
@@ -154,6 +157,8 @@ mod cli_check_rules_unconstructed_error_class;
 mod cli_check_rules_version_pin;
 #[path = "cli_check_rules_workflow_topology.rs"]
 mod cli_check_rules_workflow_topology;
+#[path = "cli_check_test_reliability.rs"]
+mod cli_check_test_reliability;
 #[path = "cli_check_unused_disable_directives.rs"]
 mod cli_check_unused_disable_directives;
 #[path = "cli_gha_snapshot_action_input_policy.rs"]
@@ -174,6 +179,8 @@ mod cli_gha_snapshot_env_policy;
 mod cli_gha_snapshot_job_permissions;
 #[path = "cli_gha_snapshot_job_timeouts.rs"]
 mod cli_gha_snapshot_job_timeouts;
+#[path = "cli_gha_snapshot_no_insta_snapshot_updates.rs"]
+mod cli_gha_snapshot_no_insta_snapshot_updates;
 #[path = "cli_gha_snapshot_no_poll_wait_job.rs"]
 mod cli_gha_snapshot_no_poll_wait_job;
 #[path = "cli_gha_snapshot_pinned_hash.rs"]
@@ -355,6 +362,9 @@ mod cli_check_queue_wait_wrappers;
 #[path = "cli_check_queue_required_options.rs"]
 mod cli_check_queue_required_options;
 
+#[path = "cli_check_queue_followups.rs"]
+mod cli_check_queue_followups;
+
 #[path = "cli_check_queue_priority.rs"]
 mod cli_check_queue_priority;
 
@@ -364,6 +374,9 @@ mod cli_check_queue_diagnostics;
 #[path = "cli_check_queue_rate_limit.rs"]
 mod cli_check_queue_rate_limit;
 
+#[path = "cli_check_queue_shared_rate_limit.rs"]
+mod cli_check_queue_shared_rate_limit;
+
 #[path = "cli_check_rules_no_single_enqueue_in_loop.rs"]
 mod cli_check_rules_no_single_enqueue_in_loop;
 
@@ -372,3 +385,6 @@ mod cli_suppression_index;
 
 #[path = "cli_queue_factory_wrappers.rs"]
 mod cli_queue_factory_wrappers;
+
+#[path = "cli_react_nested_controls_snapshot.rs"]
+mod cli_react_nested_controls_snapshot;

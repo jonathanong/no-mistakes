@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    include: [src/controls.ts]
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: '@example/db'
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      transactionExecutorTypeNames: [TransactionQuery]
+      checks:
+        row-lock-unwritten-relation: fail
+        table-lock: ignore
+        constant-advisory-lock: ignore
+        row-lock-outside-transaction: ignore
+        redundant-prelock: advise
+      unanalyzableSql: advise

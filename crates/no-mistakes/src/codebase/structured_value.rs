@@ -1,7 +1,10 @@
+mod document_spans;
 mod merge_keys;
+mod merge_locations;
+mod plain_merge_scan;
 
 pub(crate) use merge_keys::expand_merge_keys;
-use merge_keys::{expand_merge_keys_indexed, merge_line};
+use merge_locations::MergeLocations;
 use serde::Deserialize;
 use serde_yaml::Value;
 use std::borrow::Cow;
@@ -11,13 +14,40 @@ fn expand_with_context(value: &mut Value) -> Result<(), String> {
     expand_merge_keys(value).map_err(|error| merge_error(&error))
 }
 
-pub(crate) fn expand_yaml_mapping_if_merged(value: &Value) -> Result<Cow<'_, Value>, String> {
-    if value.get("<<").is_none() {
+pub(crate) fn expand_yaml_mapping_if_merged<'a>(
+    value: &'a Value,
+    source: Option<&str>,
+) -> Result<Cow<'a, Value>, String> {
+    if !contains_merge(value) {
         return Ok(Cow::Borrowed(value));
     }
     let mut expanded = value.clone();
-    expand_with_context(&mut expanded)?;
+    if let Some(source) = source {
+        MergeLocations::parse(source)
+            .expand(0, &mut expanded)
+            .map_err(|(_, error)| merge_error(&error))?;
+    } else {
+        expand_with_context(&mut expanded)?;
+    }
     Ok(Cow::Owned(expanded))
+}
+
+fn contains_merge(value: &Value) -> bool {
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            Value::Mapping(mapping) => {
+                if mapping.contains_key("<<") {
+                    return true;
+                }
+                pending.extend(mapping.values());
+            }
+            Value::Sequence(items) => pending.extend(items),
+            Value::Tagged(tagged) => pending.push(&tagged.value),
+            _ => {}
+        }
+    }
+    false
 }
 
 fn merge_error(error: &str) -> String {
@@ -35,14 +65,27 @@ pub(crate) struct YamlDocuments {
 /// Other paths use `serde_yaml`, then expand YAML 1.1 merge keys (`<<`).
 /// Parse failures return a diagnostic message instead of a silent skip.
 pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String> {
+    parse_structured_value_located(path, source).map_err(|(line, message)| match line {
+        Some(line) => format!("{message} at line {line}"),
+        None => message,
+    })
+}
+
+pub(crate) fn parse_structured_value_located(
+    path: &Path,
+    source: &str,
+) -> Result<Value, (Option<usize>, String)> {
     if is_jsonc_path(path) {
-        parse_jsonc(source)
-    } else {
-        let mut value: Value = serde_yaml::from_str(source)
-            .map_err(|error| format!("failed to parse YAML ({error})"))?;
-        expand_with_context(&mut value)?;
-        Ok(value)
+        return parse_jsonc(source).map_err(|message| (None, message));
     }
+    let mut value: Value = serde_yaml::from_str(source)
+        .map_err(|error| (None, format!("failed to parse YAML ({error})")))?;
+    if contains_merge(&value) {
+        MergeLocations::parse(source)
+            .expand(0, &mut value)
+            .map_err(|(line, error)| (Some(line), merge_error(&error)))?;
+    }
+    Ok(value)
 }
 
 /// Every YAML document in `source`. Documents parsed before a syntax error
@@ -50,15 +93,19 @@ pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String
 pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
     let mut values = Vec::new();
     let mut errors = Vec::new();
+    let mut locations = None;
     for (doc_index, document) in serde_yaml::Deserializer::from_str(source).enumerate() {
         match Value::deserialize(document) {
-            Ok(mut value) => match expand_merge_keys_indexed(&mut value) {
-                Ok(()) => values.push(value),
-                Err((merge_index, error)) => errors.push((
-                    merge_line(source, doc_index, merge_index),
-                    merge_error(&error),
-                )),
-            },
+            Ok(mut value) => {
+                if contains_merge(&value) {
+                    let locations = locations.get_or_insert_with(|| MergeLocations::parse(source));
+                    if let Err((line, error)) = locations.expand(doc_index, &mut value) {
+                        errors.push((line, merge_error(&error)));
+                        continue;
+                    }
+                }
+                values.push(value);
+            }
             Err(error) => {
                 let reported = error
                     .location()
@@ -128,5 +175,7 @@ fn yaml_number(number: serde_json::Number) -> Value {
         .unwrap_or(Value::Null)
 }
 
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod scan_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

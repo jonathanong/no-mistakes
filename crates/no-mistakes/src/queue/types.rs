@@ -78,6 +78,13 @@ impl fmt::Display for Severity {
     }
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+pub enum DiagnosticKind {
+    AnalysisNote,
+    CheckAbstention,
+    WorkerRateLimitUnresolved,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Diagnostic {
@@ -85,6 +92,8 @@ pub struct Diagnostic {
     pub file: String,
     pub line: usize,
     pub message: String,
+    #[serde(skip)]
+    pub kind: DiagnosticKind,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

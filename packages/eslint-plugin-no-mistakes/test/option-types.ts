@@ -3,6 +3,7 @@ import plugin, {
   type TestNoWallTimeAssertionsOptions,
   type NoLocaleLessDateFormatOptions,
   type PlaywrightTestTimeoutCapOptions,
+  type PlaywrightNoRawScrollPaginationOptions,
   type PostgresNoExecutorAdapterMode,
   type PostgresNonWritingCallee,
   type PostgresNoExecutorAdapterOptions,
@@ -87,3 +88,15 @@ export const wallTimeOptions: TestNoWallTimeAssertionsOptions = { allowedPaths: 
 export const defaultWallTimeOptions: pluginRequire.TestNoWallTimeAssertionsOptions = {};
 // @ts-expect-error Allowed benchmark paths must be strings.
 export const invalidWallTimeOptions: TestNoWallTimeAssertionsOptions = { allowedPaths: [1] };
+
+export const paginationOptions: PlaywrightNoRawScrollPaginationOptions = {
+  cursorParams: ["after"],
+  scrollHelper: "scrollToLoadMore",
+  sentinelLocatorNames: ["sentinel"],
+  sentinelTestIds: ["load-more"],
+};
+export const defaultPaginationOptions: pluginRequire.PlaywrightNoRawScrollPaginationOptions = {};
+export const invalidSentinelTestIds: PlaywrightNoRawScrollPaginationOptions = {
+  // @ts-expect-error Test IDs must be strings.
+  sentinelTestIds: [true],
+};

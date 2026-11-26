@@ -9,6 +9,12 @@ test("queue factory configuration selectors are public and exported", () => {
     "QueueEnqueueFactoryOptions",
     "QueueFactoriesOptions",
     "QueueFactories",
+    "QueueJobRetentionKey",
+    "QueueUnboundedJobRetentionOptions",
+    "QueueUnboundedJobRetentionConfig",
+    "QueueJobStateAsRecordOptions",
+    "QueueJobStateAsRecordConfig",
+    "QueueIncludeTestsConfig",
   ]) {
     assert.match(types, new RegExp(`export (?:type|interface) ${name}\\b`));
   }

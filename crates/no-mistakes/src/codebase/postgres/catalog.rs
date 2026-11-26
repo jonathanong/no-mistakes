@@ -71,6 +71,7 @@ pub struct SchemaCatalog {
     current_database: Option<String>,
     tables: BTreeMap<String, ArbiterTable>,
     model_tables: BTreeMap<String, CatalogTable>,
+    descendant_presence: BTreeMap<String, bool>,
     relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
     trigger_function_identities: BTreeMap<String, BTreeMap<String, String>>,

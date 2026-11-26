@@ -5,7 +5,6 @@ use super::should_store_source;
 use super::CheckFactVariant;
 use std::path::Path;
 use std::sync::Arc;
-
 pub(crate) fn collect_file_facts_from_program_with_discovery(
     variant: &CheckFactVariant<'_>,
     path: &Path,
@@ -13,10 +12,10 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
+    use crate::codebase::rules::nested_controls;
     let root = variant.root;
     let plan = variant.plan;
     let playwright = variant.playwright;
-    let collect_tests = variant.collect_tests;
     let mut scoped_executors = Default::default();
     let embedded_sql =
         embedded::prepared_with_scopes(root, path, source, program, plan, &mut scoped_executors);
@@ -42,20 +41,19 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
             || super::sql_identifier::policy_selected(root, path, plan))
         .then(|| Arc::<str>::from(source))
     });
-    let super::prepared_program::PreparedProgramFacts { ts, semantic } =
-        super::prepared_program::collect(
-            root,
-            path,
-            super::prepared_program::Demand {
-                request: plan,
-                ts: ts_plan,
-            },
-            playwright,
-            source,
-            program,
-            stored_source.clone(),
-        );
-
+    let prepared = super::prepared_program::collect(
+        root,
+        path,
+        super::prepared_program::Demand {
+            request: plan,
+            ts: ts_plan,
+        },
+        playwright,
+        source,
+        program,
+        stored_source.clone(),
+    );
+    let ts = prepared.ts;
     let react = ((plan.react
         && crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path))
         || plan.graph.react)
@@ -79,7 +77,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
             path,
             program,
             source,
-            collect_tests,
+            variant.collect_tests,
         )
     });
     let integration_runner_config = plan
@@ -120,7 +118,8 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     let playwright_static_exports = playwright_fetch
         .as_ref()
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
-    let playwright = collect_playwright_facts(path, program, source, playwright, &semantic);
+    let playwright =
+        collect_playwright_facts(path, program, source, playwright, &prepared.semantic);
     let query_annotation = annotation::collect(root, path, source, program, plan, &embedded_sql);
     let query_annotation_heads = (plan.query_annotation_heads
         || !head_candidates.is_empty()
@@ -149,7 +148,10 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     );
     let symbols = ts.symbols.clone();
     CheckFileFacts {
+        nested_controls: nested_controls::collect(path, source, program, plan),
         fact_extraction_panicked: false,
+        test_reliability: prepared.test_reliability,
+        fixture_initializers: prepared.fixture_initializers,
         lint_suppressions: plan.collect_lint_suppressions(path, program, source),
         vitest_default_excludes: if plan.vitest_default_exclude_paths.contains(path) {
             crate::codebase::rules::vitest_default_excludes::collect(program, source)

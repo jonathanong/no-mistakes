@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    testInclude: ["tests/[browser"]
+rules:
+  - rule: playwright-no-serial
+    scope: repository

@@ -17,6 +17,9 @@ Both default off. See
 and
 [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
 
+Enable [`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
+to catch invalid Node export target prefixes in selected manifests before building packages.
+
 Enabled TS/JS checks share one source inventory and one parse per file for their
 combined fact demand. Resolution results, including unresolved imports, are
 memoized within the request. Analysis data is discarded when the request ends.
@@ -26,6 +29,9 @@ with glob `roots`, `excludeRoots`, and `forbiddenFiles` to keep production code
 from reaching tests transitively. Per-root `exceptions` allow specified file
 targets without pruning other reachable dependencies. The CLI uses the shared
 canonical graph and resolver for these checks.
+
+Configure [`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
+to flag write plans that can persist in explicitly selected standalone SQL scripts.
 
 The `postgres-sql-statement-policy` rule can ban extension version pins and
 cascading drops through `options.bannedClauses`. The setting applies to matching
@@ -73,6 +79,10 @@ and [playwright-coverage](../rules/playwright-coverage.md#effort).
 checked, and other ID expressions use the selected unanalyzable policy. This
 rule remains enabled when `tests.playwright.selectors.htmlIds` is `false`. See
 [the rule](../rules/playwright-unique-html-ids.md#effort).
+Enable [`react-no-nested-buttons-and-links`](../rules/react-no-nested-buttons-and-links.md) to check native HTML buttons and links in selected JSX and TSX files. The finding points to the inner control.
+Configure [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
+to report unconditional Darwin imports in selected Swift test files.
+
 For `nextjs-no-caching`, `low` checks literal cache settings without constant
 propagation or configuration wrapper inference. Indirect settings follow the
 shared unanalyzable policy; literal violations, directives, and cache API checks
@@ -347,6 +357,11 @@ when both exist. Configure PR limits, exclusion globs, and ecosystem exemptions
 as needed. Exempt ecosystems skip every check, including the PR limit.
 Unreadable or malformed input appears in the JSON `incomplete` list.
 
+Enable [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md)
+to report relative imports whose resolved targets cross declared workspace
+package boundaries. Select the importing files with the rule's scope and path
+filters.
+
 Enable [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) for
 scripts targeting Bash before 4.4 and
 [`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md) for zsh scripts.
@@ -372,6 +387,12 @@ unreadable or malformed selected sources and unresolved effective settings
 appear in the JSON `incomplete` list. Declaration sources honor each
 application's include/exclude filters and source suppressions. The rule never
 imports or executes Vitest configuration.
+
+Enable [`test-no-retries`](../rules/test-no-retries.md) and
+[`playwright-no-serial`](../rules/playwright-no-serial.md) to find retry and
+serial settings that can hide flaky tests. Run `no-mistakes check --root .
+--format json` to see findings at the setting, call, or workflow step. Use the
+rule options to document exceptions and name shell test commands.
 
 PostgreSQL executor selection accepts `excludeExecutorNames` in rule options and
 `projects.<name>.postgres.executors`. Exclusions apply after replacement or

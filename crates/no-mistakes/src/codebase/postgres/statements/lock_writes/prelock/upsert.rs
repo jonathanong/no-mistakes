@@ -1,15 +1,22 @@
 use super::super::helpers::{generated, generated_name};
 use super::{and_keys, plain_assignments, plain_value, Key, PlaceholderPositions, RowAccess};
-use crate::codebase::postgres::idents::{ident_key, object_name_identity};
+use crate::codebase::postgres::idents::{ident_key, object_name_identity, unwrap_expr};
 use sqlparser::ast::{
-    ConflictTarget, Insert, ObjectNamePart, OnConflict, OnConflictAction, OnInsert, SetExpr,
-    TableObject,
+    ConflictTarget, Expr, Insert, ObjectNamePart, OnConflict, OnConflictAction, OnInsert, Query,
+    SetExpr, Spanned, TableObject,
 };
+use sqlparser::tokenizer::{Token, TokenWithSpan};
+
+pub(super) struct UpsertKeys {
+    pub(super) keys: Vec<RowAccess>,
+    pub(super) unconditional: bool,
+}
 
 pub(super) fn upsert_keys(
     insert: &Insert,
     positions: PlaceholderPositions<'_>,
-) -> Option<Vec<RowAccess>> {
+    tokens: &[TokenWithSpan],
+) -> Option<UpsertKeys> {
     let TableObject::TableName(relation) = &insert.table else {
         return None;
     };
@@ -34,6 +41,8 @@ pub(super) fn upsert_keys(
     if source.with.is_some()
         || source.limit_clause.is_some()
         || source.fetch.is_some()
+        || has_overriding_user_value(insert, source, tokens)
+        || !is_plain_single_column_conflict_target(source, tokens)
         || generated_name(relation, positions)
         || generated(key, positions)
         || !plain_assignments(&update.assignments)
@@ -46,18 +55,21 @@ pub(super) fn upsert_keys(
         .table_alias
         .as_ref()
         .map_or_else(|| relation.clone(), |alias| ident_key(&alias.alias));
+    let unconditional = update.selection.is_none();
     if let Some(predicate) = &update.selection {
         and_keys(predicate, &qualifier, positions, &mut Vec::new())?;
     }
     let target_index = insert.columns.iter().position(|name| {
         matches!(name.0.as_slice(), [ObjectNamePart::Identifier(id)] if ident_key(id) == column)
     })?;
-    values
+    let keys = values
         .rows
         .iter()
         .map(|row| {
             if row.content.len() != insert.columns.len()
-                || !row.content.iter().all(|value| plain_value(value).is_some())
+                || !row.content.iter().enumerate().all(|(index, value)| {
+                    plain_value(value).is_some() || (index != target_index && is_default(value))
+                })
             {
                 return None;
             }
@@ -70,5 +82,56 @@ pub(super) fn upsert_keys(
                 .row(relation.clone()),
             )
         })
-        .collect()
+        .collect::<Option<Vec<_>>>()?;
+    Some(UpsertKeys {
+        keys,
+        unconditional,
+    })
+}
+
+fn is_default(value: &Expr) -> bool {
+    matches!(unwrap_expr(value), Expr::Identifier(id) if id.quote_style.is_none() && id.value.eq_ignore_ascii_case("default"))
+}
+
+fn has_overriding_user_value(insert: &Insert, source: &Query, tokens: &[TokenWithSpan]) -> bool {
+    let start = insert.insert_token.0.span.start;
+    let end = source.span().start;
+    let first = tokens.partition_point(|token| token.span.start < start);
+    let last = tokens.partition_point(|token| token.span.start < end);
+    let (mut prev2, mut prev1) = (None::<&str>, None::<&str>);
+    for token in &tokens[first..last] {
+        if matches!(token.token, Token::Whitespace(_)) {
+            continue;
+        }
+        if let Token::Word(word) = &token.token {
+            if word.quote_style.is_none() {
+                if prev2.is_some_and(|w| w.eq_ignore_ascii_case("overriding"))
+                    && prev1.is_some_and(|w| w.eq_ignore_ascii_case("user"))
+                    && word.value.eq_ignore_ascii_case("value")
+                {
+                    return true;
+                }
+                (prev2, prev1) = (prev1, Some(word.value.as_str()));
+                continue;
+            }
+        }
+        (prev2, prev1) = (None, None);
+    }
+    false
+}
+
+fn is_plain_single_column_conflict_target(source: &Query, tokens: &[TokenWithSpan]) -> bool {
+    let start = source.span().end;
+    let first = tokens.partition_point(|token| token.span.start < start);
+    let mut iter = tokens[first..]
+        .iter()
+        .map(|token| &token.token)
+        .filter(|token| !matches!(token, Token::Whitespace(_)));
+    let kw = |token: Option<&Token>, expected: &str| matches!(token, Some(Token::Word(word)) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected));
+    kw(iter.next(), "on")
+        && kw(iter.next(), "conflict")
+        && matches!(iter.next(), Some(Token::LParen))
+        && matches!(iter.next(), Some(Token::Word(_)))
+        && matches!(iter.next(), Some(Token::RParen))
+        && kw(iter.next(), "do")
 }

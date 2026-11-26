@@ -1,8 +1,7 @@
 use anyhow::Result;
 use no_mistakes::cli::{print_json, Format};
 use no_mistakes::queue::{
-    format_diagnostic, is_worker_rate_limit_unresolved_diagnostic, CheckFinding, CheckReport,
-    Diagnostic, Edge,
+    format_diagnostic, is_check_warning, CheckFinding, CheckReport, Diagnostic, Edge,
 };
 use std::collections::BTreeSet;
 
@@ -59,7 +58,7 @@ fn print_edge_paths(edges: &[Edge]) {
 
 pub(super) fn print_diagnostics_stderr(diagnostics: &[Diagnostic], include_all: bool) {
     for diagnostic in diagnostics {
-        if !include_all && !is_worker_rate_limit_unresolved_diagnostic(diagnostic) {
+        if !include_all && !is_check_warning(diagnostic) {
             continue;
         }
         no_mistakes::diagnostics::print_stderr(format_args!("{}", format_diagnostic(diagnostic)));
@@ -91,7 +90,7 @@ pub(super) fn print_check(
             for f in findings {
                 println!("- `{}`:{} {}", f.file, f.line, f.message);
             }
-            if include_diagnostics {
+            if include_diagnostics && !diagnostics.is_empty() {
                 println!("## diagnostics");
                 for d in diagnostics {
                     println!("- `{}`:{} ({}) {}", d.file, d.line, d.severity, d.message);

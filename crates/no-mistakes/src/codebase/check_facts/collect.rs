@@ -56,7 +56,10 @@ fn collect_check_facts_inner(
         graph: plan.graph,
         call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),
+        nested_control_paths: Arc::clone(&plan.nested_control_paths),
         vitest_default_exclude_paths: Arc::clone(&plan.vitest_default_exclude_paths),
+        test_reliability_paths: Arc::clone(&plan.test_reliability_paths),
+        playwright_fixture_support: plan.playwright_fixture_support,
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
     };
@@ -95,6 +98,7 @@ fn collect_check_facts_inner(
         integration_runner_configs.extend(super::runner_config_facts(&ts));
         (ts, integration_runner_configs)
     });
+    super::playwright_provenance::project(session, root, &sources, &plan, &mut ts);
     for (path, facts) in &ts {
         if facts.fact_extraction_panicked {
             if let Some(error) = &facts.ts.operational_error {

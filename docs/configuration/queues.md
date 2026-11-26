@@ -161,10 +161,23 @@ immutable `const` binding, including another immutable `const` alias. Without
 this setting, existing enqueue roles continue to record the factory call.
 
 For fixed queues, `makeFixedEnqueue(JOB_DEF)` selects `JOB_DEF.name` from a
-local or imported `const` object literal. Named re-exports use the prepared
-module resolver. The bulk wrapper's build callback does not supply a job name;
-only the configured selector does. Resolution stays within the configured
-file universe and uses the same producer/worker graph as `queues edges`.
+local or imported `const` object literal. Named re-exports, imported queue
+constants (including `new Queue(QUEUE_NAME)` and `new Worker(QUEUE_NAME, ...)`),
+and workspace package specifiers—including `package.json` `exports` wildcards
+such as `"./*": "./*.mts"`—use the prepared module and workspace resolver,
+with or without `--tsconfig`. When a fixed-`queueName` queue has no matching
+`new Queue` or configured queue factory declaration, its queue node uses the
+deterministic virtual anchor `queue:<name>` (for example, `queue:mail#welcome`)
+instead of anchoring on an arbitrary caller file. The bulk wrapper's build
+callback does not supply a job name; only the configured selector does.
+Resolution stays within the configured file universe and uses the same
+producer/worker graph as `queues edges`. Files matched by configured `tests.*`
+scopes are excluded from every queue check and production `queues edges` by
+default (with no hardcoded filename conventions) unless opted back in with
+`queues.includeTests`; same-file raw `new Worker(<queueName>, ...)` and
+configured worker factories match producers on that queue name. See
+[Test-file scope](#test-file-scope) and
+[`queues check`](../cli/queues-check.md#producer-and-worker-matching).
 
 Property selection requires a direct, static object property. Unresolved
 values, spread objects, computed properties, non-const bindings, and mutated
@@ -185,8 +198,8 @@ JavaScript callers can name these config shapes with exported
 `QueueFactoryArgument`, `QueueEnqueueFactoryOptions`, and `QueueFactories`.
 These describe the `queues.factories` config-file value. The existing async
 queue APIs read the root configuration; no direct factory argument is added
-to `queueCheck()`. `check()` and `analyzeProject()` can also select a config
-file through their existing `config` option.
+to `queueCheck()`. `queueCheck()`, `check()`, and `analyzeProject()` accept
+a `config` path to select a file.
 
 ## Required job options
 
@@ -202,8 +215,9 @@ Factories without an `options` argument rely on queue defaults.
 defaults supplied by a same-file const object spread in its options. An unknown
 spread abstains instead of reporting a missing key when it leaves the effective
 options unresolved and the effective list for that queue is non-empty.
-`check --config <path>` and `analyzeProject({ config, ... })` use the
-selected document's required job options, including an empty policy.
+`queues check --config <path>`, `check --config <path>`, and their
+programmatic equivalents use the selected document's required job options,
+including an empty policy.
 Rust callers analyzing prepared facts can pass the selected config to the
 catalog-aware queue API.
 Same-file constant options and spreads resolve from the binding at each use.
@@ -216,6 +230,74 @@ queues:
     items: [priority]
     orders: []
 ```
+
+## Test-file scope
+
+Every queue check (`unmatched-producer`, `unmatched-worker`,
+`unbounded-job-retention`, `job-state-as-record`, `missing-job-option`,
+`invalid-job-id`, `debounce-ttl`, `scheduler-template-option`,
+`enqueue-and-wait`, `queue-cycle`, `self-dedup-enqueue`,
+`shared-queue-rate-limit`, `worker-rate-limit-per-process`, and
+`mixed-priority`) and production `queues edges` share one declared test-file
+exclusion derived from configured `tests.*` scopes (and discovered
+Vitest/Playwright configs). No hardcoded filename conventions (`*.test.*`,
+`__tests__`) are applied when no test scope is declared.
+
+Use `queues.includeTests` (default `false`) to explicitly bring configured test
+files back into the shared queue scope without removing them from `tests.*`:
+
+```yaml
+queues:
+  includeTests: ["tests/orders.test.ts"]
+```
+
+Set `queues.includeTests: true` to include all configured test files, or pass a
+list of relative glob patterns. JavaScript callers can name this configuration
+shape with the exported `QueueIncludeTestsConfig` type.
+
+## Unbounded job retention
+
+`queues.unboundedJobRetention` is opt-in and disabled by default. Set it to
+`true` to require bounded `removeOnComplete` and `removeOnFail` on every
+resolved producer and queue `defaultJobOptions`, or pass an object to select
+keys and exempt file paths:
+
+```yaml
+queues:
+  unboundedJobRetention:
+    require: [removeOnComplete, removeOnFail]
+    allowPaths: ["scripts/**"]
+```
+
+- `require` selects which of `removeOnComplete` and `removeOnFail` are checked
+  (defaults to both when enabled).
+- `allowPaths` lists relative glob patterns whose files are skipped by the
+  retention check.
+
+JavaScript callers can name this configuration shape with the exported
+`QueueJobRetentionKey`, `QueueUnboundedJobRetentionOptions`, and
+`QueueUnboundedJobRetentionConfig` types.
+See [Unbounded job retention](../rules/unbounded-job-retention.md) and
+[`queues check`](../cli/queues-check.md#unbounded-job-retention).
+
+## Queue job state as record of work
+
+`queues.jobStateAsRecord` is opt-in and disabled by default. Set it to `true`
+or pass `allowPaths` to emit advisory `job-state-as-record` findings when code
+uses queue job state or failed/completed job listings to drive retries or
+re-enqueues:
+
+```yaml
+queues:
+  jobStateAsRecord:
+    allowPaths: ["apps/admin/**"]
+```
+
+JavaScript callers can name this configuration shape with the exported
+`QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
+`QueueCheckSeverity` types.
+See [Job state as record](../rules/job-state-as-record.md) and
+[`queues check`](../cli/queues-check.md#queue-job-state-as-record-of-work).
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.

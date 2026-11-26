@@ -47,7 +47,10 @@ pub(super) fn collect_partitions(
                 .as_ref()
                 .unwrap_or(&partitions.playwright_only_tests),
             with_imports(CheckFactPlan {
+                nested_control_paths: plan.nested_control_paths.clone(),
                 vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
+                test_reliability_paths: plan.test_reliability_paths.clone(),
+                playwright_fixture_support: plan.playwright_fixture_support,
                 ..CheckFactPlan::default()
             }),
         ),
@@ -65,7 +68,10 @@ pub(super) fn collect_partitions(
     }
     if !call_tests.is_empty() {
         let mut call_plan = with_imports(CheckFactPlan {
+            nested_control_paths: plan.nested_control_paths.clone(),
             vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
+            test_reliability_paths: plan.test_reliability_paths.clone(),
+            playwright_fixture_support: plan.playwright_fixture_support,
             ..CheckFactPlan::default()
         });
         call_plan.graph.call_sites = true;
@@ -116,7 +122,9 @@ pub(super) fn collect_partitions(
     }
     if !plan.graph.is_empty()
         || !plan.call_site_paths.is_empty()
+        || !plan.nested_control_paths.is_empty()
         || !plan.vitest_default_exclude_paths.is_empty()
+        || !plan.test_reliability_paths.is_empty()
     {
         collect_test_partition(
             session,

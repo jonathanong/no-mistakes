@@ -122,8 +122,15 @@ fn redundant_prelocks(
             }) {
                 continue;
             }
-            if !only {
-                output.unresolved(&site, "cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table");
+            if let Err(reason) = unique::lock_scope(
+                catalog,
+                call,
+                lock,
+                unresolved,
+                *only,
+                write_facts.conditional_write_unique,
+            ) {
+                output.unresolved(&site, reason);
                 continue;
             }
             if !write_facts.conditional_write_unique

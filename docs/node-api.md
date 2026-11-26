@@ -3,6 +3,11 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+The opt-in [`postgres-explain-write-rollback`](rules/postgres-explain-write-rollback.md)
+rule uses the same YAML configuration and report fields in CLI `check`,
+Node `check()`, and `analyzeProject()` check reports.
+`PostgresExplainWriteRollbackOptions` names its YAML options.
+
 Configured [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
 accepts optional `schemaCatalogPath` through `PostgresLockWrittenRowsOnlyOptions`.
 Async `check()` and `analyzeProject()` check reports use the same prepared catalog
@@ -149,6 +154,11 @@ failures. Prerequisites follow each consumer's source and configuration input
 selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
+The cache-key policy, action input policy, and Vitest default exclusion rule
+validate their options before analysis; invalid options reject `check()` and
+`analyzeProject()` with the same sorted configuration error message printed by
+the CLI (exit 2, empty stdout, no `incomplete` entry). See
+[rule configuration](configuration/rules.md).
 An unwinding panic during per-file fact extraction uses the same existing
 `CheckFailure` shape with consumer `fact-extraction`, the file, and the panic
 message. `check()` and check reports in `analyzeProject()` resolve with that
@@ -299,6 +309,11 @@ For `playwright-unique-html-ids`, `low` checks literal HTML IDs and routes
 other ID expressions through the shared unanalyzable policy. The rule remains
 independent of `tests.playwright.selectors.htmlIds`; see
 [its Effort section](rules/playwright-unique-html-ids.md#effort).
+The opt-in [`react-no-nested-buttons-and-links`](rules/react-no-nested-buttons-and-links.md) rule runs through async `check()` via `checkJson` and through the `analyzeProject()` check report. It uses common YAML rule options, returns definite nested controls in `rules`, and routes unanalyzable shapes through `options.unanalyzable` (defaulting to `advise` in `advisories`).
+The opt-in [`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
+rule runs through async `check()` via `checkJson` and through the
+`analyzeProject()` check report.
+
 For `nextjs-no-caching`, `low` checks
 [literal cache settings](rules/nextjs-no-caching.md#effort) without preparing
 constant propagation or configuration wrapper facts. Both APIs preserve shared
@@ -391,6 +406,10 @@ unsupported expression shapes retain definite findings under every policy.
 Both findings and advice honor suppression. Invalid UTF-8 points to its first
 invalid byte's line; other read failures use line 1.
 
+For `package-json-export-target-prefix`, CLI `check`, async `check(options)`,
+and `analyzeProject()` check reports use the same configuration, findings,
+and advisory routing. See the [rule contract](rules/package-json-export-target-prefix.md).
+
 For `package-json-required-fields`, CLI `check`, `check(options)`, and check
 reports in `analyzeProject()` apply the same `unanalyzable` policy to selected
 manifests that cannot be read or parsed when a field check is enabled.
@@ -450,7 +469,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check`                                    | `check(options)` (including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
+| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `vitest-default-excludes`, and `vitest-project-policy` |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -483,6 +502,7 @@ remain failures. See
 `queueCheck()` also reports `worker-rate-limit-per-process` when `.rateLimit()` is called on a binding that resolves to a `Worker`, a `Worker` subclass, or a configured worker factory, and abstains with a diagnostic on `QueueReport.diagnostics` only when an unresolved receiver's binding originates from a queue module or worker construction. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`.
 Pass `{ includeDiagnostics: true }` to `queueCheck()` (or `{ type: "queueCheck", includeDiagnostics: true }` in `analyzeProject()`, typed by `QueueCheckOptions` and `BatchedQueueCheckOptions`) to receive a `QueueCheckReport` (`{ findings, diagnostics }`) instead of the default bare `QueueCheckFinding[]` array.
 Aggregate `check()` also surfaces unresolved `worker-rate-limit-per-process` receiver diagnostics in `CheckReport.warnings` without turning a clean run into a failure.
+Source directives for `queues-check` suppress these warnings in aggregate `check()` and batched `check` queries. Set `includeSuppressed: true` to see matching warnings in the suppression ledger.
 Import the exported `QueueRateLimitFindingKind` type for the rate-limit-specific values `"shared-queue-rate-limit" | "worker-rate-limit-per-process"`.
 `queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
 Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
@@ -503,10 +523,26 @@ queue mixes priority 0 and a priority greater than 0. See
 [queues check](cli/queues-check.md).
 Declaration findings carry fix guidance in `message`;
 no separate JSON field is added.
-`queues.requiredJobOptions` is discovered
-configuration, not an inline `queueCheck()` option. A `missing-job-option`
-finding lists the absent keys in `message`. Abstained calls are omitted from
-the findings array; their warnings stay on the queue report diagnostics.
+Call `queueCheck({ root, config })` to select a configuration file by absolute
+path or by path relative to `root`. In `analyzeProject()` set `config` on the
+request for all queue reports. Set `queues.requiredJobOptions` in that file.
+A `missing-job-option` finding lists the absent keys in `message`. Abstentions
+appear in the queue report diagnostics.
+`queues.unboundedJobRetention` is also configured in that file (selected by
+`config` in `queueCheck()`, `check()`, and `analyzeProject()`), emitting
+`unbounded-job-retention` findings. Undecided producer retention appears in
+`warnings` in `check()` and `analyzeProject()` check reports. Exported types
+`QueueJobRetentionKey`,
+`QueueUnboundedJobRetentionOptions`, and `QueueUnboundedJobRetentionConfig`
+describe its YAML shape.
+`queues.jobStateAsRecord` is opt-in configuration emitting advisory
+`job-state-as-record` findings (`severity: "advisory"` in `queueCheck()` and
+`advisories` in `check()` / `analyzeProject()`). Exported types
+`QueueJobStateAsRecordOptions`, `QueueJobStateAsRecordConfig`, and
+`QueueCheckSeverity` describe its configuration and finding severity.
+`queues.includeTests` explicitly opts configured test files back into the
+shared queue scope across every queue check; exported type
+`QueueIncludeTestsConfig` describes its YAML shape.
 
 ## Queue factory configuration types
 
@@ -541,7 +577,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
+| `check` | `check(options)` uses `checkJson` for configured rules, including `playwright-no-serial` and `test-no-retries`. Reports may include `CheckReport.incomplete` (`CheckFailure[]`) and `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`). |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
@@ -1027,6 +1063,11 @@ same outcome as CLI `check`. Configure it in the YAML selected by `config`.
 Policy violations use `RuleFinding`, and unreadable or malformed input uses
 `CheckReport.incomplete` (`CheckFailure[]`).
 
+The opt-in [`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) runs in
+async `check()` and `analyzeProject()` check reports. Select the rule through
+the YAML passed to `config`. Reports use the existing `RuleFinding` fields
+for the importing file, line, specifier, and resolved target.
+
 The configured [`pnpm-release-age-policy`](rules/pnpm-release-age-policy.md)
 rule runs through async `check()` and `analyzeProject()` check reports.
 `PnpmReleaseAgePolicyOptions` describes the rule options, including
@@ -1059,6 +1100,20 @@ report dynamic projects as incomplete. Selected config/helper sources that canno
 be read or parsed, and unresolved effective-policy values, are returned as
 `CheckReport.incomplete` (`CheckFailure[]`). Application include/exclude filters
 and source suppressions apply to declaration diagnostics.
+
+### Test reliability rules
+
+[`test-no-retries`](rules/test-no-retries.md) and
+[`playwright-no-serial`](rules/playwright-no-serial.md) run through asynchronous
+`check()` and batched `analyzeProject()` check queries using the existing
+`checkJson` binding. Import `TestNoRetriesOptions`, `PlaywrightNoSerialOptions`,
+`PlaywrightFixtureExport`, and `TestReliabilityAllowlistEntry` from
+`no-mistakes` to type rule options. `TestNoRetriesOptions.files` selects
+Playwright config factory modules by repository-relative glob, and `fixtures`
+on both option interfaces names repository `{ module, export }` entries treated
+as Playwright's `test`. Unresolved imported fixture bindings are returned in
+`CheckReport.incomplete`.
+Both rules return standard `RuleFinding` entries.
 
 PostgreSQL executor options accept `extraExecutorNames` in the asynchronous
 Node APIs, including `extractExecutedPostgresSql`. Each also accepts
@@ -1147,14 +1202,29 @@ and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
 
 `changesDiff({ baseRoot, headRoot, config })` asynchronously compares two local
 roots without Git or network access. It returns the CLI's schemaVersion 1
-report, including `complete: false` and reasons for unreadable roots. Use
+report, including `complete: false` and `reasons` for unreadable roots,
+`changedFiles` (omitted when empty) for changed paths matched by no category's
+`paths`, and `unclassified` for paths matched by a category's `paths` that every
+matching category excluded or no rule could classify. Use
 `changesDiff<"fixtures" | "localization">(...)` to name configured category
 fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
-`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `ChangesConfig`,
+`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `FixtureAttributePaths`,
+`ChangesConfig`,
 `ChangeCategory`, `ChangeRule`, `ChangeIdRule`, `KeyedDiffOptions`, and
 `KeyedDiffFormat`.
 
-`testsPlan({ root, changes: "changes.json", framework: "vitest" })` consumes the
-same saved report as CLI `tests plan --changes`. Invalid or incomplete input
-selects the full suite with a structured reason. Configured matchers reuse
-prepared source contents. See [changes configuration](configuration/changes.md).
+`testsPlan({ root, changes: "../changes.json", framework: "vitest" })` consumes
+the same saved report as CLI `tests plan --changes` (relative `changes` paths
+resolve against `root`, matching `config`). `changedFiles` from the report route
+through the import graph in union with any explicit `changedFiles` or `base`
+inputs without triggering a full-suite fallback, unless an entry cannot be
+traced without a baseline (such as a lockfile, manifest, global config, or
+deleted file without `base`). Missing, invalid, or incomplete reports, unknown
+categories, and `unclassified` paths select the full suite with a structured
+`fallback_reason` and warning. For categories marked
+`assertPureJsonLoader: true` (user assertion that the loader returns parsed
+JSON unchanged without extra fixture exposure or side effects), the planner
+uses `attributePaths` to narrow matching fixture tests when it can trace their
+reads and all loader uses in the file; by default it selects all matching
+tests. Configured matchers reuse prepared source contents. See
+[changes configuration](configuration/changes.md).

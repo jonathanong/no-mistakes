@@ -1,6 +1,7 @@
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
-use crate::queue::types::{Diagnostic, Severity};
+use crate::queue::test_scope::ConfiguredTestScope;
+use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -8,11 +9,15 @@ pub(super) fn queue_cycles(
     root: &Path,
     producers: &[InternalProducer],
     workers: &[InternalWorker],
+    test_scope: &ConfiguredTestScope,
 ) -> Vec<CheckFinding> {
     let workers_by_index = workers_by_file_index(workers);
     let mut outgoing: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     let mut origin: HashMap<String, (PathBuf, usize)> = HashMap::new();
     for producer in producers {
+        if test_scope.is_match(root, &producer.site.file) {
+            continue;
+        }
         let Some(target) = &producer.queue else {
             continue;
         };
@@ -22,6 +27,9 @@ pub(super) fn queue_cycles(
         let Some(worker) = workers_by_index.get(&(producer.site.file.as_path(), index)) else {
             continue;
         };
+        if test_scope.is_match(root, &worker.site.file) {
+            continue;
+        }
         let Some(source) = &worker.queue else {
             continue;
         };
@@ -62,6 +70,7 @@ pub(super) fn queue_cycles(
                 message: format!(
                     "queue cycle {cycle} has no declared terminator; review it before shipping"
                 ),
+                severity: None,
             }
         })
         .collect()
@@ -71,12 +80,13 @@ pub(super) fn self_dedup_findings(
     root: &Path,
     producers: &[InternalProducer],
     workers: &[InternalWorker],
+    test_scope: &ConfiguredTestScope,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
     let workers_by_index = workers_by_file_index(workers);
     let mut checks = Vec::new();
     let mut diagnostics = Vec::new();
     for producer in producers {
-        if !producer.site.self_dedup {
+        if !producer.site.self_dedup || test_scope.is_match(root, &producer.site.file) {
             continue;
         }
         let worker = producer.site.worker_index.and_then(|index| {
@@ -98,11 +108,13 @@ pub(super) fn self_dedup_findings(
                     queue_name: Some(source.queue_name.clone()),
                     job: producer.site.job.clone(),
                     message: "enqueue of the active job reuses its deduplication id or job id, so the queue drops the add while that job is active".to_string(),
+                    severity: None,
                 });
             }
             continue;
         }
         diagnostics.push(Diagnostic {
+            kind: DiagnosticKind::AnalysisNote,
             severity: Severity::Warning,
             file: relative_string(root, &producer.site.file),
             line: producer.site.line,

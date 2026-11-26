@@ -141,3 +141,57 @@ fn runner_group_metadata_handles_supported_and_malformed_shapes() {
     );
     assert_eq!(parse_runs_on(cases.get("invalid-type")), None);
 }
+
+#[test]
+fn nested_merges_supply_job_and_step_metadata_without_consuming_quoted_keys() {
+    let root = crate::test_support::rule_fixture_root("workflow-topology-policy")
+        .join("valid-nested-merges");
+    let topology = load_workflow_topology(&root, &CiConfig::default(), &[]);
+    assert!(
+        topology.diagnostics.is_empty(),
+        "{:?}",
+        topology.diagnostics
+    );
+    let job = |file: &str| {
+        topology
+            .jobs
+            .iter()
+            .find(|job| job.key == "verify" && job.workflow_id.ends_with(file))
+            .map(|job| serde_json::to_value(job).unwrap())
+            .unwrap()
+    };
+    let merged_job = job("job.yml");
+    assert_eq!(merged_job["timeoutMinutes"], 8);
+    assert_eq!(merged_job["runsOn"], "ubuntu-latest");
+    assert_eq!(merged_job["permissions"]["source"], "job");
+    assert_eq!(merged_job["permissions"]["scopes"]["contents"], "read");
+    assert_eq!(merged_job["steps"][0]["uses"], "example/build@v1");
+
+    assert_eq!(job("step.yml")["steps"][1]["uses"], "example/build@v1");
+    let quoted = job("quoted.yml");
+    assert_eq!(quoted["steps"][1]["uses"], "example/build@v1");
+    assert_eq!(quoted["steps"][1]["with"]["<<"], 7);
+}
+
+#[test]
+fn unlocated_merge_reports_malformed_while_quoted_literal_keeps_graph() {
+    let quoted_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
+        .join("merge-location-unavailable-quoted");
+    let quoted = load_workflow_topology(&quoted_root, &CiConfig::default(), &[]);
+    assert!(quoted.diagnostics.is_empty(), "{:?}", quoted.diagnostics);
+    assert_eq!(quoted.jobs.len(), 1);
+    let quoted_job = serde_json::to_value(&quoted.jobs[0]).unwrap();
+    assert_eq!(quoted_job["env"]["<<"], "keep");
+
+    let plain_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
+        .join("merge-location-unavailable");
+    let plain = load_workflow_topology(&plain_root, &CiConfig::default(), &[]);
+    assert_eq!(plain.diagnostics.len(), 1);
+    assert!(
+        plain.diagnostics[0]
+            .message
+            .contains("could not match a YAML `<<` key to its source location"),
+        "{}",
+        plain.diagnostics[0].message
+    );
+}

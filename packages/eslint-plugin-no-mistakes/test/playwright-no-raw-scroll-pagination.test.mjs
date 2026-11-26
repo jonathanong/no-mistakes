@@ -1,5 +1,6 @@
 import tsParser from "@typescript-eslint/parser";
 import { expect, it } from "vitest";
+import { fixture } from "./helpers.mjs";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 
 const ruleName = "playwright-no-raw-scroll-pagination";
@@ -9,8 +10,50 @@ const PAGINATED_WAIT = `page.waitForRequest(
   (req) => req.url().includes("/api/v1/posts") && req.url().includes("after=")
 );`;
 
+const sentinelOptions = {
+  sentinelLocatorNames: ["sentinel"],
+  sentinelTestIds: ["load-more"],
+};
+
 const suite = {
   valid: [
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/scroll-boundaries.spec.js"),
+      filename: "e2e/scroll-boundaries.spec.js",
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/suppressed-raw-scroll.spec.js"),
+      filename: "e2e/suppressed-raw-scroll.spec.js",
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-shadowed.spec.js"),
+      filename: "e2e/sentinel-shadowed.spec.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-other-locator.spec.js"),
+      filename: "e2e/sentinel-other-locator.spec.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-only.js"),
+      filename: "src/example.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/other-scrolls.spec.js"),
+      filename: "e2e/other-scrolls.spec.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinels.spec.js"),
+      filename: "e2e/unconfigured-sentinels.spec.js",
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/suppressed-sentinel.spec.js"),
+      filename: "e2e/suppressed-sentinel.spec.js",
+      options: [sentinelOptions],
+    },
     // Non-Playwright path: the rule is inert outside e2e/playwright specs.
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
@@ -126,6 +169,39 @@ const suite = {
     },
   ],
   invalid: [
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-receivers.spec.js"),
+      filename: "e2e/sentinel-receivers.spec.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-imported-and-factory.spec.js"),
+      filename: "e2e/sentinel-imported-and-factory.spec.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-ts-assertion.spec.ts"),
+      filename: "e2e/sentinel-ts-assertion.spec.ts",
+      languageOptions: { parser: tsParser },
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture(
+        "playwright-no-raw-scroll-pagination/sentinel-unresolved-and-refinement.spec.js",
+      ),
+      filename: "e2e/sentinel-unresolved-and-refinement.spec.js",
+      options: [sentinelOptions],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinel-only.js"),
+      filename: "e2e/sentinel-only.spec.js",
+      options: [{ sentinelLocatorNames: ["sentinel"] }],
+    },
+    {
+      code: fixture("playwright-no-raw-scroll-pagination/sentinels.spec.js"),
+      filename: "specs/sentinels.spec.js",
+      options: [{ ...sentinelOptions, scrollHelper: "scrollToLoadMore" }],
+    },
     // The exact pre-fix reviews.spec.mts shape: waitForRequest predicate mentions `after=`,
     // scrolling is a raw window.scrollTo inside page.evaluate.
     {

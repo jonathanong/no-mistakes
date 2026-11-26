@@ -1,0 +1,4 @@
+name: opaque-composite
+runs:
+  using: composite
+  steps: ${{ fromJSON(vars.STEPS) }}

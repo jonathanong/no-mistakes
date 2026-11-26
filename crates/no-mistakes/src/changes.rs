@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use crate::codebase::keyed_diff::KeyChanges;
 use crate::config::v2::load_v2_config_from_source_store;
 
+mod attributes;
 pub mod config;
 mod file_diff;
 mod report;
@@ -32,11 +32,23 @@ pub struct ChangesDiffArgs {
 pub struct ChangesReport {
     pub schema_version: u32,
     #[serde(flatten)]
-    pub categories: BTreeMap<String, KeyChanges>,
+    pub categories: BTreeMap<String, CategoryChanges>,
     pub unclassified: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub changed_files: Vec<String>,
     pub complete: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub reasons: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CategoryChanges {
+    pub changed: Vec<String>,
+    pub added: Vec<String>,
+    pub removed: Vec<String>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub attribute_paths: BTreeMap<String, Vec<String>>,
 }
 
 impl ChangesReport {
@@ -45,6 +57,7 @@ impl ChangesReport {
             schema_version: 1,
             categories: BTreeMap::new(),
             unclassified: Vec::new(),
+            changed_files: Vec::new(),
             complete: reasons.is_empty(),
             reasons,
         }
@@ -52,6 +65,7 @@ impl ChangesReport {
 
     fn finish(mut self) -> Self {
         sort_unique(&mut self.unclassified);
+        sort_unique(&mut self.changed_files);
         sort_unique(&mut self.reasons);
         self.complete = self.reasons.is_empty();
         self

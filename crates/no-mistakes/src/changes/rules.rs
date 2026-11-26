@@ -14,6 +14,7 @@ pub(super) struct Rule<'a> {
     pub category: &'a str,
     pub exclude: Option<usize>,
     pub id: Id<'a>,
+    pub emit_attribute_paths: bool,
 }
 
 impl Rule<'_> {
@@ -44,7 +45,7 @@ impl<'a> Rules<'a> {
             if name.is_empty()
                 || matches!(
                     name.as_str(),
-                    "schemaVersion" | "complete" | "unclassified" | "reasons"
+                    "schemaVersion" | "complete" | "unclassified" | "changedFiles" | "reasons"
                 )
             {
                 bail!("invalid changes category name {name:?}");
@@ -82,6 +83,7 @@ impl<'a> Rules<'a> {
                         category: name,
                         exclude,
                         id,
+                        emit_attribute_paths: category.assert_pure_json_loader,
                     });
                 }
             }

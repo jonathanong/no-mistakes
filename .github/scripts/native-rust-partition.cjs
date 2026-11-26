@@ -48,7 +48,7 @@ function outlierPartition(cases, entries, index, count = 2, evidence = costs) {
   return weighted.filter((row) => assignments.get(row.entry) === index).map((row) => row.entry);
 }
 
-function schedulingSummary(plan, entries, evidence = costs, count = 2) {
+function schedulingSummary(plan, entries, count = 2, evidence = costs) {
   const weighted = weightedCases(plan, entries, evidence);
   return {
     strategy: count === 2 ? "macOS-two-shard-outlier-LPT" : `macOS-${count}-shard-outlier-LPT`,

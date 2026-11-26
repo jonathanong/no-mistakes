@@ -1,4 +1,5 @@
 use super::*;
+use crate::invocation::test_worker_process::run_isolated;
 use std::fs::File;
 use std::time::Duration;
 
@@ -91,43 +92,48 @@ fn lock_classifier_preserves_existing_command_errors_under_shared_deadlines() {
 
 #[test]
 fn cli_and_napi_acquisition_release_locks_and_each_deadline_policy() {
-    let _serial = deadline_test_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let fixture = crate::test_support::materialize_saved_fixture(&fixture_path("lock-holder"));
-    let path = fixture.path().join("invocation.lock");
-    for forward_signals in [false, true] {
-        for json in [false, true] {
-            for (timeout, invocation_timeout) in [
-                (None, None),
-                (Some(Duration::from_secs(30)), None),
-                (None, Some(Duration::from_secs(60))),
-                (Some(Duration::from_secs(30)), Some(Duration::from_secs(60))),
-            ] {
-                let guard = InvocationGuard::acquire_resolving_path_with_json(
-                    InvocationOptions {
-                        timeout,
-                        invocation_timeout,
-                        fail_on_lock: true,
-                        ..InvocationOptions::default()
-                    },
-                    forward_signals,
-                    || Ok(path.clone()),
-                    json,
-                )
-                .unwrap();
-                let active = *active_deadline().read().unwrap();
-                assert_eq!(active.is_some(), timeout.or(invocation_timeout).is_some());
-                if let Some(active) = active {
-                    assert_eq!(active.timeout, timeout.or(invocation_timeout).unwrap());
+    run_isolated(
+        module_path!(),
+        "cli_and_napi_acquisition_release_locks_and_each_deadline_policy",
+        "NO_MISTAKES_ACQUISITION_RELEASE_CONTROL",
+        || {
+            let fixture =
+                crate::test_support::materialize_saved_fixture(&fixture_path("lock-holder"));
+            let path = fixture.path().join("invocation.lock");
+            for forward_signals in [false, true] {
+                for json in [false, true] {
+                    for (timeout, invocation_timeout) in [
+                        (None, None),
+                        (Some(Duration::from_secs(30)), None),
+                        (None, Some(Duration::from_secs(60))),
+                        (Some(Duration::from_secs(30)), Some(Duration::from_secs(60))),
+                    ] {
+                        let guard = InvocationGuard::acquire_resolving_path_with_json(
+                            InvocationOptions {
+                                timeout,
+                                invocation_timeout,
+                                fail_on_lock: true,
+                                ..InvocationOptions::default()
+                            },
+                            forward_signals,
+                            || Ok(path.clone()),
+                            json,
+                        )
+                        .unwrap();
+                        let active = *active_deadline().read().unwrap();
+                        assert_eq!(active.is_some(), timeout.or(invocation_timeout).is_some());
+                        if let Some(active) = active {
+                            assert_eq!(active.timeout, timeout.or(invocation_timeout).unwrap());
+                        }
+                        drop(guard);
+                        assert!(active_deadline().read().unwrap().is_none());
+                        let released = acquire_lock(&path, None, true).unwrap();
+                        drop(released);
+                    }
                 }
-                drop(guard);
-                assert!(active_deadline().read().unwrap().is_none());
-                let released = acquire_lock(&path, None, true).unwrap();
-                drop(released);
             }
-        }
-    }
+        },
+    );
 }
 
 #[test]

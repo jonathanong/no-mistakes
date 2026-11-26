@@ -2,6 +2,7 @@ use crate::queue::extract::FileFacts;
 use crate::queue::extract_model::EnqueuePriority;
 use crate::queue::graph_model::{CheckFinding, InternalProducer};
 use crate::queue::source::relative_string;
+use crate::queue::test_scope::ConfiguredTestScope;
 use crate::queue::types::QueueKey;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -15,11 +16,15 @@ pub(super) fn mixed_priority_findings(
     root: &Path,
     producers: &[InternalProducer],
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> Vec<CheckFinding> {
     let flow_queues = flow_queue_definitions(facts, producers);
-    let opaque = opaque_queues(facts, &flow_queues);
+    let opaque = opaque_queues(root, facts, &flow_queues, test_scope);
     let mut groups: HashMap<QueueKey, Vec<&InternalProducer>> = HashMap::new();
     for producer in producers {
+        if test_scope.is_match(root, &producer.site.file) {
+            continue;
+        }
         let Some(queue) = producer.queue.as_ref() else {
             continue;
         };
@@ -89,6 +94,7 @@ fn emit(
             queue_name: Some(queue.queue_name.clone()),
             job: producer.site.job.clone(),
             message: message(&queue.queue_name, producer, &others, root),
+            severity: None,
         })
         .collect()
 }

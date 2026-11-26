@@ -49,3 +49,24 @@ export interface QueueFactoriesOptions {
 
 /** The legacy list and explicit role forms of `queues.factories`. */
 export type QueueFactories = string[] | QueueFactoriesOptions;
+
+/** Job retention keys enforced by `queues.unboundedJobRetention`. */
+export type QueueJobRetentionKey = "removeOnComplete" | "removeOnFail";
+
+/** Configuration for `queues.unboundedJobRetention` in the selected config file. */
+export interface QueueUnboundedJobRetentionOptions {
+  require?: QueueJobRetentionKey[];
+  allowPaths?: string[];
+}
+
+export type QueueUnboundedJobRetentionConfig = boolean | QueueUnboundedJobRetentionOptions;
+
+/** Configuration for `queues.jobStateAsRecord` in the selected config file. */
+export interface QueueJobStateAsRecordOptions {
+  allowPaths?: string[];
+}
+
+export type QueueJobStateAsRecordConfig = boolean | QueueJobStateAsRecordOptions;
+
+/** Configuration for `queues.includeTests` in the selected config file. */
+export type QueueIncludeTestsConfig = boolean | string[];

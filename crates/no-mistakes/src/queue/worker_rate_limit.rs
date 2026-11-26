@@ -3,7 +3,8 @@ use crate::queue::extract_helpers::is_queue_package;
 use crate::queue::extract_model::{ExportedWorkerBinding, WorkerRateLimitTarget};
 use crate::queue::graph_model::{CheckFinding, InternalWorker};
 use crate::queue::source::relative_string;
-use crate::queue::types::{Diagnostic, Severity};
+use crate::queue::test_scope::ConfiguredTestScope;
+use crate::queue::types::{Diagnostic, DiagnosticKind, Severity};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -18,13 +19,14 @@ pub const WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE: &str =
     "worker-rate-limit-per-process was not judged because the .rateLimit() receiver did not resolve";
 
 pub fn is_worker_rate_limit_unresolved_diagnostic(diagnostic: &Diagnostic) -> bool {
-    diagnostic.message == WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE
+    diagnostic.kind == DiagnosticKind::WorkerRateLimitUnresolved
 }
 
 pub(super) fn findings(
     root: &Path,
     workers: &[InternalWorker],
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
     if facts
         .values()
@@ -36,6 +38,9 @@ pub(super) fn findings(
     let mut checks = Vec::new();
     let mut diagnostics = Vec::new();
     for (path, file) in facts {
+        if test_scope.is_match(root, path) {
+            continue;
+        }
         for site in &file.worker_rate_limits {
             match &site.target {
                 WorkerRateLimitTarget::LocalWorker(worker_index) => {
@@ -59,6 +64,7 @@ pub(super) fn findings(
                 | WorkerRateLimitTarget::CallImported { .. }
                 | WorkerRateLimitTarget::CallNamespace { .. } => {
                     diagnostics.push(Diagnostic {
+                        kind: DiagnosticKind::WorkerRateLimitUnresolved,
                         severity: Severity::Warning,
                         file: relative_string(root, path),
                         line: site.line,
@@ -96,6 +102,7 @@ fn finding(root: &Path, path: &Path, line: usize, worker: Option<&InternalWorker
         queue_name,
         job: None,
         message,
+        severity: None,
     }
 }
 

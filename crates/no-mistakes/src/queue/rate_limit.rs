@@ -1,23 +1,32 @@
 use crate::queue::cycles::self_dedup_findings;
 use crate::queue::extract::FileFacts;
+use crate::queue::extract_model::RateLimitSiteKind;
 use crate::queue::graph_model::{CheckFinding, InternalProducer, InternalWorker};
 use crate::queue::source::relative_string;
-use crate::queue::types::{Diagnostic, QueueKey, Severity};
+use crate::queue::test_scope::ConfiguredTestScope;
+use crate::queue::types::{Diagnostic, DiagnosticKind, QueueKey, Severity};
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
+
+#[path = "rate_limit_resolve.rs"]
+mod resolve_exports;
+
+pub(in crate::queue) use resolve_exports::resolve;
 
 pub(super) fn findings(
     root: &Path,
     producers: &[InternalProducer],
     workers: &[InternalWorker],
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
-    let (mut checks, mut diagnostics) = self_dedup_findings(root, producers, workers);
-    let (rate_checks, rate_diagnostics) = shared_rate_limits(root, producers, workers, facts);
+    let (mut checks, mut diagnostics) = self_dedup_findings(root, producers, workers, test_scope);
+    let (rate_checks, rate_diagnostics) =
+        shared_rate_limits(root, producers, workers, facts, test_scope);
     checks.extend(rate_checks);
     diagnostics.extend(rate_diagnostics);
     let (worker_checks, worker_diagnostics) =
-        crate::queue::worker_rate_limit::findings(root, workers, facts);
+        crate::queue::worker_rate_limit::findings(root, workers, facts, test_scope);
     checks.extend(worker_checks);
     diagnostics.extend(worker_diagnostics);
     (checks, diagnostics)
@@ -28,10 +37,14 @@ fn shared_rate_limits(
     producers: &[InternalProducer],
     workers: &[InternalWorker],
     facts: &HashMap<PathBuf, FileFacts>,
+    test_scope: &ConfiguredTestScope,
 ) -> (Vec<CheckFinding>, Vec<Diagnostic>) {
     let mut checks = Vec::new();
     let mut diagnostics = Vec::new();
     for (path, file) in facts {
+        if test_scope.is_match(root, path) {
+            continue;
+        }
         let file_workers: Vec<_> = workers
             .iter()
             .filter(|worker| worker.site.file == *path)
@@ -39,9 +52,8 @@ fn shared_rate_limits(
         for site in &file.rate_limits {
             let worker = file_workers[site.worker_index];
             judge(
-                root,
-                path,
-                site.line,
+                (root, path, site.line, test_scope),
+                &site.kind,
                 worker,
                 producers,
                 &mut checks,
@@ -53,14 +65,31 @@ fn shared_rate_limits(
 }
 
 fn judge(
-    root: &Path,
-    path: &Path,
-    line: usize,
+    (root, path, line, test_scope): (&Path, &Path, usize, &ConfiguredTestScope),
+    kind: &RateLimitSiteKind,
     worker: &InternalWorker,
     producers: &[InternalProducer],
     checks: &mut Vec<CheckFinding>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
+    if *kind != RateLimitSiteKind::Confirmed {
+        if let Some(queue) = &worker.queue {
+            if matches!(
+                job_names(root, queue, producers, test_scope),
+                JobNames::Known(names) if names.len() <= 1
+            ) {
+                return;
+            }
+        }
+        diagnostics.push(Diagnostic {
+            kind: DiagnosticKind::CheckAbstention,
+            severity: Severity::Warning,
+            file: relative_string(root, path),
+            line,
+            message: "the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged".to_string(),
+        });
+        return;
+    }
     let Some(queue) = &worker.queue else {
         diagnostics.push(abstain(
             root,
@@ -71,7 +100,7 @@ fn judge(
         return;
     };
     let queue_name = &queue.queue_name;
-    match job_names(queue, producers) {
+    match job_names(root, queue, producers, test_scope) {
         JobNames::Unknown => {
             let message = format!(
                 "the set of job names on `{queue_name}` is unknown, so this rate limit was not judged"
@@ -90,6 +119,7 @@ fn judge(
                 message: format!(
                     "`{queue_name}` carries more than one job ({jobs}), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits."
                 ),
+                severity: None,
             });
         }
         JobNames::Known(_) => {}
@@ -101,11 +131,17 @@ enum JobNames {
     Known(BTreeSet<String>),
 }
 
-fn job_names(queue: &QueueKey, producers: &[InternalProducer]) -> JobNames {
+fn job_names(
+    root: &Path,
+    queue: &QueueKey,
+    producers: &[InternalProducer],
+    test_scope: &ConfiguredTestScope,
+) -> JobNames {
     let mut names = BTreeSet::new();
     let mut unknown = false;
     for producer in producers {
-        if producer.queue.as_ref() != Some(queue) {
+        if test_scope.is_match(root, &producer.site.file) || producer.queue.as_ref() != Some(queue)
+        {
             continue;
         }
         match &producer.site.job {
@@ -124,6 +160,7 @@ fn job_names(queue: &QueueKey, producers: &[InternalProducer]) -> JobNames {
 
 fn abstain(root: &Path, path: &Path, line: usize, message: &str) -> Diagnostic {
     Diagnostic {
+        kind: DiagnosticKind::AnalysisNote,
         severity: Severity::Warning,
         file: relative_string(root, path),
         line,

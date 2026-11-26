@@ -1,4 +1,4 @@
-use super::heredoc;
+use crate::codebase::shell_heredoc::{self, CarriageReturn, Document};
 use super::{flush_command, push_char, skip_arithmetic, Command, Parse, Range};
 
 mod comment;
@@ -20,7 +20,7 @@ struct Scan<'a> {
     quoting: Option<char>,
     current: Command,
     commands: Vec<Command>,
-    pending: Vec<heredoc::Opener>,
+    pending: Vec<Document>,
     heredoc_ranges: Vec<Range<usize>>,
     unterminated: bool,
     stop: bool,
@@ -162,9 +162,15 @@ impl<'a> Scan<'a> {
         self.index = start;
         self.line += 1;
         for opener in self.pending.drain(..) {
-            let body = heredoc::skip_body(self.chars, self.index, self.line, &opener);
-            self.index = body.index;
-            self.line = body.line;
+            let body = shell_heredoc::skip_body(
+                self.chars,
+                self.index,
+                opener.delimiter.chars(),
+                opener.strip_tabs,
+                CarriageReturn::BeforeNewline,
+            );
+            self.index = body.end;
+            self.line += body.newlines;
             if !body.terminated {
                 self.unterminated = true;
                 self.stop = true;
@@ -172,6 +178,7 @@ impl<'a> Scan<'a> {
             }
         }
         self.heredoc_ranges.push(start..self.index);
+        self.current.anchor = self.index;
     }
 
     fn whitespace(&mut self, ch: char) -> bool {

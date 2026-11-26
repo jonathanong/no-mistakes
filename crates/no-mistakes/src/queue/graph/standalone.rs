@@ -1,8 +1,7 @@
 use super::{
-    build_filter, build_prepared_report, build_report, queue_project_facts_from_ts, FileFacts,
-};
-use super::{
-    InternalProducer, InternalWorker, Path, PathBuf, PreparedProjectReport, ProjectReport,
+    build_filter, build_prepared_report, build_report, queue_project_facts_from_ts,
+    ConfiguredTestScope, FileFacts, InternalProducer, InternalWorker, Path, PathBuf,
+    PreparedProjectReport, ProjectReport,
 };
 use crate::queue::graph_resolution::{queue_definitions, resolve_producers, resolve_workers};
 use std::collections::HashMap;
@@ -10,10 +9,18 @@ use std::collections::HashMap;
 pub(super) fn analyze_project(
     root: &Path,
     tsconfig_path: Option<&Path>,
+    config_path: Option<&Path>,
     filters: &[String],
     snapshot: crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> anyhow::Result<ProjectReport> {
-    analyze_project_inner(root, tsconfig_path, filters, snapshot, build_report)
+    analyze_project_inner(
+        root,
+        tsconfig_path,
+        config_path,
+        filters,
+        snapshot,
+        build_report,
+    )
 }
 
 pub(super) fn analyze_project_indexed(
@@ -25,6 +32,7 @@ pub(super) fn analyze_project_indexed(
     analyze_project_inner(
         root,
         tsconfig_path,
+        None,
         filters,
         snapshot,
         build_prepared_report,
@@ -34,6 +42,7 @@ pub(super) fn analyze_project_indexed(
 fn analyze_project_inner<T>(
     root: &Path,
     tsconfig_path: Option<&Path>,
+    config_path: Option<&Path>,
     filters: &[String],
     snapshot: crate::codebase::ts_source::VisiblePathSnapshot,
     builder: impl FnOnce(
@@ -41,6 +50,7 @@ fn analyze_project_inner<T>(
         Vec<InternalProducer>,
         Vec<InternalWorker>,
         &HashMap<PathBuf, FileFacts>,
+        &ConfiguredTestScope,
     ) -> T,
 ) -> anyhow::Result<T> {
     let session =
@@ -75,7 +85,11 @@ fn analyze_project_inner<T>(
         ),
     };
     let filter = build_filter(filters)?;
-    let loaded_config = dataset.config(None).ok();
+    let loaded_config = if config_path.is_some() {
+        Some(dataset.config(config_path)?)
+    } else {
+        dataset.config(None).ok()
+    };
     let roles = loaded_config
         .as_ref()
         .map(|config| {
@@ -128,17 +142,29 @@ fn analyze_project_inner<T>(
         crate::queue::job_options::stamp(&mut facts, &config.queues);
     }
 
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+    let scoped_resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         &tsconfig_catalog,
         &visible_set,
         &session,
     )
     .with_queue_compatibility(root);
+    let workspace = dataset.workspace();
+    let resolver = crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(
+        &scoped_resolver,
+        &workspace,
+        &visible_set,
+    );
     let remapper =
         crate::codebase::ts_source::FrozenPathRemapper::from_paths(facts.keys().cloned());
     crate::queue::factory_resolve::resolve_imported_queue_names(&mut facts, &resolver, &remapper);
+    let test_scope = loaded_config
+        .as_ref()
+        .map(|config| {
+            ConfiguredTestScope::from_session(root, config.as_ref(), &visible_paths, &session)
+        })
+        .unwrap_or_else(ConfiguredTestScope::empty);
     let queue_defs = queue_definitions(&facts);
-    let definitions = crate::queue::factory_resolve::definition_files(&facts);
+    let definitions = crate::queue::factory_resolve::definition_files(&facts, root, &test_scope);
     let mut producers =
         resolve_producers(&mut facts, &queue_defs, &definitions, &resolver, &remapper);
     let mut workers = resolve_workers(&facts, &definitions, &resolver, &remapper);
@@ -159,7 +185,15 @@ fn analyze_project_inner<T>(
         &resolver,
         &remapper,
     );
-    crate::queue::job_options::judge_into_facts(&mut facts);
+    crate::queue::job_options::judge_into_facts(root, &mut facts, &test_scope);
     crate::queue::worker_rate_limit::resolve(&mut facts, &resolver, &remapper);
-    Ok(builder(root, producers, workers, &facts))
+    crate::queue::rate_limit::resolve(&mut facts, &resolver, &remapper);
+    crate::queue::job_state::resolve_sites(
+        &mut facts,
+        &queue_defs,
+        &definitions,
+        &resolver,
+        &remapper,
+    );
+    Ok(builder(root, producers, workers, &facts, &test_scope))
 }

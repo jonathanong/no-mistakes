@@ -38,6 +38,7 @@ behavior.
 | --- | --- |
 | Keep agent context concise and code easy to analyze | [`agents-md-max-size`](agents-md-max-size.md), [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md), [`unconstructed-error-class`](unconstructed-error-class.md), [`unique-exports`](unique-exports.md) |
 | Check declared HTTP and queue payload compatibility | [`declared-payload-compatibility`](declared-payload-compatibility.md) |
+| Check queue producer/worker wiring, retention, and rate limits | [`queues check`](../cli/queues-check.md#producer-and-worker-matching) (all queue checks share configured `tests.*` scope exclusion and `queues.includeTests` opt-in), [Unbounded job retention](unbounded-job-retention.md), [Job state as record](job-state-as-record.md), [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md) |
 | Protect documentation structure and navigation | [`doc-consistency`](doc-consistency.md), [`markdown-reachability`](markdown-reachability.md), [`markdown-child-links`](markdown-child-links.md) |
 | Enforce package and workspace boundaries | [`forbidden-dependencies`](forbidden-dependencies.md), [`production-dependency-declarations`](production-dependency-declarations.md), [`workspace-package-cycles`](workspace-package-cycles.md) |
 | Make CI reproducible and bounded | [`github-actions-pinned-hash`](github-actions-pinned-hash.md), [`github-actions-cache-key-policy`](github-actions-cache-key-policy.md), [`github-actions-run-command-policy`](github-actions-run-command-policy.md), [`github-actions-script-expressions`](github-actions-script-expressions.md), [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md), [`github-actions-job-permissions`](github-actions-job-permissions.md), [`github-actions-local-action-checkout`](github-actions-local-action-checkout.md), [`github-actions-docker-host-ports`](github-actions-docker-host-ports.md), [`github-actions-download-integrity`](github-actions-download-integrity.md), [`github-actions-vitest-project-selection`](github-actions-vitest-project-selection.md), [`github-actions-no-poll-wait-job`](github-actions-no-poll-wait-job.md), [`github-actions-pr-diff-range`](github-actions-pr-diff-range.md), [`github-actions-job-timeouts`](github-actions-job-timeouts.md), [`github-actions-step-timeouts`](github-actions-step-timeouts.md), [`workflow-topology-policy`](workflow-topology-policy.md) |
@@ -47,6 +48,7 @@ behavior.
 | Keep transaction locks on written rows | [`postgres-lock-written-rows-only`](postgres-lock-written-rows-only.md) |
 | Check PostgreSQL migrations and query safety | [`postgres-array-columns`](postgres-array-columns.md), [`postgres-bounded-statements`](postgres-bounded-statements.md), [`postgres-column-naming`](postgres-column-naming.md), [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md), [`postgres-conflict-ordering`](postgres-conflict-ordering.md), [`postgres-constraint-validate`](postgres-constraint-validate.md), [`postgres-explicit-columns`](postgres-explicit-columns.md), [`postgres-generated-column-predicates`](postgres-generated-column-predicates.md), [`postgres-fk-index`](postgres-fk-index.md), [`postgres-key-column-types`](postgres-key-column-types.md), [`postgres-lock-ordering`](postgres-lock-ordering.md), [`postgres-no-transformed-uuid-predicates`](postgres-no-transformed-uuid-predicates.md), [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md), [`postgres-finite-text-columns`](postgres-finite-text-columns.md), [`postgres-identifier-length`](postgres-identifier-length.md), [`postgres-json-relation-ids`](postgres-json-relation-ids.md), [`postgres-grouping-not-aggregation`](postgres-grouping-not-aggregation.md), [`postgres-required-comments`](postgres-required-comments.md), [`postgres-materialized-view-shape`](postgres-materialized-view-shape.md), [`postgres-table-shape`](postgres-table-shape.md), [`postgres-status-with-lifecycle-timestamps`](postgres-status-with-lifecycle-timestamps.md), [`postgres-object-naming`](postgres-object-naming.md) |
 | Cap literal fixture sizes in tests and helpers | [`test-fixture-size-cap`](test-fixture-size-cap.md) |
+| Keep flaky tests visible | [`test-no-retries`](test-no-retries.md), [`playwright-no-serial`](playwright-no-serial.md) |
 | Enforce language-specific source policy | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md), [`rust-no-inline-tests`](rust-no-inline-tests.md), [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md) |
 
 These are starting points, not presets. The related-rules section on each page
@@ -73,6 +75,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`forbidden-calls`](forbidden-calls.md)                                       | Prevent configured roots from invoking selected functions.                      |
 | [`coverage-producer-assertion-owner`](coverage-producer-assertion-owner.md) | Require configured coverage producers to reach assertion owners. |
 | [`github-actions-env-policy`](github-actions-env-policy.md) | Require or forbid `env:` values at workflow, job and step scope. |
+| [`github-actions-no-insta-snapshot-updates`](github-actions-no-insta-snapshot-updates.md) | Ban Insta modes that accept snapshots in GitHub Actions. |
 | [`github-actions-action-input-policy`](github-actions-action-input-policy.md)     | Require or ban `with:` inputs for each configured action family.            |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-cache-key-policy`](github-actions-cache-key-policy.md)           | Require configured platform fragments and lockfile provenance in actions/cache keys. |
@@ -102,9 +105,11 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`markdown-mermaid-validation`](markdown-mermaid-validation.md)               | Validate Mermaid diagrams embedded in Markdown fences.                          |
 | [`markdown-reachability`](markdown-reachability.md)                           | Require Markdown docs to be reachable from instruction roots.                   |
 | [`markdown-structure-budget`](markdown-structure-budget.md)                   | Limit tables and Mermaid diagrams in oversized Markdown.                        |
+| [`react-no-nested-buttons-and-links`](react-no-nested-buttons-and-links.md) | Keep native buttons and links as separate controls. |
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md)                             | Ban Next.js API route files.                                                    |
 | [`nextjs-no-caching`](nextjs-no-caching.md)                                   | Ban Next.js caching features.                                                   |
 | [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |
+| [`no-cross-package-relative-imports`](no-cross-package-relative-imports.md) | Report relative imports that cross a declared workspace package boundary. |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md)       | Ban empty/comment-only files.                                                   |
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
 | [`no-sparse-checkout`](no-sparse-checkout.md)                                 | Ban sparse Git checkouts in selected CI YAML.                                   |
@@ -113,12 +118,14 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md)                   | Report a configured single enqueue inside an open per-item loop or callback.   |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
+| [`package-json-export-target-prefix`](package-json-export-target-prefix.md) | Require the `./` prefix on selected Node package export targets. |
 | [`package-json-nested-workspace-coverage`](package-json-nested-workspace-coverage.md) | Require nested workspace entries to exactly cover configured dependency packages. |
 | [`package-json-required-fields`](package-json-required-fields.md)             | Require configured package.json field-shape policy.                             |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
 | [`pnpm-overrides-ban`](pnpm-overrides-ban.md)                                 | Ban pnpm dependency version overrides; keep packageExtensions.                  |
 | [`pnpm-release-age-policy`](pnpm-release-age-policy.md)                       | Keep minimumReleaseAgeExclude aligned with registries and Dependabot cooldown. |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
+| [`postgres-explain-write-rollback`](postgres-explain-write-rollback.md) | Flag executing PostgreSQL write plans that can persist in standalone scripts. |
 | [`postgres-explicit-columns`](postgres-explicit-columns.md)                       | Require explicit column lists instead of `SELECT *` on wide tables.         |
 | [`postgres-bounded-statements`](postgres-bounded-statements.md)                   | Require a LIMIT, a unique-key lookup or an aggregate on statements that can match many rows. |
 | [`postgres-generated-column-predicates`](postgres-generated-column-predicates.md) | Ban predicates and sorts on generated timestamp columns.                     |
@@ -158,6 +165,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-object-naming`](postgres-object-naming.md)                         | Check PostgreSQL object names against configured patterns, plurals, and tokens. |
 | [`postgres-require-query-annotation`](postgres-require-query-annotation.md)   | Require a leading /* name */ annotation on executed PostgreSQL SQL.             |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
+| [`playwright-no-serial`](playwright-no-serial.md)                             | Report Playwright settings that force serial execution.                         |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |
 | [`playwright-unique-html-ids`](playwright-unique-html-ids.md)                 | Require unique HTML `id` values in Playwright analysis.                         |
 | [`playwright-unique-test-ids`](playwright-unique-test-ids.md)                 | Require unique test ID values in Playwright analysis.                           |
@@ -180,11 +188,13 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`strict-package-layout`](strict-package-layout.md)                           | Enforce configured package file layout.                                         |
 | [`structured-config-policy`](structured-config-policy.md)                     | Require or ban structured config keys.                                          |
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |
+| [`swift-no-unguarded-darwin-import`](swift-no-unguarded-darwin-import.md)       | Gate Darwin imports in portable Swift test sources.                            |
 | [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md)                 | Require @MainActor on Swift classes whose names end with ViewModel.             |
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
 | [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |
 | [`test-no-live-repository-scan`](test-no-live-repository-scan.md)             | Ban live-repository directory scans reachable from Vitest roots.                |
+| [`test-no-retries`](test-no-retries.md)                                       | Cap retries declared in test runners and supported GitHub Actions steps.        |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
 | [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to be owned by a tracked tsconfig.             |

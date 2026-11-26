@@ -4,9 +4,16 @@ use serde_json::json;
 #[path = "check_partial.rs"]
 mod check_partial;
 
+#[path = "check_swift_darwin_imports.rs"]
+mod check_swift_darwin_imports;
+
 #[path = "check_job_permissions.rs"]
 mod check_job_permissions;
 
+#[path = "check_insta_snapshot_updates.rs"]
+mod check_insta_snapshot_updates;
+#[path = "check_test_reliability.rs"]
+mod check_test_reliability;
 #[path = "check_test_state.rs"]
 mod check_test_state;
 
@@ -25,6 +32,8 @@ mod check_playwright_patterns;
 #[path = "check_recall_audit.rs"]
 mod check_recall_audit;
 
+#[path = "check_nested_controls.rs"]
+mod check_nested_controls;
 #[path = "check_react_consumed_directives.rs"]
 mod check_react_consumed_directives;
 #[path = "check_redirect_suppression.rs"]

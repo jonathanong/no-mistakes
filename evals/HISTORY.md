@@ -33,6 +33,23 @@ reported `Not logged in` and the judge reported an expired OAuth session.
 There were zero completed attempts and the reports recorded $0. The
 PostgreSQL and queue cases have no model scores.
 
+## 2026-11-24 — Codex rules isolation handles shell arguments
+
+The offline audit distinguishes inline text-processing programs and quoted
+operators from file operands, recognizes file redirections with `>&`, and
+recognizes plain command-prefix assignments. It can change which Codex
+attempts are eligible for scoring. Regrade earlier saved reports with the
+same audit version before comparing eligibility. Validation used synthetic
+transcripts and made zero model calls.
+
+## 2026-11-24 — testing rules for retries and coverage gates
+
+PR #3963 added three cases. They check that an agent fixes a missed Playwright
+response instead of adding retries, flags a lower coverage floor that hides
+an uncovered path, and accepts a measured, justified increase to that floor.
+The existing cases and graders are unchanged. Results are pending, and the
+expanded case set has no comparable aggregate score yet.
+
 ## 2026-11-21 — re-baseline under the Sonnet agent and Opus judge
 
 Resets the control arm after the 2026-11-14 move from an Opus agent / Sonnet

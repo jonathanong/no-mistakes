@@ -9,6 +9,7 @@ mod diff;
 mod env_read;
 mod exprs;
 mod runs;
+mod shell_guard;
 mod yaml_shapes;
 
 pub const RULE_ID: &str = "github-actions-pr-diff-range";

@@ -1,0 +1,9 @@
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -9,5 +9,5 @@
+         --exclude 'https://example.invalid/old'
+     steps:
+       - name: Prepare
+-        run: echo 'Preparing documentation'
++        run: echo 'Preparing link inputs'
+       - name: Check internal links

@@ -66,6 +66,10 @@ and unmatched package names remain `external`.
 }
 ```
 
+Use the opt-in `package-json-export-target-prefix` rule with `check` to catch
+missing `./` prefixes on direct and conditional Node export targets before
+any import site or build output exists.
+
 **Workaround for complex export maps:** `rg '@scope/pkg/'` to find importers.
 
 ## Bare npm specifiers
@@ -148,6 +152,13 @@ Text-based Playwright selector edges are approximate. Prefer exact configured
 test ID attributes and literal locator values for strong route/component
 coverage.
 
+`check` can run the opt-in `react-no-nested-buttons-and-links` rule for native buttons and links in selected JSX and TSX files. Custom render paths and dynamic destinations are outside its scope.
+
+`check` can run the opt-in `swift-no-unguarded-darwin-import` rule on configured
+portable Swift test paths. It flags unconditional `Darwin` imports. Only
+`#if` and `#elseif` conditions the rule can verify count as guards. The rule
+classifies imports in branches without a provable guard as unanalyzable.
+
 ## Structural / AST-pattern blast radius — use `ast-grep`
 
 `no-mistakes` answers **graph-aware** and **config-aware** queries. It does not
@@ -211,6 +222,11 @@ For `dependabot-cooldown-policy`, set `options.minimumDays` and run
 any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.
 Repair YAML when the rule appears in `incomplete`, then rerun the check.
 See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/dependabot-cooldown-policy.md).
+
+For `no-cross-package-relative-imports`, scope the rule to the importing files
+that belong to declared workspace packages. Replace cross-package relative
+imports with a declared dependency and a public package specifier.
+See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/no-cross-package-relative-imports.md).
 
 ## Fact extraction failures
 

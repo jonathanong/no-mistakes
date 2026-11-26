@@ -86,3 +86,32 @@ fn postgres_pool_error_listener_rule_has_public_documentation() {
         assert!(body.contains(contract), "missing {contract}");
     }
 }
+
+#[test]
+fn github_actions_no_insta_snapshot_updates_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_NO_INSTA_SNAPSHOT_UPDATES;
+    assert_eq!(rule, "github-actions-no-insta-snapshot-updates");
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let body = read(&root.join(format!("docs/rules/{rule}.md")));
+    for phrase in ["off by default", "INSTA_UPDATE", "## Suppression"] {
+        assert!(body.contains(phrase), "missing {phrase}");
+    }
+}
+
+#[test]
+fn swift_darwin_imports_are_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::SWIFT_NO_UNGUARDED_DARWIN_IMPORT;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let page = format!("{rule}.md");
+    assert!(root.join("docs/rules").join(&page).is_file());
+    for entry in [
+        "docs/rules/README.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/configuration/rules.md",
+    ] {
+        assert!(read(&root.join(entry)).contains(&page), "{entry}");
+    }
+}

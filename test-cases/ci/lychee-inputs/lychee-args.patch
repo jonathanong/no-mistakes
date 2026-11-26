@@ -1,0 +1,10 @@
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -6,6 +6,6 @@
+     env:
+       LYCHEE_ARGS: >-
+         --no-progress
+-        --exclude 'https://example.invalid/old'
++        --exclude 'https://example.invalid/new'
+     steps:
+       - name: Prepare

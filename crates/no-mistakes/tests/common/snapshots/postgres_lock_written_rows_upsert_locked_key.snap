@@ -1,0 +1,296 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "<repo>/test-cases/rules/postgres-lock-written-rows-only/configs/upsert-allow.yml",
+          "import": "postgres-lock-written-rows-only",
+          "line": 20,
+          "message": "stale postgres-lock-written-rows-only allow entry `allow[1]` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: src/matches.ts",
+          "target": "allow[1]"
+        },
+        {
+          "file": "<repo>/test-cases/rules/postgres-lock-written-rows-only/configs/upsert-allow.yml",
+          "import": "postgres-lock-written-rows-only",
+          "line": 24,
+          "message": "stale postgres-lock-written-rows-only allow entry `allow[2]` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: src/matches.ts",
+          "target": "allow[2]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/controls.ts",
+          "line": 28,
+          "message": "src/controls.ts:28: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 57,
+          "message": "src/controls.ts:57: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/controls.ts",
+          "line": 12,
+          "message": "src/controls.ts:12: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 22,
+          "message": "src/controls.ts:22: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 28,
+          "message": "src/controls.ts:28: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 38,
+          "message": "src/controls.ts:38: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 48,
+          "message": "src/controls.ts:48: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = 1 FOR UPDATE`);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 5,
+          "message": "src/controls.ts:5: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = 1 FOR UPDATE`);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 67,
+          "message": "src/controls.ts:67: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 78,
+          "message": "src/controls.ts:78: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [otherId]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 88,
+          "message": "src/controls.ts:88: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/controls.ts",
+          "line": 98,
+          "message": "src/controls.ts:98: row-lock-unwritten-relation: locked row in jobs is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "matching": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/matches.ts",
+          "line": 14,
+          "message": "src/matches.ts:14: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: the following multi-row upsert can affect the locked key; cannot prove the pre-lock is redundant",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/matches.ts",
+          "line": 5,
+          "message": "src/matches.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sibling_unanalyzable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "trigger_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/matches.ts",
+          "line": 14,
+          "message": "src/matches.ts:14: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: the following multi-row upsert can affect the locked key; cannot prove the pre-lock is redundant",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/matches.ts",
+          "line": 5,
+          "message": "src/matches.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 16,
+          "message": "src/matches.ts:16: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO jobs (id, state, touched_at)",
+          "target": "touched_at"
+        },
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 18,
+          "message": "src/matches.ts:18: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state, touched_at = EXCLUDED.touched_at",
+          "target": "touched_at"
+        },
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 7,
+          "message": "src/matches.ts:7: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO jobs (id, state, touched_at) VALUES ($1, 'done', $2)",
+          "target": "touched_at"
+        },
+        {
+          "file": "src/matches.ts",
+          "import": "jobs.touched_at",
+          "line": 8,
+          "message": "src/matches.ts:8: do not write trigger-maintained column `jobs.touched_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state, touched_at = EXCLUDED.touched_at",
+          "target": "touched_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "write_set": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "<repo>/test-cases/rules/postgres-lock-written-rows-only/configs/upsert-write-set.yml",
+          "import": "postgres-lock-written-rows-only",
+          "line": 20,
+          "message": "stale postgres-lock-written-rows-only writeSets entry `src/matches.ts:4` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: src/matches.ts",
+          "target": "src/matches.ts:4"
+        },
+        {
+          "file": "<repo>/test-cases/rules/postgres-lock-written-rows-only/configs/upsert-write-set.yml",
+          "import": "postgres-lock-written-rows-only",
+          "line": 24,
+          "message": "stale postgres-lock-written-rows-only writeSets entry `src/matches.ts:13` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: src/matches.ts",
+          "target": "src/matches.ts:13"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "written_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

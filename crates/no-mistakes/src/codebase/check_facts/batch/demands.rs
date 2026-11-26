@@ -16,7 +16,10 @@ pub(super) fn demands_by_path(
             forbidden_call_arguments: request.plan.forbidden_call_arguments.clone(),
             graph: request.plan.graph,
             call_site_paths: request.plan.call_site_paths.clone(),
+            nested_control_paths: request.plan.nested_control_paths.clone(),
             vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
+            test_reliability_paths: request.plan.test_reliability_paths.clone(),
+            playwright_fixture_support: request.plan.playwright_fixture_support,
             graph_context: request.plan.graph_context.clone(),
             integration_runner_configs: request.plan.integration_runner_configs.clone(),
             ..CheckFactPlan::default()
@@ -55,10 +58,12 @@ pub(super) fn demands_by_path(
         }
         // Independently configured sources remain addressable without joining
         // the primary or graph universe. Existing placements keep their plan.
-        let supplemental_vitest = request
+        let mut supplemental = request
             .plan
             .vitest_default_exclude_paths
             .iter()
+            .chain(request.plan.nested_control_paths.iter())
+            .chain(request.plan.test_reliability_paths.keys())
             .filter(|path| !plans.contains_key(path.as_path()))
             .cloned()
             .collect::<Vec<_>>();
@@ -73,13 +78,28 @@ pub(super) fn demands_by_path(
                 plans.remove(&normalize(path));
             }
         }
-        if !supplemental_vitest.is_empty() {
+        let is_owned_config = |path: &PathBuf| {
+            request
+                .playwright
+                .as_ref()
+                .is_some_and(|playwright| playwright.config_files().contains(path))
+                || request
+                    .plan
+                    .integration_runner_configs
+                    .as_ref()
+                    .is_some_and(|runner| runner.contains(path))
+        };
+        supplemental.retain(|path| !is_owned_config(path));
+        if !supplemental.is_empty() {
             let supplemental_plan = CheckFactPlan {
+                nested_control_paths: request.plan.nested_control_paths.clone(),
                 vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
+                test_reliability_paths: request.plan.test_reliability_paths.clone(),
+                playwright_fixture_support: request.plan.playwright_fixture_support,
                 ..CheckFactPlan::default()
             };
             plans.extend(
-                supplemental_vitest
+                supplemental
                     .into_iter()
                     .map(|path| (path, supplemental_plan.clone())),
             );

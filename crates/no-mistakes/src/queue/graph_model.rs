@@ -2,13 +2,20 @@ use crate::edge_index::PreparedRelationshipIndex;
 use crate::queue::extract::FileFacts;
 use crate::queue::source::relative_string;
 use crate::queue::types::{
-    Diagnostic, Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, QueueProducer, QueueWorker,
-    RelationshipNode, Severity,
+    Diagnostic, DiagnosticKind, Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, QueueProducer,
+    QueueWorker, RelationshipNode, Severity,
 };
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CheckSeverity {
+    Error,
+    Advisory,
+}
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +27,14 @@ pub struct CheckFinding {
     pub queue_name: Option<String>,
     pub job: Option<String>,
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub severity: Option<CheckSeverity>,
+}
+
+impl CheckFinding {
+    pub fn is_advisory(&self) -> bool {
+        self.severity == Some(CheckSeverity::Advisory)
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -33,6 +48,13 @@ pub fn format_diagnostic(diagnostic: &Diagnostic) -> String {
     format!(
         "{}: {}:{} {}",
         diagnostic.severity, diagnostic.file, diagnostic.line, diagnostic.message
+    )
+}
+
+pub fn is_check_warning(diagnostic: &Diagnostic) -> bool {
+    matches!(
+        diagnostic.kind,
+        DiagnosticKind::WorkerRateLimitUnresolved | DiagnosticKind::CheckAbstention
     )
 }
 
@@ -81,6 +103,7 @@ pub(super) struct InternalProducer {
 pub(super) struct InternalWorker {
     pub site: crate::queue::extract::WorkerSite,
     pub queue: Option<QueueKey>,
+    pub reachable_files: HashSet<PathBuf>,
 }
 
 pub(super) fn diagnostics(
@@ -91,8 +114,21 @@ pub(super) fn diagnostics(
 ) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     for (path, facts) in facts {
+        out.extend(
+            facts
+                .check_abstentions
+                .iter()
+                .map(|&(line, message)| Diagnostic {
+                    kind: DiagnosticKind::CheckAbstention,
+                    severity: Severity::Warning,
+                    file: relative_string(root, path),
+                    line,
+                    message: message.to_string(),
+                }),
+        );
         for (line, message) in &facts.diagnostics {
             out.push(Diagnostic {
+                kind: DiagnosticKind::AnalysisNote,
                 severity: Severity::Warning,
                 file: relative_string(root, path),
                 line: *line,
@@ -132,6 +168,7 @@ pub(super) fn dedup_sorted<T: Ord>(mut values: Vec<T>) -> Vec<T> {
 
 fn unresolved_producer(root: &Path, producer: &InternalProducer) -> Option<Diagnostic> {
     (producer.queue.is_none() || producer.site.job.is_none()).then(|| Diagnostic {
+        kind: DiagnosticKind::AnalysisNote,
         severity: Severity::Warning,
         file: relative_string(root, &producer.site.file),
         line: producer.site.line,
@@ -141,6 +178,7 @@ fn unresolved_producer(root: &Path, producer: &InternalProducer) -> Option<Diagn
 
 fn unresolved_worker(root: &Path, worker: &InternalWorker) -> Option<Diagnostic> {
     worker.queue.is_none().then(|| Diagnostic {
+        kind: DiagnosticKind::AnalysisNote,
         severity: Severity::Warning,
         file: relative_string(root, &worker.site.file),
         line: worker.site.line,

@@ -23,6 +23,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT put mutable state in a payload; pass ids and re-read when the job runs. Facts fixed when the event happened, such as the price charged, belong in the payload.
 - SHOULD NOT sleep inside a job; defer it through the queue.
 - SHOULD NOT ship bulk work without sizing it against production volume.
+- SHOULD NOT keep completed or failed jobs without a bound; set a count or age limit, and keep the durable record of the work in the database.
 
 ## Leases
 

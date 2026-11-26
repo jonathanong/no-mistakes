@@ -1,0 +1,25 @@
+SET ROLE NONE;
+SET TRANSACTION READ ONLY;
+
+EXPLAIN ANALYZE
+WITH seed AS (SELECT 42 AS id)
+INSERT INTO sample_jobs (id) SELECT id FROM seed;
+
+BEGIN;
+EXPLAIN ANALYZE
+WITH seed AS (SELECT 42 AS id)
+UPDATE sample_jobs AS j SET status = 'ready' FROM seed WHERE j.id = seed.id;
+
+EXPLAIN ANALYZE
+WITH seed AS (SELECT 43 AS id)
+DELETE FROM sample_jobs AS j USING seed WHERE j.id = seed.id;
+
+EXPLAIN ANALYZE
+WITH seed AS (SELECT 44 AS id)
+MERGE INTO sample_jobs AS j USING seed ON j.id = seed.id
+WHEN MATCHED THEN DELETE;
+
+EXPLAIN ANALYZE
+WITH retired AS (DELETE FROM sample_jobs WHERE id = 45 RETURNING id)
+SELECT id FROM retired;
+COMMIT;

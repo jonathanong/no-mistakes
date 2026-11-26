@@ -1,0 +1,10 @@
+- rule: github-actions-cache-key-policy
+  scope: repository
+  options:
+    forbiddenPaths:
+      - .cache/widgets
+    caches:
+      - path: .cache/widgets
+        lockfile: pnpm-lock.yaml
+        keyParts:
+          - runner.os

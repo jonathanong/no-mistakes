@@ -16,7 +16,9 @@ pub(super) use header::child_start as prepared_child_start;
 mod options;
 mod restoration;
 mod semantics;
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod span;
+use span::span;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0, nm_shard_postgres_source)))]
 mod tests;
 use super::completeness::statement as complete;
 pub(super) use options::prepare;
@@ -97,11 +99,13 @@ fn project(
             statement,
             ..
         } => {
-            let execution = if *query_plan || *estimate || !options::legacy_format(*format) {
-                PostgresSqlExecution::Unknown
-            } else {
-                options::execution(*analyze, options.as_deref())
-            };
+            let execution = explain_execution(
+                *analyze,
+                *query_plan,
+                *estimate,
+                *format,
+                options.as_deref(),
+            );
             (
                 PostgresSqlWrapperKind::Explain,
                 execution,
@@ -161,6 +165,20 @@ fn project(
     Some(wrapper)
 }
 
+pub(in crate::codebase::postgres) fn explain_execution(
+    analyze: bool,
+    query_plan: bool,
+    estimate: bool,
+    format: Option<sqlparser::ast::AnalyzeFormatKind>,
+    options: Option<&[sqlparser::ast::UtilityOption]>,
+) -> PostgresSqlExecution {
+    if query_plan || estimate || !options::legacy_format(format) {
+        PostgresSqlExecution::Unknown
+    } else {
+        options::execution(analyze, options)
+    }
+}
+
 pub(super) fn function(
     value: &sqlparser::ast::CreateFunction,
     parser: &mut Parser<'_>,
@@ -176,32 +194,4 @@ pub(super) fn declaration() -> PostgresSqlWrapper {
     );
     wrapper.diagnostics.push(diagnostic("Function body is opaque; declaration facts do not imply body execution or complete child facts", None));
     wrapper
-}
-
-fn span(tokens: &[TokenWithSpan], context: &Context<'_, '_>) -> Option<PostgresSqlSpan> {
-    let mut significant = tokens
-        .iter()
-        .filter(|token| !matches!(token.token, Token::Whitespace(_)));
-    let first = significant.next()?;
-    let last = significant.next_back().unwrap_or(first);
-    let original_end = tokens
-        .iter()
-        .filter_map(|token| {
-            context
-                .comments
-                .borrow()
-                .get(&token.span.start)
-                .map(|comment| comment.end)
-        })
-        .max()
-        .unwrap_or(last.span.end)
-        .max(last.span.end);
-    context.locations.span(Span {
-        start: first.span.start,
-        end: crate::codebase::postgres::parse::fetch_expression::source_end(
-            context.fetch,
-            first.span.start,
-            original_end,
-        ),
-    })
 }

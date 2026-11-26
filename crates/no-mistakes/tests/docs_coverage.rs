@@ -32,6 +32,8 @@ use cli_docs_helpers::{
 mod docs_coverage_commands;
 #[path = "support/docs_coverage_rules.rs"]
 mod docs_coverage_rules;
+#[path = "support/docs_coverage_test_reliability.rs"]
+mod docs_coverage_test_reliability;
 #[path = "support/docs_rule_inventory_checks.rs"]
 mod docs_rule_inventory_checks;
 
@@ -287,6 +289,24 @@ fn dependabot_cooldown_policy_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn cross_package_relative_imports_are_documented() {
+    let rule = no_mistakes::codebase::rules::NO_CROSS_PACKAGE_RELATIVE_IMPORTS;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    for path in [
+        "docs/rules/README.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
 fn vitest_default_excludes_is_in_the_public_rule_inventory() {
     let rule = "vitest-default-excludes";
     let root = repo_root();
@@ -459,4 +479,40 @@ fn changes_diff_and_semantic_test_routing_have_public_docs() {
     }
     assert!(read(&root.join("packages/no-mistakes/changes-types.d.ts"))
         .contains("export interface ChangesDiffOptions"));
+}
+
+#[test]
+fn native_control_nesting_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::REACT_NO_NESTED_BUTTONS_AND_LINKS;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    for path in [
+        "docs/rules/README.md",
+        "docs/rules/react-no-nested-buttons-and-links.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
+fn package_json_export_target_prefix_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::PACKAGE_JSON_EXPORT_TARGET_PREFIX;
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    assert!(root.join(format!("docs/rules/{rule}.md")).is_file());
+    for path in [
+        "docs/rules/README.md",
+        "docs/cli/check.md",
+        "docs/configuration/rules.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
 }

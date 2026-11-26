@@ -1,5 +1,8 @@
 # Feature Parity
 
+The opt-in [`package-json-export-target-prefix`](rules/package-json-export-target-prefix.md)
+rule checks Node package export target syntax in both CLI and async Node reports.
+
 The shell compatibility checks
 [`bash-empty-array-nounset`](rules/bash-empty-array-nounset.md) and
 [`zsh-readonly-parameter`](rules/zsh-readonly-parameter.md) share file selection,
@@ -48,6 +51,10 @@ checks `.github/dependabot.yml` in Rust, CLI `check`, async Node `check()`, and
 `analyzeProject()` check reports. These entry points share the same cooldown
 floor, explicit PR limit check, exclusion globs, ecosystem exemptions, and
 incomplete-input diagnostics.
+
+[`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) checks recorded
+TS/JS imports against declared workspace ownership through Rust, CLI `check`,
+and async Node `check()` and `analyzeProject()` check reports.
 
 Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
 literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
@@ -490,8 +497,11 @@ a second route graph.
 
 **Queues.** `queues edges`, `queues related`, and `queues check` connect
 TS/JS producers to virtual job nodes to workers. `queues.requiredJobOptions`
-adds `missing-job-option` when a producer omits a configured key; an empty
-list leaves the report unchanged. Celery, Asynq, Kafka, Active
+adds `missing-job-option` when a producer omits a configured key;
+`queues.unboundedJobRetention` adds `unbounded-job-retention` when completed or
+failed jobs are kept without a bound; `queues.jobStateAsRecord` adds advisory
+`job-state-as-record` findings when ephemeral queue job state drives retries or
+re-enqueues; all three are opt-in and leave default output unchanged. Celery, Asynq, Kafka, Active
 Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 `queue-worker` edges into `DepGraph`; query those with
 `dependents --relationship queue`. The dedicated `queues` commands project
@@ -954,6 +964,11 @@ non-production. v1 emits `dart test`, not `flutter test`.
 
 ## Shared Domain Rules
 
+The CLI and async Node check APIs share the opt-in [`react-no-nested-buttons-and-links`](rules/react-no-nested-buttons-and-links.md) rule for native buttons and links in selected JSX and TSX files.
+The CLI and async Node check APIs share the opt-in
+[`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
+rule for portable Swift files.
+
 Route, queue, and Kafka extractors are language-specific visitors. Route
 visitors emit `route` edges. HTTP callers emit `http`. Queue and Kafka
 visitors emit `queue-enqueue` and `queue-worker`. `server-route` and
@@ -1249,6 +1264,12 @@ propagation or incomplete reports for dynamic projects. Unreadable or malformed
 selected sources produce incomplete evidence. Application include/exclude filters
 and source suppressions apply to declaration diagnostics. Config is never executed
 and the rule does not discover repository files.
+
+Opt-in [`test-no-retries`](rules/test-no-retries.md) checks literal TypeScript
+and JavaScript retry settings for Vitest, Playwright, and Jest, plus supported
+GitHub Actions YAML steps. [`playwright-no-serial`](rules/playwright-no-serial.md)
+checks Playwright serial settings in TypeScript and JavaScript. Rust, CLI
+`check`, async Node `check()`, and batched `analyzeProject()` share both rules.
 
 Opt-in [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
 checks configured TypeScript/JavaScript PostgreSQL executors for unwritten-row,

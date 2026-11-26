@@ -1,0 +1,7 @@
+version: 2
+projects:
+  workers:
+    root: .
+    queues:
+      enqueues: ["apps/**/*.mts", "packages/**/*.mts"]
+      workers: ["apps/**/*.mts", "packages/**/*.mts"]

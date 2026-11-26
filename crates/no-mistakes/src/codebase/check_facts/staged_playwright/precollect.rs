@@ -30,16 +30,16 @@ pub(super) fn cached_config_file_facts(
             })
             .filter(|path| !precollected.contains_key(path))
             .filter_map(|path| {
-                let vitest_demanded = plan.vitest_default_exclude_paths.contains(path);
-                if !vitest_demanded
-                    && !universe.contains(path)
-                    && !plan.legacy_symbol_paths.contains(path)
+                let demanded = plan.vitest_default_exclude_paths.contains(path)
+                    || plan.nested_control_paths.contains(path)
+                    || plan.test_reliability_paths.contains_key(path);
+                if !demanded && !universe.contains(path) && !plan.legacy_symbol_paths.contains(path)
                 {
                     return None;
                 }
                 let source = match sources.read_source_path(path) {
                     Ok(source) => source,
-                    Err(error) if vitest_demanded => {
+                    Err(error) if demanded => {
                         return Some((
                             path.clone(),
                             super::super::file_parse_error::read_facts(root, path, plan, error),

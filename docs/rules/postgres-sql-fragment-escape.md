@@ -152,6 +152,15 @@ by the shared import visitor, including calls inside functions and CommonJS
 `require("module")` / `require("node:module")` forms. The factory must
 come from `node:module` or `module`. A non-literal argument remains unproven.
 
+When checking for missing literal module-load facts, the bounded source
+scan skips regular expression literals so quotes, parentheses, and apparent
+calls inside them stay out of the load check. A closing `)` or `]` rules
+out a regular expression opener. After `}` or `++`, the scan can treat a
+slash as a regular expression opener when a second slash closes it on the
+same line.
+In that case it skips the intervening text, even when both slashes are
+division operators.
+
 A member read that is the sole argument of `.append(...)` is not an escape.
 `query.append(fragment)` and `query.append(ns["FRAGMENT"])` stay silent. A `!`
 or `as` assertion around that argument is left to `postgres-no-executor-adapter`.

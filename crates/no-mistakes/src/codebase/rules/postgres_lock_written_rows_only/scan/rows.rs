@@ -16,6 +16,15 @@ pub(super) fn enabled_for(call: &EmbeddedSqlCall, written: bool, outside: bool) 
         written || outside
     }
 }
+pub(super) const UNCERTAIN_UPSERT_SCOPE: &str = "cannot prove the upsert covers the physical table scope of this lock; provide a complete catalog with descendant evidence or use FROM ONLY when the lock should target just this table";
+
+pub(super) fn upsert_lock_scope(only: bool, catalog: Option<&SchemaCatalog>, relation: &str) -> bool {
+    only || catalog.is_some_and(|catalog| {
+        catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete
+            && catalog.has_descendants(relation) == Some(false)
+    })
+}
+
 pub(super) fn check_transaction(
     output: &mut Output<'_>,
     site: &Site<'_>,
@@ -23,15 +32,22 @@ pub(super) fn check_transaction(
     writes: &writes::Writes<'_>,
     id: u32,
     unresolved: bool,
-    written_by_trigger: bool,
+    (written_by_trigger, catalog): (bool, Option<&SchemaCatalog>),
 ) {
     if unresolved {
         output.unresolved(site, "transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set");
     } else if let Some(relation) = &lock.relation {
-        if !written_by_trigger {
-            let (candidates, ambiguous) = writes.for_relation(id, relation);
-            check(output, site, lock, candidates, relation, ambiguous);
+        if written_by_trigger {
+            return;
         }
+        let issue = match writes.matches_upsert(id, relation, lock, site.call) {
+            Some(true) if upsert_lock_scope(lock.only, catalog, relation) => return,
+            Some(true) => Some(UNCERTAIN_UPSERT_SCOPE),
+            Some(false) => None,
+            None => Some("cannot prove the lock and upsert use the same immutable row key"),
+        };
+        let (candidates, ambiguous) = writes.for_relation(id, relation);
+        check(output, site, lock, candidates, relation, ambiguous, issue);
     } else {
         output.unresolved(
             site,
@@ -118,6 +134,7 @@ fn check(
     candidates: &[(&RowAccess, &EmbeddedSqlCall)],
     relation: &str,
     mut unknown: bool,
+    upsert_issue: Option<&str>,
 ) {
     for (write, call) in candidates {
         let Some((write_column, write_key)) = &write.key else {
@@ -145,7 +162,9 @@ fn check(
     if candidates.is_empty() && output.write_set(site, relation) {
         return;
     }
-    if unknown {
+    if let Some(reason) = upsert_issue {
+        output.unresolved(site, reason);
+    } else if unknown {
         output.unresolved(site, "row key identity is unresolved; use the same immutable binding and equality column for the lock and write");
     } else {
         output.emit(site, CHECKS[0], Some(relation), lock.key.as_ref().map(|(_, key)| key.as_str()), &format!("locked row in {relation} is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock"));

@@ -156,10 +156,15 @@ test("macOS smoke restores main test-harness snapshot before the Rust tests and 
   const target = (text) => text.replaceAll("${{ matrix.target }}", "aarch64-apple-darwin");
   const key = (step) => target(step.match(/key: (native-test-harness-workspace-v2-.*)\n/)[1]);
   const fallbacks = (step) =>
-    target(step.split("restore-keys: |\n")[1].split("          path:")[0]);
+    target(step.split("restore-keys: |\n")[1].split("          path:")[0])
+      .trim()
+      .split("\n")
+      .map((prefix) => prefix.trim());
+  const runtime = all.find((step) => step.startsWith("Restore native workspace artifacts"));
   assert.equal(key(restore), key(producer));
-  assert.equal(fallbacks(restore), fallbacks(producer));
+  assert.deepEqual(fallbacks(restore), [...fallbacks(producer), fallbacks(runtime)[0]]);
   assert.equal(paths(restore), paths(producer));
+  assert.equal(paths(restore), paths(runtime));
   const inputsIndex = index("Restore macOS test input timestamps");
   const compileIndex = index("Compile macOS-dependent Rust tests");
   const testsIndex = index("Run macOS-dependent Rust tests");

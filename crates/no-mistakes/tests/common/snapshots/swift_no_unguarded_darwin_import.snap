@@ -1,0 +1,468 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "Tests/Imports.swift",
+          "line": 15,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 2,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 20,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 23,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 4,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@_spi(Private) import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 8,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/ClockTests.swift",
+          "line": 2,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 31,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import func Darwin.getpagesize"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 32,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@preconcurrency import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 33,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import /* system module */ `Darwin`"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 26,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Foundation; import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 27,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@_spi(Private) import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 29,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 35,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 9,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "#endif; import Darwin"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_and_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/Imports.swift",
+          "line": 15,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 31,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import func Darwin.getpagesize"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 32,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@preconcurrency import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 33,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import /* system module */ `Darwin`"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 2,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 20,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 23,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 26,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Foundation; import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 27,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@_spi(Private) import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 29,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 35,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 4,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@_spi(Private) import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 8,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 9,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`. Keep this target portable.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "#endif; import Darwin"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/ClockTests.swift",
+          "line": 2,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 15,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 31,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import func Darwin.getpagesize"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 32,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@preconcurrency import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 33,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import /* system module */ `Darwin`"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 2,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 20,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 23,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 26,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Foundation; import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 27,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@_spi(Private) import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 29,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 35,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 4,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@_spi(Private) import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 8,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 9,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "#endif; import Darwin"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "Tests/Suppressed.swift",
+          "line": 5,
+          "message": "directive for `swift-no-unguarded-darwin-import` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line swift-no-unguarded-darwin-import -- platform-selected test",
+          "target": "swift-no-unguarded-darwin-import"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/ClockTests.swift",
+          "line": 2,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 31,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import func Darwin.getpagesize"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 32,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@preconcurrency import Darwin"
+        },
+        {
+          "file": "Tests/Imports.swift",
+          "line": 33,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import /* system module */ `Darwin`"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 26,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Foundation; import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 27,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "@_spi(Private) import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 29,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 35,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/Review.swift",
+          "line": 9,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "#endif; import Darwin"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,10 @@
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      actions:
+        - uses: "${{ matrix.widget }}"
+          allowedInputs:
+            - name
+          require:
+            format: json

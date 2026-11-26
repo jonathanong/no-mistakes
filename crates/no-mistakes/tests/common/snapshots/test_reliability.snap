@@ -1,0 +1,1684 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowlist": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 12,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 20,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 35,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 41,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 50,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 58,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 62,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/unit.config.ts",
+          "line": 5,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retry: 2,",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 5,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 6,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: false,",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 5,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.serial(\"checkout\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 3,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "describe(\"checkout\", { retry: 2 }, () => {",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 6,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"falls back to cash\", { retry: process.env.CI ? 2 : 0 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/globals.test.ts",
+          "line": 2,
+          "message": "Vitest retry configures a retry count of 3. Keep retries at or below 2 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test(\"exceeds the project cap\", { retry: 3 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 3,
+          "message": "Jest retryTimes configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(3);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 5,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(retriesFromEnvironment);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 6,
+          "message": "Jest retryTimes configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(2);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/mixed.test.ts",
+          "line": 5,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"checks receipt formatting\", { retry: 2 }, () => {});",
+          "target": "Vitest retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "blank-reason": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "test-no-retries",
+          "message": "test-no-retries: allowlist[0]: reason must not be blank"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 12,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 20,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 35,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 41,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 50,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 58,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 62,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 7,
+          "message": "GitHub Actions retry action configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "GitHub Actions retry action"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "browser/grid.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/unit.config.ts",
+          "line": 5,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retry: 2,",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "config/unit.config.ts",
+          "line": 8,
+          "message": "Vitest test.retry configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ test: { name: \"approved\", retry: 3 } },",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "legacy/playwright.config.cjs",
+          "line": 2,
+          "message": "Playwright retries configures a retry count of 4. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retries: 4,",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "legacy/playwright.config.cjs",
+          "line": 3,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 10,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"browser\", retries: 2, workers: 1, fullyParallel: false },",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright retries configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "retries: 1,",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 5,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 6,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: false,",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 9,
+          "message": "Playwright fullyParallel: false limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"approved\", retries: 3, workers: 1, fullyParallel: false },",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 9,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"approved\", retries: 3, workers: 1, fullyParallel: false },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 9,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "{ name: \"approved\", retries: 3, workers: 1, fullyParallel: false },",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "browserTest.describe.configure({ retries: 3, mode: \"serial\" });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/checkout.spec.ts",
+          "line": 5,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "browserTest.describe.serial(\"checkout\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 3,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "describe(\"checkout\", { retry: 2 }, () => {",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 4,
+          "message": "Vitest retry configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"shows a receipt\", { retry: 1 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/checkout.test.ts",
+          "line": 6,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"falls back to cash\", { retry: process.env.CI ? 2 : 0 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/excluded.spec.ts",
+          "line": 3,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.serial(\"exclusive scenario\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/external.test.ts",
+          "line": 3,
+          "message": "Vitest retry configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test(\"opens a remote browser\", { retry: 3 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 3,
+          "message": "Jest retryTimes configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(3);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 5,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "legacyJest.retryTimes(retriesFromEnvironment);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/legacy.test.ts",
+          "line": 6,
+          "message": "Jest retryTimes configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(2);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "tests/mixed.test.ts",
+          "line": 5,
+          "message": "Vitest retry configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "unitTest(\"checks receipt formatting\", { retry: 2 }, () => {});",
+          "target": "Vitest retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "followups": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-alias.spec.ts",
+          "message": "tests/class-alias.spec.ts:19: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-alias.spec.ts",
+          "message": "tests/class-alias.spec.ts:9: cannot verify whether `declared.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-instance.spec.ts",
+          "message": "tests/class-instance.spec.ts:12: cannot verify whether `test` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-instance.spec.ts",
+          "message": "tests/class-instance.spec.ts:8: cannot verify whether `new Suite().runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/class-this.spec.ts",
+          "message": "tests/class-this.spec.ts:7: cannot verify whether `this.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:12: cannot verify whether `localSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:15: cannot verify whether `chainedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/conditional-fixture.spec.ts",
+          "message": "tests/conditional-fixture.spec.ts:9: cannot verify whether `reexported` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/constructor-arg.spec.ts",
+          "message": "tests/constructor-arg.spec.ts:13: cannot verify whether `alias.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/distinct-factory.spec.ts",
+          "message": "tests/distinct-factory.spec.ts:9: cannot verify whether `test` is Playwright's `test` (local factory returns multiple distinct fixture origins); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:11: cannot verify whether `barreledSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:14: cannot verify whether `conditionalSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:17: cannot verify whether `typedSuite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/let-later.spec.ts",
+          "message": "tests/let-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local-fixture.spec.ts",
+          "message": "tests/local-fixture.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:11: cannot verify whether `selfRef` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:14: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:17: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:20: cannot verify whether `s` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/loop.spec.ts",
+          "message": "tests/loop.spec.ts:4: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/member-boundaries.spec.ts",
+          "message": "tests/member-boundaries.spec.ts:4: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/mixed-factory.spec.ts",
+          "message": "tests/mixed-factory.spec.ts:11: cannot verify whether `suite` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/namespace-alias.spec.ts",
+          "message": "tests/namespace-alias.spec.ts:12: cannot verify whether `localAlias.base` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/namespace-alias.spec.ts",
+          "message": "tests/namespace-alias.spec.ts:9: cannot verify whether `alias.test` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/parameter.spec.ts",
+          "message": "tests/parameter.spec.ts:10: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/parameter.spec.ts",
+          "message": "tests/parameter.spec.ts:4: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/var-later.spec.ts",
+          "message": "tests/var-later.spec.ts:6: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/class-getter.spec.ts",
+          "message": "tests/class-getter.spec.ts:10: cannot verify whether `suite` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/class-instance.spec.ts",
+          "message": "tests/class-instance.spec.ts:9: cannot verify whether `new Suite().runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/class-this.spec.ts",
+          "message": "tests/class-this.spec.ts:8: cannot verify whether `this.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/constructor-arg.spec.ts",
+          "message": "tests/constructor-arg.spec.ts:10: cannot verify whether `holder.runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/constructor-arg.spec.ts",
+          "message": "tests/constructor-arg.spec.ts:7: cannot verify whether `new Holder().runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/external-fixture.spec.ts",
+          "message": "tests/external-fixture.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/let-later.spec.ts",
+          "message": "tests/let-later.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local-fixture.spec.ts",
+          "message": "tests/local-fixture.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/logical-assign.spec.ts",
+          "message": "tests/logical-assign.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/loop.spec.ts",
+          "message": "tests/loop.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/member-boundaries.spec.ts",
+          "message": "tests/member-boundaries.spec.ts:6: cannot verify whether `runner` is Playwright's `test` (member access in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/mixed-factory.spec.ts",
+          "message": "tests/mixed-factory.spec.ts:12: cannot verify whether `suite` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/parameter.spec.ts",
+          "message": "tests/parameter.spec.ts:5: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/var-later.spec.ts",
+          "message": "tests/var-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 15,
+          "message": "GitHub Actions test rerun loop configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 28,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/loops.yml",
+          "line": 40,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 13,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 19,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/noclobber-and-pid.yml",
+          "line": 25,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 19,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 24,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 30,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/piped-input.yml",
+          "line": 35,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 14,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 20,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 28,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 34,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 46,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 56,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 66,
+          "message": "GitHub Actions test rerun loop configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": ".github/workflows/retry-signals.yml",
+          "line": 8,
+          "message": "GitHub Actions test rerun loop configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "run: |",
+          "target": "GitHub Actions test rerun loop"
+        },
+        {
+          "file": "playwright.config.ts",
+          "line": 4,
+          "message": "Playwright workers: 1 limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: process.env.CI ? 1 : undefined,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "tests/namespace-alias.spec.ts",
+          "line": 5,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "ns.test.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/namespace-alias.spec.ts",
+          "line": 6,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "ns.test.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "local-playwright": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/browser-options.ts",
+          "line": 11,
+          "message": "Playwright retries configures an unverified retry count. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "projects: [{ name: \"secondary\", retries: Number(process.env.TEST_RETRIES) }],",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/browser-options.ts",
+          "line": 6,
+          "message": "Playwright retries configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "return { retries: process.env.CI ? 1 : 0 };",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 19,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fixtures.test.describe.serial.only(\"ordered suite\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 7,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 7,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 8,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "extended.describe.configure({ mode: \"serial\", retries: 3 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 8,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "extended.describe.configure({ mode: \"serial\", retries: 3 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "local-playwright-default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:10: cannot verify whether imported binding `fake` (from `helpers/fake.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/fake.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:11: cannot verify whether imported binding `cycle` (from `helpers/loop.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/loop.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:22: cannot verify whether imported binding `ambiguous` (from `helpers/ambiguous.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/ambiguous.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/local.spec.ts",
+          "message": "tests/local.spec.ts:25: cannot verify whether imported binding `invalidExtension` (from `helpers/invalid-extension.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/invalid-extension.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/local.spec.ts",
+          "line": 19,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fixtures.test.describe.serial.only(\"ordered suite\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 7,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 7,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 8,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "extended.describe.configure({ mode: \"serial\", retries: 3 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/local.spec.ts",
+          "line": 8,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "extended.describe.configure({ mode: \"serial\", retries: 3 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "broken.spec.ts",
+          "message": "parsing broken.spec.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 13, end: 14 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }. Repair this file so playwright-no-serial can verify its test settings."
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": ".github/workflows/broken.yml",
+          "message": "did not find expected node content at line 3 column 1, while parsing a flow node. Repair this file so test-no-retries can verify its test settings."
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "broken.spec.ts",
+          "message": "parsing broken.spec.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 13, end: 14 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }. Repair this file so test-no-retries can verify its test settings."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "valid.spec.ts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "valid.spec.ts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "playwright-export-shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:13: cannot verify whether imported binding `defaultFromStar` (from `fixtures/runner.ts` export `default`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"fixtures/runner.ts\", export: \"default\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:14: cannot verify whether imported binding `mixed` (from `fixtures/mixed.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"fixtures/mixed.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:15: cannot verify whether imported binding `opaque` (from `fixtures/opaque.ts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"fixtures/opaque.ts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:16: cannot verify whether imported binding `unavailable` (from `../fixtures/unavailable` export `test`) is Playwright's `test`; if it is a Playwright fixture, add its repository-relative module and export to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/exports.spec.ts",
+          "message": "tests/exports.spec.ts:22: cannot verify whether `bound` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/options.ts",
+          "line": 9,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "return { retries: 2, projects: [{ name: \"secondary\" }] };",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/exports.spec.ts",
+          "line": 10,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "relayed.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/exports.spec.ts",
+          "line": 11,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "starred.describe.configure({ mode: \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/exports.spec.ts",
+          "line": 9,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "local.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "static-shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "__tests__/globals.ts",
+          "line": 3,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(-1);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "__tests__/globals.ts",
+          "line": 4,
+          "message": "Jest retryTimes configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(0x02);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "__tests__/globals.ts",
+          "line": 5,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(inCI ? maxAttempts : 0);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "__tests__/globals.ts",
+          "line": 6,
+          "message": "Jest retryTimes configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "jest.retryTimes(inCI ? 0 : maxAttempts);",
+          "target": "Jest retryTimes"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 2,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "workers: inCI ? 2 : 1,",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 3,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "fullyParallel: inCI ? false : true,",
+          "target": "Playwright fullyParallel: false"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 5,
+          "message": "Playwright retries configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: projectName, retries: 2.5 },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/browser.mts",
+          "line": 6,
+          "message": "Playwright retries configures an unverified retry count. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "{ name: \"unlimited\", retries: 1e30 },",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/common.cjs",
+          "line": 1,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "const settings = { retries: 3, workers: 1 };",
+          "target": "Playwright workers: 1"
+        },
+        {
+          "file": "config/common.cjs",
+          "line": 1,
+          "message": "Playwright retries configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "const settings = { retries: 3, workers: 1 };",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "config/opaque-projects/vitest.config.ts",
+          "line": 1,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "export default { test: { retry: 2, projects: loadProjects() } };",
+          "target": "Vitest test.retry"
+        },
+        {
+          "file": "scripts/quality.ts",
+          "line": 3,
+          "message": "Keep this Playwright suite parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "playwright.test.describe[\"configure\"]({ mode: inCI ? \"parallel\" : \"serial\" });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/excluded.spec.ts",
+          "line": 5,
+          "message": "Vitest retry configures a retry count of 3. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "it(\"renders the outline\", { retry: 3 }, () => {});",
+          "target": "Vitest retry"
+        },
+        {
+          "file": "vite.config.ts",
+          "line": 3,
+          "message": "Vitest test.retry configures a retry count of 2. Keep retries at or below 1 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "const inline = vitest.defineProject({ test: { [\"retry\"]: +2 } });",
+          "target": "Vitest test.retry"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow-action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 17,
+          "message": "GitHub Actions retry action configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "GitHub Actions retry action"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 25,
+          "message": "GitHub Actions retry action configures a retry count of 1. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: Wandalen/wretry.action/main@v3",
+          "target": "GitHub Actions retry action"
+        },
+        {
+          "file": ".github/workflows/test.yml",
+          "line": 7,
+          "message": "GitHub Actions retry action configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "- uses: nick-fields/retry@v3",
+          "target": "GitHub Actions retry action"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "wrapped-fixtures": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:13: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:14: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/factory.spec.mts",
+          "message": "tests/factory.spec.mts:10: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/opaque.spec.mts",
+          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:8: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:14: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:15: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/factory.spec.mts",
+          "message": "tests/factory.spec.mts:11: cannot verify whether imported binding `opaque` (from `helpers/factory.mts` export `createOpaqueTest`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/factory.mts\", export: \"createOpaqueTest\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/opaque.spec.mts",
+          "message": "tests/opaque.spec.mts:3: cannot verify whether imported binding `opaqueTest` (from `helpers/opaque-wrapper.mts` export `test`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/opaque-wrapper.mts\", export: \"test\" }` to `test-no-retries` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:9: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 4,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "followed.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 7,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "followedWithArgs.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "wrapped-fixtures-configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:13: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:14: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:4: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:8: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `playwright-no-serial` `options.fixtures`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/control-flow-factory.spec.mts",
+          "message": "tests/control-flow-factory.spec.mts:14: cannot verify whether `t` is Playwright's `test` (local factory return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/deep-chain.spec.mts",
+          "message": "tests/deep-chain.spec.mts:15: cannot verify whether `t` is Playwright's `test` (fixture chain exceeded static trace depth); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/destructured-binding.spec.mts",
+          "message": "tests/destructured-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/let-binding.spec.mts",
+          "message": "tests/let-binding.spec.mts:5: cannot verify whether `t` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/same-file-object-assign.spec.mts",
+          "message": "tests/same-file-object-assign.spec.mts:9: cannot verify whether `t` is Playwright's `test` (local wrapper or call in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/unrelated.spec.mts",
+          "message": "tests/unrelated.spec.mts:3: cannot verify whether imported binding `specBuilder` (from `helpers/unrelated.mts` export `specBuilder`) is Playwright's `test`; if it is a Playwright fixture, add `{ module: \"helpers/unrelated.mts\", export: \"specBuilder\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/admin.spec.mts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "test.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 10,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "opaque.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 11,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "opaque.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 4,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "followed.describe.serial(\"ordered\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/factory.spec.mts",
+          "line": 7,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "followedWithArgs.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/opaque.spec.mts",
+          "line": 3,
+          "message": "Playwright describe serial mode limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "opaqueTest.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright describe serial mode"
+        },
+        {
+          "file": "tests/opaque.spec.mts",
+          "line": 3,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "opaqueTest.describe.configure({ mode: \"serial\", retries: 2 });",
+          "target": "Playwright retries"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

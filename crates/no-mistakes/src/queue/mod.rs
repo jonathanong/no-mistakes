@@ -20,6 +20,7 @@ mod graph_model;
 mod graph_related;
 mod graph_resolution;
 mod job_options;
+mod job_state;
 mod lang;
 mod number_scope;
 mod object_bindings;
@@ -28,26 +29,31 @@ mod priority_mix;
 mod rate_limit;
 mod resolver;
 mod source;
+mod test_scope;
 mod types;
 mod worker_rate_limit;
 
 pub use graph::{
-    analyze_project, analyze_project_indexed, analyze_project_with_facts,
-    analyze_project_with_prepared_facts,
+    analyze_project, analyze_project_indexed, analyze_project_with_config,
+    analyze_project_with_facts, analyze_project_with_prepared_facts,
     analyze_project_with_prepared_facts_and_catalog_and_session,
     analyze_project_with_prepared_facts_indexed,
     analyze_project_with_prepared_facts_indexed_and_catalog_and_session, RelatedDirection,
 };
 pub use graph_model::{
-    format_aggregate_warning, format_diagnostic, CheckFinding, CheckReport, PreparedProjectReport,
-    ProjectReport,
+    format_aggregate_warning, format_diagnostic, is_check_warning, CheckFinding, CheckReport,
+    CheckSeverity, PreparedProjectReport, ProjectReport,
 };
 pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};
-pub use types::{Diagnostic, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity};
+pub use types::{
+    Diagnostic, DiagnosticKind, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity,
+};
 pub use worker_rate_limit::{
     is_worker_rate_limit_unresolved_diagnostic, WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE,
 };
 
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+pub(crate) mod allow_paths_test_hook;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod tests;

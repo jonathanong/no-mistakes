@@ -165,8 +165,8 @@ test("native workflow compiles independent archives and consumers never build Ru
   assert.match(api, /needs: \[changes, native-build\]/);
   assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/);
   for (const [consumer, macosCount] of [
-    [`${rust}\n${job("native-rust-tests-macos")}`, 3],
-    [`${api}\n${job("native-api-tests-macos")}`, 2],
+    [`${rust}\n${job("native-rust-tests-macos")}`, 1],
+    [`${api}\n${job("native-api-tests-macos")}`, 1],
   ]) {
     const rows = [
       ...consumer.matchAll(/- os:\s+(\S+)\s+target:\s+(\S+)\s+shard:\s+(\d+)\s+total:\s+(\d+)/g),

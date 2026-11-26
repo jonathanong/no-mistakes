@@ -19,6 +19,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         session,
         ..
     } = request;
+    if rule_id == REACT_NO_NESTED_BUTTONS_AND_LINKS {
+        return nested_controls::check_prepared(root, config, files, facts, sources, session);
+    }
     if rule_id == VITEST_DEFAULT_EXCLUDES {
         return vitest_default_excludes::check_prepared(
             root, config, files, facts, sources, session,
@@ -31,6 +34,12 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
             &snapshot.paths_for(root),
             sources,
         );
+    }
+    if rule_id == POSTGRES_EXPLAIN_WRITE_ROLLBACK {
+        return postgres_explain_write_rollback::diagnostics_with_files_sources_and_facts(
+            root, config, files, sources, facts, false,
+        )
+        .map(|diagnostics| diagnostics.findings);
     }
     if let Some(out) = postgres::run(rule_id, root, config, files, sources, facts) {
         return out;

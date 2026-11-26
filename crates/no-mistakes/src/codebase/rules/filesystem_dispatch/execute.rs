@@ -71,15 +71,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
-    let owned_facts = if facts.is_none()
-        && (rule_enabled(config, FORBIDDEN_LINT_SUPPRESSIONS)
-            || rule_enabled(config, VITEST_DEFAULT_EXCLUDES)
-            || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
-            || rule_enabled(config, REQUIRED_COMPANION_IMPORTS)
-            || crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
-                .iter()
-                .any(|rule_id| rule_enabled(config, rule_id)))
-    {
+    let owned_facts = if facts.is_none() && call_site_facts::requires_shared_facts(config) {
         super::entrypoints::prepare_call_site_facts(root, config, files, &prepared.sources)?
     } else {
         None
@@ -194,7 +186,6 @@ fn run_prepared_filesystem_rules(
     finalize::findings(&mut findings);
     Ok(findings)
 }
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "execute/tests.rs"]
 mod tests;

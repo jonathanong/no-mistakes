@@ -10,13 +10,15 @@ use sqlparser::ast::{
 mod expressions;
 mod upsert;
 use expressions::{plain_assignments, plain_value};
-pub(super) fn collect(
+pub(super) fn collect<const ADVANCED: bool>(
     statement: &Statement,
     out: &mut LockWriteFacts,
     positions: PlaceholderPositions<'_>,
+    redundant_prelocks: bool,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
 ) {
     match statement {
-        Statement::Query(query) => {
+        Statement::Query(query) if redundant_prelocks => {
             out.prelock_attempt = query
                 .locks
                 .iter()
@@ -25,16 +27,21 @@ pub(super) fn collect(
                 out.prelock = locked_key(query, positions);
             }
         }
-        Statement::Update(update) => {
+        Statement::Update(update) if redundant_prelocks => {
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
-        Statement::Insert(insert) => {
-            if let Some(keys) = upsert::upsert_keys(insert, positions) {
-                if keys.len() == 1 {
-                    out.conditional_write_keys = keys;
-                    out.conditional_write_unique = true;
-                } else {
-                    out.multi_row_upsert_keys = Some(keys.into_boxed_slice());
+        Statement::Insert(insert) if ADVANCED => {
+            if let Some(upsert) = upsert::upsert_keys(insert, positions, tokens) {
+                if redundant_prelocks {
+                    if upsert.keys.len() == 1 {
+                        out.conditional_write_keys = upsert.keys.clone();
+                        out.conditional_write_unique = true;
+                    } else {
+                        out.multi_row_upsert_keys = Some(upsert.keys.clone().into_boxed_slice());
+                    }
+                }
+                if upsert.unconditional {
+                    out.upsert_write_keys.extend(upsert.keys);
                 }
             }
         }
@@ -63,7 +70,6 @@ fn locked_key(query: &Query, positions: PlaceholderPositions<'_>) -> Option<(Row
         || select.having.is_some()
         || select.qualify.is_some()
         || !matches!(&select.group_by, GroupByExpr::Expressions(groups, _) if groups.is_empty())
-        || !matches!(unwrap_expr(projection), Expr::Value(value) if matches!(&value.value, Value::Number(value, _) if value == "1"))
     {
         return None;
     }
@@ -72,7 +78,13 @@ fn locked_key(query: &Query, positions: PlaceholderPositions<'_>) -> Option<(Row
     };
     let only = plain_table(&table.relation)?;
     let qualifier = qualifier(&table.relation)?;
-    equality(select.selection.as_ref()?, &qualifier, positions)?;
+    let key = equality(select.selection.as_ref()?, &qualifier, positions)?;
+    let projects_one = matches!(unwrap_expr(projection), Expr::Value(value) if matches!(&value.value, Value::Number(value, _) if value == "1"));
+    if !projects_one
+        && column(projection, Some(&qualifier), positions).as_ref() != Some(&key.column)
+    {
+        return None;
+    }
     let row = row_locks::collect_legacy(query, positions, true);
     row.relation.is_some().then_some((row, only))
 }
@@ -134,6 +146,7 @@ impl Key {
             recovered_key: None,
             key_identity_unproven: false,
             has_predicate: true,
+            only: false,
         }
     }
 }

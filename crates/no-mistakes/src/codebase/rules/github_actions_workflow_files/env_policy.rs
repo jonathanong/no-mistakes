@@ -1,6 +1,7 @@
 use super::RuleFinding;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
-use crate::config::v2::{NoMistakesConfig, Unanalyzable};
+use crate::codebase::rules::file_diagnostics::{self, InputUncertainty};
+use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -8,8 +9,10 @@ use serde_yaml::Value;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-mod lines;
+pub(in crate::codebase::rules) mod lines;
 mod scan;
+mod scopes;
+pub(in crate::codebase::rules) use scopes::{shape_detail, visit_workflow_scopes, ScopeEvent};
 
 pub const RULE_ID: &str = "github-actions-env-policy";
 
@@ -80,18 +83,6 @@ pub(crate) fn check_with_files_and_sources(
         .map(|output| output.findings)
 }
 
-fn resolve_unanalyzable(
-    config: &NoMistakesConfig,
-    rule: &crate::config::v2::schema::RuleDef,
-) -> Result<Unanalyzable> {
-    let explicit = rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some();
-    if explicit {
-        Ok(config.effective_rule_analysis(rule)?.unanalyzable)
-    } else {
-        Ok(Unanalyzable::Advise)
-    }
-}
-
 pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -103,7 +94,7 @@ pub fn diagnostics_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let policy = compile(&opts)?;
-        let unanalyzable = resolve_unanalyzable(config, rule)?;
+        let unanalyzable = config.effective_rule_analysis(rule)?.unanalyzable;
         if policy.required.is_empty() && policy.forbidden.is_empty() {
             continue;
         }
@@ -121,7 +112,7 @@ pub fn diagnostics_with_files_and_sources(
             opts.include.clone()
         };
         let files = super::super::matching_files(root, &include, &files, &roots)?;
-        let chunks: Vec<AnalysisDiagnostics> = files
+        let chunks: Vec<_> = files
             .par_iter()
             .map(|path| {
                 scan::check_file(
@@ -134,13 +125,24 @@ pub fn diagnostics_with_files_and_sources(
                 )
             })
             .collect();
+        let mut input_failures = Vec::new();
         for chunk in chunks {
-            output.append(chunk);
+            match chunk {
+                Ok(diagnostics) => output.append(diagnostics),
+                Err(finding) => input_failures.push(*finding),
+            }
         }
+        output.append(file_diagnostics::application(
+            root,
+            sources,
+            config,
+            rule,
+            input_failures,
+            defer_suppression,
+            InputUncertainty::ReadOrParse,
+        )?);
     }
-    super::super::sort_findings(&mut output.findings);
-    super::super::sort_findings(&mut output.advisories);
-    Ok(output)
+    Ok(file_diagnostics::sorted(output))
 }
 
 #[cfg(test)]

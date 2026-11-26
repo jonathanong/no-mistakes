@@ -215,6 +215,7 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/shell-compatibility/public.mts"),
       join(repositoryRoot, "fixtures/node-api/test-fixture-size-cap/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/test-reliability/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
     ],
@@ -236,6 +237,23 @@ test("check rule options compile from the package root", () => {
       .getPreEmitDiagnostics(program)
       .map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n")),
     [],
+  );
+});
+
+test("test-no-retries exposes optional config factory path globs and fixture exports", () => {
+  const declaration = readFileSync(join(packageRoot, "test-reliability-types.d.ts"), "utf8");
+  assert.match(
+    declaration,
+    /export interface PlaywrightFixtureExport \{[^}]*module: string;[^}]*export: string;/s,
+  );
+  assert.match(declaration, /export interface TestNoRetriesOptions \{[^}]*files\?: string\[\];/);
+  assert.match(
+    declaration,
+    /export interface TestNoRetriesOptions \{[^}]*fixtures\?: PlaywrightFixtureExport\[\];/,
+  );
+  assert.match(
+    declaration,
+    /export interface PlaywrightNoSerialOptions \{[^}]*fixtures\?: PlaywrightFixtureExport\[\];/,
   );
 });
 
@@ -608,8 +626,12 @@ test("GitHub Actions run command policy exports named option types", () => {
 test("changes diff and planner changes have exported public contracts", () => {
   const changes = readFileSync(join(packageRoot, "changes-types.d.ts"), "utf8");
   assert.match(changes, /export interface KeyChanges/);
+  assert.match(changes, /export type FixtureAttributePaths = Record<string, string\[\]>/);
+  assert.match(changes, /attributePaths\?: FixtureAttributePaths/);
+  assert.match(changes, /assertPureJsonLoader\?: boolean;/);
   assert.match(changes, /export interface ChangesDiffOptions/);
   assert.match(changes, /export type ChangesReport/);
+  assert.match(changes, /changedFiles\?: string\[\];/);
   assert.match(changes, /export function changesDiff/);
   assert.match(changes, /baseRoot: string/);
   assert.match(changes, /headRoot: string/);

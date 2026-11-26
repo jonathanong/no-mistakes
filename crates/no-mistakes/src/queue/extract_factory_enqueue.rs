@@ -31,7 +31,7 @@ pub(super) fn note_enqueue(
         .unwrap_or((None, None));
     let raw_job = job_arg.map(|arg| crate::ast::span_text(visitor.source, arg.span()).to_string());
     if crate::queue::extract_job_id::is_imported_callee(visitor, &call.callee) {
-        note_job_id_options(visitor, call, queue_index, job.clone(), options);
+        note_job_id_options(visitor, call, queue_index, job_arg, options);
     }
     let recorded = visitor.facts.producers.len();
     let priority = match options {
@@ -66,7 +66,7 @@ fn note_job_id_options(
     visitor: &mut QueueVisitor<'_>,
     call: &CallExpression<'_>,
     queue_index: usize,
-    job: Option<String>,
+    job: Option<&Argument<'_>>,
     options: Option<usize>,
 ) {
     if let Some(expr) = options
@@ -78,7 +78,12 @@ fn note_job_id_options(
             .get(queue_index)
             .and_then(Argument::as_expression)
         {
-            crate::queue::extract_job_id::note_factory_options(visitor, receiver, job, expr);
+            crate::queue::extract_job_id::note_factory_options(
+                visitor,
+                receiver,
+                job.and_then(Argument::as_expression),
+                expr,
+            );
         }
     }
 }
@@ -89,18 +94,11 @@ pub(super) fn note_worker(
     name_index: usize,
     processor_index: usize,
 ) {
-    let queue_name = call
+    let (queue_name, queue_name_import) = call
         .arguments
         .get(name_index)
-        .and_then(|arg| visitor.literal_arg(arg));
-    let queue_name_import = if queue_name.is_none() {
-        call.arguments
-            .get(name_index)
-            .and_then(identifier_arg)
-            .filter(|name| visitor.facts.string_imports.contains_key(name))
-    } else {
-        None
-    };
+        .map(|arg| visitor.resolve_queue_name_arg(arg))
+        .unwrap_or((None, None));
     visitor.facts.workers.push(WorkerSite {
         file: visitor.path.to_path_buf(),
         line: line_number(visitor.source, call.span.start),
@@ -116,6 +114,9 @@ pub(super) fn note_worker(
         .worker_rate_limit
         .note_worker_span(call.span.start, index);
     if let Some(arg) = call.arguments.get(processor_index) {
+        if crate::queue::extract_job_id::is_imported_callee(visitor, &call.callee) {
+            visitor.note_rate_limit_processor(arg, index, true);
+        }
         let span = arg.span();
         visitor.processor_spans.push((span.start, span.end, index));
     }

@@ -56,6 +56,7 @@ mod finite_sets;
 mod github_actions;
 mod handled;
 mod manifests;
+mod nested_controls;
 mod partial;
 mod payload_compatibility;
 mod redirects;

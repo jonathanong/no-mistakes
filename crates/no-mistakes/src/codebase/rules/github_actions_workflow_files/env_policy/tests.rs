@@ -152,23 +152,27 @@ fn odd_shapes_are_skipped_or_fall_back_to_the_parent_line() {
         .is_empty());
     let source = "jobs:\n  1:\n    env: {B: v}\n  s: skip\n  t:\n    env: {B: v, 2: x, A: z}\n    steps:\n      - skip\n      - env: {A: ''}\nenv: [a]\n";
     let value: Value = serde_yaml::from_str(source).unwrap();
-    let found = scan::check_parsed("w.yml", source, &value, &policy).0;
+    let (found, undecidable) = scan::check_parsed("w.yml", source, &value, &policy);
     assert_eq!(found.iter().map(|f| f.line).collect::<Vec<_>>(), [6, 6]);
+    assert_eq!(
+        undecidable.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [10, 1, 4, 8]
+    );
 }
 
 #[test]
 fn composite_shapes_and_unterminated_quotes() {
     let opts: Options = serde_yaml::from_str("forbidden: [B]").unwrap();
     let policy = compile(&opts).unwrap();
-    for source in [
-        "runs:\n  using: node20\n  steps:\n    - env: {B: v}\n",
-        "runs:\n  using: composite\n  steps: none\n",
-        "runs: none\n",
+    for (source, expected_undecidable) in [
+        ("runs:\n  using: node20\n  steps:\n    - env: {B: v}\n", 0),
+        ("runs:\n  using: composite\n  steps: none\n", 1),
+        ("runs: none\n", 1),
     ] {
         let value: Value = serde_yaml::from_str(source).unwrap();
-        assert!(scan::check_parsed("a.yml", source, &value, &policy)
-            .0
-            .is_empty());
+        let (found, undecidable) = scan::check_parsed("a.yml", source, &value, &policy);
+        assert!(found.is_empty());
+        assert_eq!(undecidable.len(), expected_undecidable, "{source}");
     }
     use lines::Seg;
     assert_eq!(locate("\"env: x\n", &[Seg::Key("env".into())]), 1);
@@ -177,15 +181,11 @@ fn composite_shapes_and_unterminated_quotes() {
 }
 
 #[test]
-fn explicit_include_missing_files_and_scalar_forms() {
+fn explicit_include_and_scalar_forms() {
     let root = rule_root().join("fixture/violations");
     let file = root.join(".github/workflows/ci.yml");
     let found = check_with_files(&root, &config("include.yml"), &[file]).unwrap();
     assert_eq!(found.len(), 1, "{found:?}");
-    let gone = root.join(".github/workflows/gone.yml");
-    assert!(check_with_files(&root, &config("include.yml"), &[gone])
-        .unwrap()
-        .is_empty());
     let opts: Options = serde_yaml::from_str("required: {FLAG: true, EMPTY: null, N: 1}").unwrap();
     let policy = compile(&opts).unwrap();
     let source = "env:\n  FLAG: true\n  EMPTY:\n  N: 1\n";
@@ -236,4 +236,62 @@ fn non_mapping_env_is_unanalyzable_not_silently_skipped() {
         diagnostics_with_files_and_sources(&root, &config("ignore.yml"), &files, &sources, false)
             .unwrap();
     assert!(ignore.findings.is_empty() && ignore.advisories.is_empty());
+}
+
+#[test]
+fn non_mapping_workflow_and_composite_scopes_are_unanalyzable() {
+    let root = rule_root().join("fixture/non-mapping-scopes");
+    let files = [
+        root.join(".github/workflows/jobs.yml"),
+        root.join(".github/workflows/shapes.yml"),
+        root.join(".github/actions/opaque/action.yml"),
+    ];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let advised =
+        diagnostics_with_files_and_sources(&root, &config("policy.yml"), &files, &sources, false)
+            .unwrap();
+    assert!(advised.findings.is_empty(), "{:?}", advised.findings);
+    let lines: Vec<_> = advised
+        .advisories
+        .iter()
+        .map(|f| (f.file.as_str(), f.line))
+        .collect();
+    assert_eq!(
+        lines,
+        [
+            (".github/actions/opaque/action.yml", 4),
+            (".github/workflows/jobs.yml", 3),
+            (".github/workflows/shapes.yml", 4),
+            (".github/workflows/shapes.yml", 7),
+            (".github/workflows/shapes.yml", 11),
+        ]
+    );
+    let report =
+        diagnostics_with_files_and_sources(&root, &config("report.yml"), &files, &sources, false)
+            .unwrap();
+    assert!(report.advisories.is_empty());
+    assert_eq!(report.findings.len(), 5);
+    let ignore =
+        diagnostics_with_files_and_sources(&root, &config("ignore.yml"), &files, &sources, false)
+            .unwrap();
+    assert!(ignore.findings.is_empty() && ignore.advisories.is_empty());
+}
+
+#[test]
+fn yaml_merge_keys_and_stepless_composite_actions_are_handled() {
+    let opts: Options = serde_yaml::from_str("forbidden: [B]").unwrap();
+    let policy = compile(&opts).unwrap();
+    let workflow = "x-base: &base\n  B: v\n<<: *base\njobs:\n  <<: *base\n  unit:\n    env:\n      <<: *base\n";
+    let value: Value = serde_yaml::from_str(workflow).unwrap();
+    let (findings, undecidable) = scan::check_parsed("w.yml", workflow, &value, &policy);
+    assert!(findings.is_empty());
+    assert_eq!(
+        undecidable.iter().map(|f| f.line).collect::<Vec<_>>(),
+        [3, 5, 8]
+    );
+    let action = "x-base: &base\n  using: composite\nruns:\n  <<: *base\n  using: composite\n";
+    let value: Value = serde_yaml::from_str(action).unwrap();
+    let (findings, undecidable) = scan::check_parsed("a.yml", action, &value, &policy);
+    assert!(findings.is_empty());
+    assert_eq!(undecidable.iter().map(|f| f.line).collect::<Vec<_>>(), [4]);
 }

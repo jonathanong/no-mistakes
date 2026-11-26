@@ -75,6 +75,18 @@ paths relative to either the repository root or the selected project root; a
 matching glob does not select files from an unselected project. Repository-scoped
 applications use repository-relative paths.
 
+The cache-key policy (`github-actions-cache-key-policy`), action input policy
+(`github-actions-action-input-policy`), and Vitest default exclusion rule
+(`vitest-default-excludes`) treat invalid option values as configuration errors.
+`check` validates their options before any analysis runs, aborts with exit
+status 2 and empty stdout, and writes the diagnostic to stderr naming the config
+file, rule, option path, rejected value, and accepted values or constraint.
+Semantic option errors across enabled applications are sorted and printed in one
+run (a YAML schema or type error stops deserialization of that application's
+`options` object while other applications are still checked); no partial report
+or `incomplete` entry is emitted. Async Node `check()` and `analyzeProject()`
+check reports reject with the same error message.
+
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds
 project-relative components alongside export-kind selections. Use a top-level
@@ -290,6 +302,12 @@ require a companion rule.
 also supports `low`: it checks literal HTML IDs and routes other ID expressions
 through the selected unanalyzable policy. This remains independent of
 `tests.playwright.selectors.htmlIds`, which controls coverage analysis.
+[`react-no-nested-buttons-and-links`](../rules/react-no-nested-buttons-and-links.md) checks native control nesting in selected JSX and TSX files. Use common scope and path filters. Its `options.unanalyzable` inherits repository `unanalyzable` when set and otherwise defaults to `advise`.
+
+Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
+rule on portable Swift test sources. Select those files with common
+`include` and `exclude` filters.
+
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported
 configuration objects without resolving constants or configuration wrappers.
@@ -364,6 +382,10 @@ cannot be read, including invalid UTF-8. The default `report` fails, `advise`
 emits non-failing advice, and `ignore` omits that uncertainty. Invalid YAML,
 unmatched source locations, and unsupported expression shapes remain definite
 findings under every policy.
+
+[`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
+checks selected Node package manifests. The rule is opt-in and uses
+`options.unanalyzable` for manifests that cannot be read or parsed.
 
 [`package-json-required-fields`](../rules/package-json-required-fields.md) uses
 `options.unanalyzable` for selected manifests that cannot be read or parsed
@@ -745,6 +767,12 @@ required. Optional `requiredGlobs` replaces the default list of
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
 
+### Workspace package relative imports
+
+[`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md) uses declared workspace
+package ownership. Enable it with the normal rule scope and select the importing
+files with the shared `include` and `exclude` filters. No rule options are required.
+
 ### Dependabot cooldown
 
 [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md) is opt-in
@@ -782,6 +810,19 @@ literal in these sources, including unimported helpers, and permit computed
 expressions without resolving constants. Declared-only policies never report
 dynamic projects as incomplete. Effective policies still report unresolved
 values as incomplete. Config is never executed.
+
+### Test retries and serial execution
+
+[`test-no-retries`](../rules/test-no-retries.md) caps literal retries in Vitest,
+Playwright, Jest, and supported GitHub Actions steps. Set `options.maxRetries`
+to set the cap, `options.testCommands` to identify test command prefixes in
+workflow scripts, and `options.files` to select Playwright config factory
+modules. [`playwright-no-serial`](../rules/playwright-no-serial.md)
+checks literal Playwright settings that force serial execution. Each rule
+accepts `options.fixtures` entries (`{ module, export }`) naming repository
+exports treated as Playwright's `test` when a wrapper cannot be followed
+statically, and `options.allowlist` entries with a `path` glob or a `project`
+name and a required `reason`.
 
 ### PostgreSQL executor selection
 
@@ -890,6 +931,13 @@ of an already materialized pool retain the source obligation without repeating
 it. It uses the same scoped
 SQL inputs, catalog and `columnBounds` declarations as the parent rule. See the
 [rule examples](../rules/postgres-bounded-statements.md#independent-candidate-bodies).
+
+[`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
+requires a nonempty `options.sqlInclude` list. Select standalone SQL scripts
+run with autocommit enabled, where each transaction can be understood from
+the script itself. `options.unanalyzable` (`report`, `advise`, or `ignore`;
+default `advise`) controls unparseable scripts, unknown savepoint targets, and
+dynamic read-only settings.
 
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 is opt-in and always advisory, even when severity is omitted. Explicit severity

@@ -1,12 +1,9 @@
 #[path = "shell_fd.rs"]
 mod fd;
-#[path = "shell_heredoc.rs"]
-mod heredoc;
 #[path = "shell_redirect.rs"]
 mod redirect;
 
 pub(super) use fd::redirects_stdout;
-pub(super) use heredoc::heredoc_at;
 pub(super) use redirect::{mask_output_redirects, redirect_targets};
 
 struct Piece<'a> {

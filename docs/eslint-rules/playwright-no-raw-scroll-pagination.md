@@ -28,6 +28,11 @@ call's own argument; a predicate extracted to a named function
 (`page.waitForRequest(isNextPageRequest)`) is not resolved back to that
 function's body and is not scanned.
 
+A configured pagination sentinel can already be visible when Playwright calls
+`scrollIntoViewIfNeeded()`. The call can then finish without scrolling, leaving
+a scroll-driven loader waiting. The configured sentinel identifies pagination
+even in specs that wait for a signal other than a cursor request.
+
 ## Disallowed
 
 ```ts
@@ -47,6 +52,16 @@ let waitForNextPage = page.waitForRequest(
 let scrollTo = window.scrollTo;
 scrollTo(0, document.body.scrollHeight);
 await waitForNextPage;
+```
+
+With `sentinelLocatorNames: ["sentinel"]` and `sentinelTestIds: ["load-more"]`,
+both of these calls are reported.
+
+```ts
+// e2e/feed.spec.ts
+const sentinel = page.locator(".load-more");
+await sentinel.scrollIntoViewIfNeeded();
+await page.getByTestId("load-more").scrollIntoViewIfNeeded();
 ```
 
 ## Allowed
@@ -90,7 +105,27 @@ raf(() => {});
 await waitForNextPage;
 ```
 
+With the same configuration, a heading can still be brought into view.
+
+```ts
+// e2e/feed.spec.ts
+await page.getByTestId("heading").scrollIntoViewIfNeeded();
+```
+
 ## Options
+
+```js
+{
+  "no-mistakes/playwright-no-raw-scroll-pagination": [
+    "error",
+    {
+      sentinelLocatorNames: ["sentinel"],
+      sentinelTestIds: ["load-more"],
+      scrollHelper: "scrollToLoadMore",
+    },
+  ],
+}
+```
 
 - `cursorParams` lists pagination query-param names to look for in the first
   argument of a `waitForRequest` or `waitForResponse` call. It defaults to
@@ -98,15 +133,32 @@ await waitForNextPage;
 - `scrollHelper` names the project's repeated-scroll helper, interpolated
   into the report message. It defaults to `""`, which uses a generic hint
   instead.
+- `sentinelLocatorNames` lists exact identifier names reserved for pagination
+  sentinel locators in the configured files. The name matches globals,
+  imported or destructured bindings, and local bindings initialized by a call
+  expression (a locator builder or a factory helper); same-named object
+  literals and shadowing parameters stay clean.
+- `sentinelTestIds` lists exact IDs in `getByTestId(...)` or in a single
+  `[data-testid="..."]` selector passed to `locator(...)`.
+  Use a string literal or a template literal without substitutions. Both
+  sentinel lists default to empty.
 
 ## Fix
 
-Replace the raw scroll with a helper that scrolls repeatedly until the
-paginated request fires, instead of a single synthetic scroll.
+Replace the one-shot scroll with a helper that scrolls until the paginated
+request fires. Start the request wait before scrolling, as in the allowed
+`scrollToLoadMore` example.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A destructured `window` member counts only when that property is `scroll`, `scrollBy`, or `scrollTo`. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name. A parameter named `waitForRequest` or `waitForResponse`, including a single-write alias of that parameter, does not establish a Playwright cursor wait.
+For raw scrolls and cursor waits, a string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A destructured `window` member counts only when that property is `scroll`, `scrollBy`, or `scrollTo`. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name. A parameter named `waitForRequest` or `waitForResponse`, including a single-write alias of that parameter, does not establish a Playwright cursor wait.
+
+Sentinel checks run on Playwright paths and files that import
+`@playwright/test`. They follow single-write aliases and the `first()`,
+`last()`, `nth()`, and `filter()` refinements. A shadowing parameter or a
+same-named object does not inherit the sentinel designation. Locator
+descendant lookups and helper return values require a separate check. For
+other CSS selectors or custom test ID attributes, use a named sentinel binding.
 
 Another file's re-export is not visible here.
 
@@ -128,6 +180,11 @@ window.scrollTo(0, document.body.scrollHeight);
 ```ts
 // eslint-disable-next-line no-mistakes/playwright-no-raw-scroll-pagination -- this scroll never races the paginated request in this test
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+```
+
+```ts
+// eslint-disable-next-line no-mistakes/playwright-no-raw-scroll-pagination -- this test inspects the sentinel itself
+await sentinel.scrollIntoViewIfNeeded();
 ```
 
 ## Related rules

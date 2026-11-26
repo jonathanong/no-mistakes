@@ -1,0 +1,1 @@
+{"type":"item.completed","item":{"type":"command_execution","command":"cat /example-outside/notes.txt","exit_code":0,"status":"completed"}}

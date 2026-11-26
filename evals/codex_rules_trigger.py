@@ -5,11 +5,14 @@ A finished command counts when a reader opens `<skill>-rules/SKILL.md` under
 the attempt's installed plugin cache or the marketplace copy of that plugin.
 Paths resolve from the command cwd and from any `cd` earlier in that command.
 """
+import ast
 import json
 import os
 import re
-import shlex
+from fnmatch import fnmatchcase
 from pathlib import Path
+
+from codex_rules_shell import command_arguments
 
 _READERS = {"cat", "sed", "head", "tail", "less", "more", "nl", "awk", "rg", "grep", "bat"}
 _SHELLS = {"bash", "sh", "zsh", "dash"}
@@ -28,6 +31,10 @@ _FLAG_ARG = {
     },
 }
 _SCRIPT_FLAGS = {"-c", "-e", "--eval"}
+_PATH_TOOLS = {
+    "cp", "diff", "file", "install", "ln", "ls", "mkdir", "mv", "readlink",
+    "realpath", "rm", "rmdir", "source", "stat", "tee", "touch", "wc",
+}
 
 
 def skills_in_transcript(
@@ -44,20 +51,38 @@ def skills_in_transcript(
     if attempt_root is None:
         attempt_root = roots[0]
     found = []
-    for command, item_cwd in _commands(transcript):
-        found.extend(
-            _skills_in_command(
-                command,
-                roots,
-                Path(attempt_root),
-                Path(item_cwd) if item_cwd else (Path(cwd) if cwd else None),
-            )
-        )
+    attempt_root = Path(attempt_root)
+    for command, item_cwd, output, success in _commands(transcript):
+        if not success:
+            continue
+        for argv, directory, heredocs, redirects in _script_stages(command, item_cwd or cwd, attempt_root):
+            found.extend(_skills_in_stage(argv, directory, heredocs, redirects, output, roots, attempt_root))
     return found
 
 
-def _commands(transcript: str) -> list:
-    commands = []
+def external_path_findings(
+    transcript: str, attempt_root: Path | None, *, cwd: Path | None = None
+) -> list[dict]:
+    """Report redacted hints for explicit paths and cwd in completed command events."""
+    if not attempt_root:
+        return []
+    roots = tuple(_audit_path(base) for base in _forms(attempt_root))
+    findings = []
+    for index, (command, item_cwd, _output, _success) in enumerate(_commands(transcript), 1):
+        directory = item_cwd or cwd
+        if directory and not _audit_under(directory, roots):
+            findings.append({"commandIndex": index, "reason": "outside-working-directory"})
+        reasons = {
+            reason
+            for argv, stage_cwd, heredocs, redirects in _script_stages(command, directory, roots[0])
+            for token in _audit_tokens(argv, heredocs, redirects)
+            if (reason := _audit_reason(token, stage_cwd, roots))
+        }
+        findings.extend({"commandIndex": index, "reason": reason} for reason in sorted(reasons))
+    return findings
+
+
+def _commands(transcript: str):
     for line in transcript.splitlines():
         if not line.strip():
             continue
@@ -70,37 +95,47 @@ def _commands(transcript: str) -> list:
         item = event.get("item")
         if not isinstance(item, dict) or item.get("type") != "command_execution":
             continue
-        if item.get("status") != "completed" or item.get("exit_code") != 0:
+        if item.get("status") not in ("completed", "failed"):
             continue
         command = item.get("command")
         if not isinstance(command, str):
             continue
-        item_cwd = item.get("cwd") if isinstance(item.get("cwd"), str) else None
-        commands.append((command, item_cwd))
-    return commands
+        item_cwd = Path(item["cwd"]) if isinstance(item.get("cwd"), str) and item["cwd"] else None
+        output = item.get("aggregated_output")
+        success = item.get("status") == "completed" and item.get("exit_code") == 0
+        yield command, item_cwd, output if isinstance(output, str) else "", success
 
 
-def _skills_in_command(command: str, roots: list, attempt_root: Path, cwd: Path | None) -> list:
-    found = []
-    for script in _inner_scripts(command):
-        found.extend(_skills_in_script(script, roots, attempt_root, cwd))
+def _skills_in_stage(argv, cwd, heredocs, redirects, output, roots, attempt_root):
+    if not argv:
+        return []
+    name = Path(argv[0]).name
+    if name == "find":
+        tokens = _find_exec_tokens(argv)
+    elif _reader_kind(name) is not None and not (name == "rg" and "--files" in argv):
+        tokens = _reader_tokens(argv)
+        tokens.extend(path for operator, path in redirects if operator in _INPUT_REDIR)
+        tokens.extend(_heredoc_reads(argv, heredocs))
+    else:
+        return []
+    found = [
+        skill
+        for token in tokens
+        if (skill := _skill_name(token, cwd, roots, attempt_root))
+    ]
+    if name == "rg" and not any(flag in argv for flag in ("--no-filename", "-I")):
+        found.extend(
+            skill for skill in _rg_output_skills(output, cwd, tokens, roots, attempt_root)
+            if skill not in found
+        )
     return found
 
 
-def _inner_scripts(command: str) -> list:
-    try:
-        argv = shlex.split(command)
-    except ValueError:
-        return []
-    if len(argv) >= 3 and Path(argv[0]).name in _SHELLS and argv[1] in _SHELL_FLAGS:
-        return [argv[2] if len(argv) == 3 else " ".join(argv[2:])]
-    return [command]
-
-
-def _skills_in_script(script: str, roots: list, attempt_root: Path, cwd: Path | None) -> list:
+def _script_stages(script: str, cwd: Path | None, attempt_root: Path, depth: int = 0):
+    if depth >= 16:
+        return
     parts = _split_ops(script)
     current = cwd
-    found = []
     index = 0
     while index < len(parts):
         stages = [parts[index]]
@@ -108,35 +143,43 @@ def _skills_in_script(script: str, roots: list, attempt_root: Path, cwd: Path | 
             index += 1
             stages.append(parts[index])
         stage_cwd = current
-        for text, _sep in stages:
+        for text, _sep, heredocs in stages:
             try:
-                argv = shlex.split(text)
+                argv, redirects = command_arguments(text)
             except ValueError:
                 continue
-            if not argv:
+            if not argv and not redirects:
                 continue
             inner = _subshell(text)
             if inner is not None:
-                found.extend(_skills_in_script(inner, roots, attempt_root, stage_cwd))
+                yield from _script_stages(inner, stage_cwd, attempt_root, depth + 1)
                 continue
-            name = Path(argv[0]).name
-            if name == "find":
-                for token in _find_exec_tokens(argv):
-                    skill = _skill_name(token, stage_cwd, roots, attempt_root)
-                    if skill:
-                        found.append(skill)
-                continue
-            if name == "cd" and len(stages) == 1:
-                current = _cd_target(argv, stage_cwd)
-                continue
-            if _reader_kind(name) is None:
-                continue
-            for token in _reader_tokens(argv):
-                skill = _skill_name(token, stage_cwd, roots, attempt_root)
-                if skill:
-                    found.append(skill)
+            name = Path(argv[0]).name if argv else ""
+            yield argv, stage_cwd, heredocs, redirects
+            if name in _SHELLS and len(argv) >= 3 and argv[1] in _SHELL_FLAGS:
+                yield from _script_stages(argv[2], stage_cwd, attempt_root, depth + 1)
+            elif name == "cd" and len(stages) == 1:
+                current = _cd_target(argv, stage_cwd, attempt_root)
         index += 1
-    return found
+
+
+_HEREDOC_START = re.compile(r"""<<(-?)[ \t]*(['"]?)([A-Za-z_][\w-]*)\2(?=[ \t;&|\n]|$)""")
+
+
+def _read_heredoc(script: str, offset: int, delimiter: str, strip_tabs: bool) -> tuple:
+    start = offset
+    while offset < len(script):
+        end = script.find("\n", offset)
+        if end == -1:
+            end = len(script)
+        line = script[offset:end]
+        if (line.lstrip("\t") if strip_tabs else line) == delimiter:
+            body = script[start:offset]
+            if strip_tabs:
+                body = "\n".join(line.lstrip("\t") for line in body.split("\n"))
+            return body, end + 1
+        offset = end + 1
+    return "", offset
 
 
 def _split_ops(script: str) -> list:
@@ -145,15 +188,21 @@ def _split_ops(script: str) -> list:
     quote = None
     depth = 0
     index = 0
+    pending_heredocs = []
 
     def push(sep: str | None) -> None:
         text = "".join(buf).strip()
         buf.clear()
         if text:
-            parts.append((text, sep))
+            parts.append((text, sep, []))
 
     while index < len(script):
         char = script[index]
+        if char == "\\" and quote != "'" and index + 1 < len(script):
+            if script[index + 1] != "\n":
+                buf.extend(script[index:index + 2])
+            index += 2
+            continue
         if quote:
             buf.append(char)
             if char == quote:
@@ -179,8 +228,20 @@ def _split_ops(script: str) -> list:
             buf.append(char)
             index += 1
             continue
+        if char == "<" and (index == 0 or script[index - 1] != "<"):
+            match = _HEREDOC_START.match(script, index)
+            if match:
+                strip_tabs, _quote, delimiter = match.groups()
+                pending_heredocs.append((len(parts), delimiter, bool(strip_tabs)))
+                buf.extend(f"<< {delimiter}")
+                index = match.end()
+                continue
         if script.startswith("&&", index) or script.startswith("||", index):
             push("seq")
+            index += 2
+            continue
+        if script.startswith(">|", index):
+            buf.extend(">|")
             index += 2
             continue
         if char == "|":
@@ -190,6 +251,11 @@ def _split_ops(script: str) -> list:
         if char in ";\n":
             push("seq")
             index += 1
+            if char == "\n":
+                for part_index, delimiter, strip_tabs in pending_heredocs:
+                    body, index = _read_heredoc(script, index, delimiter, strip_tabs)
+                    parts[part_index][2].append(body)
+                pending_heredocs.clear()
             continue
         buf.append(char)
         index += 1
@@ -214,7 +280,10 @@ def _is_python(name: str) -> bool:
 
 
 def _reader_tokens(argv: list) -> list:
-    kind = _reader_kind(Path(argv[0]).name)
+    name = Path(argv[0]).name
+    kind = _reader_kind(name)
+    if name in _TEXT_PROGRAM_OPTIONS:
+        return _text_program_files(argv, name)
     if kind == "script":
         return _script_tokens(argv)
     if kind == "search":
@@ -222,36 +291,136 @@ def _reader_tokens(argv: list) -> list:
     return _file_tokens(argv)
 
 
+# Each long option has a shortest unambiguous spelling within its GNU tool.
+_TEXT_PROGRAM_OPTIONS = {
+    "sed": {
+        "e": ("--expression", "--e"), "f": ("--file", "--fi"),
+        "i": ("--in-place", "--i"),
+    },
+    "awk": {
+        "e": ("--source", "--so"), "E": ("--exec", "--e"),
+        "f": ("--file", "--fil"), "F": ("--field-separator", "--fie"),
+        "i": ("--include", "--i"), "l": ("--load", "--lo"),
+        "v": ("--assign", "--a"),
+    },
+}
+
+
+def _text_program_files(argv: list, name: str) -> list:
+    options = _TEXT_PROGRAM_OPTIONS[name]
+    explicit_program = False
+    paths = []
+    positionals = []
+    index = 1
+    while index < len(argv):
+        arg = argv[index]
+        index += 1
+        if arg == "--":
+            positionals.extend(argv[index:])
+            break
+        if arg == "-" or not arg.startswith("-"):
+            positionals.append(arg)
+            if name == "awk":
+                positionals.extend(argv[index:])
+                break
+            continue
+        if arg.startswith("--"):
+            option, _, attached = arg.partition("=")
+            flag = next(
+                (short for short, (long, prefix) in options.items()
+                 if option.startswith(prefix) and long.startswith(option)),
+                "",
+            )
+            separate = "=" not in arg
+        else:
+            option_index = next((i for i, char in enumerate(arg[1:], 1) if char in options), 0)
+            flag = arg[option_index] if option_index else ""
+            attached = arg[option_index + 1:]
+            separate = not attached
+        if not flag or (name == "sed" and flag == "i"):
+            continue
+        explicit_program |= flag in ("e", "E", "f")
+        if separate:
+            if index >= len(argv):
+                break
+            attached = argv[index]
+            index += 1
+        if flag in ("E", "f", "i", "l"):
+            paths.append(attached)
+        if flag == "E":
+            positionals.extend(argv[index:])
+            break
+    return paths + (positionals if explicit_program else positionals[1:])
+
+
+_INPUT_REDIR = {"<", "<>"}
 _OUTPUT_REDIR = {">", ">>", ">&", ">|", "&>", "&>>"}
+_DESCRIPTOR = re.compile(r"[0-9]+-?|-")
 
 
-def _take_redirect(argv: list, index: int, tokens: list) -> int | None:
-    arg = argv[index]
-    if arg == "<" and index + 1 < len(argv):
-        tokens.append(argv[index + 1])
-        return index + 2
-    if arg in _OUTPUT_REDIR and index + 1 < len(argv):
-        return index + 2
+def _audit_tokens(argv: list, heredocs: list, redirects: list) -> list:
+    name = Path(argv[0]).name if argv else ""
+    tokens = [
+        path for operator, path in redirects
+        if operator in _INPUT_REDIR or (
+            operator in _OUTPUT_REDIR
+            and (operator != ">&" or not _DESCRIPTOR.fullmatch(path))
+        )
+    ]
+    if name == "find":
+        paths, _filter, _reader = _find_operands(argv)
+        tokens.extend(paths)
+    elif name == "rg" and "--files" in argv:
+        tokens.extend(_search_tokens(argv, has_pattern=False))
+    elif _reader_kind(name) is not None:
+        tokens.extend(_reader_tokens(argv))
+        tokens.extend(_heredoc_reads(argv, heredocs, include_writes=True))
+    elif name in _PATH_TOOLS or name == "cd":
+        tokens.extend(_file_tokens(argv))
+    return tokens
+
+
+def _audit_path(path: Path | str) -> Path:
+    normalized = Path(os.path.normpath(path))
+    if normalized.parts[:3] in (("/", "private", "tmp"), ("/", "private", "var")):
+        return Path("/", *normalized.parts[2:])
+    return normalized
+
+
+def _audit_under(path: Path | str, roots: tuple[Path, ...]) -> bool:
+    candidate = _audit_path(path)
+    return any(_is_under(candidate, root) for root in roots)
+
+
+_SAFE_DEVICE_PATHS = frozenset(
+    {
+        Path("/dev/null"),
+        Path("/dev/stdout"),
+        Path("/dev/stderr"),
+        Path("/dev/tty"),
+    }
+)
+
+
+def _audit_reason(token: str, cwd: Path | None, roots: tuple[Path, ...]) -> str | None:
+    path = _locate(token, cwd, roots[0])
+    if path is None:
+        return None
+    path = _audit_path(path)
+    if path in _SAFE_DEVICE_PATHS:
+        return None
+    if any(path == root / "codex-home" / "auth.json" for root in roots):
+        return "attempt-auth-file"
+    if not any(_is_under(path, root) for root in roots):
+        return "outside-attempt-root"
     return None
 
 
 def _file_tokens(argv: list) -> list:
-    tokens = []
-    index = 1
-    while index < len(argv):
-        taken = _take_redirect(argv, index, tokens)
-        if taken is not None:
-            index = taken
-            continue
-        if argv[index].startswith("-"):
-            index += 1
-            continue
-        tokens.append(argv[index])
-        index += 1
-    return tokens
+    return [arg for arg in argv[1:] if not arg.startswith("-")]
 
 
-def _search_tokens(argv: list) -> list:
+def _search_tokens(argv: list, *, has_pattern: bool = True) -> list:
     name = Path(argv[0]).name
     tokens = []
     positionals = []
@@ -259,10 +428,6 @@ def _search_tokens(argv: list) -> list:
     index = 1
     while index < len(argv):
         arg = argv[index]
-        taken = _take_redirect(argv, index, tokens)
-        if taken is not None:
-            index = taken
-            continue
         flag, sep, attached = arg.partition("=")
         if sep and flag in _FLAG_ARG[name]:
             if name == "grep" and flag in ("-f", "--file"):
@@ -285,7 +450,7 @@ def _search_tokens(argv: list) -> list:
             continue
         positionals.append(arg)
         index += 1
-    if pattern_flag:
+    if pattern_flag or not has_pattern:
         tokens.extend(positionals)
     elif len(positionals) >= 2:
         tokens.extend(positionals[1:])
@@ -297,10 +462,6 @@ def _script_tokens(argv: list) -> list:
     index = 1
     while index < len(argv):
         arg = argv[index]
-        taken = _take_redirect(argv, index, tokens)
-        if taken is not None:
-            index = taken
-            continue
         if arg in _SCRIPT_FLAGS and index + 1 < len(argv):
             tokens.extend(_script_reads(argv[index + 1]))
             index += 2
@@ -325,6 +486,51 @@ def _script_reads(text: str) -> list:
     return found
 
 
+def _heredoc_reads(argv: list, heredocs: list, *, include_writes: bool = False) -> list:
+    if not heredocs or not _is_python(Path(argv[0]).name):
+        return []
+    for token in argv[1:]:
+        if token == "-":
+            break
+        if token not in {"-B", "-E", "-I", "-O", "-OO", "-P", "-q", "-s", "-S", "-u"}:
+            return []
+    # The last standard-input heredoc is the one Python receives.
+    try:
+        tree = ast.parse(heredocs[-1])
+    except (SyntaxError, ValueError, RecursionError):
+        return []
+    found = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "open" and node.args:
+            mode = next(
+                (kw.value for kw in node.keywords if kw.arg == "mode"),
+                node.args[1] if len(node.args) > 1 else None,
+            )
+            if include_writes or mode is None or (
+                isinstance(mode, ast.Constant)
+                and isinstance(mode.value, str)
+                and ("r" in mode.value or "+" in mode.value)
+            ):
+                found.extend(_literal_path(node.args[0]))
+        if isinstance(func, ast.Attribute) and func.attr in ("read_text", "read_bytes"):
+            receiver = func.value
+            if (
+                isinstance(receiver, ast.Call)
+                and isinstance(receiver.func, ast.Name)
+                and receiver.func.id == "Path"
+                and receiver.args
+            ):
+                found.extend(_literal_path(receiver.args[0]))
+    return found
+
+
+def _literal_path(node: ast.expr) -> list[str]:
+    return [node.value] if isinstance(node, ast.Constant) and isinstance(node.value, str) else []
+
+
 def _subshell(text: str) -> str | None:
     body = text.strip()
     if len(body) >= 2 and body[0] == "(" and body[-1] == ")":
@@ -336,6 +542,21 @@ _FIND_ARG = {"-name", "-iname", "-path", "-regex", "-maxdepth", "-mindepth", "-t
 
 
 def _find_exec_tokens(argv: list) -> list:
+    paths, name_filter, reader = _find_operands(argv)
+    if not reader:
+        return []
+    kept = []
+    for path in paths:
+        name = Path(path).name
+        if name_filter not in (None, "SKILL.md") and name != name_filter:
+            continue
+        kept.append(path)
+        if name_filter in (None, "SKILL.md") and _SKILL_DIR.fullmatch(name):
+            kept.append(str(Path(path) / "SKILL.md"))
+    return kept
+
+
+def _find_operands(argv: list) -> tuple:
     reader = False
     name_filter = None
     paths = []
@@ -363,20 +584,10 @@ def _find_exec_tokens(argv: list) -> list:
             continue
         paths.append(arg)
         index += 1
-    if not reader:
-        return []
-    kept = []
-    for path in paths:
-        name = Path(path).name
-        if name_filter not in (None, "SKILL.md") and name != name_filter:
-            continue
-        kept.append(path)
-        if name_filter in (None, "SKILL.md") and _SKILL_DIR.fullmatch(name):
-            kept.append(str(Path(path) / "SKILL.md"))
-    return kept
+    return paths, name_filter, reader
 
 
-def _cd_target(argv: list, cwd: Path | None) -> Path | None:
+def _cd_target(argv: list, cwd: Path | None, attempt_root: Path) -> Path | None:
     index = 1
     while index < len(argv):
         arg = argv[index]
@@ -385,13 +596,17 @@ def _cd_target(argv: list, cwd: Path | None) -> Path | None:
         if arg.startswith("-"):
             index += 1
             continue
-        return _locate(arg, cwd) or cwd
+        return _locate(arg, cwd, attempt_root) or cwd
     return cwd
 
 
 def _skill_name(token: str, cwd: Path | None, roots: list, attempt_root: Path) -> str | None:
-    candidate = _locate(token, cwd)
-    if candidate is None or not _anchor(candidate, attempt_root):
+    candidate = _locate(token, cwd, attempt_root)
+    if candidate is None:
+        return None
+    if any(char in token for char in "*?["):
+        return _glob_skill(candidate, roots, attempt_root)
+    if not _anchor(candidate, attempt_root):
         return None
     if candidate.name != "SKILL.md" or not _SKILL_DIR.fullmatch(candidate.parent.name):
         return None
@@ -401,9 +616,55 @@ def _skill_name(token: str, cwd: Path | None, roots: list, attempt_root: Path) -
     return None
 
 
-def _locate(token: str, cwd: Path | None) -> Path | None:
-    if not token or token.startswith("-"):
+def _glob_skill(pattern: Path, roots: list, attempt_root: Path) -> str | None:
+    for skill in (part for part in pattern.parts if _SKILL_DIR.fullmatch(part)):
+        for root in roots:
+            target = root / "skills" / skill / "SKILL.md"
+            if not _anchor(target, attempt_root):
+                continue
+            for form in _forms(target):
+                if len(form.parts) == len(pattern.parts) and all(
+                    fnmatchcase(value, glob) for value, glob in zip(form.parts, pattern.parts)
+                ):
+                    return skill
+    return None
+
+
+_RG_RESULT_PATH = re.compile(r"^(.+?SKILL\.md)(?=:|-\d+-|\Z)")
+
+
+def _rg_output_skills(output: str, cwd: Path | None, tokens: list, roots: list, attempt_root: Path):
+    search_paths = [_locate(token, cwd, attempt_root) for token in tokens]
+    seen = set()
+    for line in output.splitlines():
+        match = _RG_RESULT_PATH.match(line)
+        if not match:
+            continue
+        path = _locate(match.group(1), cwd, attempt_root)
+        if path is None or path.name != "SKILL.md" or not any(
+            base is not None
+            and base != path
+            and _is_under(_audit_path(path), _audit_path(base))
+            for base in search_paths
+        ):
+            continue
+        skill = _skill_name(str(path), cwd, roots, attempt_root)
+        if skill and skill not in seen:
+            seen.add(skill)
+            yield skill
+
+
+def _locate(token: str, cwd: Path | None, attempt_root: Path | None = None) -> Path | None:
+    if not token or token.startswith("-") or "\x00" in token:
         return None
+    if attempt_root:
+        for alias, directory in (
+            ("~", "home"), ("$HOME", "home"), ("${HOME}", "home"),
+            ("$CODEX_HOME", "codex-home"), ("${CODEX_HOME}", "codex-home"),
+        ):
+            if token == alias or token.startswith(alias + "/"):
+                token = str(attempt_root / directory) + token[len(alias):]
+                break
     path = Path(token)
     if not path.is_absolute():
         if cwd is None:
@@ -424,16 +685,13 @@ def _forms(path: Path) -> tuple:
 
 
 def _anchor(path: Path, root: Path) -> bool:
-    """True when `path` is under `root` as saved or as canonicalized.
+    """Compare a transcript path with the saved and canonical attempt roots.
 
     Codex records `/private/tmp` and `/private/var`. A plan may store `/tmp`
-    or `/var`. After the attempt directory is deleted, either form matches.
+    or `/var`. Only the saved root is canonicalized.
     """
-    for candidate in _forms(path):
-        for base in _forms(root):
-            if _is_under(candidate, base):
-                return True
-    return False
+    candidate = _audit_path(path)
+    return any(_is_under(candidate, _audit_path(base)) for base in _forms(root))
 
 
 def _is_under(path: Path, root: Path) -> bool:

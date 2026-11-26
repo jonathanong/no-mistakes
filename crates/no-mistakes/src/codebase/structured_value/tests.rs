@@ -243,9 +243,9 @@ fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
         "../../../../../test-cases/structured-value/merge-keys/quoted-key-fallback.yml"
     );
     let quoted_docs = parse_yaml_documents(quoted_fallback);
-    assert_eq!(quoted_docs.values.len(), 1);
-    assert_eq!(quoted_docs.errors.len(), 1);
-    assert_eq!(quoted_docs.errors[0].0, 2);
+    assert!(quoted_docs.errors.is_empty());
+    assert_eq!(quoted_docs.values.len(), 2);
+    assert_eq!(quoted_docs.values[1]["runtime"]["<<"].as_i64(), Some(7));
 
     let aliased_fallback = include_str!(
         "../../../../../test-cases/structured-value/merge-keys/aliased-merge-fallback.yml"
@@ -253,7 +253,7 @@ fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
     let aliased_docs = parse_yaml_documents(aliased_fallback);
     assert!(aliased_docs.values.is_empty());
     assert_eq!(aliased_docs.errors.len(), 1);
-    assert_eq!(aliased_docs.errors[0].0, 4);
+    assert_eq!(aliased_docs.errors[0].0, 7);
 
     let compact_flow = include_str!(
         "../../../../../test-cases/structured-value/merge-keys/compact-flow-and-false-tokens.yml"
@@ -269,4 +269,206 @@ fn saved_merge_key_edge_fixtures_report_expected_errors_and_lines() {
     let brace_docs = parse_yaml_documents(compact_brace);
     assert_eq!(brace_docs.errors.len(), 1);
     assert_eq!(brace_docs.errors[0].0, 1);
+}
+
+#[test]
+fn reports_the_original_merge_key_with_aliases_and_flow_syntax() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/structured-config-policy/merge-key/aliased-location.yml"
+    );
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.ends_with("at line 4"), "{error}");
+    let documents = parse_yaml_documents(source);
+    assert!(documents.values.is_empty());
+    assert_eq!(documents.errors.len(), 1);
+    assert_eq!(documents.errors[0].0, 4);
+}
+
+#[test]
+fn earlier_sequence_source_wins_after_its_nested_merge() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/sequence-precedence.yml"
+    );
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    let result = &value["result"];
+    assert_eq!(result["color"].as_str(), Some("green"));
+    assert_eq!(result["size"].as_str(), Some("small"));
+    assert_eq!(result["tier"].as_str(), Some("basic"));
+}
+
+#[test]
+fn reports_the_key_that_survives_merge_precedence() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/overridden-location.yml"
+    );
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.ends_with("at line 4"), "{error}");
+    let documents = parse_yaml_documents(source);
+    assert_eq!(documents.errors.len(), 1);
+    assert_eq!(documents.errors[0].0, 4);
+}
+
+#[test]
+fn reports_a_failed_merge_inside_an_earlier_sequence_source() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/nested-source-error.yml"
+    );
+    let error = parse_structured_value(Path::new("app.yml"), source).unwrap_err();
+    assert!(error.ends_with("at line 4"), "{error}");
+}
+
+#[test]
+fn detects_a_merge_inside_a_tagged_mapping() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/tagged-merge-error.yml"
+    );
+    let value = serde_yaml::from_str(source).unwrap();
+    let error = super::expand_yaml_mapping_if_merged(&value, Some(source)).unwrap_err();
+    assert!(error.contains("failed to apply YAML merge keys"), "{error}");
+}
+
+#[test]
+fn locates_a_merge_error_before_a_later_yaml_syntax_error() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/merge-before-syntax-error.yml"
+    );
+    let documents = parse_yaml_documents(source);
+    assert_eq!(documents.values.len(), 1);
+    assert_eq!(documents.errors.len(), 2);
+    assert_eq!(documents.errors[0].0, 5);
+    assert!(documents.errors[0]
+        .1
+        .contains("failed to apply YAML merge keys"));
+    assert!(documents.errors[1].1.contains("failed to parse YAML"));
+}
+
+#[test]
+fn workflow_merge_supports_values_without_source_text() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/workflow-topology-policy/fixture/valid-nested-merges/.github/workflows/job.yml"
+    );
+    let value = serde_yaml::from_str(source).unwrap();
+    let expanded = super::expand_yaml_mapping_if_merged(&value, None).unwrap();
+    assert_eq!(
+        expanded["jobs"]["verify"]["timeout-minutes"].as_i64(),
+        Some(8)
+    );
+
+    let source = include_str!(
+        "../../../../../test-cases/rules/workflow-topology-policy/fixture/merge-keys/.github/workflows/job-only.yml"
+    );
+    let value = serde_yaml::from_str(source).unwrap();
+    let error = super::expand_yaml_mapping_if_merged(&value, None).unwrap_err();
+    assert!(error.contains("failed to apply YAML merge keys"), "{error}");
+}
+
+#[test]
+fn merge_keys_without_source_locations_invalidate_the_document() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/structured-config-policy/merge-location-unavailable/long-tag.yml"
+    );
+    let value: Value = serde_yaml::from_str(source).unwrap();
+    assert_eq!(value["runtime"]["<<"]["legacy"].as_bool(), Some(true));
+
+    let expected =
+        "failed to apply YAML merge keys (could not match a YAML `<<` key to its source location)";
+    let error =
+        super::parse_structured_value_located(Path::new("long-tag.yml"), source).unwrap_err();
+    assert_eq!(error, (Some(1), expected.to_string()));
+
+    let documents = parse_yaml_documents(source);
+    assert!(documents.values.is_empty());
+    assert_eq!(documents.errors, vec![(1, expected.to_string())]);
+
+    let error = super::expand_yaml_mapping_if_merged(&value, Some(source)).unwrap_err();
+    assert_eq!(error, expected);
+}
+
+#[test]
+fn merge_key_must_match_the_corresponding_source_key() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/structured-config-policy/merge-location-unavailable/quoted.yml"
+    );
+    let mut value: Value = serde_yaml::from_str(source).unwrap();
+    let defaults = value["defaults"].as_mapping_mut().unwrap();
+    let owner = defaults.shift_remove("owner").unwrap();
+    defaults.insert(Value::String("<<".to_string()), owner);
+
+    let error = super::expand_yaml_mapping_if_merged(&value, Some(source)).unwrap_err();
+    assert!(error.contains("could not match a YAML `<<` key to its source location"));
+}
+
+#[test]
+fn missing_location_in_a_nested_merge_source_is_an_error() {
+    use super::merge_keys::{expand_located, KeyLocation};
+
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/nested-source-error.yml"
+    );
+    let mut value: Value = serde_yaml::from_str(source).unwrap();
+    let outer_key = value["runtime"]
+        .as_mapping()
+        .unwrap()
+        .keys()
+        .find_map(Value::as_str)
+        .unwrap()
+        .as_ptr();
+    let error = expand_located(&mut value, &|key| {
+        if key.as_ptr() == outer_key {
+            Ok(KeyLocation::Merge(2))
+        } else {
+            Err((1, "missing source location".to_string()))
+        }
+    })
+    .unwrap_err();
+    assert_eq!(error, (1, "missing source location".to_string()));
+}
+
+#[test]
+fn quoted_literal_key_survives_when_source_location_scan_stops() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/structured-config-policy/merge-location-unavailable/long-tag-quoted.yml"
+    );
+    let value = super::parse_structured_value_located(Path::new("long-tag-quoted.yml"), source)
+        .expect("quoted literal key should stay accepted");
+    assert_eq!(value["runtime"]["<<"].as_str(), Some("keep"));
+
+    let documents = parse_yaml_documents(source);
+    assert!(documents.errors.is_empty(), "{:?}", documents.errors);
+    assert_eq!(documents.values.len(), 1);
+    assert_eq!(documents.values[0]["runtime"]["<<"].as_str(), Some("keep"));
+
+    let raw: Value = serde_yaml::from_str(source).unwrap();
+    let expanded = super::expand_yaml_mapping_if_merged(&raw, Some(source)).unwrap();
+    assert_eq!(expanded["runtime"]["<<"].as_str(), Some("keep"));
+}
+
+#[test]
+fn multi_document_unlocated_merge_uses_document_start_line() {
+    let source = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/multi-doc-location-unavailable.yml"
+    );
+    let documents = parse_yaml_documents(source);
+    assert_eq!(documents.values.len(), 1);
+    assert_eq!(documents.values[0]["id"].as_str(), Some("widgets"));
+    assert_eq!(documents.errors.len(), 1);
+    assert_eq!(documents.errors[0].0, 3);
+    assert!(
+        documents.errors[0]
+            .1
+            .contains("could not match a YAML `<<` key to its source location"),
+        "{}",
+        documents.errors[0].1
+    );
+
+    let quoted = include_str!(
+        "../../../../../test-cases/structured-value/merge-keys/multi-doc-long-tag-quoted.yml"
+    );
+    let quoted_docs = parse_yaml_documents(quoted);
+    assert!(quoted_docs.errors.is_empty(), "{:?}", quoted_docs.errors);
+    assert_eq!(quoted_docs.values.len(), 2);
+    assert_eq!(
+        quoted_docs.values[1]["runtime"]["<<"].as_str(),
+        Some("keep")
+    );
 }

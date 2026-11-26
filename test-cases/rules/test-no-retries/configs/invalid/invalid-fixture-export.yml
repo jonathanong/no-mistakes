@@ -1,0 +1,7 @@
+rules:
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      fixtures:
+        - module: ../helpers/test.mts
+          export: test

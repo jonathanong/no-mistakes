@@ -2,11 +2,13 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 mod job_options;
+mod rate_limit;
 mod worker_rate_limit;
 pub(crate) use job_options::{
     JobOptionEvidence, JobOptionFinding, JobOptionSite, JobOptionSpread, QueueDefaultOptions,
-    RequiredJobOptions,
+    RequiredJobOptions, RetentionEvidence, RetentionValue, UnboundedRetentionPolicy,
 };
+pub(crate) use rate_limit::{RateLimitExport, RateLimitSite, RateLimitSiteKind};
 pub(crate) use worker_rate_limit::{
     ExportedWorkerBinding, WorkerRateLimitCall, WorkerRateLimitTarget,
 };
@@ -85,16 +87,10 @@ pub(crate) struct LocalCheck {
     pub message: String,
 }
 
-/// A `RateLimitError` throw or `.rateLimit()` call inside a processor.
-#[derive(Debug, Clone)]
-pub(crate) struct RateLimitSite {
-    pub line: usize,
-    pub worker_index: usize,
-}
-
 #[derive(Debug, Default, Clone)]
 pub(crate) struct FileFacts {
     pub imports: Vec<ImportBinding>,
+    pub namespace_import_sources: Vec<String>,
     pub enqueue_wrappers: Vec<super::enqueue_wrapper::WrapperSite>,
     pub stable_exported_strings: HashMap<String, String>,
     pub explicit_enqueue_exports: HashSet<String>,
@@ -107,6 +103,7 @@ pub(crate) struct FileFacts {
     pub producers: Vec<ProducerSite>,
     pub workers: Vec<WorkerSite>,
     pub diagnostics: Vec<(usize, String)>,
+    pub check_abstentions: Vec<(usize, &'static str)>,
     /// `export const NAME = "value"` strings other files can import.
     pub exported_strings: HashMap<String, String>,
     /// Named imports that may be a string constant or a queue binding.
@@ -116,6 +113,8 @@ pub(crate) struct FileFacts {
     pub export_from: HashMap<String, (String, String)>,
     /// `RateLimitError` throws and `.rateLimit()` calls inside a processor.
     pub rate_limits: Vec<RateLimitSite>,
+    /// Export classifications for resolving `RateLimitError` through local barrels.
+    pub rate_limit_exports: HashMap<String, RateLimitExport>,
     /// Local queue binding whose name argument is an imported identifier.
     pub pending_queue_bindings: HashMap<String, String>,
     /// `(exported name, local binding)` aliases of a queue object.
@@ -144,6 +143,9 @@ pub(crate) struct FileFacts {
     pub worker_exports: HashMap<String, ExportedWorkerBinding>,
     pub worker_import_aliases: HashMap<String, String>,
     pub worker_namespace_exports: HashMap<String, (String, String)>,
+    pub unbounded_job_retention: Option<UnboundedRetentionPolicy>,
+    pub job_state_sites: Vec<super::job_state::JobStateSite>,
+    pub job_state_as_record: Option<crate::config::v2::schema::JobStateAsRecordConfig>,
     pub worker_class_imports: HashMap<String, String>,
     pub worker_class_namespaces: HashMap<String, (String, String)>,
     pub worker_constructed_aliases: HashMap<String, String>,

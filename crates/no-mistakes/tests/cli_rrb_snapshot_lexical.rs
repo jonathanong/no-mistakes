@@ -109,3 +109,54 @@ fn swift_viewmodel_main_actor_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn swift_no_unguarded_darwin_import_json_matches_snapshot() {
+    use super::check_json_snapshot::assert_saved_fixture_report;
+
+    let fixture = "swift-no-unguarded-darwin-import/fixture";
+    let reports = assert_saved_fixture_report(
+        "swift_no_unguarded_darwin_import",
+        &[
+            c("configured", fixture, "../configs/check.yml"),
+            c("default_off", fixture, "../configs/default-off.yml"),
+            c("allow_and_message", fixture, "../configs/allow.yml"),
+            c("advise", fixture, "../configs/advise.yml"),
+            c("ignore", fixture, "../configs/ignore.yml"),
+        ],
+        &[],
+        &[],
+    );
+    assert_eq!(reports["configured"]["exitCode"], 1);
+    assert_eq!(
+        reports["configured"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        15
+    );
+    assert_eq!(
+        reports["advise"]["report"]["advisories"]
+            .as_array()
+            .unwrap()
+            .len(),
+        6
+    );
+    let ignore_advisories = reports["ignore"]["report"]["advisories"]
+        .as_array()
+        .unwrap();
+    assert_eq!(ignore_advisories.len(), 1);
+    assert_eq!(ignore_advisories[0]["rule"], "unused-disable-directive");
+    assert_eq!(
+        reports["ignore"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        9
+    );
+    assert_eq!(reports["default_off"]["exitCode"], 0);
+    assert_eq!(
+        reports["default_off"]["report"]["rules"],
+        serde_json::json!([])
+    );
+}

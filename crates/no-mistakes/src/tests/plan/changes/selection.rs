@@ -1,5 +1,4 @@
 use super::*;
-
 pub(in crate::tests::plan) fn apply(
     prepared: &PreparedTestPlanRequest,
     input: &ChangesInput,
@@ -13,6 +12,7 @@ pub(in crate::tests::plan) fn apply(
         plan,
         discovered: &discovered,
         selected: BTreeMap::new(),
+        full_suite_fallback: false,
     };
     match &input.report {
         Ok(report) => selection.apply_categories(report, framework),
@@ -27,6 +27,7 @@ struct Selection<'a> {
     plan: &'a mut TestPlan,
     discovered: &'a DiscoveredTests,
     selected: BTreeMap<String, SelectedTest>,
+    full_suite_fallback: bool,
 }
 
 impl Selection<'_> {
@@ -35,18 +36,22 @@ impl Selection<'_> {
             .as_ref()
             .map_or(TestFramework::value_variants(), std::slice::from_ref);
         for (name, changes) in &report.categories {
-            let ids = changes
-                .changed
-                .iter()
-                .chain(&changes.added)
-                .chain(&changes.removed)
+            let ids = [&changes.changed, &changes.added, &changes.removed]
+                .into_iter()
+                .flatten()
                 .map(String::as_str)
                 .collect::<BTreeSet<_>>();
             if ids.is_empty() {
                 continue;
             }
             let category = &self.prepared.config.changes.categories[name];
-            match CategoryMatches::find(self.prepared, self.discovered, name, category, &ids) {
+            let attributes = self
+                .input
+                .fixture_reads()
+                .map(|index| (index.as_ref(), &changes.attribute_paths));
+            let matches =
+                CategoryMatches::find(self.prepared, self.discovered, name, &ids, attributes);
+            match matches {
                 Ok(matched) => {
                     for (path, ids) in matched.tests {
                         self.select(
@@ -73,6 +78,13 @@ impl Selection<'_> {
                     }
                 }
                 Err(error) => self.fallback(error, None),
+            }
+        }
+        if !report.changed_files.is_empty() && !self.full_suite_fallback {
+            if let Some(reason) =
+                unplanned_changed_file_reason(self.prepared, framework, self.discovered, self.plan)
+            {
+                self.fallback(reason, None);
             }
         }
     }
@@ -125,11 +137,9 @@ impl Selection<'_> {
     }
 
     fn fallback(&mut self, reason: String, targets: Option<&matching::RunnerTargets>) {
-        let warning = if targets.is_some() {
-            format!("{reason}. Selected configured runner targets.")
-        } else {
-            format!("{reason}. Selected the full discovered suite.")
-        };
+        self.full_suite_fallback |= targets.is_none();
+        let scope = targets.map_or("the full discovered suite", |_| "configured runner targets");
+        let warning = format!("{reason}. Selected {scope}.");
         self.plan.warnings.push(Warning {
             r#type: "changes-fallback".into(),
             message: warning,

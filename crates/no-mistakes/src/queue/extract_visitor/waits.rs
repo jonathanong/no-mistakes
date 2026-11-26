@@ -6,7 +6,6 @@ use oxc_ast::ast::{
 
 impl<'a> QueueVisitor<'a> {
     pub(super) fn note_wait_call(&mut self, call: &CallExpression<'a>) {
-        self.note_rate_limit_call(call);
         if self.record_waits
             && (self.wait_value(&call.callee)
                 || call.arguments.iter().any(|arg| {
