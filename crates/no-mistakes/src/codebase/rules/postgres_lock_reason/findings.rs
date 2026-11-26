@@ -2,7 +2,9 @@ use super::comment::{reason_message, ReasonStatus};
 use super::comments_index::CommentIndex;
 use super::options::CompiledOptions;
 use super::{finding, RULE_ID};
-use crate::codebase::postgres::{SqlFunctionCallFact, UndeclaredExecutorType};
+use crate::codebase::postgres::{
+    SqlFunctionCallFact, SqlStatementFileFacts, UndeclaredExecutorType,
+};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
@@ -38,6 +40,20 @@ pub(super) fn matches_sql_helper(options: &CompiledOptions, call: &SqlFunctionCa
     };
     let name = call.name_parts.join(".");
     options.matches_sql_helper(&name, terminal)
+}
+
+pub(super) fn statement_has_lock_work(
+    options: &CompiledOptions,
+    statement: &SqlStatementFileFacts,
+) -> bool {
+    statement
+        .lock_inventory
+        .iter()
+        .any(|lock| is_lock_category(&lock.category))
+        || statement
+            .function_calls
+            .iter()
+            .any(|call| matches_sql_helper(options, call))
 }
 
 pub(super) fn push_reason_finding(

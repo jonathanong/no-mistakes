@@ -196,3 +196,99 @@ fn co_demand_does_not_repeat_prepared_sql_projections() {
     assert_eq!(only, 1);
     assert_eq!(both, only);
 }
+
+fn rule_config(options: serde_json::Value) -> NoMistakesConfig {
+    serde_json::from_value(serde_json::json!({
+        "rules": [{
+            "rule": RULE_ID,
+            "scope": "repository",
+            "severity": "error",
+            "options": options,
+        }]
+    }))
+    .unwrap()
+}
+
+#[test]
+fn embedded_variants_report_truncated_opaque_and_broken_ts_gaps() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/postgres-lock-inventory-core/variants");
+    let config = rule_config(serde_json::json!({
+        "importSpecifier": "@example/db",
+        "executorNames": ["query"],
+        "unanalyzable": "report",
+    }));
+    let files = vec![root.join("broken.ts"), root.join("queries.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(findings.iter().any(|f| {
+        f.file == "broken.ts"
+            && f.message
+                .contains("TypeScript source could not be analyzed")
+    }));
+    assert!(findings.iter().any(|f| {
+        f.file == "queries.ts"
+            && f.message
+                .contains("executor SQL alternatives are incomplete")
+    }));
+    assert!(findings.iter().any(|f| {
+        f.file == "queries.ts" && f.message.contains("executor SQL could not be resolved")
+    }));
+    assert!(findings
+        .iter()
+        .any(|f| { f.file == "queries.ts" && f.target.as_deref() == Some("for-share") }));
+}
+
+#[test]
+fn embedded_imported_locks_and_sql_helpers_report_reason_findings() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/postgres-lock-inventory-core/imported");
+    let config = rule_config(serde_json::json!({
+        "importSpecifier": "@example/db",
+        "executorNames": ["query"],
+        "helpers": ["reserveJob"],
+        "unanalyzable": "report",
+    }));
+    let files = vec![
+        root.join("queries.mts"),
+        root.join("alternatives.mts"),
+        root.join("lock-clause.mts"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(findings
+        .iter()
+        .any(|f| { f.file == "queries.mts" && f.target.as_deref() == Some("for-update") }));
+    assert!(findings
+        .iter()
+        .any(|f| { f.file == "queries.mts" && f.target.as_deref() == Some("helper") }));
+    assert!(findings
+        .iter()
+        .any(|f| { f.file == "alternatives.mts" && f.target.as_deref() == Some("helper") }));
+}
+
+#[test]
+fn embedded_routine_and_parse_failure_report_unanalyzable_gaps() {
+    let routine_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-lock-inventory/fixture/routine");
+    let config = rule_config(serde_json::json!({
+        "importSpecifier": "@example/db",
+        "executorNames": ["query"],
+        "unanalyzable": "report",
+    }));
+    let routine_findings =
+        check_with_files(&routine_root, &config, &[routine_root.join("app.ts")]).unwrap();
+    assert!(routine_findings.iter().any(|f| {
+        f.file == "app.ts"
+            && f.message
+                .contains("stored routine body could not be resolved")
+    }));
+    assert!(routine_findings
+        .iter()
+        .any(|f| f.file == "app.ts" && f.target.as_deref() == Some("for-share")));
+
+    let gap_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-lock-inventory/fixture/gap-multiplicity");
+    let gap_findings = check_with_files(&gap_root, &config, &[gap_root.join("app.ts")]).unwrap();
+    assert!(gap_findings.iter().any(|f| {
+        f.file == "app.ts" && f.message.contains("SQL could not be parsed completely")
+    }));
+}

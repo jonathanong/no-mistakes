@@ -1,7 +1,7 @@
 use super::comments_index::CommentIndex;
 use super::findings::{
     is_lock_category, load_ts_comments, matches_sql_helper, push_reason_finding,
-    unanalyzable_finding, FileOutcome, PARSE_GAP, ROUTINE_GAP,
+    statement_has_lock_work, unanalyzable_finding, FileOutcome, PARSE_GAP, ROUTINE_GAP,
 };
 use super::options::CompiledOptions;
 use crate::codebase::check_facts::SqlFactContext;
@@ -61,18 +61,7 @@ fn native(
     let mut comment_index: Option<CommentIndex> = None;
     for statement in statements {
         record_sql_gaps(rel, statement, &mut out.unanalyzable);
-        if statement.parse_failed {
-            continue;
-        }
-        let has_locks = statement
-            .lock_inventory
-            .iter()
-            .any(|lock| is_lock_category(&lock.category))
-            || statement
-                .function_calls
-                .iter()
-                .any(|call| matches_sql_helper(options, call));
-        if !has_locks {
+        if statement.parse_failed || !statement_has_lock_work(options, statement) {
             continue;
         }
         let comments = match &comment_index {
