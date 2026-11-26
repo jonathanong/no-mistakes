@@ -48,7 +48,10 @@ module.exports = {
       const call = unwrapExpression(expression);
       if (call?.type !== "CallExpression") return null;
       const member = unwrapExpression(call.callee);
-      if (member?.type !== "MemberExpression" || !options.readMethods?.includes(memberPropertyName(member)))
+      if (
+        member?.type !== "MemberExpression" ||
+        !options.readMethods?.includes(memberPropertyName(member))
+      )
         return null;
       const client = unwrapExpression(member.object);
       if (!client) return null;

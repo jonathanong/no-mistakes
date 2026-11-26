@@ -18,7 +18,9 @@ function scalarConstAlias(node, context) {
   // Parameter initializers can run before a later binding is initialized.
   // Follow known nullable parameters only from their function body.
   if (def.type === "Parameter") return def.node.body.range[0] < init.range[0];
-  return def.type === "Variable" && def.parent.kind === "const" && def.node.range[1] < init.range[0];
+  return (
+    def.type === "Variable" && def.parent.kind === "const" && def.node.range[1] < init.range[0]
+  );
 }
 
 module.exports = { scalarConstAlias };

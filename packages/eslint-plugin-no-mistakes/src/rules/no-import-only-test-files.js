@@ -102,7 +102,8 @@ function isTestImport(statement) {
   if (statement.type === "ExportNamedDeclaration" && statement.source) {
     return isTestImportSource(statement.source.value);
   }
-  if (statement.type === "TSImportEqualsDeclaration") return isTestImportSource(importEqualsSource(statement));
+  if (statement.type === "TSImportEqualsDeclaration")
+    return isTestImportSource(importEqualsSource(statement));
   return false;
 }
 

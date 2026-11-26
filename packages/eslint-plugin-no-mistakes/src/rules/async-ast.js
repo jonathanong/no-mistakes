@@ -96,11 +96,7 @@ function isUnconditionalBeforeReturn(node, block) {
   let current = node;
   while (current && current !== block) {
     const parent = current.parent;
-    if (
-      parent &&
-      isTransparentExpression(parent) &&
-      parent.type !== "ChainExpression"
-    ) {
+    if (parent && isTransparentExpression(parent) && parent.type !== "ChainExpression") {
       current = parent;
       continue;
     }

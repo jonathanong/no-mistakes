@@ -47,7 +47,11 @@ function exportedDeclarations(program, sourceCode) {
 function requiredModule(init, sourceCode) {
   const call = unwrapExpression(init);
   const callee = unwrapExpression(call?.callee);
-  if (call?.type !== "CallExpression" || callee?.type !== "Identifier" || callee.name !== "require") {
+  if (
+    call?.type !== "CallExpression" ||
+    callee?.type !== "Identifier" ||
+    callee.name !== "require"
+  ) {
     return false;
   }
   return !resolveVariable(sourceCode, callee)?.defs.length;

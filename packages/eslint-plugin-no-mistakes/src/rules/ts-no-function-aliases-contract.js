@@ -25,7 +25,11 @@ function moduleObject(root, sourceCode) {
   if (!def) return false;
   if (def.node?.type === "ImportNamespaceSpecifier") return true;
   if (def.node?.type === "TSImportEqualsDeclaration" && def.node.importKind !== "type") return true;
-  if (def.type !== "Variable" || def.parent?.kind !== "const" || def.node?.id?.type !== "Identifier") {
+  if (
+    def.type !== "Variable" ||
+    def.parent?.kind !== "const" ||
+    def.node?.id?.type !== "Identifier"
+  ) {
     return false;
   }
   const call = unwrapExpression(def.node.init);

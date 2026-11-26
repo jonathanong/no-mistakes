@@ -33,7 +33,8 @@ function identifierName(node) {
 
 function assignmentWrapperName(node) {
   const found = bindingSite(node);
-  if (found.parent?.type !== "AssignmentExpression" || found.parent.right !== found.node) return null;
+  if (found.parent?.type !== "AssignmentExpression" || found.parent.right !== found.node)
+    return null;
   const left = found.parent.left;
   if (left.type === "Identifier") return left.name;
   if (left.type === "MemberExpression" && !left.computed) return identifierName(left.property);

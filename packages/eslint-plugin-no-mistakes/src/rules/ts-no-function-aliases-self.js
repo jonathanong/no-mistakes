@@ -76,7 +76,8 @@ function patternHasName(pattern, name) {
 
 function assignmentTarget(node) {
   const found = bindingSite(node);
-  if (found.parent?.type !== "AssignmentExpression" || found.parent.right !== found.node) return null;
+  if (found.parent?.type !== "AssignmentExpression" || found.parent.right !== found.node)
+    return null;
   return found.parent.left;
 }
 

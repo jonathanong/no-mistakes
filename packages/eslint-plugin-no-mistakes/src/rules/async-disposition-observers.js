@@ -20,7 +20,9 @@ function isVitestExpect(resolved) {
 function expectCallee(callee, context) {
   const node = unwrapExpression(callee);
   if (node?.type === "MemberExpression") {
-    return memberPropertyName(node) === "expect" && isVitestExpect(resolveImportedValue(node, context));
+    return (
+      memberPropertyName(node) === "expect" && isVitestExpect(resolveImportedValue(node, context))
+    );
   }
   if (node?.type !== "Identifier" || node.name !== "expect") return false;
   if (isReassigned(node, context) || propertiesWritten(node, context)) return false;

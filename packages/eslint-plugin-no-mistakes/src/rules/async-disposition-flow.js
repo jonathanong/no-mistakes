@@ -1,6 +1,10 @@
 "use strict";
 
-const { findContainingFunction, unwrapExpression, unwrapTransparentParent } = require("./async-ast");
+const {
+  findContainingFunction,
+  unwrapExpression,
+  unwrapTransparentParent,
+} = require("./async-ast");
 const { memberPropertyName } = require("./async-targets");
 
 function statement(node) {

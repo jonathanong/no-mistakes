@@ -102,7 +102,11 @@ function unwrapValue(node) {
 function staticKey(node) {
   const current = unwrapValue(node);
   if (!current) return null;
-  if (typeof current.name === "string" && current.type !== "Literal" && current.type !== "TemplateLiteral") {
+  if (
+    typeof current.name === "string" &&
+    current.type !== "Literal" &&
+    current.type !== "TemplateLiteral"
+  ) {
     return current.name;
   }
   if (current.type === "Literal") return String(current.value);
