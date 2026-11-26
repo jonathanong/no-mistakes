@@ -1,6 +1,7 @@
 "use strict";
 
 const { functionFromExpression } = require("./component-functions");
+const { unwrapExpression } = require("./rules/async-ast");
 
 function collectTopLevelDefinition(statement, definitions, opts, aliases, exported) {
   if (statement.type === "FunctionDeclaration" && statement.id) {
@@ -19,10 +20,11 @@ function collectTopLevelDefinition(statement, definitions, opts, aliases, export
       definitions.set(declaration.id.name, { name: declaration.id.name, fn });
       continue;
     }
-    if (declaration.init?.type === "Identifier" && declaration.parent?.kind === "const") {
+    const init = unwrapExpression(declaration.init);
+    if (init?.type === "Identifier" && declaration.parent?.kind === "const") {
       aliases.push({
         name: declaration.id.name,
-        target: declaration.init.name,
+        target: init.name,
         exported,
       });
     }
