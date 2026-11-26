@@ -1,5 +1,5 @@
 use super::check_json_case::case;
-use super::check_json_snapshot::assert_saved_fixture;
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report};
 
 type Case = (&'static str, std::path::PathBuf, std::path::PathBuf);
 
@@ -11,7 +11,8 @@ fn c(label: &'static str, dir: &str, config: &str) -> Case {
 fn csharp_max_lines_per_file_json_matches_snapshot() {
     let fail = "csharp-max-lines-per-file/fixture/fail";
     let config = |name: &str| format!("../../config/csharp_max_lines_per_file_{name}.yml");
-    assert_saved_fixture(
+    let input = "file-input-analysis/fixture";
+    let reports = assert_saved_fixture_report(
         "csharp_max_lines_per_file",
         &[
             c("fail", fail, ".no-mistakes.yml"),
@@ -19,14 +20,70 @@ fn csharp_max_lines_per_file_json_matches_snapshot() {
             c("test_max", fail, &config("uses_test_max")),
             c("over_limit", fail, &config("fails_over_limit")),
             c("disabled", fail, &config("disabled_skips")),
+            c(
+                "disable_line",
+                "csharp-max-lines-per-file/fixture/suppression",
+                "../fail/.no-mistakes.yml",
+            ),
+            c("input_report", input, "csharp-max-lines-per-file.yml"),
+            c(
+                "input_advise",
+                input,
+                "csharp-max-lines-per-file-advise.yml",
+            ),
+            c(
+                "input_ignore",
+                input,
+                "csharp-max-lines-per-file-ignore.yml",
+            ),
         ],
+        &[],
+        &[],
     );
+    let suppressed = &reports["disable_line"]["report"]["rules"];
+    let findings = suppressed.as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{suppressed}");
+    assert_eq!(findings[0]["file"], "Control.cs");
+    assert_eq!(findings[0]["line"], 1);
+
+    for (label, expected_rules, expected_advisories) in [
+        ("input_report", 2, 0),
+        ("input_advise", 1, 1),
+        ("input_ignore", 1, 0),
+    ] {
+        let result = &reports[label];
+        assert_eq!(result["exitCode"], 1);
+        assert!(result["report"].get("incomplete").is_none(), "{result}");
+        let rules = result["report"]["rules"].as_array().unwrap();
+        let advisories = result["report"]["advisories"].as_array().unwrap();
+        assert_eq!(rules.len(), expected_rules, "{result}");
+        assert_eq!(advisories.len(), expected_advisories, "{result}");
+        assert!(rules
+            .iter()
+            .any(|finding| finding["file"] == "csharp/definite.cs"));
+        assert_eq!(
+            rules
+                .iter()
+                .any(|finding| finding["file"] == "csharp/bad.cs"
+                    && finding["rule"] == "csharp-max-lines-per-file"
+                    && finding["target"] == "unanalyzable"),
+            label == "input_report"
+        );
+        assert_eq!(
+            advisories
+                .iter()
+                .any(|finding| finding["file"] == "csharp/bad.cs"
+                    && finding["rule"] == "csharp-max-lines-per-file"
+                    && finding["target"] == "unanalyzable"),
+            label == "input_advise"
+        );
+    }
 }
 
 #[test]
 fn csharp_no_async_void_delegate_json_matches_snapshot() {
     let fail = "csharp-no-async-void-delegate/fixture/fail";
-    assert_saved_fixture(
+    let reports = assert_saved_fixture_report(
         "csharp_no_async_void_delegate",
         &[
             c("fail", fail, ".no-mistakes.yml"),
@@ -40,8 +97,21 @@ fn csharp_no_async_void_delegate_json_matches_snapshot() {
                 "csharp-no-async-void-delegate/fixture/pass",
                 ".no-mistakes.yml",
             ),
+            c(
+                "disable_lines",
+                "csharp-no-async-void-delegate/fixture/suppression",
+                "../fail/.no-mistakes.yml",
+            ),
         ],
+        &[],
+        &[],
     );
+    let result = &reports["disable_lines"];
+    assert_eq!(result["exitCode"], 1);
+    let findings = result["report"]["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{result}");
+    assert_eq!(findings[0]["file"], "PageBinding.cs");
+    assert_eq!(findings[0]["line"], 11);
 }
 
 #[test]

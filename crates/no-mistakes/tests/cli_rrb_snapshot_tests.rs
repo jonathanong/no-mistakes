@@ -1,5 +1,5 @@
 use super::check_json_case::case;
-use super::check_json_snapshot::assert_saved_fixture;
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report};
 
 type Case = (&'static str, std::path::PathBuf, std::path::PathBuf);
 
@@ -14,14 +14,32 @@ fn correspondence(label: &'static str, scenario: &str) -> Case {
 
 #[test]
 fn integration_test_no_mocks_json_matches_snapshot() {
-    assert_saved_fixture(
+    let reports = assert_saved_fixture_report(
         "integration_test_no_mocks",
-        &[c(
-            "mocked",
-            "integration-test-no-mocks/fixture",
-            ".no-mistakes.yml",
-        )],
+        &[
+            c(
+                "mocked",
+                "integration-test-no-mocks/fixture",
+                ".no-mistakes.yml",
+            ),
+            c(
+                "disable_lines",
+                "integration-test-no-mocks/fixture/suppression",
+                "../.no-mistakes.yml",
+            ),
+        ],
+        &[],
+        &[],
     );
+    let result = &reports["disable_lines"];
+    assert_eq!(result["exitCode"], 1);
+    let findings = result["report"]["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{result}");
+    assert_eq!(
+        findings[0]["file"],
+        "integration-tests/web-api/mocks.test.mts"
+    );
+    assert_eq!(findings[0]["line"], 4);
 }
 
 #[test]
