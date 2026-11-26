@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-env-policy
+    scope: repository
+    message: Repair the example workflow so its environment can be checked.
+    options:
+      unanalyzable: report
+      required:
+        BASH_ENV: /dev/null
