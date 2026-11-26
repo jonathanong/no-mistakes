@@ -614,10 +614,10 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `changesDiff` | `changesDiff(options)` |
 | `lockfileDiff` | `lockfileDiff(options)` |
 | `validateMermaidMarkdown` | `validateMermaidMarkdown(options)` |
-| `playwrightCheck` | `playwrightCheck(options)` |
-| `playwrightEdges` | `playwrightEdges(options)` |
-| `playwrightRelated` | `playwrightRelated(options)` |
-| `playwrightTests` | `playwrightTests(options)` |
+| `playwrightCheck` | `playwrightCheck(options)` returns a `PlaywrightCoverageReport` with typed summary and coverage rows. |
+| `playwrightEdges` | `playwrightEdges(options)` returns a `PlaywrightEdgesReport`; use `kind` to narrow each `PlaywrightEdge`. |
+| `playwrightRelated` | `playwrightRelated(options)` returns a `PlaywrightRelatedReport` with `tests` and `fetch_apis`. |
+| `playwrightTests` | `playwrightTests(options)` returns a `PlaywrightTestsReport` with test, route, selector, and fetch details. |
 | `reactAnalyze` | `reactAnalyze(options)` |
 | `reactCheck` | `reactCheck(options)` |
 | `reactUsages` | `reactUsages(options)` |
@@ -638,7 +638,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `queues` | `queues(options)` |
 | `serverContracts` | `serverContracts(options)` |
 | `serverRouteEdges` | `serverRouteEdges(options)` |
-| `serverRouteList` | `serverRouteList(options)` |
+| `serverRouteList` | `serverRouteList(options)` returns `ServerRoute[]`, the same row type present in `serverRoutes()`. |
 | `serverRouteRelated` | `serverRouteRelated(options)` |
 | `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
 | `testsAudit` | `testsAudit(options)` |
