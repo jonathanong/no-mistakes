@@ -81,7 +81,7 @@ test("artifact inventory requires every producer archive, including short-retent
         saved.environment,
         artifactFetch({ total_count: missing.length, artifacts: missing }),
       ),
-      /all eight unexpired build archives/,
+      /all required unexpired build archives/,
     );
     for (const changes of saved.invalidArchiveMetadata) {
       const expired = saved.artifactInventory.artifacts.map((artifact, position) =>
@@ -92,7 +92,7 @@ test("artifact inventory requires every producer archive, including short-retent
           saved.environment,
           artifactFetch({ total_count: expired.length, artifacts: expired }),
         ),
-        /all eight unexpired build archives/,
+        /all required unexpired build archives/,
       );
     }
   }
@@ -105,7 +105,8 @@ test("source inventory is complete, bounded at 100 records, and unambiguous", as
       /complete inventory/,
     );
   }
-  const full = [...saved.artifactInventory.artifacts, ...Array(92).fill(saved.unrelatedArtifact)];
+  const required = saved.artifactInventory.artifacts;
+  const full = [...required, ...Array(100 - required.length).fill(saved.unrelatedArtifact)];
   assert.equal(
     (await resolveSource(saved.environment, artifactFetch({ total_count: 100, artifacts: full })))
       .reuse,
@@ -113,13 +114,10 @@ test("source inventory is complete, bounded at 100 records, and unambiguous", as
   );
   for (const inventory of [
     { total_count: 101, artifacts: [...full, saved.unrelatedArtifact] },
-    { total_count: 9, artifacts: saved.artifactInventory.artifacts },
-    { total_count: 8, artifacts: [...saved.artifactInventory.artifacts, saved.unrelatedArtifact] },
-    {
-      total_count: 9,
-      artifacts: [...saved.artifactInventory.artifacts, saved.artifactInventory.artifacts[0]],
-    },
-    { total_count: 9, artifacts: [...saved.artifactInventory.artifacts, null] },
+    { total_count: required.length + 1, artifacts: required },
+    { total_count: required.length, artifacts: [...required, saved.unrelatedArtifact] },
+    { total_count: required.length + 1, artifacts: [...required, required[0]] },
+    { total_count: required.length + 1, artifacts: [...required, null] },
   ])
     await assert.rejects(
       resolveSource(saved.environment, artifactFetch(inventory)),
