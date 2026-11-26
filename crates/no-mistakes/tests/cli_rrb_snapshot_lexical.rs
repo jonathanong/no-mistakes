@@ -266,14 +266,71 @@ fn swift_apple_module_imports_json_matches_snapshot() {
         "swift_apple_module_imports",
         &[
             c("default_modules", fixture, "../configs/check.yml"),
+            c(
+                "opt_in_apple_modules",
+                fixture,
+                "../configs/apple-opt-in.yml",
+            ),
             c("custom_modules", fixture, "../configs/modules.yml"),
             c("empty_modules", fixture, "../configs/no-modules.yml"),
+            c(
+                "macos_app_source_skipped",
+                "swift-no-unguarded-darwin-import/scope-macos-app",
+                "../configs/apple-opt-in.yml",
+            ),
+            c(
+                "xcodegen_app_skipped",
+                "swift-no-unguarded-darwin-import/scope-xcodegen-app",
+                "../configs/apple-opt-in.yml",
+            ),
+            c(
+                "apple_platforms_package_skipped",
+                "swift-no-unguarded-darwin-import/scope-apple-platforms",
+                "../configs/apple-opt-in.yml",
+            ),
+            c(
+                "apple_guard_conjunctions",
+                "swift-no-unguarded-darwin-import/scope-apple-guards",
+                "../configs/apple-opt-in.yml",
+            ),
+            c(
+                "portable_security_default",
+                "swift-no-unguarded-darwin-import/scope-portable-security",
+                "../configs/repo-default.yml",
+            ),
+            c(
+                "portable_security_opt_in",
+                "swift-no-unguarded-darwin-import/scope-portable-security",
+                "../configs/apple-opt-in.yml",
+            ),
+            c(
+                "dynamic_platforms_unanalyzable",
+                "swift-no-unguarded-darwin-import/scope-dynamic-manifest",
+                "../configs/apple-opt-in.yml",
+            ),
+            c(
+                "dynamic_platforms_advise",
+                "swift-no-unguarded-darwin-import/scope-dynamic-manifest",
+                "../configs/apple-opt-in-advise.yml",
+            ),
+            c(
+                "dynamic_targets_unanalyzable",
+                "swift-no-unguarded-darwin-import/scope-dynamic-targets",
+                "../configs/repo-default.yml",
+            ),
         ],
         &[],
         &[],
     );
     assert_eq!(
         reports["default_modules"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(
+        reports["opt_in_apple_modules"]["report"]["rules"]
             .as_array()
             .unwrap()
             .len(),
@@ -286,10 +343,39 @@ fn swift_apple_module_imports_json_matches_snapshot() {
             .len(),
         4
     );
-    assert_eq!(reports["empty_modules"]["exitCode"], 0);
+    for clean in [
+        "empty_modules",
+        "macos_app_source_skipped",
+        "xcodegen_app_skipped",
+        "apple_platforms_package_skipped",
+        "apple_guard_conjunctions",
+        "portable_security_default",
+    ] {
+        assert_eq!(reports[clean]["exitCode"], 0, "{clean}");
+        assert_eq!(
+            reports[clean]["report"]["rules"],
+            serde_json::json!([]),
+            "{clean}"
+        );
+    }
     assert_eq!(
-        reports["empty_modules"]["report"]["rules"],
-        serde_json::json!([])
+        reports["portable_security_opt_in"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        reports["dynamic_platforms_unanalyzable"]["report"]["rules"][0]["target"],
+        "unanalyzable"
+    );
+    assert_eq!(
+        reports["dynamic_platforms_advise"]["report"]["advisories"][0]["target"],
+        "unanalyzable"
+    );
+    assert_eq!(
+        reports["dynamic_targets_unanalyzable"]["report"]["rules"][0]["target"],
+        "unanalyzable"
     );
 }
 

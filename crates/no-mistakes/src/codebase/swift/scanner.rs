@@ -1,4 +1,4 @@
-pub(super) fn string_arg(source: &str, label: &str) -> Option<String> {
+pub(crate) fn string_arg(source: &str, label: &str) -> Option<String> {
     let colon = find_label_colon(source, label)?;
     let quote = source[colon + 1..]
         .char_indices()
@@ -10,7 +10,7 @@ pub(super) fn string_arg(source: &str, label: &str) -> Option<String> {
         .and_then(|(value, _)| (!value.contains("\\(") && !value.contains('\n')).then_some(value))
 }
 
-pub(super) fn find_label_colon(source: &str, label: &str) -> Option<usize> {
+pub(crate) fn find_label_colon(source: &str, label: &str) -> Option<usize> {
     let mut scanner = Scanner::new(source);
     while let Some(index) = scanner.next_code_index() {
         let rest = &source[index..];
@@ -43,7 +43,7 @@ pub(super) fn find_label_colon(source: &str, label: &str) -> Option<usize> {
     None
 }
 
-pub(super) fn find_matching_delimiter(
+pub(crate) fn find_matching_delimiter(
     source: &str,
     open_index: usize,
     open_char: char,
@@ -66,7 +66,7 @@ pub(super) fn find_matching_delimiter(
     None
 }
 
-pub(super) fn read_quoted_string(source: &str, quote_index: usize) -> Option<(String, usize)> {
+pub(crate) fn read_quoted_string(source: &str, quote_index: usize) -> Option<(String, usize)> {
     let mut value = String::new();
     let mut escaped = false;
     for (offset, ch) in source[quote_index + 1..].char_indices() {
@@ -85,21 +85,21 @@ pub(super) fn read_quoted_string(source: &str, quote_index: usize) -> Option<(St
     None
 }
 
-pub(super) struct Scanner<'a> {
+pub(crate) struct Scanner<'a> {
     source: &'a str,
     index: usize,
 }
 
 impl<'a> Scanner<'a> {
-    pub(super) fn new(source: &'a str) -> Self {
+    pub(crate) fn new(source: &'a str) -> Self {
         Self { source, index: 0 }
     }
 
-    pub(super) fn skip_to(&mut self, index: usize) {
+    pub(crate) fn skip_to(&mut self, index: usize) {
         self.index = index;
     }
 
-    pub(super) fn next_code_index(&mut self) -> Option<usize> {
+    pub(crate) fn next_code_index(&mut self) -> Option<usize> {
         while self.index < self.source.len() {
             let index = self.index;
             let ch = self.source[index..].chars().next()?;

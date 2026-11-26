@@ -11,12 +11,15 @@ use rustc_hash::FxHashSet;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod conditions;
 mod imports;
+mod packages;
 use imports::Import;
+use packages::{FileScope, PackageIndex};
 
 pub const RULE_ID: &str = "swift-no-unguarded-darwin-import";
 
-const DEFAULT_MODULES: [&str; 4] = ["Darwin", "Security", "UIKit", "AppKit"];
+const DEFAULT_MODULES: [&str; 1] = ["Darwin"];
 
 #[derive(Deserialize)]
 #[serde(default)]
@@ -31,10 +34,7 @@ impl Default for Options {
         Self {
             allow: Vec::new(),
             message: None,
-            modules: DEFAULT_MODULES
-                .into_iter()
-                .map(|name| ModuleName(name.to_owned()))
-                .collect(),
+            modules: Vec::from(DEFAULT_MODULES.map(|n| ModuleName(n.to_owned()))),
         }
     }
 }
@@ -70,6 +70,7 @@ pub(crate) fn diagnostics_with_files_and_sources(
     defer_suppression: bool,
 ) -> Result<AnalysisDiagnostics> {
     let mut diagnostics = AnalysisDiagnostics::default();
+    let package_index = PackageIndex::from_files(all_files, sources);
     for rule in config.rule_applications(RULE_ID) {
         let mut compiled = compile_options(rule.try_rule_options()?)?;
         compiled.allow.setup(root, config, rule, sources);
@@ -83,7 +84,7 @@ pub(crate) fn diagnostics_with_files_and_sources(
         )?;
         let mut findings: Vec<_> = files
             .par_iter()
-            .flat_map_iter(|path| check_file(root, path, &compiled, sources))
+            .flat_map_iter(|path| check_file(root, path, &compiled, &package_index, sources))
             .collect();
         findings.extend(compiled.allow.finish(root, sources));
         diagnostics.append(file_diagnostics::application(
@@ -115,17 +116,20 @@ fn check_file(
     root: &Path,
     path: &Path,
     options: &CompiledOptions,
+    package_index: &PackageIndex,
     sources: &SourceStore,
 ) -> Vec<RuleFinding> {
+    let scope = package_index.classify(path);
+    if matches!(scope, FileScope::Skip) {
+        return Vec::new();
+    }
     let file = relative_slash_path(root, path);
     let mut findings = match sources.read_source_path(path) {
         Ok(source) => {
             options.allow.checked(path);
             let code = super::lexical_mask::swift_declaration_mask(&source);
             imports::unproven_imports(&code, &options.modules)
-                .map(|(line, module, kind)| {
-                    finding(&file, line, module, kind, options.message.as_deref())
-                })
+                .map(|(line, module, kind)| finding(&file, line, module, kind, &scope, options))
                 .collect()
         }
         Err(error) => vec![source_access::read_failure(root, path, RULE_ID, &error)],
@@ -136,17 +140,28 @@ fn check_file(
     findings
 }
 
-fn finding(file: &str, line: usize, module: &str, kind: Import, hint: Option<&str>) -> RuleFinding {
+fn finding(
+    file: &str,
+    line: usize,
+    module: &str,
+    kind: Import,
+    scope: &FileScope,
+    options: &CompiledOptions,
+) -> RuleFinding {
     let fix =
         format!("Wrap the {module} import and the tests that use it in `#if canImport({module})`.");
-    let (mut message, target) = match kind {
-        Import::Unguarded => (fix, None),
-        Import::Unproven => (
+    let (mut message, target) = match (scope, kind) {
+        (FileScope::Uncertain(reason), _) => (
+            format!("Cannot verify whether this file belongs to a portable SwiftPM test target ({reason}). {fix}"),
+            Some("unanalyzable".to_owned()),
+        ),
+        (_, Import::Unguarded) => (fix, None),
+        (_, Import::Unproven) => (
             format!("Cannot verify that this compilation branch guards the {module} import. {fix}"),
             Some("unanalyzable".to_owned()),
         ),
     };
-    if let Some(hint) = hint {
+    if let Some(hint) = options.message.as_deref() {
         message.push(' ');
         message.push_str(hint);
     }

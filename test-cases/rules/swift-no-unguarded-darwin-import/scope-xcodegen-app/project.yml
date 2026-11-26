@@ -1,0 +1,14 @@
+name: MobileHostApp
+options:
+  bundleIdPrefix: com.example.synthetic
+targets:
+  MobileHostApp:
+    type: application
+    platform: iOS
+    sources: [Sources/MobileHostApp]
+  MobileHostAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests/MobileHostAppTests]
+    dependencies:
+      - target: MobileHostApp

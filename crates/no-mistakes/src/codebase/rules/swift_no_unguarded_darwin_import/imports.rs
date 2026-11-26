@@ -1,3 +1,4 @@
+use super::conditions::parse_condition;
 use regex::Regex;
 use rustc_hash::FxHashSet;
 use std::sync::LazyLock;
@@ -20,17 +21,54 @@ static EVENTS: LazyLock<Regex> = LazyLock::new(|| {
     .expect("Swift directives and imports")
 });
 
-static POSITIVE_GUARD: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(&format!(
-        concat!(
-            r"^(?:canImport\s*\(\s*(?P<module>{0}|\x60{0}\x60)\s*\)|",
-            r"os\s*\(\s*(?:macOS|OSX|iOS|tvOS|watchOS|visionOS|xrOS|Windows|Android",
-            r"|FreeBSD|OpenBSD|PS4|Cygwin|Haiku|WASI|Emscripten|Firmware|none)\s*\))$"
-        ),
-        IDENTIFIER,
-    ))
-    .expect("positive Swift platform guards")
-});
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) enum Proof<'a> {
+    None,
+    All,
+    Modules(Vec<&'a str>),
+}
+
+impl<'a> Proof<'a> {
+    pub(super) fn covers(&self, module: &str) -> bool {
+        match self {
+            Self::None => false,
+            Self::All => true,
+            Self::Modules(modules) => modules.contains(&module),
+        }
+    }
+
+    pub(super) fn and(self, other: Self) -> Self {
+        match (self, other) {
+            (Self::All, _) | (_, Self::All) => Self::All,
+            (Self::None, rhs) => rhs,
+            (lhs, Self::None) => lhs,
+            (Self::Modules(mut lhs), Self::Modules(rhs)) => {
+                for m in rhs {
+                    if !lhs.contains(&m) {
+                        lhs.push(m);
+                    }
+                }
+                Self::Modules(lhs)
+            }
+        }
+    }
+
+    pub(super) fn or(self, other: Self) -> Self {
+        match (self, other) {
+            (Self::None, _) | (_, Self::None) => Self::None,
+            (Self::All, rhs) => rhs,
+            (lhs, Self::All) => lhs,
+            (Self::Modules(lhs), Self::Modules(rhs)) => {
+                let shared: Vec<_> = lhs.into_iter().filter(|m| rhs.contains(m)).collect();
+                if shared.is_empty() {
+                    Self::None
+                } else {
+                    Self::Modules(shared)
+                }
+            }
+        }
+    }
+}
 
 pub(super) fn valid_module_name(name: &str) -> bool {
     MODULE_NAME.is_match(name)
@@ -39,11 +77,6 @@ pub(super) fn valid_module_name(name: &str) -> bool {
 pub(super) enum Import {
     Unguarded,
     Unproven,
-}
-
-enum Guard<'a> {
-    Module(&'a str),
-    OutsideLinux,
 }
 
 pub(super) fn unproven_imports<'a>(
@@ -63,12 +96,7 @@ pub(super) fn unproven_imports<'a>(
             return None;
         }
         let module = event.name("module")?.as_str().trim_matches('\x60');
-        if !modules.contains(module)
-            || guards.iter().flatten().any(|guard| match guard {
-                Guard::Module(guarded) => *guarded == module,
-                Guard::OutsideLinux => true,
-            })
-        {
+        if !modules.contains(module) || guards.iter().any(|proof| proof.covers(module)) {
             return None;
         }
         let kind = if guards.is_empty() {
@@ -80,36 +108,16 @@ pub(super) fn unproven_imports<'a>(
     })
 }
 
-fn update_guards<'a>(guards: &mut Vec<Option<Guard<'a>>>, directive: &str, tail: &'a str) {
+fn update_guards<'a>(guards: &mut Vec<Proof<'a>>, directive: &str, tail: &'a str) {
     if directive != "#if" {
         guards.pop();
     }
     if directive != "#endif" {
-        let guard = if directive == "#else" {
-            None
+        let proof = if directive == "#else" {
+            Proof::None
         } else {
-            positive_condition(tail)
+            parse_condition(tail)
         };
-        guards.push(guard);
+        guards.push(proof);
     }
-}
-
-fn positive_condition(tail: &str) -> Option<Guard<'_>> {
-    let (condition, following) = tail.split_once('\n').unwrap_or((tail, ""));
-    let mut condition = condition.trim();
-    while let Some(inner) = condition
-        .strip_prefix('(')
-        .and_then(|text| text.strip_suffix(')'))
-    {
-        condition = inner.trim();
-    }
-    let following = following.trim_start();
-    if following.starts_with("&&") || following.starts_with("||") {
-        return None;
-    }
-    let guard = POSITIVE_GUARD.captures(condition)?;
-    Some(match guard.name("module") {
-        Some(module) => Guard::Module(module.as_str().trim_matches('\x60')),
-        None => Guard::OutsideLinux,
-    })
 }

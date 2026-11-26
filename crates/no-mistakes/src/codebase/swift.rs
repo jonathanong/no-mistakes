@@ -1,6 +1,6 @@
 mod manifest;
 mod resolved;
-mod scanner;
+pub(crate) mod scanner;
 mod source;
 
 use rayon::prelude::*;
