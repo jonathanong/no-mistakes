@@ -32,23 +32,35 @@ formatDate(date);
 {
   "methods": ["toLocaleString", "toLocaleDateString", "toLocaleTimeString"],
   "constructors": ["Intl.DateTimeFormat", "Intl.NumberFormat"],
-  "allowUndefinedLocale": false
+  "allowUndefinedLocale": false,
+  "unknownValues": "ignore"
 }
 ```
 
-- `methods` replaces the default method-name list. An empty list disables
-  method checks. Selecting `toLocaleString` also checks Number and custom-object
-  methods with that name.
+- `methods` replaces the default method-name list with non-blank method names.
+  An empty list disables method checks. Selecting `toLocaleString` also checks
+  Number and custom-object methods with that name.
 - `constructors` defaults to an empty list. Each entry selects a member of a
-  global namespace by its dotted name and checks both calls and `new`
-  expressions. A local binding that shadows the namespace is ignored. An
-  `Intl.*Format` constructor or call whose only use is an immediate
+  global namespace by its dotted `Namespace.Member` name and checks both calls
+  and `new` expressions. A local binding that shadows the namespace is ignored.
+  An `Intl.*Format` constructor or call whose only use is an immediate
   `.resolvedOptions()` call (including any property read on its result, such as
   `Intl.DateTimeFormat().resolvedOptions().timeZone` or
   `new Intl.NumberFormat().resolvedOptions().locale`) is exempt; storing
   the instance in a variable or passing it elsewhere is still reported.
 - `allowUndefinedLocale` permits global `undefined` or a `void` expression as
   the explicit first argument. Omitting the locale still produces a finding.
+- `unknownValues` defaults to `"ignore"`. Set it to `"finding"` to report
+  undecidable calls on configured methods or constructor namespaces: spread
+  first arguments (`date.toLocaleString(...args)`,
+  `new Intl.DateTimeFormat(...args)`), computed constructor lookups on a
+  configured namespace (`new Intl[name]()`), and `undefined` or configured
+  constructor references inside dynamic `with` or non-strict direct `eval`
+  scopes.
+
+Invalid options—such as blank `methods` entries, non-dotted `constructors`
+entries, or unknown `unknownValues` strings—fail schema validation at config
+load.
 
 With the options above, both of these expressions report a missing locale.
 
@@ -84,14 +96,16 @@ export default [{
 Direct helper calls such as `formatDate(date)` are never checked, even if the
 helper name matches a configured method. Optional calls and static string or
 expression-free template member keys are checked. Constructor entries match
-direct references such as `Intl.DateTimeFormat`. Dynamic member keys, qualified
+direct references such as `Intl.DateTimeFormat`. Dynamic method keys, qualified
 namespace references such as `globalThis.Intl`, detached aliases, and indirect
 `.call`/`.apply` invocations are outside the rule.
-A spread first argument is not expanded. Aliases and other dynamic locale
+A spread first argument, a dynamic computed member on a configured constructor
+namespace, and references in dynamic `with` or non-strict direct `eval` scopes
+stay unknown under the default `unknownValues: "ignore"` and report findings
+when `unknownValues: "finding"` is enabled. Aliases and other dynamic locale
 expressions are accepted; the rule does not prove their runtime value or validate
-locale tags. References in dynamic `with` or direct-eval scopes stay unknown.
-A binding named `undefined` is resolved in its lexical scope rather than assumed
-to be the global value. No TypeScript program is required.
+locale tags. A binding named `undefined` is resolved in its lexical scope rather
+than assumed to be the global value. No TypeScript program is required.
 
 ## Fix
 
@@ -101,8 +115,13 @@ automatic fix because the rule cannot choose the correct locale for the app.
 
 ## Suppression
 
+Use `no-mistakes-disable-next-line`, `no-mistakes-disable-line`, or a leading
+`no-mistakes-disable-file` with either the short rule name or
+`no-mistakes/no-locale-less-date-format` (standard `eslint-disable-*`
+directives also work):
+
 ```ts
-// eslint-disable-next-line no-mistakes/no-locale-less-date-format -- intentional platform-native display
+// no-mistakes-disable-next-line no-locale-less-date-format -- intentional platform-native display
 new Intl.DateTimeFormat();
 ```
 

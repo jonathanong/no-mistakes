@@ -20,6 +20,8 @@ fn github_actions_pr_diff_range_json_matches_snapshot() {
         "shell-guard-dynamic-target",
         "shell-guard-condition-mutation",
         "shell-guard-time-control",
+        "shell-guard-quoted-heredoc",
+        "shell-guard-unquoted-heredoc",
     ]
     .into_iter()
     .map(|name| {

@@ -90,3 +90,15 @@ fn test_fixture_size_cap_each_table_mode_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn test_fixture_size_cap_labeled_tables_check_json_snapshot() {
+    assert_saved_fixture(
+        "test_fixture_size_cap_labeled_tables",
+        &[(
+            "all_elements",
+            rules_path(RULE, "fixture", "labeled-tables"),
+            rules_path(RULE, "configs", "all-elements.yml"),
+        )],
+    );
+}

@@ -1,4 +1,4 @@
-use super::control::{drop_leading_word, keyword};
+use super::control::keyword;
 use super::eval::{eval_condition, OnMergeGroup};
 use super::scan;
 use super::{BranchState, GuardScan};
@@ -28,10 +28,7 @@ impl GuardScan<'_> {
             depth: 0,
             in_double_bracket: false,
         };
-        let start_slice = self.slice(start_idx);
-        let start_words = drop_leading_word(&self.commands[start_idx].words, "if");
-        if self.has_arithmetic_at(start_idx)
-            || !self.consume_body(start_slice[2..].trim_start(), start_words, true, &mut state)
+        if self.has_arithmetic_at(start_idx) || !self.consume_after(start_idx, "if", true, &mut state)
         {
             return None;
         }
@@ -67,21 +64,14 @@ impl GuardScan<'_> {
                         } else {
                             cmd_start
                         };
-                        let words = drop_leading_word(&cmd.words, "then");
-                        if !self.consume_body(slice[4..].trim_start(), words, !excluded, &mut state)
-                        {
+                        if !self.consume_after(idx, "then", !excluded, &mut state) {
                             return None;
                         }
                         phase = Phase::InBranch {
                             body_start,
                             excluded,
                         };
-                    } else if !self.consume_nested(
-                        slice,
-                        &cmd.words,
-                        !prev_already_taken,
-                        &mut state,
-                    ) {
+                    } else if !self.consume_nested(idx, !prev_already_taken, &mut state) {
                         return None;
                     }
                 }
@@ -90,7 +80,7 @@ impl GuardScan<'_> {
                     excluded,
                 } => {
                     if state.depth > 0 {
-                        if !self.consume_nested(slice, &cmd.words, !excluded, &mut state) {
+                        if !self.consume_nested(idx, !excluded, &mut state) {
                             return None;
                         }
                     } else {
@@ -99,13 +89,7 @@ impl GuardScan<'_> {
                                 if excluded {
                                     pending.push(body_start..cmd_start);
                                 }
-                                let cond_words = drop_leading_word(&cmd.words, "elif");
-                                if !self.consume_body(
-                                    slice[4..].trim_start(),
-                                    cond_words,
-                                    !already_taken,
-                                    &mut state,
-                                ) {
+                                if !self.consume_after(idx, "elif", !already_taken, &mut state) {
                                     return None;
                                 }
                                 phase = Phase::InCondition {
@@ -119,13 +103,7 @@ impl GuardScan<'_> {
                                     pending.push(body_start..cmd_start);
                                 }
                                 saw_else = true;
-                                let words = drop_leading_word(&cmd.words, "else");
-                                if !self.consume_body(
-                                    slice[4..].trim_start(),
-                                    words,
-                                    !already_taken,
-                                    &mut state,
-                                ) {
+                                if !self.consume_after(idx, "else", !already_taken, &mut state) {
                                     return None;
                                 }
                                 phase = Phase::InBranch {
@@ -139,8 +117,7 @@ impl GuardScan<'_> {
                                 }
                                 let range = self.slice_range(idx);
                                 let fi_end = range.end - slice.len() + 2;
-                                let tail = &slice[2..];
-                                if scan::has_complex_expansion(tail)
+                                if self.has_complex_expansion(fi_end..range.end)
                                     || scan::has_arithmetic_in_range(
                                         self.script,
                                         fi_end..range.end,
@@ -153,7 +130,8 @@ impl GuardScan<'_> {
                                 return Some(idx + 1);
                             }
                             _ => {
-                                if !self.consume_body(slice, &cmd.words, !excluded, &mut state) {
+                                let range = self.slice_range(idx);
+                                if !self.consume_body(range, &cmd.words, !excluded, &mut state) {
                                     return None;
                                 }
                             }

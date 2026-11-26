@@ -62,8 +62,11 @@ without `-v`, and simple static-target `export` / `readonly` / `local` /
 name-reference (`-n`), function (`-f`), or integer (`-i`) flags). Any unlisted
 command, dynamic command or target name, compound array assignment, arithmetic
 command (`(( ... ))`), command or arithmetic substitution (`$(...)`, `$((...))`,
-`$[...]`, or backticks, including inside redirections), or non-simple parameter
-expansion (`${X:-...}`, `${X:=...}`) is treated as mutating every variable. The rule skips
+`$[...]`, or backticks, including inside redirections and unquoted
+here-document bodies), or non-simple parameter expansion (`${X:-...}`,
+`${X:=...}`) is treated as mutating every variable. Quoted here-document bodies
+(`<<'EOF'`, `<<"EOF"`, `<<\EOF`) do not expand in shell and are skipped when
+scanning for expansions. The rule skips
 environment reads in branches that `merge_group` cannot reach — including nested
 `if` blocks such as regex checks inside a guarded branch — and checks reads in
 reachable branches and outside the `if`. Compound tests and other unmodeled

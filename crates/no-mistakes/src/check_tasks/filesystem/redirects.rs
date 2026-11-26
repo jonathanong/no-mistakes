@@ -94,11 +94,8 @@ pub(super) fn run(
         config
     };
     let (config, workflow_diagnostics) =
-        super::github_actions::run(root, config, files, &prepared.sources, defer_suppression)?;
+        super::github_actions::run(root, config, files, &prepared, defer_suppression)?;
     diagnostics.append(workflow_diagnostics);
-    let (config, topology_diagnostics) =
-        super::workflow_topology::run(root, config.as_ref(), &prepared, defer_suppression)?;
-    diagnostics.append(topology_diagnostics);
     let config = config.as_ref();
     let mut without_manifest_fields;
     let config = if config.rule_configured(rules::PACKAGE_JSON_REQUIRED_FIELDS) {

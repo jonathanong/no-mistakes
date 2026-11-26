@@ -132,6 +132,14 @@ impl Document {
         self.key(id)
     }
 
+    pub(crate) fn is_alias(&self, id: usize) -> bool {
+        matches!(self.nodes.get(id).map(|node| &node.kind), Some(Kind::Alias(_)))
+    }
+
+    pub(crate) fn node_line(&self, id: usize) -> Option<usize> {
+        self.nodes.get(id).map(|node| node.line)
+    }
+
     pub(crate) fn roots(&self) -> &[usize] {
         &self.roots
     }

@@ -1,10 +1,12 @@
+use super::scan::project;
 use super::*;
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::EmbeddedSqlKind;
 mod locations;
 mod low;
-use crate::codebase::ts_source::{disable_directives, has_disable_comment};
+use crate::codebase::ts_source::{disable_directives, has_disable_comment, DisableDirective};
 use locations::{collect, SqlText};
+use rayon::prelude::*;
 
 struct AuditScope<'a> {
     root: &'a Path,
@@ -107,6 +109,7 @@ impl PreparedDisableDirectives {
             Self {
                 root: self.root.clone(),
                 comments,
+                read_failures: Vec::new(),
             }
             .findings_excluding_unparsed(consumed, &unparsed_files),
         );

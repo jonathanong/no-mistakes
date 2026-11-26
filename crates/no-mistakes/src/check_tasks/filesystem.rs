@@ -60,8 +60,8 @@ mod nested_controls;
 mod partial;
 mod payload_compatibility;
 mod redirects;
+mod terraform;
 mod vitest_project_policy;
-mod workflow_topology;
 fn run_remaining_filesystem_rules(
     root: &Path,
     config: &NoMistakesConfig,

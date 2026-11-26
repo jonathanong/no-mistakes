@@ -1,3 +1,4 @@
+use super::merge_availability::MergeAvailability;
 use super::concurrency_compile::CompiledIntent;
 use super::LocatedFinding;
 use super::{job_finding, workflow_finding as finding, Options};
@@ -102,19 +103,18 @@ pub(super) fn lint(
     topology: &WorkflowTopology,
     opts: &Options,
     concurrency: &BTreeMap<String, CompiledIntent>,
+    availability: &MergeAvailability<'_>,
 ) -> Vec<LocatedFinding> {
     let index = Index::new(topology);
     let mut findings = Vec::new();
     if !opts.job_inventory.is_empty() {
-        findings.extend(inventory(topology, opts));
+        findings.extend(inventory(topology, opts, availability));
     }
-    findings.extend(job_presence(&index, opts));
-    findings.extend(super::evaluate_activity_types::lint(topology, opts));
-    findings.extend(super::evaluate_forbidden_events::lint(topology, opts));
+    findings.extend(job_presence(&index, opts, availability));
     findings.extend(super::evaluate_secrets_inherit::lint(topology, opts));
-    findings.extend(super::evaluate_graph::lint(topology, &index, opts));
-    findings.extend(super::evaluate_steps::lint(topology, &index, opts));
-    findings.extend(super::evaluate_concurrency::lint(topology, concurrency));
+    findings.extend(super::evaluate_graph::lint(topology, &index, opts, availability));
+    findings.extend(super::evaluate_steps::lint(topology, &index, opts, availability));
+    findings.extend(super::evaluate_concurrency::lint(topology, concurrency, availability));
     if opts.forbid_reusable_workflow_concurrency {
         findings.extend(super::evaluate_concurrency::lint_reusable_workflows(
             topology,
@@ -123,10 +123,12 @@ pub(super) fn lint(
     if opts.forbid_concurrency_group_collisions {
         findings.extend(super::evaluate_collisions::lint(topology));
     }
+    findings.extend(super::evaluate_activity_types::lint(topology, opts));
+    findings.extend(super::evaluate_forbidden_events::lint(topology, opts));
     findings
 }
 
-fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<LocatedFinding> {
+fn inventory(topology: &WorkflowTopology, opts: &Options, availability: &MergeAvailability<'_>) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
     let mut actual = BTreeMap::new();
     for workflow in &topology.workflows {
@@ -145,7 +147,9 @@ fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<LocatedFinding>
                 expected.sort();
                 let mut got = keys.clone();
                 got.sort();
-                if expected != got {
+                if expected != got && (availability.inventory_known(path)
+                    || got.iter().any(|key| expected.binary_search(key).is_err()))
+                {
                     findings.push(finding(
                         path,
                         format!(
@@ -166,10 +170,10 @@ fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<LocatedFinding>
     findings
 }
 
-fn job_presence(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
+fn job_presence(index: &Index<'_>, opts: &Options, availability: &MergeAvailability<'_>) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
     for id in &opts.required_jobs {
-        if !index.jobs.contains_key(id.as_str()) {
+        if !index.jobs.contains_key(id.as_str()) && availability.job_membership_known(id) {
             findings.push(job_finding(id, format!("required job missing: {id}")));
         }
     }

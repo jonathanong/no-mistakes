@@ -463,8 +463,9 @@ fn diagnostic_code_as_str_matches_its_serde_wire_value() {
     }
 }
 
-const ALL_DIAGNOSTIC_CODES: [model::DiagnosticCode; 25] = [
+const ALL_DIAGNOSTIC_CODES: [model::DiagnosticCode; 26] = [
     model::DiagnosticCode::MalformedWorkflow,
+    model::DiagnosticCode::UnlocatedYamlMerge,
     model::DiagnosticCode::MissingNeedsDependency,
     model::DiagnosticCode::JobDependencyCycle,
     model::DiagnosticCode::DuplicateStepId,

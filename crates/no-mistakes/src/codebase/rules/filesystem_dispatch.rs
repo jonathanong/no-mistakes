@@ -12,8 +12,8 @@ use super::{
     github_actions_docker_host_ports, github_actions_download_integrity,
     github_actions_job_permissions, github_actions_job_timeouts,
     github_actions_local_action_checkout, github_actions_max_inline_script_lines,
-    github_actions_no_insta_snapshot_updates, github_actions_pinned_hash,
-    github_actions_script_expressions, github_actions_step_timeouts,
+    github_actions_no_insta_snapshot_updates, github_actions_no_required_pr_path_filters,
+    github_actions_pinned_hash, github_actions_script_expressions, github_actions_step_timeouts,
     github_actions_test_timeout_literals, github_actions_vitest_project_selection,
     integration_test_no_mocks, lockfile_allowlist, markdown_child_links, markdown_eval_tests,
     markdown_link_display_text, markdown_mermaid_validation, markdown_reachability,
@@ -39,12 +39,13 @@ use super::{
     production_dependency_declarations, require_files_in_subdirs, require_test_per_subdir,
     required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
     strict_package_layout, structured_config_policy, swift_no_raw_print,
-    swift_no_unguarded_darwin_import, swift_viewmodel_main_actor, test_email_domain_policy,
-    test_fixture_size_cap, test_no_dependency_pins, test_reliability,
-    tsconfig_alias_folder_mapping, tsconfig_file_coverage, tsconfig_gate_coverage,
-    version_pin_consistency, vite_optimize_deps_nested_imports, vitest_ci_path_coverage,
-    vitest_default_excludes, vitest_project_mapping, vitest_project_policy,
-    vitest_test_correspondence, workflow_topology_policy, workspace_package_cycles,
+    swift_no_unguarded_darwin_import, swift_viewmodel_main_actor,
+    terraform_iam_no_undocumented_wildcards, test_email_domain_policy, test_fixture_size_cap,
+    test_no_dependency_pins, test_reliability, tsconfig_alias_folder_mapping,
+    tsconfig_file_coverage, tsconfig_gate_coverage, version_pin_consistency,
+    vite_optimize_deps_nested_imports, vitest_ci_path_coverage, vitest_default_excludes,
+    vitest_project_mapping, vitest_project_policy, vitest_test_correspondence,
+    workflow_topology_policy, workspace_package_cycles,
 };
 
 mod call_site_facts;
@@ -96,8 +97,8 @@ use super::{
     REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR, RUST_MAX_LINES_PER_FILE,
     RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER, STRICT_PACKAGE_LAYOUT,
     STRUCTURED_CONFIG_POLICY, SWIFT_NO_RAW_PRINT, SWIFT_NO_UNGUARDED_DARWIN_IMPORT,
-    SWIFT_VIEWMODEL_MAIN_ACTOR, TEST_EMAIL_DOMAIN_POLICY, TEST_FIXTURE_SIZE_CAP,
-    TEST_NO_DEPENDENCY_PINS, TEST_NO_RETRIES, TSCONFIG_ALIAS_FOLDER_MAPPING,
+    SWIFT_VIEWMODEL_MAIN_ACTOR, TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS, TEST_EMAIL_DOMAIN_POLICY,
+    TEST_FIXTURE_SIZE_CAP, TEST_NO_DEPENDENCY_PINS, TEST_NO_RETRIES, TSCONFIG_ALIAS_FOLDER_MAPPING,
     TSCONFIG_FILE_COVERAGE, TSCONFIG_GATE_COVERAGE, VITEST_CI_PATH_COVERAGE,
     VITEST_DEFAULT_EXCLUDES, VITEST_PROJECT_MAPPING, VITEST_PROJECT_POLICY,
     VITEST_TEST_CORRESPONDENCE, WORKFLOW_TOPOLOGY_POLICY, WORKSPACE_PACKAGE_CYCLES,
@@ -121,6 +122,8 @@ pub(super) const GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA: &str =
 pub(super) const GITHUB_ACTIONS_JOB_TIMEOUTS: &str = github_actions_job_timeouts::RULE_ID;
 pub(super) const GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT: &str =
     github_actions_local_action_checkout::RULE_ID;
+pub(super) const GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS: &str =
+    github_actions_no_required_pr_path_filters::RULE_ID;
 pub(super) const GITHUB_ACTIONS_JOB_PERMISSIONS: &str = github_actions_job_permissions::RULE_ID;
 pub(super) const GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES: &str =
     github_actions_max_inline_script_lines::RULE_ID;

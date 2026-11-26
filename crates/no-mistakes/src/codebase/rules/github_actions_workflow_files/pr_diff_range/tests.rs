@@ -435,3 +435,40 @@ fn shell_guard_allowlist_and_unmodelled_controls_fail_safe() {
         assert_eq!(count(&with_env(&script)), 0, "{safe_preamble}");
     }
 }
+
+#[test]
+fn shell_guard_skips_quoted_heredocs_and_scans_unquoted_heredocs() {
+    let with_env = |run: &str| {
+        format!(
+            "on: [pull_request, merge_group]\njobs:\n  a:\n    env:\n      EVENT_NAME: ${{{{ github.event_name }}}}\n      PR_BASE_SHA: {BASE}\n      MERGE_GROUP_BASE_SHA: ${{{{ github.event.merge_group.base_sha }}}}\n    steps:\n      - run: |\n{run}"
+        )
+    };
+    let guard = "          if [ \"$EVENT_NAME\" = pull_request ]; then base=\"$PR_BASE_SHA\"; else base=\"$MERGE_GROUP_BASE_SHA\"; fi\n";
+    for safe in [
+        "          cat <<'EOF'\n          $(echo unset) EVENT_NAME\n          `echo unset`\n          ${EVENT_NAME:=pull_request}\n          $((EVENT_NAME=1))\n          EOF\n",
+        "          cat <<\"EOF\"\n          $(echo unset) EVENT_NAME\n          EOF\n",
+        "          cat <<\\EOF\n          $(echo unset) EVENT_NAME\n          EOF\n",
+        "          cat <<E'O'F\n          $(echo unset) EVENT_NAME\n          EOF\n",
+        "          cat <<-'EOF'\n          \t$(echo unset) EVENT_NAME\n          \tEOF\n",
+        "          echo \"café\"\n          cat <<'EOF'\n          $(echo unset)\n          EOF\n",
+        "          cat <<EOF\n          hello $EVENT_NAME ${EVENT_NAME} \\$(literal)\n          EOF\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then cat; fi <<'EOF'\n          $(literal)\n          EOF\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then\n            if :; then cat; fi <<'EOF'\n            $(literal)\n          EOF\n          fi\n",
+    ] {
+        assert_eq!(count(&with_env(&format!("{safe}{guard}"))), 0, "{safe}");
+    }
+    for mutating in [
+        "          cat <<EOF\n          $(echo unset) EVENT_NAME\n          EOF\n",
+        "          cat <<EOF\n          `echo unset` EVENT_NAME\n          EOF\n",
+        "          cat <<EOF\n          ${EVENT_NAME:=pull_request}\n          EOF\n",
+        "          cat <<EOF\n          $((EVENT_NAME=1))\n          EOF\n",
+        "          cat <<EOF\n          don't skip $(echo unset) EVENT_NAME\n          EOF\n",
+        "          cat <<EOF\n          # $(echo unset) EVENT_NAME\n          EOF\n",
+        "          cat <<EOF\n          \\\\$(echo unset) EVENT_NAME\n          EOF\n",
+        "          cat <<'EOF' > \"${EVENT_NAME:=pull_request}\"\n          $(literal)\n          EOF\n",
+        "          cat <<'SAFE' <<UNSAFE\n          $(literal)\n          SAFE\n          $(echo unset) EVENT_NAME\n          UNSAFE\n",
+        "          if [ \"$EVENT_NAME\" = merge_group ]; then cat; fi <<EOF\n          $(echo unset)\n          EOF\n",
+    ] {
+        assert_eq!(count(&with_env(&format!("{mutating}{guard}"))), 1, "{mutating}");
+    }
+}

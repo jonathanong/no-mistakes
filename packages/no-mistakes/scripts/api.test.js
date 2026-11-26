@@ -541,6 +541,11 @@ test("queue wait finding kinds are public without narrowing other queue findings
   );
 });
 
+test("YAML merge uncertainty is declared in topology reports", () => {
+  const topology = readFileSync(join(packageRoot, "workflow-topology-types.d.ts"), "utf8");
+  assert.match(topology, /\| "unlocated-yaml-merge"/);
+});
+
 test("workflow topology policy exports the reusable workflow lock option", () => {
   const declarations = readFileSync(
     join(packageRoot, "workflow-topology-policy-types.d.ts"),
@@ -668,4 +673,18 @@ test("GitHub Actions pr-diff-range and workflow call bindings export named optio
     "missing requireExplicitWorkflowCallBindings",
   );
   assert.ok(topology.includes("unanalyzable?: Unanalyzable;"), "missing unanalyzable");
+});
+
+test("required PR path filters export the workflow scope type", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "github-actions-no-required-pr-path-filters-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface GithubActionsNoRequiredPrPathFiltersOptions\b/);
+  assert.match(declarations, /workflows: string\[\];/);
+  assert.match(declarations, /unanalyzable\?: Unanalyzable;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-no-required-pr-path-filters-types";/,
+  );
 });

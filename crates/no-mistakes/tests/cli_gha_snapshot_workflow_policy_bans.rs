@@ -160,3 +160,32 @@ fn check_json_snapshot_workflow_policy_call_bindings() {
         "{stderr}"
     );
 }
+
+#[test]
+fn check_json_snapshot_workflow_policy_scopes_unlocated_merge() {
+    const RULE: &str = "workflow-topology-policy";
+    let mut cases = ["report", "advise", "ignore"]
+        .map(|mode| {
+            (
+                mode,
+                rules_path(RULE, "fixture", "merge-location-scoped"),
+                rules_path(
+                    RULE,
+                    "configs",
+                    &format!("merge-location-scoped-{mode}.yml"),
+                ),
+            )
+        })
+        .to_vec();
+    cases.push((
+        "inventory",
+        rules_path(RULE, "fixture", "merge-location-inventory"),
+        rules_path(RULE, "configs", "merge-location-scoped-inventory.yml"),
+    ));
+    cases.push((
+        "calls",
+        rules_path(RULE, "fixture", "merge-location-calls"),
+        rules_path(RULE, "configs", "merge-location-scoped-calls.yml"),
+    ));
+    assert_saved_fixture("workflow_policy_merge_location_scoped", &cases);
+}

@@ -112,6 +112,12 @@ pub fn validate_rule_options(
         config,
         &mut errors,
     );
+    super::github_actions_no_required_pr_path_filters::collect_config_errors(
+        root,
+        config_path,
+        config,
+        &mut errors,
+    );
     super::vitest_default_excludes::collect_config_errors(root, config_path, config, &mut errors);
     super::workflow_topology_policy::collect_config_errors(root, config_path, config, &mut errors);
     super::github_actions_workflow_files::pr_diff_range::collect_config_errors(
