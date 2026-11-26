@@ -27,7 +27,7 @@ do
   fi
 
   # Check if the branch being pushed is behind the push destination's main.
-  if ! git merge-base --is-ancestor "$local_sha" "$base"; then
+  if ! git merge-base --is-ancestor "$base" "$local_sha"; then
     behind_count=$(git rev-list --count "$local_sha..$base") || exit 1
     echo "Error: Branch '${local_ref#refs/heads/}' is behind $remote main by $behind_count commit(s)."
     echo "Please rebase onto the push destination's main before pushing."
