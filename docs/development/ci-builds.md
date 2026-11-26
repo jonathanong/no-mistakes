@@ -1483,8 +1483,10 @@ ran all three unit-test slices (`0`, `1`, `2`) sequentially because the
 minutes compiling unrelated test modules three times (e.g., main run
 `45687283513`: 14m51s total, 8927 MiB peak `rustc` RSS, 340 runs covering 328
 unique tests with 6 plain `cfg(test)` tests repeated across slices). It now
-compiles `no-mistakes-postgres-sql` once with `NM_TEST_SHARD=postgres-source`
-(`cfg(nm_shard_postgres_source)`), which includes only the `source::`
+compiles `no-mistakes-postgres-sql` once with
+`NM_POSTGRES_SQL_TEST_SHARD=postgres-source` (`cfg(nm_shard_postgres_source)`),
+plus `NM_TEST_SHARD=postgres-source` for `standalone-shard-rustc.sh`, which
+includes only the `source::`
 unit-test modules and shared plain `cfg(test)` modules under the same
 `--no-default-features` and `--features test-instrumentation` settings, 4096
 codegen units, and zero debug info, without compiling `no-mistakes`. The job
