@@ -72,6 +72,12 @@ impl ScopeStack {
         }
     }
 
+    pub(super) fn invalidate_using_column(&mut self, column: &str) {
+        if let Some(map) = self.using_columns.last_mut() {
+            map.remove(column);
+        }
+    }
+
     pub(super) fn snapshot(&self) -> ScopeSnapshot {
         ScopeSnapshot {
             frames: self.frames.clone(),

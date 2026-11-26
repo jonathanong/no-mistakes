@@ -284,6 +284,11 @@ fn excludes_unvetted_functions_quoted_types_distinct_limits_column_aliases_and_j
         SET account_id = o.account_id + 1,
             cached_name = (SELECT a1.name FROM accounts a1 WHERE a1.id = o.account_id)
         RETURNING (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id);
+
+        SELECT o.id, a.name, b.tier
+        FROM orders o
+        RIGHT JOIN accounts a USING (account_id)
+        LEFT JOIN accounts b USING (account_id);
     "#;
     assert!(collect(sql).is_empty());
 }

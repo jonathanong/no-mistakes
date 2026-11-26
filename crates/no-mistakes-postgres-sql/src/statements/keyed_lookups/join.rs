@@ -76,8 +76,19 @@ pub(super) fn inspect_join(
         record_lookup(key, key_display, line, column, seen, out);
     }
     register_table_factor(&join.relation, scopes, out);
+    let preserves_left_using = matches!(
+        join.join_operator,
+        JoinOperator::Join(_)
+            | JoinOperator::Inner(_)
+            | JoinOperator::Left(_)
+            | JoinOperator::LeftOuter(_)
+    );
     for (col, binding) in using_provenance {
-        scopes.record_using_column(col, binding);
+        if preserves_left_using {
+            scopes.record_using_column(col, binding);
+        } else {
+            scopes.invalidate_using_column(&col);
+        }
     }
     if let Some(JoinConstraint::On(expr)) = join_constraint(&join.join_operator) {
         inspect_exprs(std::iter::once(expr), scopes, seen, out);
