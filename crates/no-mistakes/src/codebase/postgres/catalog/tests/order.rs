@@ -1,4 +1,6 @@
-use super::super::{canonical_order_keys, order_by_ascending, CanonicalOrderKey};
+use no_mistakes_postgres_sql::order::{
+    canonical_order_keys, order_by_ascending, CanonicalOrderKey,
+};
 use sqlparser::ast::{
     Expr, Ident, ObjectName, ObjectNamePart, OrderBy, OrderByExpr, OrderByKind, OrderByOptions,
     OrderBySort,

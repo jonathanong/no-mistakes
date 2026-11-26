@@ -1,14 +1,10 @@
 <!-- cspell:ignore rustc -->
 ## Workspace crates
-
-- `crates/no-mistakes` — CLI, N-API library, graph, and rules (`pub use no_mistakes_invocation as invocation;`, re-exporting `no-mistakes-postgres-sql` from `codebase::postgres`).
-- `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (inverted diagnostics hooks in `hooks.rs`).
-- `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/locking/bound fact extraction, migration recovery, and identifier normalization (zero dependency on `no-mistakes`; inverted catalog and Rayon pool hooks via `CatalogLifecycleLookup` and `source::record_global_rayon_threads`).
-
+- `crates/no-mistakes` — CLI, N-API, graph, and rules (`invocation` and `codebase::postgres` re-export sibling crates).
+- `crates/no-mistakes-invocation` — locking, deadlines, watchdogs, process trees, `macos_invocation` (`hooks.rs`).
+- `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, identifiers (no `no-mistakes` dep; `CatalogLifecycleLookup` + `source::record_global_rayon_threads`).
 ## Performance Guidelines
-
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
-
 ### Core architecture invariants
 
 - One pass per invocation: discover the file universe once, parse each TS/JS

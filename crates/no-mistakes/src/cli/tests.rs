@@ -1,11 +1,15 @@
 use super::traversal::EdgeTraversalIndex;
 use super::{
     attach_jobs_pool_warning, edge_view, init_rayon_threads, init_rayon_threads_if_requested,
-    jobs_pool_mismatch, rayon_thread_count, recorded_rayon_threads, resolve_optional_root,
-    resolve_root, JobsArg, TraversableEdge,
+    jobs_pool_mismatch, rayon_thread_count, resolve_optional_root, resolve_root, JobsArg,
+    TraversableEdge,
 };
 use crate::queue::{Edge, EdgeKind};
 use std::path::Path;
+
+fn recorded_rayon_threads() -> Option<usize> {
+    super::RECORDED_RAYON_THREADS.get().copied()
+}
 
 fn edge(from: &str, to: &str) -> Edge {
     Edge {

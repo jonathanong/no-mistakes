@@ -71,11 +71,6 @@ pub fn init_rayon_threads_if_requested(jobs: Option<usize>) -> Option<JobsPoolWa
     })
 }
 
-#[cfg(test)]
-pub(crate) fn recorded_rayon_threads() -> Option<usize> {
-    RECORDED_RAYON_THREADS.get().copied()
-}
-
 pub(crate) fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> usize {
     if args.jobs > 0 {
         return args.jobs;

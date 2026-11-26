@@ -23,8 +23,6 @@ mod locations;
 mod model;
 mod names;
 mod nesting;
-#[cfg(test)]
-mod order;
 mod partition;
 mod paths;
 mod projection_cache;
@@ -58,8 +56,6 @@ pub use model::{
     GeneratedKind, PartitionKey, PartitionKeyElement, PartitionStrategy, RelationKind,
     TriggerEvent, TriggerTiming,
 };
-#[cfg(test)]
-pub(crate) use order::{canonical_order_keys, order_by_ascending};
 use paths::catalog_path;
 pub(crate) use paths::normalize_catalog_path;
 use snapshot::Snapshot;
