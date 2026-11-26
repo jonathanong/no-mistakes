@@ -1,6 +1,6 @@
 use super::{check_commands, path_globs, swift_commands, targeted_triggers, NoMistakesConfig};
 use crate::config::source_locations::ConfigPath;
-use crate::config::v2::analysis_policy::valid_project_sql_policy;
+use crate::config::v2::analysis_policy::project_sql_policy;
 use anyhow::Result;
 use std::path::Path;
 
@@ -74,7 +74,7 @@ fn validate_projects(config: &NoMistakesConfig) -> Result<()> {
             .postgres
             .as_ref()
             .and_then(|postgres| postgres.unanalyzable_sql.as_deref())
-            .filter(|policy| !valid_project_sql_policy(policy))
+            .filter(|policy| project_sql_policy(policy).is_none())
         {
             return Err(path_globs::field_error(
                 path.key("postgres").key("unanalyzableSql"),

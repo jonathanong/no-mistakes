@@ -96,6 +96,30 @@ fn inherited_annotation_policy_uses_normalized_project_value() {
 }
 
 #[test]
+fn inherited_project_report_overrides_repository_ignore() {
+    let root = fixture().join("../../../codebase-analysis/rule-analysis-policy/fixture");
+    let output = check(&root, Some("project-report-override.yml"));
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(report["incomplete"].is_null(), "{report}");
+    let findings: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["rule"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        findings,
+        ["postgres-no-offset", "postgres-require-query-annotation"]
+    );
+}
+
+#[test]
 fn strict_config_reports_the_unknown_fragment_key_on_its_own_line() {
     let root = fixture().join("fragment").canonicalize().unwrap();
     let out = check(&root, None);

@@ -1,0 +1,16 @@
+unanalyzable: ignore
+projects:
+  example:
+    root: .
+    include: ["src/*.mts"]
+    postgres:
+      unanalyzableSql: " RePoRt "
+      executors:
+        importSpecifier: "@example/db"
+rules:
+  - rule: postgres-no-offset
+    projects: [example]
+  - rule: postgres-grouping-not-aggregation
+    projects: [example]
+  - rule: postgres-require-query-annotation
+    projects: [example]

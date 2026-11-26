@@ -48,18 +48,8 @@ pub(super) fn legacy_policy(rule: &RuleDef) -> Result<Option<Unanalyzable>> {
     Ok(mode)
 }
 
-pub(in super::super) fn valid_project_sql_policy(value: &str) -> bool {
-    normalized_sql_policy(value, Some(Unanalyzable::Report)).is_some()
-}
-
-pub(in super::super) fn annotation_project_sql_policy(value: &str) -> Option<&'static str> {
-    Some(
-        match normalized_sql_policy(value, Some(Unanalyzable::Report))? {
-            Unanalyzable::Report => "report",
-            Unanalyzable::Advise => "advise",
-            Unanalyzable::Ignore => "ignore",
-        },
-    )
+pub(in super::super) fn project_sql_policy(value: &str) -> Option<Unanalyzable> {
+    normalized_sql_policy(value, Some(Unanalyzable::Report))
 }
 
 fn normalized_sql_policy(value: &str, report_mode: Option<Unanalyzable>) -> Option<Unanalyzable> {
