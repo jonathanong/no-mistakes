@@ -8,7 +8,5 @@ rules:
         - "backend/**/*.{ts,mts}"
       executorFactoryNames:
         - createExecutor
-      executorFactoryTypeNames:
-        - DbExecutor
       extraExecutorNames:
         - runQuery
