@@ -3,11 +3,11 @@ projects:
     type: server
     root: backend
 rules:
-  - rule: active-rule
+  - rule: unique-exports
     projects:
       - backend
     message: This rule is active
-  - rule: disabled-rule
+  - rule: forbidden-calls
     projects:
       - backend
     enabled: false

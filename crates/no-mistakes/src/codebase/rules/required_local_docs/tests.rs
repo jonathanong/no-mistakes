@@ -381,21 +381,17 @@ fn check_required_doc_section_standalone_discovers_files() {
 }
 
 #[test]
-fn doc_section_unreadable_file_is_skipped() {
-    // A glob match that is not on disk is skipped. Invalid UTF-8 is a check JSON snapshot.
+fn doc_section_reports_unreadable_match() {
     let root = fixture("rules/required-local-docs/doc-unreadable");
-    // The path is not on disk, so the read returns no source.
     let ghost = root.join("agents/email/README.md");
     let opts = DocSectionOptions {
         glob: "agents/*/README.md".to_string(),
         required_heading: "## Perf".to_string(),
     };
     let findings = scan_doc_section(&root, &opts, &[ghost]).unwrap();
-    // The file matches the glob but reading fails → no finding emitted
-    assert!(
-        findings.is_empty(),
-        "unreadable file should be skipped silently"
-    );
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "agents/email/README.md");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

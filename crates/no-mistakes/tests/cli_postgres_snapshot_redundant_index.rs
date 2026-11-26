@@ -7,6 +7,7 @@ fn postgres_redundant_index_check_json_snapshot() {
     let config = |name: &str| rules_path(rule, "configs", name);
     let one = config("migrations-001.yml");
     let pair = config("migrations-0001-0002.yml");
+    let custom = config("custom-directive.yml");
     // sqlInclude lists only the migration files present in that fixture, which
     // is the file list the former run() helper passed.
     assert_saved_fixture(
@@ -30,11 +31,9 @@ fn postgres_redundant_index_check_json_snapshot() {
                 fixture("pass"),
                 config("stale-never.yml"),
             ),
-            (
-                "custom_allow_directive",
-                fixture("allow"),
-                config("custom-directive.yml"),
-            ),
+            ("custom_allow_directive", fixture("allow"), custom.clone()),
+            ("disable_file", fixture("disable-file"), custom.clone()),
+            ("disable_lines", fixture("disable-lines"), custom),
             ("schema_qualified_tables", fixture("schema"), one.clone()),
             // One finding, target public.events.idx_events__topic_id.
             (

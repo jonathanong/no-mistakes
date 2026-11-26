@@ -124,7 +124,9 @@ fn invalid_options_report_the_problem() {
             "a TypeScript or JavaScript file path",
         ),
     ] {
-        let error = check_with_files(&root, &load(&root, config), &[]).unwrap_err();
+        let application =
+            serde_yaml::from_str(&std::fs::read_to_string(root.join(config)).unwrap()).unwrap();
+        let error = check_with_files(&root, &application, &[]).unwrap_err();
         assert!(
             format!("{error:#}").contains(expected_error),
             "{config}: {error:#}"
@@ -144,7 +146,14 @@ rules:
     )
     .unwrap();
     let mut errors = Vec::new();
-    collect_config_errors(&root, None, &bad_filter, &mut errors);
+    super::options::collect_config_errors(&root, None, &bad_filter, &mut errors);
+    let config_path = root.join(".no-mistakes.yml");
+    let mut with_location = Vec::new();
+    super::options::collect_config_errors(&root, Some(&config_path), &bad_filter, &mut with_location);
+    assert_eq!(
+        with_location,
+        errors.iter().map(|error| format!(".no-mistakes.yml: {error}")).collect::<Vec<_>>()
+    );
     let joined = errors.join("\n");
     assert!(joined.contains("[unclosed"), "{joined}");
     assert!(check_with_files(&root, &bad_filter, &[]).is_err());

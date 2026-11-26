@@ -47,7 +47,7 @@ pub const RULE_ID: &str = "postgres-sql-fragment-escape";
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     trusted_sql_tags: Vec<TrustedSqlTag>,
 }
 

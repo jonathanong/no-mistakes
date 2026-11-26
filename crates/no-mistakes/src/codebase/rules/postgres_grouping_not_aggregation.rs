@@ -8,7 +8,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 mod analyze;
 mod candidate;
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod evidence;
 mod existence;
 mod expressions;
@@ -38,7 +38,7 @@ pub(crate) struct Options {
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     sql_literal_helpers: Vec<String>,
 }
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     schema_catalog_path: String,
     include: GlobMatcher,
     exclude: GlobMatcher,

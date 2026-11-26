@@ -1,0 +1,10 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+      contracts:
+        - name: widget
+          producer: { file: schemas.json, pointer: /producer }
+          consumer: { file: schemas.json, pointer: /consumer }

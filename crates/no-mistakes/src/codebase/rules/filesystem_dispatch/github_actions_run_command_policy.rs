@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 mod diagnostics;
 mod judge;
 mod matcher;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod runs;
 
 pub const RULE_ID: &str = "github-actions-run-command-policy";

@@ -1,0 +1,36 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "uncertain": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/retries.spec.mts",
+          "message": "tests/retries.spec.mts:4: cannot verify whether imported binding `test` (from `helpers/index.mts` export `createTest`) is Playwright's `test` (expression in fixture chain could not be traced statically); if it is a Playwright fixture, add `{ module: \"helpers/index.mts\", export: \"createTest\" }` to `test-no-retries` `options.fixtures`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

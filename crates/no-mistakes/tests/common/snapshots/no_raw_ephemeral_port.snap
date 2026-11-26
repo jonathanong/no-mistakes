@@ -547,5 +547,80 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "unavailable_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "bad.ts",
+          "line": 1,
+          "message": "cannot verify no-raw-ephemeral-port: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "no-raw-ephemeral-port",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "definite.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port",
+          "sourceLine": "server.listen(0);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "definite.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port",
+          "sourceLine": "server.listen(0);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bad.ts",
+          "line": 1,
+          "message": "cannot verify no-raw-ephemeral-port: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "no-raw-ephemeral-port",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "definite.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port",
+          "sourceLine": "server.listen(0);"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

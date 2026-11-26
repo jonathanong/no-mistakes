@@ -140,11 +140,14 @@ fn requesting_sql_evidence_preserves_findings_and_advisories() {
 }
 
 #[test]
-fn inactive_application_does_not_parse_its_unselected_options() {
-    let selected = run("decidable-low");
-    let with_inactive = run("inactive-target");
-    assert_eq!(selected.rules, with_inactive.rules);
-    assert_eq!(selected.advisories, with_inactive.advisories);
+fn inactive_enabled_application_still_validates_its_options() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-mutable-sql-registry/fixture/effort-low");
+    let options = root.join(".no-mistakes-inactive-target.yml");
+    let error = no_mistakes::config::v2::load_v2_config(&root, Some(&options))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("executorNames"), "{error}");
 }
 
 #[test]

@@ -1,5 +1,7 @@
-- rule: rust-max-lines-per-file
+- rule: declared-payload-compatibility
   name: first
   options:
-    nested:
+    contracts:
       - name: shared
+        producer: { file: producer.json }
+        consumer: { file: consumer.json }

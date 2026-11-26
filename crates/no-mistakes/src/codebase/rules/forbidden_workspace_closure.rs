@@ -8,7 +8,7 @@ mod alias;
 mod catalog;
 mod lockfile;
 mod manifest;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod scan;
 mod selection;
 mod traversal;

@@ -10,6 +10,8 @@ mod uncertain;
 mod wrappers;
 use wrappers::WrapperProof;
 
+pub(super) const UNRESOLVED_EXPORT: &str = "fixture export could not be resolved statically";
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(super) struct ExportKey {
     pub(super) file: PathBuf,
@@ -36,8 +38,8 @@ pub(super) struct ExportLookup<'a> {
     resolver: &'a dyn ImportResolution,
     visible: &'a PathSet,
     proof: FxHashMap<ExportKey, ExportProof>,
-    uncertain: FxHashSet<ExportKey>,
-    uncertain_deps: FxHashMap<ExportKey, Vec<ExportKey>>,
+    uncertain: FxHashMap<ExportKey, &'static str>,
+    uncertain_deps: FxHashMap<ExportKey, (&'static str, Vec<ExportKey>)>,
     wrappers: FxHashMap<ExportKey, WrapperProof>,
     edges: Vec<CanonicalEdge<ExportKey, EdgeKind>>,
 }
@@ -48,7 +50,7 @@ impl<'a> ExportLookup<'a> {
             resolver,
             visible,
             proof: FxHashMap::default(),
-            uncertain: FxHashSet::default(),
+            uncertain: FxHashMap::default(),
             uncertain_deps: FxHashMap::default(),
             wrappers: FxHashMap::default(),
             edges: Vec::new(),
@@ -76,7 +78,7 @@ impl<'a> ExportLookup<'a> {
             }
             Export::Stars(targets) => (ExportProof::Stars, targets),
             Export::Uncertain => {
-                self.uncertain.insert(key.clone());
+                self.uncertain.insert(key.clone(), UNRESOLVED_EXPORT);
                 (ExportProof::Unknown, Vec::new())
             }
             Export::Unknown => (ExportProof::Unknown, Vec::new()),

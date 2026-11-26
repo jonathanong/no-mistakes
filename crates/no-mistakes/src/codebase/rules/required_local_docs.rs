@@ -1,10 +1,10 @@
-mod doc_section;
+pub(in crate::codebase::rules) mod doc_section;
 mod scan_pkg;
 
 pub use doc_section::{check_required_doc_section, DocSectionOptions};
-pub(crate) use doc_section::{
-    check_required_doc_section_with_files, check_required_doc_section_with_files_and_sources,
-};
+pub(crate) use doc_section::check_required_doc_section_with_files;
+#[doc(hidden)]
+pub use doc_section::diagnostics_with_files_and_sources;
 
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};

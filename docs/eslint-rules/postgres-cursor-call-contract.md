@@ -34,7 +34,10 @@ runCursor("/* users */ SELECT * FROM users");
 ```
 
 - `modules` and `executors` identify cursor imports and required executor names;
-  either empty list disables the rule.
+  either empty list disables the rule. TypeScript `import ns = require("...")`
+  bindings from a configured module are checked the same as `import * as ns from
+  "..."` (`export import ns = require("...")` is rejected; `import type ns =
+  require("...")` is ignored).
 - `include`, `exclude`, and `includeFiles` scope files. `include` defaults to
   `**/*.{ts,mts,tsx,js,mjs}`; `includeFiles` wins over `exclude`.
 - `annotation` replaces the leading `/* name */` requirement.

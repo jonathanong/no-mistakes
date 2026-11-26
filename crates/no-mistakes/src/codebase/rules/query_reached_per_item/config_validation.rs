@@ -1,4 +1,4 @@
-pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<()> {
+pub(in crate::codebase::rules) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<()> {
     if options.effects.is_empty() {
         bail!("{RULE_ID}: options.effects must select at least one configured effect kind");
     }

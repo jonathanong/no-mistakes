@@ -3,6 +3,18 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 const RULE: &str = "github-actions-pinned-hash";
 
 #[test]
+fn github_actions_pinned_hash_malformed_workflow_matches_snapshot() {
+    let cases = ["report", "advise", "ignore"].map(|policy| {
+        (
+            policy,
+            rules_path(RULE, "fixture", "malformed"),
+            rules_path(RULE, "configs", &format!("malformed-{policy}.yml")),
+        )
+    });
+    assert_saved_fixture("github_actions_pinned_hash_malformed_workflow", &cases);
+}
+
+#[test]
 fn github_actions_pinned_hash_json_matches_snapshot() {
     assert_saved_fixture(
         "github_actions_pinned_hash",
@@ -15,6 +27,11 @@ fn github_actions_pinned_hash_json_matches_snapshot() {
             (
                 "fail",
                 rules_path(RULE, "fixture", "fail"),
+                rules_path(RULE, "configs", "empty.yml"),
+            ),
+            (
+                "suppressions",
+                rules_path(RULE, "fixture", "suppressions"),
                 rules_path(RULE, "configs", "empty.yml"),
             ),
             (

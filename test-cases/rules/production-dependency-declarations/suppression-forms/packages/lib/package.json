@@ -1,0 +1,7 @@
+{
+  "name": "@acme/lib",
+  "main": "index.mts",
+  "devDependencies": {
+    "chalk": "5.3.0"
+  }
+}

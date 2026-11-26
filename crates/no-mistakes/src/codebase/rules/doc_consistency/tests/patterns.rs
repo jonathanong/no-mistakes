@@ -77,8 +77,9 @@ fn config_with_rules(yamls: &[&str]) -> NoMistakesConfig {
 
 fn saved_config_error(subpath: &str, files: &[PathBuf]) -> String {
     let root = fixture_root(subpath);
-    let config = crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
-        .unwrap_or_else(|error| panic!("{subpath} config should load: {error}"));
+    let config =
+        serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
+            .unwrap();
     let sources = source_store_for_files(files);
     let error = check_with_files_and_sources(&root, &config, files, &sources).unwrap_err();
     assert_eq!(sources.physical_read_count(), 0, "{error}");
@@ -351,7 +352,8 @@ fn invalid_patterns_fail_before_reads() {
 
     let root = fixture_root("patterns-invalid");
     let config =
-        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+        serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
+            .unwrap();
     let sources = source_store_for_files(&[]);
     let error = check_with_files_and_sources(&root, &config, &[], &sources).unwrap_err();
     let message = error.to_string();

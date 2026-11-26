@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: csp-allowed-origins
+    scope: repository
+    include:
+      - broken.ts
+    options:
+      cspFiles:
+        - ../headers-text/public/_headers

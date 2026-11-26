@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 1,
+          "message": "cannot verify github-actions-pinned-hash: cannot parse YAML: did not find expected node content at line 4 column 1, while parsing a flow node; repair source syntax so this check can verify the file",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "name: Malformed workflow",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: `uses: example/setup-widget@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: example/setup-widget@v1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: `uses: example/setup-widget@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: example/setup-widget@v1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: `uses: example/setup-widget@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: example/setup-widget@v1"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 1,
+          "message": "cannot verify github-actions-pinned-hash: cannot parse YAML: did not find expected node content at line 4 column 1, while parsing a flow node; repair source syntax so this check can verify the file",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "name: Malformed workflow",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

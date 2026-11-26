@@ -16,6 +16,7 @@ fn postgres_idempotent_insert_check_json_snapshot() {
         ("volatile_update", "fail-volatile", "sql.yml"),
         ("disabled_insert", "disabled-raw", "sql.yml"),
         ("disabled_insert_suppressed", "disabled", "sql.yml"),
+        ("disable_directives", "disable-directives", "sql.yml"),
         ("psql_insert", "fail", "psql.yml"),
         ("embedded_skipped", "skip-embedded", "embedded-off.yml"),
         ("unparseable_ignored", "unparseable", "ignore.yml"),

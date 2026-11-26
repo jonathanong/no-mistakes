@@ -3,7 +3,7 @@ use crate::codebase::postgres::{require_catalog_path, AllowList};
 use anyhow::{bail, Result};
 use regex::Regex;
 
-pub(super) struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     pub(super) types: Vec<String>,
     pub(super) names: Vec<Regex>,
     pub(super) name_raw: Vec<String>,
@@ -58,7 +58,7 @@ fn is_safe_varying_typmod(data_type: &str) -> bool {
     length.trim().parse::<u32>().is_ok_and(|length| length > 0)
 }
 
-pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(super::RULE_ID, options.schema_catalog_path.trim())?;
     if options.column_types.is_empty() {
         bail!("{} option columnTypes: empty", super::RULE_ID);

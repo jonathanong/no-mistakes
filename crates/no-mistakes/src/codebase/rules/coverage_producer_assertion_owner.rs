@@ -10,7 +10,7 @@ use anyhow::Result;
 use std::path::Path;
 mod builtin_tables;
 mod builtins;
-mod config;
+pub(in crate::codebase::rules) mod config;
 mod external;
 mod ownership;
 mod source_failures;

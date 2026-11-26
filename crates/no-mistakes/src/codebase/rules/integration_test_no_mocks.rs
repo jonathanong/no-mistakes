@@ -26,7 +26,7 @@ pub(crate) struct Options {
     forbidden_calls: Option<serde_yaml::Value>,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     modules: Vec<(String, Regex)>,
 }
 
@@ -110,7 +110,7 @@ fn reject_removed_call_options(opts: &Options) -> Result<()> {
     Ok(())
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let modules: Vec<&str> = if opts.forbidden_modules.is_empty() {
         DEFAULT_FORBIDDEN_MODULES.to_vec()
     } else {

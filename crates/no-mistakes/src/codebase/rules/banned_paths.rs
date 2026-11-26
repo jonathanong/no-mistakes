@@ -22,7 +22,7 @@ pub(crate) struct BannedPath {
     pub(crate) message: String,
 }
 
-struct CompiledBan<'a> {
+pub(in crate::codebase::rules) struct CompiledBan<'a> {
     def: &'a BannedPath,
     globset: GlobSet,
 }
@@ -67,7 +67,7 @@ fn scan(
     Ok(findings)
 }
 
-fn compile_bans(opts: &Options) -> Result<Vec<CompiledBan<'_>>> {
+pub(in crate::codebase::rules) fn compile_bans(opts: &Options) -> Result<Vec<CompiledBan<'_>>> {
     opts.banned_paths
         .iter()
         .map(|def| {

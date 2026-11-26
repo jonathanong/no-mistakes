@@ -175,6 +175,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/dynamic.test.mts",
+          "import": "./sibling.mts",
+          "line": 8,
+          "message": "dynamic import dependency `src/sibling.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import(\"./sibling.mts\");",
+          "target": "src/sibling.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "ignore": {
     "exitCode": 1,
     "report": {

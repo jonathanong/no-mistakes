@@ -19,6 +19,11 @@ fn strict_package_layout_json_matches_snapshot() {
             ("fail", fixture("fail"), config("queues-layout.yml")),
             // `other/note.ts` is outside `./packages` and is not a finding.
             ("dot_root", fixture("dot-root"), config("dot-packages.yml")),
+            (
+                "disable_file",
+                fixture("disable-file"),
+                config("dot-packages.yml"),
+            ),
             // Empty testFilePatterns keeps the defaults; this tree has no finding.
             (
                 "default_test_patterns",

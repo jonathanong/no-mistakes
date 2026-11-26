@@ -1,4 +1,4 @@
-use super::{scan_nested, unanalyzable, Hit, MAX_NESTED_DEPTH};
+use super::{scan_nested_body, unanalyzable, Hit};
 use crate::codebase::rules::github_actions_download_integrity::words::{Command, Word};
 use crate::codebase::rules::github_actions_run_command_policy::{
     matcher, options::CompiledOptions,
@@ -25,12 +25,13 @@ pub(super) fn try_scan_shell_c(
             "passes a dynamic script to `{name} -c`, which cannot be statically checked against configured command policies. Inline the literal command or run it directly."
         );
         hits.push(unanalyzable(op_line, operand.text.clone(), detail));
-    } else if depth < MAX_NESTED_DEPTH {
-        scan_nested(
+    } else {
+        scan_nested_body(
             &operand.text,
+            op_line,
+            "a literal shell script",
+            depth,
             compiled,
-            op_line.saturating_sub(1),
-            depth + 1,
             hits,
         );
     }
