@@ -219,14 +219,20 @@ properties, `propertyMatch`, `optionsPosition`, or message differ.
 
 Pass an object literal at the configured argument position that includes the
 required property names with values that are not definitely `undefined`.
-Spreads do not count as known keys.
+Object spreads do not count as known keys. If an argument spread occurs at or
+before the options position, pass the options as a separate argument at a
+statically known position.
 
 ## Limits
 
 A receiver method named `call` or `apply`, such as `client.apply(input)`, is that method. Forwarding stops at the first configured target, including a method named `call`
 or `apply` reached after another forwarding step. Unmatched nested intrinsic
 forwarding uses its explicit receiver, so `createResponse.call.call(other, null, input)`
-invokes `other(input)` rather than `createResponse(input)`. An `.apply` call with a spread argument is not rewritten, because the literal array may not be the runtime argument list.
+uses `other` as its target.
+
+An opaque `.apply` list or an argument spread at or before the configured position produces the missing-options finding on a recognized target. This also
+applies to a spread in the literal array passed to `.apply`. A spread after the
+options position leaves that position known.
 
 Another file's re-export is not visible here. `import { check } from "./barrel.mjs"; check(url)` stays unreported when `barrel.mjs` is `export { validateUrl as check } from "ssrf-guard/node"` or `export * from "ssrf-guard/node"`. A parameter default such as `function run({ validateUrl } = guard)` is not judged, because the caller can pass a different object. `const check = (0, validateUrl)` is still `validateUrl`. `const check = validateUrl<string>` is still `validateUrl`. `import * as guard from "ssrf-guard/node"; const api = guard; api.validateUrl(url)` is still `validateUrl`.
 

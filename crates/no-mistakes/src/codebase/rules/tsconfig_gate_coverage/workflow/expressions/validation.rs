@@ -119,23 +119,4 @@ fn special_functions_available(
     })
 }
 
-pub(super) fn interpolated_expression_end(value: &str) -> Option<usize> {
-    let bytes = value.as_bytes();
-    let mut index = 0;
-    let mut in_string = false;
-    while index < bytes.len() {
-        match bytes[index] {
-            b'\'' => {
-                if in_string && bytes.get(index + 1) == Some(&b'\'') {
-                    index += 2;
-                } else {
-                    in_string = !in_string;
-                    index += 1;
-                }
-            }
-            b'}' if !in_string && bytes.get(index + 1) == Some(&b'}') => return Some(index),
-            _ => index += 1,
-        }
-    }
-    None
-}
+pub(super) use crate::codebase::rules::github_actions_workflow_files::interpolated_expression_end;

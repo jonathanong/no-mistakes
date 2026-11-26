@@ -3,6 +3,7 @@ const { rule, options } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { findContainingFunction, isUnconditionalBeforeReturn } = require("./async-ast");
 const { createEvaluator } = require("./vitest-timeout-values");
+const { staticImportSource } = require("./async-target-bindings");
 const { createBindings } = require("./playwright-test-timeout-bindings");
 const { createCarriers } = require("./playwright-timeout-carriers");
 const { readTimeoutOptions } = require("./playwright-timeout-options");
@@ -68,9 +69,7 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
         const registrations = fn ? bindings.registrationFor(fn) : [];
         const api = registrations.length === 1 ? bindings.resolve(registrations[0].callee) : null;
         const root = api?.kind === "test" ? api.root : api?.owner?.root;
-        const directSdk = root?.defs?.some(
-          (def) => def.type === "ImportBinding" && def.parent.source.value === "@playwright/test",
-        );
+        const directSdk = root?.defs?.some((def) => staticImportSource(def) === "@playwright/test");
         return {
           timeout: { kind: "unknown" },
           slow: directSdk && !priorSlowMayExist ? false : null,
@@ -120,11 +119,12 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
           continue;
         }
         if (owner.kind === "test" && api.key === "extend") {
-          fixtures(node.arguments[0]);
+          fixtures(node.arguments[0], node);
           continue;
         }
         if (owner.kind === "test" && api.key === "configure" && owner.path.includes("describe")) {
-          field(evaluate(node.arguments[0]), node.arguments[0], "suite timeout");
+          const carrier = node.arguments[0];
+          field(evaluate(carrier), carrier ?? node, "suite timeout");
           continue;
         }
         if (api.key !== "setTimeout" && api.key !== "slow") {

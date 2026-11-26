@@ -24,8 +24,9 @@ test("user", () => {
 
 ## Options
 
-- `allowBeforeAllAssignments` permits module-scope assignments in `beforeAll`.
-  It defaults to `false`.
+- `allowBeforeAllAssignments` defaults to `false`. Set it to `true` to count
+  recognized `beforeAll` resets as cleanup for the owning suite when it runs
+  in parallel. Serial scopes already count these resets. [Suite cleanup](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/test-no-shared-state-cleanup.js#L12-L25) and [scope handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/test-no-shared-state-cleanup.js#L49-L57).
 
 ## Fix
 

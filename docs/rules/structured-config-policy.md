@@ -128,7 +128,7 @@ restated on the nested config are findings.
 
 ## Options and defaults
 
-`policies` is required and defaults to no checks when empty. Each policy may
+Omitting `policies` or supplying an empty list selects no checks. [Option defaults](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/structured_config_policy.rs#L18-L22). Each policy may
 set `files`, `requiredKeys`, `bannedKeys`, and `valueAssertions`; assertions
 support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 `string-prefix`, `string-glob`, `not-single-file`, `equals`, `equals-file`,

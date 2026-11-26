@@ -1,0 +1,8 @@
+name: Cache
+runs:
+  using: composite
+  steps:
+    - uses: example/cache@v2
+      with:
+        path: .cache/widgets
+        key: legacy

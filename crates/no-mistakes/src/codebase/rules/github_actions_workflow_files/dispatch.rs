@@ -1,7 +1,7 @@
 use super::{env_policy, no_poll_wait_job, pr_diff_range};
 use crate::codebase::rules::{
-    github_actions_no_insta_snapshot_updates, github_actions_no_required_pr_path_filters,
-    RuleFinding,
+    github_actions_cache_setup_policy, github_actions_no_insta_snapshot_updates,
+    github_actions_no_required_pr_path_filters, RuleFinding,
 };
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
@@ -18,6 +18,15 @@ pub(in crate::codebase::rules) fn run(
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
     match rule_id {
+        github_actions_cache_setup_policy::RULE_ID => Some(
+            github_actions_cache_setup_policy::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            ),
+        ),
         env_policy::RULE_ID => Some(env_policy::check_with_files_and_sources(
             root,
             config,

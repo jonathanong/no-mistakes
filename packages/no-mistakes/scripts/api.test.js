@@ -26,6 +26,21 @@ require("./api-tests/declarations-runtime");
 
 const { assert, test, readFileSync, join, packageRoot } = require("./api-tests/context");
 
+test("cache setup policy exports both workflow selectors", () => {
+  const options = readFileSync(
+    join(packageRoot, "github-actions-cache-setup-policy-types.d.ts"),
+    "utf8",
+  );
+  assert.match(options, /export interface GitHubActionsCacheSetupPolicyOptions/);
+  assert.match(options, /export interface GitHubActionsCacheKeyShape/);
+  assert.match(options, /export interface GitHubActionsSetupDeadline/);
+  assert.match(options, /unanalyzable\?: Unanalyzable;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-cache-setup-policy-types";/,
+  );
+});
+
 test("github-actions-pinned-hash images option is publicly named", () => {
   const declaration = readFileSync(
     join(packageRoot, "github-actions-pinned-hash-types.d.ts"),
