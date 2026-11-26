@@ -37,12 +37,8 @@ function propertyName(node, computed) {
   return literalString(node) || (node.type === "Literal" ? String(node.value) : null);
 }
 
-function unwrap(node) {
-  return unwrapSequence(node);
-}
-
 function mockMember(node, context, seen = new Set()) {
-  const callee = unwrap(node);
+  const callee = unwrapSequence(node);
   if (callee?.type === "Identifier") {
     if (seen.has(callee.name)) return false;
     const variable = resolveVariable(callee, context);
@@ -74,7 +70,7 @@ function mockMember(node, context, seen = new Set()) {
     return mockMember(callee.object, context, seen);
   }
   if (!MOCK_METHODS.has(method)) return false;
-  const object = unwrap(callee.object);
+  const object = unwrapSequence(callee.object);
   if (object?.type === "Identifier") {
     return isFrameworkBinding(object, context) && !isDefaultImport(object, context);
   }
@@ -92,7 +88,7 @@ function isMockingCall(node, context) {
 }
 
 function opaqueMock(node, context) {
-  const callee = unwrap(node.callee);
+  const callee = unwrapSequence(node.callee);
   if (callee?.type !== "MemberExpression") return false;
   const method = propertyName(callee.property, callee.computed);
   if (method === null || !MOCK_METHODS.has(method)) return false;
