@@ -5,7 +5,7 @@ const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
 const source = readFileSync(path.resolve(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflowJob(source, name);
-const workflow = require("yaml").parse(source);
+const stepNames = (body) => [...body.matchAll(/^      - name: (.+)$/gm)].map((match) => match[1]);
 const families = ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"];
 
 test("the macOS jobs retain the Windows build and test phases on parallel runners", () => {
@@ -13,25 +13,22 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
     ["native-build", "native-api-tests"],
     ["native-test-build", "native-rust-tests"],
   ]) {
-    const windows = [workflow.jobs[build], workflow.jobs[run]];
-    assert.deepEqual(windows[1].needs, ["changes", build]);
-    const macos = workflow.jobs[`${run}-macos`];
-    assert.equal(macos.needs, "changes");
+    const windows = [job(build), job(run)];
+    assert.ok(windows[1].includes(`    needs: [changes, ${build}]`));
+    const macos = job(`${run}-macos`);
+    assert.match(macos, /^    needs: changes$/m);
     const expected = new Set(
-      windows.flatMap((job) =>
-        job.steps
-          .map((step) => step.name)
-          .filter((name) => name !== "Exclude workspace from Microsoft Defender"),
-      ),
+      windows.flatMap(stepNames).filter((name) => name !== "Exclude workspace from Microsoft Defender"),
     );
-    const names = macos.steps.map((step) => step.name);
+    const names = stepNames(macos);
     assert.equal(names.length, expected.size, run);
     assert.deepEqual(new Set(names), expected, run);
-    for (const [job, os] of [...windows.map((job) => [job, "windows-2025"]), [macos, "macos-15"]]) {
-      assert.ok(job.strategy.matrix.include.length > 0);
-      assert.ok(job.strategy.matrix.include.every((row) => row.os === os));
-      assert.equal(job.env.NO_MISTAKES_BUILD_NAPI, "1");
-      assert.doesNotMatch(job.if, /docs-only/);
+    for (const [body, os] of [...windows.map((body) => [body, "windows-2025"]), [macos, "macos-15"]]) {
+      const runners = [...body.matchAll(/^          (?:- |  )os: (.+)$/gm)];
+      assert.ok(runners.length > 0);
+      assert.ok(runners.every((row) => row[1] === os));
+      assert.match(body, /^      NO_MISTAKES_BUILD_NAPI: "1"$/m);
+      assert.doesNotMatch(body, /^    if: .*docs-only/m);
     }
   }
 });
