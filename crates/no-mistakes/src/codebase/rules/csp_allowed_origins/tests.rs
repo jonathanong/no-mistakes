@@ -291,25 +291,23 @@ fn ignores_relative_and_non_network_urls_and_flags_malformed_network_urls() {
 fn reports_invalid_options_unreadable_csp_files_and_unanalyzable_modes() {
     let errors_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/csp-allowed-origins/fixture/errors");
+    let load = |f| crate::config::v2::load_v2_config_with_path(&errors_root, Some(&errors_root.join(f)));
     for (cfg_name, expected) in [
+        ("unknown-option.yml", "bogusOption"),
         ("empty-csp-files.yml", "requires non-empty options.cspFiles"),
         ("blank-csp-file.yml", "must be nonempty paths"),
         ("invalid-self-origin.yml", "must be a valid origin"),
+    ] {
+        let err = load(cfg_name).unwrap_err();
+        assert!(err.to_string().contains(expected), "{cfg_name}: {err}");
+    }
+    for (cfg_name, expected) in [
         ("missing-csp-text.yml", "failed to read CSP file"),
         ("empty-csp-directives.yml", "no static CSP directives found"),
         ("broken-ts-csp.yml", "Repair the CSP file"),
     ] {
-        let cfg = crate::config::v2::load_v2_config_with_path(
-            &errors_root,
-            Some(&errors_root.join(cfg_name)),
-        )
-        .unwrap()
-        .0;
-        let err = check_with_files(&errors_root, &cfg, &[]).unwrap_err();
-        assert!(
-            err.to_string().contains(expected),
-            "{cfg_name}: unexpected error: {err}"
-        );
+        let err = check_with_files(&errors_root, &load(cfg_name).unwrap().0, &[]).unwrap_err();
+        assert!(err.to_string().contains(expected), "{cfg_name}: {err}");
     }
 
     let report_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
