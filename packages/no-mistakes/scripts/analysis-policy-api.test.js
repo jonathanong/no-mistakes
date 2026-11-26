@@ -105,7 +105,7 @@ test("compiled legacy policies preserve project inheritance", { skip: !compiled 
       ["postgres-no-unbounded-sql-identifier", 5],
     ],
   );
-  for (const config of ["project-fail.yml", "project-previously-ignored.yml", "opaque-legacy.yml"])
+  for (const config of ["project-fail.yml", "opaque-legacy.yml"])
     for (const api of [cjs, esm]) assert.deepEqual(await api.check({ root, config }), inherited);
 });
 
@@ -115,6 +115,7 @@ test("compiled checks reject unsupported effort", { skip: !compiled }, async () 
 });
 
 for (const config of [
+  "project-previously-ignored.yml",
   "shared-invalid-annotation.yml",
   "shared-invalid-sql.yml",
   "shared-invalid-common.yml",
