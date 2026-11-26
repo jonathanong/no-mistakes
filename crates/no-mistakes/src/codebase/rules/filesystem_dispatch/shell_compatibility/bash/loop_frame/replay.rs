@@ -19,9 +19,6 @@ impl Repeat<'_> {
         };
         if self.pass >= MAX_PASSES {
             next_entry.widen_unanalyzable(self.empties, self.touches);
-            if !self.entry.weakened_by(&next_entry) {
-                return LoopPass::Stable;
-            }
         }
         if !replay_allowed {
             self.entry = next_entry;

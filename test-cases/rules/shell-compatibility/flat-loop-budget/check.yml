@@ -1,0 +1,5 @@
+rules:
+  - rule: bash-empty-array-nounset
+    scope: repository
+    options:
+      files: ["flat.sh"]

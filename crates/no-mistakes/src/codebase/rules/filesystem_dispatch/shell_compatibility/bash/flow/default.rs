@@ -1,6 +1,6 @@
 use super::super::super::lex::Boundary;
 use super::super::state::State;
-use super::{Flow, MAX_FILE_LOOP_REPLAYS};
+use super::Flow;
 use crate::fx::{FxHashMap, FxHashSet};
 
 impl Default for Flow<'_> {
@@ -21,7 +21,8 @@ impl Default for Flow<'_> {
             fn_unsets: FxHashMap::default(),
             fn_dynamic_unsets: FxHashSet::default(),
             restart: None,
-            loop_replays_left: MAX_FILE_LOOP_REPLAYS,
+            loop_nest_frame: None,
+            loop_replays_left: 0,
         }
     }
 }

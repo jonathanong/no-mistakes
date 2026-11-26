@@ -19,6 +19,8 @@ mod state;
 mod write_sets;
 
 #[cfg(test)]
+mod loop_budget_tests;
+#[cfg(test)]
 mod loop_tests;
 #[cfg(test)]
 mod tests;

@@ -139,9 +139,15 @@ fn shell_compatibility_loop_budget_matches_snapshot() {
     let cases = [
         case("advise", fixture, "check.yml"),
         case("report", fixture, "check-report.yml"),
+        case(
+            "flat",
+            "test-cases/rules/shell-compatibility/flat-loop-budget",
+            "check.yml",
+        ),
     ];
     let report = assert_saved_fixture_report("bash_loop_budget", &cases, &[], &[]);
     assert_eq!(report["advise"]["exitCode"], 1);
+    assert_eq!(report["flat"]["exitCode"], 1);
     assert_eq!(report["report"]["exitCode"], 1);
 }
 

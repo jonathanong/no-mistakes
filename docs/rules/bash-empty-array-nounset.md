@@ -219,11 +219,11 @@ rule's `unanalyzable` policy (`advise` by default, or `report` / `ignore` via
   condition (`if` / `elif` / `else`, `&&` / `||`, or a `case` arm) that may
   exclude the empty paths, the expansion is reported through `unanalyzable`
   rather than as a definite finding.
-- **File-wide loop replay budget**: loop replays share a budget across the
-  script. If a loop still needs another replay when the budget is exhausted,
-  the rule reports uncertainty at its `done`. Earlier findings are preserved,
-  and array facts that the loop could invalidate are weakened before analysis
-  continues past the loop.
+- **Loop nest replay budget**: an outermost loop and all its nested loops
+  share a replay budget. A separate outermost loop gets a fresh budget. If a
+  loop still needs another replay when its nest exhausts the budget, the rule
+  reports uncertainty at its `done`, preserves the findings it already saw,
+  and weakens array facts the loop could invalidate.
 - **Dynamic `unset` operands**: `unset` with a dynamic target (such as
   `unset "$name"`) clears nonempty guarantees on tracked arrays and widens them
   to `unanalyzable` until the array is refilled or guarded. When the `unset`

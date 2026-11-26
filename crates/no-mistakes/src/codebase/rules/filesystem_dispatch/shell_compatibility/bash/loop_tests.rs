@@ -159,12 +159,21 @@ fn nested_loop_budget_reports_uncertainty_and_keeps_weakened_expansions() {
         "/../../test-cases/rules/shell-compatibility/loop-budget/deep.sh"
     ));
     let result = super::analyze(source);
-    for expected in [72, 82] {
-        assert!(result.unanalyzable.iter().any(|(line, detail)| {
-            *line == expected && detail.contains("file-wide Bash loop replay budget exhausted")
-        }));
-    }
-    assert!(result.findings.contains(&("level_4_third", 55)));
-    assert!(result.findings.contains(&("final", 76)));
-    assert!(result.findings.contains(&("later", 83)));
+    let exhausted = result
+        .unanalyzable
+        .iter()
+        .filter(|(_, detail)| detail.starts_with("Bash loop nest replay budget exhausted"))
+        .map(|(line, _)| *line)
+        .collect::<Vec<_>>();
+    assert_eq!(exhausted, [42, 47, 52, 57, 62, 67, 72]);
+    assert_eq!(result.unanalyzable.len(), 14);
+    assert_eq!(
+        result.findings,
+        [
+            ("level_4_third", 55),
+            ("final", 76),
+            ("later", 80),
+            ("later", 83)
+        ]
+    );
 }

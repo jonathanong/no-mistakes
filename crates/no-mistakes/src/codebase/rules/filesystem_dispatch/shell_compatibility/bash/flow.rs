@@ -10,14 +10,13 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 mod boundaries;
 mod default;
-mod finish_loop;
 mod fn_summary;
+mod loops;
 mod observe;
 mod prefix;
 mod unset_fn;
 
 pub(super) use fn_summary::FnSummaries;
-const MAX_FILE_LOOP_REPLAYS: u8 = 64;
 
 pub(super) struct Flow<'a> {
     pub state: State,
@@ -35,6 +34,7 @@ pub(super) struct Flow<'a> {
     fn_unsets: FxHashMap<&'a str, FxHashMap<String, bool>>,
     fn_dynamic_unsets: FxHashSet<&'a str>,
     restart: Option<(usize, usize, usize)>,
+    loop_nest_frame: Option<usize>,
     loop_replays_left: u8,
 }
 
