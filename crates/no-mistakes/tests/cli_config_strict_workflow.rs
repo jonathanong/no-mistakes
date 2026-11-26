@@ -46,6 +46,7 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
             "4439.yml",
             "testPlan.vitest.fullSuiteTriggers.projects.missing",
         ),
+        ("4439-target.yml", "targets[1] duplicates targets[0]"),
         (
             "4440.yml",
             "testPlan.vitest.fullSuiteTriggers.projects.example[0]",
@@ -77,6 +78,12 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
             "testPlan.vitest.environments.pre-push.limit.file",
         ),
         ("4475.yml", "testPlan.vitest.fullSuiteTriggers.trigger"),
+        (
+            "4475-scalar.yml",
+            "a full-suite trigger mapping or a list of named triggers",
+        ),
+        ("4475-list.yml", "testPlan.vitest.fullSuiteTriggers[0]"),
+        ("4475-duplicate.yml", "duplicates fullSuiteTriggers[0]"),
         ("4479.yml", "tests.playwright.configsTypo"),
         (
             "4480-include.yml",
@@ -111,6 +118,10 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
         ),
         ("4491.yml", "changes.categories.example.id.fromPath"),
         ("4491-double.yml", "changes.categories.example.id.fromPath"),
+        (
+            "4491-rule.yml",
+            "changes.categories.example.rules[0].id.fromPath",
+        ),
         ("4492.yml", "changes.categories.example.match"),
     ] {
         let out = invoke(&root, config, &["check"]);
