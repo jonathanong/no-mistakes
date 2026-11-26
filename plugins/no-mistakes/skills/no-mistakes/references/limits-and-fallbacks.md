@@ -209,6 +209,10 @@ invalidates every path. Conditional, nonroot, and noncovering self checkouts
 preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
 in-process queries. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
 
+For `github-actions-no-required-pr-path-filters`, declare the workflows that supply
+required PR checks in `options.workflows` and select work inside those workflows.
+See [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-no-required-pr-path-filters.md).
+
 For `github-actions-run-command-policy`, declare `options.commands` with the
 exact command tokens, `valueFlags`, `whenAnyArgs`, `requireArgs`,
 `requireAnyArgs`, and `forbidArgPatterns` to enforce. Commands the shared

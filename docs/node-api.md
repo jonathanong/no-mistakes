@@ -160,11 +160,11 @@ failures. Prerequisites follow each consumer's source and configuration input
 selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
-The cache-key policy, action input policy, and Vitest default exclusion rule
-validate their options before analysis; invalid options reject `check()` and
-`analyzeProject()` with the same sorted configuration error message printed by
-the CLI (exit 2, empty stdout, no `incomplete` entry). See
-[rule configuration](configuration/rules.md).
+The cache-key policy, action input policy, required PR path-filter rule, and
+Vitest default exclusion rule validate their options before analysis; invalid
+options reject `check()` and `analyzeProject()` with the same sorted
+configuration error message printed by the CLI (exit 2, empty stdout, no
+`incomplete` entry). See [rule configuration](configuration/rules.md).
 An unwinding panic during per-file fact extraction uses the same existing
 `CheckFailure` shape with consumer `fact-extraction`, the file, and the panic
 message. `check()` and check reports in `analyzeProject()` resolve with that
@@ -1033,6 +1033,13 @@ paths with the same configuration and ordered per-job checkout analysis as CLI
 rule, `file`/`line` locate the local action's `uses:` line, and `target` identifies
 the `job#step` (one-based step position). No new runtime
 export, option type, or report field is needed.
+
+The opt-in `github-actions-no-required-pr-path-filters` uses the same config and
+`RuleFinding` shape in async `check()`, `analyzeProject()`, and the CLI.
+`GithubActionsNoRequiredPrPathFiltersOptions` describes its YAML options;
+`options.workflows` is required and non-empty (missing, empty, or non-literal
+entries reject `check()` and `analyzeProject()` before analysis).
+See [the rule](rules/github-actions-no-required-pr-path-filters.md).
 
 [`github-actions-pinned-hash`](rules/github-actions-pinned-hash.md) reads
 `options.images` from the rule configuration selected by `config`. The async

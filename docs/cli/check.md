@@ -17,6 +17,10 @@ Both default off. See
 and
 [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
 
+Use `github-actions-no-required-pr-path-filters` for workflows that supply required PR checks.
+Declare the workflow paths and keep path selection inside the workflow.
+See [the rule](../rules/github-actions-no-required-pr-path-filters.md).
+
 Enable [`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
 to catch invalid Node export target prefixes in selected manifests before building packages.
 

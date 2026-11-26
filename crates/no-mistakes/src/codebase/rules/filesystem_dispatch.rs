@@ -12,8 +12,8 @@ use super::{
     github_actions_docker_host_ports, github_actions_download_integrity,
     github_actions_job_permissions, github_actions_job_timeouts,
     github_actions_local_action_checkout, github_actions_max_inline_script_lines,
-    github_actions_no_insta_snapshot_updates, github_actions_pinned_hash,
-    github_actions_script_expressions, github_actions_step_timeouts,
+    github_actions_no_insta_snapshot_updates, github_actions_no_required_pr_path_filters,
+    github_actions_pinned_hash, github_actions_script_expressions, github_actions_step_timeouts,
     github_actions_test_timeout_literals, github_actions_vitest_project_selection,
     integration_test_no_mocks, lockfile_allowlist, markdown_child_links, markdown_eval_tests,
     markdown_link_display_text, markdown_mermaid_validation, markdown_reachability,
@@ -122,6 +122,8 @@ pub(super) const GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA: &str =
 pub(super) const GITHUB_ACTIONS_JOB_TIMEOUTS: &str = github_actions_job_timeouts::RULE_ID;
 pub(super) const GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT: &str =
     github_actions_local_action_checkout::RULE_ID;
+pub(super) const GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS: &str =
+    github_actions_no_required_pr_path_filters::RULE_ID;
 pub(super) const GITHUB_ACTIONS_JOB_PERMISSIONS: &str = github_actions_job_permissions::RULE_ID;
 pub(super) const GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES: &str =
     github_actions_max_inline_script_lines::RULE_ID;

@@ -20,6 +20,10 @@ const CHECKS: &[(&str, WorkflowCheck)] = &[
         rules::github_actions_local_action_checkout::diagnostics_with_files_and_sources,
     ),
     (
+        rules::github_actions_no_required_pr_path_filters::RULE_ID,
+        rules::github_actions_no_required_pr_path_filters::diagnostics_with_files_and_sources,
+    ),
+    (
         rules::github_actions_checkout_credentials::RULE_ID,
         rules::github_actions_checkout_credentials::diagnostics_with_files_and_sources,
     ),

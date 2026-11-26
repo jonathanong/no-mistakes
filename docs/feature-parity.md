@@ -9,6 +9,10 @@ The shell compatibility checks
 source-line findings, and suppressions across Rust, CLI `check`, async Node
 `check()`, and `analyzeProject()` check reports.
 
+The opt-in `github-actions-no-required-pr-path-filters` reports the same PR trigger filter
+keys and source lines across Rust, CLI `check`, and async Node check reports.
+See [the rule](rules/github-actions-no-required-pr-path-filters.md).
+
 GitHub Actions `workflow-topology-policy` supports opt-in
 [`forbidReusableWorkflowConcurrency`](configuration/workflow-topology-policy-concurrency.md#forbidreusableworkflowconcurrency)
 with identical workflow-level locations and suppression in Rust, CLI, and async
