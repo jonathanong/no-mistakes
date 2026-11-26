@@ -61,6 +61,6 @@ fn csp_allowed_origins_async_check_matches_cli() {
     )
     .unwrap();
     assert_eq!(advise_cli.rules.len(), 2);
-    assert_eq!(advise_cli.advisories.len(), 5);
+    assert_eq!(advise_cli.advisories.len(), 9);
     assert_eq!(advise_native, crate::check_runner::json_value(&advise_cli));
 }

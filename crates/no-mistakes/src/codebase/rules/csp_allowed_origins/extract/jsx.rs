@@ -41,7 +41,7 @@ fn record_link_element(
         LinkDirective::Dynamic => match jsx_attr_value(element, "href") {
             None => {}
             Some(JsxAttrValue::Static(url, _)) if !ParsedOrigin::is_network_like_url(&url) => {}
-            Some(JsxAttrValue::Static(_, span)) => {
+            Some(JsxAttrValue::Static(_, span) | JsxAttrValue::Spread(span)) => {
                 record_unanalyzable(collected, source, span, UnanalyzableReason::DynamicLinkRel);
             }
             Some(JsxAttrValue::Dynamic(expr)) => record_unanalyzable(
@@ -69,12 +69,16 @@ fn record_jsx_attr(
         Some(JsxAttrValue::Dynamic(expr)) => {
             record_url_expr(collected, source, expr, dir);
         }
+        Some(JsxAttrValue::Spread(span)) => {
+            record_unanalyzable(collected, source, span, UnanalyzableReason::DynamicUrl(dir));
+        }
     }
 }
 
 enum JsxAttrValue<'a> {
     Static(Cow<'a, str>, u32),
     Dynamic(&'a Expression<'a>),
+    Spread(u32),
 }
 
 enum LinkDirective {
@@ -107,7 +111,7 @@ fn link_directive(element: &JSXOpeningElement<'_>) -> LinkDirective {
             Some(JsxAttrValue::Static(as_raw, _)) => {
                 LinkDirective::Resolved(preload_directive(&as_raw.to_ascii_lowercase()))
             }
-            Some(JsxAttrValue::Dynamic(_)) => LinkDirective::Dynamic,
+            Some(JsxAttrValue::Dynamic(_) | JsxAttrValue::Spread(_)) => LinkDirective::Dynamic,
         };
     }
     if is_non_fetch_link_rel(&tokens) {
@@ -138,13 +142,13 @@ fn is_non_fetch_link_rel(tokens: &[&str]) -> bool {
     })
 }
 
-fn jsx_attr_value<'a>(
-    element: &'a JSXOpeningElement<'a>,
-    name: &str,
-) -> Option<JsxAttrValue<'a>> {
-    for item in &element.attributes {
-        let JSXAttributeItem::Attribute(attr) = item else {
-            continue;
+fn jsx_attr_value<'a>(element: &'a JSXOpeningElement<'a>, name: &str) -> Option<JsxAttrValue<'a>> {
+    for item in element.attributes.iter().rev() {
+        let attr = match item {
+            JSXAttributeItem::SpreadAttribute(spread) => {
+                return Some(JsxAttrValue::Spread(spread.span.start));
+            }
+            JSXAttributeItem::Attribute(attr) => attr,
         };
         let JSXAttributeName::Identifier(ident) = &attr.name else {
             continue;
@@ -153,9 +157,10 @@ fn jsx_attr_value<'a>(
             continue;
         }
         return match attr.value.as_ref()? {
-            JSXAttributeValue::StringLiteral(lit) => {
-                Some(JsxAttrValue::Static(crate::ast::js_literal(lit), lit.span.start))
-            }
+            JSXAttributeValue::StringLiteral(lit) => Some(JsxAttrValue::Static(
+                crate::ast::js_literal(lit),
+                lit.span.start,
+            )),
             JSXAttributeValue::ExpressionContainer(container) => {
                 let expr = container.expression.as_expression()?;
                 match eval_static_string(expr) {

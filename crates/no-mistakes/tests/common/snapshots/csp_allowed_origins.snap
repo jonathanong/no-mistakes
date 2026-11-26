@@ -425,6 +425,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/page.tsx",
+          "line": 16,
+          "message": "Dynamic URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img {...spreadProps} alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 17,
+          "message": "Dynamic URL used for script-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script {...spreadProps} />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 18,
+          "message": "Dynamic URL used for frame-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<iframe src=\"https://embeds.example.com/ok\" {...spreadProps} title=\"player\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 19,
+          "message": "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for src/csp.ts. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link {...spreadProps} />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
           "line": 5,
           "message": "Dynamic URL used for connect-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
           "rule": "csp-allowed-origins",
@@ -528,6 +560,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for src/csp.ts. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'.",
           "rule": "csp-allowed-origins",
           "sourceLine": "<link rel={dynamicRel} href=\"https://cdn.example.com/a.css\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 16,
+          "message": "Dynamic URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img {...spreadProps} alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 17,
+          "message": "Dynamic URL used for script-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script {...spreadProps} />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 18,
+          "message": "Dynamic URL used for frame-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<iframe src=\"https://embeds.example.com/ok\" {...spreadProps} title=\"player\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 19,
+          "message": "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for src/csp.ts. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link {...spreadProps} />",
           "target": "unanalyzable"
         },
         {

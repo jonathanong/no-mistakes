@@ -44,7 +44,7 @@ Policy parsing follows browser CSP3 semantics:
 - While any configured policy in `options.cspFiles` is unanalyzable, the rule abstains from judging browser origins against the remaining static policies alone, because the unread dynamic policy may allow them; only the unanalyzable policy diagnostic (plus any unanalyzable target URLs) is emitted, and same-origin and relative URLs stay silent.
 - Unquoted non-JS CSP lines (such as YAML block scalars containing `img-src https://cdn.example.com;`) keep directive names intact and strip a `Header:` / key prefix only when the prefix before `:` has no whitespace, is not a URL scheme, and is not followed by `//`.
 
-Dynamic URLs whose origin cannot be statically determined (for example `fetch(url)`, `` fetch(`https://${host}/x`) ``, `<img src={src} />`), malformed network URLs, dynamic `<link rel={rel}>` / `as={kind}` attributes, target files that fail to parse, and unresolvable dynamic CSP policy expressions in `options.cspFiles` are routed through `options.unanalyzable` (default `report`).
+Dynamic URLs whose origin cannot be statically determined (for example `fetch(url)`, `` fetch(`https://${host}/x`) ``, `<img src={src} />`, or JSX spread attributes such as `<img {...props} />` without a later overriding static `src`/`href`), malformed network URLs, dynamic `<link rel={rel}>` / `as={kind}` attributes, target files that fail to parse, and unresolvable dynamic CSP policy expressions in `options.cspFiles` are routed through `options.unanalyzable` (default `report`).
 
 ## Options
 

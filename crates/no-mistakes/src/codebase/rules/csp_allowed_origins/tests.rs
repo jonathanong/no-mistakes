@@ -355,7 +355,7 @@ fn reports_invalid_options_unreadable_csp_files_and_unanalyzable_modes() {
     .0;
     let diag = diagnostics_with_files(&unanalyzable_root, &advise_cfg, &u_files).unwrap();
     assert_eq!(diag.findings.len(), 2);
-    assert_eq!(diag.advisories.len(), 5);
+    assert_eq!(diag.advisories.len(), 9);
     assert!(diag
         .advisories
         .iter()

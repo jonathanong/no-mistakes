@@ -1,4 +1,4 @@
-export function Page(dynamicUrl: string, host: string, id: string, dynamicRel: string) {
+export function Page(dynamicUrl: string, host: string, id: string, dynamicRel: string, spreadProps: Record<string, string>) {
   void fetch("http://[::1]:3000/health");
   void fetch("https://[2001:db8::2]:8443/api");
   void fetch(`/api/users/${id}`);
@@ -13,6 +13,11 @@ export function Page(dynamicUrl: string, host: string, id: string, dynamicRel: s
       <img src={dynamicUrl} alt="" />
       <img src="https://bad host/x.png" alt="" />
       <link rel={dynamicRel} href="https://cdn.example.com/a.css" />
+      <img {...spreadProps} alt="" />
+      <script {...spreadProps} />
+      <iframe src="https://embeds.example.com/ok" {...spreadProps} title="player" />
+      <link {...spreadProps} />
+      <img {...spreadProps} src="https://cdn.example.com/override.png" alt="" />
     </div>
   );
 }
