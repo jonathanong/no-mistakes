@@ -1,6 +1,8 @@
 //! Native SQL projections from one prepared parse per selected source.
 use super::*;
+use crate::codebase::postgres::parse::PreparedSql;
 use rayon::prelude::*;
+use sqlparser::keywords::Keyword;
 
 pub(super) fn collect(
     root: &Path,
@@ -40,12 +42,15 @@ pub(super) fn collect(
             let schema_selected = plan.postgres_schema && schema_set.contains(path);
             let dml_selected = plan.postgres_dml
                 && dml_write_set.as_ref().is_none_or(|writes| schema_set.contains(path) || writes.contains(path));
-            let mut write_plan_locations = plan
-                .postgres_explain_write_rollback_paths
-                .contains(path)
-                .then(Vec::new);
-            let parsed = source.as_ref().map(|source| {
-                let prepared = crate::codebase::postgres::parse::PreparedSql::new(source);
+            let explain_selected = plan.postgres_explain_write_rollback_paths.contains(path);
+            let prepared = source.as_ref().map(|source| (source, PreparedSql::new(source)));
+            let explain_absent = explain_selected
+                && prepared.as_ref().is_ok_and(|(_, sql)| sql.keyword_is_absent(Keyword::EXPLAIN));
+            if explain_absent && !schema_selected && !dml_selected {
+                return (path.clone(), None, None, Some(Ok(Arc::default())));
+            }
+            let mut write_plan_locations = (explain_selected && !explain_absent).then(Vec::new);
+            let parsed = prepared.map(|(source, prepared)| {
                 let parsed = prepared.parse_policy_with_locations(write_plan_locations.as_mut());
                 let failed = parsed.is_err();
                 let (statements, functions, failures, statement_sources, grouping_complete) = match parsed {
@@ -84,7 +89,7 @@ pub(super) fn collect(
                         Arc::new(plans)
                     })
                     .map_err(|error| Arc::clone(*error))
-            });
+            }).or_else(|| explain_absent.then(|| Ok(Arc::default())));
             let schema = schema_selected.then(|| {
                 parsed
                     .as_ref()

@@ -106,6 +106,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`markdown-mermaid-validation`](markdown-mermaid-validation.md)               | Validate Mermaid diagrams embedded in Markdown fences.                          |
 | [`markdown-reachability`](markdown-reachability.md)                           | Require Markdown docs to be reachable from instruction roots.                   |
 | [`markdown-structure-budget`](markdown-structure-budget.md)                   | Limit tables and Mermaid diagrams in oversized Markdown.                        |
+| [`react-no-nested-buttons-and-links`](react-no-nested-buttons-and-links.md) | Keep native buttons and links as separate controls. |
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md)                             | Ban Next.js API route files.                                                    |
 | [`nextjs-no-caching`](nextjs-no-caching.md)                                   | Ban Next.js caching features.                                                   |
 | [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |

@@ -113,13 +113,10 @@ impl PreparedDisableDirectives {
 
     /// Finalization only matches retained comments to consumed provenance.
     pub fn findings(&self, suppressed: &[SuppressedFinding]) -> Vec<RuleFinding> {
-        self.findings_for_locations(suppressed.iter().map(|item| {
-            (
-                item.source_file.as_str(),
-                item.rule.as_str(),
-                &item.directive,
-            )
-        }))
+        let items = suppressed
+            .iter()
+            .map(|i| (i.source_file.as_str(), i.rule.as_str(), &i.directive));
+        self.findings_for_locations(items, &BTreeSet::new())
     }
 
     /// Complete internal consumption, independent of deduplicated public findings.
@@ -127,18 +124,24 @@ impl PreparedDisableDirectives {
         &self,
         consumed: &[ConsumedDisableDirective],
     ) -> Vec<RuleFinding> {
-        self.findings_for_locations(consumed.iter().map(|item| {
-            (
-                item.source_file.as_str(),
-                item.rule.as_str(),
-                &item.directive,
-            )
-        }))
+        self.findings_excluding_unparsed(consumed, &BTreeSet::new())
+    }
+
+    pub(super) fn findings_excluding_unparsed(
+        &self,
+        consumed: &[ConsumedDisableDirective],
+        unparsed_files: &BTreeSet<String>,
+    ) -> Vec<RuleFinding> {
+        let items = consumed
+            .iter()
+            .map(|i| (i.source_file.as_str(), i.rule.as_str(), &i.directive));
+        self.findings_for_locations(items, unparsed_files)
     }
 
     fn findings_for_locations<'a>(
         &self,
         consumed: impl Iterator<Item = (&'a str, &'a str, &'a SuppressionDirective)>,
+        unparsed_files: &BTreeSet<String>,
     ) -> Vec<RuleFinding> {
         let used: BTreeSet<_> = consumed
             .map(|(file, rule, directive)| {
@@ -150,6 +153,7 @@ impl PreparedDisableDirectives {
             })
             .collect();
         let mut findings = self.comments.iter().filter_map(|comment| {
+            if matches!(comment.status, DirectiveStatus::Enabled) && unparsed_files.contains(&comment.file) { return None }
             if !matches!(comment.status, DirectiveStatus::IneffectivePlacement) && used.contains(&(comment.file.clone(), comment.rule.as_str(), comment.directive.clone())) { return None }
             let (rule, detail) = match comment.status {
                 DirectiveStatus::Enabled => ("unused-disable-directive", format!("directive for `{}` suppressed no findings in this invocation", comment.rule)),

@@ -395,6 +395,25 @@ that every matching category excluded or no rule could classify) select the full
 suite with a structured `fallback_reason` and warning. This safety fallback does
 not require opting into `--global-config-fallback`.
 
+When a category sets `assertPureJsonLoader: true` (asserting that its loader
+returns the parsed JSON unchanged and neither branches on nor exposes anything
+else from the fixture) and uses the complete literal loader call as its `match`
+template (such as `loadFixture("{id}")`), and the report carries
+`attributePaths` for a fixture ID, the planner can select only the JavaScript
+and TypeScript test files that read a changed path. By default
+(`assertPureJsonLoader` unset or `false`), categories ignore `attributePaths`
+and select every test matching the fixture. It follows static property access,
+object destructuring, and immutable local aliases. A test that reads an entire
+changed object also matches changes inside that object. Passing the fixture
+itself to another function, spreading it, iterating over it, calling the loader
+with a non-literal argument, or referencing the loader or its module export
+outside a direct literal call (namespace import, renamed import, local
+re-binding, aliasing, passing as a value, re-exporting, dynamic `import()`, or
+`require()`) keeps the test selected. If the report has no paths for an ID or
+the planner cannot trace a matching file's reads, it keeps the whole-fixture
+selection for that ID or file. Duplicate keys in `attributePaths` invalidate
+the report and trigger full-suite fallback.
+
 A path trigger marked `supersededByChanges` is suppressed only for a trusted
 report. Without the flag, existing path-trigger behavior is unchanged. Unmatched
 IDs use the category's named trigger, or full-suite fallback. Matching reuses the

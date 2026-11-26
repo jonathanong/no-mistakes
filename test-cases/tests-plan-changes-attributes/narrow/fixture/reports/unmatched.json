@@ -1,0 +1,1 @@
+{"schemaVersion":1,"complete":true,"unclassified":[],"fixtures":{"changed":["absent","profile.avatar"],"added":[],"removed":[],"attributePaths":{"absent":["/size"],"profile.avatar":["/dimensions/size"]}}}

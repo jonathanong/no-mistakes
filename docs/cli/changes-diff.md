@@ -29,11 +29,28 @@ without changing their values does not produce a change.
 ```json
 {
   "schemaVersion": 1,
-  "fixtures": { "changed": ["account.profile"], "added": [], "removed": [] },
+  "fixtures": {
+    "changed": ["account.profile"],
+    "added": [],
+    "removed": [],
+    "attributePaths": { "account.profile": ["/avatar/size"] }
+  },
   "unclassified": [],
   "complete": true
 }
 ```
+
+For changed path-derived IDs with comparable JSON objects on both sides in a
+category that sets `assertPureJsonLoader: true` (a user assertion that the
+loader returns the parsed JSON unchanged with no fixture-dependent side effects
+or extra exposure), `attributePaths` maps each ID to sorted RFC 6901 JSON
+Pointers. The path names the changed property, replaced nested object, or
+array. In a path segment, `~0` represents `~` and `~1` represents `/`. If
+`assertPureJsonLoader` is unset (`false`), or if a file is added, removed,
+replaced at the root, non-JSON, has duplicate keys anywhere in the document
+(including inside arrays), or cannot be compared reliably, the ID has no
+attribute paths. The planner then uses whole-fixture selection for that ID.
+Duplicate keys in `attributePaths` are rejected when parsing a report.
 
 Supported keyed formats are pnpm/npm lockfiles, SwiftPM `Package.resolved`
 versions 1–3, NuGet `packages.lock.json` per target framework, JSON objects or
@@ -63,4 +80,4 @@ any unclassified path as requiring full-suite selection.
 The async Node equivalent is `changesDiff({ baseRoot, headRoot, config })`.
 Its promise resolves to the same report, including incomplete results. Argument
 or configuration errors reject instead. Import `ChangesDiffOptions`,
-`ChangesReport`, `KeyChanges`, and `ChangesConfig` for the public contracts.
+`ChangesReport`, `KeyChanges`, `FixtureAttributePaths`, and `ChangesConfig` for the public contracts.
