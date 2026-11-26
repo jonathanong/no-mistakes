@@ -1,4 +1,5 @@
 import { test } from "@playwright/test";
+import * as pw from "@playwright/test";
 
 declare const dynamicKey: string;
 declare const dynamicMethod: string;
@@ -65,11 +66,23 @@ test("reassigned function callback", reassignedFn);
 test("partially bound callback", ((a: unknown, b: unknown) => [a, b]).bind(null, 1));
 test("spread bound callback", ((a: unknown) => a).bind(...spreadArgs));
 test("spread test arguments", ...spreadArgs);
+test(...spreadArgs);
+test.only(...spreadArgs);
 test.beforeEach(...spreadArgs);
 test.beforeEach(externalCallback);
 test.skip("skipped with unknown callback", externalCallback);
 test.skip(...spreadArgs);
 test.skip("title", ...spreadArgs);
 test[dynamicMethod]("dynamic registrar", async ({ browser }) => {
+  await browser.newContext();
+});
+pw[dynamicMethod]("dynamic namespace registrar", async ({ browser }) => {
+  await browser.newContext();
+});
+pw[dynamicMethod].only("chained dynamic namespace registrar", async ({ browser }) => {
+  await browser.newContext();
+});
+const { ...pwRest } = pw;
+pwRest.test("rest namespace registrar", async ({ browser }) => {
   await browser.newContext();
 });

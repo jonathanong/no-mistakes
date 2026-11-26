@@ -60,6 +60,13 @@ test.beforeEach();
 test("single arg call");
 const [localRunner] = [() => {}];
 localRunner();
+const helpers = { a: { run: () => {} }, go: () => {} };
+const {
+  a: { run },
+} = helpers;
+run();
+const { a: _nested, ...restHelpers } = helpers;
+restHelpers.go();
 
 const customTest = test.extend({
   appPage: async ({ browser }, use) => {

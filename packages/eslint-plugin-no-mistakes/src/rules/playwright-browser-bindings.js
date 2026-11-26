@@ -52,12 +52,14 @@ function createBrowserBindings(context, modules) {
       const target = prop.value.type === "AssignmentPattern" ? prop.value.left : prop.value;
       return target.type === "Identifier" && target.name === name;
     });
-    return propertyKey(match);
+    return match ? propertyKey(match) : null;
   }
 
   function memberApi(owner, key) {
     if (!owner) return null;
+    if (owner.kind === "dynamic") return owner;
     if (owner.kind === "namespace") {
+      if (key === null) return { kind: "dynamic" };
       if (key === "test" || (key === "default" && owner.source === "@playwright/test")) {
         return { kind: "test" };
       }
@@ -166,6 +168,9 @@ function createBrowserBindings(context, modules) {
     }
     const args = callNode.arguments;
     if (api.kind === "test" || (api.kind === "modifier" && api.key === "only")) {
+      if (args.length === 1 && args[0].type === "SpreadElement") {
+        return { kind: "opaque", node: args[0], reason: "spread test arguments" };
+      }
       return args.length < 2 ? null : callbackSlot(args[args.length - 1], "test");
     }
     if (api.kind === "hook") {
