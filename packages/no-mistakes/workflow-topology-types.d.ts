@@ -163,6 +163,7 @@ export type WorkflowTopologyEdge = NeedsEdge | WorkflowCallEdge | WorkflowRunEdg
 
 export type WorkflowTopologyDiagnosticCode =
   | "malformed-workflow"
+  | "unlocated-yaml-merge"
   | "missing-needs-dependency"
   | "job-dependency-cycle"
   | "duplicate-step-id"

@@ -143,6 +143,11 @@ fn application_errors(
         super::GITHUB_ACTIONS_CACHE_KEY_POLICY => {
             super::github_actions_cache_key_policy::collect_application_errors(root, config, rule)
         }
+        super::GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS => {
+            super::github_actions_no_required_pr_path_filters::collect_application_errors(
+                root, config, rule,
+            )
+        }
         super::VITEST_DEFAULT_EXCLUDES => {
             super::vitest_default_excludes::collect_application_errors(root, config, rule)
         }

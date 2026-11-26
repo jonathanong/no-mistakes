@@ -83,10 +83,11 @@ and the invalid option or ID. Unknown IDs include the closest registered ID.
 This also applies to rule applications loaded from config fragments.
 
 `check` exits with status 2 and empty stdout on invalid rule configuration.
-Diagnostics from option validation are written to stderr before analysis.
-Async Node `check()` and `analyzeProject()` reject invalid rule configuration
-when they load a project. Options omitted from a valid application use that
-rule's documented defaults.
+Diagnostics from option validation are sorted and written to stderr before
+analysis, with no partial report or `incomplete` entry emitted. Async Node
+`check()` and `analyzeProject()` reject invalid rule configuration when they
+load a project. Options omitted from a valid application use that rule's
+documented defaults.
 
 Rule-specific `options.include` and `options.exclude` can have different
 selection semantics. For example, Storybook's `options.include` explicitly adds
@@ -561,6 +562,12 @@ lists it.
 [`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md) has no
 options. It stays off until a configuration lists it.
 
+Set `options.workflows` to a required non-empty list of exact repository-relative
+paths directly under `.github/workflows` for workflows that supply required PR
+checks. Omitting `options.workflows`, passing an empty list, or passing a
+non-literal path fails configuration validation early with exit status 2.
+See [`github-actions-no-required-pr-path-filters`](../rules/github-actions-no-required-pr-path-filters.md).
+
 For [`github-actions-vitest-project-selection`](../rules/github-actions-vitest-project-selection.md),
 `options.projects` defaults to none. Each entry names a Vitest `project`, the
 workflow or composite-action paths that may select it, and `nameFilters`
@@ -767,6 +774,12 @@ required. Optional `requiredGlobs` replaces the default list of
 `**/node_modules/**` and `**/.git/**`. Entries must be nonempty strings,
 duplicates are deduplicated, and an empty array disables the check. A spread of
 `configDefaults.exclude` imported from `vitest/config` retains the defaults.
+
+### Terraform IAM wildcard resources
+
+[`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md) is opt-in.
+Select Terraform files with the standard rule scope and path filters.
+It supports the shared `options.unanalyzable` policy (`report` by default, `advise`, or `ignore`).
 
 ### Workspace package relative imports
 

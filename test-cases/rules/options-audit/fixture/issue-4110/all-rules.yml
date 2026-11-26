@@ -33,6 +33,7 @@ rules:
   - {rule: github-actions-max-inline-script-lines, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-no-insta-snapshot-updates, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-no-poll-wait-job, scope: repository, options: {bogusOption: true}}
+  - {rule: github-actions-no-required-pr-path-filters, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-pinned-hash, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-pr-diff-range, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-run-command-policy, scope: repository, options: {bogusOption: true}}
@@ -137,6 +138,7 @@ rules:
   - {rule: swift-no-raw-print, scope: repository, options: {bogusOption: true}}
   - {rule: swift-no-unguarded-darwin-import, scope: repository, options: {bogusOption: true}}
   - {rule: swift-viewmodel-main-actor, scope: repository, options: {bogusOption: true}}
+  - {rule: terraform-iam-no-undocumented-wildcards, scope: repository, options: {bogusOption: true}}
   - {rule: test-email-domain-policy, scope: repository, options: {bogusOption: true}}
   - {rule: test-fixture-size-cap, scope: repository, options: {bogusOption: true}}
   - {rule: test-no-dependency-pins, scope: repository, options: {bogusOption: true}}

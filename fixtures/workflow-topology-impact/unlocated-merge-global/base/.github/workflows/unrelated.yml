@@ -1,0 +1,7 @@
+name: unrelated
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm lint

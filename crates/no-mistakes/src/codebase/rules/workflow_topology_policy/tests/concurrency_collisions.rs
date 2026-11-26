@@ -20,7 +20,7 @@ fn collisions(topology: &WorkflowTopology) -> Vec<String> {
 fn gated(topology: &WorkflowTopology, yaml: &str) -> Vec<String> {
     let opts: super::super::Options = super::config(yaml).rules[0].try_rule_options().unwrap();
     let policy = super::super::concurrency_compile::compile(&opts.concurrency_policy).unwrap();
-    let mut findings = super::super::evaluate::lint(topology, &opts, &policy)
+    let mut findings = super::super::evaluate::lint(topology, &opts, &policy, &Default::default())
         .into_iter()
         .map(|located| located.finding)
         .collect::<Vec<_>>();

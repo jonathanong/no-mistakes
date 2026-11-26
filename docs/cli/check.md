@@ -17,6 +17,10 @@ Both default off. See
 and
 [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
 
+Use `github-actions-no-required-pr-path-filters` for workflows that supply required PR checks.
+Declare the workflow paths and keep path selection inside the workflow.
+See [the rule](../rules/github-actions-no-required-pr-path-filters.md).
+
 Enable [`package-json-export-target-prefix`](../rules/package-json-export-target-prefix.md)
 to catch invalid Node export target prefixes in selected manifests before building packages.
 
@@ -246,9 +250,13 @@ inside `analyzeProject()` expose the same optional `sqlVerdicts` field.
 
 Unused disable comments produce `unused-disable-directive` advice by default
 at the comment's file and line. `invalid-disable-directive` identifies unknown
-or disabled rule names separately. Set `reportUnusedDisableDirectives: report`
-to fail on these diagnostics. With `ignore`, unknown rule IDs still produce
-advice. See [suppression hygiene](../configuration/suppressions.md).
+or disabled rule names separately. Unreadable files in the audit scope produce
+an `unused-disable-directive` read-failure diagnostic at line 1 with
+`target: "unanalyzable"`. Set repository
+`reportUnusedDisableDirectives: report` to fail on these diagnostics. With
+`ignore`, unknown rule IDs still produce advice while other hygiene diagnostics
+are omitted. This works without `--include-suppressed`; see
+[suppression hygiene](../configuration/suppressions.md).
 
 Configured exceptions produce `unused-allow-entry` advice by default. Set
 repository `reportUnusedAllowEntries: report` to fail or `ignore` to omit it.
@@ -356,6 +364,10 @@ with `options.minimumDays` to require a cooldown on every applicable entry in
 when both exist. Configure PR limits, exclusion globs, and ecosystem exemptions
 as needed. Exempt ecosystems skip every check, including the PR limit.
 Unreadable or malformed input appears in the JSON `incomplete` list.
+
+Enable [`terraform-iam-no-undocumented-wildcards`](../rules/terraform-iam-no-undocumented-wildcards.md)
+to require narrower resources or a suppression in selected Terraform IAM Allow
+statements. Findings point to the opening line of the `resources` attribute.
 
 Enable [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md)
 to report relative imports whose resolved targets cross declared workspace

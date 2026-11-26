@@ -2,6 +2,115 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "cli": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 10,
+          "message": "job \"unit\" step 4 enables cargo-insta snapshot acceptance with `--accept-unseen`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test --accept-unseen",
+          "target": "--accept-unseen"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 11,
+          "message": "job \"unit\" step 5 enables cargo-insta snapshot acceptance with `--force-update-snapshots`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo +stable insta test --force-update-snapshots",
+          "target": "--force-update-snapshots"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 12,
+          "message": "job \"unit\" step 6 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta approve",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 23,
+          "message": "job \"unit\" step 12 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "--accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 27,
+          "message": "job \"unit\" step 13 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: bash -c 'cargo insta accept'",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 28,
+          "message": "job \"unit\" step 14 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo-insta --color never accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 29,
+          "message": "job \"unit\" step 15 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta --color=never test --accept",
+          "target": "--accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 30,
+          "message": "job \"unit\" step 16 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo -C . insta test --accept",
+          "target": "--accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 31,
+          "message": "job \"unit\" step 17 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo ready & cargo insta accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 32,
+          "message": "job \"unit\" step 18 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo \"$(cargo insta accept)\"",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "job \"unit\" step 1 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test --accept",
+          "target": "--accept"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "job \"unit\" step 2 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "custom-message": {
     "exitCode": 1,
     "report": {
@@ -44,7 +153,56 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "merge-keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/merge.yml",
+          "line": 3,
+          "message": "workflow uses YAML merge key `<<`, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "<<: *base",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/merge.yml",
+          "line": 5,
+          "message": "workflow `jobs` uses YAML merge key `<<`, so `INSTA_UPDATE` settings cannot be checked statically. Write literal workflow mappings and step sequences so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "<<: *base",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/merge.yml",
+          "line": 9,
+          "message": "job \"unit\" `env` uses YAML merge key `<<`, which cannot be checked statically for `INSTA_UPDATE`. Write literal `env:` entries so the rule can verify them, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "<<: *base",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "off-by-default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ordinary-runs": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -116,6 +274,99 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-no-insta-snapshot-updates",
           "sourceLine": "env: { \"INSTA_UPDATE\": 1 }",
           "target": "INSTA_UPDATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shells": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/arguments.yml",
+          "line": 15,
+          "message": "job \"unit\" step 9 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: '\"$(printf cargo)\" insta test --accept'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/defaults.yml",
+          "line": 10,
+          "message": "job \"workflow_default\" step 1 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/defaults.yml",
+          "line": 17,
+          "message": "job \"job_default\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/defaults.yml",
+          "line": 18,
+          "message": "job \"job_default\" step 2 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test --accept",
+          "target": "--accept"
+        },
+        {
+          "file": ".github/workflows/runners.yml",
+          "line": 11,
+          "message": "job \"windows_labels\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/runners.yml",
+          "line": 15,
+          "message": "job \"dynamic_labels\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/runners.yml",
+          "line": 19,
+          "message": "job \"macos_label\" step 1 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/runners.yml",
+          "line": 25,
+          "message": "job \"group_linux\" step 1 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/runners.yml",
+          "line": 30,
+          "message": "job \"group_opaque\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/runners.yml",
+          "line": 7,
+          "message": "job \"linux_labels\" step 1 enables cargo-insta snapshot acceptance with `--accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test --accept",
+          "target": "--accept"
         }
       ],
       "warnings": []
@@ -240,6 +491,206 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": ".github/workflows/run.yml",
+          "line": 10,
+          "message": "job \"unit\" step 4 sets `run` to a non-string value, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: [\"cargo\", \"insta\"]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 11,
+          "message": "job \"unit\" step 5 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 13,
+          "message": "job \"unit\" step 6 invokes a shell with an opaque script, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: bash -c \"$SNAPSHOT_COMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 14,
+          "message": "job \"unit\" step 7 passes a dynamic subcommand to Cargo, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo \"$SUBCOMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 15,
+          "message": "job \"unit\" step 8 selects a dynamic Cargo toolchain, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo +$TOOLCHAIN insta test",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 16,
+          "message": "job \"unit\" step 9 passes dynamic arguments to cargo-insta, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta \"$SUBCOMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 17,
+          "message": "job \"unit\" step 10 uses an ambiguous grouped cargo-insta subcommand, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: (cargo insta accept)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 18,
+          "message": "job \"unit\" step 11 uses an ambiguous grouped cargo-insta argument, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: (cargo insta test --accept)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 19,
+          "message": "job \"unit\" step 12 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 22,
+          "message": "job \"unit\" step 13 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo \"$(cargo insta accept\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 23,
+          "message": "job \"unit\" step 14 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: 'eval \"$SNAPSHOT_COMMAND\"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 25,
+          "message": "job \"unit\" step 16 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: source scripts/insta-setup.sh",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 26,
+          "message": "job \"unit\" step 17 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: eval 'cargo insta accept'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 27,
+          "message": "job \"unit\" step 18 contains shell scripts nested too deeply to check, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo \"$(echo \"$(echo \"$(echo \"$(echo \"$(cargo insta accept)\")\")\")\")\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 28,
+          "message": "job \"unit\" step 19 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test '${{ vars.FLAGS }}'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 29,
+          "message": "job \"unit\" step 20 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept '${{ vars.FLAGS }}'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 30,
+          "message": "job \"unit\" step 21 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: 'cargo \"$SUBCOMMAND\" \"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 31,
+          "message": "job \"unit\" step 22 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: '\"$COMMAND\" \"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 32,
+          "message": "job \"unit\" step 23 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 39,
+          "message": "job \"windows\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 40,
+          "message": "job \"windows\" step 2 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 49,
+          "message": "job \"custom\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: print(\"cargo insta accept\")",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 7,
+          "message": "job \"unit\" step 1 passes dynamic arguments to cargo-insta, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test \"$FLAGS\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 8,
+          "message": "job \"unit\" step 2 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test '",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 9,
+          "message": "job \"unit\" step 3 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: ${{ vars.SNAPSHOT_COMMAND }}",
+          "target": "unanalyzable"
+        },
+        {
           "file": ".github/workflows/syntax-line.yml",
           "line": 5,
           "message": "workflow YAML could not be parsed (did not find expected ',' or ']' at line 5 column 15, while parsing a flow sequence at line 5 column 10), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
@@ -252,7 +703,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "unanalyzable-advise": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -344,6 +795,198 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": ".github/workflows/run.yml",
+          "line": 10,
+          "message": "job \"unit\" step 4 sets `run` to a non-string value, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: [\"cargo\", \"insta\"]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 11,
+          "message": "job \"unit\" step 5 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 13,
+          "message": "job \"unit\" step 6 invokes a shell with an opaque script, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: bash -c \"$SNAPSHOT_COMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 14,
+          "message": "job \"unit\" step 7 passes a dynamic subcommand to Cargo, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo \"$SUBCOMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 15,
+          "message": "job \"unit\" step 8 selects a dynamic Cargo toolchain, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo +$TOOLCHAIN insta test",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 16,
+          "message": "job \"unit\" step 9 passes dynamic arguments to cargo-insta, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta \"$SUBCOMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 17,
+          "message": "job \"unit\" step 10 uses an ambiguous grouped cargo-insta subcommand, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: (cargo insta accept)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 18,
+          "message": "job \"unit\" step 11 uses an ambiguous grouped cargo-insta argument, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: (cargo insta test --accept)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 19,
+          "message": "job \"unit\" step 12 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 22,
+          "message": "job \"unit\" step 13 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo \"$(cargo insta accept\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 23,
+          "message": "job \"unit\" step 14 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: 'eval \"$SNAPSHOT_COMMAND\"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 25,
+          "message": "job \"unit\" step 16 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: source scripts/insta-setup.sh",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 26,
+          "message": "job \"unit\" step 17 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: eval 'cargo insta accept'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 27,
+          "message": "job \"unit\" step 18 contains shell scripts nested too deeply to check, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo \"$(echo \"$(echo \"$(echo \"$(echo \"$(cargo insta accept)\")\")\")\")\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 28,
+          "message": "job \"unit\" step 19 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test '${{ vars.FLAGS }}'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 29,
+          "message": "job \"unit\" step 20 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept '${{ vars.FLAGS }}'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 30,
+          "message": "job \"unit\" step 21 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: 'cargo \"$SUBCOMMAND\" \"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 31,
+          "message": "job \"unit\" step 22 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: '\"$COMMAND\" \"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 32,
+          "message": "job \"unit\" step 23 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 39,
+          "message": "job \"windows\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 49,
+          "message": "job \"custom\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: print(\"cargo insta accept\")",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 7,
+          "message": "job \"unit\" step 1 passes dynamic arguments to cargo-insta, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test \"$FLAGS\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 8,
+          "message": "job \"unit\" step 2 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test '",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 9,
+          "message": "job \"unit\" step 3 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: ${{ vars.SNAPSHOT_COMMAND }}",
+          "target": "unanalyzable"
+        },
+        {
           "file": ".github/workflows/syntax-line.yml",
           "line": 5,
           "message": "workflow YAML could not be parsed (did not find expected ',' or ']' at line 5 column 15, while parsing a flow sequence at line 5 column 10), so `INSTA_UPDATE` settings cannot be checked statically. Fix the YAML syntax or suppress this file.",
@@ -356,19 +999,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 40,
+          "message": "job \"windows\" step 2 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        }
+      ],
       "warnings": []
     }
   },
   "unanalyzable-ignore": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 40,
+          "message": "job \"windows\" step 2 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        }
+      ],
       "warnings": []
     }
   },
@@ -467,6 +1128,206 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "job \"unit\" step 2 sets `env` to `a non-mapping value`, which cannot be checked statically for `INSTA_UPDATE`. Write a literal `env:` mapping so the rule can verify it, or suppress this line.",
           "rule": "github-actions-no-insta-snapshot-updates",
           "sourceLine": "- env: []",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 10,
+          "message": "job \"unit\" step 4 sets `run` to a non-string value, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: [\"cargo\", \"insta\"]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 11,
+          "message": "job \"unit\" step 5 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 13,
+          "message": "job \"unit\" step 6 invokes a shell with an opaque script, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: bash -c \"$SNAPSHOT_COMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 14,
+          "message": "job \"unit\" step 7 passes a dynamic subcommand to Cargo, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo \"$SUBCOMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 15,
+          "message": "job \"unit\" step 8 selects a dynamic Cargo toolchain, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo +$TOOLCHAIN insta test",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 16,
+          "message": "job \"unit\" step 9 passes dynamic arguments to cargo-insta, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta \"$SUBCOMMAND\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 17,
+          "message": "job \"unit\" step 10 uses an ambiguous grouped cargo-insta subcommand, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: (cargo insta accept)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 18,
+          "message": "job \"unit\" step 11 uses an ambiguous grouped cargo-insta argument, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: (cargo insta test --accept)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 19,
+          "message": "job \"unit\" step 12 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 22,
+          "message": "job \"unit\" step 13 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo \"$(cargo insta accept\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 23,
+          "message": "job \"unit\" step 14 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: 'eval \"$SNAPSHOT_COMMAND\"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 25,
+          "message": "job \"unit\" step 16 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: source scripts/insta-setup.sh",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 26,
+          "message": "job \"unit\" step 17 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: eval 'cargo insta accept'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 27,
+          "message": "job \"unit\" step 18 contains shell scripts nested too deeply to check, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: echo \"$(echo \"$(echo \"$(echo \"$(echo \"$(cargo insta accept)\")\")\")\")\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 28,
+          "message": "job \"unit\" step 19 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test '${{ vars.FLAGS }}'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 29,
+          "message": "job \"unit\" step 20 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept '${{ vars.FLAGS }}'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 30,
+          "message": "job \"unit\" step 21 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: 'cargo \"$SUBCOMMAND\" \"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 31,
+          "message": "job \"unit\" step 22 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: '\"$COMMAND\" \"'",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 32,
+          "message": "job \"unit\" step 23 invokes a dynamic command, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: |",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 39,
+          "message": "job \"windows\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 40,
+          "message": "job \"windows\" step 2 enables cargo-insta snapshot acceptance with `accept`, which can accept snapshots during CI. Run `cargo insta test` without acceptance flags in CI. Review and commit deliberate snapshot changes separately.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta accept",
+          "target": "accept"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 49,
+          "message": "job \"custom\" step 1 uses an unsupported or unknown shell, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: print(\"cargo insta accept\")",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 7,
+          "message": "job \"unit\" step 1 passes dynamic arguments to cargo-insta, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test \"$FLAGS\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 8,
+          "message": "job \"unit\" step 2 contains incomplete shell syntax, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: cargo insta test '",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/run.yml",
+          "line": 9,
+          "message": "job \"unit\" step 3 uses a GitHub expression in `run`, so cargo-insta snapshot acceptance cannot be checked statically. Use a literal command in a supported shell, or suppress this line.",
+          "rule": "github-actions-no-insta-snapshot-updates",
+          "sourceLine": "- run: ${{ vars.SNAPSHOT_COMMAND }}",
           "target": "unanalyzable"
         },
         {

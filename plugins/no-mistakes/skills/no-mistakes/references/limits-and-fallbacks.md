@@ -209,6 +209,10 @@ invalidates every path. Conditional, nonroot, and noncovering self checkouts
 preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
 in-process queries. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
 
+For `github-actions-no-required-pr-path-filters`, declare the workflows that supply
+required PR checks in `options.workflows` and select work inside those workflows.
+See [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-no-required-pr-path-filters.md).
+
 For `github-actions-run-command-policy`, declare `options.commands` with the
 exact command tokens, `valueFlags`, `whenAnyArgs`, `requireArgs`,
 `requireAnyArgs`, and `forbidArgPatterns` to enforce. Commands the shared
@@ -222,6 +226,12 @@ For `dependabot-cooldown-policy`, set `options.minimumDays` and run
 any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.
 Repair YAML when the rule appears in `incomplete`, then rerun the check.
 See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/dependabot-cooldown-policy.md).
+
+For `terraform-iam-no-undocumented-wildcards`, scope `check` to the
+Terraform or OpenTofu files that declare AWS IAM policy documents. Replace
+wildcard grants with explicit resource ARNs or explain a required wildcard in
+a suppression beside the `resources` attribute.
+See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/terraform-iam-no-undocumented-wildcards.md).
 
 For `no-cross-package-relative-imports`, scope the rule to the importing files
 that belong to declared workspace packages. Replace cross-package relative

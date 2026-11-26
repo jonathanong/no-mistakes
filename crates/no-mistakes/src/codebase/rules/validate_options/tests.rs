@@ -82,6 +82,7 @@ fn every_registered_configurable_rule_id_has_a_unique_option_validator() {
     for id in [
         crate::codebase::rules::GITHUB_ACTIONS_ACTION_INPUT_POLICY,
         crate::codebase::rules::GITHUB_ACTIONS_CACHE_KEY_POLICY,
+        crate::codebase::rules::GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS,
         crate::codebase::rules::VITEST_DEFAULT_EXCLUDES,
     ]
     .into_iter()

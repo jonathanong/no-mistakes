@@ -25,6 +25,10 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         rules::REACT_NO_NESTED_BUTTONS_AND_LINKS,
         decode::<NoOptions>,
     ),
+    (
+        rules::TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS,
+        decode::<NoOptions>,
+    ),
     (rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS, decode::<NoOptions>),
     (playwright::PLAYWRIGHT_COVERAGE, decode::<NoOptions>),
     (playwright::PLAYWRIGHT_UNIQUE_TEST_IDS, decode::<NoOptions>),

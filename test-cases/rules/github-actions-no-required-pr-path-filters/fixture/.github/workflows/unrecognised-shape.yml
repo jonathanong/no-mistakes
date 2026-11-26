@@ -1,0 +1,7 @@
+on:
+  pull_request: 42
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok

@@ -121,6 +121,27 @@ fn topology_diagnostics_are_local_only_with_bound_root_evidence() {
         .expect("global parser diagnostic");
     assert_eq!(format!("{:?}", diagnostic.scope), "Global");
     assert_eq!(diagnostic.root_job_ids, None);
+
+    let unlocated = report("unlocated-merge-global");
+    assert!(unlocated.global_fallback);
+    assert_eq!(
+        unlocated.affected_root_job_ids,
+        [
+            ".github/workflows/ci.yml#test-backend",
+            ".github/workflows/ci.yml#test-web",
+        ]
+    );
+    let diagnostic = unlocated
+        .diagnostics
+        .iter()
+        .find(|diagnostic| diagnostic.code == "unlocated-yaml-merge")
+        .expect("global unlocated-yaml-merge diagnostic");
+    assert_eq!(
+        diagnostic.workflow_path.as_deref(),
+        Some(".github/workflows/unrelated.yml")
+    );
+    assert_eq!(format!("{:?}", diagnostic.scope), "Global");
+    assert_eq!(diagnostic.root_job_ids, None);
 }
 
 #[test]

@@ -32,7 +32,7 @@ fn run(config: &str) -> Vec<RuleFinding> {
 }
 
 #[test]
-fn reports_only_literal_test_exclusion_overrides() {
+fn reports_literal_overrides_and_unresolved_spreads() {
     let findings = run(".no-mistakes.yml");
     assert_eq!(
         findings
@@ -42,6 +42,10 @@ fn reports_only_literal_test_exclusion_overrides() {
         [
             ("vitest.config.ts", 10),
             ("vitest.config.ts", 14),
+            ("vitest.config.ts", 21),
+            ("vitest.config.ts", 22),
+            ("vitest.config.ts", 23),
+            ("vitest.config.ts", 24),
             ("vitest.config.ts", 27),
             ("vitest.config.ts", 34),
         ]
@@ -51,7 +55,10 @@ fn reports_only_literal_test_exclusion_overrides() {
     assert!(findings[1]
         .message
         .contains("**/node_modules/**, **/.git/**"));
-    assert_eq!(findings[3].message, findings[0].message);
+    assert!(findings[2..6]
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
+    assert_eq!(findings[7].message, findings[0].message);
 }
 
 #[test]

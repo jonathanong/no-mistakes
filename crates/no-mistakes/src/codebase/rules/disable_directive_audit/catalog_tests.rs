@@ -1,4 +1,4 @@
-use super::*;
+use super::{known_rules::known_rule, *};
 use crate::codebase::ts_source::disable_directives;
 
 #[test]

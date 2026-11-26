@@ -211,3 +211,40 @@ fn check_json_snapshot_unknown_suppression_rules_without_rule_applications() {
         .map(|(label, config)| (label, root.clone(), root.join(config)));
     crate::check_json_snapshot::assert_saved_fixture("unknown_suppression_rules", &cases);
 }
+
+#[cfg(unix)]
+#[test]
+fn check_json_snapshot_unreadable_disable_directives() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/unreadable-disable-directives");
+    let fixture = super::saved_fixture::materialize_path(&source);
+    let root = fixture.path().to_path_buf();
+    for args in [
+        &["init", "--quiet"][..],
+        &["add", "--force", "--", "src/unreadable.rs", "src/clean.rs"],
+    ] {
+        let output = Command::new("git")
+            .current_dir(&root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    // A tracked source can become unreadable after discovery trusts its index mode.
+    std::fs::rename(
+        root.join("unavailable-source.link"),
+        root.join("src/unreadable.rs"),
+    )
+    .unwrap();
+    let cases = [
+        ("advise", ".no-mistakes.yml"),
+        ("report", "report.yml"),
+        ("ignore", "ignore.yml"),
+    ]
+    .map(|(label, config)| (label, root.clone(), root.join(config)));
+    crate::check_json_snapshot::assert_saved_fixture("unreadable_disable_directives", &cases);
+}

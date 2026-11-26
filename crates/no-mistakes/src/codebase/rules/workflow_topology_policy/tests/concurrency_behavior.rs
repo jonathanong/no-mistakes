@@ -6,7 +6,7 @@ use crate::codebase::workflow_topology::model::{ConcurrencyValue, WorkflowTopolo
 fn messages(topology: &WorkflowTopology, yaml: &str) -> Vec<String> {
     let opts: super::super::Options = super::config(yaml).rules[0].try_rule_options().unwrap();
     let policy = super::super::concurrency_compile::compile(&opts.concurrency_policy).unwrap();
-    let mut findings = super::super::evaluate_concurrency::lint(topology, &policy)
+    let mut findings = super::super::evaluate_concurrency::lint(topology, &policy, &Default::default())
         .into_iter()
         .map(|located| located.finding)
         .collect::<Vec<_>>();
@@ -387,7 +387,7 @@ fn empty_policy_does_not_report_owners() {
         .unwrap();
     let policy = super::super::concurrency_compile::compile(&opts.concurrency_policy).unwrap();
     assert!(policy.is_empty());
-    assert!(super::super::evaluate_concurrency::lint(&topology, &policy).is_empty());
+    assert!(super::super::evaluate_concurrency::lint(&topology, &policy, &Default::default()).is_empty());
 }
 
 #[test]

@@ -1,6 +1,5 @@
 use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
-use crate::codebase::workflow_topology::model::DiagnosticCode;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
@@ -18,9 +17,11 @@ mod evaluate_secrets_inherit;
 mod evaluate_steps;
 mod locations;
 mod malformed;
+mod execution;
+mod merge_availability;
 mod options;
+pub use execution::diagnostics_prepared;
 pub(crate) use options::Options;
-use malformed::report_malformed;
 #[cfg(test)]
 mod prepare;
 mod secret_inventory;
@@ -67,56 +68,8 @@ pub(crate) fn check_prepared(
     inputs: &crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs,
     config_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    let mut check_reusable = false;
-    let mut locations = locations::Locations::default();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.try_rule_options()?;
-        check_reusable |= opts.forbid_reusable_workflow_concurrency;
-        let first_finding = findings.len();
-        let concurrency = concurrency_compile::compile(&opts.concurrency_policy)?;
-        let inventory = opts
-            .secret_inventory
-            .as_ref()
-            .map(|options| options.compile())
-            .transpose()?;
-        let topology_findings = evaluate::lint(inputs.topology(), &opts, &concurrency);
-        findings.extend(locations.locate(root, sources, topology_findings));
-        if let Some(inventory) = inventory {
-            let authored = config
-                .rules
-                .iter()
-                .position(|entry| std::ptr::eq(entry, rule))
-                .and_then(|index| {
-                    config.config_provenance.origin(
-                        &crate::config::source_locations::ConfigPath::default()
-                            .key("rules")
-                            .index(index),
-                    )
-                });
-            findings.extend(secret_inventory::lint(
-                root,
-                inputs,
-                sources,
-                &inventory,
-                authored.map(|(path, _)| path).or(config_path),
-            ));
-        }
-        if let Some(message) = &rule.message {
-            for finding in &mut findings[first_finding..] {
-                finding.message.clone_from(message);
-            }
-        }
-    }
-    if check_reusable {
-        for diagnostic in &inputs.topology().diagnostics {
-            if diagnostic.code == DiagnosticCode::MalformedWorkflow {
-                report_malformed(diagnostic, session)?;
-            }
-        }
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    diagnostics_prepared(root, config, session, sources, inputs, config_path, true)
+        .map(|diagnostics| diagnostics.findings)
 }
 
 #[derive(Clone, Copy)]

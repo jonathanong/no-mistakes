@@ -1,5 +1,10 @@
+use super::known_rules::known_rule;
+use super::scan::project;
 use super::*;
-use crate::codebase::ts_source::{disable_directives, NamedDisableDirective};
+use crate::codebase::rules::suppression::SuppressionDirectiveKind;
+use crate::codebase::ts_source::{
+    audit_directives_for_path, disable_directives, DisableDirective, NamedDisableDirective,
+};
 
 fn disable_directives_for_path(source: &str, path: &Path) -> Vec<NamedDisableDirective> {
     audit_directives_for_path(source, path)
@@ -407,4 +412,52 @@ fn rust_doc_fences_join_attributes_across_gaps_and_keep_trailing_doc_directives(
             ),
         ]
     );
+}
+
+#[test]
+fn unreadable_file_in_scope_emits_read_failure_without_skipping_readable_files() {
+    let root = root();
+    let unreadable = root.join("missing.sql");
+    let readable = root.join("source.sql");
+    let files = vec![unreadable.clone(), readable.clone()];
+    let mut config: NoMistakesConfig = serde_yaml::from_str(include_str!(
+        "../../../../../../fixtures/rules/disable-directive-audit/disabled.yml"
+    ))
+    .unwrap();
+    config.rules[0].include = vec!["*.sql".into()];
+    let sources = super::super::source_store_for_files(&files);
+    assert!(sources.read_path(&unreadable).is_err());
+    let prepared = PreparedDisableDirectives::prepare(&root, &config, &files, &sources).unwrap();
+    assert_eq!(sources.physical_read_count(), 2);
+    drop(sources);
+    let findings = prepared.findings(&[]);
+    let read_failures: Vec<_> = findings
+        .iter()
+        .filter(|item| item.file == "missing.sql")
+        .collect();
+    assert_eq!(read_failures.len(), 1, "{findings:?}");
+    assert_eq!(read_failures[0].rule, "unused-disable-directive");
+    assert_eq!(read_failures[0].line, 1);
+    assert_eq!(read_failures[0].target.as_deref(), Some("unanalyzable"));
+    assert!(
+        read_failures[0]
+            .message
+            .contains("cannot verify unused-disable-directive: cannot read source:"),
+        "{}",
+        read_failures[0].message
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|item| item.file == "source.sql")
+            .count(),
+        4,
+        "{findings:?}"
+    );
+    config.report_unused_disable_directives = DisableDirectivePolicy::Ignore;
+    let ignored_sources = super::super::source_store_for_files(&files);
+    let ignored =
+        PreparedDisableDirectives::prepare(&root, &config, &files, &ignored_sources).unwrap();
+    assert_eq!(ignored_sources.physical_read_count(), 2);
+    assert!(ignored.findings(&[]).is_empty());
 }
