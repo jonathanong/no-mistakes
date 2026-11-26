@@ -99,6 +99,7 @@ fn triggers_report_unanalyzable_shapes() {
     for ok in [
         "name: No On\njobs: {}",
         "on: push\njobs: {}",
+        "  on: push\n",
         "on:\n  pull_request:\n  # comment\n  push:\n    paths:\n      - '**foo.sh'\njobs: {}",
     ] {
         let value: Value = serde_yaml::from_str(ok).unwrap();
@@ -254,7 +255,7 @@ fn parses_working_directory_values() {
 fn scans_cd_and_dynamic_working_directory_paths() {
     let dirs = vec!["scripts".to_string(), "tools/ci".to_string()];
     let dynamic_hits = scan_script(
-        "bash ./run.sh\nnode /abs/$X.js\nnode \"$SCRIPT\"\nnode \"tools/${TARGET}\"\ncd sub\n",
+        "FOO=bar\nbash \"\"\nbash ./run.sh\nbash /abs/run.sh\nnode /abs/$X.js\nnode \"$SCRIPT\"\nnode \"tools/${TARGET}\"\ncd sub\n",
         WorkingDir::Dynamic("${{ inputs.dir }}".to_string()),
         &dirs,
     );
@@ -266,6 +267,16 @@ fn scans_cd_and_dynamic_working_directory_paths() {
             >= 3,
         "expected dynamic dir/script unanalyzable hits, got {dynamic_hits:?}"
     );
+    let known_empty_prefix = scan_script(
+        "node \"$SCRIPT\"\ncat <<EOF\nunterminated",
+        WorkingDir::Known(String::new()),
+        &dirs,
+    );
+    assert_eq!(known_empty_prefix.len(), 1);
+    assert_eq!(known_empty_prefix[0].token(), None);
+    let known_dyn_token = scan_script("node \"$SCRIPT\"", WorkingDir::Known(String::new()), &dirs);
+    assert_eq!(known_dyn_token[0].token(), Some("$SCRIPT"));
+    assert_eq!(super::composites::normalize_local_uses("./${{ x }}"), None);
     let outside_hits = scan_script(
         "cd\n./run.sh\nnode \"$X\"\ncd sub\n",
         WorkingDir::Known("scripts".to_string()),
@@ -396,6 +407,25 @@ fn checks_edge_cases_fixture_composites_include_and_unreadable_paths() {
     );
     assert_eq!(diag.findings.len(), 1);
     assert_eq!(diag.findings[0].line, 4);
+
+    let mut fallback_diag = AnalysisDiagnostics::default();
+    let mismatch_located = crate::codebase::rules::github_actions_script_expressions::StepRun {
+        job: "a".to_string(),
+        step: 1,
+        item_line: 8,
+        lines: vec![(9, "echo unrelated".to_string())],
+    };
+    super::emit::emit_hits(
+        &emit_ctx,
+        super::emit::Origin::Run {
+            place: "job `a` step 1",
+            located: Some(&mismatch_located),
+            script: "./scripts/fallback.sh\necho done",
+        },
+        &hits,
+        &mut fallback_diag,
+    );
+    assert_eq!(fallback_diag.findings[0].line, 9);
 
     let main_fixture = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -28,4 +28,7 @@ jobs:
       - uses: ./.github/actions/missing
       - uses: ./.github/actions/broken
       - uses: ./.github/actions/node
+      - uses: ./.github/actions/empty
+      - uses: ./.github/actions/no-steps
+      - uses: ./
       - uses: ./.github/actions/outer

@@ -168,4 +168,33 @@ actionCaps:
         bad_yaml.iter().any(|f| f.message.contains("duplicate")),
         "expected duplicate allow finding, got {bad_yaml:?}"
     );
+
+    let without_cap = run_files(
+        "action-caps",
+        "onlyConfiguredActions: true\nactionCaps: [{uses: 'actions/setup-node', maxMinutes: 5}]\nallow: [{step: '.github/workflows/ci.yml#build#dynamic-fast', reason: 'allowed'}]\n",
+        &[".github/workflows/ci.yml"],
+    );
+    assert!(
+        !without_cap
+            .iter()
+            .any(|f| f.message.contains("dynamic-fast")),
+        "{without_cap:?}"
+    );
+
+    let compiled = options::compile_options(
+        serde_yaml::from_str("actionCaps: [{uses: 'actions/setup-node', maxMinutes: 5}]").unwrap(),
+        crate::config::v2::Unanalyzable::Advise,
+        false,
+    )
+    .unwrap();
+    let num_uses: serde_yaml::Mapping = serde_yaml::from_str("uses: 42").unwrap();
+    assert!(matches!(
+        compiled.match_action_cap(&num_uses),
+        options::UsesMatch::Dynamic { .. }
+    ));
+    let empty_uses: serde_yaml::Mapping = serde_yaml::from_str("uses: ''").unwrap();
+    assert!(matches!(
+        compiled.match_action_cap(&empty_uses),
+        options::UsesMatch::None
+    ));
 }
