@@ -208,9 +208,9 @@ fn no_mistakes_config_examples_execute_unknown_key_and_missing_root_independentl
     let rule = "no-mistakes-config";
     let page = docs_rule_snippets::load_page(&repo_root(), rule);
     let fallback = docs_rule_snippets::rule_config_yaml(&page.body, rule);
-    for (heading, unknown_key, expected_count) in [
-        ("Unknown-key limitation", true, 0),
-        ("Counterexample", false, 1),
+    for (heading, unknown_key) in [
+        ("Unknown configuration keys", true),
+        ("Counterexample", false),
     ] {
         let section = docs_rule_snippets::heading_section(&page.body, heading);
         let fences = docs_rule_snippets::fences(&section);
@@ -229,11 +229,13 @@ fn no_mistakes_config_examples_execute_unknown_key_and_missing_root_independentl
             !unknown_key,
             "{active}"
         );
-        let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
-        assert_eq!(findings.len(), expected_count, "{heading}: {findings:?}");
-        if !unknown_key {
+        let result = docs_rule_snippets::run_rule(fixture.path(), rule);
+        if unknown_key {
+            let error = result.unwrap_err();
+            assert!(error.contains("unknown field `unknownKey`"), "{error}");
+        } else {
             assert_eq!(
-                findings,
+                result.unwrap(),
                 [".no-mistakes.yml:3:projects.web.root: missing directory `apps/missing`"]
             );
         }

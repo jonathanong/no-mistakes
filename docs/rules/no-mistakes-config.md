@@ -58,12 +58,11 @@ rules:
 The configured project root does not exist, so the rule reports
 `apps/missing` at the `root` entry's source line.
 
-## Unknown-key limitation
+## Unknown configuration keys
 
-Unknown top-level keys are accepted by the current loader and are not findings
-of this rule. The following active configuration loads successfully and reports
-nothing; `unknownKey` has no effect. This is a limitation, not a reporting
-counterexample:
+The loader rejects unknown top-level keys before the rule runs. This example
+reports `unknownKey` at its source line and exits with code 2. Remove the key
+or use a supported configuration setting.
 
 ```yaml
 # .no-mistakes.yml

@@ -290,6 +290,8 @@ mod cli_gha_snapshot_inline_script_alignment;
 
 #[path = "cli_config_fragments.rs"]
 mod cli_config_fragments;
+
+#[path = "cli_config_strict_load.rs"]
 mod cli_config_strict_load;
 
 #[path = "cli_rule_options_audit.rs"]
