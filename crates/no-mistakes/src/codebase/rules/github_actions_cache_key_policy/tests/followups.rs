@@ -377,12 +377,12 @@ runs:
         }],
         ..options::Options::default()
     };
-    assert!(judge::judge("ci.yml", &jobs, &options, None, &|uses| {
+    assert!(super::judge_findings("ci.yml", &jobs, &options, None, &|uses| {
         (uses == "./.github/actions/lock-digest").then(|| action.to_string())
     })
     .is_empty());
     assert_eq!(
-        judge::judge("ci.yml", &jobs, &options, None, &|_| None).len(),
+        super::judge_findings("ci.yml", &jobs, &options, None, &|_| None).len(),
         1
     );
     let constant = action.replace(
@@ -390,16 +390,16 @@ runs:
         "echo \"digest=constant\" >> \"$GITHUB_OUTPUT\"",
     );
     assert_eq!(
-        judge::judge("ci.yml", &jobs, &options, None, &|_| Some(constant.clone())).len(),
+        super::judge_findings("ci.yml", &jobs, &options, None, &|_| Some(constant.clone())).len(),
         1
     );
     assert_eq!(
-        judge::judge("ci.yml", &jobs, &options, None, &|_| Some(":\n".into())).len(),
+        super::judge_findings("ci.yml", &jobs, &options, None, &|_| Some(":\n".into())).len(),
         1
     );
     let node = action.replace("using: composite", "using: node20");
     assert_eq!(
-        judge::judge("ci.yml", &jobs, &options, None, &|_| Some(node.clone())).len(),
+        super::judge_findings("ci.yml", &jobs, &options, None, &|_| Some(node.clone())).len(),
         1
     );
     let unnamed = action.replace(
@@ -407,7 +407,7 @@ runs:
         "description: note",
     );
     assert_eq!(
-        judge::judge("ci.yml", &jobs, &options, None, &|_| Some(unnamed.clone())).len(),
+        super::judge_findings("ci.yml", &jobs, &options, None, &|_| Some(unnamed.clone())).len(),
         1
     );
 }

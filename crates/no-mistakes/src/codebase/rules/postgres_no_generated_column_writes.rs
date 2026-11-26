@@ -34,7 +34,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ExtraGeneratedColumn {
     pub(crate) table: String,
     pub(crate) column: String,

@@ -48,6 +48,19 @@ fn github_actions_cache_broad_hash_files_json_matches_snapshot() {
 }
 
 #[test]
+fn github_actions_cache_dynamic_hash_files_json_matches_snapshot() {
+    let root = rules_path(RULE, "fixture", "dynamic-hash");
+    let cases = ["report", "advise", "ignore", "disabled"].map(|mode| {
+        (
+            mode,
+            root.clone(),
+            rules_path(RULE, "configs", &format!("dynamic-hash-{mode}.yml")),
+        )
+    });
+    assert_saved_fixture("github_actions_cache_dynamic_hash_files", &cases);
+}
+
+#[test]
 fn malformed_hash_files_preserve_only_findings_from_complete_expressions() {
     assert_saved_fixture(
         "github_actions_cache_malformed_hash_files",
