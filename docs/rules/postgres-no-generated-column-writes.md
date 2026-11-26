@@ -41,6 +41,8 @@ findings retain the matched SQL column's spelling.
 
 ## Options and defaults
 
+Each `extraGeneratedColumns` entry accepts only `table` and `column`.
+
 ```yaml
 rules:
   - rule: postgres-no-generated-column-writes
