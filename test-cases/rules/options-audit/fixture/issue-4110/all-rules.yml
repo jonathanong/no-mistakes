@@ -96,6 +96,7 @@ rules:
   - {rule: postgres-key-column-types, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-lock-inventory, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-lock-ordering, scope: repository, options: {bogusOption: true}}
+  - {rule: postgres-lock-reason, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-lock-written-rows-only, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-materialized-view-shape, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-no-add-column, scope: repository, options: {bogusOption: true}}
