@@ -51,9 +51,10 @@ that scope does not filter the import facts needed by this rule.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no `options.unanalyzable` channel. It matches module specifiers in `from`, `import`, `require(`, and dynamic `import(` only. Call bans belong on `forbidden-calls`.
+The rule matches literal module specifiers in `from`, `import`, `require(`,
+and dynamic `import(`. It skips unreadable files and does not resolve
+computed specifiers. It does not use `options.unanalyzable`. Configure
+call bans on `forbidden-calls`. [Source scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/integration_test_no_mocks.rs#L139-L164) and [module patterns](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/integration_test_no_mocks/patterns.rs#L1-L6).
 
 ## Related rules
 

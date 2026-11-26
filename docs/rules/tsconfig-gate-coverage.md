@@ -472,7 +472,12 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)); workflow steps this rule cannot interpret (for example a custom `shell:` such as `python {0}`, or a step whose command depends on an unresolved expression) are never counted as a typecheck gate and conservatively block later steps and dependent jobs from counting. A project whose only gate sits behind such a step is therefore reported as lacking a `tsc` gate. `options.unanalyzable` does not apply; fix it by running `tsc` in a plain `run:` step before the opaque step.
+A step with an unsupported shell or unresolved command cannot establish a
+typecheck gate. It can block later steps and dependent jobs from counting.
+When the rule can prove `continue-on-error: true` for that step, analysis
+can continue to later candidates. An unproven gate is reported as missing
+coverage. `options.unanalyzable` does not apply. Move the `tsc` command into
+a supported `run:` step on a path the rule can verify. [Opaque step handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/tsconfig_gate_coverage/workflow/reusable/steps/run.rs#L97-L139).
 
 ## Suppression
 

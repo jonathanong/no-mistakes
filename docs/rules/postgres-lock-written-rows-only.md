@@ -492,8 +492,14 @@ but absent relationship metadata cannot prove that two relations are linked.
 Only complete catalogs contribute trigger-derived write evidence and non-null
 CTE join-key evidence.
 
-`checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
-selectors are optional `relation`, `key`, `file`, and `line`, with a required
+`row-lock-unwritten-relation`, `table-lock`, `constant-advisory-lock`, and
+`row-lock-outside-transaction` default to `advise`. `share-lock-then-write`
+and `redundant-prelock` default to `ignore`. Set `share-lock-then-write`
+to `advise` or `fail`, or set `redundant-prelock` to `advise`, to enable
+the corresponding check. [Default check levels](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only.rs#L14-L38), [level names](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/policy.rs#L3-L10), and [pre-lock level validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/policy.rs#L41-L44).
+
+`allow` defaults to `[]`; selectors are optional `relation`, `key`, `file`,
+and `line`, with a required
 `reason`. At least one selector is required and all supplied selectors must
 match. `file` is an exact root-relative path with `/` separators, not a glob.
 `relation` uses the canonical PostgreSQL name (unquoted names fold to lowercase;
@@ -689,4 +695,5 @@ executor SQL. See [suppression hygiene](../configuration/suppressions.md).
 
 ## Invalid UTF-8
 
-Source text this rule reads, including standalone SQL, is decoded lossily, so a stray byte does not drop the file or replace it with an encoding failure. Other read errors contribute no source text. `unanalyzableSql` still applies to SQL the statement pass cannot parse.
+The rule reads SQL from executor calls in application source. Source text
+is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/scan.rs#L35-L50).

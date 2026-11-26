@@ -1,0 +1,44 @@
+name: Widgets
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Example/Cache@v2
+        with:
+          path: |
+            ./.cache/widgets/
+            .cache/unrelated
+          key: pnpm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}
+      - uses: example/cache@v2
+        with:
+          path: [.cache/widgets, .cache/widgets]
+          key: pnpm-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('widgets.lock') }}
+      - uses: example/cache@v2
+        with:
+          path: .cache/widgets
+      - uses: example/cache@v2
+        with:
+          path: .cache/widgets-extra
+          key: old
+      - uses: example/setup-package-manager@v1
+        timeout-minutes: 2
+      - uses: example/setup-package-manager@v1
+        timeout-minutes: 4
+      - uses: example/setup-package-manager@v1
+      - uses: example/setup-package-manager@v1
+        timeout-minutes: "2"
+      - uses: example/other@v1
+      - run: echo ready
+      - parallel:
+          - uses: example/setup-package-manager@v1
+            timeout-minutes: 0
+      - uses: example/setup-package-manager@v1
+        # no-mistakes-disable-next-line github-actions-cache-setup-policy
+        timeout-minutes: 6
+      - uses: example/cache@v2
+        with:
+          path: .cache/widgets
+          key: old # no-mistakes-disable-line github-actions-cache-setup-policy
+  call:
+    uses: ./.github/workflows/delegated.yml

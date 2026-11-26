@@ -54,8 +54,8 @@ dynamic command name (`$CMD ...` or `$DIR/$TOOL ...`), `eval`, a dynamic
 `bash -c "$SCRIPT"`, a dynamic subcommand on a configured base command, an
 unquoted word-splitting expansion that could supply a required argument, or an
 unterminated quote, expansion, or here-document—it abstains from reporting a
-policy violation and records a diagnostic instead. By default that diagnostic is
-a non-failing advisory (`options.unanalyzable: advise`). A variable-prefixed
+policy violation and records a diagnostic under the configured uncertainty
+policy. A variable-prefixed
 path whose final path segment is a literal matching no configured policy
 `command[0]` and not a known shell (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`,
 `pwsh`) or wrapper command (`env`, `sudo`, `xargs`, `nohup`, `time`, `exec`,
@@ -69,7 +69,9 @@ arguments are still inspected.
 `options.include` defaults to `[]`, which selects `.github/workflows/*.{yml,yaml}`
 and `.github/actions/**/action.{yml,yaml}`; an explicit glob list narrows the
 matched files within those workflow and composite-action paths.
-`options.unanalyzable` defaults to `advise` (`advise | report | ignore`).
+`options.unanalyzable` accepts `advise`, `report`, or `ignore`. It inherits
+the repository-level `unanalyzable` setting when omitted. With neither
+setting, the rule uses `advise`. [Policy selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/filesystem_dispatch/github_actions_run_command_policy/diagnostics.rs#L61-L71).
 
 | Option | Default | Behavior |
 | --- | --- | --- |
@@ -82,7 +84,7 @@ matched files within those workflow and composite-action paths.
 | `commands[].forbidArgPatterns` | `[]` | Regex checks with `{ pattern, scope?, message? }`, where `scope` is `any` (default) or `positional`. |
 | `commands[].message` | Omitted | Optional policy explanation appended to findings from this entry. |
 | `include` | `[]` | Optional repo-relative globs narrowing the checked workflow and action files. |
-| `unanalyzable` | `advise` | Controls diagnostics for unparsable commands (`advise`, `report`, or `ignore`). |
+| `unanalyzable` | Repository setting, then `advise` | Controls diagnostics for unparsable commands (`advise`, `report`, or `ignore`). |
 
 ```yaml
 rules:
@@ -191,7 +193,7 @@ steps:
 
 ### Unanalyzable inputs
 
-- Invalid YAML is skipped without findings.
+- Unreadable files and invalid YAML are skipped. [Workflow input handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/filesystem_dispatch/github_actions_run_command_policy/diagnostics.rs#L34-L45).
 - Dynamic command names (`$CMD ...`, `"$CMD" ...`, `${{ inputs.cmd }} ...`,
   `$DIR/$TOOL ...`, or a variable-prefixed path whose literal final segment
   matches a configured policy `command[0]`, a known shell such as `sh`/`bash`/
@@ -201,7 +203,7 @@ steps:
   configured base command, unquoted word-splitting expansions on a matching
   command whose required arguments are absent, and unterminated quotes,
   expansions, or here-documents abstain from policy failure and emit a
-  diagnostic governed by `options.unanalyzable` (default `advise`).
+  diagnostic governed by the selected uncertainty policy.
 - Variable-prefixed script paths whose final path segment is a literal matching
   no configured policy `command[0]`, known shell, or wrapper command (for
   example `$GITHUB_ACTION_PATH/build-images.sh`) abstain silently with no

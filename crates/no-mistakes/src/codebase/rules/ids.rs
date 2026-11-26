@@ -143,3 +143,5 @@ pub use super::github_actions_workflow_files::pr_diff_range::RULE_ID as GITHUB_A
 
 pub use super::vitest_default_excludes::RULE_ID as VITEST_DEFAULT_EXCLUDES;
 pub use super::vitest_project_policy::RULE_ID as VITEST_PROJECT_POLICY;
+
+pub use super::github_actions_cache_setup_policy::RULE_ID as GITHUB_ACTIONS_CACHE_SETUP_POLICY;
