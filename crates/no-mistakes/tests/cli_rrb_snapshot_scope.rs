@@ -23,6 +23,7 @@ fn production_dependency_declarations_json_matches_snapshot() {
             production("relative_closure", "relative-import-closure"),
             production("type_import", "import-type-exempt"),
             production("suppressed", "suppression-honored"),
+            production("suppression_forms", "suppression-forms"),
             production("test_only_importer", "test-only-importer"),
             production("computed_import", "computed-import"),
         ],
@@ -183,6 +184,11 @@ fn required_companion_imports_json_matches_snapshot() {
                 "../config/generic_filesystem_rules_run_through_public_dispatch-required-companion-imports.yml",
             ),
             rule(
+                "disable_file",
+                "required-companion-imports/disable-file",
+                "../config/generic_filesystem_rules_run_through_public_dispatch-required-companion-imports.yml",
+            ),
+            rule(
                 "prepared_scope",
                 "required-companion-imports/prepared-scope",
                 ".no-mistakes.yml",
@@ -214,6 +220,11 @@ fn required_doc_section_json_matches_snapshot() {
         &[
             rule("fail", &format!("{dir}/fail"), ".no-mistakes.yml"),
             rule("pass", &format!("{dir}/pass"), ".no-mistakes.yml"),
+            rule(
+                "disable_file",
+                &format!("{dir}/disable-file"),
+                ".no-mistakes.yml",
+            ),
             rule(
                 "deeper_heading",
                 &format!("{dir}/fail-deeper-heading"),

@@ -168,6 +168,7 @@ impl SharedCheckContext {
         };
         let supplemental_call_site_files =
             fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
+        let disable_directives = prepare_disable_directives(&root, config, &discovered, &prepared)?;
         let fs_files = if filesystem_rules_enabled || config.audits_disable_directives() {
             discovered
         } else {
@@ -175,7 +176,7 @@ impl SharedCheckContext {
         };
         Ok(Self {
             session,
-            disable_directives: prepare_disable_directives(&root, config, &fs_files, &prepared)?,
+            disable_directives,
             root,
             config_path: config_path.map(Path::to_path_buf),
             tsconfig_path: tsconfig_path.map(Path::to_path_buf),

@@ -13,7 +13,7 @@ pub const RULE_ID: &str = "package-json-export-target-prefix";
 
 #[derive(Default, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Options {}
+pub(in crate::codebase::rules) struct Options {}
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     super::check_sourced_standalone(root, config, check_with_files)

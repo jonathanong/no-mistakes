@@ -1,3 +1,4 @@
+use super::strict_rule_options::{OptionLocation, WithKnownFields};
 use super::{rule_targets, NoMistakesConfig, RuleDef, RuleScope};
 use anyhow::Result;
 use serde::de::IntoDeserializer;
@@ -15,9 +16,22 @@ impl RuleDef {
     /// disables a configured rule. The original [`Self::rule_options`] API
     /// intentionally remains infallible for existing programmatic callers.
     pub fn try_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self) -> Result<T> {
-        super::super::analysis_policy::validate_inventory_policy(self)?;
-        self.configured_effort()?;
-        super::postgres_executors::validate(self)?;
+        self.validate_common_options()?;
+        self.decode_rule_options(false)
+    }
+
+    pub(crate) fn strict_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(
+        &self,
+    ) -> Result<T> {
+        let parsed = self.decode_rule_options(true)?;
+        self.validate_common_options()?;
+        Ok(parsed)
+    }
+
+    fn decode_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(
+        &self,
+        strict: bool,
+    ) -> Result<T> {
         if matches!(&self.options, serde_yaml::Value::Null)
             || matches!(&self.options, serde_yaml::Value::Mapping(options) if options.is_empty())
         {
@@ -35,25 +49,25 @@ impl RuleDef {
         if matches!(&options, serde_yaml::Value::Mapping(options) if options.is_empty()) {
             return Ok(T::default());
         }
-        let deserializer = options.into_deserializer();
-        serde_path_to_error::deserialize(deserializer).map_err(|error| {
-            let path = error.path().to_string();
-            let location = if path.is_empty() {
-                "options".to_string()
-            } else {
-                format!("options.{path}")
-            };
-            let name = self
-                .name
-                .as_deref()
-                .map(|name| format!(" application `{name}`"))
-                .unwrap_or_default();
-            anyhow::anyhow!(
-                "invalid options for rule `{}`{name} at {location}: {}",
-                self.rule,
-                error.inner()
-            )
-        })
+        let unknown = std::cell::RefCell::new(None);
+        let result = if strict {
+            serde_path_to_error::deserialize(WithKnownFields {
+                options,
+                postgres: self.rule.starts_with("postgres-"),
+                embedded_sql: crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
+                    .contains(&self.rule.as_str()),
+                unknown: &unknown,
+            })
+        } else {
+            serde_path_to_error::deserialize(options.into_deserializer())
+        };
+        result.map_err(|error| OptionLocation::from_error(self, error, unknown.into_inner()))
+    }
+
+    fn validate_common_options(&self) -> Result<()> {
+        super::super::analysis_policy::validate_inventory_policy(self)?;
+        self.configured_effort()?;
+        super::postgres_executors::validate(self)
     }
 
     pub fn applies_to_project(&self, project: &str) -> bool {

@@ -2,7 +2,7 @@ use super::{validate, CompiledOptions, Options, RULE_ID};
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use anyhow::{bail, Result};
 
-pub(super) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let functions = match &opts.functions {
         None => vec!["uuid_extract_timestamp".to_string()],
         Some(values) if values.is_empty() => {

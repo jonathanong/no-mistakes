@@ -51,7 +51,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings)
 }
 
-fn compile_groups(options: &Options) -> Result<Vec<CompiledGroup>> {
+pub(in crate::codebase::rules) fn compile_groups(options: &Options) -> Result<Vec<CompiledGroup>> {
     options
         .groups
         .iter()

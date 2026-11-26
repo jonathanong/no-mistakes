@@ -237,21 +237,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "invalid": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "production-exports-only-used-by-tests",
-          "message": "invalid options for rule `production-exports-only-used-by-tests` at options.ignoreExportsUsedInFile: invalid type: string \"yes\", expected a boolean"
-        }
-      ],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: invalid.yml:7: invalid options for rule `production-exports-only-used-by-tests` at options.ignoreExportsUsedInFile: invalid type: string \"yes\", expected a boolean\n"
   }
 }

@@ -1441,6 +1441,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: `uses: example/setup-widget@v1` — `v1` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: example/setup-widget@v1"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "tag-ref": {
     "exitCode": 1,
     "report": {

@@ -238,22 +238,24 @@ narrower `--root` that omits generated assets, or simplify shared receiver mutat
 Rule `include`/`exclude` filters select diagnostics and do not remove evidence
 from this full graph analysis. See [the work-budget investigation](../performance/foreign-receiver-work-budget.md).
 
-Invalid rule option values are configuration errors, not implicit defaults.
-`check` exits with a diagnostic naming the rule application and the exact
-`options` path whose YAML type does not match the rule's schema. Omitted options
-continue to use that rule's documented defaults.
+An unknown rule ID or an invalid option on an enabled rule aborts config
+loading. `check` exits with status 2, reports the config file and line on
+stderr, and leaves stdout empty even with `--format json`. The diagnostic names
+the rule and invalid option or suggests the closest registered ID.
+See [rule configuration](../configuration/rules.md).
 
 Node API: `check({ includeSuppressed: true })` exposes the same optional
 `suppressed` accounting. `check({ includeSqlVerdicts: true })` and check reports
 inside `analyzeProject()` expose the same optional `sqlVerdicts` field.
 
-Unused disable comments produce `unused-disable-directive` advice by default,
+Unused disable comments produce `unused-disable-directive` advice by default
 at the comment's file and line. `invalid-disable-directive` identifies unknown
 or disabled rule names separately. Unreadable files in the audit scope produce
 an `unused-disable-directive` read-failure diagnostic at line 1 with
 `target: "unanalyzable"`. Set repository
-`reportUnusedDisableDirectives: report` to fail or `ignore` to omit these
-diagnostics. This works without `--include-suppressed`; see
+`reportUnusedDisableDirectives: report` to fail on these diagnostics. With
+`ignore`, unknown rule IDs still produce advice while other hygiene diagnostics
+are omitted. This works without `--include-suppressed`; see
 [suppression hygiene](../configuration/suppressions.md).
 
 Configured exceptions produce `unused-allow-entry` advice by default. Set
@@ -376,6 +378,13 @@ Enable [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) for
 scripts targeting Bash before 4.4 and
 [`zsh-readonly-parameter`](../rules/zsh-readonly-parameter.md) for zsh scripts.
 Both report shell source locations in `check` without invoking ShellCheck.
+
+Enable [`csp-allowed-origins`](../rules/csp-allowed-origins.md) to report
+third-party browser origins (`<script>`, `<img>`, `<link>`, `<iframe>`, media,
+`fetch`, `WebSocket`, `EventSource`, including protocol-relative `//host` and
+IPv6 literals) not allowed by the intersected CSP directives in
+`options.cspFiles` (with optional `options.selfOrigins` for `'self'` and
+`options.unanalyzable` for dynamic URLs).
 
 Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch
 literal `test.exclude` arrays that drop Vitest's discovery exclusions in the

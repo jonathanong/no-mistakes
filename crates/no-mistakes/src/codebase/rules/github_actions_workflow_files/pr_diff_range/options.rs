@@ -1,12 +1,7 @@
 use super::RULE_ID;
-use crate::codebase::rules::validate_options::{
-    format_invalid_option, indexed_rule_applications, push_application_errors,
-};
-use crate::config::v2::NoMistakesConfig;
+use crate::codebase::rules::validate_options::format_invalid_option;
 use anyhow::{bail, Result};
 use serde::Deserialize;
-use std::collections::BTreeSet;
-use std::path::Path;
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -163,26 +158,6 @@ fn is_flag(flag: &str) -> bool {
     flag.starts_with('-') && flag.len() > 1 && !flag.chars().any(char::is_whitespace)
 }
 
-pub(crate) fn collect_config_errors(
-    root: &Path,
-    config_path: Option<&Path>,
-    config: &NoMistakesConfig,
-    errors: &mut Vec<String>,
-) {
-    for (rule_index, rule) in indexed_rule_applications(config, RULE_ID) {
-        let mut app_errors = BTreeSet::new();
-        match rule.try_rule_options::<Options>() {
-            Ok(opts) => {
-                if let Err(error) = compile(&opts) {
-                    app_errors.insert(error.to_string());
-                }
-            }
-            Err(error) => {
-                app_errors.insert(error.to_string());
-            }
-        }
-        if !app_errors.is_empty() {
-            push_application_errors(root, config, rule_index, config_path, app_errors, errors);
-        }
-    }
+pub(crate) fn validate_options(opts: &Options) -> Result<()> {
+    compile(opts).map(drop)
 }

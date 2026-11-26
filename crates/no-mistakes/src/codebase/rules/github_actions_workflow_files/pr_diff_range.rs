@@ -21,7 +21,7 @@ mod verdicts;
 mod verdicts_helpers;
 mod yaml_shapes;
 
-pub(crate) use options::collect_config_errors;
+pub(crate) use options::validate_options;
 
 pub const RULE_ID: &str = "github-actions-pr-diff-range";
 
@@ -67,7 +67,7 @@ pub fn diagnostics_with_files_and_sources(
 ) -> Result<AnalysisDiagnostics> {
     let mut output = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
-        let raw_opts: options::Options = rule.try_rule_options()?;
+        let raw_opts: options::Options = rule.strict_rule_options()?;
         let compiled = options::compile(&raw_opts)?;
         let unanalyzable = resolve_unanalyzable(config, rule)?;
         let files = rules::selected_rule_files(root, config, rule, all_files)?;

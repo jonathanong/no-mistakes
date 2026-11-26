@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { findVariable, propertyName, unwrap } = require("./postgres-cursor-ast");
 const { matchesCursorFile, resolveCursorContractOptions } = require("./postgres-cursor-options");
 const {
+  importEqualsModule,
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,
@@ -29,7 +30,11 @@ function isTypeOnlyExport(identifier) {
 }
 
 function reExportsCursor(node, config) {
-  if (!isCursorModule(node.source?.value, config) || node.exportKind === "type") return false;
+  if (node.exportKind === "type") return false;
+  if (node.declaration?.type === "TSImportEqualsDeclaration") {
+    return isCursorModule(importEqualsModule(node.declaration), config);
+  }
+  if (!isCursorModule(node.source?.value, config)) return false;
   if (node.type === "ExportAllDeclaration") return true;
   return (
     node.specifiers?.some((specifier) => {
@@ -46,6 +51,7 @@ function visitCursorIdentifier(context, node, options, reportedDirectUses) {
   if (
     node.parent?.type === "ImportSpecifier" ||
     node.parent?.type === "ImportNamespaceSpecifier" ||
+    (node.parent?.type === "TSImportEqualsDeclaration" && node.parent.id === node) ||
     isTypeQuery(node) ||
     isTypeOnlyExport(node)
   ) {

@@ -21,7 +21,7 @@ import type {
   ResolveCheckFilesOptions,
   ResolveCheckOptions,
 } from "./query-types";
-import type { QueueCheckOptions } from "./queue-report-types";
+import type { QueueCheckOptions, QueueRelatedOptions } from "./queue-report-types";
 import type {
   InfraOptions,
   PlaywrightOptions,
@@ -53,7 +53,7 @@ export type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "con
 export type BatchedDependencyTraverseOptions = (TraverseGraphOptions | TraversePathsOptions) &
   Pick<ProjectOptions, "config">;
 export type BatchedQueueCheckOptions = Omit<QueueCheckOptions, "root" | "tsconfig" | "config">;
-export type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
+export type BatchedQueueRelatedOptions = Omit<QueueRelatedOptions, "root" | "tsconfig" | "config">;
 export type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
 export type BatchedReactUsagesOptions = Pick<
@@ -68,7 +68,9 @@ export type BatchedCheckOptions = Pick<
   Pick<CheckOptions, "includeRunnerConfigDeadlines" | "includeSqlVerdicts">;
 export type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;
 export type BatchedRootConfigOptions<T> = Omit<T, "root" | "config">;
-export type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "config">;
+export type BatchedRootTsConfigOptions<T> = T extends unknown
+  ? Omit<T, "root" | "tsconfig" | "config">
+  : never;
 
 export type AnalyzeProjectReportRequest =
   | ({ type: "dependencies"; id?: string } & BatchedDependencyTraverseOptions)
@@ -139,7 +141,10 @@ export type AnalyzeProjectReportRequest =
   | ({ type: "ciImpact"; id?: string } & BatchedRootConfigOptions<CiImpactOptions>)
   | ({ type: "ciEnv"; id?: string } & BatchedRootConfigOptions<CiEnvOptions>)
   | ({ type: "ciTopology"; id?: string } & BatchedRootConfigOptions<CiTopologyOptions>)
-  | ({ type: "impactedChecks"; id?: string } & BatchedRootTsConfigOptions<ImpactedChecksOptions>)
+  | ({
+      type: "impactedChecks";
+      id?: string;
+    } & BatchedRootTsConfigOptions<ImpactedChecksOptions>)
   | ({
       type: "infraResourceRefs" | "infraOutputs" | "infraTestFor";
       id?: string;

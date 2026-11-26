@@ -2,6 +2,7 @@ pub mod analysis_policy;
 pub mod ast_grep_ignore_freshness;
 pub mod csharp_max_lines_per_file;
 pub mod csharp_no_async_void_delegate;
+pub mod csp_allowed_origins;
 pub mod forbidden_calls;
 pub mod forbidden_lint_suppressions;
 pub mod nextjs_no_api_routes;

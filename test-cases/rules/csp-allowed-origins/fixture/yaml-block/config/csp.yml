@@ -1,0 +1,4 @@
+content_security_policy: |
+  default-src 'self';
+  img-src 'self' https://cdn.example.com;
+  script-src 'self' https://scripts.example.com;

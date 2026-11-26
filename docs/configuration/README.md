@@ -98,7 +98,8 @@ step comparisons when the partner caps steps below the job deadline.
 
 `reportUnusedDisableDirectives` defaults to `advise`: stale disable comments and
 comments naming unknown or disabled check rules produce non-failing advice.
-Use `report` to fail or `ignore` to omit it. See
+Use `report` to fail the check. The `ignore` mode keeps unknown rule IDs
+visible as advice and omits other suppression diagnostics. See
 [suppression hygiene](suppressions.md) for locations, examples, and API parity.
 
 `reportUnusedAllowEntries` independently controls proven stale configured

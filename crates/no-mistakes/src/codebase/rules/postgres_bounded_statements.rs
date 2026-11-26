@@ -24,7 +24,7 @@ pub const RULE_ID: &str = "postgres-bounded-statements";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
@@ -87,7 +87,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     )
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     crate::codebase::postgres::require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     Ok(CompiledOptions {
         schema: PostgresSchemaOptions {

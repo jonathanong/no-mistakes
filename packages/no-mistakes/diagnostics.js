@@ -8,8 +8,6 @@ const EXCLUDED = [
   "diagnosticsSnapshot",
   "writePlanningImpactArtifacts",
   "createWorkflowTopologyIndex",
-  "testsComment",
-  "testsGraphMermaid",
 ];
 let contexts;
 
@@ -27,7 +25,7 @@ function diagnosticsError(error) {
   return decorateInvocationError(error);
 }
 
-async function callJson(fn, options) {
+async function callJson(fn, options, decode = JSON.parse) {
   const context = contexts?.getStore();
   const value = options || {};
   const request = !context
@@ -37,8 +35,9 @@ async function callJson(fn, options) {
       : { ...value, __collectDiagnostics: true };
   const input = Buffer.from(JSON.stringify(request));
   try {
-    const response = JSON.parse(await fn(input));
-    if (!context) return response;
+    const output = await fn(input);
+    if (!context) return decode(output);
+    const response = JSON.parse(output);
     if (
       !response ||
       !Object.hasOwn(response, "diagnostics") ||

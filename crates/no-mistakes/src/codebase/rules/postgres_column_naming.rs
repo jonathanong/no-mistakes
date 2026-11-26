@@ -17,6 +17,10 @@ mod types;
 
 pub const RULE_ID: &str = "postgres-column-naming";
 
+pub(super) fn validate_options(options: &Options, message: Option<String>) -> Result<()> {
+    compile::compile(options, message).map(drop)
+}
+
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Options {

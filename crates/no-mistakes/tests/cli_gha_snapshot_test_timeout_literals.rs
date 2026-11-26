@@ -15,6 +15,11 @@ fn github_actions_test_timeout_literals_json_matches_snapshot() {
                 default.clone(),
             ),
             (
+                "disabled_line",
+                rules_path(RULE, "fixture", "suppressions"),
+                default.clone(),
+            ),
+            (
                 "dispatch-fixture",
                 rules_path(RULE, "fixture", "3304-dispatch"),
                 default.clone(),

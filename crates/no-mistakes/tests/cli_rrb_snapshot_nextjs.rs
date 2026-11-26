@@ -26,13 +26,19 @@ fn nextjs_no_api_routes_json_matches_snapshot() {
 
 #[test]
 fn nextjs_no_caching_json_matches_snapshot() {
+    let effort = "rules/nextjs-no-caching/fixture/effort-low";
     assert_saved_fixture(
         "nextjs_no_caching",
-        &[c(
-            "fail",
-            "codebase-analysis/no-nextjs-caching/fixture",
-            "../../../rules/nextjs-no-caching/config/nextjs_no_caching_fails_for_cache_features.yml",
-        )],
+        &[
+            c(
+                "fail",
+                "codebase-analysis/no-nextjs-caching/fixture",
+                "../../../rules/nextjs-no-caching/config/nextjs_no_caching_fails_for_cache_features.yml",
+            ),
+            c("report", effort, "report.yml"),
+            c("advise", effort, "advise.yml"),
+            c("ignore", effort, "ignore.yml"),
+        ],
     );
 }
 
@@ -88,6 +94,7 @@ fn nextjs_redirect_destinations_json_matches_snapshot() {
 #[test]
 fn server_route_client_boundary_json_matches_snapshot() {
     let fail = "rules/server-route-client-boundary/fixture/fail";
+    let inputs = "rules/file-input-analysis/fixture";
     assert_saved_fixture(
         "server_route_client_boundary",
         &[
@@ -103,6 +110,26 @@ fn server_route_client_boundary_json_matches_snapshot() {
                 "non_source_files",
                 "rules/server-route-client-boundary/fixture/non-source-project-files",
                 ".no-mistakes.yml",
+            ),
+            c(
+                "suppression",
+                "rules/server-route-client-boundary/fixture/suppression",
+                "../fail/boundary-only.no-mistakes.yml",
+            ),
+            c(
+                "input_report",
+                inputs,
+                "server-route-client-boundary-report.yml",
+            ),
+            c(
+                "input_advise",
+                inputs,
+                "server-route-client-boundary-advise.yml",
+            ),
+            c(
+                "input_ignore",
+                inputs,
+                "server-route-client-boundary-ignore.yml",
             ),
         ],
     );

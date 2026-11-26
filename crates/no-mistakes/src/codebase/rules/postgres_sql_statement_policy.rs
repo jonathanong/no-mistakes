@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 mod clauses;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod scan;
 pub(crate) use options::Options;
 
@@ -24,7 +24,7 @@ const DEFAULT_BANNED: &[&str] = &[
     "DROP VIEW",
 ];
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     paths: super::RuleGlobFilter,
     schema: PostgresSchemaOptions,
     banned: HashSet<String>,
@@ -102,7 +102,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings.finish())
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let mut banned = HashSet::new();
     for value in &opts.banned_statements {
         let kind = value

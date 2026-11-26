@@ -137,10 +137,15 @@ fn false_and_omitted_report_nothing() {
 fn invalid_boolean_is_rejected_at_config_validation() {
     let root = super::fixture("call-bindings");
     let cfg = super::config("requireExplicitWorkflowCallBindings: \"yes\"");
-    let mut errors = Vec::new();
-    super::super::collect_config_errors(&root, None, &cfg, &mut errors);
-    assert_eq!(errors.len(), 1, "{errors:?}");
-    assert!(errors[0].contains("requireExplicitWorkflowCallBindings"));
+    let error = crate::codebase::rules::validate_options::validate_rule_options(
+        &root,
+        Path::new(".no-mistakes.yml"),
+        &cfg,
+        &|_| None,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("requireExplicitWorkflowCallBindings"), "{error}");
 }
 
 #[test]

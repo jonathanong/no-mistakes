@@ -34,8 +34,7 @@ pub use super::run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,
     run_check_with_facts_and_playwright, PreparedRulesCheck,
 };
-#[doc(hidden)]
-pub use super::validate_options::validate_rule_options;
+pub(crate) use super::validate_options::validate_rule_options;
 #[doc(hidden)]
 pub use super::vitest_project_catalog::{
     prepare_vitest_project_catalog, PreparedVitestProjectCatalog,

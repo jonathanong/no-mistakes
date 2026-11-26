@@ -1,4 +1,4 @@
-use super::super::options::{collect_config_errors, compile, CompiledOptions, Options};
+use super::super::options::{compile, CompiledOptions, Options};
 use super::super::runs::check_source_with_options;
 use super::super::RULE_ID;
 use crate::config::v2::{
@@ -322,8 +322,12 @@ fn invalid_revision_pair_options_are_rejected() {
             }],
             ..Default::default()
         };
-        let mut errors = Vec::new();
-        collect_config_errors(Path::new("."), None, &cfg, &mut errors);
-        assert!(!errors.is_empty(), "expected config error for:\n{bad}");
+        let result = crate::codebase::rules::validate_options::validate_rule_options(
+            Path::new("."),
+            Path::new(".no-mistakes.yml"),
+            &cfg,
+            &|_| None,
+        );
+        assert!(result.is_err(), "expected config error for:\n{bad}");
     }
 }

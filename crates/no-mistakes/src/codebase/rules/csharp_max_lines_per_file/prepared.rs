@@ -19,7 +19,7 @@ pub(crate) struct Options {
     pub(crate) test_roots: Option<Vec<String>>,
 }
 
-pub(super) struct PreparedRule {
+pub(in crate::codebase::rules) struct PreparedRule {
     src_max: usize,
     test_max: usize,
     pub(super) roots: Vec<PathBuf>,
@@ -29,7 +29,11 @@ pub(super) struct PreparedRule {
 }
 
 impl PreparedRule {
-    pub(super) fn new(opts: &Options, root: &Path, target_roots: &[PathBuf]) -> Result<Self> {
+    pub(in crate::codebase::rules) fn new(
+        opts: &Options,
+        root: &Path,
+        target_roots: &[PathBuf],
+    ) -> Result<Self> {
         let excludes = effective_excludes(opts);
         let test_root_patterns = effective_test_roots(opts);
         Ok(Self {

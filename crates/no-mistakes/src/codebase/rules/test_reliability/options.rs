@@ -7,7 +7,7 @@ use std::{collections::BTreeSet, path::Path};
 
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase", default, deny_unknown_fields)]
-pub(super) struct RetryOptions {
+pub(in crate::codebase::rules) struct RetryOptions {
     pub(super) max_retries: u64,
     pub(super) allowlist: Vec<AllowEntry>,
     pub(super) test_commands: Vec<Vec<String>>,
@@ -27,7 +27,7 @@ impl RetryOptions {
 
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase", default, deny_unknown_fields)]
-pub(super) struct SerialOptions {
+pub(in crate::codebase::rules) struct SerialOptions {
     pub(super) allowlist: Vec<AllowEntry>,
     pub(super) fixtures: Vec<FixtureExportEntry>,
 }
@@ -119,5 +119,21 @@ pub(super) fn validate_test_commands(commands: &[Vec<String>]) -> Result<()> {
             "test-no-retries: testCommands[{index}] must be a non-empty literal argv prefix"
         );
     }
+    Ok(())
+}
+
+pub(in crate::codebase::rules) fn validate_test_no_retries(options: RetryOptions) -> Result<()> {
+    validate_test_commands(&options.test_commands)?;
+    options.factory_files()?;
+    Allowlist::compile(super::TEST_NO_RETRIES, options.allowlist)?;
+    compile_fixtures(super::TEST_NO_RETRIES, options.fixtures)?;
+    Ok(())
+}
+
+pub(in crate::codebase::rules) fn validate_playwright_no_serial(
+    options: SerialOptions,
+) -> Result<()> {
+    Allowlist::compile(super::PLAYWRIGHT_NO_SERIAL, options.allowlist)?;
+    compile_fixtures(super::PLAYWRIGHT_NO_SERIAL, options.fixtures)?;
     Ok(())
 }

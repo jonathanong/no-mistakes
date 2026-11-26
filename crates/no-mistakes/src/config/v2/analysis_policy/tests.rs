@@ -4,7 +4,11 @@ use std::path::PathBuf;
 fn config(name: &str) -> NoMistakesConfig {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/rule-analysis-policy/fixture");
-    super::super::load_v2_config(&root, Some(PathBuf::from(name).as_path())).unwrap()
+    let source = std::fs::read_to_string(root.join(name)).unwrap();
+    let mut config: NoMistakesConfig = serde_yaml::from_str(&source).unwrap();
+    super::super::postgres_project_scope::materialize(&mut config).unwrap();
+    config.materialize_analysis_defaults().unwrap();
+    config
 }
 
 #[test]

@@ -100,5 +100,23 @@ fn rust_max_lines_per_file_json_matches_snapshot() {
         ),
         rules_path(RULE, "configs", "per-project.yml"),
     ));
+    let unavailable = rules_path("file-input-analysis", "fixture", "rust-max");
+    cases.extend([
+        (
+            "unavailable_report",
+            unavailable.clone(),
+            rules_path(RULE, "configs", "unavailable-report.yml"),
+        ),
+        (
+            "unavailable_advise",
+            unavailable.clone(),
+            rules_path(RULE, "configs", "unavailable-advise.yml"),
+        ),
+        (
+            "unavailable_ignore",
+            unavailable,
+            rules_path(RULE, "configs", "unavailable-ignore.yml"),
+        ),
+    ]);
     assert_saved_fixture("rust_max_lines_per_file", &cases);
 }

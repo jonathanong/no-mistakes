@@ -1,3 +1,4 @@
+use super::known_rules::known_rule;
 use super::scan::project;
 use super::*;
 use crate::codebase::rules::suppression::SuppressionDirectiveKind;
@@ -176,19 +177,19 @@ fn prepared_comments_finalize_after_source_owner_is_dropped() {
 }
 
 #[test]
-fn ignored_audit_preparation_does_not_read_sources() {
-    let root = root();
-    let files = vec![root.join("source.sql")];
-    let mut config: NoMistakesConfig = serde_yaml::from_str(include_str!(
-        "../../../../../../fixtures/rules/disable-directive-audit/disabled.yml"
-    ))
-    .unwrap();
+fn ignored_hygiene_retains_unknown_rules_from_selected_comments() {
+    let (root, files, mut config) = super::catalog_tests::recent_fixture();
     config.report_unused_disable_directives = DisableDirectivePolicy::Ignore;
     let sources = super::super::source_store_for_files(&files);
     let prepared = PreparedDisableDirectives::prepare(&root, &config, &files, &sources).unwrap();
-    assert_eq!(sources.physical_read_count(), 0);
-    assert!(prepared.findings(&[]).is_empty());
-    assert_eq!(sources.physical_read_count(), 0);
+    let findings = prepared.findings(&[]);
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, "invalid-disable-directive");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("typo-configured-as-a-rule")
+    );
+    assert_eq!(sources.physical_read_count(), 1);
 }
 
 #[test]
@@ -457,6 +458,6 @@ fn unreadable_file_in_scope_emits_read_failure_without_skipping_readable_files()
     let ignored_sources = super::super::source_store_for_files(&files);
     let ignored =
         PreparedDisableDirectives::prepare(&root, &config, &files, &ignored_sources).unwrap();
-    assert_eq!(ignored_sources.physical_read_count(), 0);
+    assert_eq!(ignored_sources.physical_read_count(), 2);
     assert!(ignored.findings(&[]).is_empty());
 }

@@ -1,22 +1,58 @@
 use super::*;
+use std::sync::OnceLock;
 
-fn repository_report(files: &[&str]) -> ImpactedChecksReport {
-    let mut request = args(files);
-    // Use the real repository configuration: a copied fixture would miss its regression.
-    request.root = crate::codebase::ts_resolver::normalize_path(
+fn repo_root() -> PathBuf {
+    let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
     );
-    request.generic_only = true;
-    generate_impacted_checks(&request).unwrap()
+    root.canonicalize().unwrap_or(root)
+}
+
+fn repository_config() -> &'static NoMistakesConfig {
+    static CONFIG: OnceLock<NoMistakesConfig> = OnceLock::new();
+    // Use the real repository configuration: a copied fixture would miss its regression.
+    CONFIG.get_or_init(|| crate::config::v2::load_v2_config(&repo_root(), None).unwrap())
+}
+
+fn repository_report(files: &[&str]) -> ImpactedChecksReport {
+    let root = repo_root();
+    let changed_files: Vec<String> = files
+        .iter()
+        .map(|file| (*file).to_string())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    let missing: BTreeSet<String> = changed_files
+        .iter()
+        .filter(|file| !root.join(file).exists())
+        .cloned()
+        .collect();
+    let checks =
+        dedupe_checks(generic_checks(repository_config(), &changed_files, &missing).unwrap());
+    ImpactedChecksReport {
+        changed_files,
+        checks,
+        warnings: Vec::new(),
+        fallback_triggered: false,
+        empty_result: None,
+    }
 }
 
 #[test]
 fn repository_declarations_select_lint_and_format_without_file_arguments() {
-    let report = repository_report(&[
+    let files = [
         "packages/no-mistakes/index.d.ts",
         "packages/no-mistakes/scripts/api.test.js",
         "fixtures/node-api/executed-postgres-sql/public.mts",
-    ]);
+    ];
+    let mut request = args(&files);
+    request.root = repo_root();
+    request.generic_only = true;
+    let report = generate_impacted_checks(&request).unwrap();
+    assert_eq!(
+        command_strings(&report),
+        command_strings(&repository_report(&files))
+    );
     assert_eq!(
         command_strings(&report),
         [

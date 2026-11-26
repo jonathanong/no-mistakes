@@ -20,12 +20,12 @@ const UNPROVEN: &str = "Cannot verify that this compilation branch guards the Da
 
 #[derive(Deserialize, Default)]
 #[serde(default)]
-struct Options {
+pub(super) struct Options {
     allow: Vec<String>,
     message: Option<String>,
 }
 
-struct CompiledOptions {
+pub(super) struct CompiledOptions {
     allow: FileAllow,
     message: String,
 }
@@ -41,14 +41,7 @@ pub(crate) fn diagnostics_with_files_and_sources(
 ) -> Result<AnalysisDiagnostics> {
     let mut diagnostics = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
-        let options: Options = rule.try_rule_options()?;
-        let mut compiled = CompiledOptions {
-            allow: FileAllow::new(&options.allow, &format!("{RULE_ID} allow"))?,
-            message: match options.message.filter(|message| !message.is_empty()) {
-                Some(message) => format!("{FIX} {message}"),
-                None => FIX.to_string(),
-            },
-        };
+        let mut compiled = compile_options(rule.try_rule_options()?)?;
         compiled.allow.setup(root, config, rule, sources);
         let files = super::selected_rule_files_matching_with_sources(
             root, config, rule, all_files, sources, is_swift_file,
@@ -63,6 +56,16 @@ pub(crate) fn diagnostics_with_files_and_sources(
         )?);
     }
     Ok(file_diagnostics::sorted(diagnostics))
+}
+
+pub(super) fn compile_options(options: Options) -> Result<CompiledOptions> {
+    Ok(CompiledOptions {
+        allow: FileAllow::new(&options.allow, &format!("{RULE_ID} options.allow"))?,
+        message: match options.message.filter(|message| !message.is_empty()) {
+            Some(message) => format!("{FIX} {message}"),
+            None => FIX.to_string(),
+        },
+    })
 }
 
 fn is_swift_file(path: &Path) -> bool {

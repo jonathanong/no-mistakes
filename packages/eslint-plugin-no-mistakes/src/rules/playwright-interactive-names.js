@@ -1,6 +1,7 @@
 "use strict";
 
 const { attributeName, INTERACTIVE_ELEMENTS, selectorLiteral } = require("../helpers");
+const { unwrapExpression } = require("./async-ast");
 
 function variableNamed(name, node, context) {
   let scope = context.sourceCode.getScope(node);
@@ -27,7 +28,7 @@ function rememberImport(specifier, importedNames) {
 function rememberAlias(node, importedNames, context) {
   const parent = node.parent;
   const id = node.id;
-  const init = node.init;
+  const init = unwrapExpression(node.init);
   if (!parent || parent.kind !== "const") return;
   if (!id || id.type !== "Identifier" || !init || init.type !== "Identifier") return;
   const imported = importedNames.get(init.name);
@@ -53,7 +54,7 @@ function mappedImport(name, node, context, importedNames) {
   if (fromBinding && fromBinding !== name) return fromBinding;
   const imported = importedNames.get(name);
   if (!imported || imported === name || def.type !== "Variable") return null;
-  const init = def.node.init;
+  const init = unwrapExpression(def.node.init);
   const source =
     init && init.type === "Identifier" ? variableNamed(init.name, init, context) : null;
   const sourceDefs = source ? source.defs : [];

@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: csp-allowed-origins
+    scope: repository
+    include:
+      - src/**/*.ts
+    options:
+      cspFiles:
+        - src/csp.ts
+      unanalyzable: advise

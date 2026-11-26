@@ -422,6 +422,19 @@ test("declared config exports its unused allow-entry policy", () => {
   );
 });
 
+test("CSP allowed origins exports its configuration type", () => {
+  const types = readFileSync(join(packageRoot, "csp-allowed-origins-types.d.ts"), "utf8");
+  assert.match(types, /export interface CspAllowedOriginsOptions/);
+  assert.match(types, /cspFiles: string\[\];/);
+  assert.match(types, /selfOrigins\?: string\[\];/);
+  assert.match(types, /unanalyzable\?: Unanalyzable;/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./csp-allowed-origins-types";',
+    ),
+  );
+});
+
 test("Vitest default excludes exports its configuration type", () => {
   const types = readFileSync(join(packageRoot, "vitest-default-excludes-types.d.ts"), "utf8");
   assert.match(types, /export interface VitestDefaultExcludesOptions/);

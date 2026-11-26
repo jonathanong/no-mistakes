@@ -3,7 +3,7 @@ use crate::codebase::postgres::{AllowEntry, AllowList, CatalogObjectRef};
 use crate::codebase::rules::path_filter::GlobMatcher;
 use anyhow::{bail, Result};
 
-pub(super) struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     pub(super) requirements: Vec<Requirement>,
     pub(super) allow: AllowList,
     pub(super) message: Option<String>,
@@ -14,7 +14,7 @@ pub(super) struct Requirement {
     pub(super) types: Vec<&'static str>,
 }
 
-pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     let requirements = options.columns.iter().map(|requirement| {
         if requirement.pattern.trim().is_empty() || requirement.types.is_empty() {
             bail!("{RULE_ID} options.columns: pattern and types must be nonempty");

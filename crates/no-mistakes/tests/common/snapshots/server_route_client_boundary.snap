@@ -42,6 +42,102 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "input_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "boundary/api/bad.ts",
+          "line": 1,
+          "message": "cannot verify server-route-client-boundary: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "server-route-client-boundary",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "server-route-client-boundary",
+          "file": "boundary/api/bad.ts",
+          "message": "parsing boundary/api/bad.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"File appears to be binary.\", labels: [], help: None, note: None, severity: Error, code: OxcCode { scope: Some(\"TS\"), number: Some(\"1490\") }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "boundary/api/definite.ts",
+          "line": 8,
+          "message": "client HTTP call is in a server route folder; move request clients out of route definition folders or narrow server route globs so AST route extraction stays unambiguous",
+          "rule": "server-route-client-boundary",
+          "sourceLine": "axios.get(route);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "input_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "server-route-client-boundary",
+          "file": "boundary/api/bad.ts",
+          "message": "parsing boundary/api/bad.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"File appears to be binary.\", labels: [], help: None, note: None, severity: Error, code: OxcCode { scope: Some(\"TS\"), number: Some(\"1490\") }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "boundary/api/definite.ts",
+          "line": 8,
+          "message": "client HTTP call is in a server route folder; move request clients out of route definition folders or narrow server route globs so AST route extraction stays unambiguous",
+          "rule": "server-route-client-boundary",
+          "sourceLine": "axios.get(route);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "input_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "server-route-client-boundary",
+          "file": "boundary/api/bad.ts",
+          "message": "parsing boundary/api/bad.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"File appears to be binary.\", labels: [], help: None, note: None, severity: Error, code: OxcCode { scope: Some(\"TS\"), number: Some(\"1490\") }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "boundary/api/bad.ts",
+          "line": 1,
+          "message": "cannot verify server-route-client-boundary: cannot read source: invalid utf-8 sequence of 1 bytes from index 0; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "server-route-client-boundary",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "boundary/api/definite.ts",
+          "line": 8,
+          "message": "client HTTP call is in a server route folder; move request clients out of route definition folders or narrow server route globs so AST route extraction stays unambiguous",
+          "rule": "server-route-client-boundary",
+          "sourceLine": "axios.get(route);"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "non_source_files": {
     "exitCode": 1,
     "report": {
@@ -86,6 +182,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "backend/api/client.ts",
           "line": 5,
+          "message": "client HTTP call is in a server route folder; move request clients out of route definition folders or narrow server route globs so AST route extraction stays unambiguous",
+          "rule": "server-route-client-boundary",
+          "sourceLine": "axios.get(route);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/api/client.ts",
+          "line": 11,
           "message": "client HTTP call is in a server route folder; move request clients out of route definition folders or narrow server route globs so AST route extraction stays unambiguous",
           "rule": "server-route-client-boundary",
           "sourceLine": "axios.get(route);"

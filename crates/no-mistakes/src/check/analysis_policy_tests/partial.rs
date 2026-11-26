@@ -14,17 +14,13 @@ fn invalid_legacy_sql_alias_keeps_its_original_parser_error_at_max() {
                 include_sql_verdicts: false,
             },
         )
+        .err()
         .unwrap()
-        .incomplete
+        .to_string()
     };
-    let default = execute(None);
-    assert!(!default.is_empty());
-    assert_eq!(execute(Some(Effort::Max)), default);
-    let message = default
-        .iter()
-        .map(|failure| failure.message.as_str())
-        .collect::<Vec<_>>()
-        .join("\n");
-    assert!(message.contains("options.unanalyzableSql"));
-    assert!(message.contains(" REPORT "));
+    let message = execute(None);
+    assert_eq!(execute(Some(Effort::Max)), message);
+    assert!(message.contains("invalid-alias.yml:7:"), "{message}");
+    assert!(message.contains("options.unanalyzableSql"), "{message}");
+    assert!(message.contains(" REPORT "), "{message}");
 }

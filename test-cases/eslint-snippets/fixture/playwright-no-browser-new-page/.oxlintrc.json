@@ -1,0 +1,18 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "off",
+    "no-mistakes/playwright-no-browser-new-page": [
+      "error",
+      {
+        "fixtureName": "appPage",
+        "registrationPackages": ["./fixtures"]
+      }
+    ]
+  }
+}

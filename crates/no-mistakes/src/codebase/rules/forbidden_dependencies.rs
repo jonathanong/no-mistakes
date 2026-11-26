@@ -18,7 +18,7 @@ pub(crate) use shared::{check_with_prepared_facts_and_graph, PreparedConfig};
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod selectors;
 use options::Options;
 
