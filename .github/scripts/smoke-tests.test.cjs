@@ -27,9 +27,9 @@ test("every OS lists Rust and API tests", () => {
 });
 
 test("every listed Rust target, file and test name still exists", () => {
-  const manifest = read("crates/no-mistakes/Cargo.toml");
   for (const [os, { rust }] of systems) {
-    for (const { selector, guards } of rust) {
+    for (const { package: pkg = "no-mistakes", selector, guards } of rust) {
+      const manifest = read(`crates/${pkg}/Cargo.toml`);
       assert.ok(guards.length > 0, os);
       if (selector[0] === "--test")
         assert.match(manifest, new RegExp(`\\[\\[test\\]\\]\\nname = "${selector[1]}"`));
@@ -98,7 +98,8 @@ test("the compile step builds exactly the targets the test step runs, same profi
   for (const [os, { rust }] of systems) {
     const build = buildCommand(os);
     const [first] = cargoCommands(os);
-    const prefix = first.slice(0, first.indexOf("no-mistakes") + 1);
+    const pkgIndex = first.indexOf("-p") + 2;
+    const prefix = first.slice(0, pkgIndex);
     assert.deepEqual(build.slice(0, prefix.length), prefix);
     assert.equal(build[prefix.length], "--no-run");
     const selectors = build.slice(prefix.length + 1);
@@ -153,6 +154,6 @@ test("macOS smoke builds only the small invocation harness with the main cache p
   assert.deepEqual(profile(smoke), profile(cached));
   assert.deepEqual(smoke.slice(smoke.indexOf("-p"), smoke.indexOf("-p") + 2), [
     "-p",
-    "no-mistakes",
+    "no-mistakes-invocation",
   ]);
 });

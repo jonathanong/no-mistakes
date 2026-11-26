@@ -5,6 +5,7 @@
 //! a hot path does not even read the clock during an ordinary invocation.
 
 pub(crate) mod context;
+mod hooks;
 pub(crate) mod hot_files;
 mod memory;
 mod observer;

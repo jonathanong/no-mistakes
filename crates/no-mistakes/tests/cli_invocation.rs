@@ -18,7 +18,25 @@ fn hung_fsmonitor_times_out_and_releases_the_invocation_lock() {
 }
 
 fn bin() -> PathBuf {
-    PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
+    if let Some(path) = std::env::var_os("NO_MISTAKES_CLI_BIN") {
+        return PathBuf::from(path);
+    }
+    if let Some(path) = option_env!("CARGO_BIN_EXE_no-mistakes") {
+        return PathBuf::from(path);
+    }
+    if let Some(path) = std::env::var_os("CARGO_BIN_EXE_no-mistakes") {
+        return PathBuf::from(path);
+    }
+    let name = format!("no-mistakes{}", std::env::consts::EXE_SUFFIX);
+    if let Ok(exe) = std::env::current_exe() {
+        for ancestor in exe.ancestors().skip(1).take(5) {
+            let candidate = ancestor.join(&name);
+            if candidate.is_file() {
+                return candidate;
+            }
+        }
+    }
+    panic!("NO_MISTAKES_CLI_BIN must point to the built no-mistakes binary");
 }
 
 fn run(args: &[&str]) -> Output {

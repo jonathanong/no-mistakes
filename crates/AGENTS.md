@@ -1,4 +1,7 @@
 <!-- cspell:ignore rustc -->
+## Workspace crates
+- `crates/no-mistakes` — CLI, N-API library, graph, and rules (`pub use no_mistakes_invocation as invocation;`).
+- `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (inverted diagnostics hooks in `hooks.rs`).
 ## Performance Guidelines
 
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).

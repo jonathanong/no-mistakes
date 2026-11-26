@@ -10,7 +10,7 @@ pub(super) fn watch_deadline(
     cancel: Arc<AtomicBool>,
     expires_at: Instant,
     timeout: Duration,
-    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
+    observer: Option<Arc<dyn crate::hooks::DiagnosticsObserver>>,
     output: crate::invocation::CliErrorOutput,
 ) {
     loop {
@@ -35,7 +35,7 @@ pub(super) fn watch_deadline(
                     output::emit(format!("{report}\n"), output.clone());
                 }
             }
-            crate::diagnostics::render_timeout_stderr(observer, message);
+            crate::hooks::render_timeout_stderr(observer, message);
             crate::invocation::child::process_tree::terminate_registered_groups();
             std::process::exit(124);
         }
