@@ -42,7 +42,10 @@ policies:
 
     assert_eq!(state.parsed_ancestors.values.len(), 1);
     assert!(state.canonical_inventory.is_some());
-    assert!(findings.is_empty(), "{findings:?}");
+    assert!(
+        findings.findings.is_empty() && findings.uncertainty.is_empty(),
+        "{findings:?}"
+    );
 }
 
 #[test]
@@ -92,10 +95,12 @@ fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths
         &missing_root_inventory,
         &mut missing_root_cache,
     );
-    assert_eq!(missing_root_findings.len(), 1);
-    assert!(missing_root_findings[0]
-        .message
-        .contains("cannot resolve the repository root safely"));
+    assert_eq!(missing_root_findings.findings.len(), 1);
+    assert!(
+        missing_root_findings.findings[0]
+            .message
+            .contains("cannot resolve the repository root safely")
+    );
 
     let outside_nested = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
     let outside_inventory = paths::CanonicalInventory::new(&fixture, &[]);
@@ -109,8 +114,10 @@ fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths
         &outside_inventory,
         &mut outside_cache,
     );
-    assert_eq!(outside_findings.len(), 1);
-    assert!(outside_findings[0]
-        .message
-        .contains("nested config is outside the repository root"));
+    assert_eq!(outside_findings.findings.len(), 1);
+    assert!(
+        outside_findings.findings[0]
+            .message
+            .contains("nested config is outside the repository root")
+    );
 }

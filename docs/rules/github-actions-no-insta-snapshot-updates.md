@@ -8,14 +8,25 @@ that needs review into a passing check.
 
 ## What it catches
 
-The rule checks `INSTA_UPDATE` declarations in workflow, job, and step `env`
-mappings directly under `.github/workflows/`.
+The rule checks workflow, job, and step `env` mappings and step `run:`
+scripts in files directly under `.github/workflows/`.
 
 - Literal values of `always`, `1`, `force`, and `unseen` are reported as
   findings pointing to the declaration that enables snapshot acceptance.
   `unseen` accepts missing snapshots while leaving changed snapshots pending
   review.
-- Inputs the rule cannot decide statically — unreadable or non-UTF-8 workflow
+- In `run:` scripts, it flags `cargo insta accept` (alias `approve`) and
+  `cargo insta test` with `--accept`, `--accept-unseen`, or
+  `--force-update-snapshots`. Direct `cargo-insta` invocations are covered
+  too. Arguments after `--` belong to the test runner. Findings point to the
+  step's `run:` key.
+- In supported shells, opaque `run:` scripts use the unanalyzable policy
+  when the script mentions Insta or the command or execution arguments are
+  dynamic. A literal `source` of an unrelated setup file and expressions
+  passed as data to a literal unrelated command stay outside the check.
+  In unsupported or unknown shells, only an Insta reference in the script
+  text triggers that policy. Ordinary PowerShell assignments pass.
+- Other inputs the rule cannot decide statically — unreadable or non-UTF-8 workflow
   files, unparsable workflow YAML (reported at the parser's line), non-mapping
   workflow documents, `jobs`, jobs, steps, or `env:` values (such as
   `jobs: ${{ fromJSON(vars.JOBS) }}`, `env: ${{ fromJSON(vars.ENV) }}`, or
@@ -45,7 +56,7 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     steps:
-      - run: cargo test
+      - run: cargo insta test
         env:
           INSTA_UPDATE: "no"
 ```
@@ -63,15 +74,14 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     steps:
-      - run: cargo test
-        env:
-          INSTA_UPDATE: always
+      - run: cargo insta test --accept
+      - run: cargo insta accept
 ```
 
 ## Fix
 
-Set `INSTA_UPDATE` to `"no"` in CI. Review and commit deliberate snapshot
-changes separately.
+Set `INSTA_UPDATE` to `"no"` in CI and run `cargo insta test` without
+acceptance flags. Review and commit deliberate snapshot changes separately.
 
 ## Suppression
 
@@ -82,12 +92,12 @@ For a single declaration use `no-mistakes-disable-line` or
 
 ## Limits
 
-This rule checks `INSTA_UPDATE` declarations in `env:` mappings directly under
-`.github/workflows/` only. It does not examine `run:` command lines (such as
-`cargo insta test --accept`, `cargo insta accept`, or inline shell
-`INSTA_UPDATE=...` assignments), local composite actions, or standalone Insta
-configuration. It checks the declaration at each scope, including one
-overridden by a job or step.
+The shell analysis handles direct commands in Bash and POSIX shell steps.
+The analyzer checks inline shell text. It leaves separate script files, inline
+shell `INSTA_UPDATE=...` assignments, local composite actions, and standalone
+Insta configuration outside its scope. The environment check covers the declaration at
+each scope, including one overridden by a job or step. The rule is specific
+to Insta. It leaves Vitest and Jest `-u` alone.
 
 See [Insta's snapshot update modes](https://insta.rs/docs/advanced/#controlling-snapshot-updating)
 for the runner's behavior.
@@ -95,7 +105,6 @@ for the runner's behavior.
 ## Related rules
 
 Use [GitHub Actions run command policy](github-actions-run-command-policy.md)
-to forbid `cargo insta test --accept`, `cargo insta accept`, and other
-snapshot-updating flags in `run:` steps. Use
+to forbid snapshot-updating flags for other tools in `run:` steps. Use
 [GitHub Actions environment policy](github-actions-env-policy.md) to require
 one exact value wherever an environment variable is defined.

@@ -1,0 +1,39 @@
+version: 2
+unanalyzable: ignore
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      forbiddenEvents: [pull_request_target]
+      jobInventory:
+        ".github/workflows/check.yml": [possible]
+      requiredJobs: [".github/workflows/check.yml#possible"]
+      forbiddenJobs: [".github/workflows/check.yml#present"]
+      requiredTransitiveEdges:
+        - [".github/workflows/check.yml#present", ".github/workflows/check.yml#possible"]
+      stepOrders:
+        - jobId: ".github/workflows/check.yml#present"
+          steps: [{id: validate}]
+        - jobId: ".github/workflows/check.yml#possible"
+          steps: [{id: validate}]
+      forbidConcurrencyGroupCollisions: true
+      concurrencyPolicy:
+        ".github/workflows/check.yml":
+          pending: coalesce-latest
+          cancellation: retain-running
+          scope: [fixed-resource]
+        ".github/workflows/check.yml#present":
+          pending: fifo
+          cancellation: retain-running
+          scope: [fixed-resource]
+        ".github/workflows/check.yml#possible":
+          pending: coalesce-latest
+          cancellation: retain-running
+          scope: [fixed-resource]
+      requiredArtifactEdges:
+        - from: ".github/workflows/check.yml#present"
+          to: ".github/workflows/check.yml#possible"
+          name: bundle
+        - from: ".github/workflows/check.yml#possible"
+          to: ".github/workflows/check.yml#possible"
+          name: bundle

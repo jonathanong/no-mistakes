@@ -5,7 +5,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "ignore": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": "cannot verify unused-disable-directive: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "unused-disable-directive",
+          "target": "unanalyzable"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -17,7 +25,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "input-message": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": "cannot verify unused-disable-directive: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "unused-disable-directive",
+          "target": "unanalyzable"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -43,6 +59,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "cannot verify github-actions-env-policy: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
           "rule": "github-actions-env-policy",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": "cannot verify unused-disable-directive: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "unused-disable-directive",
           "target": "unanalyzable"
         }
       ],
