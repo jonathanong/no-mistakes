@@ -5,6 +5,7 @@ pub mod csharp_no_async_void_delegate;
 pub mod forbidden_calls;
 pub mod forbidden_lint_suppressions;
 pub mod nextjs_no_api_routes;
+pub mod nested_controls;
 pub mod nextjs_no_caching;
 pub mod nextjs_redirect_destinations;
 mod no_cross_package_relative_imports;

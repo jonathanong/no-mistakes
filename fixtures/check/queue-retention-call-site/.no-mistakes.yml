@@ -1,0 +1,9 @@
+version: 2
+projects:
+  dispatch:
+    root: .
+    queues:
+      enqueues: [enqueue.ts]
+      workers: [worker.ts]
+queues:
+  unboundedJobRetention: true

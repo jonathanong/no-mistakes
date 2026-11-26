@@ -206,3 +206,49 @@ fn unlocated_merge_reports_uncertainty_and_preserves_explicit_graph_facts() {
         plain.diagnostics[0].message
     );
 }
+
+#[test]
+fn unlocated_merges_keep_explicit_calls_and_withhold_unknown_contracts() {
+    use super::super::model::{DiagnosticCode, WorkflowTopologyEdge};
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("workflow-topology-policy")
+            .join("merge-location-calls"),
+    );
+    let topology = load_workflow_topology(&root, &CiConfig::default(), &[]);
+    let contract = topology
+        .workflows
+        .iter()
+        .find(|workflow| workflow.path.ends_with("/contract.yml"))
+        .unwrap();
+    assert!(contract.callable);
+    assert!(contract.workflow_call.is_none());
+    assert!(topology.edges.iter().any(|edge| matches!(
+        edge,
+        WorkflowTopologyEdge::Calls(call)
+            if call.from.ends_with("#explicit") && call.to.as_deref() == Some(contract.path.as_str())
+    )));
+    assert!(!topology.edges.iter().any(|edge| matches!(
+        edge,
+        WorkflowTopologyEdge::Calls(call) if call.from.ends_with("#pending")
+    )));
+    assert_eq!(
+        topology
+            .diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.code == DiagnosticCode::UnlocatedYamlMerge)
+            .count(),
+        3
+    );
+    assert!(topology.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == DiagnosticCode::MissingLocalWorkflow
+            && diagnostic
+                .job_id
+                .as_deref()
+                .is_some_and(|job| job.ends_with("#absent"))
+    }));
+    assert!(!topology
+        .diagnostics
+        .iter()
+        .any(|diagnostic| { diagnostic.code == DiagnosticCode::NonCallableWorkflow }));
+}

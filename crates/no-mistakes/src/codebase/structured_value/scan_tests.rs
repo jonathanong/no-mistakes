@@ -34,3 +34,26 @@ fn later_document_reparses_after_earlier_document_stops_location_scan() {
     assert_eq!(docs.values.len(), 2);
     assert_eq!(docs.values[1]["runtime"]["owner"].as_str(), Some("widgets"));
 }
+
+#[test]
+fn unlocated_merge_remains_scoped_inside_a_tagged_sequence_item() {
+    let path = crate::test_support::rule_fixture_root("structured-config-policy")
+        .parent()
+        .unwrap()
+        .join("merge-location-unavailable/tagged-child.yml");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let error = super::parse_structured_value_located(&path, &source).unwrap_err();
+    assert!(error.missing_merge_location);
+    let partial = error.partial.unwrap();
+    let runtime = &partial.value()["runtime"];
+    assert!(!partial.mapping_unknown(runtime));
+    assert_eq!(runtime["known"].as_str(), Some("local"));
+    assert!(!partial.contains_unknown(&runtime["known"]));
+    assert!(partial.contains_unknown(&runtime["settings"]));
+    let serde_yaml::Value::Tagged(item) = &runtime["settings"][0] else {
+        panic!("the item should retain its tag");
+    };
+    assert!(partial.mapping_unknown(&item.value));
+    assert_eq!(item.value["enabled"].as_bool(), Some(true));
+    assert!(item.value.get("owner").is_none());
+}

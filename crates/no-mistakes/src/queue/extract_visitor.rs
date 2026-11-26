@@ -10,6 +10,7 @@ mod enqueue_calls;
 mod helpers;
 mod queue_bindings;
 mod rate_limit;
+pub(super) use rate_limit::State as RateLimitState;
 mod wait_wrappers;
 mod waits;
 
@@ -54,6 +55,7 @@ pub(super) struct QueueVisitor<'a> {
     pub function_stack: Vec<u32>,
     pub top_level_callables: u32,
     pub worker_rate_limit: super::extract_worker_rate_limit::State,
+    pub shared_rate_limit: rate_limit::State,
 }
 
 impl<'a> Visit<'a> for QueueVisitor<'a> {
@@ -65,6 +67,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
         self.note_wait_variable(decl);
         super::extract_job_id::note_const(self, decl);
+        self.note_rate_limit_const(decl);
         self.note_variable(decl);
     }
 

@@ -141,5 +141,10 @@ fn check_json_snapshot_workflow_policy_scopes_unlocated_merge() {
         rules_path(RULE, "fixture", "merge-location-inventory"),
         rules_path(RULE, "configs", "merge-location-scoped-inventory.yml"),
     ));
+    cases.push((
+        "calls",
+        rules_path(RULE, "fixture", "merge-location-calls"),
+        rules_path(RULE, "configs", "merge-location-scoped-calls.yml"),
+    ));
     assert_saved_fixture("workflow_policy_merge_location_scoped", &cases);
 }
