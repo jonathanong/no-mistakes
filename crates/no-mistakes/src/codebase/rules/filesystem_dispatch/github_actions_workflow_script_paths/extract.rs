@@ -69,8 +69,7 @@ pub(super) fn interpreter_script_arg<'a>(
             start,
             &["-WorkingDirectory", "-ConfigurationName"],
             &["-c", "-Command"],
-        )
-        .or_else(|| flag_value(words, start, &["-f", "-File"])),
+        ),
         "bun" | "deno" => unwrap_subcommand_runner(name, words, start),
         "npx" | "pnpx" | "pnpm" | "npm" | "yarn" | "uv" => {
             unwrap_package_runner(name, words, start)
@@ -159,15 +158,6 @@ fn first_script_arg<'a>(
         return Some(word);
     }
     None
-}
-
-fn flag_value<'a>(words: &'a [Word], index: usize, flags: &[&str]) -> Option<&'a Word> {
-    let pos = words[index..].iter().position(|word| {
-        flags
-            .iter()
-            .any(|flag| word.text.eq_ignore_ascii_case(flag))
-    })?;
-    words.get(index + pos + 1)
 }
 
 fn shell_short_value_flag(text: &str, value_flags: &[&str]) -> bool {

@@ -1,0 +1,8 @@
+name: Outer Composite
+runs:
+  using: composite
+  steps:
+    - working-directory: scripts
+      run: ./from-composite.sh
+      shell: bash
+    - uses: ./.github/actions/inner

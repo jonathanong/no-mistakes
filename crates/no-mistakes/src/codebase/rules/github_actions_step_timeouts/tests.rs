@@ -95,3 +95,41 @@ fn action_caps_validate_invalid_options() {
         );
     }
 }
+
+#[test]
+fn dynamic_uses_allow_entries_enforce_reason_and_max_minutes() {
+    let findings = run_files(
+        "action-caps",
+        r#"
+onlyConfiguredActions: true
+actionCaps:
+  - uses: actions/setup-node
+    maxMinutes: 5
+allow:
+  - step: .github/workflows/ci.yml#build#dynamic-slow
+    reason: ""
+    maxMinutes: 5
+  - step: .github/workflows/ci.yml#build#dynamic-fast
+    reason: "bounded setup"
+    maxMinutes: 5
+"#,
+        &[".github/workflows/ci.yml"],
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.message.contains("needs a reason") && f.message.contains("dynamic-slow")),
+        "expected missing reason finding, got {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.message.contains("over the 5-minute cap")
+                && f.message.contains("dynamic-slow")),
+        "expected cap finding for dynamic-slow, got {findings:?}"
+    );
+    assert!(
+        !findings.iter().any(|f| f.message.contains("dynamic-fast")),
+        "dynamic-fast should pass within its allow cap, got {findings:?}"
+    );
+}

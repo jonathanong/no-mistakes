@@ -1,0 +1,7 @@
+name: Inner Composite
+runs:
+  using: composite
+  steps:
+    - run: ./scripts/deep.sh
+      shell: bash
+    - uses: ./.github/actions/outer

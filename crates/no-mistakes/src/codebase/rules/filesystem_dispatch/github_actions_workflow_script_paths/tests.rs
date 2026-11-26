@@ -83,6 +83,10 @@ fn triggers_report_unanalyzable_shapes() {
         "on:\n  pull_request:\n    paths: 'scripts/**'\njobs: {}",
         "on:\n  pull_request:\n    paths: ['${{ inputs.glob }}']\njobs: {}",
         "on:\n  pull_request:\n    paths: ['scripts/+(a|b).sh']\njobs: {}",
+        "on:\n  pull_request:\n    paths: [42]\njobs: {}",
+        "on:\n  pull_request:\n    paths: ['']\njobs: {}",
+        "on:\n  pull_request:\n    paths: ['[invalid']\njobs: {}",
+        "base: &base {}\non:\n  pull_request:\n    <<: *base\njobs: {}",
     ] {
         let value: Value = serde_yaml::from_str(bad).unwrap();
         let events = vec!["push".to_string(), "pull_request".to_string()];
@@ -90,6 +94,19 @@ fn triggers_report_unanalyzable_shapes() {
         assert!(
             !parsed.unanalyzable.is_empty(),
             "expected unanalyzable trigger for:\n{bad}"
+        );
+    }
+    for ok in [
+        "name: No On\njobs: {}",
+        "on: push\njobs: {}",
+        "on:\n  pull_request:\n  # comment\n  push:\n    paths:\n      - '**foo.sh'\njobs: {}",
+    ] {
+        let value: Value = serde_yaml::from_str(ok).unwrap();
+        let events = vec!["push".to_string(), "pull_request".to_string()];
+        let parsed = parse_triggers(ok, &value, &events);
+        assert!(
+            parsed.unanalyzable.is_empty(),
+            "unexpected issue for:\n{ok}"
         );
     }
 }
@@ -231,4 +248,152 @@ fn parses_working_directory_values() {
         parse_working_dir(&Value::Number(42.into())),
         WorkingDir::Dynamic("non-string".to_string())
     );
+}
+
+#[test]
+fn scans_cd_and_dynamic_working_directory_paths() {
+    let dirs = vec!["scripts".to_string(), "tools/ci".to_string()];
+    let dynamic_hits = scan_script(
+        "bash ./run.sh\nnode /abs/$X.js\nnode \"$SCRIPT\"\nnode \"tools/${TARGET}\"\ncd sub\n",
+        WorkingDir::Dynamic("${{ inputs.dir }}".to_string()),
+        &dirs,
+    );
+    assert!(
+        dynamic_hits
+            .iter()
+            .filter(|hit| matches!(hit.kind, ScriptHitKind::Unanalyzable { .. }))
+            .count()
+            >= 3,
+        "expected dynamic dir/script unanalyzable hits, got {dynamic_hits:?}"
+    );
+    let outside_hits = scan_script(
+        "cd\n./run.sh\nnode \"$X\"\ncd sub\n",
+        WorkingDir::Known("scripts".to_string()),
+        &dirs,
+    );
+    assert!(outside_hits.is_empty(), "{outside_hits:?}");
+
+    let cd_hits = scan_script(
+        "cd \"$DIR\"\n./in-dyn.sh\ncd /tmp\n./in-tmp.sh\ncd -\n./in-prev.sh\n",
+        WorkingDir::Known(String::new()),
+        &dirs,
+    );
+    assert_eq!(cd_hits.len(), 1, "{cd_hits:?}");
+
+    let nested_prefix = scan_script(
+        "node \"tools/${X}\"\nnode \"/abs/${X}\"\nbash -- scripts/dash.sh\nsh -o errexit -c 'bash scripts/opt.sh'\nsh --command 'bash scripts/cmd.sh'\nsh -ce 'ignored'\nbash -x\n",
+        WorkingDir::Known(String::new()),
+        &dirs,
+    );
+    assert!(nested_prefix.iter().any(|h| matches!(
+        &h.kind,
+        ScriptHitKind::Unanalyzable { token, .. } if token == "tools/${X}"
+    )));
+    let in_scripts = scan_script(
+        "node \"${TARGET}.mjs\"",
+        WorkingDir::Known("scripts".to_string()),
+        &dirs,
+    );
+    assert_eq!(in_scripts.len(), 1, "{in_scripts:?}");
+    assert_eq!(
+        super::scripts::resolve_rel_path("", "https://example.com/a.sh"),
+        None
+    );
+}
+
+#[test]
+fn checks_edge_cases_fixture_composites_include_and_unreadable_paths() {
+    use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+    use crate::config::v2::{
+        schema::{RuleDef, RuleScope},
+        NoMistakesConfig, Unanalyzable,
+    };
+    use std::path::PathBuf;
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/github-actions-workflow-script-paths/edge-cases"),
+    );
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: super::RULE_ID.into(),
+            scope: Some(RuleScope::Repository),
+            message: None,
+            options: serde_yaml::from_str(
+                "scriptDirs: [scripts]\ninclude: ['.github/workflows/*.yml']\nunanalyzable: report\n",
+            )
+            .unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let findings = super::check(&root, &config).unwrap();
+    for needle in [
+        "invalid workflow YAML",
+        "non-string `run` value",
+        "dynamic local action",
+        "could not be read",
+        "containing invalid YAML",
+        "scripts/dup.sh",
+        "scripts/from-composite.sh",
+        "scripts/deep.sh",
+        "Update on.pull_request.paths, on.push.paths-ignore",
+    ] {
+        assert!(
+            findings.iter().any(|f| f.message.contains(needle)),
+            "missing `{needle}` in findings: {findings:?}"
+        );
+    }
+
+    let custom_msg_config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: super::RULE_ID.into(),
+            scope: Some(RuleScope::Repository),
+            message: Some("Custom remediation hint.".into()),
+            options: serde_yaml::from_str("scriptDirs: [scripts]\nunanalyzable: report\n").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let missing_file = root.join(".github/workflows/does-not-exist.yml");
+    let edge_file = root.join(".github/workflows/edge.yml");
+    let files = vec![edge_file, missing_file];
+    let with_missing = super::check_with_files(&root, &custom_msg_config, &files).unwrap();
+    assert!(with_missing
+        .iter()
+        .any(|f| f.message.contains("Custom remediation hint.")));
+    assert!(with_missing
+        .iter()
+        .any(|f| f.message.contains("cannot read workflow as UTF-8")));
+
+    let parsed = parse_triggers(
+        "on:\n  pull_request:\n    paths:\n      - 'apps/**'\n",
+        &serde_yaml::from_str("on:\n  pull_request:\n    paths: ['apps/**']\n").unwrap(),
+        &["pull_request".to_string()],
+    );
+    let hits = scan_script(
+        "./scripts/fallback.sh",
+        WorkingDir::Known(String::new()),
+        &["scripts".to_string()],
+    );
+    let mut diag = AnalysisDiagnostics::default();
+    let emit_ctx = super::emit::EmitCtx {
+        rel: ".github/workflows/flow.yml",
+        source: "jobs:\n  a:\n    steps:\n      - run: ./scripts/fallback.sh\n",
+        filters: &parsed.filters,
+        unanalyzable: Unanalyzable::Report,
+        rule_message: None,
+    };
+    super::emit::emit_hits(
+        &emit_ctx,
+        super::emit::Origin::Run {
+            place: "job `a` step 1",
+            located: None,
+            script: "./scripts/fallback.sh",
+        },
+        &hits,
+        &mut diag,
+    );
+    assert_eq!(diag.findings.len(), 1);
+    assert_eq!(diag.findings[0].line, 4);
 }
