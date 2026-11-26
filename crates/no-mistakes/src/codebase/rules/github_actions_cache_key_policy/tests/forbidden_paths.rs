@@ -137,7 +137,7 @@ jobs:
         forbidden_paths_message: Some("Forbidden store path.".into()),
         ..options::Options::default()
     };
-    let findings = judge::judge(
+    let findings = super::judge_findings(
         ".github/workflows/mixed.yml",
         &jobs,
         &options,
@@ -185,7 +185,7 @@ jobs:
         ],
         ..options::Options::default()
     };
-    let findings = judge::judge(
+    let findings = super::judge_findings(
         ".github/workflows/multi.yml",
         &jobs,
         &options,

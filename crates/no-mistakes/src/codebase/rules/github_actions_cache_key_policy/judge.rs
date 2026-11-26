@@ -3,6 +3,8 @@ use super::output::proven_output_names;
 use super::scan::{Field, Job, Step};
 use super::text::{has_fragment, hash_args, norm_path, path_entries};
 use super::{hit, RuleFinding};
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use crate::config::v2::Unanalyzable;
 
 pub(super) fn judge(
     rel: &str,
@@ -10,9 +12,10 @@ pub(super) fn judge(
     options: &Options,
     rule_message: Option<&str>,
     actions: &dyn Fn(&str) -> Option<String>,
-) -> Vec<RuleFinding> {
+    unanalyzable: Unanalyzable,
+) -> AnalysisDiagnostics {
     let view = View { options, actions };
-    let mut findings = Vec::new();
+    let mut output = AnalysisDiagnostics::default();
     for job in jobs {
         for (index, step) in job.steps.iter().enumerate() {
             if !step
@@ -27,8 +30,8 @@ pub(super) fn judge(
                 .as_ref()
                 .map(|field| path_entries(&field.value))
                 .unwrap_or_default();
-            super::forbidden::check(rel, step, &paths, options, rule_message, &mut findings);
-            let before = findings.len();
+            super::forbidden::check(rel, step, &paths, options, rule_message, &mut output.findings);
+            let before = output.findings.len();
             let mut scoped = false;
             for cache in &options.caches {
                 let path = norm_path(&cache.path);
@@ -43,20 +46,20 @@ pub(super) fn judge(
                     cache,
                     &path,
                     &view,
-                    &mut findings,
+                    &mut output.findings,
                 );
             }
             if scoped && options.forbid_broad_hash_files {
-                super::broad_hash::check(rel, step, options, &mut findings);
+                super::broad_hash::check(rel, step, options, unanalyzable, &mut output);
             }
             if let Some(message) = rule_message {
-                for finding in &mut findings[before..] {
+                for finding in output.findings[before..].iter_mut().filter(|finding| finding.target.is_none()) {
                     finding.message = message.to_string();
                 }
             }
         }
     }
-    findings
+    output
 }
 
 struct View<'a> {

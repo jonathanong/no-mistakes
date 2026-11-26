@@ -139,6 +139,9 @@ scopes are not tracked.
 
 ## Options and defaults
 
+The loader rejects unknown keys in `shapeOptions` and its nested option records.
+Use `allowedValues` to configure exceptions for `literalLimit`.
+
 `unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
 `--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
 

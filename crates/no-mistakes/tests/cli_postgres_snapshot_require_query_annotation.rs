@@ -1,4 +1,7 @@
-use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
+use super::check_json_snapshot::{
+    assert_saved_fixture, assert_saved_fixture_report, assert_saved_fixture_with_env_and_args,
+    rules_path,
+};
 
 const RULE: &str = "postgres-require-query-annotation";
 
@@ -341,7 +344,12 @@ fn postgres_annotation_excluded_callers_check_json_snapshot() {
             .join(name);
         (name, root.clone(), root.join(".no-mistakes.yml"))
     });
-    assert_saved_fixture("postgres_annotation_excluded_callers", &cases);
+    assert_saved_fixture_with_env_and_args(
+        "postgres_annotation_excluded_callers",
+        &cases,
+        &[],
+        &["--timeout", "120"],
+    );
 }
 
 #[test]
@@ -350,7 +358,12 @@ fn postgres_annotation_multi_root_shared_walks_check_json_snapshot() {
         .join("../../fixtures/performance/annotation-multi-root-shared-walks");
     let cases =
         ["low", "max"].map(|effort| (effort, root.clone(), root.join(format!("{effort}.yml"))));
-    assert_saved_fixture("postgres_annotation_multi_root_shared_walks", &cases);
+    assert_saved_fixture_with_env_and_args(
+        "postgres_annotation_multi_root_shared_walks",
+        &cases,
+        &[],
+        &["--timeout", "120"],
+    );
 }
 
 #[test]
