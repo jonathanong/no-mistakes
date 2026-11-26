@@ -677,7 +677,7 @@ denies both lints. `crates/no-mistakes/build.rs` sets `nm_shard_all` when `NM_TE
 which is what local `cargo test` and clippy do. `crates/no-mistakes-invocation/build.rs`
 always sets `nm_shard_all`, and `crates/no-mistakes-postgres-sql/build.rs` watches
 `NM_POSTGRES_SQL_TEST_SHARD` (used only by the `postgres-source` slice) rather
-than `NM_TEST_SHARD`, so Cargo keeps both sibling `rlib` artifacts fresh when
+than `NM_TEST_SHARD`, so Cargo keeps both sibling library artifacts fresh when
 `NM_TEST_SHARD` cycles across `0`, `1`, and `2`. The standalone build sets
 `NM_TEST_SHARD` to `0`, `1`, and `2` on three sequential `cargo nextest archive`
 commands (shard 0 archives `--workspace --lib` so the smaller
