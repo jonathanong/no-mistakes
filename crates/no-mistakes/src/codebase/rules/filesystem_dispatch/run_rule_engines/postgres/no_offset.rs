@@ -19,37 +19,3 @@ pub(super) fn run(
         None => postgres_no_offset::check_with_files_and_sources(root, config, files, sources),
     }
 }
-
-pub(super) fn dup_lookups(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: Option<&CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    match facts {
-        Some(facts) => postgres_no_duplicate_keyed_lookups::check_with_files_sources_and_facts(
-            root, config, files, sources, facts,
-        ),
-        None => postgres_no_duplicate_keyed_lookups::check_with_files_and_sources(
-            root, config, files, sources,
-        ),
-    }
-}
-
-pub(super) fn idempotent_insert(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &Arc<SourceStore>,
-    facts: Option<&CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    match facts {
-        Some(facts) => postgres_idempotent_insert::check_with_files_sources_and_facts(
-            root, config, files, sources, facts,
-        ),
-        None => {
-            postgres_idempotent_insert::check_with_files_and_sources(root, config, files, sources)
-        }
-    }
-}
