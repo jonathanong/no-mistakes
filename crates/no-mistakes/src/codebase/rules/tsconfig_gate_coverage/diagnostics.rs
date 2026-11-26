@@ -44,7 +44,10 @@ pub(super) fn annotate(
             .key("allowProjects")
             .key(finding.target.as_deref().unwrap());
         if let Some((path, local)) = config.config_provenance.origin(&origin) {
-            finding.file = relative_slash_path(root, path);
+            finding.file = relative_slash_path(
+                &crate::codebase::ts_resolver::normalize_path(root),
+                &crate::codebase::ts_resolver::normalize_path(path),
+            );
             finding.line = sources
                 .config_locations(path)
                 .and_then(|locations| locations.line(&local))
