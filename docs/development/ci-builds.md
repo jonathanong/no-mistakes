@@ -218,6 +218,13 @@ changes. A cold or changed native library still requires compilation. All Rust t
 dependencies and workspace snapshots, then share their newly built outputs
 through artifacts without publishing another target cache.
 
+The Linux Clippy jobs share a dependency-only cache for check metadata.
+Only the all-feature Clippy job saves that cache on main. Both Clippy commands
+lint workspace targets on every run. Cargo checks dependency fingerprints
+against each command's feature graph. The other quality rows keep their
+existing cache keys. The source policy job scans tracked binaries before
+setting up pnpm and keeps running in parallel with Rust compilation.
+
 ## Cache capacity and cold-build validation
 
 The issue #3330 audit found 35 cache records totaling 10.526 GiB, above the
