@@ -7,31 +7,8 @@ import {
   type LockfileDiffReport,
   type LockfileDiffReportOptions,
   type LockfileDiffWarning,
-  type PostgresBoundedStatementKind,
-  type PostgresBoundedStatementsOptions,
-  type PostgresLegacyUnanalyzableSql,
-  type PostgresNoMutableSqlRegistryOptions,
-  type PostgresNoUnboundedSqlIdentifierOptions,
   type WorkflowTopology,
 } from "no-mistakes";
-
-const statements: PostgresBoundedStatementKind[] = ["select", "update", "delete"];
-const legacy: PostgresLegacyUnanalyzableSql = "fail";
-const bounded: PostgresBoundedStatementsOptions = {
-  schemaCatalogPath: "catalog.json",
-  statements,
-  unanalyzableSql: legacy,
-};
-const registry: PostgresNoMutableSqlRegistryOptions = { unanalyzableSql: legacy };
-const identifier: PostgresNoUnboundedSqlIdentifierOptions = { unanalyzableSql: legacy };
-const modern: PostgresNoUnboundedSqlIdentifierOptions = { unanalyzable: "report" };
-
-// @ts-expect-error The modern policy spells this "report".
-const invalidModern: PostgresNoUnboundedSqlIdentifierOptions = { unanalyzable: "fail" };
-// @ts-expect-error The legacy policy spells this "fail".
-const invalidLegacy: PostgresBoundedStatementsOptions = { ...bounded, unanalyzableSql: "report" };
-// @ts-expect-error INSERT is outside the bounded-statements selector.
-const invalidStatement: PostgresBoundedStatementKind = "insert";
 
 const diagramOptions: CiTopologyMermaidOptions = { format: "mermaid" };
 const diagram: string = await ciTopology(diagramOptions);
@@ -50,5 +27,4 @@ const catalog = await generatePostgresCatalog({
   output: "catalog.json",
 });
 
-void [registry, identifier, modern, invalidModern, invalidLegacy, invalidStatement];
 void [diagram, topology, warning, entries, catalog];

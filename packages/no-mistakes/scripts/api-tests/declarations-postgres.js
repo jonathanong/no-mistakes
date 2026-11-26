@@ -39,6 +39,8 @@ test("Public option configuration and async checks compile from the package root
       join(repositoryRoot, "fixtures/node-api/postgres-grouping-not-aggregation/public.mts"),
       join(repositoryRoot, "fixtures/node-api/queue-factory-config/public.mts"),
       join(repositoryRoot, "fixtures/node-api/g12-domain-parity/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/g12-domain-parity/legacy-policy.mts"),
+      join(repositoryRoot, "fixtures/node-api/g12-domain-parity/statement-kind.mts"),
     ],
     {
       noEmit: true,
