@@ -1,5 +1,4 @@
 use super::*;
-
 pub(in crate::tests::plan) fn apply(
     prepared: &PreparedTestPlanRequest,
     input: &ChangesInput,
@@ -37,18 +36,22 @@ impl Selection<'_> {
             .as_ref()
             .map_or(TestFramework::value_variants(), std::slice::from_ref);
         for (name, changes) in &report.categories {
-            let ids = changes
-                .changed
-                .iter()
-                .chain(&changes.added)
-                .chain(&changes.removed)
+            let ids = [&changes.changed, &changes.added, &changes.removed]
+                .into_iter()
+                .flatten()
                 .map(String::as_str)
                 .collect::<BTreeSet<_>>();
             if ids.is_empty() {
                 continue;
             }
             let category = &self.prepared.config.changes.categories[name];
-            match CategoryMatches::find(self.prepared, self.discovered, name, category, &ids) {
+            let attributes = self
+                .input
+                .fixture_reads()
+                .map(|index| (index.as_ref(), &changes.attribute_paths));
+            let matches =
+                CategoryMatches::find(self.prepared, self.discovered, name, &ids, attributes);
+            match matches {
                 Ok(matched) => {
                     for (path, ids) in matched.tests {
                         self.select(

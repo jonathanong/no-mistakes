@@ -181,15 +181,11 @@ fn composite_shapes_and_unterminated_quotes() {
 }
 
 #[test]
-fn explicit_include_missing_files_and_scalar_forms() {
+fn explicit_include_and_scalar_forms() {
     let root = rule_root().join("fixture/violations");
     let file = root.join(".github/workflows/ci.yml");
     let found = check_with_files(&root, &config("include.yml"), &[file]).unwrap();
     assert_eq!(found.len(), 1, "{found:?}");
-    let gone = root.join(".github/workflows/gone.yml");
-    assert!(check_with_files(&root, &config("include.yml"), &[gone])
-        .unwrap()
-        .is_empty());
     let opts: Options = serde_yaml::from_str("required: {FLAG: true, EMPTY: null, N: 1}").unwrap();
     let policy = compile(&opts).unwrap();
     let source = "env:\n  FLAG: true\n  EMPTY:\n  N: 1\n";

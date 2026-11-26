@@ -67,6 +67,7 @@ macro_rules! filesystem_rules {
             REQUIRED_LOCAL_DOCS => required_local_docs::check_with_files => "",
             REQUIRED_DOC_SECTION => required_local_docs::check_required_doc_section_with_files => "",
             NO_EMPTY_OR_COMMENTS_ONLY_FILES => no_empty_or_comments_only_files::check_with_files => "",
+            REACT_NO_NESTED_BUTTONS_AND_LINKS => nested_controls::check_with_files => "",
             NEXTJS_REDIRECT_DESTINATIONS => nextjs_redirect_destinations::check_with_files => "",
             VITEST_TEST_CORRESPONDENCE => vitest_test_correspondence::check_with_files => "",
             FILE_EXTENSION_POLICY => file_extension_policy::check_with_files => "",

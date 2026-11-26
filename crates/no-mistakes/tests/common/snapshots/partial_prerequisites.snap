@@ -123,16 +123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "partial-unique": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "bad/broken.ts",
-          "line": 1,
-          "message": "directive for `unique-exports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file unique-exports",
-          "target": "unique-exports"
-        }
-      ],
+      "advisories": [],
       "codebase": [
         {
           "exportKind": "value",
@@ -236,16 +227,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "storybook-catalog-allowances": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "stories/Broken.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -264,16 +246,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "storybook-source-allowances": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "stories/Broken.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {

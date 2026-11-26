@@ -172,3 +172,26 @@ fn nested_merges_supply_job_and_step_metadata_without_consuming_quoted_keys() {
     assert_eq!(quoted["steps"][1]["uses"], "example/build@v1");
     assert_eq!(quoted["steps"][1]["with"]["<<"], 7);
 }
+
+#[test]
+fn unlocated_merge_reports_malformed_while_quoted_literal_keeps_graph() {
+    let quoted_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
+        .join("merge-location-unavailable-quoted");
+    let quoted = load_workflow_topology(&quoted_root, &CiConfig::default(), &[]);
+    assert!(quoted.diagnostics.is_empty(), "{:?}", quoted.diagnostics);
+    assert_eq!(quoted.jobs.len(), 1);
+    let quoted_job = serde_json::to_value(&quoted.jobs[0]).unwrap();
+    assert_eq!(quoted_job["env"]["<<"], "keep");
+
+    let plain_root = crate::test_support::rule_fixture_root("workflow-topology-policy")
+        .join("merge-location-unavailable");
+    let plain = load_workflow_topology(&plain_root, &CiConfig::default(), &[]);
+    assert_eq!(plain.diagnostics.len(), 1);
+    assert!(
+        plain.diagnostics[0]
+            .message
+            .contains("could not match a YAML `<<` key to its source location"),
+        "{}",
+        plain.diagnostics[0].message
+    );
+}

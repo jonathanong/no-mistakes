@@ -152,6 +152,8 @@ Text-based Playwright selector edges are approximate. Prefer exact configured
 test ID attributes and literal locator values for strong route/component
 coverage.
 
+`check` can run the opt-in `react-no-nested-buttons-and-links` rule for native buttons and links in selected JSX and TSX files. Custom render paths and dynamic destinations are outside its scope.
+
 `check` can run the opt-in `swift-no-unguarded-darwin-import` rule on configured
 portable Swift test paths. It flags unconditional `Darwin` imports. Only
 `#if` and `#elseif` conditions the rule can verify count as guards. The rule

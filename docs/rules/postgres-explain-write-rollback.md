@@ -15,7 +15,7 @@ autocommit enabled and no caller-owned transaction. The rule's `include`,
 `exclude`, and target scope can narrow that selection.
 
 `options.unanalyzable` (`report`, `advise`, or `ignore`; default `advise`)
-controls scripts that cannot be parsed completely, `EXPLAIN` plans whose
+controls candidate scripts that cannot be parsed completely, `EXPLAIN` plans whose
 execution options cannot be statically evaluated, `RELEASE SAVEPOINT` or
 `ROLLBACK TO SAVEPOINT` targeting an unknown savepoint, and dynamic read-only
 `SET` or `set_config(...)` arguments.
@@ -66,6 +66,12 @@ on the outer `EXPLAIN` line or
 above it for one plan.
 
 ## Analysis
+
+Before parsing a script for this rule, the check looks for the case-insensitive
+`EXPLAIN` keyword outside comments, string literals, and quoted identifiers.
+If tokenization succeeds and finds no keyword, the rule skips the script. Tokenization failures and incomplete parses of
+candidate scripts follow `options.unanalyzable`. Other configured SQL rules
+can still parse the same file.
 
 The rule reuses the check request's parsed SQL and tracks transaction state,
 nested savepoints (`SAVEPOINT`, `RELEASE SAVEPOINT`, and

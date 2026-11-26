@@ -137,5 +137,5 @@ pub(super) fn output(
     })
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0, nm_shard_postgres_source)))]
 mod tests;

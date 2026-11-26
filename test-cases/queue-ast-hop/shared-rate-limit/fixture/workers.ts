@@ -1,0 +1,33 @@
+import type { Job, Worker as QueueWorker } from "bullmq";
+import type * as queue from "bullmq";
+import { createWorker } from "./worker-factory";
+
+declare namespace outer {
+  namespace inner {
+    type Worker = { rateLimit(ms: number): Promise<void> };
+  }
+}
+
+export const worker = createWorker("items", async (_task: Job, handle: QueueWorker) => {
+  await handle.rateLimit(1000);
+  await (async (handle: QueueWorker) => handle.rateLimit(1000))(handle);
+});
+
+export const namespacedWorker = createWorker("items", async (_task, handle: queue.Worker) => {
+  await handle.rateLimit(1000);
+});
+
+interface Limiter {
+  rateLimit(ms: number): Promise<void>;
+}
+
+export const unrelated = createWorker("items", async (job: queue.Job, helper: Limiter) => {
+  const readName = (
+    { name }: QueueWorker,
+    _flag: boolean,
+    _deep: outer.inner.Worker,
+    _unknown: UnknownWorkerType,
+  ) => name;
+  if (job.name) await helper.rateLimit(1000);
+  void readName;
+});
