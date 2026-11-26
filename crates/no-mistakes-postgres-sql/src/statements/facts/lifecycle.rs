@@ -64,9 +64,9 @@ impl LifecycleBuilder {
     }
 }
 
-pub fn project_bounds<'a, C: CatalogLifecycleLookup>(
+pub fn project_bounds<'a>(
     file: &'a SqlStatementFileFacts,
-    catalog: &C,
+    catalog: &dyn CatalogLifecycleLookup,
 ) -> Cow<'a, [SqlBoundFact]> {
     let Some(lifecycle) = &file.lifecycle else {
         return Cow::Borrowed(&file.bounds);
@@ -118,7 +118,7 @@ pub fn project_bounds<'a, C: CatalogLifecycleLookup>(
                 &mut temporary,
                 &mut bounds[step.first_bound..step.last_bound],
                 step.view_reads.as_ref(),
-                Some(catalog as &dyn CatalogLifecycleLookup),
+                Some(catalog),
             );
         }
         prepared.record(&batch.source);

@@ -20,6 +20,10 @@ test("the source filter compiles one bounded postgres-source test slice", () => 
     calls.map((call) => call.env.NM_TEST_SHARD),
     fixture.shards,
   );
+  assert.deepEqual(
+    calls.map((call) => call.env.NM_POSTGRES_SQL_TEST_SHARD),
+    fixture.shards,
+  );
   for (const call of calls) {
     assert.equal(call.command, "cargo");
     assert.deepEqual(call.args, fixture.args);

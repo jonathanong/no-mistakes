@@ -19,7 +19,7 @@ pub(super) fn locked_tables(
     locks: &[LockClause],
     positions: &[(u32, u32)],
 ) -> Option<LockedTables> {
-    let relations = relations(body)?;
+    let (select, relations) = relations(body)?;
     let update_locks: Vec<_> = locks
         .iter()
         .filter(|lock| lock.lock_type == LockType::Update)
@@ -32,14 +32,14 @@ pub(super) fn locked_tables(
             joins: Vec::new(),
         });
     }
-    let pins = analyze(&relations, select_of(body)?, positions);
+    let pins = analyze(&relations, select, positions);
     if update_locks.iter().any(|lock| lock.of.is_none()) {
         // Without `OF`, every FROM item is locked, so each must be a base table.
         return selected_tables(&relations.iter().collect::<Vec<_>>(), pins);
     }
     let mut tables = Vec::new();
-    for lock in update_locks {
-        let target = normalize(&qualified_relation_name(lock.of.as_ref()?));
+    for target_name in update_locks.iter().filter_map(|lock| lock.of.as_ref()) {
+        let target = normalize(&qualified_relation_name(target_name));
         let matches = relations
             .iter()
             .filter(|relation| relation.names.contains(&target))
@@ -52,13 +52,6 @@ pub(super) fn locked_tables(
     selected_tables(&tables, pins)
 }
 
-fn select_of(body: &SetExpr) -> Option<&sqlparser::ast::Select> {
-    match body {
-        SetExpr::Select(select) => Some(select),
-        _ => None,
-    }
-}
-
 #[derive(Debug)]
 pub(super) struct Relation {
     /// `None` for a derived table, lateral subquery, or table function: it can be
@@ -67,26 +60,25 @@ pub(super) struct Relation {
     pub(super) names: BTreeSet<String>,
 }
 
-fn relations(body: &SetExpr) -> Option<Vec<Relation>> {
+fn relations(body: &SetExpr) -> Option<(&sqlparser::ast::Select, Vec<Relation>)> {
     let SetExpr::Select(select) = body else {
         return None;
     };
     let mut relations = Vec::new();
     for table in &select.from {
-        collect_table_with_joins(table, &mut relations)?;
+        collect_table_with_joins(table, &mut relations);
     }
-    (!relations.is_empty()).then_some(relations)
+    (!relations.is_empty()).then_some((select, relations))
 }
 
-fn collect_table_with_joins(table: &TableWithJoins, relations: &mut Vec<Relation>) -> Option<()> {
-    collect_table_factor(&table.relation, relations)?;
+fn collect_table_with_joins(table: &TableWithJoins, relations: &mut Vec<Relation>) {
+    collect_table_factor(&table.relation, relations);
     for join in &table.joins {
-        collect_table_factor(&join.relation, relations)?;
+        collect_table_factor(&join.relation, relations);
     }
-    Some(())
 }
 
-fn collect_table_factor(factor: &TableFactor, relations: &mut Vec<Relation>) -> Option<()> {
+fn collect_table_factor(factor: &TableFactor, relations: &mut Vec<Relation>) {
     match factor {
         TableFactor::Table { name, alias, .. } => {
             let table = qualified_relation_name(name);
@@ -111,7 +103,6 @@ fn collect_table_factor(factor: &TableFactor, relations: &mut Vec<Relation>) -> 
                 table: Some(table),
                 names,
             });
-            Some(())
         }
         TableFactor::NestedJoin {
             table_with_joins, ..
@@ -121,7 +112,6 @@ fn collect_table_factor(factor: &TableFactor, relations: &mut Vec<Relation>) -> 
                 table: None,
                 names: opaque_names(other),
             });
-            Some(())
         }
     }
 }

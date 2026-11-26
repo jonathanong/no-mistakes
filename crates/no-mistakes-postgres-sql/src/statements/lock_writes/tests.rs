@@ -63,3 +63,47 @@ fn ambiguous_delete_targets_do_not_supply_trigger_evidence() {
         assert!(facts.dynamic_setting_name);
     }
 }
+
+#[test]
+fn prelock_edges_reject_non_plain_targets_and_record_reversed_and_keys() {
+    let statements = statements("prelock-edges.sql");
+    for (index, statement) in statements.iter().enumerate() {
+        let facts = collect::<true>(std::slice::from_ref(statement), None, true, None, &[]);
+        match index {
+            0..=3 | 5 | 6 => {
+                assert!(facts.prelock_attempt, "index {index}");
+                assert!(facts.prelock.is_none(), "index {index}");
+            }
+            4 => {
+                let (row, only) = facts.prelock.expect("ONLY prelock");
+                assert!(only);
+                assert_eq!(row.relation.as_deref(), Some("accounts"));
+                assert_eq!(row.key, Some(("id".into(), "$1".into())));
+            }
+            7 => {
+                assert_eq!(facts.conditional_write_keys.len(), 2);
+                assert_eq!(
+                    facts.conditional_write_keys[0].key,
+                    Some(("id".into(), "$1".into()))
+                );
+                assert_eq!(
+                    facts.conditional_write_keys[1].key,
+                    Some(("tenant_id".into(), "$2".into()))
+                );
+            }
+            8..=13 => {
+                assert!(facts.conditional_write_keys.is_empty(), "index {index}");
+            }
+            14 | 15 => {
+                assert!(facts.linked_cte_locks.is_empty(), "index {index}");
+            }
+            16 => {
+                assert_eq!(
+                    facts.linked_cte_locks.get(&0),
+                    Some(&super::CteWriteLink::RequiresNonNull("id".into()))
+                );
+            }
+            _ => unreachable!(),
+        }
+    }
+}

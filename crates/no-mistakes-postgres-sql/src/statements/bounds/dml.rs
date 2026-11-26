@@ -10,6 +10,14 @@ pub(super) fn update(
     positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
+    out.push(update_fact(update, scope, positions));
+}
+
+fn update_fact(
+    update: &Update,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> SqlBoundFact {
     let mut builder = Builder::new(scope, positions);
     builder.target_tables(std::slice::from_ref(&update.table));
     if let Some(UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables)) =
@@ -24,13 +32,12 @@ pub(super) fn update(
         || update.update_token.0.span.start,
         positions,
     );
-    push(
+    build_fact(
         SqlBoundKind::Update,
         super::start(update.update_token.0.span),
         items,
         update.limit.is_some() || super::predicate::rejects_all(update.selection.as_ref()),
-        out,
-    );
+    )
 }
 
 pub(super) fn delete(
@@ -39,6 +46,14 @@ pub(super) fn delete(
     positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
+    out.push(delete_fact(delete, scope, positions));
+}
+
+fn delete_fact(
+    delete: &Delete,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> SqlBoundFact {
     let mut builder = Builder::new(scope, positions);
     let (FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables)) = &delete.from;
     builder.target_tables(tables);
@@ -52,23 +67,21 @@ pub(super) fn delete(
         || delete.delete_token.0.span.start,
         positions,
     );
-    push(
+    build_fact(
         SqlBoundKind::Delete,
         super::start(delete.delete_token.0.span),
         items,
         delete.limit.is_some() || super::predicate::rejects_all(delete.selection.as_ref()),
-        out,
-    );
+    )
 }
 
-fn push(
+fn build_fact(
     kind: SqlBoundKind,
     (line, column): (usize, usize),
     items: Vec<super::super::SqlBoundItem>,
     capped: bool,
-    out: &mut Vec<SqlBoundFact>,
-) {
-    out.push(SqlBoundFact {
+) -> SqlBoundFact {
+    SqlBoundFact {
         body: None,
         kind,
         line,
@@ -86,7 +99,7 @@ fn push(
         target: Some(0),
         scalar_reads: None,
         lateral_qualified_reads: Vec::new(),
-    });
+    }
 }
 
 /// RETURNING keeps target and driver evidence for catalog-backed target-row evaluation.
@@ -96,7 +109,6 @@ pub(super) fn returning_bound(
     scope: &Scope,
     positions: super::super::value::PlaceholderPositions<'_>,
 ) -> Option<SqlBoundQuery> {
-    let mut facts = Vec::new();
     // The statement's own fact is collected later. This projection must not consume its
     // shared source-token cursor while inspecting auxiliary subqueries.
     let mut projection_scope = scope.clone();
@@ -105,44 +117,35 @@ pub(super) fn returning_bound(
     // RETURNING yields one row per inserted source row. The source query, not the target
     // table, is what a later statement can pin.
     if let Statement::Insert(insert) = statement {
-        if insert
+        let returning = insert
             .returning
-            .as_ref()
-            .is_some_and(|items| !items.is_empty())
-        {
-            let source = insert.source.as_deref()?;
-            let mut bound = super::query::bound_query(source, &projection_scope, positions);
-            if let Some(returning) = &insert.returning {
-                super::inserted::name(&mut bound, source, returning, positions);
-            }
-            // Skipped and Blocking already decide the source. Streaming is the insert's row source.
-            if bound.input_mode == SqlBoundInputMode::Streaming {
-                bound.input_mode = SqlBoundInputMode::ReturningSource;
-            }
-            return Some(bound);
+            .as_deref()
+            .filter(|items| !items.is_empty())?;
+        let source = insert.source.as_deref()?;
+        let mut bound = super::query::bound_query(source, &projection_scope, positions);
+        super::inserted::name(&mut bound, source, returning, positions);
+        // Skipped and Blocking already decide the source. Streaming is the insert's row source.
+        if bound.input_mode == SqlBoundInputMode::Streaming {
+            bound.input_mode = SqlBoundInputMode::ReturningSource;
         }
-        return None;
+        return Some(bound);
     }
-    let returning = match statement {
-        Statement::Update(update)
-            if update
+    let (fact, returning) = match statement {
+        Statement::Update(update) => {
+            let returning = update
                 .returning
-                .as_ref()
-                .is_some_and(|items| !items.is_empty()) =>
-        {
-            self::update(update, &projection_scope, positions, &mut facts);
-            update.returning.as_deref()?
+                .as_deref()
+                .filter(|items| !items.is_empty())?;
+            (update_fact(update, &projection_scope, positions), returning)
         }
-        Statement::Delete(delete)
-            if delete
+        Statement::Delete(delete) => {
+            let returning = delete
                 .returning
-                .as_ref()
-                .is_some_and(|items| !items.is_empty()) =>
-        {
-            self::delete(delete, &projection_scope, positions, &mut facts);
-            delete.returning.as_deref()?
+                .as_deref()
+                .filter(|items| !items.is_empty())?;
+            (delete_fact(delete, &projection_scope, positions), returning)
         }
         _ => return None,
     };
-    super::returning::project(facts.pop()?.query, returning)
+    super::returning::project(fact.query, returning)
 }

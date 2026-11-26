@@ -164,16 +164,8 @@ fn normalize_table_queries(tokens: &mut Vec<sqlparser::tokenizer::TokenWithSpan>
 }
 
 /// Parse `sql`, skipping unparseable statements instead of failing the file.
-///
-/// Migration trees mix parseable `CREATE TABLE` with `DO $$` blocks and other
-/// statements sqlparser rejects. `DO $tag$` bodies are peeled and schema DDL
-/// inside them is recovered, including schema and DML statements after PL/pgSQL
-/// `BEGIN` or `IF/THEN` prefixes.
-/// Other unparseable SQL is still skipped. PostgreSQL 18
-/// `GENERATED ALWAYS AS (...) VIRTUAL` is rewritten to `STORED` so those
-/// `CREATE TABLE` statements parse. Column lists on `ON DELETE SET NULL` /
-/// `SET DEFAULT` are removed before parsing; the action keyword and
-/// constraint name stay. `ON UPDATE` column lists are left unchanged.
+/// Peels `DO $tag$` bodies, rewrites PostgreSQL 18 `GENERATED ... VIRTUAL` to
+/// `STORED`, and strips `ON DELETE SET NULL/DEFAULT` column lists before parse.
 pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     lenient::parse_postgres_sql_lenient(sql)
 }
@@ -192,19 +184,17 @@ pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod analyze_list_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod expression_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod radix_first_tests;
-#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
-mod tests;
-
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
-mod radix_lenient_tests;
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod radix_large_tests;
-
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod radix_lenient_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod recovered_hex_tests;
-
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod uppercase_hex_tests;

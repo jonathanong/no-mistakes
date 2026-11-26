@@ -14,7 +14,7 @@ function commands(mode, bundle, index, total, workspace = process.cwd()) {
       "nextest",
       "archive",
       "--locked",
-      "--workspace",
+      ...(shard === 0 ? ["--workspace"] : ["-p", "no-mistakes"]),
       "--lib",
       "--archive-file",
       path.resolve(bundle, archiveName(shard)),

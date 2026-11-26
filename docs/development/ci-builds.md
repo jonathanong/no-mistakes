@@ -673,11 +673,16 @@ with every shard. A shard's
 `no_mistakes_postgres_sql` crates
 only, because an item used solely by another shard is not dead in the full
 suite. `cargo clippy --all-targets` leaves `NM_TEST_SHARD` unset and still
-denies both lints. `crates/no-mistakes/build.rs` and
-`crates/no-mistakes-postgres-sql/build.rs` set
-`nm_shard_all` when `NM_TEST_SHARD` is unset, which is what local `cargo test`
-and clippy do. The standalone build sets `NM_TEST_SHARD` to `0`, `1`, and `2`
-on three sequential `cargo nextest archive --workspace --lib` commands and writes
+denies both lints. `crates/no-mistakes/build.rs` sets `nm_shard_all` when `NM_TEST_SHARD` is unset,
+which is what local `cargo test` and clippy do. `crates/no-mistakes-invocation/build.rs`
+always sets `nm_shard_all`, and `crates/no-mistakes-postgres-sql/build.rs` watches
+`NM_POSTGRES_SQL_TEST_SHARD` (used only by the `postgres-source` slice) rather
+than `NM_TEST_SHARD`, so Cargo keeps both sibling `rlib` artifacts fresh when
+`NM_TEST_SHARD` cycles across `0`, `1`, and `2`. The standalone build sets
+`NM_TEST_SHARD` to `0`, `1`, and `2` on three sequential `cargo nextest archive`
+commands (shard 0 archives `--workspace --lib` so the smaller
+`no-mistakes-invocation` and `no-mistakes-postgres-sql` crates run all of their
+unit tests once, while shards 1 and 2 archive `-p no-mistakes --lib`) and writes
 `standalone-0.tar.zst`, `standalone-1.tar.zst`, and `standalone-2.tar.zst`.
 Each consumer runs one of those archives and does not hash-partition it. The
 job also sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,

@@ -28,6 +28,7 @@ function run(env = process.env, spawn = spawnSync) {
     CARGO_PROFILE_DEV_DEBUG: "0",
     CARGO_PROFILE_TEST_DEBUG: "0",
     NM_TEST_SHARD: SHARD,
+    NM_POSTGRES_SQL_TEST_SHARD: SHARD,
     NM_INNER_RUSTC_WRAPPER:
       env.RUSTC_WRAPPER && env.RUSTC_WRAPPER !== wrapper ? env.RUSTC_WRAPPER : "",
     RUSTC_WRAPPER: wrapper,
