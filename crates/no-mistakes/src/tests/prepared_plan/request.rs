@@ -41,12 +41,15 @@ impl PreparedTestPlanRequest {
         self.graph
             .get_or_init(|| {
             self.graph_builds.fetch_add(1, Ordering::Relaxed);
-            let (fact_plan, fact_context) =
+            let (fact_plan, mut fact_context) =
                 no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
                     &self.root,
                     self.graph_plan,
                     &self.prepared_graph_config,
                 );
+            fact_context.set_fixture_reads(
+                self.changes_input.as_ref().and_then(super::super::plan::changes::ChangesInput::fixture_reads),
+            );
             let graph_visible_paths = VisiblePathSnapshot::from_paths(
                 &self.root,
                 self.graph_files.all(),

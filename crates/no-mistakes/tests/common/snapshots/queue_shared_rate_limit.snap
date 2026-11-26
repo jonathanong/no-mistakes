@@ -1,0 +1,389 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "shared-rate-limit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 59,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw new RateLimitError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 60,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw new RenamedPause();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 61,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw new LocalReexport();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 62,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw new ConstAlias();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 63,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw MemberAlias();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 64,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw NsMemberAlias();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 65,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw NsWorkerMemberAlias();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 66,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw new DefaultRateLimit();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 67,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw BarrelWorker.RateLimitError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 68,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw queueNs.RateLimitError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 69,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw queueNs.Worker.RateLimitError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 70,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw barrelNs.RateLimitError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 71,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw barrelNs.Worker.RateLimitError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 72,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw ReexportedNs.RateLimitError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 73,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "if (Math.random()) throw new LocalAliasError();"
+        },
+        {
+          "file": "barrel-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 74,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "throw new StarRateLimitError();"
+        },
+        {
+          "file": "barrel-renamed-only.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 5,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "throw new RenamedPause();"
+        },
+        {
+          "file": "callback-forms.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 12,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "throw new RateLimitError();"
+        },
+        {
+          "file": "callback-forms.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 26,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "throw new RateLimitError();"
+        },
+        {
+          "file": "callback-forms.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 8,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "throw new RateLimitError();"
+        },
+        {
+          "file": "callback-forms.ts",
+          "job": null,
+          "kind": "worker-rate-limit-per-process",
+          "line": 41,
+          "message": "`.rateLimit()` on the `items` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "void stable.rateLimit(1000);"
+        },
+        {
+          "file": "computed-call.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 4,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "await worker[\"rateLimit\"](1000);"
+        },
+        {
+          "file": "computed-call.ts",
+          "job": null,
+          "kind": "worker-rate-limit-per-process",
+          "line": 4,
+          "message": "`.rateLimit()` on the `items` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "await worker[\"rateLimit\"](1000);"
+        },
+        {
+          "file": "mixed-call.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 4,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "await worker.rateLimit(1000);"
+        },
+        {
+          "file": "mixed-call.ts",
+          "job": null,
+          "kind": "worker-rate-limit-per-process",
+          "line": 4,
+          "message": "`.rateLimit()` on the `items` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "await worker.rateLimit(1000);"
+        },
+        {
+          "file": "mixed-error.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 4,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "throw new RateLimitError();"
+        },
+        {
+          "file": "mixed-error.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 5,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "throw Worker.RateLimitError();"
+        },
+        {
+          "file": "namespace-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 4,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "if (queueModule) throw queue.RateLimitError();"
+        },
+        {
+          "file": "namespace-errors.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 5,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "throw queue.Worker.RateLimitError();"
+        },
+        {
+          "file": "renamed-error.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 4,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "throw new Pause();"
+        },
+        {
+          "file": "shared-processor.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 4,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "throw new RateLimitError();"
+        },
+        {
+          "file": "shared-processor.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 4,
+          "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "throw new RateLimitError();"
+        },
+        {
+          "file": "single.ts",
+          "job": null,
+          "kind": "worker-rate-limit-per-process",
+          "line": 19,
+          "message": "`.rateLimit()` on the `orders` worker applies per process only, so N worker processes run at N times the intended rate. Use the queue-level limiter or a provider-side wait.",
+          "queueFile": "queues.ts",
+          "queueName": "orders",
+          "sourceLine": "await worker.rateLimit(1);"
+        },
+        {
+          "file": "workers.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 12,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "await handle.rateLimit(1000);"
+        },
+        {
+          "file": "workers.ts",
+          "job": null,
+          "kind": "shared-queue-rate-limit",
+          "line": 17,
+          "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+          "queueFile": "queues.ts",
+          "queueName": "items",
+          "sourceLine": "await handle.rateLimit(1000);"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "queues-check: ambient-error.ts:4 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:103 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:104 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:105 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:106 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:107 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:108 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:109 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:110 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:111 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:112 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:113 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:114 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:115 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:116 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:117 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: barrel-errors.ts:118 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: namespace-errors.ts:13 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: namespace-errors.ts:14 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged",
+        "queues-check: unresolved.ts:11 the thrown RateLimitError could not be traced to a queue package, so this shared-queue rate limit was not judged"
+      ]
+    }
+  }
+}

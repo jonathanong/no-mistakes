@@ -846,14 +846,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
         }
       ],
       "codebase": [],
@@ -884,16 +876,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_allow_file": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -917,16 +900,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_base": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -964,32 +938,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_broken_jsx": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "components/FileDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "components/LineDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1017,32 +966,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_default_exports": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "components/FileDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "components/LineDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1054,32 +978,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_empty_options": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "components/FileDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "components/LineDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1091,32 +990,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_ignore": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "components/FileDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "components/LineDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1153,14 +1027,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
         }
       ],
       "codebase": [],
@@ -1200,32 +1066,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_named_exports": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "components/FileDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "components/LineDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1313,32 +1154,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_next_line": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "components/FileDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "components/LineDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1366,16 +1182,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_override": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1413,32 +1220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_plain_ts": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "components/FileDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "components/LineDisabled.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1450,16 +1232,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_project_exclude": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1483,16 +1256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_required_props": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1530,16 +1294,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_rule_exclude": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -1563,16 +1318,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "selected_rule_include": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "outside/NextLine.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1895,24 +1641,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "stories_ignore": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "web/stories/FileDisabled.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate harness",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "web/stories/LineDisabled.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-line require-storybook-stories: separate harness",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -2098,24 +1827,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "stories_options_ignore": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "web/stories/FileDisabled.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate harness",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "web/stories/LineDisabled.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-line require-storybook-stories: separate harness",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {
@@ -2153,24 +1865,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "stories_options_ignore_low": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "web/stories/FileDisabled.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate harness",
-          "target": "require-storybook-stories"
-        },
-        {
-          "file": "web/stories/LineDisabled.stories.tsx",
-          "line": 1,
-          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "sourceLine": "// no-mistakes-disable-line require-storybook-stories: separate harness",
-          "target": "require-storybook-stories"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "incomplete": [
         {

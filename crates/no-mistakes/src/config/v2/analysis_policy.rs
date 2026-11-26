@@ -87,6 +87,8 @@ impl NoMistakesConfig {
             Unanalyzable::Report
         } else if let Some(shared) = option(rule, "unanalyzable")? {
             shared
+        } else if rule.rule == "github-actions-env-policy" {
+            self.unanalyzable.unwrap_or(Unanalyzable::Advise)
         } else {
             legacy_policy(rule)?
                 .or(self.unanalyzable)

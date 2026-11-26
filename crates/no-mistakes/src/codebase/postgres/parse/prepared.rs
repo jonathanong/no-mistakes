@@ -1,8 +1,9 @@
 use super::{normalize_copy_data, normalize_table_queries, PostgresParseError};
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
-use sqlparser::tokenizer::{Location, TokenWithSpan};
+use sqlparser::tokenizer::{Location, Token, TokenWithSpan};
 use std::borrow::Cow;
 use std::cell::{Cell, OnceCell, Ref, RefCell};
 
@@ -33,6 +34,15 @@ impl<'a> PreparedSql<'a> {
 
     pub(crate) fn tokens(&self) -> &[TokenWithSpan] {
         self.located().map_or(&[], Vec::as_slice)
+    }
+
+    pub(crate) fn keyword_is_absent(&self, keyword: Keyword) -> bool {
+        self.located().is_ok_and(|tokens| {
+            !tokens.iter().any(|token| {
+                matches!(&token.token, Token::Word(word)
+                    if word.quote_style.is_none() && word.keyword == keyword)
+            })
+        })
     }
 
     pub(crate) fn tokens_preserve_source_positions(&self) -> bool {

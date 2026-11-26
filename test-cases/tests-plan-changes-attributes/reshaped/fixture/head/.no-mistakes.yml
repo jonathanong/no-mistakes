@@ -1,0 +1,10 @@
+changes:
+  categories:
+    fixtures:
+      paths: ["fixtures/*.json"]
+      id: { fromPath: "fixtures/{id}.json" }
+      tests: ["tests/**/*.test.ts"]
+      match: 'loadReshapedFixture("{id}")'
+tests:
+  vitest:
+    configs: vitest.config.mts

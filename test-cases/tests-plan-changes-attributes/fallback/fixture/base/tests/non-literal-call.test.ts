@@ -1,0 +1,9 @@
+import { expect, test } from "vitest";
+
+declare function loadFixture(id: string): { size: number; label: string };
+
+test("non-literal loader call", () => {
+  const id = "opaque";
+  expect(loadFixture("opaque").label).toBe("sample");
+  expect(loadFixture(id).size).toBe(64);
+});

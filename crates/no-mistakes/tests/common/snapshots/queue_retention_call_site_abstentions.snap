@@ -1,0 +1,70 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "call-sites": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueue.ts",
+          "job": "mixed",
+          "kind": "unbounded-job-retention",
+          "line": 14,
+          "message": "unbounded job retention: removeOnComplete kept without a bound",
+          "queueFile": "enqueue.ts",
+          "queueName": "receipts",
+          "sourceLine": "await queue.add(\"mixed\", {}, { removeOnComplete: false, removeOnFail: dynamicRetention });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "unbounded",
+          "kind": "unbounded-job-retention",
+          "line": 17,
+          "message": "unbounded job retention: removeOnFail kept without a bound",
+          "queueFile": "enqueue.ts",
+          "queueName": "receipts",
+          "sourceLine": "await queue.add(\"unbounded\", {}, { removeOnFail: false });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "unbounded-dynamic-queue",
+          "kind": "unbounded-job-retention",
+          "line": 27,
+          "message": "unbounded job retention: removeOnComplete kept without a bound",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await dynamicQueue.add(\"unbounded-dynamic-queue\", {}, { removeOnComplete: false, removeOnFail: 100 });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "nextLine",
+            "line": 18
+          },
+          "domain": "queues",
+          "file": "enqueue.ts",
+          "line": 19,
+          "reason": "unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+          "rule": "queues-check",
+          "sourceFile": "enqueue.ts",
+          "sourceLine": "await queue.add(\"suppressed\", {}, { removeOnFail: dynamicRetention });"
+        }
+      ],
+      "warnings": [
+        "queues-check: enqueue.ts:11 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:12 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:13 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:14 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:23 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:26 unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known"
+      ]
+    }
+  }
+}
