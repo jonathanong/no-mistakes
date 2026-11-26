@@ -133,3 +133,40 @@ runs:
         .collect();
     assert_eq!(values, vec!["./composite-action"]);
 }
+
+#[test]
+fn recorded_provenance_still_reports_root_schema_paths() {
+    let mut config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(
+        r#"
+projects:
+  app:
+    root: missing-project
+tests:
+  playwright:
+    configs: missing-playwright.config.ts
+"#,
+    )
+    .unwrap();
+    config.config_provenance.insert(
+        crate::config::source_locations::ConfigPath::default().key("projects"),
+        std::path::PathBuf::from(".no-mistakes.yml"),
+        crate::config::source_locations::ConfigPath::default(),
+    );
+    let values: Vec<_> =
+        super::no_mistakes::extract(&config, std::path::Path::new(".no-mistakes.yml"))
+            .into_iter()
+            .map(|item| item.value)
+            .collect();
+    assert_eq!(
+        values,
+        vec![
+            "missing-project".to_string(),
+            "missing-playwright.config.ts".to_string()
+        ]
+    );
+    assert!(super::no_mistakes::extract(
+        &config,
+        std::path::Path::new(".no-mistakes/rules/base.yml")
+    )
+    .is_empty());
+}

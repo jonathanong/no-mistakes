@@ -8,15 +8,18 @@ pub(crate) fn extract(config: &NoMistakesConfig, source: &Path) -> Vec<Extracted
     paths::references(config)
         .into_iter()
         .filter(|reference| {
-            reference
+            // Schema paths are collected without per-field origins. Recorded
+            // provenance must not drop them from the root config file.
+            let declared_here = reference
                 .origin
                 .as_ref()
                 .and_then(|origin| config.config_provenance.origin(origin))
-                .is_some_and(|(path, _)| path == source)
-                || (config.config_provenance.is_empty()
-                    && !source
-                        .components()
-                        .any(|component| component.as_os_str() == ".no-mistakes"))
+                .is_some_and(|(path, _)| path == source);
+            let root_config = reference.origin.is_none()
+                && !source
+                    .components()
+                    .any(|component| component.as_os_str() == ".no-mistakes");
+            declared_here || root_config
         })
         .map(|reference| Extracted {
             field: reference.field,
