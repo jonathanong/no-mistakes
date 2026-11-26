@@ -72,6 +72,8 @@ import createAccount = createUser;
 import makeAccount = createUser; // no-mistakes-disable-line no-mistakes/ts-no-const-aliases -- stable compatibility name
 ```
 
+Standard ESLint and Oxlint disable comments also apply.
+
 ## Related rules
 
 - [`ts-no-export-renaming`](ts-no-export-renaming.md) rejects renamed value

@@ -1418,16 +1418,29 @@ it("snapshots remaining diagnostics", async () => {
         valid: [
           lintCase(ruleFixture("ts-no-const-aliases", "valid.ts"), "valid.ts"),
           lintCase(ruleFixture("ts-no-const-aliases", "typed.ts"), "typed.ts"),
+          lintCase(ruleFixture("ts-no-const-aliases", "disable-line.ts"), "disable-line.ts"),
+          lintCase(
+            ruleFixture("ts-no-const-aliases", "disable-next-line.ts"),
+            "disable-next-line.ts",
+          ),
+          lintCase(ruleFixture("ts-no-const-aliases", "disable-file.ts"), "disable-file.ts"),
         ],
         invalid: [
           // 6 alias diagnostics.
           lintCase(ruleFixture("ts-no-const-aliases", "invalid.ts"), "invalid.ts"),
           lintCase(ruleFixture("ts-no-const-aliases", "coverage.ts"), "coverage.ts"),
+          lintCase(ruleFixture("ts-no-const-aliases", "open.ts"), "open.ts"),
         ],
       }),
       "ts-no-export-renaming": snapshotSuite("ts-no-export-renaming", languageOptions, {
         valid: [
           lintCase(ruleFixture("ts-no-export-renaming", "valid.ts"), "valid.ts"),
+          lintCase(ruleFixture("ts-no-export-renaming", "disable-line.ts"), "disable-line.ts"),
+          lintCase(
+            ruleFixture("ts-no-export-renaming", "disable-next-line.ts"),
+            "disable-next-line.ts",
+          ),
+          lintCase(ruleFixture("ts-no-export-renaming", "disable-file.ts"), "disable-file.ts"),
           {
             code: exportRenaming,
             filename: resolve(process.cwd(), "web/app/index.ts"),
@@ -1439,6 +1452,7 @@ it("snapshots remaining diagnostics", async () => {
         invalid: [
           lintCase(ruleFixture("ts-no-export-renaming", "invalid.ts"), "invalid.ts"),
           lintCase(ruleFixture("ts-no-export-renaming", "coverage.ts"), "coverage.ts"),
+          lintCase(ruleFixture("ts-no-export-renaming", "open.ts"), "open.ts"),
           lintCase(exportRenaming, "web/app/index.ts"),
           lintCase(exportRenaming, "web/app/index.ts", { allowDefaultReExports: true }),
           lintCase(exportRenaming, "backend/index.ts", { includePathPatterns: ["^backend/"] }),

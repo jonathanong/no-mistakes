@@ -330,6 +330,10 @@ const suite = {
       fixture(`${RULE}/import-equals-valid.ts`),
       resolve(FIXTURE_ROOT, "import-equals-valid.ts"),
     ),
+    // Line, next-line, and file directives each hide the annotation finding.
+    ...["suppress-line.js", "suppress-next-line.js", "suppress-file.js"].map((name) =>
+      cursorCase(fixture(`${RULE}/${name}`), resolve(FIXTURE_ROOT, name)),
+    ),
   ],
   invalid: [
     // reports the configured cursor contract.
@@ -343,6 +347,8 @@ const suite = {
       fixture(`${RULE}/import-equals-invalid.ts`),
       resolve(FIXTURE_ROOT, "import-equals-invalid.ts"),
     ),
+    // The same cursor call reports when no directive is present.
+    cursorCase(fixture(`${RULE}/suppress-open.js`), resolve(FIXTURE_ROOT, "suppress-open.js")),
     // reports staticQuery when the cursor call has no SQL argument.
     // One staticQuery finding.
     cursorCase(

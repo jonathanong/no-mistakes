@@ -154,9 +154,7 @@ module.exports = Object.assign(
             }
             const local = exportName(specifier.local);
             const exported = exportName(specifier.exported);
-            if (local && exported && local !== exported) {
-              context.report({ node: specifier, messageId: "renamed" });
-            }
+            if (local && exported && local !== exported) report(specifier, "renamed");
           }
         },
         AssignmentExpression(node) {

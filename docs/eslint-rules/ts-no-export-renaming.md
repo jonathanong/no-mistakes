@@ -72,6 +72,8 @@ export import makeUser = createUser;
 exports.publishUser = createUser; // no-mistakes-disable-line no-mistakes/ts-no-export-renaming -- public compatibility alias
 ```
 
+Standard ESLint and Oxlint disable comments also apply.
+
 ## Related rules
 
 - [`ts-no-function-aliases`](ts-no-function-aliases.md) rejects implementation
