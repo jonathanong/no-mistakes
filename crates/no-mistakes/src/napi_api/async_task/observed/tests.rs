@@ -3,8 +3,11 @@ use napi::Task;
 
 #[test]
 fn ordinary_outputs_and_errors_remain_unwrapped() {
-    assert_eq!(finish(Ok("[1,2]".into()), None).unwrap().as_ref(), b"[1,2]");
-    let error = finish(Err(napi::Error::from_reason("original error")), None)
+    assert_eq!(
+        finish(Ok("[1,2]".into()), None, false).unwrap().as_ref(),
+        b"[1,2]"
+    );
+    let error = finish(Err(napi::Error::from_reason("original error")), None, false)
         .err()
         .unwrap();
     assert_eq!(error.reason, "original error");
@@ -14,7 +17,9 @@ fn ordinary_outputs_and_errors_remain_unwrapped() {
     .unwrap()
     .unwrap();
     assert_eq!(
-        finish(Ok("{}".into()), Some(&request)).unwrap().as_ref(),
+        finish(Ok("{}".into()), Some(&request), false)
+            .unwrap()
+            .as_ref(),
         b"{}"
     );
 }
@@ -25,13 +30,14 @@ fn verbose_transport_preserves_array_results_and_authoritative_errors() {
         DiagnosticRequestGuard::extract(&mut serde_json::json!({"__collectDiagnostics":true}))
             .unwrap()
             .unwrap();
-    let output = finish(Ok("[1,2]".into()), Some(&request)).unwrap();
+    let output = finish(Ok("[1,2]".into()), Some(&request), false).unwrap();
     let json: Value = serde_json::from_slice(output.as_ref()).unwrap();
     assert_eq!(json["result"], serde_json::json!([1, 2]));
     assert_eq!(json["diagnostics"]["work"]["output.renders"], 1);
     let error = finish(
         Err(napi::Error::from_reason("original error")),
         Some(&request),
+        false,
     )
     .err()
     .unwrap();
@@ -39,6 +45,22 @@ fn verbose_transport_preserves_array_results_and_authoritative_errors() {
     assert_eq!(message, "original error");
     let diagnostics: Value = serde_json::from_str(diagnostics).unwrap();
     assert_eq!(diagnostics["work"]["output.errors"], 1);
+}
+
+#[test]
+fn verbose_transport_quotes_text_while_ordinary_transport_leaves_it_raw() {
+    let text = "graph TD\n    A --> \"example\"\n";
+    let plain = finish(Ok(text.into()), None, true).unwrap();
+    assert_eq!(plain.as_ref(), text.as_bytes());
+
+    let request =
+        DiagnosticRequestGuard::extract(&mut serde_json::json!({"__collectDiagnostics":true}))
+            .unwrap()
+            .unwrap();
+    let output = finish(Ok(text.into()), Some(&request), true).unwrap();
+    let json: Value = serde_json::from_slice(output.as_ref()).unwrap();
+    assert_eq!(json["result"], text);
+    assert_eq!(json["diagnostics"]["work"]["output.renders"], 1);
 }
 
 #[test]
@@ -109,7 +131,7 @@ fn deep_native_json_remains_opaque_during_diagnostics_collection() {
         DiagnosticRequestGuard::extract(&mut serde_json::json!({"__collectDiagnostics":true}))
             .unwrap()
             .unwrap();
-    let output = finish(Ok(input.to_owned()), Some(&request)).unwrap();
+    let output = finish(Ok(input.to_owned()), Some(&request), false).unwrap();
     let json = std::str::from_utf8(output.as_ref()).unwrap();
     assert!(json.starts_with(&format!("{{\"result\":{input},\"diagnostics\":")));
 }
