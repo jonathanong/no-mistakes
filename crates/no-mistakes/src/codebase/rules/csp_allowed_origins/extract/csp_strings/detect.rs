@@ -113,9 +113,7 @@ pub(super) fn object_contains_csp_source_map(obj: &ObjectExpression<'_>) -> bool
 pub(super) fn arg_contains_csp_fragment(arg: &Argument<'_>) -> bool {
     match arg {
         Argument::SpreadElement(spread) => expr_contains_csp_fragment(&spread.argument),
-        other => other
-            .as_expression()
-            .is_some_and(expr_contains_csp_fragment),
+        other => expr_contains_csp_fragment(other.to_expression()),
     }
 }
 

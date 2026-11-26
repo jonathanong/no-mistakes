@@ -25,6 +25,9 @@ export function emptyReturnCsp() {
   return;
 }
 export const buildStaticCsp = () => ["default-src 'self'", "connect-src 'self'"].join("; ");
+export function buildStaticFnCsp() {
+  return "default-src 'self'; connect-src 'self'";
+}
 export const aliasCsp = buildStaticCsp();
 export const staticConstCsp = "default-src 'self'; connect-src 'self'";
 export const aliasConstCsp = staticConstCsp;
@@ -86,3 +89,20 @@ export const dynamicHeaderMap = {
 export function applyDynamicHeader(settings: { tenant: string }) {
   setHeader("Content-Security-Policy", buildHeader(settings));
 }
+
+export const HTTPOnlyCsp = buildHeader({ tenant: "acme" });
+export const trailingCsp_ = buildHeader({ tenant: "acme" });
+export const elisionCsp = [, "default-src 'self'", extraOrigins];
+export const spreadJoinSepCsp = ["default-src 'self'"].join(...(extraOrigins as [string]));
+export function spreadHeaderSetter() {
+  setHeader(...(extraOrigins as [string]), "x");
+  setHeader("Content-Security-Policy", ...(extraOrigins as [string]));
+}
+export const dynamicJoinHeader = {
+  key: "Content-Security-Policy",
+  value: ["default-src 'self'", ...extraOrigins].join("; "),
+};
+export const nonCspJoinHeader = {
+  key: "Content-Security-Policy",
+  value: ["alpha"].join(";"),
+};

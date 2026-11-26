@@ -114,16 +114,20 @@ fn header_setter_unanalyzable_span(call: &CallExpression<'_>) -> Option<u32> {
     if !eval_static_string(first).is_some_and(|name| is_csp_header_name(&name)) {
         return None;
     }
-    let value = call.arguments[1].as_expression()?;
-    (!is_resolvable_csp_expr(value)).then(|| value.span().start)
+    let second = &call.arguments[1];
+    match second.as_expression() {
+        Some(value) if is_resolvable_csp_expr(value) => None,
+        _ => Some(second.span().start),
+    }
 }
 
 fn arg_is_unresolvable_csp(arg: &Argument<'_>) -> bool {
     match arg {
         Argument::SpreadElement(spread) => expr_contains_csp_fragment(&spread.argument),
-        other => other
-            .as_expression()
-            .is_some_and(|expr| expr_contains_csp_fragment(expr) && !is_resolvable_csp_expr(expr)),
+        other => {
+            let expr = other.to_expression();
+            expr_contains_csp_fragment(expr) && !is_resolvable_csp_expr(expr)
+        }
     }
 }
 
