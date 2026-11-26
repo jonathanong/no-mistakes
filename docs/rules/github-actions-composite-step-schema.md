@@ -58,9 +58,9 @@ runs:
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it validates the parsed shape of composite action steps. Nothing is routed through `options.unanalyzable`.
+Invalid YAML produces an ordinary finding. The rule skips non-sequence
+`runs.steps` values, non-mapping step entries, and non-string keys. It
+does not use `options.unanalyzable`. [YAML and step scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_composite_step_schema/scan.rs#L30-L68).
 
 ## Suppression
 

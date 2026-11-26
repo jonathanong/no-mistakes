@@ -9,8 +9,9 @@ names. A repository opts in by listing the families it cares about.
 ## What it requires
 
 Each configured family matches `uses:` after the ref is removed, including a
-commit SHA. Required inputs must be present as that scalar. Banned inputs must
-be absent. A family that only bans inputs does not require those inputs.
+commit SHA. Required inputs must be present as that scalar. `ban` reports
+non-null values. `allowedInputs` checks the remaining names under `with:`,
+including keys with null values. [Required and banned values](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/policy.rs#L137-L164) and [allowlisted names](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/policy/extra.rs#L70-L87).
 Actions that are not listed stay silent. Other `with:` keys stay silent.
 
 Remote `owner/repo` families match case-insensitively, so
@@ -185,7 +186,7 @@ union.
 opt-in. Each entry needs `uses`, the action family. A ref after `@` on that
 name is ignored. `require` defaults to `{}` and maps an input name to a string,
 number, or boolean. `ban` defaults to `[]` and lists input names that must be
-absent. `allowedInputs` (default unset) restricts `with:` to the listed names.
+absent or null. `allowedInputs` (default unset) restricts `with:` to the listed names.
 `requiredPresent` (default `[]`) lists names that need a non-null value. The
 same input cannot be both required and banned. Two entries for one family
 merge. Disagreeing required values are a configuration error. See
@@ -193,7 +194,8 @@ merge. Disagreeing required values are a configuration error. See
 
 `include` defaults to `.github/workflows/**/*.yml`,
 `.github/workflows/**/*.yaml`, `.github/actions/**/action.yml`, and
-`.github/actions/**/action.yaml`. An explicit list replaces that default.
+`.github/actions/**/action.yaml`. A nonempty list replaces those globs.
+An empty list uses the defaults. [Include selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy.rs#L124-L132).
 
 ```yaml
 rules:
@@ -238,7 +240,8 @@ Invalid YAML is skipped and produces no finding. A `uses:` value that contains
 input set to a `${{ }}` expression is a definite mismatch when that text is not
 the required scalar. The checker does not evaluate expressions. A `<<` key is
 not expanded, so keys nested under it are not inputs. A file that cannot be
-read is skipped and produces no finding.
+read is skipped and produces no finding. A non-mapping `with:` is treated
+as absent. It can still produce missing-required-input findings. [Input extraction](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/scan.rs#L109-L118).
 
 ## Related rules
 

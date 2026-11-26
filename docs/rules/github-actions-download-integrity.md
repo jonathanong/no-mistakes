@@ -312,14 +312,18 @@ rules:
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
-
-- Inputs this rule cannot prove (a downloader URL built from a variable, a dynamic option name such as `curl --$FLAG URL`, an unquoted dynamic option value, or an indirect command prefix, at low effort) follow `options.unanalyzable`:
+- At low effort, a downloader URL built from a variable, a dynamic option
+  name such as `curl --$FLAG URL`, an unquoted dynamic option value, or an
+  indirect command prefix follows `options.unanalyzable`:
   - `report` (default): fails as a finding. The message names the job, step, and argument shape, and says `download URL or argument shape` is unanalyzable at effort low. An indirect command says `downloader command is unanalyzable at effort low`.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy.
+
+At max effort, the rule skips unresolved URLs and continues checking literal
+candidates. At either effort, it skips scripts with an unterminated heredoc
+and workflows that cannot be read or parsed. [Shell judging](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L58-L104), [URL operands](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L118-L140), and [workflow selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/effort.rs#L87-L94).
 
 ### Limits
 
