@@ -48,4 +48,18 @@ export function excludedAndOverridden(
     missing: { read: missingNested },
   } = { other: db } as unknown as { missing: typeof db };
   invoke(missingNested);
+  const { nested: _ignoredNested, ...restWithoutNested } = { nested: db };
+  const {
+    nested: { read: droppedNestedRead },
+  } = restWithoutNested as unknown as { nested: typeof db };
+  invoke(droppedNestedRead);
+  const spreadWithGetter = {
+    ...db,
+    get read() {
+      return fallback;
+    },
+  };
+  invoke(spreadWithGetter.read);
+  const { [dynamicKey]: _dynamicIgnored, ...restAfterDynamic } = db as Record<string, unknown>;
+  invoke(restAfterDynamic.read);
 }

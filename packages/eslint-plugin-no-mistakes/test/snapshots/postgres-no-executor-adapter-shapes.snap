@@ -1346,6 +1346,17 @@
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 24,
+        "endLine": 47,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-executor-adapter/namespace-provenance.ts",
+        "line": 47,
+        "message": "This call passes keptNestedRead into a helper. Name the executor inside the helper (`keptNestedRead(sql`…`)`, or `const exec = keptNestedRead; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
       }
     ],
     "kind": "invalid",

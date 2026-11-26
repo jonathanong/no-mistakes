@@ -40,4 +40,9 @@ export function additionalNamespaceForms() {
     inner: { read: fromSpreadNested },
   } = { ...holder };
   invoke(fromSpreadNested);
+  const { other: _other, ...restKeepingNested } = { nested: db, other: 1 };
+  const {
+    nested: { read: keptNestedRead },
+  } = restKeepingNested;
+  invoke(keptNestedRead);
 }

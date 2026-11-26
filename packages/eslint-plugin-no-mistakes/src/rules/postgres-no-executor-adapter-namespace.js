@@ -22,10 +22,12 @@ function findBindingPath(pattern, target, context) {
   if (pattern === target) return [];
   if (pattern?.type !== "ObjectPattern") return null;
   const excluded = new Set();
+  let hasDynamicSibling = false;
   for (const item of pattern.properties) {
     if (item.type !== "Property") continue;
     const key = patternKey(item, context);
     if (key) excluded.add(key);
+    else hasDynamicSibling = true;
   }
   for (const item of pattern.properties) {
     if (item.type === "Property") {
@@ -33,7 +35,7 @@ function findBindingPath(pattern, target, context) {
       if (!key) continue;
       const tail = findBindingPath(item.value, target, context);
       if (tail) return [{ kind: "prop", key }, ...tail];
-    } else {
+    } else if (!hasDynamicSibling) {
       const tail = findBindingPath(item.argument, target, context);
       if (tail) return [{ kind: "rest", excluded }, ...tail];
     }
@@ -48,10 +50,12 @@ function objectPropertyValue(objectExpr, key, context) {
       result = { kind: "spread", node: entry.argument };
       continue;
     }
-    if (entry.kind !== "init") continue;
     const propKey = patternKey(entry, context);
-    if (propKey === key) result = { kind: "value", node: entry.value };
-    else if (propKey === null) result = null;
+    if (propKey === key) {
+      result = entry.kind === "init" ? { kind: "value", node: entry.value } : null;
+    } else if (propKey === null) {
+      result = null;
+    }
   }
   return result;
 }
@@ -70,7 +74,9 @@ function projectPath(expr, path, targetKey, context, seen) {
   if (path.length === 0) return current;
   const [step, ...rest] = path;
   if (step.kind === "rest") {
-    return step.excluded.has(targetKey)
+    const nextProp = rest.find((item) => item.kind === "prop");
+    const checkedKey = nextProp ? nextProp.key : targetKey;
+    return step.excluded.has(checkedKey)
       ? null
       : projectPath(current, rest, targetKey, context, seen);
   }
