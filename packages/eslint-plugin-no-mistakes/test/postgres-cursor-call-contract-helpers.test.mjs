@@ -15,6 +15,7 @@ const {
   unwrap,
 } = require("../src/rules/postgres-cursor-ast");
 const {
+  importEqualsModule,
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,
@@ -434,6 +435,18 @@ describe("cursor import detection", () => {
       computed: false,
     };
     assert.equal(namespaceCursorImport(contextFor(namespace), object, helpers, config), true);
+    assert.equal(
+      namespaceCursorImport(contextFor(namespace), { type: "Literal", value: 1 }, helpers, config),
+      false,
+    );
+    assert.equal(
+      importEqualsModule({
+        type: "TSImportEqualsDeclaration",
+        importKind: "value",
+        moduleReference: { type: "TSExternalModuleReference", expression: identifier("dynamic") },
+      }),
+      null,
+    );
     assert.equal(namespaceImportMember(contextFor(namespace), member, helpers, config), member);
     assert.equal(
       namespaceCursorMember(contextFor(namespace), member, helpers, config),
