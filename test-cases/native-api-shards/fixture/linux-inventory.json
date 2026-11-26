@@ -222,5 +222,13 @@
   {
     "file": "packages/no-mistakes/scripts/cache-setup-policy-api.test.js",
     "name": "compiled synthetic case 29 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/graph-report-api.test.js",
+    "name": "compiled synthetic reports case (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/graph-report-api.test.js",
+    "name": "compiled synthetic reports case (1)"
   }
 ]
