@@ -123,6 +123,7 @@ rules:
   - {rule: production-exports-only-used-by-tests, scope: repository, options: {bogusOption: true}}
   - {rule: query-reached-per-item, scope: repository, options: {bogusOption: true}}
   - {rule: queue-dashboard-reachability, scope: repository, options: {bogusOption: true}}
+  - {rule: queue-rate-limit-error-delay, scope: repository, options: {bogusOption: true}}
   - {rule: react-no-nested-buttons-and-links, scope: repository, options: {bogusOption: true}}
   - {rule: require-files-in-subdirs, scope: repository, options: {bogusOption: true}}
   - {rule: require-storybook-stories, scope: repository, options: {bogusOption: true}}
