@@ -1,0 +1,200 @@
+fn binding_identifier_name<'a>(pattern: &'a oxc_ast::ast::BindingPattern<'a>) -> Option<&'a str> {
+    match pattern {
+        oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) => {
+            Some(identifier.name.as_str())
+        }
+        _ => None,
+    }
+}
+
+pub fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
+    match crate::syntax_helpers::unwrap_ts_wrappers(expr) {
+        Expression::Identifier(ident) => Some(ident.name.to_string()),
+        Expression::SequenceExpression(sequence) => sequence
+            .expressions
+            .last()
+            .and_then(|expression| simple_callee_name(expression)),
+        Expression::StaticMemberExpression(member) => simple_static_member_name(member),
+        Expression::ComputedMemberExpression(member) => simple_computed_member_name(member),
+        _ => None,
+    }
+}
+
+fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
+    let object = match crate::syntax_helpers::unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(object) => object.name.to_string(),
+        Expression::ThisExpression(_) => "this".to_string(),
+        Expression::ImportMeta(_) => "import.meta".to_string(),
+        Expression::StaticMemberExpression(object) => simple_static_member_name(object)?,
+        Expression::ComputedMemberExpression(object) => simple_computed_member_name(object)?,
+        _ => "<unknown>".to_string(),
+    };
+    Some(format!("{object}.{}", member.property.name.as_str()))
+}
+
+fn has_dynamic_static_member_receiver(expr: &Expression<'_>) -> bool {
+    let Expression::StaticMemberExpression(member) =
+        crate::syntax_helpers::unwrap_ts_wrappers(expr)
+    else {
+        return false;
+    };
+    match crate::syntax_helpers::unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(_) | Expression::ThisExpression(_) => false,
+        Expression::StaticMemberExpression(_) => has_dynamic_static_member_receiver(&member.object),
+        Expression::ComputedMemberExpression(member) => {
+            simple_computed_member_name(member).is_none()
+        }
+        _ => true,
+    }
+}
+
+fn simple_computed_member_name(
+    member: &oxc_ast::ast::ComputedMemberExpression<'_>,
+) -> Option<String> {
+    let object = match crate::syntax_helpers::unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(object) => object.name.as_str(),
+        Expression::ImportMeta(_) => "import.meta",
+        _ => return None,
+    };
+    let property = match crate::syntax_helpers::unwrap_ts_wrappers(&member.expression) {
+        Expression::StringLiteral(property) => crate::ast::js_literal(property),
+        _ => return None,
+    };
+    Some(format!("{object}.{property}"))
+}
+fn jsx_element_reference_name(name: &oxc_ast::ast::JSXElementName<'_>) -> Option<String> {
+    match name {
+        oxc_ast::ast::JSXElementName::Identifier(id) => Some(id.name.to_string()),
+        oxc_ast::ast::JSXElementName::IdentifierReference(id) => Some(id.name.to_string()),
+        oxc_ast::ast::JSXElementName::MemberExpression(member) => {
+            jsx_member_expression_name(member)
+        }
+        _ => None,
+    }
+}
+
+fn jsx_member_expression_name(member: &oxc_ast::ast::JSXMemberExpression<'_>) -> Option<String> {
+    let object = match &member.object {
+        oxc_ast::ast::JSXMemberExpressionObject::IdentifierReference(id) => id.name.to_string(),
+        oxc_ast::ast::JSXMemberExpressionObject::MemberExpression(member) => {
+            jsx_member_expression_name(member)?
+        }
+        oxc_ast::ast::JSXMemberExpressionObject::ThisExpression(_) => return None,
+    };
+    Some(format!("{}.{}", object, member.property.name.as_str()))
+}
+
+fn type_reference_name(reference: &TSTypeReference<'_>) -> Option<String> {
+    ts_type_name_name(&reference.type_name)
+}
+
+fn ts_type_name_name(name: &TSTypeName<'_>) -> Option<String> {
+    match name {
+        TSTypeName::IdentifierReference(identifier) => Some(identifier.name.to_string()),
+        TSTypeName::QualifiedName(qualified) => ts_qualified_name_name(qualified),
+        TSTypeName::ThisExpression(_) => None,
+    }
+}
+
+fn ts_qualified_name_name(name: &TSQualifiedName<'_>) -> Option<String> {
+    let left = ts_type_name_name(&name.left)?;
+    Some(format!("{}.{}", left, name.right.name.as_str()))
+}
+
+fn import_declaration_kind(import: &ImportDeclaration<'_>) -> ImportKind {
+    if import.import_kind.is_type()
+        || all_named_specifiers_are_type(import.specifiers.as_deref().map(|v| &**v))
+    {
+        ImportKind::Type
+    } else {
+        ImportKind::Static
+    }
+}
+
+fn export_named_declaration_kind(export: &ExportFromDeclaration<'_>) -> ImportKind {
+    if export.export_kind.is_type() || all_export_specifiers_are_type(&export.specifiers) {
+        ImportKind::Type
+    } else {
+        ImportKind::Static
+    }
+}
+
+fn all_named_specifiers_are_type(specifiers: Option<&[ImportDeclarationSpecifier<'_>]>) -> bool {
+    let Some(specifiers) = specifiers else {
+        return false;
+    };
+    !specifiers.is_empty()
+        && specifiers.iter().all(|spec| {
+            matches!(
+                spec,
+                ImportDeclarationSpecifier::ImportSpecifier(s) if s.import_kind.is_type()
+            )
+        })
+}
+
+fn all_export_specifiers_are_type(specifiers: &[ExportSpecifier<'_>]) -> bool {
+    !specifiers.is_empty() && specifiers.iter().all(|s| s.export_kind.is_type())
+}
+
+fn module_export_name_name<'a>(
+    name: &'a ModuleExportName<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
+    Some(crate::ast::module_export_name(name))
+}
+
+fn is_require_callee(expr: &Expression<'_>) -> bool {
+    matches!(expr, Expression::Identifier(ident) if ident.name == "require")
+}
+
+fn is_require_resolve_callee(expr: &Expression<'_>) -> bool {
+    matches!(expr, Expression::StaticMemberExpression(member)
+        if matches!(&member.object, Expression::Identifier(ident) if ident.name == "require")
+            && member.property.name == "resolve")
+}
+
+pub fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
+    match crate::syntax_helpers::unwrap_ts_wrappers(expr) {
+        Expression::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            let mut specifier = String::new();
+            for quasi in &template.quasis {
+                specifier.push_str(crate::ast::template_quasi_text(quasi).as_ref());
+            }
+            Some(specifier)
+        }
+        _ => None,
+    }
+}
+
+fn static_path_argument(arg: &Argument<'_>) -> Option<String> {
+    match arg {
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
+        Argument::TemplateLiteral(tl) if tl.expressions.is_empty() => {
+            Some(crate::syntax_helpers::normalize_template(tl))
+        }
+        _ => None,
+    }
+}
+
+fn static_process_cwd_arg(callee: &str, args: &[Argument<'_>]) -> Option<String> {
+    let method = callee.rsplit('.').next().unwrap_or(callee);
+    let opts_index = match method {
+        "exec" => 1,
+        "execFile" | "fork" | "spawn" => 2,
+        _ => return None,
+    };
+    crate::syntax_helpers::extract_cwd_from_opts(args, opts_index)
+}
+
+fn visit_jsx_opening_element_with_value_reference<'a>(
+    collector: &mut ImportCollector,
+    opening: &JSXOpeningElement<'a>,
+) {
+    if let Some(name) = jsx_element_reference_name(&opening.name) {
+        if name.chars().next().is_some_and(char::is_uppercase) {
+            collector.record_callable_name_value_use(&name);
+            collector.push_value_symbol_reference(name);
+        }
+    }
+    walk::walk_jsx_opening_element(collector, opening);
+}

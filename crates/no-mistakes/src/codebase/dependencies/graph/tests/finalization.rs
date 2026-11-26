@@ -85,7 +85,7 @@ fn leftover_path_keyed_maps_use_fx_hash() {
             || types.contains("type ResourceEdgeDetails = FxHashMap"),
         "ResourceEdgeDetails must use rustc-hash FxHashMap"
     );
-    let cache = include_str!("../../../../ast/parsed_cache.rs");
+    let cache = include_str!("../../../../../../no-mistakes-ts-facts/src/ast/parsed_cache.rs");
     assert!(
         cache.contains("type CachedPrograms = FxHashMap"),
         "ParsedProgramCache must use rustc-hash FxHashMap"

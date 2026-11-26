@@ -283,10 +283,31 @@ function libraryShardCoverage(root, options = {}) {
   const includeStack = [];
   const srcDir = options.srcDir ?? join(root, "crates/no-mistakes/src");
   const excluded = new Set(options.excluded ?? UNCOMPILED_SRC);
-  const entries = options.entry
-    ? [options.entry]
-    : [join(srcDir, "lib.rs"), join(srcDir, "main.rs")];
-  const relativeSrc = (file) => relative(srcDir, file).split("\\").join("/");
+  const crates =
+    options.entry || options.srcDir
+      ? [
+          {
+            srcDir,
+            entries: options.entry
+              ? [options.entry]
+              : [join(srcDir, "lib.rs"), join(srcDir, "main.rs")],
+          },
+        ]
+      : [
+          {
+            srcDir: join(root, "crates/no-mistakes/src"),
+            entries: [
+              join(root, "crates/no-mistakes/src/lib.rs"),
+              join(root, "crates/no-mistakes/src/main.rs"),
+            ],
+          },
+          {
+            srcDir: join(root, "crates/no-mistakes-ts-facts/src"),
+            entries: [join(root, "crates/no-mistakes-ts-facts/src/lib.rs")],
+          },
+        ];
+  let activeSrcDir = srcDir;
+  const relativeSrc = (file) => relative(activeSrcDir, file).split("\\").join("/");
   const countsTests = (file) => !excluded.has(relativeSrc(file));
   const isPostgresSourcePath = (modPath) =>
     modPath.length >= 3 &&
@@ -501,7 +522,12 @@ function libraryShardCoverage(root, options = {}) {
     }
   }
 
-  for (const entry of entries) walkFile(entry, ALL, true, [], null, false);
+  let plainTestCount = 0;
+  for (const crate of crates) {
+    activeSrcDir = crate.srcDir;
+    for (const entry of crate.entries) walkFile(entry, ALL, true, [], null, false);
+    plainTestCount += countPlainTests(crate.srcDir, excluded);
+  }
   return {
     nested,
     droppedTests,
@@ -510,7 +536,7 @@ function libraryShardCoverage(root, options = {}) {
     unresolved,
     incomplete,
     testCount,
-    plainTestCount: countPlainTests(srcDir, excluded),
+    plainTestCount,
   };
 }
 

@@ -38,28 +38,7 @@ fn literal_string(expr: &Expression) -> Option<String> {
     }
 }
 
-/// Extract `cwd` from the opts object at `args[opts_index]`.
-pub(crate) fn extract_cwd_from_opts(args: &[Argument], opts_index: usize) -> Option<String> {
-    let obj = match args
-        .get(opts_index)?
-        .as_expression()
-        .map(unwrap_ts_wrappers)
-    {
-        Some(Expression::ObjectExpression(obj)) => obj,
-        _ => return None,
-    };
-    obj.properties
-        .iter()
-        .filter_map(|prop| match prop {
-            ObjectPropertyKind::ObjectProperty(p) => Some(p),
-            _ => None,
-        })
-        .find_map(|p| {
-            matches!(&p.key, PropertyKey::StaticIdentifier(id) if id.name.as_str() == "cwd")
-                .then(|| literal_string(&p.value))
-                .flatten()
-        })
-}
+pub(crate) use no_mistakes_ts_facts::syntax_helpers::extract_cwd_from_opts;
 
 /// Attempt to get the short name of a callee (last identifier in a chain).
 fn callee_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {

@@ -1378,6 +1378,7 @@ dependencies = [
  "napi-build",
  "napi-derive",
  "nix 0.32.0",
+ "no-mistakes-ts-facts",
  "num_cpus",
  "oxc_allocator",
  "oxc_ast",
@@ -1386,7 +1387,6 @@ dependencies = [
  "oxc_parser",
  "oxc_semantic",
  "oxc_span",
- "oxc_str",
  "oxc_syntax",
  "percent-encoding",
  "predicates",
@@ -1397,7 +1397,6 @@ dependencies = [
  "regex-syntax",
  "roxmltree",
  "rustc-hash",
- "self_cell",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -1411,6 +1410,30 @@ dependencies = [
  "url",
  "wait-timeout",
  "windows-sys",
+]
+
+[[package]]
+name = "no-mistakes-ts-facts"
+version = "0.109.122"
+dependencies = [
+ "anyhow",
+ "ignore",
+ "oxc_allocator",
+ "oxc_ast",
+ "oxc_ast_visit",
+ "oxc_diagnostics",
+ "oxc_parser",
+ "oxc_semantic",
+ "oxc_span",
+ "oxc_str",
+ "oxc_syntax",
+ "rayon",
+ "rustc-hash",
+ "self_cell",
+ "serde",
+ "serde_json",
+ "sqlparser",
+ "tempfile",
 ]
 
 [[package]]

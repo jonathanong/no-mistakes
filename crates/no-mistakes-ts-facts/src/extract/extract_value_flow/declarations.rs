@@ -1,0 +1,57 @@
+pub(super) type DefaultOriginIndex =
+    FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
+pub(super) type PriorMemberMutations = receiver_histories::ReceiverHistories;
+pub(super) type ReceiverBindingOrigins = mutable_origins::ReceiverBindingOrigins;
+pub(super) type ForeignReceiverWrites = mutable_origins::ForeignReceiverWrites;
+pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
+pub(super) type TaggedTemplates = FxHashMap<(u32, u32), templates::TaggedTemplateInfo>;
+pub use templates::origins::{TextOrigin, TextOrigins};
+
+/// Small syntactic annotation shapes; resolution uses the prepared fact catalog.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ValueType {
+    Reference(String),
+    Member(Box<ValueType>, String),
+    Object(FxHashMap<String, ValueType>),
+    /// The `number` or `bigint` keyword.
+    Number,
+    /// A non-empty string literal type or union of string literal types.
+    FiniteStringLiterals,
+    /// `(typeof NAME)[number]`: an element of a value's array type.
+    Element(String),
+    /// Positional parameter shapes of a function type.
+    Signature(Vec<ValueType>),
+    /// The nth parameter of the function type that the inner shape denotes.
+    Param(Box<ValueType>, usize),
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CallableAssignment {
+    pub scope: usize,
+    pub name: String,
+    pub completed_at: u32,
+    pub callable: Option<CallableId>,
+    pub owner: Option<CallableId>,
+    pub region_start: Option<u32>,
+    pub guaranteed: bool,
+}
+
+pub use module_provider_guards::ModuleAssignedMutations;
+pub use module_provider_intervals::ModuleProviderTarget;
+pub use mutation_history::ValueMutationHistory;
+pub use mutation_history::{
+    ValueAssignedMutation, ValueAssignedMutations, ValueAssignedWriter,
+};
+pub use mutation_sources::{
+    ValueDefaultMutationSource, ValueDefaultMutations, ValueMutationInfo, ValueMutationPath,
+    ValueReceiverMutations,
+};
+pub use replacements::{
+    ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts, ValueReplacementWrite,
+};
+pub use value_descriptors::{
+    ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
+};
+
+pub use value_descriptors::{ForOfEscapes, ForOfFacts};

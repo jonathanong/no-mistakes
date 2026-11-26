@@ -14,8 +14,7 @@ function commands(mode, bundle, index, total, workspace = process.cwd()) {
       "nextest",
       "archive",
       "--locked",
-      "-p",
-      "no-mistakes",
+      ...(shard === 0 ? ["--workspace"] : ["-p", "no-mistakes"]),
       "--lib",
       "--archive-file",
       path.resolve(bundle, archiveName(shard)),
@@ -26,8 +25,7 @@ function commands(mode, bundle, index, total, workspace = process.cwd()) {
   }
   if (!Number.isInteger(index) || !Number.isInteger(total) || index < 1 || index > total)
     throw new Error("expected a one-based standalone shard within its total");
-  if (total !== SHARDS)
-    throw new Error("standalone shard total must match the compiled archives");
+  if (total !== SHARDS) throw new Error("standalone shard total must match the compiled archives");
   return [
     [
       "nextest",
@@ -61,12 +59,7 @@ function run(mode, bundle, index, total, env = process.env) {
     childEnv.CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER = `bash ${path.join(__dirname, "libtest-argv-runner.sh")}`;
     delete childEnv.NM_TEST_SHARD;
   }
-  for (const [shard, args] of commands(
-    mode,
-    directory,
-    Number(index),
-    Number(total),
-  ).entries()) {
+  for (const [shard, args] of commands(mode, directory, Number(index), Number(total)).entries()) {
     const shardEnv = { ...childEnv };
     if (mode === "build") {
       if (shardEnv.NM_TEST_SHARD) throw new Error("standalone compile shard is already selected");

@@ -1,4 +1,8 @@
 <!-- cspell:ignore rustc -->
+## Workspace crates
+- `crates/no-mistakes` — CLI, N-API, graph, and rules (`ast`, `fx`, `codebase::ts_source::{jsx, fixture_reads, builtin_receivers, module_facts}`, and `codebase::dependencies::extract` re-export `no-mistakes-ts-facts`).
+- `crates/no-mistakes-ts-facts` — pure OXC TypeScript AST parsing, `ParsedProgramCache`, JSX/builtin-receiver/fixture-read helpers, `module_facts`, and `extract` + `extract_value_flow` (no `no-mistakes` dep; inverted diagnostics hooks in `hooks.rs`).
+
 ## Performance Guidelines
 
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).

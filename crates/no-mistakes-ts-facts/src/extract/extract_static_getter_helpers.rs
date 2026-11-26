@@ -1,0 +1,199 @@
+fn visit_static_member_expression_with_getters<'a>(
+    collector: &mut ImportCollector,
+    member: &StaticMemberExpression<'a>,
+) {
+    collector.note_sql_fragment_member(&member.object, Some(member.property.name.as_str()));
+    collector.mark_member_object_registry(&member.object);
+    collector.note_selected_member(&member.object, member.property.name.as_str());
+    if let Some(name) = simple_static_member_name(member) {
+        record_static_getter_read(collector, member.span.start, &name);
+        record_object_getter_read(collector, member, &name);
+        collector.push_value_symbol_reference(name);
+    }
+    walk::walk_static_member_expression(collector, member);
+}
+fn visit_computed_member_expression_with_getters<'a>(
+    collector: &mut ImportCollector,
+    member: &ComputedMemberExpression<'a>,
+) {
+    let property = if let Expression::StringLiteral(property) =
+        crate::syntax_helpers::unwrap_ts_wrappers(&member.expression)
+    {
+        Some(crate::ast::js_literal(property))
+    } else {
+        None
+    };
+    collector.note_sql_fragment_member(&member.object, property.as_deref());
+    collector.mark_computed_member_registry(member);
+    if let Expression::StringLiteral(property) =
+        crate::syntax_helpers::unwrap_ts_wrappers(&member.expression)
+    {
+        collector.note_selected_member(&member.object, crate::ast::js_literal(property).as_ref());
+    }
+    if let Some(name) = simple_computed_member_name(member) {
+        record_static_getter_read(collector, member.span.start, &name);
+        collector.push_value_symbol_reference(name);
+    }
+    collector.visit_expression(&member.object);
+    let conditional = member.optional || has_optional_chain(&member.object);
+    with_conditional_execution(collector, conditional, |collector| {
+        collector.visit_expression(&member.expression);
+    });
+}
+
+fn record_static_getter_read(collector: &mut ImportCollector, offset: u32, callee: &str) {
+    let Some((binding, property)) = callee.split_once('.') else {
+        return;
+    };
+    let Some(binding_scope) = collector.callee_binding_scope(callee) else {
+        return;
+    };
+    if collector.has_reassigned_callable_at(binding_scope, binding)
+        || collector.has_reassigned_callable_at(binding_scope, callee)
+    {
+        return;
+    }
+    let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
+        return;
+    };
+    if !collector.has_static_getter_member(class_id, property) {
+        return;
+    }
+    collector.function_calls.push(FunctionCall {
+        caller: collector.current_function(),
+        caller_id: collector.current_function_id(),
+        syntactic_caller: collector.current_syntactic_caller(),
+        callee: callee.to_string(),
+        line: import_line_at(&collector.line_starts, offset as usize),
+        offset,
+        is_callback: false,
+        invocation: InvocationKind::Get,
+        target_identity: CallTargetIdentity::RepositoryFunction,
+        callee_binding_scope: Some(binding_scope),
+        static_arg: None,
+        static_cwd: None,
+    });
+}
+
+fn is_static_getter(collector: &ImportCollector, callee: &str) -> bool {
+    let Some((binding, property)) = callee.split_once('.') else {
+        return false;
+    };
+    let Some(binding_scope) = collector.callee_binding_scope(callee) else {
+        return false;
+    };
+    let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
+        return false;
+    };
+    collector.has_static_getter_member(class_id, property)
+}
+
+fn record_static_setter_assignment(
+    collector: &mut ImportCollector,
+    callee: &str,
+    offset: u32,
+) -> bool {
+    let Some((binding, property)) = callee.split_once('.') else {
+        return false;
+    };
+    let Some(binding_scope) = collector.callee_binding_scope(callee) else {
+        return false;
+    };
+    let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
+        return false;
+    };
+    if !collector.has_static_setter_member(class_id, property) {
+        return false;
+    }
+    collector.function_calls.push(FunctionCall {
+        caller: collector.current_function(),
+        caller_id: collector.current_function_id(),
+        syntactic_caller: collector.current_syntactic_caller(),
+        callee: callee.to_string(),
+        line: import_line_at(&collector.line_starts, offset as usize),
+        offset,
+        is_callback: false,
+        invocation: InvocationKind::Set,
+        target_identity: CallTargetIdentity::RepositoryFunction,
+        callee_binding_scope: Some(binding_scope),
+        static_arg: None,
+        static_cwd: None,
+    });
+    true
+}
+
+fn visit_assignment_expression_with_calls<'a>(
+    collector: &mut ImportCollector,
+    assignment: &AssignmentExpression<'a>,
+) {
+    if collector
+        .transparent_receiver_writes
+        .contains(&assignment.span.start)
+    {
+        walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+        collector.visit_expression(&assignment.right);
+        return;
+    }
+    collector.record_replacement_assignment(assignment);
+    collector.note_closed_registry_write(&assignment.left, assignment.span.start);
+    if collector.collect_value_flow {
+        let value = collector.identifier_assignment(assignment);
+        let start = collector.value_flow.identifier_writes.len();
+        visit_assignment_expression_with_receiver_effects(collector, assignment);
+        collector.note_identifier_assignment(assignment, start, value);
+        return;
+    }
+    // Ordinary writes/getters/imports retain their original traversal order.
+    with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
+        record_assignment_target_writes(
+            collector,
+            &assignment.left,
+            assignment.span.start,
+            assignment.span.end,
+        );
+    });
+    walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+    with_conditional_execution(collector, assignment.operator.is_logical(), |collector| {
+        collector.visit_expression(&assignment.right);
+    });
+}
+
+fn walk_assignment_lhs_without_written_getter<'a>(
+    collector: &mut ImportCollector,
+    target: &AssignmentTarget<'a>,
+) {
+    let previous = std::mem::replace(&mut collector.metadata_rows.writing, true);
+    if let AssignmentTarget::StaticMemberExpression(member) = target {
+        collector.visit_expression(&member.object);
+    } else if let AssignmentTarget::ComputedMemberExpression(member) = target {
+        collector.visit_expression(&member.object);
+        collector.visit_expression(&member.expression);
+    } else {
+        walk::walk_assignment_target(collector, target);
+    }
+    collector.metadata_rows.writing = previous;
+}
+
+fn visit_update_expression_with_calls<'a>(
+    collector: &mut ImportCollector,
+    update: &oxc_ast::ast::UpdateExpression<'a>,
+) {
+    collector.record_callable_assignment(
+        update.argument.as_assignment_target(),
+        None,
+        false,
+        update.span.end,
+    );
+    collector.record_replacement_target(
+        update.argument.as_assignment_target(),
+        ValueExpression::Unknown,
+        update.span.end,
+    );
+    record_assignment_target_writes(
+        collector,
+        update.argument.as_assignment_target(),
+        update.span.start,
+        update.span.end,
+    );
+    walk::walk_update_expression(collector, update);
+}

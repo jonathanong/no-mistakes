@@ -17,7 +17,7 @@ if [[ "$shard" == "0" || "$shard" == "1" || "$shard" == "2" || "$shard" == "post
     fi
     previous="$arg"
   done
-  if [[ "$crate" == "no_mistakes" ]]; then
+  if [[ "$crate" == "no_mistakes" || "$crate" == "no_mistakes_ts_facts" ]]; then
     args+=("-A" "dead_code" "-A" "unused_imports")
   fi
 fi

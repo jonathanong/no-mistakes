@@ -651,7 +651,7 @@ jobs:
       - name: Check Cargo packages
         if: ${{ needs.changes.outputs.rust == 'true' }}
         timeout-minutes: 25
-        run: cargo publish --dry-run --locked -p no-mistakes
+        run: cargo publish --dry-run --locked --workspace
 
       - name: Check npm packages
         timeout-minutes: 2

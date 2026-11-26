@@ -18,17 +18,18 @@ test("standalone build retains the default-feature library-only scope", () => {
   const built = commands("build", "target/bundle");
   assert.equal(built.length, 3);
   built.forEach((command, shard) => {
-    assert.deepEqual(command.slice(0, 7), [
-      "nextest",
-      "archive",
-      "--locked",
-      "-p",
-      "no-mistakes",
-      "--lib",
-      "--archive-file",
+    const scope = shard === 0 ? ["--workspace"] : ["-p", "no-mistakes"];
+    const expectedPrefix = ["nextest", "archive", "--locked", ...scope, "--lib", "--archive-file"];
+    assert.deepEqual(command.slice(0, expectedPrefix.length), expectedPrefix);
+    assert.equal(
+      command[expectedPrefix.length],
+      path.resolve(`target/bundle/standalone-${shard}.tar.zst`),
+    );
+    assert.deepEqual(command.slice(expectedPrefix.length + 1), [
+      "--zstd-level",
+      "6",
+      "--zstd-long",
     ]);
-    assert.equal(command[7], path.resolve(`target/bundle/standalone-${shard}.tar.zst`));
-    assert.deepEqual(command.slice(8), ["--zstd-level", "6", "--zstd-long"]);
     assert.ok(!command.includes("--all-features"));
     assert.ok(!command.includes("--bins"));
     assert.ok(!command.includes("--partition"));
