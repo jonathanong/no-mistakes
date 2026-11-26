@@ -74,3 +74,5 @@ test-cases/rules/postgres-bounded-statements/issue-3426/** text eol=lf
 test-cases/rules/postgres-bounded-statements/value-const-holes/src/value-positions.ts text eol=lf
 test-cases/rules/postgres-sql-statement-policy/fixture/issue-3856/src/policy.test.ts text eol=lf
 test-cases/rules/github-actions-no-insta-snapshot-updates/fixture/unreadable/.github/workflows/*.yml -text -whitespace
+
+test-cases/rules/github-actions-cache-setup-policy/fixture/unavailable/.github/workflows/invalid-utf8.yml -text -whitespace

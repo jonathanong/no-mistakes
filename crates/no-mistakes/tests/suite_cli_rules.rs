@@ -279,6 +279,9 @@ mod cli_gha_snapshot_cache_fd_redirects;
 #[path = "cli_gha_snapshot_cache_key_policy.rs"]
 mod cli_gha_snapshot_cache_key_policy;
 
+#[path = "cli_gha_snapshot_cache_setup_policy.rs"]
+mod cli_gha_snapshot_cache_setup_policy;
+
 #[path = "cli_gha_snapshot_inline_script_lines.rs"]
 mod cli_gha_snapshot_inline_script_lines;
 

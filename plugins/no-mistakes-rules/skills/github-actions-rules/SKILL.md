@@ -34,3 +34,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT use large or extra-OS runners without a runtime reason.
 - SHOULD NOT assert exact action SHAs or versions in tests; assert identity and SHA shape.
 - SHOULD NOT parse workflow YAML with regexes; use a YAML parser.
+
+Use opt-in [`github-actions-cache-setup-policy`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-setup-policy.md)
+when cache keys must follow an ordered template or selected setup actions need
+individual step deadline caps.
