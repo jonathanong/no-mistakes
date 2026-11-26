@@ -249,9 +249,9 @@ cost $0.16-0.19. A total far below the estimate means runs errored — see
 
 ## Flows
 
-Every case carries a `tags:` field naming its flow. 80 generated cases across
-13 flows; 71 excluding the holdout. The 62 skill cases are the first 12 flows;
-the 18 `rules` cases load the `no-mistakes-rules` plugin instead.
+Every case carries a `tags:` field naming its flow. 85 generated cases across
+13 flows; 76 excluding the holdout. The 62 skill cases are the first 12 flows;
+the 23 `rules` cases load the `no-mistakes-rules` plugin instead.
 
 | tag | cases | what it covers | demand |
 | --- | --- | --- | --- |
@@ -267,7 +267,7 @@ the 18 `rules` cases load the `no-mistakes-rules` plugin instead.
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
 | `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
 | `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
-| `rules` | 18 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
+| `rules` | 23 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
 
 "Real traffic" means the phrasing was observed in mined session history.
 "Skill surface" means `SKILL.md` documents it but no comparable question
@@ -306,18 +306,18 @@ that says "use `rg` here, the graph won't help" is ideal.
 
 The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
 `rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
-topics (`testing`, `postgresql`, `queue`, `github-actions`) with 17 cases
+topics (`testing`, `postgresql`, `queue`, `github-actions`) with 19 cases
 between them (`testing` has six, `github-actions` has three, and the others
-have four), plus four off-topic guards. Every case exposes all installed
+have five), plus four off-topic guards. Every case exposes all installed
 plugin skills.
 
 - **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
   test, worker, workflow). The prompt never names the rule; breaking one
   specific rule is the path of least resistance. The rubric checks that one
   thing in the code.
-- **review** (1 per topic, `review-*`): an inline 30–50 line diff with one
-  planted defect and one decoy that looks wrong but is allowed. Pass needs both:
-  the defect is named at its location, and the decoy is not flagged.
+- **review** (`review-*`) gives an inline code sample or diff with a planted
+  defect. Passing requires identifying the defect at its location and leaving
+  any deliberate decoy alone.
 - **exception** (1 per topic, `exception-*`): same vocabulary, but the code is
   correct because of a written exception or a reasoned SHOULD NOT. Pass when
   the response leaves it alone. Over-flagging is the failure. The topic skill
@@ -336,12 +336,24 @@ both arms and retain the content graders as regression checks.
 `skill-fired` here checks the specific topic skill among the installed skills, not whether the
 plugin fired at all.
 
+### Lock review cases
+
+- `rules-postgresql-review-parent-key-update` checks whether the review traces
+  the implicit parent lock to the child insert, identifies the deadlock, and
+  recommends taking the stronger parent lock first.
+- `rules-queue-review-job-self-overlap` checks whether the review identifies
+  overlap between scheduled and manual runs across replicas and preserves
+  exclusion or makes concurrent writes safe.
+
+Both cases are unmeasured. The 2026-11-24 pilot stopped at authentication.
+See [HISTORY.md](HISTORY.md#2026-11-24--lock-review-cases-3879).
+
 ### Current trigger comparison
 
 The results below measure the earlier 16-skill inventory. The current plugin
-contains 15 skills after #3587. The three cases below are pending measurement.
-The historical comparison still refers to its original case set. See
-[history](HISTORY.md).
+contains 15 skills after #3587. The two lock review cases and the three cases
+below were added subsequently and are pending measurement. The historical
+comparison still refers to its original case set. See [history](HISTORY.md).
 
 | Unmeasured case | What it checks |
 | --- | --- |
@@ -424,7 +436,7 @@ that every triggered answer follows every rule.
 ### Trigger variants
 
 `python3 evals/generate.py --rules-variant <name>` builds a copy of the plugin
-under `evals-variants/_plugins/<name>/` (`rules_variants.py`) and emits the 18
+under `evals-variants/_plugins/<name>/` (`rules_variants.py`) and emits the
 rules cases under `evals-variants/rules-<name>/`, pointed at it. Rule bodies
 are copied unchanged. Compare trigger counts separately from content scores;
 sampling can move either result even when the inputs match.
@@ -493,7 +505,7 @@ the Claude table.
 
 `python3 evals/codex_rules.py` prints `cases x arms x runs` and exits. It does
 not call a model. Dollars are unknown until a paid run; the preview says so.
-A full rules pass at the case default is 21 cases x 2 arms x 3 runs = 126
+A full rules pass at the case default is 23 cases x 2 arms x 3 runs = 138
 attempts. Pilot with one case before that:
 
 ```sh
