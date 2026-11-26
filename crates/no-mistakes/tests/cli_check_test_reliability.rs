@@ -44,6 +44,18 @@ fn test_reliability_check_json_snapshot() {
 }
 
 #[test]
+fn test_no_retries_line_suppression_json_matches_snapshot() {
+    assert_saved_fixture(
+        "test_no_retries_line_suppression",
+        &[(
+            "retries-disable-line",
+            rules_path("test-no-retries", "fixture", "retries-disable-line"),
+            rules_path("test-no-retries", "configs", "retries-disable-line.yml"),
+        )],
+    );
+}
+
+#[test]
 fn test_reliability_invalid_options_check_json_snapshot() {
     let root = rules_path("test-no-retries", "fixture", "workflow-action");
     let cases = [

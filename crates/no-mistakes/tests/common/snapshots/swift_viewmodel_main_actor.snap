@@ -71,6 +71,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "FeedViewModels.swift",
+          "line": 10,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class ControlViewModel {"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail": {
     "exitCode": 1,
     "report": {

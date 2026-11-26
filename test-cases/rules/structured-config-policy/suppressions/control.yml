@@ -1,0 +1,4 @@
+base: &base {color: green}
+shared: &shared {<<: *base}
+copy: *shared
+runtime: {<<: 7}

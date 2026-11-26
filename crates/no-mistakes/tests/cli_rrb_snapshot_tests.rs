@@ -28,11 +28,18 @@ fn integration_test_no_mocks_json_matches_snapshot() {
 fn test_email_domain_policy_json_matches_snapshot() {
     assert_saved_fixture(
         "test_email_domain_policy",
-        &[c(
-            "fail",
-            "test-email-domain-policy/fixture",
-            ".no-mistakes.yml",
-        )],
+        &[
+            c(
+                "fail",
+                "test-email-domain-policy/fixture",
+                ".no-mistakes.yml",
+            ),
+            c(
+                "suppressions",
+                "test-email-domain-policy/suppressions",
+                ".no-mistakes.yml",
+            ),
+        ],
     );
 }
 
@@ -137,6 +144,11 @@ fn test_no_unmocked_dynamic_imports_json_matches_snapshot() {
             c("report", dir, ".no-mistakes-report.yml"),
             c("advise", dir, ".no-mistakes-advise.yml"),
             c("ignore", dir, ".no-mistakes-ignore.yml"),
+            c(
+                "disable_line",
+                "test-no-unmocked-dynamic-imports/fixture/disable-line",
+                ".no-mistakes.yml",
+            ),
         ],
     );
 }
@@ -149,6 +161,11 @@ fn vitest_ci_path_coverage_json_matches_snapshot() {
         &[
             c("fail", "vitest-ci-path-coverage/fixture", config),
             c("pass", "vitest-ci-path-coverage/pass", config),
+            c(
+                "file_suppression",
+                "vitest-ci-path-coverage/file-suppression",
+                ".no-mistakes.yml",
+            ),
         ],
     );
 }
@@ -161,6 +178,11 @@ fn vitest_project_mapping_json_matches_snapshot() {
         "vitest_project_mapping",
         &[
             c("unmapped", "vitest-project-mapping/fixture", config),
+            c(
+                "file_suppression",
+                "vitest-project-mapping/file-suppression",
+                config,
+            ),
             c(
                 "dynamic_config",
                 "vitest-project-mapping/dynamic-config",
@@ -176,6 +198,7 @@ fn vitest_test_correspondence_json_matches_snapshot() {
         "vitest_test_correspondence",
         &[
             correspondence("fail", "fail"),
+            correspondence("file_suppression", "file-suppression"),
             correspondence("pass", "pass"),
             correspondence("source_to_test_fail", "source-to-test-fail"),
             correspondence("source_to_test_pass", "source-to-test-pass"),
