@@ -39,7 +39,7 @@ pub(super) fn body(expression: &Expression<'_>, param: &str) -> Option<String> {
     if property.computed || property.method || property.kind != PropertyKind::Init {
         return None;
     }
-    (crate::ast::property_key_name(&property.key)? == "default")
+    (crate::ast::property_key_name(&property.key).as_deref() == Some("default"))
         .then(|| read(&property.value, param))?
 }
 

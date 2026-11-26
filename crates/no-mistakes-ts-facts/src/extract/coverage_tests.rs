@@ -175,3 +175,19 @@ fn object_array_and_assignment_bindings_are_extracted() {
         .iter()
         .any(|import| import.specifier.contains("mod.mts")));
 }
+
+#[test]
+fn this_jsx_member_and_this_type_names_are_ignored() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "export const view = <this.A.B />;\nexport type T = this.Foo;\n",
+        SourceType::tsx(),
+    )
+    .parse();
+    let facts = extract_import_facts_from_program(&ret.program);
+    assert!(facts
+        .symbol_references
+        .iter()
+        .all(|reference| !reference.callee.contains("Foo") && !reference.callee.contains(".B")));
+}

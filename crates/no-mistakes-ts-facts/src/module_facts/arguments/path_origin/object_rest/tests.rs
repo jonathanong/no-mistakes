@@ -14,8 +14,13 @@ fn object_rest_handles_non_rest_and_non_declarator_bindings() {
             const { cwd } = opts;
             const { a, ...rest } = opts;
             function inner() {}
-            spawn("ls", { ...cwd, ...inner, ...rest, cwd: "/tmp" });
-            spawn("ls", { cwd: rest.cwd, env: inner.env });
+            spawn("ls", { cwd: "/tmp", ...cwd, ...inner, ...a, ...rest });
+            spawn("ls", { cwd: inner.cwd });
+            spawn("ls", { cwd: a.cwd });
+        }
+        function clean(opts: any) {
+            const { a, ...rest } = opts;
+            spawn("ls", { cwd: rest.cwd });
         }
         function g({ a, ...rest }: any = { cwd: "/a" }) {
             spawn("ls", { cwd: rest.cwd });

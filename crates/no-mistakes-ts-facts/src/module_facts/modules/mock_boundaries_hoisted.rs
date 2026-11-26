@@ -111,3 +111,7 @@ fn inert_value(value: &Expression<'_>, semantic: &Semantic<'_>) -> bool {
         other => other.is_literal(),
     }
 }
+
+#[cfg(test)]
+#[path = "mock_boundaries_hoisted_tests.rs"]
+mod tests;

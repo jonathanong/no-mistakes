@@ -95,3 +95,6 @@ fn is_conditional_arm(
     let span = nodes.kind(current).span();
     expr.consequent.span() == span || expr.alternate.span() == span
 }
+
+#[cfg(test)]
+mod tests;

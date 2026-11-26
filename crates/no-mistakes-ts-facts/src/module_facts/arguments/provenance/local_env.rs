@@ -129,3 +129,6 @@ pub(super) fn known_vi(
         })
     })
 }
+
+#[cfg(test)]
+mod tests;
