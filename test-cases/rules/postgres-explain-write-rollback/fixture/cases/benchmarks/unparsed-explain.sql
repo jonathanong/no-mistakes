@@ -1,0 +1,2 @@
+eXpLaIn ANALYZE DELETE FROM sample_jobs WHERE id = 42;
+SELECT (;

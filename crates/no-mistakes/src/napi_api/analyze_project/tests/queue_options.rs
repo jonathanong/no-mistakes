@@ -155,3 +155,20 @@ fn queue_shared_test_scope_respects_include_tests_in_prepared_reports() {
         );
     }
 }
+
+#[test]
+fn queue_retention_call_site_warnings_match_in_prepared_reports() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-retention-call-site");
+    let standalone = standalone_check_result(&root);
+    let prepared = analyze_project_check_result(&root);
+    assert_eq!(
+        standalone["queues"].as_array().unwrap().len(),
+        3,
+        "{standalone}"
+    );
+    assert_eq!(prepared["queues"], standalone["queues"]);
+    let warnings = standalone["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 6, "{standalone}");
+    assert_eq!(prepared["warnings"], standalone["warnings"]);
+}

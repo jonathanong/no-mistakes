@@ -106,6 +106,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`markdown-mermaid-validation`](markdown-mermaid-validation.md)               | Validate Mermaid diagrams embedded in Markdown fences.                          |
 | [`markdown-reachability`](markdown-reachability.md)                           | Require Markdown docs to be reachable from instruction roots.                   |
 | [`markdown-structure-budget`](markdown-structure-budget.md)                   | Limit tables and Mermaid diagrams in oversized Markdown.                        |
+| [`react-no-nested-buttons-and-links`](react-no-nested-buttons-and-links.md) | Keep native buttons and links as separate controls. |
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md)                             | Ban Next.js API route files.                                                    |
 | [`nextjs-no-caching`](nextjs-no-caching.md)                                   | Ban Next.js caching features.                                                   |
 | [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |
@@ -165,7 +166,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-object-naming`](postgres-object-naming.md)                         | Check PostgreSQL object names against configured patterns, plurals, and tokens. |
 | [`postgres-require-query-annotation`](postgres-require-query-annotation.md)   | Require a leading /* name */ annotation on executed PostgreSQL SQL.             |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
-| [`playwright-no-serial`](playwright-no-serial.md) | Report Playwright settings that force serial execution. |
+| [`playwright-no-serial`](playwright-no-serial.md)                             | Report Playwright settings that force serial execution.                         |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |
 | [`playwright-unique-html-ids`](playwright-unique-html-ids.md)                 | Require unique HTML `id` values in Playwright analysis.                         |
 | [`playwright-unique-test-ids`](playwright-unique-test-ids.md)                 | Require unique test ID values in Playwright analysis.                           |
@@ -194,7 +195,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |
 | [`test-no-live-repository-scan`](test-no-live-repository-scan.md)             | Ban live-repository directory scans reachable from Vitest roots.                |
-| [`test-no-retries`](test-no-retries.md) | Cap retries declared in test runners and supported GitHub Actions steps. |
+| [`test-no-retries`](test-no-retries.md)                                       | Cap retries declared in test runners and supported GitHub Actions steps.        |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
 | [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to be owned by a tracked tsconfig.             |

@@ -1,0 +1,20 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [long-tag.yml]
+          bannedKeys: [runtime.legacy]
+        - files: [long-tag-apostrophe.yml]
+          bannedKeys: [runtime.legacy]
+        - files: [long-tag-multiline-scalar.yml]
+          bannedKeys: [runtime.legacy]
+        - files: [long-tag-flow-merge.yml]
+          bannedKeys: [runtime.legacy]
+        - files: [long-tag-explicit-merge.yml]
+          bannedKeys: [runtime.legacy]
+        - files: [quoted.yml]
+          requiredKeys: [merged.owner, "literal.<<"]
+        - files: [long-tag-quoted.yml]
+          requiredKeys: ["runtime.<<"]

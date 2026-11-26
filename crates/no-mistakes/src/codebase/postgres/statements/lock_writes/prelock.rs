@@ -70,7 +70,6 @@ fn locked_key(query: &Query, positions: PlaceholderPositions<'_>) -> Option<(Row
         || select.having.is_some()
         || select.qualify.is_some()
         || !matches!(&select.group_by, GroupByExpr::Expressions(groups, _) if groups.is_empty())
-        || !matches!(unwrap_expr(projection), Expr::Value(value) if matches!(&value.value, Value::Number(value, _) if value == "1"))
     {
         return None;
     }
@@ -79,7 +78,13 @@ fn locked_key(query: &Query, positions: PlaceholderPositions<'_>) -> Option<(Row
     };
     let only = plain_table(&table.relation)?;
     let qualifier = qualifier(&table.relation)?;
-    equality(select.selection.as_ref()?, &qualifier, positions)?;
+    let key = equality(select.selection.as_ref()?, &qualifier, positions)?;
+    let projects_one = matches!(unwrap_expr(projection), Expr::Value(value) if matches!(&value.value, Value::Number(value, _) if value == "1"));
+    if !projects_one
+        && column(projection, Some(&qualifier), positions).as_ref() != Some(&key.column)
+    {
+        return None;
+    }
     let row = row_locks::collect_legacy(query, positions, true);
     row.relation.is_some().then_some((row, only))
 }

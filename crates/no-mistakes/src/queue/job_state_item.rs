@@ -1,7 +1,54 @@
 use crate::fx::FxHashSet;
+use crate::queue::extract_model::ProducerBinding;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{BindingPattern, CallExpression, Expression, IdentifierReference};
 use oxc_ast_visit::{walk, Visit};
+
+pub(super) enum Action {
+    Retry,
+    Enqueue(ProducerBinding),
+    Uncertain(ProducerBinding),
+}
+
+impl Action {
+    pub(super) fn into_site(self) -> (Option<ProducerBinding>, bool) {
+        match self {
+            Self::Retry => (None, false),
+            Self::Enqueue(binding) => (Some(binding), false),
+            Self::Uncertain(binding) => (Some(binding), true),
+        }
+    }
+}
+
+pub(super) enum ActionScope<'a> {
+    StateGuard(Vec<String>),
+    Listing(ListingItem<'a>),
+}
+
+impl ActionScope<'_> {
+    pub(super) fn matches(&self, visitor: &QueueVisitor<'_>, id: &IdentifierReference<'_>) -> bool {
+        match self {
+            Self::StateGuard(names) => names.iter().any(|name| name == id.name.as_str()),
+            Self::Listing(item) => item.matches(visitor, id),
+        }
+    }
+
+    pub(super) fn enqueue(
+        &self,
+        visitor: &QueueVisitor<'_>,
+        call: &CallExpression<'_>,
+        binding: ProducerBinding,
+    ) -> Option<Action> {
+        match self {
+            Self::StateGuard(_) => Some(Action::Enqueue(binding)),
+            Self::Listing(item) => match item.enqueue_use(visitor, call) {
+                ItemUse::Absent => None,
+                ItemUse::Uncertain => Some(Action::Uncertain(binding)),
+                ItemUse::Proven => Some(Action::Enqueue(binding)),
+            },
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 pub(super) struct ListingItem<'a> {

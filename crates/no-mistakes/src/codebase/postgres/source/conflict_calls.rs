@@ -95,5 +95,5 @@ pub(super) fn parse_statement(
 mod program;
 pub(in crate::codebase::postgres) use program::parse as parse_program;
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1, nm_shard_postgres_source)))]
 mod tests;

@@ -2,7 +2,8 @@ use super::super::job_lines::document::Document;
 use super::lines::{locate, parse, Seg};
 use super::scopes::{shape_detail, visit_action_scopes, visit_workflow_scopes, ScopeEvent};
 use super::{scalar_text, Policy, RuleFinding, RULE_ID};
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, source_access};
+use crate::codebase::ts_source::SourceStore;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::Unanalyzable;
 use serde_yaml::{Mapping, Value};
@@ -12,31 +13,41 @@ pub(super) fn check_file(
     root: &Path,
     path: &Path,
     policy: &Policy,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
     defer_suppression: bool,
     unanalyzable: Unanalyzable,
-) -> AnalysisDiagnostics {
-    let mut output = AnalysisDiagnostics::default();
-    let rel = relative_slash_path(root, path);
-    let Some(source) = super::super::super::read_language_source(sources, path) else {
-        return output;
-    };
+) -> Result<AnalysisDiagnostics, Box<RuleFinding>> {
+    let source = sources
+        .read_source_path(path)
+        .map_err(|error| Box::new(source_access::read_failure(root, path, RULE_ID, &error)))?;
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
     {
-        return output;
+        return Ok(AnalysisDiagnostics::default());
     }
-    if let Ok(value) = serde_yaml::from_str::<Value>(&source) {
-        let (findings, undecidable) = check_parsed(&rel, &source, &value, policy);
-        output.findings = findings;
-        for finding in undecidable {
-            output.unanalyzable(unanalyzable, finding);
-        }
+    let value = sources.parse_loaded_yaml(path, &source, false).map_err(|error| {
+        let mut finding = source_access::unanalyzable_source(
+            root,
+            path,
+            RULE_ID,
+            format_args!("YAML could not be parsed ({error})"),
+        );
+        finding.line = error.line();
+        Box::new(finding)
+    })?;
+    let rel = relative_slash_path(root, path);
+    let (findings, undecidable) = check_parsed(&rel, &source, &value, policy);
+    let mut output = AnalysisDiagnostics {
+        findings,
+        ..Default::default()
+    };
+    for finding in undecidable {
+        output.unanalyzable(unanalyzable, finding);
     }
     if !defer_suppression {
         super::super::super::suppress_rule_findings_with_source(&mut output.findings, &source);
         super::super::super::suppress_rule_findings_with_source(&mut output.advisories, &source);
     }
-    output
+    Ok(output)
 }
 
 #[derive(Default)]

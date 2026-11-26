@@ -13,12 +13,17 @@ use std::collections::BTreeMap;
 pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCatalog> {
     let mut tables = BTreeMap::new();
     let mut model_tables = BTreeMap::new();
+    let mut descendant_presence = BTreeMap::new();
     let mut trigger_function_identities = BTreeMap::new();
     for (name, table) in snapshot.tables {
         let identities = trigger_function_identities.entry(name.clone()).or_default();
         let model = model_table(path, &name, &table, identities)?;
-        tables.insert(normalize_table_name(&name), arbiter::arbiter_table(&table));
-        model_tables.insert(normalize_table_name(&name), model);
+        let key = normalize_table_name(&name);
+        if let Some(present) = table.has_descendants {
+            descendant_presence.insert(key.clone(), present);
+        }
+        tables.insert(key.clone(), arbiter::arbiter_table(&table));
+        model_tables.insert(key, model);
     }
     let functions = functions(snapshot.functions, snapshot.schema.as_deref());
     Ok(SchemaCatalog {
@@ -28,6 +33,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         current_database: snapshot.current_database,
         tables,
         model_tables,
+        descendant_presence,
         trigger_function_identities,
         relation_fallback: Default::default(),
         functions,

@@ -309,6 +309,7 @@ For `playwright-unique-html-ids`, `low` checks literal HTML IDs and routes
 other ID expressions through the shared unanalyzable policy. The rule remains
 independent of `tests.playwright.selectors.htmlIds`; see
 [its Effort section](rules/playwright-unique-html-ids.md#effort).
+The opt-in [`react-no-nested-buttons-and-links`](rules/react-no-nested-buttons-and-links.md) rule runs through async `check()` via `checkJson` and through the `analyzeProject()` check report. It uses common YAML rule options, returns definite nested controls in `rules`, and routes unanalyzable shapes through `options.unanalyzable` (defaulting to `advise` in `advisories`).
 The opt-in [`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
 rule runs through async `check()` via `checkJson` and through the
 `analyzeProject()` check report.
@@ -529,7 +530,9 @@ A `missing-job-option` finding lists the absent keys in `message`. Abstentions
 appear in the queue report diagnostics.
 `queues.unboundedJobRetention` is also configured in that file (selected by
 `config` in `queueCheck()`, `check()`, and `analyzeProject()`), emitting
-`unbounded-job-retention` findings. Exported types `QueueJobRetentionKey`,
+`unbounded-job-retention` findings. Undecided producer retention appears in
+`warnings` in `check()` and `analyzeProject()` check reports. Exported types
+`QueueJobRetentionKey`,
 `QueueUnboundedJobRetentionOptions`, and `QueueUnboundedJobRetentionConfig`
 describe its YAML shape.
 `queues.jobStateAsRecord` is opt-in configuration emitting advisory
@@ -1210,7 +1213,8 @@ report, including `complete: false` and `reasons` for unreadable roots,
 matching category excluded or no rule could classify. Use
 `changesDiff<"fixtures" | "localization">(...)` to name configured category
 fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
-`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `ChangesConfig`,
+`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `FixtureAttributePaths`,
+`ChangesConfig`,
 `ChangeCategory`, `ChangeRule`, `ChangeIdRule`, `KeyedDiffOptions`, and
 `KeyedDiffFormat`.
 
@@ -1222,5 +1226,10 @@ inputs without triggering a full-suite fallback, unless an entry cannot be
 traced without a baseline (such as a lockfile, manifest, global config, or
 deleted file without `base`). Missing, invalid, or incomplete reports, unknown
 categories, and `unclassified` paths select the full suite with a structured
-`fallback_reason` and warning. Configured matchers reuse prepared source
-contents. See [changes configuration](configuration/changes.md).
+`fallback_reason` and warning. For categories marked
+`assertPureJsonLoader: true` (user assertion that the loader returns parsed
+JSON unchanged without extra fixture exposure or side effects), the planner
+uses `attributePaths` to narrow matching fixture tests when it can trace their
+reads and all loader uses in the file; by default it selects all matching
+tests. Configured matchers reuse prepared source contents. See
+[changes configuration](configuration/changes.md).

@@ -32,6 +32,7 @@ pub(super) struct SnapshotTable {
     /// Optional parent identity for hand-authored snapshots that retain partition leaves.
     pub(super) partition_of: Option<String>,
     pub(super) inherited_from: Vec<String>,
+    pub(super) has_descendants: Option<bool>,
     pub(super) comment: Option<String>,
     pub(super) columns: BTreeMap<String, SnapshotColumn>,
     pub(super) primary_key: Option<SnapshotPrimaryKey>,

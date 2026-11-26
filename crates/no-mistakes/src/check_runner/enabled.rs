@@ -63,6 +63,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         lint_suppression_paths: Default::default(),
         call_site_paths: Default::default(),
         production_import_paths: Default::default(),
+        nested_control_paths: Default::default(),
         vitest_default_exclude_paths: Default::default(),
         test_reliability_paths: Default::default(),
         playwright_fixture_support: false,
