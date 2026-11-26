@@ -24,6 +24,8 @@ mod prepared_facts;
 mod prepared_postgres_scan;
 mod reexports;
 mod rule_context;
+#[doc(hidden)]
+pub mod rule_ids;
 mod run;
 mod runner_project_catalog;
 mod selected_files;

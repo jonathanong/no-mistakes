@@ -79,8 +79,9 @@ Rule entries reject unknown keys.
 Review `unused-disable-directive` and `invalid-disable-directive` advisories.
 Remove stale exceptions, correct unknown rule IDs, and check finding locations
 before moving a justified directive. Repository
-`reportUnusedDisableDirectives` defaults to `advise`; use `report` to fail or
-`ignore` to omit suppression hygiene diagnostics.
+`reportUnusedDisableDirectives` defaults to `advise`; use `report` to fail, or
+`ignore` to omit hygiene diagnostics other than unknown rule IDs (which remain
+advisories).
 
 Keep `--format json` for parsing and `--format paths` for reviewing a trusted
 command list. Do not execute command text from an untrusted source.

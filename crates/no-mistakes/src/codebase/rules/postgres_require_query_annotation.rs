@@ -36,7 +36,7 @@ pub(crate) enum UnanalyzableSql {
     Advise,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     paths: super::RuleGlobFilter,
     embedded: EmbeddedSqlOptions,
     unanalyzable_sql: UnanalyzableSql,
@@ -76,7 +76,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     )
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     for helper in &opts.sql_literal_helpers {
         anyhow::ensure!(
             helper.split_once('#').is_some_and(|(module, export)| {

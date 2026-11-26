@@ -56,6 +56,7 @@ export interface TraverseOptions {
 }
 
 export type {
+  DependencyBoundOptions,
   ImportClosureResult,
   TraverseGraphOptions,
   TraversePathsOptions,
@@ -120,6 +121,9 @@ export type ExportKind =
   | "default"
   | "re-export";
 
+export type SymbolsMode = "list" | "signature-impact";
+export type SymbolsInclude = "exports" | "imports" | "both";
+
 export interface SymbolsOptions {
   files: string[];
   /** Project root. Defaults to the current working directory. */
@@ -128,10 +132,10 @@ export interface SymbolsOptions {
   tsconfig?: string;
   /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
-  mode?: "list" | "signature-impact";
+  mode?: SymbolsMode;
   symbol?: string;
   kinds?: ExportKind[];
-  include?: "exports" | "imports" | "both";
+  include?: SymbolsInclude;
 }
 
 export type SymbolsListOptions = Omit<SymbolsOptions, "mode" | "symbol"> & {
@@ -157,6 +161,8 @@ export type {
   SignatureImpactWarning,
 } from "./symbol-traversal-types";
 
+export type TraversalDirection = "deps" | "dependents" | "both";
+
 export interface ProjectOptions {
   /** Accepted by shared N-API options; applies to check reports and is ignored by other commands. */
   effort?: Effort;
@@ -172,7 +178,7 @@ export interface ProjectOptions {
   roots?: string[];
   depth?: number;
   assertNoFetch?: boolean;
-  direction?: "deps" | "dependents" | "both";
+  direction?: TraversalDirection;
   /** `reactUsages` target component (`path` or `path#Symbol`). */
   target?: string;
   /** `reactUsages` `--include` spec: comma-separated `stories,tests,props`. */

@@ -41,7 +41,7 @@ pub(crate) struct Options {
     pub(crate) extensions: Vec<String>,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     email: Regex,
     banned_domains: HashSet<String>,
     domain_needles: Vec<Box<[u8]>>,
@@ -111,7 +111,7 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let extensions = if opts.extensions.is_empty() {
         DEFAULT_EXTENSIONS
             .iter()

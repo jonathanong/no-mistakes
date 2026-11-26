@@ -27,6 +27,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
             root, config, files, facts, sources, session,
         );
     }
+    if rule_id == CSP_ALLOWED_ORIGINS {
+        return csp_allowed_origins::check_prepared(root, config, files, facts, sources, session);
+    }
     if rule_id == VITEST_PROJECT_POLICY {
         return vitest_project_policy::check_with_files_and_sources(
             root,

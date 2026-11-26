@@ -199,16 +199,16 @@ fn json_output_carries_the_configured_message_and_target() {
 }
 
 #[test]
-fn invalid_options_skip_the_check_and_fail() {
+fn invalid_options_abort_before_the_check() {
     // A rule that errors is downgraded to a `rules check skipped` warning, and
     // the check fails with exit code 1 (not the usage-error code 2). Exit code 1
     // is also the findings code, so each case pins its warning text as well.
     let unknown = check(&fixture(), "configs/unknown-option.yml", "human");
-    assert_eq!(unknown.status.code(), Some(1), "{}", text(&unknown));
+    assert_eq!(unknown.status.code(), Some(2), "{}", text(&unknown));
     assert!(text(&unknown).contains("unknown field `testGlobs`"));
 
     let invalid = check(&fixture(), "configs/invalid-test-files.yml", "human");
-    assert_eq!(invalid.status.code(), Some(1), "{}", text(&invalid));
+    assert_eq!(invalid.status.code(), Some(2), "{}", text(&invalid));
     assert!(text(&invalid).contains("options.testFiles contains invalid glob"));
 }
 

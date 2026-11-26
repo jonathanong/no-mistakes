@@ -10,6 +10,7 @@ fn case(name: &str) -> std::path::PathBuf {
 fn no_empty_or_comments_only_files_json_matches_snapshot() {
     let ts = rules_path(RULE, "configs", "ts.yml");
     let md = rules_path(RULE, "configs", "md.yml");
+    let unavailable = rules_path("file-input-analysis", "fixture", "empty");
     assert_saved_fixture(
         "no_empty_or_comments_only_files",
         &[
@@ -39,6 +40,21 @@ fn no_empty_or_comments_only_files_json_matches_snapshot() {
                 ts.clone(),
             ),
             ("check_with_files", case("check-with-files-works"), ts),
+            (
+                "unavailable_report",
+                unavailable.clone(),
+                rules_path(RULE, "configs", "unavailable-report.yml"),
+            ),
+            (
+                "unavailable_advise",
+                unavailable.clone(),
+                rules_path(RULE, "configs", "unavailable-advise.yml"),
+            ),
+            (
+                "unavailable_ignore",
+                unavailable,
+                rules_path(RULE, "configs", "unavailable-ignore.yml"),
+            ),
             (
                 "sql_comment",
                 case("sql-dash-comment-only"),

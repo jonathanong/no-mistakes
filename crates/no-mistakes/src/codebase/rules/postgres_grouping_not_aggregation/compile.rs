@@ -1,5 +1,5 @@
 use super::*;
-pub(super) fn options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn options(opts: &Options) -> Result<CompiledOptions> {
     let mode = if opts.unanalyzable_sql.trim().eq_ignore_ascii_case("report") {
         "advise"
     } else {

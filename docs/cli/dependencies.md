@@ -69,6 +69,8 @@ repeatable `--target-module`, repeatable `--relationship`, repeatable `--test`,
 `--symbols` includes exported symbol nodes. It is not valid together with
 `--candidate-include` or `--candidate-exclude`.
 
+`DependencyBoundOptions` is the public Node type for the two candidate filters.
+
 `--candidate-include` / `--candidate-exclude` define the **initial** import-only
 candidate inventory before GraphFiles / fact preparation. They are not
 `--filter`: excluded unrelated tests are omitted from that inventory and are

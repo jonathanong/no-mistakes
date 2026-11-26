@@ -272,7 +272,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "react": [],
       "rules": [],
-      "warnings": []
+      "warnings": [
+        "queues-check: enqueue.ts:75 mixed-priority was not judged for queue \"ambiguousFlow\" because the flow queue has multiple definition files",
+        "queues-check: flows.ts:5 mixed-priority was not judged for queue \"ambiguousFlow\" because the flow queue has multiple definition files"
+      ]
     }
   }
 }

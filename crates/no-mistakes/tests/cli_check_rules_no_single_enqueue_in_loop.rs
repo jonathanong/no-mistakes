@@ -13,6 +13,7 @@ fn no_single_enqueue_in_loop_check_json_snapshot() {
     let same_export = fixture("same-export");
     let sibling_scopes = fixture("sibling-scopes");
     let spellings = fixture("spellings");
+    let suppressions = fixture("suppressions");
     let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "no_single_enqueue_in_loop",
         &[
@@ -37,6 +38,11 @@ fn no_single_enqueue_in_loop_check_json_snapshot() {
                 spellings.clone(),
                 spellings.join(".no-mistakes.yml"),
             ),
+            (
+                "suppressions",
+                suppressions.clone(),
+                suppressions.join(".no-mistakes.yml"),
+            ),
         ],
         &[],
         &[],
@@ -45,6 +51,7 @@ fn no_single_enqueue_in_loop_check_json_snapshot() {
     assert_eq!(reports["same-export"]["exitCode"], 1);
     assert_eq!(reports["sibling-scopes"]["exitCode"], 1);
     assert_eq!(reports["spellings"]["exitCode"], 1);
+    assert_eq!(reports["suppressions"]["exitCode"], 1);
     assert_eq!(reports["empty"]["exitCode"], 0);
     assert!(reports["empty"]["report"]["rules"]
         .as_array()

@@ -1,0 +1,15 @@
+name: Widget merge sequence
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: example/publish-widget@v1
+        with:
+          retention-days: 7
+          # no-mistakes-disable-next-line github-actions-action-input-policy
+          <<: [{ keep-days: 1 }]
+      - uses: example/publish-widget@v1
+        with:
+          retention-days: 7
+          <<: [{ keep-days: 1 }]

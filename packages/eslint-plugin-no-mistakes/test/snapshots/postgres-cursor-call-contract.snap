@@ -442,6 +442,23 @@
     ]
   },
   {
+    "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-valid.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
     "file": "src/raw-string.js",
     "findings": [
       {
@@ -1030,6 +1047,152 @@
         "endLine": 2,
         "file": "src/local-reexport.js",
         "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+    "findings": [
+      {
+        "column": 17,
+        "endColumn": 24,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 5,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 24,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 6,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 11,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 7,
+        "message": "PostgreSQL namespace members must use a static property name so cursor use can be verified.",
+        "messageId": "staticNamespaceMember",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 11,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 8,
+        "message": "PostgreSQL namespace members must use a static property name so cursor use can be verified.",
+        "messageId": "staticNamespaceMember",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 36,
+        "endColumn": 39,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 9,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 36,
+        "endColumn": 39,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 10,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-invalid.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 51,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-invalid.ts",
+        "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 27,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-invalid.ts",
+        "line": 5,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 27,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-invalid.ts",
+        "line": 6,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 13,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-invalid.ts",
+        "line": 10,
         "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
         "messageId": "directUse",
         "ruleId": "no-mistakes/postgres-cursor-call-contract",

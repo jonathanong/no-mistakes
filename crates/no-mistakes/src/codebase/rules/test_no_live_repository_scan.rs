@@ -1,6 +1,6 @@
 //! Reject directory enumeration of the live repository reachable from test roots.
 mod assets;
-mod config;
+pub(in crate::codebase::rules) mod config;
 mod enumerators;
 mod findings;
 mod node_loaders;

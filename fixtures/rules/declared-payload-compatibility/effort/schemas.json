@@ -1,0 +1,28 @@
+{
+  "producer": {
+    "type": "object",
+    "properties": {
+      "details": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "consumer": {
+    "type": "object",
+    "properties": {
+      "details": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

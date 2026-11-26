@@ -2,6 +2,27 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "names.ts",
+          "line": 1,
+          "message": "names.ts: finite set 'typed' with kind 'ts-string-union' is unanalyzable at effort low; use yaml-sequence, yaml-string-selector, or path-regex-capture, or use effort max for this application",
+          "rule": "finite-set-consistency",
+          "sourceLine": "export type Names = 'widget';",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "glob_coverage": {
     "exitCode": 1,
     "report": {
@@ -18,6 +39,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "finite-set-consistency",
           "sourceLine": "exclude:",
           "target": "@acme/docs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "names.ts",
+          "line": 1,
+          "message": "names.ts: finite set 'typed' with kind 'ts-string-union' is unanalyzable at effort low; use yaml-sequence, yaml-string-selector, or path-regex-capture, or use effort max for this application",
+          "rule": "finite-set-consistency",
+          "sourceLine": "export type Names = 'widget';",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control.yml",
+          "line": 1,
+          "message": "names contains `widget` but no glob in control covers it",
+          "rule": "finite-set-consistency",
+          "sourceLine": "values:",
+          "target": "widget"
         }
       ],
       "warnings": []

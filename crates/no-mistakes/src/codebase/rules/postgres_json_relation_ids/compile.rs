@@ -4,7 +4,7 @@ use super::{
 use anyhow::{bail, Result};
 use regex::Regex;
 
-pub(super) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     for (key, column) in &opts.key_column_map {
         if key.trim().is_empty() {
             bail!("{RULE_ID} option keyColumnMap: key must not be empty");

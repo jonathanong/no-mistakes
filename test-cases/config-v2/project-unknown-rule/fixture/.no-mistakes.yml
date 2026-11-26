@@ -3,10 +3,10 @@ projects:
     type: server
     root: backend
 rules:
-  - rule: known-rule
+  - rule: unique-exports
     projects:
       - backend
     message: Known rule
-  - rule: ghost-rule
+  - rule: uniqe-exports
     projects:
       - backend

@@ -1,0 +1,9 @@
+name: Widgets
+on: [workflow_dispatch]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # no-mistakes-disable-next-line github-actions-vitest-project-selection
+      - run: pnpm exec vitest run --project widgets selected.test.ts
+      - run: pnpm exec vitest run --project widgets sibling.test.ts

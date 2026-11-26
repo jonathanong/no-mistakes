@@ -19,13 +19,13 @@ pub const RULE_ID: &str = "github-actions-checkout-credentials";
 /// `assumeWriteWhenUnspecified` defaults to false. Unknown option keys are rejected.
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     assume_write_when_unspecified: bool,
     default_branch: Option<String>,
 }
 
 impl Options {
-    fn default_branch(&self) -> Result<Option<&str>> {
+    pub(super) fn default_branch(&self) -> Result<Option<&str>> {
         let Some(branch) = self.default_branch.as_deref() else {
             return Ok(None);
         };

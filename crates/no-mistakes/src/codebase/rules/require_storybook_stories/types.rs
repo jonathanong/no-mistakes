@@ -19,7 +19,7 @@ pub(super) struct RuleCheck<'a> {
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     pub(super) stories: Option<Vec<String>>,
     pub(super) include: Vec<String>,
     pub(super) exclude: Vec<String>,
@@ -98,4 +98,12 @@ impl GlobMatcher {
             .as_ref()
             .is_some_and(|globset| globset.is_match(path))
     }
+}
+
+pub(in crate::codebase::rules) fn validate_options(opts: &Options) -> Result<()> {
+    GlobMatcher::new(&opts.include).context("options.include")?;
+    GlobMatcher::new(&opts.exclude).context("options.exclude")?;
+    GlobMatcher::new(opts.stories.iter().flatten()).context("options.stories")?;
+    GlobMatcher::new(opts.allow_files.keys()).context("options.allowFiles")?;
+    Ok(())
 }

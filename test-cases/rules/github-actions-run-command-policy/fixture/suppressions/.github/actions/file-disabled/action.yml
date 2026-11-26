@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-run-command-policy
+name: Release helper
+description: Run the configured sample command
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: gh api -f x=1 repos/example/widgets/labels

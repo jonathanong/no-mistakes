@@ -52,15 +52,7 @@ pub fn diagnostics_with_files_and_sources(
     let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
-        anyhow::ensure!(
-            !opts.source_file.trim().is_empty(),
-            "{RULE_ID}: sourceFile is required and must not be empty"
-        );
-        anyhow::ensure!(
-            !opts.source_key.trim().is_empty(),
-            "{RULE_ID}: sourceKey is required and must not be empty"
-        );
-        anyhow::ensure!(opts.anchors.is_some(), "{RULE_ID}: anchors is required");
+        validate_options(&opts)?;
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
@@ -88,3 +80,19 @@ pub fn diagnostics_with_files_and_sources(
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
+
+pub(super) fn validate_options(opts: &Options) -> Result<()> {
+    anyhow::ensure!(
+        !opts.source_file.trim().is_empty(),
+        "{RULE_ID}: options.sourceFile is required and must not be empty"
+    );
+    anyhow::ensure!(
+        !opts.source_key.trim().is_empty(),
+        "{RULE_ID}: options.sourceKey is required and must not be empty"
+    );
+    anyhow::ensure!(
+        opts.anchors.is_some(),
+        "{RULE_ID}: options.anchors is required"
+    );
+    Ok(())
+}

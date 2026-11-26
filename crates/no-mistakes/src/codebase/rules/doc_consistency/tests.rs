@@ -245,7 +245,10 @@ fn load_pattern_fixture(name: &str) -> (std::path::PathBuf, NoMistakesConfig) {
 }
 
 fn pattern_config_error(name: &str) -> String {
-    let (root, config) = load_pattern_fixture(name);
+    let root = fixture_root(&format!("pattern-config/{name}"));
+    let config =
+        serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
+            .unwrap();
     let files = [root.join("CLAUDE.md")];
     let sources = source_store_for_files(&files);
     let error = check_with_files_and_sources(&root, &config, &files, &sources).unwrap_err();
@@ -256,11 +259,8 @@ fn pattern_config_error(name: &str) -> String {
 #[test]
 fn empty_matching_patterns_fail_at_config_load() {
     let root = fixture_root("patterns-empty");
-    let error = check(
-        &root,
-        &crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap(),
-    )
-    .unwrap_err();
+    let error =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap_err();
     let message = error.to_string();
     assert!(message.contains("bannedPatterns[0]"), "{message}");
     assert!(message.contains("`a*|QQ`"), "{message}");

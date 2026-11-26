@@ -88,7 +88,10 @@ if it is not. The rule also records `incomplete` when it can find Playwright
 provenance but cannot resolve the whole receiver, for example through later
 assignments, a loop binding, arguments to a local function, an initialized
 class field, or a factory with an untraceable return branch. A missing initializer or an unknown
-branch does not discard provenance from another path. Computed
+branch preserves provenance from another path, including through imports and
+re-exports. A configured fixture establishes the identity of its imported export.
+Local choices, later assignments, and wrappers applied at the call site
+still need to preserve that identity. Computed
 configuration, omitted options, and CLI worker flags
 need separate review. An unreadable or malformed selected test or config also
 appears in the JSON `incomplete` list.

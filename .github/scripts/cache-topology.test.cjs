@@ -23,6 +23,31 @@ const producers = [
   "rust-coverage-build",
 ];
 
+test("macOS smoke replays runtime input timestamps only after restoring runtime artifacts", () => {
+  const all = steps(job("macos-smoke"));
+  const runtime = all.find((step) => step.startsWith("Restore native workspace artifacts"));
+  const build = all.find((step) => step.startsWith("Build native CLI and N-API addon"));
+  assert.match(runtime, /id: native-workspace-cache\b/);
+  assert.ok(
+    build.includes(
+      "NATIVE_WORKSPACE_CACHE_KEY: ${{ steps.native-workspace-cache.outputs.cache-matched-key }}",
+    ),
+  );
+  const commands = build.split("\n").map((line) => line.trim());
+  const replay = commands.findIndex((line) =>
+    line.startsWith("node .github/scripts/cargo-cache-inputs.cjs restore "),
+  );
+  assert.ok(replay > 0);
+  assert.deepEqual(commands.slice(replay - 2, replay), [
+    "PY",
+    'if [[ -n "$NATIVE_WORKSPACE_CACHE_KEY" ]]; then',
+  ]);
+  assert.deepEqual(commands.slice(replay + 1, replay + 3), [
+    "fi",
+    "node .github/scripts/build-native.cjs",
+  ]);
+});
+
 test("all large workspace snapshots restore on PRs but save only successful main builds", () => {
   for (const name of producers) {
     const body = job(name);
@@ -66,7 +91,15 @@ test("dependency caches are main-only, dependency-only and shared across compati
   for (const step of steps(workflow).filter((step) => /uses: Swatinem\/rust-cache@/.test(step))) {
     const block = step.split(/\n  [a-z][a-z-]*:\n/)[0];
     assert.match(block, /cache-workspace-crates: false/);
-    assert.match(block, /save-if: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);
+    if (block.startsWith("Cache Rust quality artifacts\n")) {
+      assert.ok(
+        block.includes(
+          "save-if: ${{ github.ref == 'refs/heads/main' && matrix.name != 'default-feature Clippy' }}",
+        ),
+      );
+    } else {
+      assert.match(block, /save-if: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);
+    }
     assert.match(block, /env.COLD_BUILD != 'true'/);
   }
   for (const name of ["packages", "linux-runtime"])

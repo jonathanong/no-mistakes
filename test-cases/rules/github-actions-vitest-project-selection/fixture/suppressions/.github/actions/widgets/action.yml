@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-vitest-project-selection
+name: Widgets helper
+description: Select the widgets project and a test path
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: pnpm exec vitest run --project widgets selected.test.ts

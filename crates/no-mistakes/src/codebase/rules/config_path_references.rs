@@ -79,7 +79,7 @@ pub(crate) fn check_with_files_and_sources(
 }
 
 impl Options {
-    fn validate(&self) -> Result<()> {
+    pub(in crate::codebase::rules) fn validate(&self) -> Result<()> {
         let unknown: Vec<_> = self
             .presets
             .iter()

@@ -208,9 +208,10 @@ is unchanged; only the list, and therefore the failure decision, differs.
 no-mistakes disable comments using the selected configuration's
 `reportUnusedDisableDirectives` setting. The default `advise` puts
 `unused-disable-directive` and `invalid-disable-directive` diagnostics in
-`CheckReport.advisories`; `report` puts them in `CheckReport.rules`, and
-`ignore` omits them. Locations refer to the comment. Unknown and disabled rule
-IDs have distinct messages. `includeSuppressed` controls only the optional
+`CheckReport.advisories`. The `report` mode puts them in `CheckReport.rules`.
+The `ignore` mode keeps unknown rule IDs in `CheckReport.advisories` and omits
+other hygiene diagnostics. Locations refer to the comment. Unknown and disabled
+rule IDs have distinct messages. `includeSuppressed` controls only the optional
 ledger of hidden findings. See [suppression hygiene](configuration/suppressions.md).
 
 `check()` and `analyzeProject()` check reports include optional
@@ -479,7 +480,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `terraform-iam-no-undocumented-wildcards`, `vitest-default-excludes`, and `vitest-project-policy` |
+| `check` | `check(options)`, including configured `csp-allowed-origins`, `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `terraform-iam-no-undocumented-wildcards`, `vitest-default-excludes`, and `vitest-project-policy` |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -634,7 +635,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `testsGraphMermaid` | `testsGraphMermaid(options)` |
 | `queueCheck` | `queueCheck(options)` |
 | `queueEdges` | `queueEdges(options)` |
-| `queueRelated` | `queueRelated(options)` |
+| `queueRelated` | `queueRelated(options)` accepts `QueueRelatedOptions` with at least one file or queue node in `files` |
 | `queues` | `queues(options)` |
 | `serverContracts` | `serverContracts(options)` |
 | `serverRouteEdges` | `serverRouteEdges(options)` |
@@ -823,7 +824,7 @@ through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
 no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`
 (including `runtimeAssets` entries, `TestNoLiveRepositoryScanRuntimeAsset`,
 and opt-in `analyzers` entries, `TestNoLiveRepositoryScanAnalyzer`),
-exported from `no-mistakes/types`. Runtime-asset reads are advisories with
+exported from `no-mistakes`. Runtime-asset reads are advisories with
 target `runtime asset` in the check report. A configured analyzer launch
 against the live working directory is an ordinary finding with target
 `analyzer subprocess`.
@@ -927,10 +928,10 @@ For a union-valued selector, arguments must satisfy every possible operation;
 otherwise narrow the selector before calling. For example, `"check" | "dependents"`
 requires options with `files`, even though a literal `"check"` needs no options.
 Selectors cover root analysis APIs, including `analyzeProject`, SQL extraction
-and parsing, and `lockStatus`. Utilities `version`, `diagnosticsSnapshot`,
-`createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts`, the collector
-itself, and raw Markdown helpers `testsComment` and `testsGraphMermaid` are
-excluded.
+and parsing, `lockStatus`, `testsComment`, and `testsGraphMermaid`. Both test-plan
+renderers return their ordinary strings as the collected result. The selector
+map excludes the collector itself and the `version`, `diagnosticsSnapshot`,
+`createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts` utilities.
 
 Phase records contain `label`, `wallMs`, user/system CPU milliseconds
 (`userMs`, `systemMs`), `utilization` as CPU/wall time, process-lifetime peak RSS
@@ -1096,6 +1097,14 @@ rule runs through async `check()` and `analyzeProject()` check reports.
 `PnpmReleaseAgePermanentPackage` entries with an exact `name` or
 package-name `pattern`, and `PnpmReleaseAgeTemporaryGroup` entries with
 exact version selectors. Configure the rule in the YAML selected by `config`.
+
+The configured [`csp-allowed-origins`](rules/csp-allowed-origins.md) rule runs
+through async `check()` using the existing `checkJson` binding and through
+batched `analyzeProject()` check reports. `CspAllowedOriginsOptions` exports
+`cspFiles` (`options.cspFiles`), optional `selfOrigins`
+(`options.selfOrigins`), and optional `unanalyzable` (`options.unanalyzable`,
+default `"report"`). Findings and advisories use the standard `RuleFinding`
+shape.
 
 The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
 rule runs through async `check()` using the existing `checkJson` binding and

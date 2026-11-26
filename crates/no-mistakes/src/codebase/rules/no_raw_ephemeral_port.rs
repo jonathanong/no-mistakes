@@ -40,7 +40,7 @@ pub(crate) struct Options {
     pub(crate) message: Option<String>,
 }
 
-pub(super) struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     include: Vec<String>,
     allow: FileAllow,
     bind: regex::Regex,
@@ -118,7 +118,7 @@ pub fn diagnostics_with_files_and_sources(
     Ok(super::file_diagnostics::sorted(diagnostics))
 }
 
-fn compile_options(opts: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: Options) -> Result<CompiledOptions> {
     let include = if opts.include.is_empty() {
         DEFAULT_INCLUDE
             .iter()

@@ -376,13 +376,9 @@ fn issue_3856_banned_clauses_check_json_snapshot() {
     let findings = reports["opt_in"]["report"]["rules"].as_array().unwrap();
     assert_eq!(findings.len(), 12, "{findings:?}");
     assert!(findings.iter().all(|finding| finding["rule"] == rule));
-    assert_eq!(reports["unknown"]["exitCode"], 1);
-    let errors = reports["unknown"]["report"]["incomplete"]
-        .as_array()
-        .unwrap();
-    assert_eq!(errors.len(), 1, "{errors:?}");
-    assert_eq!(errors[0]["consumer"], rule);
-    let message = errors[0]["message"].as_str().unwrap();
+    assert_eq!(reports["unknown"]["exitCode"], 2);
+    assert!(reports["unknown"]["report"].is_null());
+    let message = reports["unknown"]["stderr"].as_str().unwrap();
     assert!(
         message.contains("bannedClauses") && message.contains("unknown-clause"),
         "{message}"

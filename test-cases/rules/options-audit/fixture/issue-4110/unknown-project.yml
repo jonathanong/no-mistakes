@@ -1,0 +1,6 @@
+version: 2
+projects:
+  widget:
+    root: .
+    rules:
+      - github-actions-download-integrit

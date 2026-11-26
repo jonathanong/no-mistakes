@@ -1,0 +1,5 @@
+reportUnusedDisableDirectives: report
+projects:
+  widget:
+    root: src
+    exclude: [excluded.ts]

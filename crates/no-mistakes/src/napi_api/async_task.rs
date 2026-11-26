@@ -18,6 +18,7 @@ pub struct JsonTask {
 pub struct JsonValueTask {
     options_json: Buffer,
     run: fn(serde_json::Value) -> napi::Result<String>,
+    text: bool,
 }
 
 impl JsonValueTask {
@@ -25,7 +26,23 @@ impl JsonValueTask {
         options_json: Buffer,
         run: fn(serde_json::Value) -> napi::Result<String>,
     ) -> Self {
-        Self { options_json, run }
+        Self {
+            options_json,
+            run,
+            text: false,
+        }
+    }
+
+    #[cfg(not(coverage))]
+    pub(crate) fn new_text(
+        options_json: Buffer,
+        run: fn(serde_json::Value) -> napi::Result<String>,
+    ) -> Self {
+        Self {
+            options_json,
+            run,
+            text: true,
+        }
     }
 }
 
@@ -34,7 +51,7 @@ impl Task for JsonValueTask {
     type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        observed::execute_json(&self.options_json, self.run)
+        observed::execute_json(&self.options_json, self.run, self.text)
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
@@ -57,9 +74,11 @@ impl Task for JsonTask {
     type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        observed::execute_json(&self.options_json, |options| {
-            (self.run)(serde_json::to_string(&options).map_err(to_napi_error)?)
-        })
+        observed::execute_json(
+            &self.options_json,
+            |options| (self.run)(serde_json::to_string(&options).map_err(to_napi_error)?),
+            false,
+        )
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {

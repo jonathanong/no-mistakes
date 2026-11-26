@@ -14,7 +14,7 @@ pub const RULE_ID: &str = "postgres-no-test-state-mutation";
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     test_globs: Vec<String>,
     helper_roots: Vec<String>,
     import_specifier: String,
@@ -29,7 +29,7 @@ pub(super) struct Options {
     unanalyzable_sql: String,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     tests: GlobMatcher,
     helpers: GlobMatcher,
     embedded: EmbeddedSqlOptions,
@@ -38,7 +38,7 @@ struct CompiledOptions {
 }
 
 impl CompiledOptions {
-    fn new(options: &Options) -> Result<Self> {
+    pub(super) fn new(options: &Options) -> Result<Self> {
         if options.test_globs.is_empty() {
             bail!("{RULE_ID}: testGlobs must list at least one test-file glob");
         }

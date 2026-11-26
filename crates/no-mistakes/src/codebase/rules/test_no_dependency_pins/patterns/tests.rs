@@ -1,10 +1,14 @@
-use super::super::{check_source, compile_options, Options};
+use super::super::{check_source, compile_options, CompiledOptions, Options};
 use super::DEFAULT_PATTERNS;
 use std::path::PathBuf;
 
+fn default_compiled_options() -> &'static CompiledOptions {
+    static DEFAULT: std::sync::OnceLock<CompiledOptions> = std::sync::OnceLock::new();
+    DEFAULT.get_or_init(|| compile_options(&Options::default()).unwrap())
+}
+
 fn refs(line: &str) -> Vec<String> {
-    let options = compile_options(&Options::default()).unwrap();
-    check_source("src/app.test.mts", line, &options)
+    check_source("src/app.test.mts", line, default_compiled_options())
         .into_iter()
         .filter(|finding| finding.target.as_deref() == Some("exact action ref"))
         .filter_map(|finding| finding.import)

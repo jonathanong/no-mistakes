@@ -284,11 +284,11 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
     let frag_lines: Vec<_> = cli_frag.lines().collect();
     assert_eq!(frag_lines.len(), 2, "{cli_frag}");
     assert!(
-        frag_lines[0].starts_with(".no-mistakes/rules/cache.yml: "),
+        frag_lines[0].starts_with(".no-mistakes/rules/cache.yml:"),
         "{cli_frag}"
     );
     assert!(
-        frag_lines[1].starts_with(".no-mistakes/rules/vitest.yml: "),
+        frag_lines[1].starts_with(".no-mistakes/rules/vitest.yml:"),
         "{cli_frag}"
     );
 
@@ -358,7 +358,7 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
         .expect("config outside root must fail")
     );
     assert!(!outside_err.starts_with('/'), "{outside_err}");
-    assert!(outside_err.contains("cache.yml: "), "{outside_err}");
+    assert!(outside_err.contains("cache.yml:"), "{outside_err}");
 
     let valid_frag_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/options-audit/fixture/issue-3958-valid-fragment")
@@ -397,4 +397,44 @@ fn invalid_rule_options_reject_with_cli_and_batch_parity() {
         "{}",
         bad_frag_err.reason
     );
+}
+
+#[test]
+fn analyze_project_rejects_invalid_rule_ids_and_options_before_report_preparation() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/options-audit/fixture/issue-4110");
+    for (name, expected) in [
+        ("unknown.yml", "github-actions-download-integrit"),
+        ("invalid-options.yml", "bogusOption"),
+        ("invalid-values.yml", "downloadHelpers"),
+    ] {
+        let config = root.join(name);
+        let cli = crate::check_runner::run_all_with_options(
+            root.clone(),
+            Some(config.clone()),
+            Some(root.join("unreadable-tsconfig.json")),
+            false,
+            false,
+            crate::check_runner::AnalysisOptions::default(),
+        )
+        .err()
+        .expect("invalid rule configuration must abort CLI preparation");
+        let message = format!("{cli:#}");
+        assert!(
+            message.contains(expected) && message.contains(&format!("{name}:")),
+            "{message}"
+        );
+        for reports in [
+            json!([{"type": "check"}]),
+            json!([{"type": "symbols", "files": ["missing.ts"]}]),
+            json!([{"type": "callSites"}, {"type": "check"}]),
+        ] {
+            let input = json!({"root": root, "config": config, "reports": reports});
+            let err = crate::napi_api::analyze_project::analyze_project_json_impl(
+                crate::napi_api::options::test_json_arg(input.to_string()),
+            )
+            .expect_err("invalid rule configuration must reject the whole batch");
+            assert_eq!(err.reason, message, "{name}, {reports}");
+        }
+    }
 }

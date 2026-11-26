@@ -14,7 +14,7 @@ pub const RULE_ID: &str = "github-actions-no-poll-wait-job";
 /// configuration names the commands that poll another job or workflow.
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     poll_commands: Vec<String>,
     ignore_for_loops: bool,
 }
@@ -52,7 +52,7 @@ fn scan(
     })
 }
 
-fn compile(opts: &Options) -> Result<Vec<Vec<String>>> {
+pub(in crate::codebase::rules) fn compile(opts: &Options) -> Result<Vec<Vec<String>>> {
     opts.poll_commands
         .iter()
         .map(|command| {

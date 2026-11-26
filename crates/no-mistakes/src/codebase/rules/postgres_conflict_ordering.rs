@@ -102,7 +102,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings.finish())
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     if opts.schema_catalog_path.is_empty() {
         bail!("{RULE_ID} requires options.schemaCatalogPath");
     }

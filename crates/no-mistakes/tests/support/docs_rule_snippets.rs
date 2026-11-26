@@ -457,7 +457,7 @@ fn write_path(root: &Path, relative: &str, body: &str) {
 
 #[path = "docs_rule_report.rs"]
 mod report;
-pub use report::{check_report, run_rule};
+pub use report::{check_report, execute_rule_snippets, run_rule};
 
 pub fn page_path(repo_root: &Path, rule_id: &str) -> PathBuf {
     repo_root.join("docs/rules").join(format!("{rule_id}.md"))
