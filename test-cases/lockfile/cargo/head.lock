@@ -1,0 +1,40 @@
+# synthetic Cargo.lock
+version = 4
+
+[[package]]
+name = "sample-alpha"
+version = "1.1.0"
+source = "registry+https://example.invalid/crates"
+checksum = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+[[package]]
+name = "sample-app"
+version = "0.1.0"
+
+[[package]]
+name = "sample-path"
+version = "0.3.0"
+source = "path+file:///tmp/sample-path"
+
+[[package]]
+name = "sample-sparse"
+version = "1.4.0"
+source = "sparse+https://example.invalid/index/"
+checksum = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+
+[[package]]
+name = "sample-other"
+version = "0.5.0"
+source = "other+https://example.invalid/sample-other"
+
+[[package]]
+name = "sample-digest"
+version = "1.0.0"
+source = "registry+https://example.invalid/crates"
+checksum = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+
+[[package]]
+name = "sample-gamma"
+version = "2.0.0"
+source = "registry+https://example.invalid/crates"
+checksum = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"

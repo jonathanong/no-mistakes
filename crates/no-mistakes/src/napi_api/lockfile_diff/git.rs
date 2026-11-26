@@ -5,13 +5,7 @@ pub(super) fn detect_lockfiles_from_head(
     head: &str,
     root: &Path,
 ) -> std::io::Result<Vec<PathBuf>> {
-    let candidates = [
-        "pnpm-lock.yaml",
-        "package-lock.json",
-        "npm-shrinkwrap.json",
-        "yarn.lock",
-        "bun.lock",
-    ];
+    let candidates = crate::codebase::lockfile::LOCKFILE_BASENAMES;
     let root_rel = root
         .strip_prefix(git_root)
         .unwrap_or(Path::new(""))

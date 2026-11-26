@@ -1,4 +1,5 @@
 pub mod bun;
+mod ecosystem;
 pub(crate) mod keyed_diff;
 pub mod npm;
 pub mod pnpm;
@@ -11,7 +12,7 @@ pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ResolutionKind {
     Registry,
     Workspace,
@@ -56,7 +57,47 @@ pub enum PackageManager {
     Pnpm,
     Yarn,
     Bun,
+    Poetry,
+    Uv,
+    Pipfile,
+    Go,
+    Cargo,
+    Gemfile,
+    Composer,
 }
+
+impl PackageManager {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Npm => "npm",
+            Self::Pnpm => "pnpm",
+            Self::Yarn => "yarn",
+            Self::Bun => "bun",
+            Self::Poetry => "poetry",
+            Self::Uv => "uv",
+            Self::Pipfile => "pipfile",
+            Self::Go => "go",
+            Self::Cargo => "cargo",
+            Self::Gemfile => "gemfile",
+            Self::Composer => "composer",
+        }
+    }
+}
+
+pub const LOCKFILE_BASENAMES: &[&str] = &[
+    "pnpm-lock.yaml",
+    "package-lock.json",
+    "npm-shrinkwrap.json",
+    "yarn.lock",
+    "bun.lock",
+    "poetry.lock",
+    "uv.lock",
+    "Pipfile.lock",
+    "go.mod",
+    "Cargo.lock",
+    "Gemfile.lock",
+    "composer.lock",
+];
 
 pub fn detect_manager(basename: &str) -> Option<PackageManager> {
     match basename {
@@ -64,6 +105,13 @@ pub fn detect_manager(basename: &str) -> Option<PackageManager> {
         "pnpm-lock.yaml" => Some(PackageManager::Pnpm),
         "yarn.lock" => Some(PackageManager::Yarn),
         "bun.lock" => Some(PackageManager::Bun),
+        "poetry.lock" => Some(PackageManager::Poetry),
+        "uv.lock" => Some(PackageManager::Uv),
+        "Pipfile.lock" => Some(PackageManager::Pipfile),
+        "go.mod" => Some(PackageManager::Go),
+        "Cargo.lock" => Some(PackageManager::Cargo),
+        "Gemfile.lock" => Some(PackageManager::Gemfile),
+        "composer.lock" => Some(PackageManager::Composer),
         _ => None,
     }
 }
@@ -82,7 +130,30 @@ pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPac
         PackageManager::Pnpm => pnpm::parse(content),
         PackageManager::Yarn => yarn::parse(content),
         PackageManager::Bun => bun::parse(content),
+        PackageManager::Poetry => ecosystem::parse_toml(ecosystem::TomlKind::Poetry, content),
+        PackageManager::Uv => ecosystem::parse_toml(ecosystem::TomlKind::Uv, content),
+        PackageManager::Pipfile => ecosystem::parse_pipfile(content),
+        PackageManager::Go => ecosystem::parse_gomod(content),
+        PackageManager::Cargo => ecosystem::parse_toml(ecosystem::TomlKind::Cargo, content),
+        PackageManager::Gemfile => ecosystem::parse_gemfile(content),
+        PackageManager::Composer => ecosystem::parse_composer(content),
     }
+}
+
+/// npm-family parsers stay lenient. Other managers must validate first so a
+/// malformed file is not an empty package list.
+pub fn packages_for_diff(
+    manager: PackageManager,
+    content: &str,
+) -> Result<Vec<ResolvedPackage>, validate::LockfileValidationError> {
+    if matches!(
+        manager,
+        PackageManager::Npm | PackageManager::Pnpm | PackageManager::Yarn | PackageManager::Bun
+    ) {
+        return Ok(parse_lockfile(manager, content));
+    }
+    validate::validate_for_planning(manager, content)?;
+    Ok(parse_lockfile(manager, content))
 }
 
 pub fn diff(old: &[ResolvedPackage], new: &[ResolvedPackage]) -> LockfileDiff {

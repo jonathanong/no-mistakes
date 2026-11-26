@@ -1,0 +1,39 @@
+# synthetic Cargo.lock
+version = 3
+
+[[package]]
+name = "sample-alpha"
+version = "1.0.0"
+source = "registry+https://example.invalid/crates"
+checksum = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+[[package]]
+name = "sample-beta"
+version = "0.2.0"
+source = "git+https://example.invalid/sample-beta.git?rev=abc123#abc123"
+
+[[package]]
+name = "sample-app"
+version = "0.1.0"
+
+[[package]]
+name = "sample-path"
+version = "0.3.0"
+source = "path+file:///tmp/sample-path"
+
+[[package]]
+name = "sample-sparse"
+version = "1.4.0"
+source = "sparse+https://example.invalid/index/"
+checksum = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+
+[[package]]
+name = "sample-other"
+version = "0.5.0"
+source = "other+https://example.invalid/sample-other"
+
+[[package]]
+name = "sample-digest"
+version = "1.0.0"
+source = "registry+https://example.invalid/crates"
+checksum = "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"

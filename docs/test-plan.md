@@ -110,7 +110,7 @@ plus both sides of detected renames and copies.
 
 ## Lockfile Change Handling
 
-When a lockfile (`pnpm-lock.yaml`, `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`) appears
+When a lockfile (`pnpm-lock.yaml`, `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, `poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`, `Cargo.lock`, `Gemfile.lock`, `composer.lock`) appears
 in the changed file list, `tests plan` performs targeted package-level analysis instead of
 falling back to the full test suite. This applies to both plain plans and framework
 (Playwright / Vitest) configured plans.
@@ -136,8 +136,13 @@ an empty package list into that group.
 
 These conditions emit a warning: the lockfile has no baseline, the head
 revision is missing, pnpm YAML is malformed, the pnpm schema is unsupported, a
-non-env document precedes the project document, or a pnpm installation section
-outside the package graph changed. Diff-only mode without `--head` uses the
+non-env document precedes the project document, a pnpm installation section
+outside the package graph changed, or a `poetry.lock`, `uv.lock`,
+`Pipfile.lock`, `go.mod`, `Cargo.lock`, `Gemfile.lock`, or `composer.lock`
+file is malformed (`lockfile-poetry-malformed`, `lockfile-uv-malformed`,
+`lockfile-pipfile-malformed`, `lockfile-gomod-malformed`,
+`lockfile-cargo-malformed`, `lockfile-gemfile-malformed`,
+`lockfile-composer-malformed`). Diff-only mode without `--head` uses the
 same `lockfile-no-baseline` warning as a missing `--base`. The plan sets
 `fallback_triggered` for them only when full-suite fallback is opted in. A
 framework plan reads `--global-config-fallback` or `globalConfigFallback: true`

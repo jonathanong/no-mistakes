@@ -110,8 +110,23 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             continue;
         };
 
-        let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
-        let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
+        let old_pkgs = match lockfile::packages_for_diff(manager, &old_content) {
+            Ok(packages) => packages,
+            Err(error) => {
+                eprintln!(
+                    "warning: `{rel}` at `{}` has {}; skipping it",
+                    args.base, error.description
+                );
+                continue;
+            }
+        };
+        let new_pkgs = match lockfile::packages_for_diff(manager, &new_content) {
+            Ok(packages) => packages,
+            Err(error) => {
+                eprintln!("warning: `{rel}` has {}; skipping it", error.description);
+                continue;
+            }
+        };
         let diff = lockfile::diff(&old_pkgs, &new_pkgs);
 
         outputs.push(LockfileDiffOutput {
@@ -144,10 +159,5 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 include!("lockfile/git.rs");
 
 fn manager_name(m: PackageManager) -> &'static str {
-    match m {
-        PackageManager::Npm => "npm",
-        PackageManager::Pnpm => "pnpm",
-        PackageManager::Yarn => "yarn",
-        PackageManager::Bun => "bun",
-    }
+    m.as_str()
 }

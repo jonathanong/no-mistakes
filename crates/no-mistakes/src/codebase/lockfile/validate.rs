@@ -1,5 +1,7 @@
-use super::{bun, npm, pnpm, yarn, PackageManager};
+use super::ecosystem::TomlKind;
+use super::{bun, ecosystem, npm, pnpm, yarn, PackageManager};
 
+#[derive(Debug)]
 pub struct LockfileValidationError {
     pub kind: &'static str,
     pub description: &'static str,
@@ -17,7 +19,68 @@ pub fn validate_for_planning(
         PackageManager::Npm => validate_npm(content),
         PackageManager::Yarn => validate_yarn(content),
         PackageManager::Bun => validate_bun(content),
+        PackageManager::Poetry => toml(
+            TomlKind::Poetry,
+            content,
+            "lockfile-poetry-malformed",
+            "malformed poetry.lock content",
+        ),
+        PackageManager::Uv => toml(
+            TomlKind::Uv,
+            content,
+            "lockfile-uv-malformed",
+            "malformed uv.lock content",
+        ),
+        PackageManager::Pipfile => checked(
+            ecosystem::parse_pipfile_checked(content),
+            "lockfile-pipfile-malformed",
+            "malformed Pipfile.lock content",
+        ),
+        PackageManager::Go => checked(
+            ecosystem::parse_gomod_checked(content),
+            "lockfile-gomod-malformed",
+            "malformed go.mod content",
+        ),
+        PackageManager::Cargo => toml(
+            TomlKind::Cargo,
+            content,
+            "lockfile-cargo-malformed",
+            "malformed Cargo.lock content",
+        ),
+        PackageManager::Gemfile => checked(
+            ecosystem::parse_gemfile_checked(content),
+            "lockfile-gemfile-malformed",
+            "malformed Gemfile.lock content",
+        ),
+        PackageManager::Composer => checked(
+            ecosystem::parse_composer_checked(content),
+            "lockfile-composer-malformed",
+            "malformed composer.lock content",
+        ),
     }
+}
+
+fn checked<T, E>(
+    result: Result<T, E>,
+    kind: &'static str,
+    description: &'static str,
+) -> Result<(), LockfileValidationError> {
+    result
+        .map(|_| ())
+        .map_err(|_| LockfileValidationError { kind, description })
+}
+
+fn toml(
+    kind: TomlKind,
+    content: &str,
+    error_kind: &'static str,
+    description: &'static str,
+) -> Result<(), LockfileValidationError> {
+    checked(
+        ecosystem::parse_toml_checked(kind, content),
+        error_kind,
+        description,
+    )
 }
 
 fn validate_pnpm(content: &str) -> Result<(), LockfileValidationError> {

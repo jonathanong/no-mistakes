@@ -139,12 +139,32 @@ fn detect_manager_known() {
     assert_eq!(detect_manager("pnpm-lock.yaml"), Some(PackageManager::Pnpm));
     assert_eq!(detect_manager("yarn.lock"), Some(PackageManager::Yarn));
     assert_eq!(detect_manager("bun.lock"), Some(PackageManager::Bun));
+    assert_eq!(detect_manager("poetry.lock"), Some(PackageManager::Poetry));
+    assert_eq!(detect_manager("uv.lock"), Some(PackageManager::Uv));
+    assert_eq!(
+        detect_manager("Pipfile.lock"),
+        Some(PackageManager::Pipfile)
+    );
+    assert_eq!(detect_manager("go.mod"), Some(PackageManager::Go));
+    assert_eq!(detect_manager("Cargo.lock"), Some(PackageManager::Cargo));
+    assert_eq!(
+        detect_manager("Gemfile.lock"),
+        Some(PackageManager::Gemfile)
+    );
+    assert_eq!(
+        detect_manager("composer.lock"),
+        Some(PackageManager::Composer)
+    );
+    assert_eq!(PackageManager::Cargo.as_str(), "cargo");
+    assert_eq!(PackageManager::Go.as_str(), "go");
 }
 
 #[test]
 fn detect_manager_unknown() {
     assert_eq!(detect_manager("bun.lockb"), None);
     assert_eq!(detect_manager("package.json"), None);
+    assert_eq!(detect_manager("go.sum"), None);
+    assert_eq!(detect_manager("Cargo.toml"), None);
     assert_eq!(detect_manager("other.txt"), None);
 }
 

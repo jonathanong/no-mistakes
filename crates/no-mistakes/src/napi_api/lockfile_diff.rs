@@ -64,21 +64,15 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
         detect_lockfiles_from_head(&git_root, head, &root).map_err(git_io_to_napi)?
     } else {
         let visible_paths = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
-        [
-            "pnpm-lock.yaml",
-            "package-lock.json",
-            "npm-shrinkwrap.json",
-            "yarn.lock",
-            "bun.lock",
-        ]
-        .iter()
-        .map(|name| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(name)))
-        .filter(|candidate| {
-            visible_paths
-                .iter()
-                .any(|path| no_mistakes::codebase::ts_resolver::normalize_path(path) == *candidate)
-        })
-        .collect()
+        lockfile::LOCKFILE_BASENAMES
+            .iter()
+            .map(|name| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(name)))
+            .filter(|candidate| {
+                visible_paths.iter().any(|path| {
+                    no_mistakes::codebase::ts_resolver::normalize_path(path) == *candidate
+                })
+            })
+            .collect()
     };
 
     let mut entries = Vec::new();
@@ -110,8 +104,12 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
             None => std::fs::read_to_string(lf_path).unwrap_or_default(),
         };
         let old_content = git_lockfile_content(&git_root, &base, &rel, "base")?;
-        let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
-        let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
+        let old_pkgs = lockfile::packages_for_diff(manager, &old_content).map_err(|error| {
+            napi::Error::from_reason(format!("`{rel}` has {}", error.description))
+        })?;
+        let new_pkgs = lockfile::packages_for_diff(manager, &new_content).map_err(|error| {
+            napi::Error::from_reason(format!("`{rel}` has {}", error.description))
+        })?;
         let diff = lockfile::diff(&old_pkgs, &new_pkgs);
         entries.push(LockfileDiffEntry {
             lockfile: rel,
@@ -150,12 +148,7 @@ fn git_lockfile_content(
 }
 
 fn manager_name(m: PackageManager) -> &'static str {
-    match m {
-        PackageManager::Npm => "npm",
-        PackageManager::Pnpm => "pnpm",
-        PackageManager::Yarn => "yarn",
-        PackageManager::Bun => "bun",
-    }
+    m.as_str()
 }
 
 #[cfg(test)]

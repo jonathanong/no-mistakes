@@ -362,15 +362,16 @@ unproven. Recovered modifying SQL still requires statement-level classification.
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
 dependency artifacts participate in semantic native test planning. Playwright, React,
-Next.js fetches, call-sites, dead-exports, other ecosystem lockfile diffs, and applying every rule family to every language it
+Next.js fetches, call-sites, dead-exports, and applying every rule family to every language it
 can (for example the PostgreSQL rules over SQL in Rust code, tracked in
 [#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work. There are no
 per-language CLIs and none are planned: one `no-mistakes` invocation analyzes every
 configured language in one session with one graph, so a Next.js app that calls a Rust
 endpoint is a single analysis. `dependents --relationship <lang>` and
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` are the stable
-per-language surface when those stacks are configured. Other ecosystem lockfiles are
-not started.
+per-language surface when those stacks are configured.
+
+`pom.xml`, Gradle lockfiles, `mix.lock`, and `pubspec.yaml` stay native fallback only.
 
 ## Current Status
 
@@ -539,14 +540,15 @@ literals do the same. `server edges` reports them as `client-call`. Computed,
 concatenated, and interpolated URLs stay non-edges. Dart stays on `Uri.parse` /
 `http.*` literals aimed at configured TypeScript backends.
 
-**Lockfiles.** `lockfile diff` parses npm-family lockfiles. Test planning also
-understands SwiftPM `Package.resolved` pins and NuGet `packages.lock.json`
-(including TFM/RID variants),
-project `PackageReference`, and central `PackageVersion` changes. Future language
-support adds the ecosystem lockfile when agents need package-change impact:
-`poetry.lock` / `uv.lock` / `Pipfile.lock`, `go.mod`, `Cargo.lock`,
-`Gemfile.lock`, `composer.lock`. Go package-change impact reads the selected
-module graph from `go.mod`, not authentication hashes in `go.sum`.
+**Lockfiles.** `lockfile diff` parses npm-family lockfiles and `poetry.lock`,
+`uv.lock`, `Pipfile.lock`, `go.mod`, `Cargo.lock`, `Gemfile.lock`, and
+`composer.lock`. The diff is package name, version, fingerprint, and
+resolution kind. `go.sum` is not parsed; Go package-change impact reads
+require directives from `go.mod`. `pom.xml`, Gradle lockfiles, `mix.lock`,
+and `pubspec.yaml` stay native fallback only. Test planning also understands
+SwiftPM `Package.resolved` pins and NuGet `packages.lock.json` (including
+TFM/RID variants), project `PackageReference`, and central `PackageVersion`
+changes.
 
 **Checks, CLI, and N-API.** Every stable CLI capability needs an async N-API
 equivalent, fixture-backed tests, and docs. CLI `--format json` emits compact
@@ -635,7 +637,7 @@ are configured domain extractors on top of it.
 | HTTP routes      | Express / Hono / Koa      | Django URLconf → view, plus configured Flask / FastAPI decorator literals                        |
 | HTTP clients     | `fetch` `http` edge       | `requests` / `httpx` static literals; computed URLs are non-edges                                 |
 | Queues           | BullMQ / glide-mq         | Celery `@shared_task` / `@app.task`, `.delay(` / `.apply_async(`                                 |
-| Lockfile         | pnpm / npm / yarn / bun   | later (`lockfile diff` is npm-family; `poetry.lock` / `uv.lock` / `Pipfile.lock` are not parsed) |
+| Lockfile         | pnpm / npm / yarn / bun   | `poetry.lock`, `uv.lock`, and `Pipfile.lock` (`lockfile diff`)                                      |
 
 Configure package roots the way Swift configures `tests.swift.packages`. Route
 and queue paths stay under `projects.*.routes` and `projects.*.queues`. Do not
@@ -687,7 +689,7 @@ Go support is the language frontend. Asynq is the queue extractor. Configured
 | HTTP routes      | `server routes`     | configured `net/http`, Chi, Gin, Echo, or Fiber registrations                                                    |
 | HTTP clients     | `fetch` `http` edge | `http.Get` / `http.NewRequest` static literals; computed URLs are non-edges                                      |
 | Queues           | BullMQ job name     | Asynq `NewTask("mail:welcome", …)` / `HandleFunc("mail:welcome", …)`                                             |
-| Lockfile         | npm-family          | later (`lockfile diff` is npm-family; test planning reads the selected module graph from `go.mod`, not `go.sum`) |
+| Lockfile         | npm-family          | `go.mod` require directives (`lockfile diff`; not `go.sum`)                                          |
 
 Asynq task type strings are the virtual job identity, same as a BullMQ job
 name. A producer file gets `queue-enqueue`; the handler file gets
@@ -739,8 +741,9 @@ Rust v1 is a language frontend at the Swift/.NET bar: configured
 `tests.rust.packages` emit `rust-use` / `rust-mod` / `rust-package` edges,
 `tests plan cargo` selects crate tests, and static Axum / Actix / Rocket
 registrations emit `route` edges. Language `symbols` / `call-sites`,
-`Cargo.lock` diffs, and PostgreSQL rules over SQL in Rust code
+and PostgreSQL rules over SQL in Rust code
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work.
+`Cargo.lock` diffs participate in `lockfile diff`.
 
 | Feature          | TS/JS reference     | Rust equivalent                                                                                                                              |
 | ---------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -751,7 +754,7 @@ registrations emit `route` edges. Language `symbols` / `call-sites`,
 | HTTP routes      | `server routes`     | configured Axum, Actix, or Rocket registrations                                                                                              |
 | HTTP clients     | `fetch` `http` edge | `reqwest::get` / `reqwest::Client::new().get` static literals; computed URLs are non-edges                                                   |
 | Queues           | BullMQ              | declined: no Rust job facts                                                                                                                  |
-| Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `Cargo.lock` diffs are not started)                                                                    |
+| Lockfile         | npm-family          | `Cargo.lock` name, version, and checksum (`lockfile diff`)                                                                                   |
 | Checks           | `unique-exports`    | keep the existing `rust-*` filesystem rules                                                                                                  |
 
 The Rust fact pass records no language-specific queue jobs. Rust files
@@ -789,7 +792,7 @@ Sidekiq extractors.
 | HTTP routes      | `server routes`     | configured `config/routes.rb` (and engine routes) → controller#action, including bare `resources :name` |
 | HTTP clients     | `fetch` `http` edge | `Faraday` / `HTTParty` / `RestClient` / `Net::HTTP.get` static literals; computed URLs are non-edges  |
 | Queues           | BullMQ              | Active Job `SomeJob.perform_later` or Sidekiq `SomeWorker.perform_async` → job class                    |
-| Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `Gemfile.lock` diffs are not started)                             |
+| Lockfile         | npm-family          | `Gemfile.lock` specs (`lockfile diff`)                                                                  |
 
 Zeitwerk inference is heuristic and must stay inside configured roots. Do not
 scan the whole repository for `app/models`. Dynamic `constantize`,
@@ -819,7 +822,7 @@ framework from files, and do not enable both extractors from a missing value.
 | HTTP routes      | `server routes`     | configured Laravel `Route::` / static `Route::resource` / `Route::apiResource` / `Route::apiResources` or Symfony attribute/YAML routes |
 | HTTP clients     | `fetch` `http` edge | Laravel `Http::get` or `->request("GET", ...)` static literals; computed URLs are non-edges                  |
 | Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers                                  |
-| Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `composer.lock` diffs are not started)                                  |
+| Lockfile         | npm-family          | `composer.lock` packages (`lockfile diff`)                                                              |
 
 ```php
 Route::get('/api/users', [UserController::class, 'index']);
@@ -1135,10 +1138,8 @@ call shapes outside the documented matchers.
 Queue cells that say `declined` are closed. Do not invent a framework for them.
 
 Keep using `rg` for holes the status table still marks `no` or later:
-ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
-`Cargo.lock`, `Gemfile.lock`, `composer.lock`), Laravel resource routes with
-computed options or arguments, Phoenix resource routes with options,
-Kafka calls outside the documented literal shapes, language
+Laravel resource routes with computed options or arguments, Phoenix resource
+routes with options, Kafka calls outside the documented literal shapes, language
 `symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 

@@ -26,6 +26,13 @@ no-mistakes lockfile diff --base <ref> [--head <ref>] [--lockfile <path>] [--roo
 | `package-lock.json`, `npm-shrinkwrap.json` | npm |
 | `yarn.lock` | yarn (classic and berry) |
 | `bun.lock` | bun |
+| `poetry.lock` | poetry |
+| `uv.lock` | uv |
+| `Pipfile.lock` | pipfile |
+| `go.mod` | go |
+| `Cargo.lock` | cargo |
+| `Gemfile.lock` | gemfile |
+| `composer.lock` | composer |
 
 Auto-detection ignores `bun.lockb`. `--lockfile bun.lockb` warns that the
 binary lockfile cannot be parsed, omits it, and still exits 0. In Node,
@@ -33,6 +40,29 @@ binary lockfile cannot be parsed, omits it, and still exits 0. In Node,
 an empty `entries` array and a warning with `code: "binary-lockfile"`,
 `lockfile`, and `message`. Without `includeWarnings`, the Node promise rejects
 for explicit binary lockfiles and returns an array for supported lockfiles.
+
+`poetry.lock`, `uv.lock`, and `Cargo.lock` contribute one package per
+`[[package]]` table: name, version, and the first hash or Cargo `checksum`.
+A `[package.dependencies]` table stays on that package. Cargo `registry+` and
+`sparse+` sources are registry, `git+` is git, `path+` is a directory, and a
+package with no source is the workspace. Poetry and uv git, directory, and
+URL sources set the same resolution kind. `Pipfile.lock` reads `default` and
+`develop`; the object key is the name, a leading `==` is removed from the
+version, and the first hash is the fingerprint. `go.mod` reads `require`
+lines, including `// indirect`. `replace`, `exclude`, `retract`, and `go.sum`
+are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
+lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
+fingerprints, and `PATH` is a directory. `composer.lock` reads `packages` and
+`packages-dev`. `dist.reference` is the fingerprint, `dist.type` `path` is a
+directory, and a git source with no dist is git.
+
+A malformed file of one of those managers is not an empty package list.
+`lockfile diff` warns and omits that file. `tests plan` reports
+`lockfile-cargo-malformed`, `lockfile-poetry-malformed`, `lockfile-uv-malformed`,
+`lockfile-pipfile-malformed`, `lockfile-gomod-malformed`,
+`lockfile-gemfile-malformed`, or `lockfile-composer-malformed`. The async
+`lockfileDiff()` call rejects with the same description. `pom.xml`, Gradle
+lockfiles, `mix.lock`, and `pubspec.yaml` are not lockfile diffs.
 
 pnpm 12 still writes `lockfileVersion: '9.0'`. When the project pins pnpm 12, or has config dependencies, `pnpm-lock.yaml` is two YAML documents. The env document comes first and records `configDependencies` and `packageManagerDependencies`. The project document is last. Package diffs union `packages` from every document, so a pnpm pin or config dependency change is reported. Importer and snapshot impact use the project document. A document before that project document must be an env lockfile: its `.` importer has only `configDependencies` and `packageManagerDependencies`. Anything else is rejected instead of being read as the workspace. A `resolution.revision` field is accepted metadata; the `integrity` digest remains the package identity. Lockfile majors outside 5 through 9 stay unsupported.
 
