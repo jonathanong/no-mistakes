@@ -111,7 +111,7 @@ The current validation graph is organized as follows:
   operation added or removed in an otherwise portable rule still triggers smoke.
   Before compiling the Rust tests, smoke first tries to restore the
   `native-test-harness-workspace-v2-aarch64-apple-darwin`
-  `target/debug` snapshot that `native-test-build-macos` saves on `main`
+  `target/debug` snapshot that `native-rust-tests-macos` saves on `main`
   (same primary key, harness restore prefixes and paths). PRs only restore.
   `smoke.cjs` uses the same `profileArgs` Cargo profile. If the harness cache
   misses, smoke falls back to the compatible macOS runtime workspace from
@@ -142,9 +142,12 @@ The current validation graph is organized as follows:
   Keep the timestamp replay ahead of compilation because replaying it again
   would mark changed files fresh and force a rebuild.
   [macOS smoke job](https://github.com/jonathanong/no-mistakes/actions/runs/45364121571/job/138343765816)
-  The full macOS jobs (`native-build-macos`, `native-test-build-macos`,
-  `native-rust-tests-macos`, `native-api-tests-macos`) run only on pushes to
-  `main` and manual dispatch, where they are unchanged. The trade-off is that
+  The full macOS jobs (`native-rust-tests-macos` and `native-api-tests-macos`)
+  run on `main` and manual dispatch. They build in parallel and each runs its
+  tests on its own build runner. They still publish the runtime and Rust test
+  archives for exact-commit measurement reuse. Only a validated reuse run
+  downloads an archive before testing. Cache retention follows a successful
+  build upload even if tests later fail. The PR smoke tier means that
   an OS-only regression outside the smoke list surfaces on `main` after merge
   instead of on the pull request. The release workflow is a manual dispatch
   and does not read `main` CI results, so the maintainer must confirm `main` is

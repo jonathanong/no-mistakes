@@ -16,9 +16,9 @@ const paths = (step) =>
 const producers = [
   "linux-runtime",
   "native-build",
-  "native-build-macos",
+  "native-api-tests-macos",
   "native-test-build",
-  "native-test-build-macos",
+  "native-rust-tests-macos",
   "standalone-build",
   "rust-coverage-build",
 ];
@@ -47,7 +47,7 @@ test("all large workspace snapshots restore on PRs but save only successful main
 });
 
 test("macOS snapshots prefer CGU64, then fall back across manifest changes", () => {
-  for (const name of ["native-build-macos", "native-test-build-macos"]) {
+  for (const name of ["native-api-tests-macos", "native-rust-tests-macos"]) {
     const restore = steps(job(name)).find((step) => /uses: actions\/cache\/restore@/.test(step));
     assert.match(restore, /key: [^\n]+-cgu64-\$\{\{ hashFiles\('crates\/\*\*\/\*\.rs'\) \}\}/);
     const fallback = restore
@@ -80,9 +80,9 @@ test("dependency caches are main-only, dependency-only and shared across compati
   assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
   for (const name of [
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
     "rust-coverage-build",
     "standalone-build",
   ]) {
@@ -111,7 +111,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 34);
+  assert.equal(setups.length, 30);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);
@@ -150,7 +150,7 @@ test("macOS smoke restores main test-harness snapshot before the Rust tests and 
   const restore = all.find((step) => step.startsWith("Restore native test harness artifacts"));
   assert.ok(restore);
   assert.doesNotMatch(smoke, /actions\/cache\/save@/);
-  const producer = steps(job("native-test-build-macos")).find((step) =>
+  const producer = steps(job("native-rust-tests-macos")).find((step) =>
     /uses: actions\/cache\/restore@/.test(step),
   );
   const target = (text) => text.replaceAll("${{ matrix.target }}", "aarch64-apple-darwin");

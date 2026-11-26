@@ -11,16 +11,21 @@ test("Tests with coverage waits directly for the coverage merge and the Linux AP
   assert.ok(ci.jobs["tests-gate"].needs.includes("linux-api-tests"));
 });
 
-test("each cache is retained by its own job right after its producer", () => {
+test("each cache is retained from its own build result", () => {
   for (const name of [
     "linux-runtime",
     "native-build",
-    "native-build-macos",
     "native-test-build",
-    "native-test-build-macos",
     "standalone-build",
     "rust-coverage-build",
   ])
     assert.equal(ci.jobs[`retain-${name}-cache`]?.needs, name, name);
+  for (const [retention, job] of [
+    ["retain-native-build-macos-cache", "native-api-tests-macos"],
+    ["retain-native-test-build-macos-cache", "native-rust-tests-macos"],
+  ]) {
+    assert.equal(ci.jobs[retention]?.needs, job, job);
+    assert.ok(ci.jobs[retention].if.includes(`needs.${job}.outputs.built == 'true'`), job);
+  }
   assert.equal(ci.jobs["retain-caches"], undefined);
 });

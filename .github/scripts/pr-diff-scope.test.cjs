@@ -52,12 +52,7 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
   const release = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
   assert.doesNotMatch(release, /pr-diff-scope|outputs\.macos/);
 
-  for (const name of [
-    "native-build-macos",
-    "native-test-build-macos",
-    "native-rust-tests-macos",
-    "native-api-tests-macos",
-  ]) {
+  for (const name of ["native-rust-tests-macos", "native-api-tests-macos"]) {
     assert.match(
       workflowJob(source, name),
       /if: \$\{\{ needs\.changes\.outputs\.macos == 'true'(?: && needs\.changes\.outputs\.rust == 'true')? \}\}/,
@@ -76,21 +71,6 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
   );
 
   const mainPush = "github.event_name == 'push' && github.ref == 'refs/heads/main'";
-  for (const [name, slot] of [
-    ["native-build-macos", "native-build-macos-all"],
-    ["native-test-build-macos", "native-test-build-macos-all"],
-  ]) {
-    const body = workflowJob(source, name);
-    assert.match(
-      body,
-      new RegExp(
-        `group: \\$\\{\\{ ${mainPush} && 'ci-macos-main-${slot}' \\|\\| format\\('ci-macos-\\{0\\}-${slot}', github\\.run_id\\) \\}\\}`,
-      ),
-      name,
-    );
-    assert.doesNotMatch(body, /github\.job/);
-    assert.match(body, /cancel-in-progress: false/, name);
-  }
   for (const name of ["native-rust-tests-macos", "native-api-tests-macos"]) {
     const body = workflowJob(source, name);
     assert.match(
@@ -107,7 +87,7 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
     assert.doesNotMatch(workflowJob(source, name), /concurrency:|ci-macos-main/);
   assert.doesNotMatch(workflowJob(source, "macos-smoke"), /concurrency:|ci-macos-main/);
   for (const name of ["retain-native-build-macos-cache", "retain-native-test-build-macos-cache"])
-    assert.match(workflowJob(source, name), /needs\.[^.]+\.result == 'success'/);
+    assert.match(workflowJob(source, name), /needs\.[^.]+\.outputs\.built == 'true'/);
 });
 
 test("Tests with coverage accepts a skipped full macOS tier only on pull requests", () => {
@@ -126,12 +106,7 @@ test("Tests with coverage accepts a skipped full macOS tier only on pull request
   assert.match(native, /run: node \.github\/scripts\/tests-gate\.cjs/);
   const script = path.join(__dirname, "tests-gate.cjs");
   const macosJobs = needs.filter((name) => name.endsWith("-macos"));
-  assert.deepEqual(macosJobs.sort(), [
-    "native-api-tests-macos",
-    "native-build-macos",
-    "native-rust-tests-macos",
-    "native-test-build-macos",
-  ]);
+  assert.deepEqual(macosJobs.sort(), ["native-api-tests-macos", "native-rust-tests-macos"]);
   const runGate = (
     results,
     required,
@@ -186,7 +161,7 @@ test("Tests with coverage accepts a skipped full macOS tier only on pull request
     1,
   );
   assert.equal(
-    runGate({ ...skippedMacos, "native-build-macos": { result: "failure" } }, "false").status,
+    runGate({ ...skippedMacos, "native-api-tests-macos": { result: "failure" } }, "false").status,
     1,
   );
   assert.equal(runGate({ ...success, changes: { result: "skipped" } }, "false").status, 1);
@@ -211,26 +186,13 @@ test("Tests with coverage accepts a skipped full macOS tier only on pull request
   );
   assert.equal(
     runGate(
-      { ...success, "native-build-macos": { result: "failure" } },
+      { ...success, "native-api-tests-macos": { result: "failure" } },
       "true",
       "push",
       "refs/heads/main",
     ).status,
     1,
   );
-  const supersededApi = {
-    ...success,
-    "native-build-macos": { result: "cancelled" },
-    "native-api-tests-macos": { result: "skipped" },
-  };
-  const supersededRust = {
-    ...success,
-    "native-test-build-macos": { result: "cancelled" },
-    "native-rust-tests-macos": { result: "skipped" },
-  };
-  assert.equal(runGate(supersededApi, "true", "push", "refs/heads/main").status, 0);
-  assert.equal(runGate(supersededRust, "true", "push", "refs/heads/main").status, 0);
-  assert.equal(runGate(supersededApi, "true", "pull_request", "refs/heads/main").status, 1);
   assert.equal(
     runGate(
       { ...success, "native-api-tests-macos": { result: "skipped" } },

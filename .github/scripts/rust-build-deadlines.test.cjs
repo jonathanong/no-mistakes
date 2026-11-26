@@ -20,7 +20,11 @@ const budget = (body) => seconds(body.match(/^\s+timeout-minutes: (.+)$/m)[1]);
 const step = (body, name) => body.split(`      - name: ${name}\n`)[1].split(/\n      - /)[0];
 for (const sample of evidence.censored) {
   test(`cold timeout reserve: ${sample.workflow}/${sample.job}`, () => {
-    const body = workflowJob(workflows[sample.workflow], sample.job);
+    const job =
+      sample.workflow === "ci" && sample.job === "native-test-build-macos"
+        ? "native-rust-tests-macos"
+        : sample.job;
+    const body = workflowJob(workflows[sample.workflow], job);
     const stepSeconds = budget(step(body, sample.step));
     assert.ok(stepSeconds >= sample.seconds * 1.25, `retain cold reserve for run ${sample.run}`);
     assert.ok(budget(body) >= stepSeconds + 300, "setup and artifact reserve must fit");
@@ -32,9 +36,9 @@ test("measured CI exceptions remain finite and below the sum of their bounded st
     "packages",
     "linux-runtime",
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
     "standalone-build",
     "rust-coverage-build",
     "docs-tests",
