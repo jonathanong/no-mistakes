@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      includeVitestProjectGlobs: 1
