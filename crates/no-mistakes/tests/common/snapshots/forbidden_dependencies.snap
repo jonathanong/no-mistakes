@@ -374,5 +374,52 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "next-line-before-import.mts",
+          "line": 1,
+          "message": "directive for `forbidden-dependencies` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line forbidden-dependencies",
+          "target": "forbidden-dependencies"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 20,
+          "message": "forbidden-dependencies: invalid glob pattern in forbiddenModules: error parsing glob '[': unclosed character class; missing ']'",
+          "rule": "forbidden-dependencies",
+          "sourceLine": "- '['"
+        },
+        {
+          "file": "next-line-before-import.mts",
+          "import": "import",
+          "line": 1,
+          "message": "*.mts reaches forbidden file 'lib/forbidden.mts' via import. Reproduce: no-mistakes dependencies 'next-line-before-import.mts' --filter 'lib/forbidden.mts' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "sourceLine": "// no-mistakes-disable-next-line forbidden-dependencies",
+          "target": "lib/forbidden.mts"
+        },
+        {
+          "file": "unsuppressed.mts",
+          "import": "import",
+          "line": 1,
+          "message": "*.mts reaches forbidden file 'lib/forbidden.mts' via import. Reproduce: no-mistakes dependencies 'unsuppressed.mts' --filter 'lib/forbidden.mts' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "sourceLine": "import \"./lib/forbidden.mts\";",
+          "target": "lib/forbidden.mts"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

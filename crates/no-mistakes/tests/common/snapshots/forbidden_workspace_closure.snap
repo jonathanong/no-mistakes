@@ -547,6 +547,67 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "suppression_catalog_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppression_catalog_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppression_next_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "directive for `forbidden-workspace-closure` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line forbidden-workspace-closure",
+          "target": "forbidden-workspace-closure"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 10,
+          "message": "forbidden-workspace-closure: configured package '@fixture/unsuppressed' is not a named workspace package",
+          "rule": "forbidden-workspace-closure",
+          "sourceLine": "- '@fixture/unsuppressed'"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: setting \"catalog\" is claimed by more than one pnpm source",
+          "rule": "forbidden-workspace-closure",
+          "sourceLine": "# no-mistakes-disable-next-line forbidden-workspace-closure",
+          "target": "catalog"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "transitive": {
     "exitCode": 1,
     "report": {

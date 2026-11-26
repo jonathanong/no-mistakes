@@ -1,0 +1,8 @@
+# no-mistakes-disable-next-line require-test-per-subdir
+rules:
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      # `..` leaves this repository. Report that once; do not scan the parent.
+      roots: [".."]
+      testGlob: "*.test.mts"

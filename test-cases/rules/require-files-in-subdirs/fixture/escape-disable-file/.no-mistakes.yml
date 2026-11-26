@@ -1,0 +1,9 @@
+
+# no-mistakes-disable-file require-files-in-subdirs
+rules:
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        - root: ".."
+          requiredFiles: [README.md]

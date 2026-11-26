@@ -93,6 +93,26 @@ fn require_test_per_subdir_json_matches_snapshot() {
             ),
             // Empty roots skip the fail tree instead of reporting its missing test.
             ("empty_roots", fixture("fail"), config("empty.yml")),
+            (
+                "escape",
+                fixture("escape"),
+                fixture("escape/.no-mistakes.yml"),
+            ),
+            (
+                "escape_disable_file",
+                fixture("escape-disabled"),
+                fixture("escape-disabled/.no-mistakes.yml"),
+            ),
+            (
+                "escape_disable_line",
+                fixture("escape-disable-line"),
+                fixture("escape-disable-line/.no-mistakes.yml"),
+            ),
+            (
+                "escape_disable_next_line",
+                fixture("escape-disable-next-line"),
+                fixture("escape-disable-next-line/.no-mistakes.yml"),
+            ),
         ],
     );
 }

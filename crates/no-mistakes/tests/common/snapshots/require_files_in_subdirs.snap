@@ -45,6 +45,79 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "escape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "..: configured root escapes the repository",
+          "rule": "require-files-in-subdirs",
+          "sourceLine": "rules:"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escape_disable_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escape_disable_next_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "directive for `require-files-in-subdirs` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line require-files-in-subdirs",
+          "target": "require-files-in-subdirs"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "..: configured root escapes the repository",
+          "rule": "require-files-in-subdirs",
+          "sourceLine": "# no-mistakes-disable-next-line require-files-in-subdirs"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail": {
     "exitCode": 1,
     "report": {
