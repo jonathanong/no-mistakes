@@ -93,6 +93,7 @@ that block is configured.
 Combine the lookups into a single join and project every needed column from it:
 
 ```sql
+-- queries/orders.sql
 SELECT
   o.id,
   a.display_name AS account_name,
@@ -106,6 +107,7 @@ LEFT JOIN accounts a ON a.id = o.account_id;
 Two scalar subqueries looking up the same `accounts` row on `o.account_id`:
 
 ```sql
+-- queries/orders.sql
 SELECT
   o.id,
   (SELECT display_name FROM accounts WHERE id = o.account_id) AS account_name,
@@ -116,6 +118,7 @@ FROM orders o;
 Two joins against the same `accounts` row on `o.account_id`:
 
 ```sql
+-- queries/orders.sql
 SELECT
   o.id,
   a1.display_name,
