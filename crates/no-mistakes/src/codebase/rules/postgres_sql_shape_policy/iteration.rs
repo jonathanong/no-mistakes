@@ -11,7 +11,7 @@ use anyhow::{bail, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ShapeOptions {
     pub(super) banned_function_call: super::functions::BannedFunctionCall,
     literal_limit: LiteralLimit,
@@ -19,13 +19,13 @@ pub(crate) struct ShapeOptions {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct LiteralLimit {
     allowed_values: Option<Vec<i64>>,
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct KeysetOnlySweep {
     non_selective_predicates: Vec<String>,
     pub(super) ignore_tables: Vec<String>,

@@ -6,7 +6,7 @@ mod compile;
 pub(super) use compile::compile;
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct BannedFunctionCall {
     functions: Vec<FunctionEntry>,
 }

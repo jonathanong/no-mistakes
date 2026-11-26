@@ -28,7 +28,7 @@ pub(crate) struct FiniteDomainAssertion {
 }
 
 #[derive(Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct IdentifierValidator {
     pub(crate) module: Option<String>,
     pub(crate) name: String,
@@ -36,7 +36,7 @@ pub(crate) struct IdentifierValidator {
 }
 
 #[derive(Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct IdentifierSource {
     pub(crate) module: Option<String>,
     pub(crate) name: String,
