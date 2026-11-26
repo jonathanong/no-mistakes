@@ -125,18 +125,20 @@ jobs:
           node - "$version" <<'NODE'
           const fs = require("node:fs");
           const version = process.argv[2];
-          const crates = [
-            "Cargo.toml",
-            "crates/no-mistakes/Cargo.toml",
-          ];
-          for (const file of crates) {
-            if (!fs.existsSync(file)) continue;
-            const cargo = fs.readFileSync(file, "utf8").replace(
-              /^version = ".*"$/m,
-              `version = "${version}"`,
-            );
-            fs.writeFileSync(file, cargo);
+          const file = "Cargo.toml";
+          const original = fs.readFileSync(file, "utf8");
+          let updated = original.replace(
+            /(\[workspace\.package\][\s\S]*?^version = ")[^"]+(")/m,
+            `$1${version}$2`,
+          );
+          updated = updated.replace(
+            /(no-mistakes-[a-z0-9-]+\s*=\s*\{\s*version\s*=\s*"=)[^"]+("\s*,\s*path\s*=\s*"crates\/[^"]+"\s*\})/g,
+            `$1${version}$2`,
+          );
+          if (updated === original) {
+            throw new Error(`failed to bump workspace version to ${version} in ${file}`);
           }
+          fs.writeFileSync(file, updated);
           NODE
 
           cargo update -w
@@ -390,7 +392,7 @@ jobs:
 
       - name: Check Cargo packages
         timeout-minutes: 10
-        run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh" cargo publish --dry-run --locked -p no-mistakes
+        run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh" cargo publish --dry-run --locked --workspace
 
       # rust-cache's post step walks `target/package/**/tests/{target,trybuild}`.
       # Those dirs are absent from the packaged crate, and Node's ENOENT
@@ -1300,7 +1302,9 @@ jobs:
         run: |
           set -euo pipefail
           version="${{ needs.prepare.outputs.version }}"
-          for pkg in no-mistakes; do
+          pkgs=(no-mistakes-invocation no-mistakes-postgres-sql no-mistakes)
+          for i in "${!pkgs[@]}"; do
+            pkg="${pkgs[$i]}"
             if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then
               echo "$pkg $version is already published on crates.io; skipping"
             else
@@ -1312,6 +1316,18 @@ jobs:
               else
                 exit 1
               fi
+            fi
+            if (( i + 1 < ${#pkgs[@]} )); then
+              for (( attempt = 1; attempt <= 24; attempt++ )); do
+                if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then
+                  break
+                fi
+                if (( attempt == 24 )); then
+                  echo "::error::$pkg $version did not appear on crates.io index in time" >&2
+                  exit 1
+                fi
+                sleep 5
+              done
             fi
           done
 

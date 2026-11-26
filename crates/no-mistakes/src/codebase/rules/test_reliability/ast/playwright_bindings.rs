@@ -24,13 +24,6 @@ impl ValueTrace {
             Self::Unresolved(reason, candidates)
         }
     }
-
-    pub(super) fn into_resolved(self) -> Option<FixtureInitializer> {
-        match self {
-            Self::Resolved(init) => Some(init),
-            Self::Unresolved(..) | Self::None => None,
-        }
-    }
 }
 
 pub(crate) fn fixture_initializers<'a>(
@@ -49,32 +42,34 @@ pub(crate) fn fixture_initializers<'a>(
         else {
             continue;
         };
-        if scope.symbol_flags(symbol).is_const_variable() {
-            if let Some(initializer) = semantic
+        let mut visited = FxHashSet::default();
+        if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
+            result.wrappers.insert(export.local.clone(), summary);
+            continue;
+        }
+        let trace = if bindings.is_function_def(symbol) {
+            bindings.factory_return_origin(symbol, 0)
+        } else if scope.symbol_flags(symbol).is_const_variable() {
+            semantic
                 .nodes()
                 .kind(scope.symbol_declaration(symbol))
                 .as_variable_declarator()
                 .filter(|declaration| declaration.id.is_binding_identifier())
                 .and_then(|declaration| declaration.init.as_ref())
-            {
-                match bindings.playwright_value_origin(initializer) {
-                    ValueTrace::Resolved(import) => {
-                        result.values.insert(export.local.clone(), import);
-                        continue;
-                    }
-                    ValueTrace::Unresolved(_, candidates) => {
-                        result.uncertain.insert(export.local.clone(), candidates);
-                        continue;
-                    }
-                    ValueTrace::None => {}
-                }
+                .map_or(ValueTrace::None, |init| {
+                    bindings.playwright_value_origin(init)
+                })
+        } else {
+            ValueTrace::None
+        };
+        match trace {
+            ValueTrace::Resolved(origin) => {
+                result.values.insert(export.local.clone(), origin);
             }
-        }
-        let mut visited = FxHashSet::default();
-        if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
-            result.wrappers.insert(export.local.clone(), summary);
-        } else if let Some(origin) = bindings.factory_return_origin(symbol, 0).into_resolved() {
-            result.values.insert(export.local.clone(), origin);
+            ValueTrace::Unresolved(_, candidates) => {
+                result.uncertain.insert(export.local.clone(), candidates);
+            }
+            ValueTrace::None => {}
         }
     }
     result

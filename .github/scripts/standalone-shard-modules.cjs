@@ -302,6 +302,11 @@ function libraryShardCoverage(root, options = {}) {
           ],
         },
         {
+          crateName: "no-mistakes-invocation",
+          srcDir: join(root, "crates/no-mistakes-invocation/src"),
+          entries: [join(root, "crates/no-mistakes-invocation/src/lib.rs")],
+        },
+        {
           crateName: "no-mistakes-postgres-sql",
           srcDir: join(root, "crates/no-mistakes-postgres-sql/src"),
           entries: [join(root, "crates/no-mistakes-postgres-sql/src/lib.rs")],

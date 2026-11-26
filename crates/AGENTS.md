@@ -1,20 +1,13 @@
 <!-- cspell:ignore rustc -->
+## Workspace crates
+
+- `crates/no-mistakes` — CLI, N-API library, graph, and rules (`pub use no_mistakes_invocation as invocation;`, re-exporting `no-mistakes-postgres-sql` from `codebase::postgres`).
+- `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (inverted diagnostics hooks in `hooks.rs`).
+- `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/locking/bound fact extraction, migration recovery, and identifier normalization (zero dependency on `no-mistakes`; inverted catalog and Rayon pool hooks via `CatalogLifecycleLookup` and `source::record_global_rayon_threads`).
+
 ## Performance Guidelines
 
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
-
-### Workspace crate boundaries
-
-- `crates/no-mistakes-postgres-sql` owns pure PostgreSQL SQL parsing,
-  statement/DML/locking/bound fact extraction, migration recovery, and SQL
-  identifier normalization. It must not depend on `no-mistakes`.
-- Host-side hooks (`CatalogLifecycleLookup` for catalog search-path/scalar
-  lookups and `source::record_global_rayon_threads` for Rayon pool sizing)
-  invert dependencies from `no-mistakes` into `no-mistakes-postgres-sql`.
-- `crates/no-mistakes/src/codebase/postgres/` owns TypeScript-embedded SQL,
-  schema catalogs, rule profiles, verdicts, and re-exports the public surface
-  of `no-mistakes-postgres-sql` so CLI, N-API, and Rust callers see unchanged
-  paths.
 
 ### Core architecture invariants
 

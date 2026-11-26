@@ -197,8 +197,8 @@ one suite; the registration test rejects omitted or duplicate sources. Original
 module and fixture paths stay unchanged. To run one former target, use, for example,
 `cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::`.
 Use the full module-qualified name with `-- --exact` for a single test.
-`windows_job_object`, `windows_invocation` and `macos_invocation` remain separate platform harnesses
-for their process and crate-root requirements. The native macOS job also runs
+`windows_job_object` and `windows_invocation` remain separate platform harnesses in `crates/no-mistakes`,
+while `macos_invocation` lives in `crates/no-mistakes-invocation` alongside `src/invocation*` (re-exported by `crates/no-mistakes` as `invocation`). The native macOS job also runs
 `cargo test --locked -p no-mistakes --bin no-mistakes invocation::tests::blocked_check::`
 for the blocked-check timeout regression. This binary subprocess test opens the
 configuration FIFO from the writer side to prove the real check reader reached

@@ -1378,6 +1378,7 @@ dependencies = [
  "napi-build",
  "napi-derive",
  "nix 0.32.0",
+ "no-mistakes-invocation",
  "no-mistakes-postgres-sql",
  "num_cpus",
  "oxc_allocator",
@@ -1410,6 +1411,25 @@ dependencies = [
  "toml",
  "unicode-id-start",
  "url",
+ "wait-timeout",
+ "windows-sys",
+]
+
+[[package]]
+name = "no-mistakes-invocation"
+version = "0.109.122"
+dependencies = [
+ "anyhow",
+ "clap",
+ "directories",
+ "ignore",
+ "libc",
+ "nix 0.32.0",
+ "rayon",
+ "serde",
+ "serde_json",
+ "signal-hook",
+ "tempfile",
  "wait-timeout",
  "windows-sys",
 ]

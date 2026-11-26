@@ -91,6 +91,7 @@ test("unit-test modules are split across three compile shards", () => {
   let helpers = 0;
   const files = [
     ...rustFiles(join(root, "crates/no-mistakes/src")),
+    ...rustFiles(join(root, "crates/no-mistakes-invocation/src")),
     ...rustFiles(join(root, "crates/no-mistakes-postgres-sql/src")),
   ];
   for (const file of files) {
@@ -120,7 +121,7 @@ test("unit-test modules are split across three compile shards", () => {
   for (const id of ["0", "1", "2"]) assert.ok(counts[id] >= total * 0.2, `${id}=${counts[id]}`);
   assert.ok(helpers > 0);
   assert.ok(helpers < 300, String(helpers));
-  for (const crate of ["no-mistakes", "no-mistakes-postgres-sql"]) {
+  for (const crate of ["no-mistakes", "no-mistakes-invocation", "no-mistakes-postgres-sql"]) {
     const buildRs = readFileSync(join(root, `crates/${crate}/build.rs`), "utf8");
     assert.match(buildRs, /nm_shard_all/);
     assert.match(buildRs, /NM_TEST_SHARD must be 0, 1, 2, or postgres-source/);

@@ -19,7 +19,7 @@ impl DeadlineGuard {
         let timeout = deadline.timeout;
         let cancel = Arc::new(AtomicBool::new(false));
         let watcher = Arc::clone(&cancel);
-        let observer = crate::diagnostics::current();
+        let observer = crate::hooks::current_observer();
         std::thread::Builder::new()
             .name("no-mistakes-timeout".to_string())
             .spawn(move || watch::watch_deadline(watcher, expires_at, timeout, observer, output))

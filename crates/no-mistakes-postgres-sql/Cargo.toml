@@ -1,12 +1,12 @@
 [package]
 name = "no-mistakes-postgres-sql"
-version = "0.109.122"
-edition = "2021"
-rust-version = "1.97"
-license = "MIT"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
 description = "PostgreSQL SQL parsing, statement facts, and identifier extraction for no-mistakes"
-repository = "https://github.com/jonathanong/no-mistakes"
-readme = "../../README.md"
+repository.workspace = true
+documentation = "https://github.com/jonathanong/no-mistakes"
 
 [lints]
 workspace = true

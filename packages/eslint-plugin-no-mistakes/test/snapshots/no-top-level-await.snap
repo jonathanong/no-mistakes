@@ -1,5 +1,34 @@
 [
   {
+    "file": "await-using.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 1,
+        "file": "await-using.ts",
+        "line": 1,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 37,
+        "endLine": 3,
+        "file": "await-using.ts",
+        "line": 3,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "await-using.ts",
+    "options": null
+  },
+  {
     "file": "unsafe.mjs",
     "findings": [
       {
@@ -213,6 +242,48 @@
       }
     ],
     "name": "strict guard",
+    "options": {
+      "allowInImportMetaMain": false
+    }
+  },
+  {
+    "file": "await-using.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 1,
+        "file": "await-using.ts",
+        "line": 1,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 37,
+        "endLine": 3,
+        "file": "await-using.ts",
+        "line": 3,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 10,
+        "file": "await-using.ts",
+        "line": 10,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "strict guard await using",
     "options": {
       "allowInImportMetaMain": false
     }
