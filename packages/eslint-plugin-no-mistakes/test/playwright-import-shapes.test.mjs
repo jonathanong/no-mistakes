@@ -54,6 +54,12 @@ const cases = [
     expected: [],
   },
   {
+    name: "relative import named expect keeps the cap check",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-relative-expect.spec.ts",
+    expected: [[4, "timeout"]],
+  },
+  {
     name: "assertion unanalyzable ignore",
     rule: "playwright-assertion-timeout-cap",
     file: "e2e/assertion-ignore.spec.ts",

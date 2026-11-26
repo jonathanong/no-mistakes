@@ -61,7 +61,10 @@ function expectFact(fact) {
     if (fact.status === "namespace") return false;
     return fact.exported === "expect";
   }
-  return isUnreadSource(fact.source) ? "opaque" : false;
+  if (!isUnreadSource(fact.source)) return false;
+  // import { expect } from "./fixtures" kept the cap check by local name.
+  if (fact.status === "export" && fact.exported === "expect") return null;
+  return "opaque";
 }
 
 function expectRoot(node, context, expectNames, seen = new Set()) {
@@ -152,17 +155,19 @@ module.exports = Object.assign(
           const method = memberName(invoked.callee);
           if (!TIMEOUT_MATCHERS.has(method)) return;
           const root = expectRoot(invoked.callee.object, context, expectNames);
+          const options = unwrapExpression(invoked.arguments.at(-1));
+          const timeout =
+            options?.type === "ObjectExpression"
+              ? options.properties.find(
+                  (property) => property.type === "Property" && patternKey(property) === "timeout",
+                )
+              : undefined;
           if (root === "opaque") {
-            if (surfaceOpaque) context.report({ node, messageId: "unanalyzable" });
+            if (surfaceOpaque && timeout) context.report({ node, messageId: "unanalyzable" });
             return;
           }
-          if (!root) return;
-          const options = unwrapExpression(invoked.arguments.at(-1));
-          if (options?.type !== "ObjectExpression") return;
-          const timeout = options.properties.find(
-            (property) => property.type === "Property" && patternKey(property) === "timeout",
-          );
-          if (numericLiteral(timeout?.value) > max) {
+          if (!root || !timeout) return;
+          if (numericLiteral(timeout.value) > max) {
             context.report({ node, messageId: "timeout", data: { max } });
           }
         },

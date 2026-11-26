@@ -173,6 +173,25 @@
       "rule": "playwright-assertion-timeout-cap"
     },
     {
+      "file": "e2e/assertion-relative-expect.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-relative-expect.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "relative import named expect keeps the cap check",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "src/defaults.tsx",
       "findings": [
         {
@@ -877,6 +896,21 @@
         }
       ],
       "name": "assertion unresolved expect (#4578)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-expect.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-relative-expect.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "relative import named expect keeps the cap check",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },

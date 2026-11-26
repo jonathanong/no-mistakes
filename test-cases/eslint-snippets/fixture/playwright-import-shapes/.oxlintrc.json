@@ -10,7 +10,7 @@
   },
   "overrides": [
     {
-      "files": ["e2e/assertion-imports.spec.ts", "e2e/assertion-wrappers.spec.ts", "e2e/assertion-opaque.spec.ts", "e2e/assertion-quiet.spec.ts"],
+      "files": ["e2e/assertion-imports.spec.ts", "e2e/assertion-wrappers.spec.ts", "e2e/assertion-opaque.spec.ts", "e2e/assertion-quiet.spec.ts", "e2e/assertion-relative-expect.spec.ts"],
       "rules": { "no-mistakes/playwright-assertion-timeout-cap": "error" }
     },
     {

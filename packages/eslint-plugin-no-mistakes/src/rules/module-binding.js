@@ -26,8 +26,7 @@ function memberKey(node) {
   const property = unwrapExpression(target.property);
   if (target.computed && property?.type === "Identifier") return null;
   if (!target.computed && typeof target.property?.name === "string") return target.property.name;
-  const literal = literalString(property);
-  return literal === null ? null : literal;
+  return literalString(property);
 }
 
 function requireFact(node, context) {
