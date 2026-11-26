@@ -73,12 +73,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         let shared_guard = self.begin_shared_capture(module_id, env);
-        let before_untrusted = self.untrusted_array_intrinsics;
-        let before_untrusted_writes = self.modules.untrusted_intrinsic_writes;
-        let before_events = self.event_log.len();
-        let before_invalidated = self.invalidated_builders.len();
-        let before_builder_updates = self.builder_updates.len();
-        let before_captured_prefix = self.captured_prefix_count(env);
+        let before = shared_guard
+            .as_ref()
+            .map_or_else(|| self.init_purity_snapshot(env), |guard| guard.before());
         let facts = &files[path].facts;
         self.steps(&facts.roots, path, &mut env, 16, true);
         // A dependency's top-level opaque effect may mutate a builder owned
@@ -126,14 +123,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .get(*dep_env)
                     .is_some_and(|cur| cur.same_bindings(expected) || cur == expected)
             });
-            let clean = self.untrusted_array_intrinsics == before_untrusted
-                && self.modules.untrusted_intrinsic_writes == before_untrusted_writes
-                && self.event_log.len() == before_events
-                && self.invalidated_builders.len() == before_invalidated
-                && self.builder_updates.len() == before_builder_updates
-                && self.captured_prefix_count(env) == before_captured_prefix
-                && deps_unchanged
-                && !self.scopes[env].contains_reference();
+            let clean = deps_unchanged && self.is_clean_init(env, before);
             self.modules
                 .captured_inits
                 .insert(module_id, clean.then(|| (env, self.scopes[env].clone())));

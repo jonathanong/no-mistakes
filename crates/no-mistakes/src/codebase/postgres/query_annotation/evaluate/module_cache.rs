@@ -56,9 +56,54 @@ impl DerefMut for ModuleCache {
     }
 }
 
+#[derive(Clone, Copy)]
+pub(in crate::codebase::postgres::query_annotation) struct InitPuritySnapshot {
+    untrusted: bool,
+    untrusted_writes: u64,
+    events: usize,
+    invalidated: usize,
+    builder_updates: usize,
+    captured_prefix: usize,
+}
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn module_ids(&self) -> &ModuleIds {
         self.shared_module_ids()
+    }
+
+    pub(in crate::codebase::postgres::query_annotation) fn init_purity_snapshot(
+        &self,
+        env: Environment,
+    ) -> InitPuritySnapshot {
+        InitPuritySnapshot {
+            untrusted: self.untrusted_array_intrinsics,
+            untrusted_writes: self.modules.untrusted_intrinsic_writes,
+            events: self.event_log.len(),
+            invalidated: self.invalidated_builders.len(),
+            builder_updates: self.builder_updates.len(),
+            captured_prefix: self.captured_prefix_count(env),
+        }
+    }
+
+    pub(in crate::codebase::postgres::query_annotation) fn is_clean_init(
+        &self,
+        env: Environment,
+        before: InitPuritySnapshot,
+    ) -> bool {
+        self.untrusted_array_intrinsics == before.untrusted
+            && self.modules.untrusted_intrinsic_writes == before.untrusted_writes
+            && self.event_log.len() == before.events
+            && self.invalidated_builders.len() == before.invalidated
+            && self.builder_updates.len() == before.builder_updates
+            && self.captured_prefix_count(env) == before.captured_prefix
+            && !self.scopes[env].contains_reference()
+    }
+
+    fn captured_prefix_count(&self, env: Environment) -> usize {
+        self.captured_bindings
+            .keys()
+            .filter(|&&frame| frame <= env)
+            .count()
     }
 
     pub(in crate::codebase::postgres::query_annotation) fn shared_module_ids(

@@ -112,13 +112,28 @@ fn referenced_deps(
             collect_expr_names(expr, imports, &mut names);
         }
     }
-    names
+    let mut specifiers: Vec<&str> = names
         .into_iter()
         .filter_map(|name| {
             let index = imports.get(name)?;
-            let specifier = &file.module.ts.imported_bindings[*index].specifier;
-            file.module.target(specifier, path, resolve)
+            Some(file.module.ts.imported_bindings[*index].specifier.as_str())
         })
+        .collect();
+    for binding in &file.module.ts.exported_bindings {
+        if let Some(specifier) = binding.specifier.as_deref() {
+            specifiers.push(specifier);
+        } else if !file.facts.globals.contains_key(&binding.local) {
+            if let Some(index) = imports.get(binding.local.as_str()) {
+                specifiers.push(file.module.ts.imported_bindings[*index].specifier.as_str());
+            }
+        }
+    }
+    for specifier in &file.module.ts.star_reexport_specifiers {
+        specifiers.push(specifier.as_str());
+    }
+    specifiers
+        .into_iter()
+        .filter_map(|specifier| file.module.target(specifier, path, resolve))
         .filter(|target| files.contains_key(*target))
         .map(|target| ids.id(target))
         .collect()
@@ -171,3 +186,7 @@ fn post_order(
         }
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "candidates_tests.rs"]
+mod tests;

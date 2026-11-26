@@ -254,3 +254,28 @@ fn local_promotion_preserves_untrusted_array_intrinsics_from_regexp_init() {
         5
     );
 }
+
+#[test]
+fn barrel_reexport_over_impure_leaf_preserves_effects_across_roots() {
+    let (report, diagnostics) =
+        observed_check(&fixture("helper-tracing-shared-init-reexport-impure"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    let mut actual: Vec<(&str, u64)> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    actual.sort_unstable();
+    assert_eq!(actual, vec![("src/roots/root-a.mts", 8)], "{report}");
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.builds"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.cache_hits"], 0);
+    assert_eq!(work["postgres.annotation.module_initializations"], 8);
+}
