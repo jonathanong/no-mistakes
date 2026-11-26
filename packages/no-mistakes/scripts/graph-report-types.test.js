@@ -1,7 +1,8 @@
 const assert = require("node:assert/strict");
+const { createRequire } = require("node:module");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
-const ts = require("typescript");
+const ts = createRequire(require.resolve("@storybook/react"))("typescript");
 
 test("Playwright and server route report fields compile through the public declarations", () => {
   const program = ts.createProgram(
