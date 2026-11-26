@@ -186,8 +186,9 @@ export const tables = { users: "app.users" } as const;
 
 ## Options and defaults
 
-The loader validates the legacy `unanalyzableSql` option. Use `fail`, `advise`,
-or `ignore`.
+A rule-local legacy `unanalyzableSql` option accepts `fail`, `advise`, and
+`ignore`. An unrecognized value inherited from a project keeps the existing
+default policy.
 
 `importSpecifier` defaults to empty and must be set (or set `executorNames`) to
 select executor calls when the rule does not inherit a project postgres block.
