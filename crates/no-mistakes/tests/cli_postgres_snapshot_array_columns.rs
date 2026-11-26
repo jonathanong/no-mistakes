@@ -15,6 +15,8 @@ fn postgres_array_columns_check_json_snapshot() {
     let catalog = "catalog.yml";
     let cases = [
         ("text_array", "orders-tag-names", catalog),
+        ("line_disable", "line-disable", catalog),
+        ("file_disable", "file-disable", catalog),
         // Messages must not contain stale.
         (
             "uuid_allow_does_not_excuse",

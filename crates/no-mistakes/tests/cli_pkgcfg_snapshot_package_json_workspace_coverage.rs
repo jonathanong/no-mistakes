@@ -17,6 +17,7 @@ fn package_json_workspace_coverage_json_matches_snapshot() {
     // package.json files in that directory change coverage when selected.
     let services = config("packages-and-services.yml");
     let require_named = config("require-named.yml");
+    let packages_and_apps = config("packages-and-apps.yml");
     assert_saved_fixture(
         "package_json_workspace_coverage",
         &[
@@ -54,7 +55,22 @@ fn package_json_workspace_coverage_json_matches_snapshot() {
             (
                 "unmatched_pattern",
                 root("unmatched-pattern"),
-                config("packages-and-apps.yml"),
+                packages_and_apps.clone(),
+            ),
+            (
+                "unmatched_pattern_control",
+                root("unmatched-pattern-control"),
+                packages_and_apps.clone(),
+            ),
+            (
+                "unmatched_pattern_disable_file",
+                root("unmatched-pattern-disable-file"),
+                packages_and_apps.clone(),
+            ),
+            (
+                "unmatched_pattern_disable_line",
+                root("unmatched-pattern-disable-line"),
+                packages_and_apps,
             ),
             (
                 "unmatched_package_json",

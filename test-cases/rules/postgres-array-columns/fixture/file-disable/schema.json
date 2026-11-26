@@ -1,0 +1,13 @@
+// no-mistakes-disable-file postgres-array-columns
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "tag_names": {
+          "dataType": "text[]"
+        }
+      }
+    }
+  }
+}

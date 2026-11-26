@@ -1,0 +1,5 @@
+lockfileVersion: '9.0' # no-mistakes-disable-line package-json-registry-only
+packages:
+  my-pkg@1.0.0:
+    resolution:
+      tarball: https://example.com/pkg.tgz

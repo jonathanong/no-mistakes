@@ -1,0 +1,3 @@
+# no-mistakes-disable-file package-json-workspace-coverage
+packages:
+  - apps/*

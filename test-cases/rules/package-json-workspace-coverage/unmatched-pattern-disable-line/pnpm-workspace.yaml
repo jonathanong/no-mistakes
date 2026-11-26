@@ -1,0 +1,2 @@
+packages: # no-mistakes-disable-line package-json-workspace-coverage
+  - apps/*

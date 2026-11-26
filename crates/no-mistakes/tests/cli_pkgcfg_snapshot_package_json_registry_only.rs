@@ -37,6 +37,11 @@ fn package_json_registry_only_json_matches_snapshot() {
                 lockfile.clone(),
             ),
             (
+                "lockfile_tarball_disable_line",
+                fixture("lockfile-tarball-disable-line"),
+                lockfile.clone(),
+            ),
+            (
                 "lockfile_excluded",
                 fixture("lockfile-tarball"),
                 config("lockfile-exclude.yml"),

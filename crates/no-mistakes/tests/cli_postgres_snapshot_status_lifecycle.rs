@@ -14,6 +14,9 @@ fn postgres_status_with_lifecycle_timestamps_check_json_snapshot() {
     let rule = "postgres-status-with-lifecycle-timestamps";
     let root = catalog();
     let config = |name: &str| rules_path(rule, "configs", name);
+    let fixture = |name| rules_path(rule, "fixture", name);
+    let fail = fixture("fail");
+    let suppression_config = fail.join(".no-mistakes.yml");
     // reports_stored_status_beside_lifecycle_timestamps and
     // valid_shapes_and_non_lifecycle_columns_pass share main. The repeated
     // main_options equality is the jobs 1 vs 2 check on that case.
@@ -53,6 +56,13 @@ fn postgres_status_with_lifecycle_timestamps_check_json_snapshot() {
             // Contains "table:deliveries: use one source of truth".
             ("custom_message", root.clone(), config("custom-message.yml")),
             ("include_misses_catalog", root, config("include-misses.yml")),
+            ("unsuppressed", fail, suppression_config.clone()),
+            (
+                "line_disable",
+                fixture("line-disable"),
+                suppression_config.clone(),
+            ),
+            ("file_disable", fixture("file-disable"), suppression_config),
         ],
     );
 }

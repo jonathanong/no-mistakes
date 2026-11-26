@@ -608,6 +608,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "hex_escape": {
     "exitCode": 0,
     "report": {
@@ -670,6 +682,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "function:fn_plain"
         }
       ],
+      "warnings": []
+    }
+  },
+  "line_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },

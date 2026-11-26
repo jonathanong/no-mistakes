@@ -37,6 +37,11 @@ fn package_json_required_fields_json_matches_snapshot() {
                 rules_path(RULE, "configs", "include-valid.yml"),
             ),
             (
+                "malformed_disable_line",
+                rules_path(RULE, "fixture", "suppression"),
+                rules_path(RULE, "fixture", "unanalyzable/report.yml"),
+            ),
+            (
                 "nested_companion",
                 rules_path(RULE, "fixture", "nested-companion"),
                 rules_path(RULE, "configs", "main-src-index.yml"),
