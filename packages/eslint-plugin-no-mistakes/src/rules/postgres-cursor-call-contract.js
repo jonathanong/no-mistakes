@@ -55,11 +55,10 @@ function reportFinding(context, suppressed, descriptor) {
 function visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed) {
   const namedImport = namedCursorImport(context, node, helpers, options);
   const namespaceImport = namespaceCursorImport(context, node, helpers, options);
-  if (namedImport === "unresolved" || namespaceImport === "unresolved") {
-    const expression = transparentParent(node);
-    const member =
-      expression.parent?.type === "MemberExpression" && expression.parent.object === expression;
-    if (!directCallParent(node) && !member && !suppressed(node)) {
+  if (namedImport === "unresolved") {
+    const variable = helpers.findVariable(context, node);
+    const reference = variable?.references.find((item) => item.identifier === node);
+    if (reference && !reference.init && !directCallParent(node) && !suppressed(node)) {
       reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
     }
     return;
@@ -88,17 +87,18 @@ function visitCursorIdentifier(context, node, options, reportedDirectUses, suppr
 }
 
 function visitNamespaceMember(context, node, options, suppressed) {
-  const namespaceMember = namespaceImportMember(context, node, helpers, options);
-  if (!namespaceMember || isTypeQuery(node)) return;
-  if (namespaceMember.computed && helpers.propertyName(namespaceMember) == null) {
-    reportFinding(context, suppressed, { messageId: "staticNamespaceMember", node });
-    return;
-  }
+  if (isTypeQuery(node)) return;
   const cursorMember = namespaceCursorMember(context, node, helpers, options);
   if (cursorMember === "unresolved") {
     if (!directCallParent(node) && !suppressed(node)) {
       reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
     }
+    return;
+  }
+  const namespaceMember = namespaceImportMember(context, node, helpers, options);
+  if (!namespaceMember) return;
+  if (namespaceMember.computed && helpers.propertyName(namespaceMember) == null) {
+    reportFinding(context, suppressed, { messageId: "staticNamespaceMember", node });
     return;
   }
   if (cursorMember && !directCallParent(node)) {

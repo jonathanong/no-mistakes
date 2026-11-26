@@ -18,7 +18,7 @@ function executorOptionDefaults(options = {}) {
   }
   return {
     importSpecifier: options.importSpecifier ?? DEFAULT_IMPORT_SPECIFIER,
-    executorNames: options.executorNames ?? (options.importSpecifier ? DEFAULT_EXECUTOR_NAMES : []),
+    executorNames: options.executorNames ?? DEFAULT_EXECUTOR_NAMES,
     executorFactoryNames: options.executorFactoryNames ?? [],
     executorTypeNames: options.executorTypeNames ?? [],
     trustedSqlTags: options.trustedSqlTags ?? [],

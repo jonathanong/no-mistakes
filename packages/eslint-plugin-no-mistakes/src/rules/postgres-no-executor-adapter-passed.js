@@ -90,7 +90,7 @@ function combineConditional(consequent, alternate) {
 function unresolvedPassed(node, context, options) {
   if (node?.type === "MemberExpression") {
     const name = propertyText(node, context);
-    if (!name || !(options.executorNames ?? []).includes(name)) return false;
+    if (!name || !options.executorNames.includes(name)) return false;
     return moduleNamespace(node.object, context, options) === "unresolved";
   }
   if (node?.type !== "Identifier") return false;
@@ -98,7 +98,7 @@ function unresolvedPassed(node, context, options) {
   return Boolean(
     binding?.status === "unresolved" &&
     binding.kind === "named" &&
-    (options.executorNames ?? []).includes(binding.name),
+    options.executorNames.includes(binding.name),
   );
 }
 

@@ -70,7 +70,6 @@ function moduleObject(binding) {
 }
 
 function destructuredBinding(definition, declarator, variable, context, seen) {
-  if (declarator.id?.type !== "ObjectPattern") return null;
   const property = declarator.id.properties.find(
     (item) =>
       item.type === "Property" &&

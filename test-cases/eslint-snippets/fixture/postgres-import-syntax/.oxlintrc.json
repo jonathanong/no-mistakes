@@ -16,16 +16,24 @@
       "files": [
         "pool-listener-ok.ts",
         "pool-other.ts",
+        "pool-limits.ts",
         "pool-import-equals.ts",
         "pool-computed.ts",
-        "pool-dynamic.ts"
+        "pool-dynamic.ts",
+        "pool-edges.ts"
       ],
       "rules": {
         "no-mistakes/postgres-pool-requires-error-listener": "error"
       }
     },
     {
-      "files": ["builder-local.ts", "builder-require.ts", "builder-dynamic.ts"],
+      "files": [
+        "builder-local.ts",
+        "builder-limits.ts",
+        "builder-require.ts",
+        "builder-dynamic.ts",
+        "builder-edges.ts"
+      ],
       "rules": {
         "no-mistakes/postgres-no-async-sql-builder": [
           "error",
@@ -43,7 +51,13 @@
       }
     },
     {
-      "files": ["manual-other.ts", "manual-require.ts", "manual-dynamic.ts"],
+      "files": [
+        "manual-other.ts",
+        "manual-limits.ts",
+        "manual-require.ts",
+        "manual-dynamic.ts",
+        "manual-written.ts"
+      ],
       "rules": {
         "no-mistakes/postgres-no-manual-transaction": [
           "error",
@@ -52,7 +66,7 @@
       }
     },
     {
-      "files": ["manual-scoped.ts"],
+      "files": ["manual-scoped.ts", "manual-pattern.ts"],
       "rules": {
         "no-mistakes/postgres-no-manual-transaction": [
           "error",
@@ -61,7 +75,12 @@
       }
     },
     {
-      "files": ["fanout-require.ts", "fanout-wrapped.ts", "fanout-dynamic.ts"],
+      "files": [
+        "fanout-require.ts",
+        "fanout-wrapped.ts",
+        "fanout-dynamic.ts",
+        "fanout-reference.ts"
+      ],
       "rules": {
         "no-mistakes/postgres-no-unbounded-query-fanout": [
           "error",
@@ -88,12 +107,9 @@
       }
     },
     {
-      "files": ["adapter-local.ts", "adapter-require.ts", "adapter-dynamic.ts"],
+      "files": ["adapter-local.ts", "adapter-require.ts", "adapter-dynamic.ts", "adapter-named.ts"],
       "rules": {
-        "no-mistakes/postgres-no-executor-adapter": [
-          "error",
-          { "importSpecifier": "@example/db" }
-        ]
+        "no-mistakes/postgres-no-executor-adapter": ["error", { "importSpecifier": "@example/db" }]
       }
     },
     {
@@ -106,7 +122,7 @@
       }
     },
     {
-      "files": ["cursor-trusted.ts"],
+      "files": ["cursor-trusted.ts", "cursor-limits.ts", "cursor-edges.ts"],
       "rules": {
         "no-mistakes/postgres-cursor-call-contract": [
           "error",

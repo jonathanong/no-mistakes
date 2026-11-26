@@ -179,10 +179,7 @@ function isConfiguredBuilder(func, builders, context) {
 }
 
 function unwrapTagCallee(node) {
-  let current = unwrapExpression(node);
-  while (current?.type === "ParenthesizedExpression")
-    current = unwrapExpression(current.expression);
-  return current;
+  return unwrapExpression(node);
 }
 
 function identifierDeclaredOutside(identifier, context, func) {
