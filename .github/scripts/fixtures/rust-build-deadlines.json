@@ -14,7 +14,7 @@
     "docsJob": 1800
   },
   "censored": [
-    { "workflow": "ci", "job": "native-test-build-macos", "step": "Precompile native Rust test targets", "seconds": 1333, "run": 43919796161 },
+    { "workflow": "ci", "job": "native-rust-tests-macos", "step": "Precompile native Rust test targets", "seconds": 1333, "run": 43919796161, "source": "standalone macOS Rust precompile before build and test co-location" },
     { "workflow": "ci", "job": "rust-coverage-build", "step": "Build and archive instrumented Rust tests", "seconds": 1500, "run": 43925528010, "source": "issue comment; job metadata unavailable" },
     { "workflow": "ci", "job": "quality-rust", "step": "Run isolated Rust quality check", "seconds": 871, "run": 43971597460 },
     { "workflow": "release", "job": "validate-rust", "step": "Build Rust tests", "seconds": 3027, "run": 43940838628 }
