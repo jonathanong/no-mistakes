@@ -19,6 +19,10 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — Duplicate-lookup rule downgraded to SHOULD NOT
+
+No new run. The duplicate-lookup sentence measured below was later changed from MUST NOT to SHOULD NOT. The only harm it names is another probe per output row, which depends on row count, and a second lookup of the same key can be deliberate. The narrow-view sentence gained the reason that the view's joins and subqueries still run for every output row. Those two sentences were not re-measured. The table in the next section is the earlier wording. Downgrading a MUST NOT needs no new evidence.
+
 ## 2026-11-26 — PostgreSQL duplicate row lookup and narrow view rules
 
 Added two rules to `plugins/no-mistakes-rules/skills/postgresql-rules/SKILL.md`

@@ -17,8 +17,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT let a paginated read scan unbounded work for one page (for example, an ever-wider time window until a row matches); bound the work per page and return the cursor, since unbounded scans time out before the client reaches results or the end.
 - MUST NOT query a protected relation without its required predicates (tenant, soft-delete, partition key).
 - SHOULD NOT issue one query per item for an input-sized batch when one query can do the same work.
-- MUST NOT look up the same row more than once in one statement through separate joins or scalar subqueries keyed by the same expression; each extra lookup adds another probe per output row. Join it once and project every field from that row.
-- SHOULD NOT join or subquery a view that contains joins or subqueries only to read one or two base-table columns; join the base table with its required predicates.
+- SHOULD NOT look up the same row more than once in one statement through separate joins or scalar subqueries keyed by the same expression; each extra lookup adds another probe per output row. Join it once and project every field from that row.
+- SHOULD NOT join or subquery a view that contains joins or subqueries only to read one or two base-table columns; the view's joins and subqueries still run for every output row. Join the base table with its required predicates.
 - MUST NOT use `NOT IN (SELECT …)`; NULLs silently drop rows. Use `NOT EXISTS`.
 - SHOULD NOT put volatile functions (`random()`, `clock_timestamp()`) in predicates unless per-row evaluation is intended; they are evaluated per row.
 - MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT` on a key the retry repeats, not a freshly generated one.

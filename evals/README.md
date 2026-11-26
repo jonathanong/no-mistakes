@@ -392,6 +392,12 @@ variation; the ceiling cases confirm trigger fidelity and zero regressions or
 over-flagging. See
 [HISTORY.md](HISTORY.md#2026-11-26--postgresql-duplicate-row-lookup-and-narrow-view-rules).
 
+The duplicate-lookup rule was later downgraded from MUST NOT to SHOULD NOT, and
+the narrow-view rule now states that the view's joins and subqueries still run
+for every output row. That wording was not re-measured. This table is the
+2026-11-26 run against the earlier sentences.
+`review-duplicate-row-lookup` was already a ceiling in the without-plugin arm.
+
 ### Current trigger comparison
 
 The results below measure the earlier 16-skill inventory. The current plugin
