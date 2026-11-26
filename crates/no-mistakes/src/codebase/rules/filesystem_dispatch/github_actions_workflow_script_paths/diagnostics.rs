@@ -6,12 +6,48 @@ use crate::codebase::rules::{
     self,
     analysis_policy::AnalysisDiagnostics,
     github_actions_workflow_files::{gha_kind, unreadable_finding},
+    RuleFinding,
 };
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
+
+pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
+    rules::check_sourced_standalone(root, config, check_with_files)
+}
+
+pub(crate) fn check_with_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    rules::check_with_borrowed_source_store(root, config, all_files, |r, c, f, s| {
+        check_with_files_sources_and_deferred_suppression(r, c, f, s, false)
+    })
+}
+
+pub(crate) fn check_with_files_sources_and_deferred_suppression(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
+    diagnostics_with_files_and_sources(root, config, files, sources, defer_suppression)
+        .map(|output| output.findings)
+}
+
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    run(root, config, files, sources, defer_suppression)
+}
 
 pub(super) struct RunCtx<'a> {
     pub(super) root: &'a Path,
