@@ -1,0 +1,4 @@
+tuple: [example, true]
+tupleStruct: !pair [fixture, 2]
+wrappedList: !paths [src/example.ts]
+unit: null

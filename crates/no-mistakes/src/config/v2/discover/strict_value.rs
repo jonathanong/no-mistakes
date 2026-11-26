@@ -145,3 +145,6 @@ fn untag(mut value: Value) -> Value {
     }
     value
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;
