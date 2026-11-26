@@ -91,7 +91,15 @@ test("dependency caches are main-only, dependency-only and shared across compati
   for (const step of steps(workflow).filter((step) => /uses: Swatinem\/rust-cache@/.test(step))) {
     const block = step.split(/\n  [a-z][a-z-]*:\n/)[0];
     assert.match(block, /cache-workspace-crates: false/);
-    assert.match(block, /save-if: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);
+    if (block.startsWith("Cache Rust quality artifacts\n")) {
+      assert.ok(
+        block.includes(
+          "save-if: ${{ github.ref == 'refs/heads/main' && matrix.name != 'default-feature Clippy' }}",
+        ),
+      );
+    } else {
+      assert.match(block, /save-if: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);
+    }
     assert.match(block, /env.COLD_BUILD != 'true'/);
   }
   for (const name of ["packages", "linux-runtime"])
