@@ -118,22 +118,11 @@ test(
   "Node text renderers preserve the machine-readable invocation lock error",
   { skip: !compiled },
   async () => {
-    const api = require("../index.js");
-    const native = require(addonPath);
-    const { lockFile } = await api.lockStatus();
-    const token = await native.acquirePlanningArtifactLock(lockFile);
-    const options = { plan: join(fixture, "legacy-plan.json"), failOnLock: true };
-    try {
-      for (const operation of ["testsComment", "testsGraphMermaid"]) {
-        await assert.rejects(api[operation](options), (error) => {
-          assert.equal(error.code, "NO_MISTAKES_LOCK_BUSY");
-          assert.equal(error.details.kind, "lock_busy");
-          assert.doesNotMatch(error.message, /no-mistakes-error-json/);
-          return true;
-        });
-      }
-    } finally {
-      await native.releasePlanningArtifactLock(token);
-    }
+    const { stdout } = await execute(
+      process.execPath,
+      [join(fixture, "text-lock.cjs"), join(fixture, "legacy-plan.json")],
+      { env: { ...process.env, "CARGO_BIN_EXE_no-mistakes": "planning-parity" } },
+    );
+    assert.equal(stdout.trim(), "2 structured lock errors");
   },
 );
