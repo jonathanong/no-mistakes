@@ -208,7 +208,14 @@ runtime crate types, a helper restores old timestamps only for unchanged input
 bytes and keeps changed or new files fresh. Cargo still checks compiler,
 configuration, feature, and dependency fingerprints normally. The manifest is
 captured only after a successful build and saved with that build's artifacts;
-never restore it independently. Workspace restores require the same compiler, Rust flags, and Cargo
+never restore it independently.
+
+In macOS pull-request smoke CI, the runtime build replays timestamps when its
+workspace cache restores an exact or prefix match. When the runtime cache
+misses, Cargo uses the timestamps already prepared for the Rust test build and
+the fresh timestamp from rewriting the runtime manifest.
+
+Workspace restores require the same compiler, Rust flags, and Cargo
 configuration; only tracked Rust source bytes may differ between a primary key
 and its fallback. A manifest, dependency, profile, or package-version change
 starts a new workspace instead of carrying obsolete hashed outputs into the
