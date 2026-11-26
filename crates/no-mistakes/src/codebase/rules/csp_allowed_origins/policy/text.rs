@@ -34,19 +34,10 @@ fn flush_block(policies: &mut Vec<CspPolicy>, block: &mut CspPolicy) {
     }
 }
 
-fn extract_quoted_fragments(line: &str) -> Vec<&str> {
-    let fragments = extract_delimited(line, "\"", "\"");
-    if fragments.is_empty() {
-        extract_delimited(line, "='", "'")
-    } else {
-        fragments
-    }
-}
-
-fn extract_delimited<'a>(mut rest: &'a str, open: &str, close: &str) -> Vec<&'a str> {
+fn extract_quoted_fragments(mut rest: &str) -> Vec<&str> {
     let mut fragments = Vec::new();
-    while let Some(idx) = rest.find(open) {
-        rest = &rest[idx + open.len()..];
+    while let Some((open_idx, open_len, close)) = next_quoted_open(rest) {
+        rest = &rest[open_idx + open_len..];
         let Some(end) = rest.find(close) else {
             break;
         };
@@ -54,6 +45,17 @@ fn extract_delimited<'a>(mut rest: &'a str, open: &str, close: &str) -> Vec<&'a 
         rest = &rest[end + close.len()..];
     }
     fragments
+}
+
+fn next_quoted_open(rest: &str) -> Option<(usize, usize, &'static str)> {
+    let double = rest.find('"').map(|idx| (idx, 1, "\""));
+    let single = rest.find("='").map(|idx| (idx, 2, "'"));
+    match (double, single) {
+        (Some(d), Some(s)) => Some(if d.0 <= s.0 { d } else { s }),
+        (Some(d), None) => Some(d),
+        (None, Some(s)) => Some(s),
+        (None, None) => None,
+    }
 }
 
 fn strip_header_prefix(line: &str) -> Option<&str> {

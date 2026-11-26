@@ -1,6 +1,4 @@
-use super::{
-    check_with_files, diagnostics_with_files, CspDirective, CspPolicySet, ParsedOrigin,
-};
+use super::{check_with_files, diagnostics_with_files, CspDirective, CspPolicySet, ParsedOrigin};
 use std::path::PathBuf;
 
 #[test]
@@ -179,6 +177,32 @@ fn parses_unquoted_yaml_block_scalars_and_single_quoted_meta_without_scheme_spli
         &ParsedOrigin::parse("https://unlisted.example.net/a.png").unwrap(),
         &[],
     ));
+
+    let mixed_double_then_single = "<meta http-equiv=\"Content-Security-Policy\" content='default-src https://meta.example.com; img-src https://img.example.com'>";
+    let mixed_policy = CspPolicySet::parse_from_text(mixed_double_then_single);
+    assert!(mixed_policy.allows(
+        CspDirective::Img,
+        &ParsedOrigin::parse("https://img.example.com/a.png").unwrap(),
+        &[],
+    ));
+    assert!(!mixed_policy.allows(
+        CspDirective::Img,
+        &ParsedOrigin::parse("https://unlisted.example.net/a.png").unwrap(),
+        &[],
+    ));
+
+    let mixed_single_then_double = "<meta http-equiv='Content-Security-Policy' content=\"default-src 'self'; img-src https://img.example.com\">";
+    let mixed_reverse = CspPolicySet::parse_from_text(mixed_single_then_double);
+    assert!(mixed_reverse.allows(
+        CspDirective::Img,
+        &ParsedOrigin::parse("https://img.example.com/a.png").unwrap(),
+        &[],
+    ));
+    assert!(!mixed_reverse.allows(
+        CspDirective::Img,
+        &ParsedOrigin::parse("https://unlisted.example.net/a.png").unwrap(),
+        &[],
+    ));
 }
 
 #[test]
@@ -211,19 +235,27 @@ fn handles_child_src_fallback_text_comments_and_missing_directives() {
     assert_eq!(CspDirective::ScriptElem.as_str(), "script-src-elem");
     assert_eq!(CspDirective::StyleElem.as_str(), "style-src-elem");
     assert_eq!(
-        ParsedOrigin::parse("http://example.com:80/x").unwrap().display(),
+        ParsedOrigin::parse("http://example.com:80/x")
+            .unwrap()
+            .display(),
         "http://example.com"
     );
     assert_eq!(
-        ParsedOrigin::parse("http://example.com:8080/x").unwrap().display(),
+        ParsedOrigin::parse("http://example.com:8080/x")
+            .unwrap()
+            .display(),
         "http://example.com:8080"
     );
     assert_eq!(
-        ParsedOrigin::parse("//cdn.example.com/a.js").unwrap().display(),
+        ParsedOrigin::parse("//cdn.example.com/a.js")
+            .unwrap()
+            .display(),
         "https://cdn.example.com"
     );
     assert_eq!(
-        ParsedOrigin::parse("http://[::1]:3000/a").unwrap().display(),
+        ParsedOrigin::parse("http://[::1]:3000/a")
+            .unwrap()
+            .display(),
         "http://[::1]:3000"
     );
 }
@@ -237,7 +269,9 @@ fn ignores_relative_and_non_network_urls_and_flags_malformed_network_urls() {
     assert!(ParsedOrigin::parse("blob:https://app.example.com/123").is_none());
     assert!(ParsedOrigin::parse("mailto:user@example.com").is_none());
     assert!(ParsedOrigin::parse("https://user@example.com/x").is_none());
-    assert!(ParsedOrigin::is_network_like_url("https://user@example.com/x"));
+    assert!(ParsedOrigin::is_network_like_url(
+        "https://user@example.com/x"
+    ));
     assert!(ParsedOrigin::parse("https://example.com:notaport/x").is_none());
     assert!(ParsedOrigin::parse("https://bad host/x").is_none());
     assert!(ParsedOrigin::parse("https://[not-ipv6]/x").is_none());
@@ -247,7 +281,10 @@ fn ignores_relative_and_non_network_urls_and_flags_malformed_network_urls() {
     assert!(ParsedOrigin::parse("https://a:b:80/x").is_none());
     assert!(ParsedOrigin::parse("///empty-host").is_none());
     assert!(ParsedOrigin::is_network_like_url("///empty-host"));
-    assert!(CspPolicySet::parse_from_text(":empty-prefix\nhttps://just-url\ncontent='unclosed").is_empty());
+    assert!(
+        CspPolicySet::parse_from_text(":empty-prefix\nhttps://just-url\ncontent='unclosed")
+            .is_empty()
+    );
 }
 
 #[test]
@@ -362,7 +399,8 @@ fn covers_bare_arrays_binary_concat_and_expression_edge_cases() {
             !diag
                 .findings
                 .iter()
-                .any(|f| f.message.contains("script-src") && f.message.contains("https://shared.example.com")),
+                .any(|f| f.message.contains("script-src")
+                    && f.message.contains("https://shared.example.com")),
             "{cfg_name}: shared.example.com should be allowed for script-src, got {:?}",
             diag.findings
         );
@@ -382,13 +420,48 @@ fn covers_bare_arrays_binary_concat_and_expression_edge_cases() {
     )
     .unwrap()
     .0;
-    assert!(check_with_files(
+    let broken_findings = check_with_files(
         &errors_root,
         &broken_target_cfg,
         &[errors_root.join("broken.ts")],
     )
+    .unwrap();
+    assert_eq!(broken_findings.len(), 1);
+    assert_eq!(broken_findings[0].file, "broken.ts");
+    assert_eq!(broken_findings[0].line, 1);
+    assert_eq!(broken_findings[0].target.as_deref(), Some("unanalyzable"));
+
+    let parse_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/csp-allowed-origins/fixture/parse-error-target");
+    let parse_files = vec![
+        parse_root.join("src/csp.ts"),
+        parse_root.join("src/broken.ts"),
+    ];
+    let advise_parse_cfg = crate::config::v2::load_v2_config_with_path(
+        &parse_root,
+        Some(&parse_root.join("advise.yml")),
+    )
     .unwrap()
-    .is_empty());
+    .0;
+    let advise_parse =
+        diagnostics_with_files(&parse_root, &advise_parse_cfg, &parse_files).unwrap();
+    assert!(advise_parse.findings.is_empty());
+    assert_eq!(advise_parse.advisories.len(), 1);
+    assert_eq!(
+        advise_parse.advisories[0].target.as_deref(),
+        Some("unanalyzable")
+    );
+
+    let ignore_parse_cfg = crate::config::v2::load_v2_config_with_path(
+        &parse_root,
+        Some(&parse_root.join("ignore.yml")),
+    )
+    .unwrap()
+    .0;
+    let ignore_parse =
+        diagnostics_with_files(&parse_root, &ignore_parse_cfg, &parse_files).unwrap();
+    assert!(ignore_parse.findings.is_empty());
+    assert!(ignore_parse.advisories.is_empty());
 
     let headers_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/csp-allowed-origins/fixture/headers-text");
@@ -400,17 +473,20 @@ fn covers_bare_arrays_binary_concat_and_expression_edge_cases() {
     .0;
     let header_files = vec![headers_root.join("src/page.tsx")];
     let header_sources = crate::codebase::rules::source_store_for_files(&header_files);
-    assert!(
-        super::check_prepared(&headers_root, &headers_cfg, &header_files, None, &header_sources, None)
-            .is_err()
-    );
-
-    let mut custom_cfg = crate::config::v2::load_v2_config_with_path(
-        &root,
-        Some(&root.join("concat.yml")),
+    assert!(super::check_prepared(
+        &headers_root,
+        &headers_cfg,
+        &header_files,
+        None,
+        &header_sources,
+        None
     )
-    .unwrap()
-    .0;
+    .is_err());
+
+    let mut custom_cfg =
+        crate::config::v2::load_v2_config_with_path(&root, Some(&root.join("concat.yml")))
+            .unwrap()
+            .0;
     custom_cfg.rules[0].message = Some("Custom CSP hint".into());
     let custom_files = vec![root.join("src/concat.ts"), root.join("src/page.tsx")];
     let custom_diag = diagnostics_with_files(&root, &custom_cfg, &custom_files).unwrap();

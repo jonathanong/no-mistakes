@@ -9,6 +9,7 @@ fn csp_allowed_origins_json_matches_snapshot() {
     let yaml_block = rules_path("csp-allowed-origins", "fixture", "yaml-block");
     let dynamic_policies = rules_path("csp-allowed-origins", "fixture", "dynamic-policies");
     let mixed_static_dynamic = rules_path("csp-allowed-origins", "fixture", "mixed-static-dynamic");
+    let parse_error_target = rules_path("csp-allowed-origins", "fixture", "parse-error-target");
     assert_saved_fixture(
         "csp_allowed_origins",
         &[
@@ -22,6 +23,11 @@ fn csp_allowed_origins_json_matches_snapshot() {
                 "headers-text",
                 headers_text.clone(),
                 headers_text.join(".no-mistakes.yml"),
+            ),
+            (
+                "headers-meta-mixed-quotes",
+                headers_text.clone(),
+                headers_text.join("meta-mixed-quotes.yml"),
             ),
             (
                 "duplicate-directive",
@@ -92,6 +98,21 @@ fn csp_allowed_origins_json_matches_snapshot() {
                 "mixed-static-dynamic-ignore",
                 mixed_static_dynamic.clone(),
                 mixed_static_dynamic.join("ignore.yml"),
+            ),
+            (
+                "parse-error-target-report",
+                parse_error_target.clone(),
+                parse_error_target.join("report.yml"),
+            ),
+            (
+                "parse-error-target-advise",
+                parse_error_target.clone(),
+                parse_error_target.join("advise.yml"),
+            ),
+            (
+                "parse-error-target-ignore",
+                parse_error_target.clone(),
+                parse_error_target.join("ignore.yml"),
             ),
         ],
     );

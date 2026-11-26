@@ -106,3 +106,24 @@ pub(super) fn csp_unanalyzable_finding(
         target: Some("unanalyzable".into()),
     }
 }
+
+pub(super) fn parse_error_finding(
+    file: &str,
+    csp_label: &str,
+    custom_message: Option<&str>,
+) -> RuleFinding {
+    let message = custom_message.map(str::to_owned).unwrap_or_else(|| {
+        format!(
+            "Target file {file} failed to parse and cannot be statically verified against CSP in {csp_label}. Fix the syntax error or set options.unanalyzable to 'advise' or 'ignore'."
+        )
+    });
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.into(),
+        file: file.to_owned(),
+        line: 1,
+        message,
+        import: None,
+        target: Some("unanalyzable".into()),
+    }
+}

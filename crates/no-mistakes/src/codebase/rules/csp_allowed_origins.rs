@@ -18,7 +18,9 @@ mod options;
 mod policy;
 
 pub(crate) use extract::collect_for_plan;
-use findings::{csp_unanalyzable_finding, origin_finding, unanalyzable_finding};
+use findings::{
+    csp_unanalyzable_finding, origin_finding, parse_error_finding, unanalyzable_finding,
+};
 pub(crate) use findings::{CollectedOrigins, OriginRef, UnanalyzableReason, UnanalyzableRef};
 use load::load_policy;
 use options::{applications, Application};
@@ -160,14 +162,17 @@ fn check_application(
             anyhow::bail!("{RULE_ID}: missing prepared facts for {file}");
         };
         if file_facts.parse_error.is_some() {
+            let finding = parse_error_finding(&file, &csp_label, app.message);
+            diagnostics.unanalyzable(app.unanalyzable, finding);
             continue;
         }
         if !loaded.policy.is_empty() && loaded.unanalyzable.is_empty() {
             for origin_ref in &file_facts.csp_allowed_origins.refs {
-                if !loaded
-                    .policy
-                    .allows(origin_ref.directive, &origin_ref.origin, &app.self_origins)
-                {
+                if !loaded.policy.allows(
+                    origin_ref.directive,
+                    &origin_ref.origin,
+                    &app.self_origins,
+                ) {
                     diagnostics.findings.push(origin_finding(
                         &file,
                         origin_ref.line,

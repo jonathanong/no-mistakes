@@ -131,6 +131,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "headers-meta-mixed-quotes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://unlisted.example.net' used for img-src is not allowed by CSP in public/index.html. Add 'https://unlisted.example.net' to img-src in public/index.html or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted.example.net/bad.png\" alt=\"\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "headers-text": {
     "exitCode": 1,
     "report": {
@@ -254,6 +274,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Origin 'https://dev-only.example.com' used for script-src is not allowed by CSP in src/multi.ts. Add 'https://dev-only.example.com' to script-src in src/multi.ts or remove the third-party origin.",
           "rule": "csp-allowed-origins",
           "sourceLine": "<script src=\"https://dev-only.example.com/dev.js\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parse-error-target-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/broken.ts",
+          "line": 1,
+          "message": "Target file src/broken.ts failed to parse and cannot be statically verified against CSP in src/csp.ts. Fix the syntax error or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "export const broken = ;",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse-error-target-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse-error-target-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/broken.ts",
+          "line": 1,
+          "message": "Target file src/broken.ts failed to parse and cannot be statically verified against CSP in src/csp.ts. Fix the syntax error or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "export const broken = ;",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

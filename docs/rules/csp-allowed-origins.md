@@ -44,13 +44,13 @@ Policy parsing follows browser CSP3 semantics:
 - While any configured policy in `options.cspFiles` is unanalyzable, the rule abstains from judging browser origins against the remaining static policies alone, because the unread dynamic policy may allow them; only the unanalyzable policy diagnostic (plus any unanalyzable target URLs) is emitted, and same-origin and relative URLs stay silent.
 - Unquoted non-JS CSP lines (such as YAML block scalars containing `img-src https://cdn.example.com;`) keep directive names intact and strip a `Header:` / key prefix only when the prefix before `:` has no whitespace, is not a URL scheme, and is not followed by `//`.
 
-Dynamic URLs whose origin cannot be statically determined (for example `fetch(url)`, `` fetch(`https://${host}/x`) ``, `<img src={src} />`), malformed network URLs, dynamic `<link rel={rel}>` / `as={kind}` attributes, and unresolvable dynamic CSP policy expressions in `options.cspFiles` are routed through `options.unanalyzable` (default `report`).
+Dynamic URLs whose origin cannot be statically determined (for example `fetch(url)`, `` fetch(`https://${host}/x`) ``, `<img src={src} />`), malformed network URLs, dynamic `<link rel={rel}>` / `as={kind}` attributes, target files that fail to parse, and unresolvable dynamic CSP policy expressions in `options.cspFiles` are routed through `options.unanalyzable` (default `report`).
 
 ## Options
 
 - `cspFiles` (`string[]`, **required**): Non-empty list of repository-relative paths declaring static CSP directives. Supports JS/TS/JSX/TSX modules (read from static string/template literals, `+` concatenations, and `[...].join(...)` expressions in the prepared AST) as well as non-JS/TS files such as JSON, HTML, YAML, and `_headers`. Missing, unreadable, or directive-free files are reported as incomplete check inputs.
 - `selfOrigins` (`string[]`, optional, default: `[]`): First-party origins (for example `https://app.example.com`) that satisfy `'self'` in the parsed CSP.
-- `unanalyzable` (`"report" | "advise" | "ignore"`, optional, default: `"report"`): Controls how dynamic URLs, malformed network URLs, dynamic `<link>` `rel`/`as` attributes, and unresolvable dynamic CSP policy expressions are handled. `report` emits failing findings, `advise` emits non-failing advisories, and `ignore` omits unanalyzable diagnostics. Definite origin violations remain failing findings when all configured policies are statically resolved.
+- `unanalyzable` (`"report" | "advise" | "ignore"`, optional, default: `"report"`): Controls how dynamic URLs, malformed network URLs, dynamic `<link>` `rel`/`as` attributes, target files with parse errors, and unresolvable dynamic CSP policy expressions are handled. `report` emits failing findings, `advise` emits non-failing advisories, and `ignore` omits unanalyzable diagnostics. Definite origin violations remain failing findings when all configured policies are statically resolved.
 
 ## Valid example
 
