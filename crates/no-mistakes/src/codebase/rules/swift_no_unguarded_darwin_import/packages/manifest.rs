@@ -55,7 +55,7 @@ pub(super) fn top_level_label_value<'a>(body: &'a str, label: &str) -> Option<&'
     let mut scanner = Scanner::new(body);
     let mut depth = 0usize;
     while let Some(index) = scanner.next_code_index() {
-        let ch = body[index..].chars().next()?;
+        let ch = body[index..].chars().next().unwrap_or('\0');
         match ch {
             '(' | '[' | '{' => depth += 1,
             ')' | ']' | '}' => depth = depth.saturating_sub(1),
@@ -123,7 +123,7 @@ pub(super) fn trim_code(text: &str) -> Option<&str> {
     let mut first = None;
     let mut last_end = 0;
     while let Some(index) = scanner.next_code_index() {
-        let ch = text[index..].chars().next()?;
+        let ch = text[index..].chars().next().unwrap_or('\0');
         if !ch.is_whitespace() {
             first.get_or_insert(index);
             last_end = if ch == '"' {
@@ -171,7 +171,7 @@ pub(super) fn call_name_and_args(expr: &str) -> Option<(&str, &str)> {
         .is_none()
         .then(|| trim_code(&expr[..open]))
         .flatten()?;
-    let name = prefix.rsplit('.').next()?;
+    let name = prefix.rsplit('.').next().unwrap_or("");
     let qualifier = &prefix[..prefix.len() - name.len()];
     matches!(
         qualifier,
@@ -187,7 +187,7 @@ fn next_code_char(source: &str, start: usize) -> Option<(usize, char)> {
     let mut scanner = Scanner::new(source);
     scanner.skip_to(start);
     while let Some(index) = scanner.next_code_index() {
-        let ch = source[index..].chars().next()?;
+        let ch = source[index..].chars().next().unwrap_or('\0');
         if !ch.is_whitespace() {
             return Some((index, ch));
         }

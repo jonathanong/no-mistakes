@@ -86,6 +86,18 @@ check report use the same rule.
 ## Valid example
 
 ```swift
+// Package.swift
+import PackageDescription
+
+let package = Package(
+    name: "Clock",
+    targets: [
+        .testTarget(name: "ClockTests"),
+    ]
+)
+```
+
+```swift
 // Tests/ClockTests/ClockTests.swift
 import XCTest
 #if canImport(Darwin)
@@ -100,6 +112,18 @@ final class ClockTests: XCTestCase {
 ```
 
 ## Counterexample
+
+```swift
+// Package.swift
+import PackageDescription
+
+let package = Package(
+    name: "Clock",
+    targets: [
+        .testTarget(name: "ClockTests"),
+    ]
+)
+```
 
 ```swift
 // Tests/ClockTests/ClockTests.swift

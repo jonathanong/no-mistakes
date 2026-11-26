@@ -87,6 +87,18 @@ fn condition_parser_handles_apple_conjunctions_disjunctions_and_negations() {
     assert_eq!(parse_condition(" canImport(Darwin\n"), Proof::None);
     assert_eq!(parse_condition(" (os(iOS)\n  || os(macOS))\n"), Proof::All);
     assert_eq!(parse_condition(" os(iOS) ||\n  os(macOS)\n"), Proof::All);
+    assert_eq!(parse_condition(" os(iOS) ||\n"), Proof::None);
+    assert_eq!(parse_condition(" !\n"), Proof::None);
+    assert_eq!(parse_condition(" (\n"), Proof::None);
+    assert_eq!(parse_condition(" `DEBUG\n"), Proof::None);
+    assert_eq!(
+        parse_condition(" DEBUG && canImport(Security)\n"),
+        Proof::Modules(vec!["Security"])
+    );
+    assert_eq!(
+        parse_condition(" canImport(Security) && canImport(Security)\n"),
+        Proof::Modules(vec!["Security"])
+    );
 }
 
 #[test]
@@ -207,6 +219,7 @@ fn package_manifest_classifier_handles_platforms_targets_excludes_and_uncertaint
 #[test]
 fn package_manifest_classifier_handles_nested_packages_plugins_and_dynamic_fields() {
     let outer = Path::new("/synthetic/repo");
+    let sibling = Path::new("/synthetic/other");
     let inner = Path::new("/synthetic/repo/SubPkg");
     let nested = packages::PackageIndex::from_manifests([
         (
@@ -216,10 +229,12 @@ fn package_manifest_classifier_handles_nested_packages_plugins_and_dynamic_field
                 import PackageDescription
                 let helper = Helper.Package()
                 let PackageInfo = 1
+                let kind = Package.self
                 let package = Package(
                     name: "Outer",
+                    platforms,
                     myplatforms: [.iOS(.v17)],
-                    platforms: [.linux(.v1)],
+                    platforms: [, .linux(.v1)],
                     targets: [
                         .plugin(name: "GenPlugin"),
                         .testTarget(name: "OuterTests")
@@ -227,6 +242,10 @@ fn package_manifest_classifier_handles_nested_packages_plugins_and_dynamic_field
                 )
                 "#,
             )),
+        ),
+        (
+            sibling.to_path_buf(),
+            Some(Arc::from(r#"let package = Package(name: "Other")"#)),
         ),
         (
             inner.to_path_buf(),
@@ -261,7 +280,11 @@ fn package_manifest_classifier_handles_nested_packages_plugins_and_dynamic_field
     ));
 
     for bad_platform_manifest in [
+        r#"let x = Package"#,
+        r#"let package = Package(name: "P", platforms: /* empty */, targets: [.testTarget(name: "T")])"#,
         r#"let package = Package(name: "P", platforms: [dynPlatform], targets: [.testTarget(name: "T")])"#,
+        r#"let package = Package(name: "P", platforms: [.iOS(.v17) + extra], targets: [.testTarget(name: "T")])"#,
+        r#"let package = Package(name: "P", platforms: [.iOS(.v17], targets: [.testTarget(name: "T")])"#,
         r#"let package = Package(name: "P", platforms: [.unknownOs(.v1)], targets: [.testTarget(name: "T")])"#,
         r#"let package = Package(name: "P", platforms: [.custom(dynName, versionString: "1")], targets: [.testTarget(name: "T")])"#,
         r#"let package = Package(name: "P", platforms: [.custom("solaris", versionString: "1")], targets: [.testTarget(name: "T")])"#,
@@ -276,6 +299,7 @@ fn package_manifest_classifier_handles_nested_packages_plugins_and_dynamic_field
     for bad_target_manifest in [
         r#"let package = Package(name: "P", targets: [dynamicTarget])"#,
         r#"let package = Package(name: "P", targets: [.futureTarget(name: "X")])"#,
+        r#"let package = Package(name: "P", targets: [.testTarget(name: /* empty */)])"#,
         r#"let package = Package(name: "P", targets: [.testTarget(path: "Tests/X")])"#,
         r#"let package = Package(name: "P", targets: [.testTarget(name: "X", path: dynPath)])"#,
         r#"let package = Package(name: "P", targets: [.testTarget(name: "X", exclude: dynEx)])"#,

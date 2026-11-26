@@ -95,7 +95,11 @@ pub(super) fn unproven_imports<'a>(
             update_guards(&mut guards, directive.as_str(), &code[directive.end()..]);
             return None;
         }
-        let module = event.name("module")?.as_str().trim_matches('\x60');
+        let module = event
+            .name("module")
+            .expect("import module")
+            .as_str()
+            .trim_matches('\x60');
         if !modules.contains(module) || guards.iter().any(|proof| proof.covers(module)) {
             return None;
         }
