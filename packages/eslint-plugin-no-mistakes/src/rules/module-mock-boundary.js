@@ -79,16 +79,15 @@ module.exports = rule(
       specifierNode = node.arguments[0],
       factory = node.arguments[1],
     ) {
-      if (suppressed(node)) return;
       const { dynamic, specifier } = moduleMockSpecifierArgument(specifierNode);
       if (dynamic) {
-        if (options.requireLiteralSpecifiers === false) return;
+        if (options.requireLiteralSpecifiers === false || suppressed(node)) return;
         context.report({ node, messageId: "boundary", data: { message: reportMessage(true) } });
         return;
       }
       if (!specifier || !isInternalSpecifier(specifier, options)) return;
       if (integrationAllows(specifier, factory, mock, context, options)) return;
-      if (tracker.allowed(specifier)) return;
+      if (tracker.allowed(specifier) || suppressed(node)) return;
       context.report({
         node,
         messageId: "boundary",

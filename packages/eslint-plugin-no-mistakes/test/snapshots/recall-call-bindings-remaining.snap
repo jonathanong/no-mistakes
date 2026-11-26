@@ -674,6 +674,22 @@
       "options": null
     },
     {
+      "file": "suppressed-baselined.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "baseline": [
+            [
+              "suppressed-baselined.mjs",
+              "./local",
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
       "file": "dynamic-key.mjs",
       "findings": [
         {
@@ -966,6 +982,34 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "suppressed-baselined.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "suppressed-baselined.mjs",
+          "line": 1,
+          "message": "Module mock boundary baseline for \"./local\" is stale; lower count from 2 to 1.",
+          "messageId": "stale",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "baseline": [
+            [
+              "suppressed-baselined.mjs",
+              "./local",
+              2
+            ]
+          ]
+        }
+      ]
     }
   ],
   "module-mock-preserve-exports": [

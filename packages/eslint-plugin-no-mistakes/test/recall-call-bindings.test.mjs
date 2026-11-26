@@ -164,6 +164,12 @@ describe("call-binding recall", () => {
               "suppressed-next-line.mjs",
             ),
             lintCase(fixture("module-mock-boundary/suppressed-file.mjs"), "suppressed-file.mjs"),
+            // Baselined call. A line directive must not make that baseline look unused.
+            lintCase(
+              fixture("module-mock-boundary/suppressed-baselined.mjs"),
+              "suppressed-baselined.mjs",
+              { baseline: [["suppressed-baselined.mjs", "./local", 1]] },
+            ),
           ],
           invalid: [
             // 1 diagnostic.
@@ -193,6 +199,12 @@ describe("call-binding recall", () => {
             ),
             // 1 diagnostic. Same internal mock as the suppressed fixtures, with no directive.
             lintCase(fixture("module-mock-boundary/unsuppressed.mjs"), "unsuppressed.mjs"),
+            // 1 stale diagnostic. The suppressed call counts, and the baseline still expects two.
+            lintCase(
+              fixture("module-mock-boundary/suppressed-baselined.mjs"),
+              "suppressed-baselined.mjs",
+              { baseline: [["suppressed-baselined.mjs", "./local", 2]] },
+            ),
           ],
         }),
         "module-mock-preserve-exports": snapshotSuite(
