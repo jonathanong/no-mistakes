@@ -2,7 +2,6 @@ use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::Deserialize;
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
@@ -46,36 +45,29 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            opts.validate()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let config_universe: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let config_files =
-                super::path_filter::filter_rule_files(root, config, rule, &config_universe)?;
-            let reference_candidates = existence_candidates(all_files, &target_roots);
-            scan(
-                root,
-                config,
-                &opts,
-                &config_files,
-                &reference_candidates,
-                &target_roots,
-                sources,
-            )
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        opts.validate()?;
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let config_universe: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
+            .cloned()
+            .collect();
+        let config_files =
+            super::path_filter::filter_rule_files(root, config, rule, &config_universe)?;
+        let reference_candidates = existence_candidates(all_files, &target_roots);
+        scan(
+            root,
+            config,
+            &opts,
+            &config_files,
+            &reference_candidates,
+            &target_roots,
+            sources,
+        )
+    })
 }
 
 impl Options {
@@ -148,7 +140,7 @@ fn scan(
         sources,
         &mut findings,
     )?;
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::sort_findings::sort_by_file_and_message(&mut findings);
     Ok(findings)
 }
 

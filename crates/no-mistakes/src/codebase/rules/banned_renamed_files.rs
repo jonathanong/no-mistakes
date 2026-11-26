@@ -52,7 +52,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .par_iter()
         .flat_map(|path| check_file(path, root, opts, &compiled))
         .collect();
-    findings.sort_by(|a, b| a.file.cmp(&b.file));
+    super::sort_findings::sort_by_file(&mut findings);
     Ok(findings)
 }
 

@@ -2,7 +2,6 @@ use super::RuleFinding;
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 mod alias;
@@ -49,41 +48,34 @@ pub(crate) fn check_with_files_and_sources(
     let lockfile_importers =
         lockfile::LockfileImporterCache::with_observer(sources.observer().cloned());
     let selections = selection::SelectionCache::default();
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: options::Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let mut discovery_roots = vec![root.to_path_buf()];
-            discovery_roots.extend(target_roots.iter().cloned());
-            discovery_roots.sort();
-            discovery_roots.dedup();
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &discovery_roots))
-                .cloned()
-                .collect();
-            let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            let anchor = ConfigAnchor::resolve(root, config, Some(sources), rule);
-            scan::scan_with_sources(
-                root,
-                &target_roots,
-                &files,
-                scan::ScanInput {
-                    opts: &opts,
-                    source_filter: &source_filter,
-                    sources,
-                    preparation: (&lockfile_importers, &selections),
-                    anchor: &anchor,
-                },
-            )
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: options::Options = rule.try_rule_options()?;
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let mut discovery_roots = vec![root.to_path_buf()];
+        discovery_roots.extend(target_roots.iter().cloned());
+        discovery_roots.sort();
+        discovery_roots.dedup();
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &discovery_roots))
+            .cloned()
+            .collect();
+        let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        let anchor = ConfigAnchor::resolve(root, config, Some(sources), rule);
+        scan::scan_with_sources(
+            root,
+            &target_roots,
+            &files,
+            scan::ScanInput {
+                opts: &opts,
+                source_filter: &source_filter,
+                sources,
+                preparation: (&lockfile_importers, &selections),
+                anchor: &anchor,
+            },
+        )
+    })
 }
 
 include!("forbidden_workspace_closure/test_mods.rs");

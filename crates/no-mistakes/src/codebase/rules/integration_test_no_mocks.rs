@@ -45,22 +45,15 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            reject_removed_call_options(&opts)?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files = candidate_files(root, config, all_files, &skip, &target_roots, rule);
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_with_sources(root, &opts, &files, sources)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        reject_removed_call_options(&opts)?;
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let files = candidate_files(root, config, all_files, &skip, &target_roots, rule);
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        scan_with_sources(root, &opts, &files, sources)
+    })
 }
 
 fn candidate_files(
