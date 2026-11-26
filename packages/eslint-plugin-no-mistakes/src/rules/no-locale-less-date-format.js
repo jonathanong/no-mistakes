@@ -3,29 +3,36 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
+const { stableConstInitializer } = require("./async-target-bindings");
+const { literalString } = require("./logical-call");
 
 const id = "no-locale-less-date-format";
 const DEFAULT_METHODS = ["toLocaleString", "toLocaleDateString", "toLocaleTimeString"];
 
-function methodName(member) {
+function resolveConstExpression(node, context) {
+  let expression = unwrapExpression(node);
+  const seen = new Set();
+  for (;;) {
+    const initializer = stableConstInitializer(expression, context, seen);
+    if (!initializer) return expression;
+    expression = unwrapExpression(initializer);
+  }
+}
+
+function methodName(member, context) {
   if (!member.computed) {
     return member.property.type === "Identifier" ? member.property.name : null;
   }
-  const key = member.property;
-  if (key.type === "Literal" && typeof key.value === "string") return key.value;
-  if (key.type === "TemplateLiteral" && key.expressions.length === 0) {
-    return key.quasis[0].value.cooked;
-  }
-  return null;
+  return literalString(resolveConstExpression(member.property, context));
 }
 
-function isImmediateResolvedOptionsCall(node) {
+function isImmediateResolvedOptionsCall(node, context) {
   const expr = unwrapTransparentParent(node);
   const member = expr.parent;
   if (
     member?.type !== "MemberExpression" ||
     member.object !== expr ||
-    methodName(member) !== "resolvedOptions"
+    methodName(member, context) !== "resolvedOptions"
   ) {
     return false;
   }
@@ -33,12 +40,14 @@ function isImmediateResolvedOptionsCall(node) {
   return call.parent?.type === "CallExpression" && call.parent.callee === call;
 }
 
+function isDynamicScope(scope, evalScopes) {
+  return scope.type === "with" || scope.directCallToEvalScope || evalScopes.has(scope);
+}
+
 function globalResolution(identifier, sourceCode, evalScopes) {
   let reference;
   for (let scope = sourceCode.getScope(identifier); scope; scope = scope.upper) {
-    if (scope.type === "with" || scope.directCallToEvalScope || evalScopes.has(scope)) {
-      return "unknown";
-    }
+    if (isDynamicScope(scope, evalScopes)) return "unknown";
     reference ??= scope.references.find((item) => item.identifier === identifier);
   }
   const variable = reference?.resolved;
@@ -89,12 +98,11 @@ module.exports = rule(
       if (!suppressed(node)) context.report({ node, messageId, data: { method } });
     }
 
-    function checkLocale(node, method, namespace) {
+    function checkLocale(node, method, { namespace, usesAlias } = {}) {
       const firstArg = node.arguments[0];
       if (firstArg?.type === "SpreadElement") {
         if (reportUnknown) {
-          if (namespace) pending.push({ node, method, namespace, messageId: "unknownLocale" });
-          else report(node, method, "unknownLocale");
+          pending.push({ node, method, namespace, usesAlias, messageId: "unknownLocale" });
         }
         return;
       }
@@ -103,14 +111,24 @@ module.exports = rule(
         locale?.type === "Identifier" && locale.name === "undefined" ? locale : null;
       const voidLocale = locale?.type === "UnaryExpression" && locale.operator === "void";
       if (locale && (options.allowUndefinedLocale || !(undefinedIdentifier || voidLocale))) return;
-      if (namespace || undefinedIdentifier) {
-        pending.push({ node, method, namespace, undefinedIdentifier, messageId: "explicitLocale" });
+      if (namespace || undefinedIdentifier || usesAlias) {
+        pending.push({
+          node,
+          method,
+          namespace,
+          undefinedIdentifier,
+          usesAlias,
+          messageId: "explicitLocale",
+        });
       } else {
         report(node, method);
       }
     }
 
-    function checkConstructor(node, callee, member) {
+    function checkConstructor(node, original) {
+      const callee = resolveConstExpression(original, context);
+      if (callee.type !== "MemberExpression") return;
+      const member = methodName(callee, context);
       const namespace = unwrapExpression(callee.object);
       if (namespace.type !== "Identifier") return;
       if (member === null) {
@@ -124,11 +142,11 @@ module.exports = rule(
       if (
         namespace.name === "Intl" &&
         member.endsWith("Format") &&
-        isImmediateResolvedOptionsCall(node)
+        isImmediateResolvedOptionsCall(node, context)
       ) {
         return;
       }
-      checkLocale(node, name, namespace);
+      checkLocale(node, name, { namespace, usesAlias: callee !== original });
     }
 
     return {
@@ -138,18 +156,20 @@ module.exports = rule(
           const scope = sourceCode.getScope(node);
           if (!scope.isStrict) evalScopes.add(scope.variableScope);
         }
-        if (callee.type !== "MemberExpression") return;
-        const method = methodName(callee);
-        if (methods.has(method)) {
-          checkLocale(node, method);
-        } else if (constructors.size > 0) {
-          checkConstructor(node, callee, method);
+        if (callee.type === "MemberExpression") {
+          const method = methodName(callee, context);
+          if (methods.has(method)) {
+            checkLocale(node, method, {
+              usesAlias: callee.computed && unwrapExpression(callee.property).type === "Identifier",
+            });
+            return;
+          }
         }
+        if (constructors.size > 0) checkConstructor(node, callee);
       },
       NewExpression(node) {
         if (constructors.size === 0) return;
-        const callee = unwrapExpression(node.callee);
-        if (callee.type === "MemberExpression") checkConstructor(node, callee, methodName(callee));
+        checkConstructor(node, unwrapExpression(node.callee));
       },
       "Program:exit"() {
         for (const item of pending) {
@@ -161,7 +181,10 @@ module.exports = rule(
             ? globalResolution(item.undefinedIdentifier, sourceCode, evalScopes)
             : "global";
           if (undefinedState === "local") continue;
-          if (namespaceState === "unknown" || undefinedState === "unknown") {
+          let aliasScope = item.usesAlias ? sourceCode.getScope(item.node) : null;
+          while (aliasScope && !isDynamicScope(aliasScope, evalScopes))
+            aliasScope = aliasScope.upper;
+          if (namespaceState === "unknown" || undefinedState === "unknown" || aliasScope) {
             if (reportUnknown) report(item.node, item.method, "unknownLocale");
             continue;
           }
