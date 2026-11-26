@@ -10,7 +10,7 @@
   },
   "overrides": [
     {
-      "files": ["e2e/assertion-imports.spec.ts", "e2e/assertion-wrappers.spec.ts", "e2e/assertion-opaque.spec.ts", "e2e/assertion-quiet.spec.ts", "e2e/assertion-relative-expect.spec.ts"],
+      "files": ["e2e/assertion-imports.spec.ts", "e2e/assertion-wrappers.spec.ts", "e2e/assertion-opaque.spec.ts", "e2e/assertion-quiet.spec.ts", "e2e/assertion-relative-expect.spec.ts", "e2e/assertion-branches.spec.ts", "e2e/assertion-members.spec.ts"],
       "rules": { "no-mistakes/playwright-assertion-timeout-cap": "error" }
     },
     {
@@ -20,7 +20,7 @@
       }
     },
     {
-      "files": ["e2e/test-timeout-require.spec.ts", "e2e/test-timeout-wrappers.spec.ts", "e2e/test-timeout-dynamic-ignore.spec.ts"],
+      "files": ["e2e/test-timeout-require.spec.ts", "e2e/test-timeout-wrappers.spec.ts", "e2e/test-timeout-dynamic-ignore.spec.ts", "e2e/test-timeout-shapes.spec.ts"],
       "rules": { "no-mistakes/playwright-test-timeout-cap": "error" }
     },
     {
@@ -39,13 +39,22 @@
       }
     },
     {
+      "files": ["e2e/test-timeout-packages.spec.ts"],
+      "rules": {
+        "no-mistakes/playwright-test-timeout-cap": [
+          "error",
+          { "registrationPackages": ["my-kit"], "unknownValues": "finding" }
+        ]
+      }
+    },
+    {
       "files": ["e2e/test-timeout-ban.spec.ts"],
       "rules": {
         "no-mistakes/playwright-test-timeout-cap": ["error", { "banOverrides": true }]
       }
     },
     {
-      "files": ["e2e/hoisted-imports.spec.ts", "src/hoisted-require.ts", "e2e/hoisted-opaque.spec.ts"],
+      "files": ["e2e/hoisted-imports.spec.ts", "src/hoisted-require.ts", "e2e/hoisted-opaque.spec.ts", "e2e/hoisted-aliases.spec.ts", "e2e/hoisted-opaque-quiet.spec.ts"],
       "rules": {
         "no-mistakes/playwright-no-hoisted-unique-token": ["error", { "tokenFactories": ["makeToken"] }]
       }
@@ -57,7 +66,7 @@
       }
     },
     {
-      "files": ["src/scroll-require.ts", "src/scroll-equals.ts"],
+      "files": ["src/scroll-require.ts", "src/scroll-equals.ts", "src/scroll-statement.ts"],
       "rules": { "no-mistakes/playwright-no-raw-scroll-pagination": "error" }
     },
     {
@@ -67,7 +76,7 @@
       }
     },
     {
-      "files": ["src/selector-require.ts", "src/selector-equals.ts"],
+      "files": ["src/selector-require.ts", "src/selector-equals.ts", "e2e/selector-calls.spec.ts", "src/selector-plain.ts", "src/selector-statement.ts"],
       "rules": { "no-mistakes/playwright-selector-priority": "error" }
     },
     {
@@ -75,7 +84,7 @@
       "rules": { "no-mistakes/playwright-defaults": "error" }
     },
     {
-      "files": ["src/interactive-imports.tsx", "src/interactive-opaque.tsx"],
+      "files": ["src/interactive-imports.tsx", "src/interactive-opaque.tsx", "src/interactive-redeclare.tsx"],
       "rules": {
         "no-mistakes/playwright-require-interactive-test-id": ["error", { "interactiveComponents": ["Button"] }]
       }

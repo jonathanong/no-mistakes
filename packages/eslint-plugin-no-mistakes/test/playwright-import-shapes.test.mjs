@@ -60,6 +60,25 @@ const cases = [
     expected: [[4, "timeout"]],
   },
   {
+    name: "assertion binding branches",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-branches.spec.ts",
+    expected: [
+      [11, "unanalyzable"],
+      [14, "timeout"],
+      [20, "unanalyzable"],
+    ],
+  },
+  {
+    name: "assertion member and package roots",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-members.spec.ts",
+    expected: [
+      [10, "timeout"],
+      [13, "unanalyzable"],
+    ],
+  },
+  {
     name: "assertion unanalyzable ignore",
     rule: "playwright-assertion-timeout-cap",
     file: "e2e/assertion-ignore.spec.ts",
@@ -114,6 +133,27 @@ const cases = [
     expected: [[5, "override"]],
   },
   {
+    name: "extend, namespace member, and info pattern",
+    rule: "playwright-test-timeout-cap",
+    file: "e2e/test-timeout-shapes.spec.ts",
+    expected: [
+      [7, "timeout"],
+      [13, "timeout"],
+      [17, "timeout"],
+    ],
+  },
+  {
+    name: "registration package and partial bind",
+    rule: "playwright-test-timeout-cap",
+    file: "e2e/test-timeout-packages.spec.ts",
+    options: { registrationPackages: ["my-kit"], unknownValues: "finding" },
+    expected: [
+      [6, "unknown"],
+      [7, "unknown"],
+      [8, "unknown"],
+    ],
+  },
+  {
     name: "hoisted CommonJS and import-equals (#4362)",
     rule: "playwright-no-hoisted-unique-token",
     file: "e2e/hoisted-imports.spec.ts",
@@ -151,6 +191,23 @@ const cases = [
     expected: [[5, "unanalyzable"]],
   },
   {
+    name: "it and describe beforeAll read a hoisted token",
+    rule: "playwright-no-hoisted-unique-token",
+    file: "e2e/hoisted-aliases.spec.ts",
+    options: { tokenFactories: ["makeToken"] },
+    expected: [
+      [5, "hoisted"],
+      [10, "hoisted"],
+    ],
+  },
+  {
+    name: "opaque beforeAll that does not read a token stays quiet",
+    rule: "playwright-no-hoisted-unique-token",
+    file: "e2e/hoisted-opaque-quiet.spec.ts",
+    options: { tokenFactories: ["makeToken"] },
+    expected: [],
+  },
+  {
     name: "raw scroll require outside e2e (#4364)",
     rule: "playwright-no-raw-scroll-pagination",
     file: "src/scroll-require.ts",
@@ -160,6 +217,12 @@ const cases = [
     name: "raw scroll import-equals outside e2e (#4364)",
     rule: "playwright-no-raw-scroll-pagination",
     file: "src/scroll-equals.ts",
+    expected: [[5, "rawScroll"]],
+  },
+  {
+    name: "side-effect require admits the file",
+    rule: "playwright-no-raw-scroll-pagination",
+    file: "src/scroll-statement.ts",
     expected: [[5, "rawScroll"]],
   },
   {
@@ -185,6 +248,28 @@ const cases = [
     rule: "playwright-selector-priority",
     file: "src/selector-equals.ts",
     expected: [[4, "semantic"]],
+  },
+  {
+    name: "locator call, apply, and sequence callee",
+    rule: "playwright-selector-priority",
+    file: "e2e/selector-calls.spec.ts",
+    expected: [
+      [4, "semantic"],
+      [5, "semantic"],
+      [7, "semantic"],
+    ],
+  },
+  {
+    name: "locator outside a Playwright file stays quiet",
+    rule: "playwright-selector-priority",
+    file: "src/selector-plain.ts",
+    expected: [],
+  },
+  {
+    name: "side-effect require admits selector checks",
+    rule: "playwright-selector-priority",
+    file: "src/selector-statement.ts",
+    expected: [[3, "semantic"]],
   },
   {
     name: "defaulted test ids through wrappers (#4368)",
@@ -213,6 +298,13 @@ const cases = [
     file: "src/interactive-opaque.tsx",
     options: { interactiveComponents: ["Button"] },
     expected: [[4, "unanalyzable"]],
+  },
+  {
+    name: "redeclared component is still interactive",
+    rule: "playwright-require-interactive-test-id",
+    file: "src/interactive-redeclare.tsx",
+    options: { interactiveComponents: ["Button"] },
+    expected: [[5, "missing"]],
   },
   {
     name: "opaque interactive component ignored",

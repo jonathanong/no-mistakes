@@ -1,6 +1,47 @@
 {
   "eslint": [
     {
+      "file": "e2e/assertion-branches.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 11,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 11,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 14,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 14,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 20,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 20,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion binding branches",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-imports.spec.ts",
       "findings": [
         {
@@ -49,6 +90,36 @@
         }
       ],
       "name": "assertion CommonJS and import-equals (#4356)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-members.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 10,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 13,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 13,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion member and package roots",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },
@@ -346,6 +417,40 @@
       "rule": "playwright-no-hoisted-unique-token"
     },
     {
+      "file": "e2e/hoisted-aliases.spec.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 5,
+          "message": "`tokenA` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 10,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 10,
+          "message": "`tokenB` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "it and describe beforeAll read a hoisted token",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
       "file": "e2e/hoisted-opaque.spec.ts",
       "findings": [
         {
@@ -361,6 +466,17 @@
         }
       ],
       "name": "opaque beforeAll is unanalyzable",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-quiet.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that does not read a token stays quiet",
       "options": {
         "tokenFactories": [
           "makeToken"
@@ -460,6 +576,25 @@
           "feed-sentinel"
         ]
       },
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "src/scroll-statement.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "src/scroll-statement.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "name": "side-effect require admits the file",
+      "options": null,
       "rule": "playwright-no-raw-scroll-pagination"
     },
     {
@@ -595,6 +730,77 @@
       "rule": "playwright-require-interactive-test-id"
     },
     {
+      "file": "src/interactive-redeclare.tsx",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 17,
+          "endLine": 5,
+          "file": "src/interactive-redeclare.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "redeclared component is still interactive",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "e2e/selector-calls.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 4,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 5,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 7,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 7,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "locator call, apply, and sequence callee",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-plain.ts",
+      "findings": [],
+      "name": "locator outside a Playwright file stays quiet",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
       "file": "src/selector-equals.ts",
       "findings": [
         {
@@ -629,6 +835,25 @@
         }
       ],
       "name": "selector require outside e2e (#4366)",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-statement.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "src/selector-statement.ts",
+          "line": 3,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "side-effect require admits selector checks",
       "options": null,
       "rule": "playwright-selector-priority"
     },
@@ -670,6 +895,93 @@
       "findings": [],
       "name": "dynamic require stays quiet when unknownValues is ignore",
       "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-shapes.spec.ts",
+      "findings": [
+        {
+          "column": 21,
+          "endColumn": 28,
+          "endLine": 7,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 7,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 27,
+          "endLine": 13,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 13,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 21,
+          "endLine": 17,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 17,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "extend, namespace member, and info pattern",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-packages.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 6,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 6,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 7,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 7,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 9,
+          "endLine": 8,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 8,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "registration package and partial bind",
+      "options": {
+        "registrationPackages": [
+          "my-kit"
+        ],
+        "unknownValues": "finding"
+      },
       "rule": "playwright-test-timeout-cap"
     },
     {
@@ -778,6 +1090,35 @@
   ],
   "oxlint": [
     {
+      "file": "e2e/assertion-branches.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 11,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 14,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 20,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "assertion binding branches",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-imports.spec.ts",
       "findings": [
         {
@@ -810,6 +1151,28 @@
         }
       ],
       "name": "assertion CommonJS and import-equals (#4356)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-members.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 13,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "assertion member and package roots",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },
@@ -1017,6 +1380,28 @@
       "rule": "playwright-no-hoisted-unique-token"
     },
     {
+      "file": "e2e/hoisted-aliases.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 5,
+          "message": "`tokenA` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 10,
+          "message": "`tokenB` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "it and describe beforeAll read a hoisted token",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
       "file": "e2e/hoisted-opaque.spec.ts",
       "findings": [
         {
@@ -1028,6 +1413,13 @@
         }
       ],
       "name": "opaque beforeAll is unanalyzable",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-quiet.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that does not read a token stays quiet",
       "options": null,
       "rule": "playwright-no-hoisted-unique-token"
     },
@@ -1094,6 +1486,21 @@
         }
       ],
       "name": "scroll and sentinel wrappers (#4401)",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "src/scroll-statement.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 3,
+          "file": "src/scroll-statement.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        }
+      ],
+      "name": "side-effect require admits the file",
       "options": null,
       "rule": "playwright-no-raw-scroll-pagination"
     },
@@ -1185,6 +1592,57 @@
       "rule": "playwright-require-interactive-test-id"
     },
     {
+      "file": "src/interactive-redeclare.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 11,
+          "file": "src/interactive-redeclare.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID."
+        }
+      ],
+      "name": "redeclared component is still interactive",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "e2e/selector-calls.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 5,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 7,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "locator call, apply, and sequence callee",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-plain.ts",
+      "findings": [],
+      "name": "locator outside a Playwright file stays quiet",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
       "file": "src/selector-equals.ts",
       "findings": [
         {
@@ -1215,6 +1673,21 @@
       "rule": "playwright-selector-priority"
     },
     {
+      "file": "src/selector-statement.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "src/selector-statement.ts",
+          "line": 3,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "side-effect require admits selector checks",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
       "file": "playwright.config.ts",
       "findings": [],
       "name": "defineConfig satisfies stays under the cap (#4377)",
@@ -1240,6 +1713,64 @@
       "file": "e2e/test-timeout-dynamic-ignore.spec.ts",
       "findings": [],
       "name": "dynamic require stays quiet when unknownValues is ignore",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-shapes.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 21,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 7,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 20,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 13,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 14,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 17,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "extend, namespace member, and info pattern",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-packages.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 6,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 7,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 8,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        }
+      ],
+      "name": "registration package and partial bind",
       "options": null,
       "rule": "playwright-test-timeout-cap"
     },

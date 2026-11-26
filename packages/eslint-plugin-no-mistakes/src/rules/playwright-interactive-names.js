@@ -22,11 +22,7 @@ function importedSpecifierName(specifier) {
 
 function bindingIdentifier(variable) {
   const def = variable?.defs?.[0];
-  if (def?.name?.type === "Identifier") return def.name;
-  if (def?.node?.type === "Identifier") return def.node;
-  if (def?.node?.id?.type === "Identifier") return def.node.id;
-  if (def?.node?.local?.type === "Identifier") return def.node.local;
-  return null;
+  return def?.name?.type === "Identifier" ? def.name : null;
 }
 
 function componentBinding(name, node, context) {
