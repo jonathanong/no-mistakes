@@ -13,7 +13,9 @@ macro_rules! filesystem_rules {
             GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => github_actions_action_timeout_pair::check_with_files => "",
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files => "",
             GITHUB_ACTIONS_JOB_TIMEOUTS => github_actions_job_timeouts::check_with_files => "",
+            GITHUB_ACTIONS_CACHE_SETUP_POLICY => github_actions_cache_setup_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/cache-setup-policy-options.yml")),
             GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT => github_actions_local_action_checkout::check_with_files => "",
+            GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS => github_actions_no_required_pr_path_filters::check_with_files => "      workflows: [.github/workflows/ci.yml]\n",
             GITHUB_ACTIONS_JOB_PERMISSIONS => github_actions_job_permissions::check_with_files => "",
             GITHUB_ACTIONS_CACHE_KEY_POLICY => github_actions_cache_key_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/cache-key-policy-options.yml")),
             GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES => github_actions_max_inline_script_lines::check_with_files => "",
@@ -118,6 +120,7 @@ macro_rules! filesystem_rules {
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files => "",
             DOC_CONSISTENCY => doc_consistency::check_with_files => "",
             SHELLCHECK_RUNNER => shellcheck_runner::check_with_files => "",
+            TERRAFORM_IAM_NO_UNDOCUMENTED_WILDCARDS => terraform_iam_no_undocumented_wildcards::check_with_files => "",
         }
     };
 }

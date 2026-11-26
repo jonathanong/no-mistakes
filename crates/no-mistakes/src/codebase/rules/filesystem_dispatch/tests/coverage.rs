@@ -12,8 +12,13 @@ fn dispatch_with_files_skips_disabled_rules() {
         .filter(|&rule| rule != RUST_MAX_LINES_PER_FILE && rule != RUST_NO_INLINE_TESTS)
         .collect();
     let (fixture, config_path) = super::fixture_config::prepared_rules(&rules_without_rust);
-    let findings =
-        run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
+    let workflow = fixture.path().join(".github/workflows/ci.yml");
+    let findings = run_filesystem_rules_with_files(
+        fixture.path(),
+        Some(&config_path),
+        std::slice::from_ref(&workflow),
+    )
+    .unwrap();
     assert!(findings.is_empty());
 }
 

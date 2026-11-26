@@ -1,0 +1,10 @@
+on:
+  push: &shared_filters
+    # no-mistakes-disable-next-line github-actions-no-required-pr-path-filters
+    paths: ['src/**']
+  pull_request: *shared_filters
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok

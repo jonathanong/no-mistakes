@@ -1,0 +1,88 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_elements": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "intervals.test.ts",
+          "line": 10,
+          "message": "it.each table has 2 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each(["
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 14,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([[\"ended period\", 1_740_000_000, 10_000]])(\"%s\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 15,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([[10_000, \"daily\"]])(\"mismatched duration %i\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 16,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([[18_000, \"every malformedh\"]])(\"unrecognized interval %i\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 22,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([\"2025-02-29\", 20261000])(\"non-date cardinality %s\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 23,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([\"2025-02-29\", 20261304])(\"non-date month %s\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 25,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([\"2025-0x-29\", 20261004])(\"non-date label %s\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 26,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([\"2025/02/29\", 20261004])(\"slash-separated label %s\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 27,
+          "message": "it.each table has 1 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([\"2025-02/29\", 20261004])(\"mixed separators label %s\", () => {});"
+        },
+        {
+          "file": "intervals.test.ts",
+          "line": 9,
+          "message": "it.each table has 2 sizes all exceeding threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, 100_000])(\"scale %i\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

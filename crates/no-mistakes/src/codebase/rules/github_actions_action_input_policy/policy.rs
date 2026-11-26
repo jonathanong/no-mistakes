@@ -96,7 +96,7 @@ fn compile_with_errors(opts: Options, errors: &mut BTreeSet<String>) -> Compiled
     }
 }
 
-pub(super) fn family_of(uses: &str) -> Option<String> {
+pub(in crate::codebase::rules) fn family_of(uses: &str) -> Option<String> {
     let trimmed = uses.trim().trim_end_matches('/');
     if trimmed.is_empty() || trimmed.contains("${{") {
         return None;

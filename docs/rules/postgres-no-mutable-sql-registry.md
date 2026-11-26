@@ -253,20 +253,19 @@ check is required because unsupported inputs are explicitly classified.
 
 ### Unanalyzable inputs
 
-Following recall over precision ([how analysis
-works](../../README.md#how-analysis-works)), inputs this rule cannot prove are
-never treated as clean; they follow `options.unanalyzable`.
+At low effort, registry relations such as ``query(`SELECT id FROM
+${tables.users}`)``, unmodeled helpers, aliases, namespace executor calls,
+unsupported executor factories, and unproven type receivers follow
+`options.unanalyzable`. [Low effort routing](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_sql_cross_file/low.rs#L90-L128).
 
-- At low: a registry relation such as ``query(`SELECT id FROM
-  ${tables.users}`)``, unmodeled helpers, aliases, namespace executor calls, and
-  unsupported executor factories or unproven type receivers. At max the rule
-  abstains on routes it cannot tie to one canonical producer (dynamic or
-  conditional `require`, ambiguous re-exports) rather than reporting them.
   - `report` (default): fails as a finding at the unsupported use.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.
 
-  Proven cross-file writes remain findings at max under every policy.
+At max effort, the rule emits no uncertainty diagnostic for a route it
+cannot tie to one canonical producer, such as a dynamic or conditional
+`require` or an ambiguous re-export. Proven cross-file writes remain
+findings under every policy. [Max effort scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_mutable_sql_registry.rs#L72-L90).
 
 ## Suppression
 

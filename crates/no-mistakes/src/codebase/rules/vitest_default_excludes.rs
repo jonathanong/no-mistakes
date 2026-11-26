@@ -7,16 +7,20 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
+mod arrays;
 mod extract;
 mod options;
-pub(crate) use extract::collect;
+mod spreads;
+use extract::literal_glob;
+pub(crate) use extract::collect_prepared;
+pub(crate) use spreads::has_candidate_exports;
 pub(crate) use options::collect_config_errors;
 use options::{applications, Application, CheckMode};
 
@@ -26,12 +30,23 @@ pub const RULE_ID: &str = "vitest-default-excludes";
 pub(crate) struct CollectedExcludes {
     pub(crate) default_export: Vec<ExcludeArray>,
     pub(crate) test_literals: Vec<ExcludeArray>,
+    pub(crate) exports: FxHashMap<String, FxHashSet<String>>,
 }
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
+pub(crate) struct SpreadImport {
+    pub(crate) specifier: String,
+    pub(crate) name: String,
+}
+
+pub(crate) type ResolvedSpreads = FxHashMap<PathBuf, FxHashMap<SpreadImport, FxHashSet<String>>>;
 
 pub(crate) struct ExcludeArray {
     line: usize,
     globs: FxHashSet<String>,
     spreads_config_defaults: bool,
+    pub(crate) imports: Vec<SpreadImport>,
+    unknown: bool,
 }
 
 #[doc(hidden)]
@@ -122,38 +137,52 @@ fn check_application(
         }
         .into());
     }
+    let imports = facts.and_then(|facts| facts.vitest_exclude_imports.get(&app.path));
     let arrays = match app.mode {
         CheckMode::DefaultExport => &file_facts.vitest_default_excludes.default_export,
         CheckMode::TestLiterals => &file_facts.vitest_default_excludes.test_literals,
     };
     Ok(arrays
         .iter()
-        .filter_map(|array| {
-            if array.spreads_config_defaults {
-                return None;
-            }
-            let missing: Vec<_> = app
-                .required_globs
-                .iter()
-                .filter(|glob| !array.globs.contains(glob.as_str()))
-                .map(String::as_str)
-                .collect();
-            (!missing.is_empty()).then(|| RuleFinding {
-                causes: Vec::new(),
-                rule: RULE_ID.into(),
-                file: file.clone(),
-                line: array.line,
-                message: app.message.map(str::to_owned).unwrap_or_else(|| {
-                    format!(
-                        "Add {} to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
-                        missing.join(", ")
-                    )
-                }),
-                import: None,
-                target: None,
-            })
-        })
+        .filter_map(|array| finding_for(array, &app, &file, imports))
         .collect())
+}
+
+fn finding_for(
+    array: &ExcludeArray,
+    app: &Application<'_>,
+    file: &str,
+    imports: Option<&FxHashMap<SpreadImport, FxHashSet<String>>>,
+) -> Option<RuleFinding> {
+    if array.spreads_config_defaults {
+        return None;
+    }
+    let lookup = |import: &SpreadImport| imports.and_then(|imports| imports.get(import));
+    let missing: Vec<_> = app.required_globs.iter().filter(|glob| {
+        !array.globs.contains(glob.as_str())
+            && !array.imports.iter().filter_map(lookup).any(|globs| globs.contains(glob.as_str()))
+    }).map(String::as_str).collect();
+    if missing.is_empty() {
+        return None;
+    }
+    let unknown = array.unknown || array.imports.iter().any(|import| lookup(import).is_none());
+    let message = if unknown {
+        "test.exclude contains an unanalyzable spread or entry. Use a literal string array or a statically known const array for each spread.".into()
+    } else {
+        app.message.map(str::to_owned).unwrap_or_else(|| format!(
+            "Add {} to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+            missing.join(", ")
+        ))
+    };
+    Some(RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.into(),
+        file: file.to_owned(),
+        line: array.line,
+        message,
+        import: None,
+        target: unknown.then(|| "unanalyzable".into()),
+    })
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

@@ -63,6 +63,8 @@ values are reported; a known value replaced by a later property or spread does
 not produce a finding. Numeric separators are understood. A dynamic config or
 spread that cannot be recovered is opaque; for a recognized timeout field
 whose value is unresolved, set `unknownValues: "finding"` to report it.
+TypeScript external import-equals declarations resolve as namespaces for the
+recognized Vitest and Vite modules.
 
 ```ts
 const shortTimeout = 4_000;

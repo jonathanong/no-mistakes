@@ -1,0 +1,6 @@
+x-base: &base
+  on:
+    pull_request:
+      paths: ['src/**']
+<<: *base
+jobs: {}

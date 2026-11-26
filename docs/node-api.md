@@ -31,6 +31,10 @@ Explicit integration-policy includes/excludes narrow test discovery while
 retaining imported helper summaries and parse diagnostics. This preparation
 change adds no invocation option, runtime export, or report field.
 
+Configured `github-actions-cache-setup-policy` uses the same authored key
+patterns, setup deadline caps, and unanalyzable policy in `check()` and
+`analyzeProject()`. [Rule options](rules/github-actions-cache-setup-policy.md)
+
 `ciTopology()` reports `unlocated-yaml-merge` when a YAML merge key cannot
 be matched to its location in the source. Workflow and structured-config
 checks route the uncertainty through their configured policy and retain
@@ -160,11 +164,11 @@ failures. Prerequisites follow each consumer's source and configuration input
 selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
-The cache-key policy, action input policy, and Vitest default exclusion rule
-validate their options before analysis; invalid options reject `check()` and
-`analyzeProject()` with the same sorted configuration error message printed by
-the CLI (exit 2, empty stdout, no `incomplete` entry). See
-[rule configuration](configuration/rules.md).
+The cache-key policy, action input policy, required PR path-filter rule, and
+Vitest default exclusion rule validate their options before analysis; invalid
+options reject `check()` and `analyzeProject()` with the same sorted
+configuration error message printed by the CLI (exit 2, empty stdout, no
+`incomplete` entry). See [rule configuration](configuration/rules.md).
 An unwinding panic during per-file fact extraction uses the same existing
 `CheckFailure` shape with consumer `fact-extraction`, the file, and the panic
 message. `check()` and check reports in `analyzeProject()` resolve with that
@@ -475,7 +479,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `vitest-default-excludes`, and `vitest-project-policy` |
+| `check` | `check(options)`, including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `playwright-no-serial`, `test-no-retries`, `terraform-iam-no-undocumented-wildcards`, `vitest-default-excludes`, and `vitest-project-policy` |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -1034,6 +1038,13 @@ rule, `file`/`line` locate the local action's `uses:` line, and `target` identif
 the `job#step` (one-based step position). No new runtime
 export, option type, or report field is needed.
 
+The opt-in `github-actions-no-required-pr-path-filters` uses the same config and
+`RuleFinding` shape in async `check()`, `analyzeProject()`, and the CLI.
+`GithubActionsNoRequiredPrPathFiltersOptions` describes its YAML options;
+`options.workflows` is required and non-empty (missing, empty, or non-literal
+entries reject `check()` and `analyzeProject()` before analysis).
+See [the rule](rules/github-actions-no-required-pr-path-filters.md).
+
 [`github-actions-pinned-hash`](rules/github-actions-pinned-hash.md) reads
 `options.images` from the rule configuration selected by `config`. The async
 `check()` and `analyzeProject()` check paths use the same image findings and
@@ -1068,6 +1079,11 @@ same outcome as CLI `check`. Configure it in the YAML selected by `config`.
 `DependabotCooldownPolicyOptions` is exported for typed configuration.
 Policy violations use `RuleFinding`, and unreadable or malformed input uses
 `CheckReport.incomplete` (`CheckFailure[]`).
+
+The opt-in [`terraform-iam-no-undocumented-wildcards`](rules/terraform-iam-no-undocumented-wildcards.md)
+runs through async `check()` and `analyzeProject()` check reports. Configure it
+in the YAML selected by `config`. Wildcard resources use `RuleFinding` and
+unreadable or malformed files appear in `CheckReport.incomplete`.
 
 The opt-in [`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) runs in
 async `check()` and `analyzeProject()` check reports. Select the rule through

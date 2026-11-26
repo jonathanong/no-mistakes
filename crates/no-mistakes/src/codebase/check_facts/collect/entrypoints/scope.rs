@@ -5,6 +5,9 @@ use crate::codebase::ts_source::{FileIdMap, SourceStore};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[path = "vitest_spreads.rs"]
+mod vitest_spreads;
+
 pub(super) fn collect_with_scope(
     session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
@@ -42,7 +45,14 @@ pub(super) fn collect_with_scope(
     } else {
         None
     };
-    if let Some(sql_seeds) = sql_seeds {
+    let mut supplemental_plan = CheckFactPlan {
+        nested_control_paths: Arc::clone(&plan.nested_control_paths),
+        vitest_default_exclude_paths: Arc::clone(&plan.vitest_default_exclude_paths),
+        test_reliability_paths: Arc::clone(&plan.test_reliability_paths),
+        ..Default::default()
+    };
+    supplemental_plan.require_call_site_paths(supplemental_call_sites);
+    let mut map = if let Some(sql_seeds) = sql_seeds {
         let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_sql_seeds(
             session.session,
             vec![crate::codebase::check_facts::batch::BatchCheckFactRequest {
@@ -52,37 +62,86 @@ pub(super) fn collect_with_scope(
                 graph_files,
                 plan,
                 playwright,
-                sources,
+                sources: Arc::clone(&sources),
             }],
             Some(sql_seeds),
         )
         .pop()
         .expect("one requested fact map");
         map.graph_files_complete = graph_files_complete;
-        return map;
-    }
-    session.record_work("check.fact_collections", 1);
-    if let Some(playwright) = playwright {
-        return crate::codebase::check_facts::staged_playwright::collect_with_sources_and_session(
-            session,
-            root,
-            (files, graph_files, graph_files_complete),
-            plan,
-            playwright,
-            sources,
-            SupplementalFactInput {
-                facts: precollected,
-                call_sites: supplemental_call_sites,
-            },
-        );
-    }
-    super::super::collect_check_facts_inner(
+        map
+    } else {
+        session.record_work("check.fact_collections", 1);
+        if let Some(playwright) = playwright {
+            crate::codebase::check_facts::staged_playwright::collect_with_sources_and_session(
+                session,
+                root,
+                (files, graph_files, graph_files_complete),
+                plan,
+                playwright,
+                Arc::clone(&sources),
+                SupplementalFactInput {
+                    facts: precollected,
+                    call_sites: supplemental_call_sites,
+                },
+            )
+        } else {
+            super::super::collect_check_facts_inner(
+                session,
+                root,
+                (files, graph_files, graph_files_complete),
+                plan,
+                playwright,
+                Arc::clone(&sources),
+                precollected,
+            )
+        }
+    };
+    collect_missing(
         session,
         root,
-        (files, graph_files, graph_files_complete),
+        &sources,
+        supplemental_call_sites,
+        &supplemental_plan,
+        &mut map,
+    );
+    vitest_spreads::prepare(session, root, &sources, &supplemental_plan, &mut map);
+    map
+}
+
+fn collect_missing(
+    session: crate::codebase::check_facts::FactRequest<'_>,
+    root: &Path,
+    sources: &SourceStore,
+    supplemental_call_sites: &[PathBuf],
+    plan: &CheckFactPlan,
+    facts: &mut CheckFactMap,
+) {
+    // Keep the requested spelling as the address of a supplemental read failure.
+    let missing: std::collections::BTreeSet<_> = supplemental_call_sites
+        .iter()
+        .chain(plan.nested_control_paths.iter())
+        .chain(plan.vitest_default_exclude_paths.iter())
+        .chain(plan.test_reliability_paths.keys())
+        .filter(|path| !facts.ts.contains_key(path))
+        .cloned()
+        .collect();
+    if missing.is_empty() {
+        return;
+    }
+    let supplemental = super::super::collect_fact_map_with_sources(
+        session,
+        root,
+        &missing.into_iter().collect::<Vec<_>>(),
         plan,
-        playwright,
+        None,
         sources,
-        precollected,
-    )
+    );
+    facts.stats.files_discovered += supplemental.len();
+    facts.stats.files_parsed += supplemental.values().filter(|file| file.parsed).count();
+    facts.stats.parse_errors += supplemental
+        .values()
+        .filter(|file| file.parse_error.is_some())
+        .count();
+    facts.ts.extend(supplemental.map_values(Arc::new));
 }

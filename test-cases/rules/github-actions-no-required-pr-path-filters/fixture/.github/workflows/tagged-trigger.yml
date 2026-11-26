@@ -1,0 +1,8 @@
+on: !custom
+  pull_request:
+    paths: ['src/**']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok

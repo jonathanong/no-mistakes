@@ -1,0 +1,104 @@
+# `github-actions-no-required-pr-path-filters`
+
+## Why and when
+
+A workflow that supplies a required pull-request check must start for every
+pull request in its required scope. If GitHub skips the workflow because of a
+path filter, the required check can stay pending and block the pull request.
+
+## Options
+
+```yaml
+version: 2
+rules:
+  - rule: github-actions-no-required-pr-path-filters
+    scope: repository
+    options:
+      workflows:
+        - .github/workflows/ci.yml
+```
+
+`workflows` is required (no default) and must be a non-empty list of exact
+repository-relative `.yml` and `.yaml` workflow paths directly under
+`.github/workflows`. Omitting `workflows`, passing an empty list, or passing a
+non-literal or non-workflow path is a configuration error: `check` validates
+options before analysis runs, exits with status 2 and empty stdout, and writes
+a diagnostic to stderr naming the config file, rule, and `options.workflows`
+(and async Node `check()` and `analyzeProject()` reject with the same message).
+To disable the rule, set `enabled: false`. `unanalyzable` (`report`, `advise`,
+or `ignore`; default `report`) controls how unreadable, malformed, or
+unrecognized workflow shapes are reported. Every configured path must match a
+selected workflow file; renamed, deleted, or misspelled entries fail the check
+early, and entries excluded by rule or project configuration also fail early
+naming the exclusion. Use the workflows that publish required checks in your
+branch protection or rulesets.
+
+## What it catches
+
+In a selected workflow, the rule reports each `paths` or `paths-ignore` key
+under `on.pull_request` or `on.pull_request_target`.
+
+## Valid example
+
+The PR trigger starts the workflow for any changed path. The push filter
+applies only to push events.
+
+```yaml
+on:
+  pull_request:
+  push:
+    paths: ['src/**']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/verify
+```
+
+## Counterexample
+
+A pull request that changes only documentation can skip this workflow.
+
+```yaml
+on:
+  pull_request:
+    paths: ['src/**']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/verify
+```
+
+## Fix
+
+Remove the PR path filter. If work needs to be conditional, detect changes
+inside the workflow and keep an always-reporting gate that handles the
+results from the selected jobs.
+
+The rule inspects the workflow declaration. It does not query GitHub or
+verify job conditions, activity types, branch filters, or the required
+status check's settings. A selected workflow that cannot be read or parsed, or
+that uses an unrecognized workflow root or `on` / `on.pull_request` /
+`on.pull_request_target` shape (such as a non-mapping value, a custom YAML tag,
+or a YAML merge key, including at the workflow root when no literal `on` key is
+present), follows the shared `unanalyzable` policy. When a PR trigger reuses a mapping
+through a YAML alias, the finding is reported at the alias use site rather than
+the anchor definition, so a suppression comment on an anchor (for example on
+`push:`) does not suppress the aliased PR trigger.
+
+## Suppression
+
+Use `no-mistakes-disable-line github-actions-no-required-pr-path-filters` on
+a reported key, `no-mistakes-disable-next-line` on the preceding line, or
+`no-mistakes-disable-file` for the selected file.
+
+Run `no-mistakes check --format json` or use async `check()` and
+`analyzeProject()` with the same config.
+
+## Related rules
+
+[`workflow-topology-policy`](workflow-topology-policy.md)
+checks declared jobs and their dependency edges in configured workflows.
+
+[GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore)

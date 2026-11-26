@@ -1,0 +1,216 @@
+{
+  "cases": [
+    {
+      "eslint": [
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 3,
+          "file": "playwright-configure-no-args.spec.ts",
+          "line": 3,
+          "message": "Playwright suite timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "file": "playwright-configure-no-args.spec.ts",
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "eslint": [
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 3,
+          "file": "playwright-extend-no-args.spec.ts",
+          "line": 3,
+          "message": "Playwright fixture carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "file": "playwright-extend-no-args.spec.ts",
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "eslint": [
+        {
+          "column": 20,
+          "endColumn": 27,
+          "endLine": 3,
+          "file": "playwright-import-equals.spec.ts",
+          "line": 3,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "file": "playwright-import-equals.spec.ts",
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "eslint": [
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 4,
+          "file": "playwright-slow-for-of.spec.ts",
+          "line": 4,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "file": "playwright-slow-for-of.spec.ts",
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "eslint": [
+        {
+          "column": 17,
+          "endColumn": 41,
+          "endLine": 3,
+          "file": "vitest-import-equals.test.ts",
+          "line": 3,
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "file": "vitest-import-equals.test.ts",
+      "rule": "vitest-timeout-cap"
+    },
+    {
+      "eslint": [
+        {
+          "column": 14,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "vitest-scalar-copy-ambient.test.ts",
+          "line": 7,
+          "message": "Vitest testTimeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "vitest-scalar-copy-ambient.test.ts",
+          "line": 7,
+          "message": "Vitest timeout options cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "file": "vitest-scalar-copy-ambient.test.ts",
+      "rule": "vitest-timeout-cap"
+    },
+    {
+      "eslint": [
+        {
+          "column": 23,
+          "endColumn": 32,
+          "endLine": 7,
+          "file": "async-import-equals-mock.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "file": "async-import-equals-mock.ts",
+      "rule": "async-call-disposition"
+    },
+    {
+      "eslint": [
+        {
+          "column": 3,
+          "endColumn": 70,
+          "endLine": 3,
+          "file": "correlated-global.js",
+          "line": 3,
+          "message": "Independent appends on query can leave an unknown or empty path for accessKind. Return a complete statement from one switch (case \"orders\": case \"accounts\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+          "messageId": "correlated",
+          "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+          "severity": 2
+        }
+      ],
+      "file": "correlated-global.js",
+      "rule": "postgres-no-correlated-sql-builder"
+    }
+  ],
+  "oxlint": [
+    {
+      "code": "no-mistakes(async-call-disposition)",
+      "column": 23,
+      "file": "async-import-equals-mock.ts",
+      "line": 7,
+      "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+    },
+    {
+      "code": "no-mistakes(postgres-no-correlated-sql-builder)",
+      "column": 3,
+      "file": "correlated-global.js",
+      "line": 3,
+      "message": "Independent appends on query can leave an unknown or empty path for accessKind. Return a complete statement from one switch (case \"orders\": case \"accounts\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 1,
+      "file": "playwright-configure-no-args.spec.ts",
+      "line": 3,
+      "message": "Playwright suite timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 1,
+      "file": "playwright-extend-no-args.spec.ts",
+      "line": 3,
+      "message": "Playwright fixture carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 20,
+      "file": "playwright-import-equals.spec.ts",
+      "line": 3,
+      "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 3,
+      "file": "playwright-slow-for-of.spec.ts",
+      "line": 4,
+      "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(vitest-timeout-cap)",
+      "column": 17,
+      "file": "vitest-import-equals.test.ts",
+      "line": 3,
+      "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout."
+    },
+    {
+      "code": "no-mistakes(vitest-timeout-cap)",
+      "column": 14,
+      "file": "vitest-scalar-copy-ambient.test.ts",
+      "line": 7,
+      "message": "Vitest testTimeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values."
+    },
+    {
+      "code": "no-mistakes(vitest-timeout-cap)",
+      "column": 14,
+      "file": "vitest-scalar-copy-ambient.test.ts",
+      "line": 7,
+      "message": "Vitest timeout options cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values."
+    }
+  ]
+}
