@@ -396,3 +396,7 @@ mod cli_queue_factory_wrappers;
 
 #[path = "cli_react_nested_controls_snapshot.rs"]
 mod cli_react_nested_controls_snapshot;
+
+#[cfg(unix)]
+#[path = "cli_unreadable_rule_inputs.rs"]
+mod cli_unreadable_rule_inputs;

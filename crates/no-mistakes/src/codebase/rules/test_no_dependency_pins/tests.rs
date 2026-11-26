@@ -430,7 +430,9 @@ fn missing_file_and_action_ref_lookbehind() {
         ],
     )
     .unwrap();
-    assert!(findings.is_empty(), "{findings:#?}");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "src/missing.test.mts");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 
     let compiled = compile_options(&Options::default()).unwrap();
     let findings = check_source(

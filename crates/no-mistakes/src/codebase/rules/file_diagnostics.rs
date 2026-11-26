@@ -83,6 +83,8 @@ pub fn handles(rule: &str) -> bool {
             | super::NO_RAW_EPHEMERAL_PORT
             | super::PACKAGE_JSON_EXPORT_TARGET_PREFIX
             | super::STRUCTURED_CONFIG_POLICY
+            | super::REQUIRED_DOC_SECTION
+            | super::TEST_NO_DEPENDENCY_PINS
             | super::github_actions_pinned_hash::RULE_ID
     )
 }
@@ -109,6 +111,8 @@ pub fn diagnostics_with_files_and_sources(
         super::no_raw_ephemeral_port::diagnostics_with_files_and_sources,
         super::package_json_export_target_prefix::diagnostics_with_files_and_sources,
         super::structured_config_policy::diagnostics_with_files_and_sources,
+        super::required_local_docs::diagnostics_with_files_and_sources,
+        super::test_no_dependency_pins::diagnostics_with_files_and_sources,
         super::github_actions_pinned_hash::diagnostics_with_files_and_sources,
     ];
     use rayon::prelude::*;

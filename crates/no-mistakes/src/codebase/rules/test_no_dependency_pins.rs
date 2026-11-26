@@ -3,9 +3,12 @@ mod patterns;
 mod runtime_patterns;
 mod scan;
 
+use super::analysis_policy::AnalysisDiagnostics;
+use super::file_diagnostics::{classified_applications, ClassifiedInputFindings, FileRuleInputs};
 use super::path_filter::GlobMatcher;
+use super::source_access::read_failure;
 use super::RuleFinding;
-use crate::codebase::ts_source::{discover_files, relative_slash_path};
+use crate::codebase::ts_source::{discover_files, relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use compile::{compile_builtin, compile_pattern};
@@ -75,43 +78,40 @@ pub(crate) fn check_with_files(
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
+    diagnostics_with_files_and_sources(root, config, all_files, &sources, true)
+        .map(|output| output.findings)
 }
 
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|path| {
-                    super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-                })
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_with_sources(root, &opts, &files, sources)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    classified_applications(
+        FileRuleInputs {
+            root,
+            config,
+            files: all_files,
+            sources,
+            defer_suppression,
+        },
+        RULE_ID,
+        |opts, files, _, _| {
+            Ok(ClassifiedInputFindings {
+                findings: scan_with_sources(root, opts, files, sources)?,
+                ..Default::default()
+            })
+        },
+    )
 }
 
 fn scan_with_sources(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let compiled = compile_options(opts)?;
     let mut findings: Vec<RuleFinding> = files
@@ -153,16 +153,16 @@ fn check_file_with_sources(
     root: &Path,
     path: &Path,
     opts: &CompiledOptions,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: &SourceStore,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
     if !opts.includes(&rel) {
         return Vec::new();
     }
-    let Some(content) = super::read_language_source(sources, path) else {
-        return Vec::new();
-    };
-    check_source(&rel, &content, opts)
+    match sources.read_source_path(path) {
+        Ok(content) => check_source(&rel, &content, opts),
+        Err(error) => vec![read_failure(root, path, RULE_ID, &error)],
+    }
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

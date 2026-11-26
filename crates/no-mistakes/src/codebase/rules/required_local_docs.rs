@@ -3,7 +3,7 @@ mod scan_pkg;
 
 pub use doc_section::{check_required_doc_section, DocSectionOptions};
 pub(crate) use doc_section::{
-    check_required_doc_section_with_files, check_required_doc_section_with_files_and_sources,
+    check_required_doc_section_with_files, diagnostics_with_files_and_sources,
 };
 
 use super::RuleFinding;

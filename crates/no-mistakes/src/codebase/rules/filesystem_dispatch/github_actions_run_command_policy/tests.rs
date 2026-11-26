@@ -288,7 +288,7 @@ fn abstains_on_literal_script_paths_not_matching_any_policy_command() {
 
 #[test]
 fn covers_default_messages_any_scope_per_pattern_message_and_yaml_shapes() {
-    use super::runs::check_source;
+    use super::runs::check_parsed;
     use crate::config::v2::Unanalyzable;
 
     let compiled = compile_yaml(
@@ -310,23 +310,15 @@ commands:
     requireArgs: [HEAD, [--force-with-lease, main]]
 "#,
     );
-    // Invalid YAML produces empty diagnostics.
-    let invalid = check_source(
-        ".github/workflows/bad.yml",
-        "jobs: [",
-        false,
-        &compiled,
-        Unanalyzable::Advise,
-        None,
-    );
-    assert!(invalid.findings.is_empty() && invalid.advisories.is_empty());
-
     // Folded scalar, flow-style steps, default messages, and per-pattern messages.
     let yaml = "\u{feff}name: Shapes\non: push\njobs:\n  folded:\n    runs-on: ubuntu-latest\n    steps:\n      - run: >\n          gh api\n          -f=x=1\n          secret\n          legacy\n      - run: >\n          git push origin\n  flow:\n    runs-on: ubuntu-latest\n    steps: [{ run: 'gh api -f x=1 repos/o/r' }, { run: 'gh api \"unclosed' }, { run: 'eval x' }]\n";
-    let out = check_source(
+    let yaml = yaml.trim_start_matches('\u{feff}');
+    let value = serde_yaml::from_str(yaml).unwrap();
+    let out = check_parsed(
         ".github/workflows/shapes.yml",
         yaml,
         false,
+        &value,
         &compiled,
         Unanalyzable::Advise,
         None,

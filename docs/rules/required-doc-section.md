@@ -86,7 +86,12 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-A glob match with invalid UTF-8 is decoded lossily and the heading is still checked, so a missing heading next to a stray byte is reported. A file that cannot be read for any other reason is skipped and produces no finding. Heading checks do not consult `options.unanalyzable`.
+Selected files with invalid UTF-8 are decoded lossily and checked for headings.
+If a selected file cannot be read, the rule records its path as unanalyzable.
+The default policy is `report`, which records a finding. The rule option
+`unanalyzable` can override the repository policy with `report`, `advise`
+(an advisory), or `ignore`. The rule reports definite violations in readable
+files in all three modes.
 
 ## Suppression
 
