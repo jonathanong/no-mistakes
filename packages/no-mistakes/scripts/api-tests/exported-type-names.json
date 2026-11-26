@@ -124,6 +124,7 @@
   "FetchSummary",
   "FetchesOptions",
   "FindingCause",
+  "FixtureAttributePaths",
   "FlowEdge",
   "FlowNode",
   "FlowOptions",

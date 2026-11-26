@@ -1,0 +1,10 @@
+{
+  "portrait": {
+    "crops": [1, 3],
+    "radius": 0.100000000000000002,
+    "visited": false,
+    "/label~": "Second",
+    "width": 80
+  },
+  "": true
+}

@@ -1208,7 +1208,8 @@ report, including `complete: false` and `reasons` for unreadable roots,
 matching category excluded or no rule could classify. Use
 `changesDiff<"fixtures" | "localization">(...)` to name configured category
 fields in TypeScript. Exported contracts include `ChangesDiffOptions`,
-`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `ChangesConfig`,
+`ChangesReport`, `ChangesReportMetadata`, `KeyChanges`, `FixtureAttributePaths`,
+`ChangesConfig`,
 `ChangeCategory`, `ChangeRule`, `ChangeIdRule`, `KeyedDiffOptions`, and
 `KeyedDiffFormat`.
 
@@ -1220,5 +1221,10 @@ inputs without triggering a full-suite fallback, unless an entry cannot be
 traced without a baseline (such as a lockfile, manifest, global config, or
 deleted file without `base`). Missing, invalid, or incomplete reports, unknown
 categories, and `unclassified` paths select the full suite with a structured
-`fallback_reason` and warning. Configured matchers reuse prepared source
-contents. See [changes configuration](configuration/changes.md).
+`fallback_reason` and warning. For categories marked
+`assertPureJsonLoader: true` (user assertion that the loader returns parsed
+JSON unchanged without extra fixture exposure or side effects), the planner
+uses `attributePaths` to narrow matching fixture tests when it can trace their
+reads and all loader uses in the file; by default it selects all matching
+tests. Configured matchers reuse prepared source contents. See
+[changes configuration](configuration/changes.md).
