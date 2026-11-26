@@ -32,10 +32,14 @@ rule.
 
 ## Options and defaults
 
-`glob` and `requiredHeading` are this rule's only options. Both default to an
-empty string, which disables the rule application rather than inferring a
-document set or heading. `roots`, `requiredFile`, `codeExtensions`, and
-`testExcludePatterns` belong to sibling `required-local-docs`, not this rule.
+The rule-specific options are `glob` and `requiredHeading`. Both default to an
+empty string, which disables the rule application. The sibling rule
+`required-local-docs` defines `roots`, `requiredFile`, `codeExtensions`, and
+`testExcludePatterns`.
+
+Set `options.unanalyzable` to override the repository policy. The supported
+values are `report` for a finding, `advise` for an advisory, and `ignore` to
+omit the diagnostic. The default is `report` if neither policy is set.
 
 A value without leading `#` characters matches a heading of that text at any
 level. A valid ATX value (`## Perf`) requires that exact level. For compatibility,
@@ -88,10 +92,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 Selected files with invalid UTF-8 are decoded lossily and checked for headings.
 If a selected file cannot be read, the rule records its path as unanalyzable.
-The default policy is `report`, which records a finding. The rule option
-`unanalyzable` can override the repository policy with `report`, `advise`
-(an advisory), or `ignore`. The rule reports definite violations in readable
-files in all three modes.
+The rule reports definite violations in readable files in all three modes.
 
 ## Suppression
 
