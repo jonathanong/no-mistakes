@@ -595,6 +595,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "consumer": "playwright-no-serial",
+          "file": "tests/factory-unresolved.spec.ts",
+          "message": "tests/factory-unresolved.spec.ts:13: cannot verify whether `mixed` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/factory-unresolved.spec.ts",
+          "message": "tests/factory-unresolved.spec.ts:17: cannot verify whether `controlFlow` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/factory-unresolved.spec.ts",
+          "message": "tests/factory-unresolved.spec.ts:20: cannot verify whether `localUncertain` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/factory-unresolved.spec.ts",
+          "message": "tests/factory-unresolved.spec.ts:23: cannot verify whether `barreled` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/factory-unresolved.spec.ts",
+          "message": "tests/factory-unresolved.spec.ts:26: cannot verify whether `arrowUnresolved` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
           "file": "tests/let-later.spec.ts",
           "message": "tests/let-later.spec.ts:7: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
         },
@@ -697,6 +722,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "consumer": "test-no-retries",
           "file": "tests/external-fixture.spec.ts",
           "message": "tests/external-fixture.spec.ts:8: cannot verify whether `suite` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/factory-unresolved.spec.ts",
+          "message": "tests/factory-unresolved.spec.ts:14: cannot verify whether `mixed` is Playwright's `test` (non-constant or destructured fixture binding); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
         },
         {
           "consumer": "test-no-retries",
@@ -894,6 +924,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "playwright-no-serial",
           "sourceLine": "workers: process.env.CI ? 1 : undefined,",
           "target": "Playwright workers: 1"
+        },
+        {
+          "file": "tests/factory-unresolved.spec.ts",
+          "line": 29,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "resolved.describe.serial(\"resolved factory\", () => {});",
+          "target": "Playwright test.describe.serial"
+        },
+        {
+          "file": "tests/factory-unresolved.spec.ts",
+          "line": 30,
+          "message": "Playwright retries configures a retry count of 2. Keep retries at or below 0 and fix the underlying test failure.",
+          "rule": "test-no-retries",
+          "sourceLine": "resolved.describe.configure({ retries: 2 });",
+          "target": "Playwright retries"
+        },
+        {
+          "file": "tests/factory-unresolved.spec.ts",
+          "line": 33,
+          "message": "Playwright test.describe.serial limits test parallelism. Isolate test state and let Playwright run tests in parallel.",
+          "rule": "playwright-no-serial",
+          "sourceLine": "arrowResolved.describe.serial(\"arrow resolved factory\", () => {});",
+          "target": "Playwright test.describe.serial"
         },
         {
           "file": "tests/namespace-alias.spec.ts",
