@@ -4,7 +4,9 @@ const { memberName, testBinding, isContextObject } = require("./test-no-skips-bi
 const { isContextSkipAlias } = require("./test-no-skips-context");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { ruleSuppression } = require("../rule-suppression");
-const { unwrapExpression } = require("./async-ast");
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
+const { isUnresolved, moduleLoad } = require("./module-load");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const MODIFIERS = ["skip", "skipIf", "runIf", "only", "todo", "fixme"];
 const ANNOTATION_TYPES = new Set(["skip", "fixme"]);
 
@@ -133,6 +135,7 @@ module.exports = rule(
         properties: {
           allow: { type: "array", items: { enum: MODIFIERS }, uniqueItems: true },
           testModules: { type: "array", items: { type: "string" }, uniqueItems: true },
+          unanalyzable: UNANALYZABLE_SCHEMA,
         },
         additionalProperties: false,
       },
@@ -142,6 +145,8 @@ module.exports = rule(
         "Test modifier '{{modifier}}' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
       annotation:
         "Playwright '{{annotation}}' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} skips a test. Use a static test, it, or describe binding.",
     },
   },
   (context) => {
@@ -154,29 +159,37 @@ module.exports = rule(
         const modifier = memberName(node, context);
         if (!banned.has(modifier) || suppressed(node.property)) return;
         const test = testBinding(node.object, context);
+        let invoked = node;
+        while (isTransparentExpression(invoked.parent)) invoked = invoked.parent;
         const contextCall =
           modifier === "skip" &&
-          node.parent.type === "CallExpression" &&
-          node.parent.callee === node &&
+          invoked.parent?.type === "CallExpression" &&
+          unwrapExpression(invoked.parent.callee) === unwrapExpression(invoked) &&
           isContextObject(node.object, context);
-        if (!test && !contextCall) return;
+        if (!test && !contextCall) {
+          const object = unwrapExpression(node.object);
+          const knownMember =
+            object?.type === "MemberExpression" &&
+            moduleLoad(object.object, context)?.source != null;
+          if (isUnresolved(moduleLoad(object, context)) && !knownMember) {
+            reportUnanalyzable(context, node.property, "this modifier");
+          }
+          return;
+        }
         context.report({ node: node.property, messageId: "modifier", data: { modifier } });
       },
       CallExpression(node) {
+        const callee = unwrapExpression(node.callee);
         if (
           banned.has("skip") &&
-          node.callee.type === "Identifier" &&
-          !suppressed(node.callee) &&
-          isContextSkipAlias(node.callee, context)
+          callee?.type === "Identifier" &&
+          !suppressed(callee) &&
+          isContextSkipAlias(callee, context)
         ) {
-          context.report({ node: node.callee, messageId: "modifier", data: { modifier: "skip" } });
+          context.report({ node: callee, messageId: "modifier", data: { modifier: "skip" } });
         }
         // extend's arguments are fixture options, not test declaration details.
-        if (
-          node.callee.type === "MemberExpression" &&
-          memberName(node.callee, context) === "extend"
-        )
-          return;
+        if (callee?.type === "MemberExpression" && memberName(callee, context) === "extend") return;
         const binding = testBinding(node.callee, context);
         if (
           binding?.framework !== "@playwright/test" ||

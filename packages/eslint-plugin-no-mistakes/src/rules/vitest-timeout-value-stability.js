@@ -106,11 +106,15 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
       );
     }
     const members = [];
+    let memberNode = null;
     while (node.parent?.type === "MemberExpression" && node.parent.object === node) {
       members.push(memberName(node.parent, context));
+      memberNode = node.parent;
       node = unwrapTransparentParent(node.parent);
     }
-    const memberRead = node.type === "MemberExpression" && primitiveMemberRead(node);
+    // `member as number` is still that member. The wrapper stays `node` so a
+    // write through the assertion is judged on the assertion, as before.
+    const memberRead = Boolean(memberNode) && primitiveMemberRead(memberNode);
     let parent = node.parent;
     if (
       (parent?.type === "AssignmentExpression" && parent.left === node) ||

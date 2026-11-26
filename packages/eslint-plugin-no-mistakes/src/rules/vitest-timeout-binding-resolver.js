@@ -7,6 +7,7 @@ const {
 } = require("./async-target-bindings");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 const { unwrapExpression, isFunction } = require("./async-ast");
+const { requireResolution } = require("./async-target-sources");
 const { createCallbackBindings } = require("./timeout-callback-bindings");
 const HOOKS = new Set([
   "beforeAll",
@@ -42,6 +43,8 @@ function createBindingResolver(context) {
       ["test", "hook", "setter", "unknown"].includes(owner.kind)
     )
       return { kind: "invocation", target: owner, mode: name, root: owner.root };
+    if (owner.kind === "unknown")
+      return owner.required ? { kind: "unknown", root: owner.root, required: true } : null;
     if (owner.kind === "namespace")
       return name === null
         ? { kind: "unknown", root: owner.root }
@@ -70,6 +73,14 @@ function createBindingResolver(context) {
         : null;
     }
     if (node.type === "CallExpression") {
+      const required = requireResolution(node, context);
+      if (required) {
+        if (required.source === null) return { kind: "unknown", root: node, required: true };
+        if (["vitest", "vitest/config", "vite"].includes(required.source)) {
+          return { kind: "namespace", source: required.source, root: node };
+        }
+        return null;
+      }
       const callee = unwrapExpression(node.callee);
       if (callee.type === "MemberExpression" && member(callee) === "bind") {
         const target = resolve(callee.object),
@@ -116,8 +127,8 @@ function createBindingResolver(context) {
             call.arguments.some(
               (arg) =>
                 callback(arg) === fn ||
-                (arg.type === "ArrayExpression" &&
-                  arg.elements.some((element) => callback(element) === fn)),
+                (unwrapExpression(arg)?.type === "ArrayExpression" &&
+                  unwrapExpression(arg).elements.some((element) => callback(element) === fn)),
             ),
           )
           .map((call) => invocation(call))

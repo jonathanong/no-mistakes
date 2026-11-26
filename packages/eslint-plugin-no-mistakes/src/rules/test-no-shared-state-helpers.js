@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { collectPatternNames } = require("./ast-pattern-names");
 const { createCleanupTracker } = require("./test-no-shared-state-cleanup");
 const {
@@ -91,6 +92,7 @@ function containsIdentifierCall(node, name) {
 }
 
 function isMutableInitializer(node) {
+  node = unwrapExpression(node);
   return Boolean(
     node &&
     (node.type === "ArrayExpression" ||

@@ -27,6 +27,15 @@ test("user", () => {
 - `allowBeforeAllAssignments` defaults to `false`. Set it to `true` to count
   recognized `beforeAll` resets as cleanup for the owning suite when it runs
   in parallel. Serial scopes already count these resets. [Suite cleanup](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/test-no-shared-state-cleanup.js#L12-L25) and [scope handling](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/test-no-shared-state-cleanup.js#L49-L57).
+- `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+  `.test`, `.it`, or `.describe` call whose receiver comes from a non-static
+  `require` reports `unanalyzable`.
+
+`const vt = require("vitest")`, `const { test } = require("vitest")`,
+`import vt = require("vitest")`, and `const { test } = require("@playwright/test")`
+register tests. Vitest's default import is not a test callee. A type assertion
+on an array, such as `[] as string[]`, is still a mutable initializer, and
+`list = [] as string[]` inside `beforeEach` is still a reset.
 
 ## Fix
 

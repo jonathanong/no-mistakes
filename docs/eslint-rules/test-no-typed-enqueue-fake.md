@@ -68,6 +68,15 @@ test files with your linter's `files` globs and use a TypeScript parser in ESLin
 - `moduleGlobs` selects literal import specifiers, such as `./queue` or
   `./queues/**`. When both selectors are supplied, the module and export must
   both match. With neither selector, the rule reports nothing.
+- `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+  `vi.mocked` or `vi.fn` whose target comes from a non-static `require`
+  reports `unanalyzable`.
+
+`const vt = require("vitest"); const jobs = require("@example/jobs"); vt.vi.mocked(jobs.enqueue)`,
+a renamed `vi` and `enqueue`, and `import vt = require("vitest")` with
+`import jobs = require("@example/jobs")` are the same fake.
+`(vi.mocked as typeof vi.mocked)(enqueueJob)`, `(vi as typeof vi).mocked(enqueueJob)`,
+and `(vi.fn<typeof enqueueJob>)()` are too.
 
 ```js
 {

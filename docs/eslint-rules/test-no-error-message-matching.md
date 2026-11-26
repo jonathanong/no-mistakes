@@ -20,7 +20,15 @@ expect(error.code).toBe("USER_NOT_FOUND");
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. An
+assertion whose `expect` comes from a non-static `require` reports
+`unanalyzable` when the compared value is an error message.
+
+`import vt = require("vitest")`, `const { expect } = require("@playwright/test")`,
+and a Vitest namespace are expect bindings. Inside a test,
+`err.message === ("boom" as string)`, `(v as typeof v).expect(err.message)`,
+`v.expect.apply(null, [err.message] as const)`, and `(v.expect<string>)(err.message)`
+are the same message comparison.
 
 ## Fix
 

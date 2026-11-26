@@ -1,9 +1,10 @@
 "use strict";
 const { options } = require("../helpers");
 const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
+const { requireResolution } = require("./async-target-sources");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 const { literalString } = require("./module-mock-helpers");
-const { unwrapExpression, isFunction } = require("./async-ast");
+const { unwrapExpression, isFunction, isTransparentExpression } = require("./async-ast");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
 const CONFIGURED_NAMESPACE = "configured-test-module";
@@ -104,6 +105,7 @@ function imported(node, context, namespace = false, seen = new Set()) {
         else if (def.node.type === "ImportDefaultSpecifier")
           importedName = source === "@playwright/test" ? "test" : null;
         else importedName = importSpecifierName(def.node);
+        if (importedName === "default" && source === "@playwright/test") importedName = "test";
       }
     } else if (def.type === "Variable") {
       const declaration = def.node;
@@ -111,15 +113,9 @@ function imported(node, context, namespace = false, seen = new Set()) {
       let init = unwrapExpression(declaration.init || {});
       const awaited = init.type === "AwaitExpression";
       if (awaited) init = unwrapExpression(init.argument);
-      if (
-        init.type === "CallExpression" &&
-        init.callee.type === "Identifier" &&
-        init.callee.name === "require"
-      ) {
-        const requireVariable = resolveVariable(init.callee, context);
-        if (requireVariable?.defs.length) continue;
-        source = init.arguments[0]?.type === "Literal" ? init.arguments[0].value : null;
-      } else if (init.type === "ImportExpression" && awaited) {
+      const required = requireResolution(declaration.init, context);
+      if (required) source = required.source;
+      else if (init.type === "ImportExpression" && awaited) {
         source = init.source?.type === "Literal" ? init.source.value : null;
       }
       if (declaration.id.type === "ObjectPattern") {
@@ -129,6 +125,9 @@ function imported(node, context, namespace = false, seen = new Set()) {
       }
       if (!source && init.type === "Identifier" && declaration.id.type === "ObjectPattern") {
         const namespaceSource = imported(init, context, true, seen);
+        if (namespaceSource === CONFIGURED_NAMESPACE && importedName === "test") {
+          return { framework: "@playwright/test", name: "test" };
+        }
         if (
           (namespaceSource === "vitest" || namespaceSource === "@playwright/test") &&
           NAMES.has(importedName)
@@ -163,8 +162,9 @@ function testBinding(node, context, visited = new Set()) {
   if (node.type === "TaggedTemplateExpression") return testBinding(node.tag, context, visited);
   if (node.type !== "MemberExpression") return null;
   const name = memberName(node, context);
-  if (NAMES.has(name) && node.object.type === "Identifier") {
-    const framework = imported(node.object, context, true);
+  const object = unwrapExpression(node.object);
+  if (NAMES.has(name) && object?.type === "Identifier") {
+    const framework = imported(object, context, true);
     if (framework && (framework !== CONFIGURED_NAMESPACE || name === "test"))
       return {
         framework: framework === CONFIGURED_NAMESPACE ? "@playwright/test" : framework,
@@ -178,8 +178,11 @@ function testBinding(node, context, visited = new Set()) {
   return name === "describe" ? { ...binding, name } : binding;
 }
 function contextParameter(callback, context) {
-  const call = isFunction(callback) ? callback.parent : null;
-  if (call?.type !== "CallExpression" || !call.arguments.includes(callback)) return null;
+  if (!isFunction(callback)) return null;
+  let current = callback;
+  while (isTransparentExpression(current.parent)) current = current.parent;
+  const call = current.parent;
+  if (call?.type !== "CallExpression" || !call.arguments.includes(current)) return null;
   const binding = testBinding(call.callee, context);
   if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
     return null;

@@ -1,5 +1,6 @@
 "use strict";
 
+const { staticImportSource } = require("./async-target-bindings");
 const { requireSource } = require("./async-target-sources");
 const { literalString } = require("./module-mock-helpers");
 const { memberName, propertyName, unwrap } = require("./test-message-expect");
@@ -35,11 +36,30 @@ function localOrigin(node, context) {
   return current;
 }
 
-function requiredNamespace(node, context) {
+function importNamespaceSource(definition) {
+  if (definition?.type !== "ImportBinding") return null;
+  if (
+    definition.node?.type !== "ImportNamespaceSpecifier" &&
+    definition.node?.type !== "TSImportEqualsDeclaration"
+  ) {
+    return null;
+  }
+  return staticImportSource(definition);
+}
+
+function requiredNamespace(node, context, seen = new Set()) {
   const value = unwrap(node);
-  if (value?.type !== "Identifier") return requireSource(value, context);
-  const declaration = constDeclaration(value, resolveVariable(value, context));
-  return declaration?.id.type === "Identifier" ? requireSource(declaration.init, context) : null;
+  if (!value || seen.has(value)) return null;
+  if (value.type !== "Identifier") return requireSource(value, context);
+  seen.add(value);
+  const variable = resolveVariable(value, context);
+  const imported = importNamespaceSource(variable?.defs.length === 1 ? variable.defs[0] : null);
+  if (imported) return imported;
+  const declaration = constDeclaration(value, variable);
+  if (declaration?.id.type !== "Identifier") return null;
+  return (
+    requiredNamespace(declaration.init, context, seen) || requireSource(declaration.init, context)
+  );
 }
 
 function requiredMemberAccess(node, context) {

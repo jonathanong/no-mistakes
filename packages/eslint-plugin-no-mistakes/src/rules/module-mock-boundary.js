@@ -2,6 +2,7 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { UNANALYZABLE_SCHEMA, reportUnanalyzable } = require("./rule-unanalyzable");
 const { baselineKey, baselineMap } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const { integrationAllows } = require("./module-mock-integration");
@@ -59,10 +60,12 @@ module.exports = rule(
       description: "enforce configured module mock boundaries",
       recommended: false,
     },
-    schema: [{ type: "object" }],
+    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
     messages: {
       boundary: "{{message}}",
       stale: "{{message}}",
+      unanalyzable:
+        "Cannot tell whether {{subject}} is a framework mock. Use a static vitest or Jest import.",
     },
   },
   (context) => {
@@ -115,6 +118,10 @@ module.exports = rule(
       },
       CallExpression(node) {
         const memberMock = isModuleMockMemberCall(node, context);
+        if (memberMock?.unanalyzable) {
+          reportUnanalyzable(context, node, "this call");
+          return;
+        }
         if (memberMock && MODULE_MOCK_METHODS.has(memberMock.method)) {
           reportIfDisallowed(node, memberMock);
           return;

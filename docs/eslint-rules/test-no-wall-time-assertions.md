@@ -53,6 +53,14 @@ The rule is disabled by default in both presets.
 - `allowedPaths` defaults to `[]`. Set it to an array of globs relative to the
   ESLint working directory to exempt benchmark suites such as
   `["benchmarks/**/*.test.ts"]`.
+- `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. An
+  elapsed `now()` read whose clock binding comes from a non-static `require`
+  reports `unanalyzable`.
+
+`import * as ph from "node:perf_hooks"`, `import ph = require("node:perf_hooks")`,
+and `const { performance } = ph` are the same clock. A cast such as
+`(v as typeof v).expect(Date.now() - start)` is still `expect`. A cast
+`v.vi.useFakeTimers()` still exempts the whole file.
 
 ## Suppression
 

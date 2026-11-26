@@ -82,7 +82,14 @@ using directory = mkdtempDisposableSync(prefix);
 
 Enable this opt-in rule with `"no-mistakes/test-no-fixed-temp-paths": "error"`.
 It checks `.test` and `.spec` files with JS, TS, JSX, TSX, and their
-CommonJS and ESM extensions. This rule has no options. It is disabled by default in both presets.
+CommonJS and ESM extensions. It is disabled by default in both presets.
+
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+filesystem call whose `fs` binding comes from a non-static `require` reports
+`unanalyzable`.
+
+`fs.writeFileSync`, `const { ["writeFileSync" as const]: write } = fs`, and
+`(require as NodeRequire)("node:fs")` are the same filesystem binding.
 
 ## Fix
 

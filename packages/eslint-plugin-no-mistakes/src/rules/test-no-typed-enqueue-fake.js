@@ -4,6 +4,8 @@ const { posix } = require("node:path");
 const { options, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
+const { isUnresolved, moduleLoad } = require("./module-load");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { memberPropertyName } = require("./logical-call");
 const {
   isFrameworkMockType,
@@ -37,6 +39,7 @@ module.exports = rule(
         properties: {
           singleExportPattern: { type: "string", pattern: "\\S" },
           moduleGlobs: { type: "array", items: { type: "string", pattern: "\\S" } },
+          unanalyzable: UNANALYZABLE_SCHEMA,
         },
         additionalProperties: false,
       },
@@ -44,6 +47,8 @@ module.exports = rule(
     messages: {
       typedEnqueueFake:
         "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} is an enqueue export. Use a static import or require.",
     },
   },
   (context) => {
@@ -59,7 +64,8 @@ module.exports = rule(
         Boolean(target) &&
         (!exportMatcher || exportMatcher.test(target.name)) &&
         (moduleGlobs.length === 0 ||
-          moduleGlobs.some((glob) => posix.matchesGlob(target.module, glob)))
+          (typeof target.module === "string" &&
+            moduleGlobs.some((glob) => posix.matchesGlob(target.module, glob))))
       );
     }
 
@@ -96,15 +102,30 @@ module.exports = rule(
 
     return {
       CallExpression(node) {
-        const { callee } = node;
-        if (callee.type !== "MemberExpression" || !isFrameworkReceiver(callee.object, sourceCode)) {
+        let callee = node.callee;
+        let typeNode = node;
+        if (callee.type === "TSInstantiationExpression") {
+          typeNode = callee;
+          callee = callee.expression;
+        }
+        callee = unwrapExpression(callee);
+        if (
+          callee?.type !== "MemberExpression" ||
+          !isFrameworkReceiver(callee.object, sourceCode)
+        ) {
           return;
         }
         const method = memberPropertyName(callee);
-        if (method === "fn" && hasTypedEnqueueArg(typeArgParams(node))) {
+        const argument = unwrapExpression(node.arguments[0]);
+        if (method === "fn" && hasTypedEnqueueArg(typeArgParams(typeNode))) {
           report(node);
-        } else if (method === "mocked" && matchesTarget(unwrapExpression(node.arguments[0]))) {
+        } else if (method === "mocked" && matchesTarget(argument)) {
           report(node);
+        } else if (
+          (method === "mocked" || method === "fn") &&
+          isUnresolved(moduleLoad(method === "mocked" ? argument : callee, context))
+        ) {
+          reportUnanalyzable(context, node, "this enqueue fake");
         }
       },
       TSTypeReference(node) {

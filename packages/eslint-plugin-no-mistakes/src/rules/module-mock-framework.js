@@ -2,9 +2,22 @@
 
 const { unwrapExpression } = require("./async-ast");
 
+function staticImportSource(definition) {
+  return require("./async-target-bindings").staticImportSource(definition);
+}
+
+function requireSource(node, context) {
+  return require("./async-target-sources").requireSource(node, context);
+}
+
+function requireResolution(node, context) {
+  return require("./async-target-sources").requireResolution(node, context);
+}
+
 const FRAMEWORK_MODULES = new Set(["vitest", "@jest/globals"]);
 
 function propertyName(node) {
+  node = unwrapExpression(node);
   if (!node) return null;
   if (node.type === "Literal") return String(node.value);
   if (typeof node.name === "string") return node.name;
@@ -15,26 +28,34 @@ function propertyName(node) {
 }
 
 function memberPropertyName(node) {
-  let current = node;
-  while (current?.type === "ChainExpression") current = current.expression;
+  const current = unwrapExpression(node);
   if (current?.type !== "MemberExpression") return null;
-  if (current.computed && current.property?.type === "Identifier") return null;
-  return propertyName(current.property);
+  const property = unwrapExpression(current.property);
+  if (current.computed && property?.type === "Identifier") return null;
+  return propertyName(property);
 }
 
-function frameworkRequireModule(def) {
-  const init = def.node?.init;
-  const requireCall =
-    init?.type === "MemberExpression" && memberPropertyName(init) ? init.object : init;
-  if (
-    def.type === "Variable" &&
-    requireCall?.type === "CallExpression" &&
-    requireCall.callee.type === "Identifier" &&
-    requireCall.callee.name === "require" &&
-    FRAMEWORK_MODULES.has(requireCall.arguments[0]?.value)
-  ) {
-    return requireCall.arguments[0].value;
+function frameworkRequireSource(init, context) {
+  let call = unwrapExpression(init);
+  if (call?.type === "MemberExpression" && memberPropertyName(call)) {
+    call = unwrapExpression(call.object);
   }
+  const source = requireSource(call, context);
+  if (source !== null) return source;
+  const argument = call?.type === "CallExpression" ? call.arguments?.[0] : null;
+  if (argument && argument.type == null && typeof argument.value === "string")
+    return argument.value;
+  return null;
+}
+
+function frameworkRequireModule(def, name, context) {
+  if (def.type !== "Variable") return null;
+  const source = frameworkRequireSource(def.node?.init, context);
+  if (!FRAMEWORK_MODULES.has(source)) return null;
+  if (def.node?.id?.type !== "ObjectPattern") return source;
+  const key = patternKey(def.node.id, name);
+  if (source === "vitest" && key === "vi") return source;
+  if (source === "@jest/globals" && key === "jest") return source;
   return null;
 }
 
@@ -58,14 +79,14 @@ function frameworkBindingModule(node, context, seen = new Set()) {
     if (seen.has(variable)) return null;
     seen.add(variable);
     for (const def of variable.defs) {
-      const importModule = def.type === "ImportBinding" ? def.parent?.source?.value : null;
+      const importModule = def.type === "ImportBinding" ? staticImportSource(def) : null;
       if (FRAMEWORK_MODULES.has(importModule) && frameworkImportMatches(def, importModule)) {
         return importModule;
       }
       if (def.node?.type === "ImportDefaultSpecifier" && FRAMEWORK_MODULES.has(importModule)) {
         return importModule;
       }
-      const requireModule = frameworkRequireModule(def);
+      const requireModule = frameworkRequireModule(def, node.name, context);
       if (requireModule) return requireModule;
       if (
         def.type === "Variable" &&
@@ -105,8 +126,50 @@ function isFrameworkBinding(node, context) {
   return Boolean(frameworkBindingModule(node, context));
 }
 
+function frameworkBindingOpaque(node, context, seen = new Set()) {
+  node = unwrapExpression(node);
+  if (!node || frameworkBindingModule(node, context)) return false;
+  if (node.type === "MemberExpression") {
+    const known = frameworkBindingModule(node.object, context);
+    if (known && memberPropertyName(node) === null) return true;
+    return frameworkBindingOpaque(node.object, context, seen);
+  }
+  if (node.type !== "Identifier" || seen.has(node.name)) return false;
+  let scope = context.sourceCode.getScope(node);
+  while (scope) {
+    const found = scope.variables.find((candidate) => candidate.name === node.name);
+    if (!found) {
+      scope = scope.upper;
+      continue;
+    }
+    if (found.defs.length !== 1) return false;
+    seen.add(node.name);
+    const def = found.defs[0];
+    const required = requireResolution(def.node?.init, context);
+    if (required?.source === null && def.type === "Variable") return true;
+    if (
+      def.type === "ImportBinding" &&
+      def.node?.type === "TSImportEqualsDeclaration" &&
+      !staticImportSource(def)
+    ) {
+      return true;
+    }
+    if (def.type === "Variable" && def.node?.id?.type === "ObjectPattern") {
+      const key = patternKey(def.node.id, node.name);
+      if (key === null && required?.source === null) return true;
+    }
+    return false;
+  }
+  return false;
+}
+
 function frameworkImportMatches(def, importModule) {
-  if (def.node?.type === "ImportNamespaceSpecifier") return true;
+  if (
+    def.node?.type === "ImportNamespaceSpecifier" ||
+    def.node?.type === "TSImportEqualsDeclaration"
+  ) {
+    return true;
+  }
   const imported = def.node?.imported;
   const name = imported?.type === "Literal" ? String(imported.value) : imported?.name;
   if (importModule === "vitest") return name === "vi";
@@ -136,5 +199,6 @@ function expressionName(node) {
 module.exports = {
   expressionName,
   frameworkBindingModule,
+  frameworkBindingOpaque,
   isFrameworkBinding,
 };

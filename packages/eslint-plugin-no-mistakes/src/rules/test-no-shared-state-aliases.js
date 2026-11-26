@@ -102,13 +102,14 @@ function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
       namespaces.add(specifier.local.name);
       testAliases.add(specifier.local, "namespace");
     }
-    if (
-      specifier.type === "ImportDefaultSpecifier" &&
-      node.source.value === "@playwright/test" &&
-      specifier.local?.name
-    ) {
-      testCalleeNames.add(specifier.local.name);
-      testAliases.add(specifier.local, "test");
+    if (specifier.type === "ImportDefaultSpecifier" && specifier.local?.name) {
+      if (node.source.value === "vitest") {
+        namespaces.add(specifier.local.name);
+        testAliases.add(specifier.local, "namespace");
+      } else if (node.source.value === "@playwright/test") {
+        testCalleeNames.add(specifier.local.name);
+        testAliases.add(specifier.local, "test");
+      }
     }
     if (specifier.type !== "ImportSpecifier") continue;
     const imported = importSpecifierName(specifier);

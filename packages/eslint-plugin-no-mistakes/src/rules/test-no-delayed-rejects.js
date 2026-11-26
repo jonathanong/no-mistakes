@@ -2,7 +2,14 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { findContainingRoot, traverse } = require("./async-ast");
+const {
+  findContainingRoot,
+  isTransparentExpression,
+  traverse,
+  unwrapExpression,
+} = require("./async-ast");
+const { isUnresolved, moduleLoad } = require("./module-load");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { originDeclarator } = require("./test-no-delayed-rejects-promise-alias");
 const { chainIsSafelyObserved, promiseChainBase } = require("./test-no-delayed-rejects-chains");
 const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
@@ -17,14 +24,25 @@ const { expectedIdentifier } = require("./test-no-delayed-rejects-expect");
 
 function matcherCall(rejects) {
   let current = rejects;
-  while (
-    current.parent?.type === "ChainExpression" ||
-    (current.parent?.type === "MemberExpression" && current.parent.object === current)
-  ) {
-    current = current.parent;
+  while (current.parent) {
+    const parent = current.parent;
+    if (parent.type === "ChainExpression" || isTransparentExpression(parent)) {
+      current = parent;
+      continue;
+    }
+    if (
+      parent.type === "MemberExpression" &&
+      unwrapExpression(parent.object) === unwrapExpression(current)
+    ) {
+      current = parent;
+      continue;
+    }
+    break;
   }
-  return current.parent?.type === "CallExpression" && current.parent.callee === current
-    ? current.parent
+  const parent = current.parent;
+  return parent?.type === "CallExpression" &&
+    unwrapExpression(parent.callee) === unwrapExpression(current)
+    ? parent
     : null;
 }
 
@@ -33,8 +51,10 @@ function isSameConst(identifier, declarator, context) {
 }
 
 function isRejectionHandlerCall(node, declarator, context) {
-  if (node.type !== "CallExpression" || node.callee.type !== "MemberExpression") return false;
-  const object = promiseChainBase(node.callee.object);
+  if (node.type !== "CallExpression") return false;
+  const callee = unwrapExpression(node.callee);
+  if (callee?.type !== "MemberExpression") return false;
+  const object = promiseChainBase(callee.object);
   if (!isSameConst(object, declarator, context)) return false;
   return chainIsSafelyObserved(node);
 }
@@ -117,10 +137,12 @@ module.exports = rule(
       description: "require rejection observers before coordination awaits",
       recommended: false,
     },
-    schema: [],
+    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
     messages: {
       delayedReject:
         "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} observes a rejection. Use a static expect from vitest.",
     },
   },
   (context) => {
@@ -129,7 +151,18 @@ module.exports = rule(
     return {
       MemberExpression(node) {
         const identifier = expectedIdentifier(node, context);
-        if (!identifier) return;
+        if (!identifier) {
+          const expectation = unwrapExpression(node.object);
+          const expectCallee = unwrapExpression(expectation?.callee);
+          if (
+            node.property?.name === "rejects" &&
+            expectation?.type === "CallExpression" &&
+            isUnresolved(moduleLoad(expectCallee, context))
+          ) {
+            reportUnanalyzable(context, node, "this rejection matcher");
+          }
+          return;
+        }
         const declarator = originDeclarator(identifier, context);
         const call = matcherCall(node);
         if (

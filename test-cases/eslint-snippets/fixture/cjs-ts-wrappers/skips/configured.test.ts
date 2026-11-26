@@ -1,0 +1,10 @@
+import * as custom from "./custom-test";
+const { test: named } = custom;
+named.skip("configured namespace", () => {});
+const loaded = require("./custom-test");
+const { test: required } = loaded;
+required.skip("configured require", () => {});
+import { default as playwrightTest } from "@playwright/test";
+playwrightTest.skip("playwright default", () => {});
+import * as suite from "./custom-test";
+suite.describe.skip("describe is not the configured test", () => {});

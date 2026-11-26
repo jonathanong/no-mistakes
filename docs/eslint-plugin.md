@@ -108,14 +108,16 @@ earlier explicit key.
 The schema accepts an object: `internalSpecifiers?: string[]`,
 `includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,
 `requireLiteralSpecifiers?: boolean` (default `true`),
-`baseline?: [string, string, number][]`, and `integrationExports?: object`
-(including `sourcePathTemplates` and `reexportExtensions`).
+`baseline?: [string, string, number][]`, `integrationExports?: object`
+(including `sourcePathTemplates` and `reexportExtensions`), and
+`unanalyzable?: "finding" | "ignore"` (default `"finding"`).
 
 ### `module-mock-preserve-exports`
 
 The schema accepts an object: `internalSpecifiers?: string[]`,
 `includePathPatterns?: string[]`, `excludePathPatterns?: string[]`, and
-`baseline?: [string, string][]`.
+`baseline?: [string, string][]`, and
+`unanalyzable?: "finding" | "ignore"` (default `"finding"`).
 
 ### `nextjs-no-manual-script-tags`
 
@@ -374,7 +376,8 @@ instead of passing silently. `require("react")` and
 
 ### `test-no-fixed-temp-paths`
 
-Opt-in with no rule-local options. Reports fixed temporary paths at known Node
+Opt-in. `unanalyzable?: "finding" | "ignore"` defaults to `"finding"` when an
+`fs` binding comes from a non-static `require`. Reports fixed temporary paths at known Node
 filesystem or process sinks. A local `const` alias can supply a path argument
 or the root of a `path.join` or `path.resolve` call. Unique-directory prefixes,
 including disposable variants, are allowed. Files that mock the filesystem
@@ -383,7 +386,8 @@ with `vi.mock` or `jest.mock` are exempt. See
 
 ### `test-no-shared-state`
 
-`allowBeforeAllAssignments?: boolean`; default `false`.
+`allowBeforeAllAssignments?: boolean` (default `false`) and
+`unanalyzable?: "finding" | "ignore"` (default `"finding"`).
 
 ### `test-no-skips`
 
@@ -394,6 +398,7 @@ declaration annotations. `allow` defaults to `[]` and accepts `skip`,
 `skipIf`, `runIf`, `only`, `todo`, and `fixme`. Same-file `.extend()` fixture
 wrappers stay bound; `testModules` names import specifiers whose exported
 `test` is Playwright's, matching the specifier as written.
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`.
 See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
 table callbacks, configuration, and `no-mistakes` suppression directives.
 
@@ -406,12 +411,14 @@ and Jest mock constructors and mock wrapper types (`Mock<...>` and
 `MockedFunction<...>`) that copy the type of a matching import, including
 `typeof` on a namespace member and `Parameters<typeof enqueueEmail>`. It also
 reports `vi.mocked` and `jest.mocked` casts of matching imports.
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`.
 See [the rule reference](eslint-rules/test-no-typed-enqueue-fake.md).
 
 ### `test-no-wall-time-assertions`
 
 Opt-in. `allowedPaths?: string[]` defaults to `[]` and exempts benchmark paths
-using globs relative to the ESLint working directory. Numeric bounds on elapsed
+using globs relative to the ESLint working directory.
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. Numeric bounds on elapsed
 `Date.now()` or `performance.now()` values are reported in test filenames;
 files that call Vitest or Jest fake timers are exempt. See
 [the rule reference](eslint-rules/test-no-wall-time-assertions.md).
@@ -497,6 +504,32 @@ policy, `effectiveSlot` reports unproved inherited registration deadlines/latche
 even when subsequent local slow operations are legal. This is not canonical
 cross-file owner proof. See [the rule reference](eslint-rules/playwright-test-timeout-cap.md).
 
+### `no-vitest-sequential`
+
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"` when a sequential
+registration's Vitest binding comes from a non-static `require`. A static
+`require("vitest")` and `import = require("vitest")` are runners for `test`,
+`it`, and `describe`. Vitest's default import is not a runner. See
+[the rule reference](eslint-rules/no-vitest-sequential.md).
+
+### `vitest-mock-test-file-naming`
+
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"` when a module
+mock's `vi` or `jest` binding comes from a non-static `require`. See
+[the rule reference](eslint-rules/vitest-mock-test-file-naming.md).
+
+### `test-no-delayed-rejects`
+
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"` when a
+`.rejects` matcher's `expect` comes from a non-static `require`. See
+[the rule reference](eslint-rules/test-no-delayed-rejects.md).
+
+### `test-no-error-message-matching`
+
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"` when an
+assertion's `expect` comes from a non-static `require`. See
+[the rule reference](eslint-rules/test-no-error-message-matching.md).
+
 ### `vitest-timeout-cap`
 
 Enable this single-file ESLint/Oxlint rule with explicit `files` globs for
@@ -510,7 +543,8 @@ Set `requireReason: false` for a staged rollout that keeps cap enforcement while
 disabling only justification findings.
 `configRoot` explicitly admits plain standalone configuration exports; enable it
 only for actual configuration-file scopes. Both caps must be positive finite numbers. `unknownValues` defaults to
-`ignore`; set `finding` to require statically recoverable timeout values.
+`ignore`; set `finding` to require statically recoverable timeout values. A
+non-static `require` of Vitest is one of those unresolved values.
 `configUnknownValues` defaults to `"inherit"`; `"defer-to-runner"` delegates only
 unresolved configuration values to a separate effective runner policy without
 changing known-invalid findings or those outside configuration.

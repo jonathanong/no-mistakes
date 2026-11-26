@@ -43,7 +43,13 @@ The schema accepts an options object.
 
 `internalSpecifiers`, `includePathPatterns`, and `excludePathPatterns` select
 applicable mocks; `baseline` provides temporary `[file, specifier]` allowances.
-See the exhaustive table in [`eslint-plugin`](../eslint-plugin.md#rule-options).
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+mock whose framework binding comes from a non-static `require` reports
+`unanalyzable`. See the exhaustive table in
+[`eslint-plugin`](../eslint-plugin.md#rule-options).
+
+`const { expect } = require("vitest")` is not a framework mock.
+`import vt = require("vitest"); vt.vi.mock(specifier, factory)` is.
 
 A default import of `vitest` or `@jest/globals`, a single `const` alias, a static `vi` or `jest` member including a string or expression-free template key, an optional call, a comma callee, and a direct `.call` or literal-array `.apply` are the same framework binding.
 

@@ -43,8 +43,15 @@ The schema accepts an options object.
 `requireLiteralSpecifiers` defaults to `true`; and `baseline` records
 temporary `[file, specifier, count]` allowances. `integrationExports` permits
 tagged integration exports, with its `specifiers`, `sourcePathTemplates`,
-`reexportExtensions`, and `markerRegex` controls. See the exhaustive table in
+`reexportExtensions`, and `markerRegex` controls.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+mock whose `vitest` or `@jest/globals` binding comes from a non-static
+`require` reports `unanalyzable`. See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
+
+`const { expect } = require("vitest")` is not a framework mock.
+`import vt = require("vitest")` and `const vt = require("vitest")` followed by
+`vt.vi.mock` are the same framework binding as `import { vi } from "vitest"`.
 
 A default import of `vitest` or `@jest/globals`, a single `const` alias, a static `vi` or `jest` member including a string or expression-free template key, an optional call, and a comma callee are the same framework binding.
 

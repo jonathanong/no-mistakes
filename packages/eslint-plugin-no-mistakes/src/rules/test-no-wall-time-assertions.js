@@ -3,6 +3,8 @@
 const { posix, relative } = require("node:path");
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { isUnresolved, moduleLoad } = require("./module-load");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const {
   EXPECT_MODULES,
   isExpectCallee,
@@ -82,6 +84,28 @@ function isFrameworkExpect(node, context) {
   return member?.name === "expect" && ASSERTION_MODULES.has(member.source);
 }
 
+function opaqueNow(node, context) {
+  const value = localOrigin(node, context);
+  if (value?.type !== "CallExpression") return false;
+  const callee = unwrap(value.callee);
+  if (memberName(callee) !== "now") return false;
+  return isUnresolved(moduleLoad(unwrap(callee.object), context));
+}
+
+function opaqueWallClock(node, context) {
+  const callee = unwrap(node.callee);
+  if (!MATCHERS.has(memberName(callee))) return false;
+  let assertion = unwrap(callee.object);
+  while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
+  if (assertion?.type !== "CallExpression") return false;
+  const argument = localOrigin(assertion.arguments?.[0], context);
+  return (
+    argument?.type === "BinaryExpression" &&
+    argument.operator === "-" &&
+    (opaqueNow(argument.left, context) || opaqueNow(argument.right, context))
+  );
+}
+
 function isWallTimeAssertion(callee, context) {
   if (!MATCHERS.has(memberName(callee))) return false;
   let assertion = unwrap(callee.object);
@@ -106,13 +130,18 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        properties: { allowedPaths: { type: "array", items: { type: "string" } } },
+        properties: {
+          allowedPaths: { type: "array", items: { type: "string" } },
+          unanalyzable: UNANALYZABLE_SCHEMA,
+        },
         additionalProperties: false,
       },
     ],
     messages: {
       wallTime:
         "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} reads wall time. Use a static Date, performance, or perf_hooks binding.",
     },
   },
   (context) => {
@@ -128,6 +157,8 @@ module.exports = rule(
           usesFakeTimers = true;
         } else if (isWallTimeAssertion(callee, context) && !suppressed(node)) {
           assertions.push(node);
+        } else if (!suppressed(node) && opaqueWallClock(node, context)) {
+          reportUnanalyzable(context, node, "this elapsed-time assertion");
         }
       },
       "Program:exit"() {

@@ -1,5 +1,8 @@
 "use strict";
 
+const { unwrapSequence } = require("./async-ast");
+const { staticImportSource } = require("./async-target-bindings");
+const { requireSource } = require("./async-target-sources");
 const { literalString } = require("./module-mock-helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
@@ -16,26 +19,19 @@ function propertyName(node) {
 }
 
 function memberName(member) {
+  member = unwrap(member);
   if (member?.type !== "MemberExpression") return null;
-  if (member.computed && member.property?.type === "Identifier") return null;
-  return propertyName(member.property);
+  const property = unwrap(member.property);
+  if (member.computed && property?.type === "Identifier") return null;
+  return propertyName(property);
 }
 
 function unwrap(node) {
-  let current = node;
-  while (
-    current?.type === "ChainExpression" ||
-    current?.type === "TSAsExpression" ||
-    current?.type === "TSTypeAssertion" ||
-    current?.type === "TSNonNullExpression" ||
-    current?.type === "TSSatisfiesExpression"
-  ) {
-    current = current.expression;
-  }
-  if (current?.type === "SequenceExpression" && current.expressions?.length) {
-    return unwrap(current.expressions.at(-1));
-  }
-  return current;
+  return unwrapSequence(node);
+}
+
+function allowedModule(source, modules) {
+  return Boolean(source) && (modules || MESSAGE_MODULES).has(source);
 }
 
 function isExpectBinding(def, modules) {
@@ -56,18 +52,23 @@ function isNestedBinding(variable) {
 }
 
 function isNamespace(node, context, seen, modules = null) {
+  node = unwrap(node);
   if (node?.type !== "Identifier" || seen.has(node.name)) return false;
   const variable = resolveVariable(node, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (
-    def?.type === "ImportBinding" &&
-    ((def.node.type === "ImportNamespaceSpecifier" &&
-      (modules || MESSAGE_MODULES).has(def.parent?.source?.value)) ||
-      (!modules &&
-        def.node.type === "ImportDefaultSpecifier" &&
-        def.parent?.source?.value === "@playwright/test"))
-  ) {
-    return true;
+  if (def?.type === "ImportBinding") {
+    const source = staticImportSource(def);
+    if (!allowedModule(source, modules)) return false;
+    if (
+      def.node.type === "ImportNamespaceSpecifier" ||
+      def.node.type === "TSImportEqualsDeclaration"
+    ) {
+      return true;
+    }
+    if (def.node.type !== "ImportDefaultSpecifier") return false;
+    return !modules
+      ? source === "@playwright/test" || EXPECT_MODULES.has(source)
+      : EXPECT_MODULES.has(source);
   }
   if (
     def?.type !== "Variable" ||
@@ -78,6 +79,7 @@ function isNamespace(node, context, seen, modules = null) {
   }
   if (variable.references.some((ref) => ref.isWrite() && !ref.init)) return false;
   seen.add(node.name);
+  if (allowedModule(requireSource(def.node.init, context), modules)) return true;
   return isNamespace(def.node.init, context, seen, modules);
 }
 
@@ -110,7 +112,7 @@ function isExpectCallee(node, context, seen = new Set(), modules = null, mode = 
   if (def.node.id.type !== "ObjectPattern") return false;
   const fromModule =
     isNamespace(def.node.init, context, seen, modules) ||
-    (!modules && requireExpectSource(def.node.init));
+    requireExpectSource(def.node.init, context, modules);
   if (!fromModule) return false;
   return def.node.id.properties.some((property) => {
     let value = property.value;
@@ -120,12 +122,8 @@ function isExpectCallee(node, context, seen = new Set(), modules = null, mode = 
   });
 }
 
-function requireExpectSource(node) {
-  const call = unwrap(node);
-  if (call?.type !== "CallExpression") return false;
-  const callee = unwrap(call.callee);
-  if (callee?.type !== "Identifier" || callee.name !== "require") return false;
-  return EXPECT_MODULES.has(literalString(call.arguments?.[0]));
+function requireExpectSource(node, context, modules = null) {
+  return allowedModule(requireSource(node, context), modules || MESSAGE_MODULES);
 }
 
 function expectArguments(node, context) {
@@ -138,9 +136,9 @@ function expectArguments(node, context) {
     if (name === "call") {
       callee = callee.object;
       args = args.slice(1);
-    } else if (name === "apply" && args[1]?.type === "ArrayExpression") {
+    } else if (name === "apply" && unwrap(args[1])?.type === "ArrayExpression") {
       callee = callee.object;
-      args = args[1].elements;
+      args = unwrap(args[1]).elements;
     }
   }
   return isExpectCallee(callee, context) ? args : null;

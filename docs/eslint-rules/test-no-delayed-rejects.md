@@ -114,7 +114,15 @@ the async matcher was not awaited at its creation.
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+`.rejects` matcher whose `expect` comes from a non-static `require` reports
+`unanalyzable`.
+
+`const { expect } = require("vitest")`, an `expect` alias, `vt.expect` from
+`require("vitest")`, and `import vt = require("vitest")` are the same expect.
+`(expect(promise).rejects as any).toThrow()` is still that matcher. An
+immediate `(promise.catch as typeof promise.catch)(() => {})` still counts as
+observing the rejection.
 
 ## Fix
 

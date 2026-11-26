@@ -1,6 +1,9 @@
 "use strict";
 
-const { memberPropertyName } = require("./logical-call");
+const { unwrapExpression } = require("./async-ast");
+const { staticImportSource } = require("./async-target-bindings");
+const { requireSource } = require("./async-target-sources");
+const { literalString, memberPropertyName } = require("./logical-call");
 const { importSpecifierName } = require("./module-mock-helpers");
 
 const frameworkModules = new Map([
@@ -17,7 +20,10 @@ function referenceBinding(identifier, sourceCode) {
 
 function importDefinition(binding) {
   const def = binding?.defs.length === 1 ? binding.defs[0] : null;
-  return def?.type === "ImportBinding" && def.parent?.type === "ImportDeclaration" ? def : null;
+  return def?.type === "ImportBinding" &&
+    (def.parent?.type === "ImportDeclaration" || def.parent?.type === "TSImportEqualsDeclaration")
+    ? def
+    : null;
 }
 
 function runtimeImport(def) {
@@ -28,27 +34,66 @@ function typeArgParams(node) {
   return (node?.typeArguments ?? node?.typeParameters)?.params;
 }
 
-function namespaceImport(identifier, sourceCode) {
-  const def = importDefinition(referenceBinding(identifier, sourceCode));
-  return def?.node.type === "ImportNamespaceSpecifier" ? def : null;
+function scopeContext(sourceCode) {
+  return { sourceCode };
+}
+
+function namespaceModule(identifier, sourceCode) {
+  const binding = referenceBinding(identifier, sourceCode);
+  const def = importDefinition(binding);
+  if (
+    def &&
+    (def.node.type === "ImportNamespaceSpecifier" ||
+      def.node.type === "TSImportEqualsDeclaration" ||
+      def.node.type === "ImportDefaultSpecifier") &&
+    runtimeImport(def)
+  ) {
+    return staticImportSource(def);
+  }
+  const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
+  if (
+    variable?.type === "Variable" &&
+    variable.parent?.kind === "const" &&
+    variable.node?.id?.type === "Identifier"
+  ) {
+    return requireSource(variable.node.init, scopeContext(sourceCode));
+  }
+  return null;
+}
+
+function patternExportName(pattern, name) {
+  for (const property of pattern?.properties || []) {
+    if (property.type !== "Property") continue;
+    let value = property.value;
+    while (value?.type === "AssignmentPattern") value = value.left;
+    if (value?.type !== "Identifier" || value.name !== name) continue;
+    if (!property.computed && property.key?.type === "Identifier") return property.key.name;
+    return literalString(property.key);
+  }
+  return null;
 }
 
 function isFrameworkReceiver(receiver, sourceCode) {
-  if (receiver.type === "Identifier") {
+  receiver = unwrapExpression(receiver);
+  if (receiver?.type === "Identifier") {
     const binding = referenceBinding(receiver, sourceCode);
     if (!binding?.defs.length) return frameworkModules.has(receiver.name);
     const def = importDefinition(binding);
-    return (
+    if (
       runtimeImport(def) &&
-      frameworkModules.get(importSpecifierName(def.node)) === def.parent.source.value
-    );
+      frameworkModules.get(importSpecifierName(def.node)) === staticImportSource(def)
+    ) {
+      return true;
+    }
+    const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
+    if (variable?.type !== "Variable" || variable.node?.id?.type !== "ObjectPattern") return false;
+    const source = requireSource(variable.node.init, scopeContext(sourceCode));
+    return frameworkModules.get(patternExportName(variable.node.id, receiver.name)) === source;
   }
-  if (receiver.type !== "MemberExpression" || receiver.object.type !== "Identifier") return false;
-  const def = namespaceImport(receiver.object, sourceCode);
-  return (
-    runtimeImport(def) &&
-    frameworkModules.get(memberPropertyName(receiver)) === def.parent.source.value
-  );
+  if (receiver?.type !== "MemberExpression") return false;
+  const object = unwrapExpression(receiver.object);
+  if (object?.type !== "Identifier") return false;
+  return frameworkModules.get(memberPropertyName(receiver)) === namespaceModule(object, sourceCode);
 }
 
 function isFrameworkMockType(typeName, sourceCode) {
@@ -73,31 +118,49 @@ function isFrameworkMockType(typeName, sourceCode) {
   }
   const binding = referenceBinding(typeName.left, sourceCode);
   if (!binding?.defs.length) return frameworkModules.has(typeName.left.name);
-  const def = namespaceImport(typeName.left, sourceCode);
-  return Boolean(def) && mockTypeModules.has(def.parent.source.value);
+  return mockTypeModules.has(namespaceModule(typeName.left, sourceCode));
 }
 
 function resolveImportTarget(node, sourceCode) {
+  node = unwrapExpression(node);
   if (node?.type === "Identifier") {
-    const target = importDefinition(referenceBinding(node, sourceCode));
-    if (!target || target.node.type === "ImportNamespaceSpecifier") return null;
-    return {
-      name: importSpecifierName(target.node) ?? "default",
-      module: target.parent.source.value,
-    };
+    const binding = referenceBinding(node, sourceCode);
+    const target = importDefinition(binding);
+    if (
+      target &&
+      target.node.type !== "ImportNamespaceSpecifier" &&
+      target.node.type !== "TSImportEqualsDeclaration"
+    ) {
+      const typedSource = target.parent?.source?.value;
+      const module =
+        staticImportSource(target) || (typeof typedSource === "string" ? typedSource : null);
+      return module ? { name: importSpecifierName(target.node) ?? "default", module } : null;
+    }
+    const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
+    if (variable?.type === "Variable" && variable.node?.id?.type === "ObjectPattern") {
+      const name = patternExportName(variable.node.id, node.name);
+      const init = unwrapExpression(variable.node.init);
+      const module =
+        requireSource(variable.node.init, scopeContext(sourceCode)) ||
+        (init?.type === "Identifier" ? namespaceModule(init, sourceCode) : null);
+      return name && module ? { name, module } : null;
+    }
+    return null;
   }
   if (
     node?.type === "TSQualifiedName" &&
     node.left.type === "Identifier" &&
     node.right.type === "Identifier"
   ) {
-    const target = namespaceImport(node.left, sourceCode);
-    return target ? { name: node.right.name, module: target.parent.source.value } : null;
+    const module = namespaceModule(node.left, sourceCode);
+    return module ? { name: node.right.name, module } : null;
   }
-  if (node?.type === "MemberExpression" && node.object.type === "Identifier") {
+  if (node?.type === "MemberExpression") {
+    const object = unwrapExpression(node.object);
     const name = memberPropertyName(node);
-    const target = name ? namespaceImport(node.object, sourceCode) : null;
-    return target ? { name, module: target.parent.source.value } : null;
+    const module =
+      object?.type === "Identifier" && name ? namespaceModule(object, sourceCode) : null;
+    return module ? { name, module } : null;
   }
   return null;
 }

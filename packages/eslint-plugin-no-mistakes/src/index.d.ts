@@ -59,13 +59,58 @@ declare namespace plugin {
     sentinelTestIds?: string[];
   }
 
+  export type RuleUnanalyzable = "finding" | "ignore";
+
+  export interface NoVitestSequentialOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface VitestMockTestFileNamingOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface ModuleMockBoundaryOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface ModuleMockPreserveExportsOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoDelayedRejectsOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoErrorMessageMatchingOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoFixedTempPathsOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoSharedStateOptions {
+    allowBeforeAllAssignments?: boolean;
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export type TestNoSkipModifier = "skip" | "skipIf" | "runIf" | "only" | "todo" | "fixme";
+
+  export interface TestNoSkipsOptions {
+    allow?: TestNoSkipModifier[];
+    testModules?: string[];
+    unanalyzable?: RuleUnanalyzable;
+  }
+
   export interface TestNoWallTimeAssertionsOptions {
     allowedPaths?: string[];
+    unanalyzable?: RuleUnanalyzable;
   }
 
   export interface TestNoTypedEnqueueFakeOptions {
     singleExportPattern?: string;
     moduleGlobs?: string[];
+    unanalyzable?: RuleUnanalyzable;
   }
 
   export interface NoLocaleLessDateFormatOptions {

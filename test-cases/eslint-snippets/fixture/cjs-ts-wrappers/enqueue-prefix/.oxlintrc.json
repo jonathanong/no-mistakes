@@ -1,0 +1,17 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "off",
+    "no-mistakes/test-no-typed-enqueue-fake": [
+      "error",
+      {
+        "singleExportPattern": "^enqueue"
+      }
+    ]
+  }
+}

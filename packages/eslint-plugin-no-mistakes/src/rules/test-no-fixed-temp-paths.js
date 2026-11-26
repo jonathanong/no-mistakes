@@ -6,7 +6,12 @@ const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
 const { stableConstInitializer } = require("./async-target-bindings");
 const { literalString } = require("./logical-call");
-const { bindingResolver, isFilesystemMock } = require("./test-no-fixed-temp-paths-bindings");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
+const {
+  UNRESOLVED,
+  bindingResolver,
+  isFilesystemMock,
+} = require("./test-no-fixed-temp-paths-bindings");
 const { forEachPathArgument } = require("./test-no-fixed-temp-paths-sinks");
 
 const RULE_NAME = "test-no-fixed-temp-paths";
@@ -52,10 +57,12 @@ module.exports = rule(
       description: "require unique temporary paths in tests",
       recommended: false,
     },
-    schema: [],
+    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
     messages: {
       fixedTempPath:
         "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} writes a fixed temporary path. Use a static fs or path binding.",
     },
   },
   (context) => {
@@ -81,6 +88,10 @@ module.exports = rule(
       CallExpression(node) {
         if (mocksFilesystem) return;
         const binding = resolve(node.callee);
+        if (binding === UNRESOLVED) {
+          if (!suppressed(node)) reportUnanalyzable(context, node, "this call");
+          return;
+        }
         if (isFilesystemMock(node, binding)) {
           mocksFilesystem = true;
           return;

@@ -157,7 +157,18 @@ matching the specifier as written. It defaults to `[]`. List every specifier
 form the tests use: `./fixtures` and `../fixtures` are different entries, and
 the option applies to the whole config scope rather than one directory.
 A default import stays silent even when its specifier is listed, because only
-the exported `test` binding is admitted.
+the exported `test` binding is admitted. `@playwright/test`'s default import
+is Playwright `test` without `testModules`.
+
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+banned modifier whose receiver comes from a non-static `require` reports
+`unanalyzable`.
+
+A configured namespace and `const loaded = require("./custom-test")` both
+export `test`, so `const { test } = loaded; test.skip` reports. `describe`
+from that namespace is not that `test`. `ctx.skip`, `(ctx.skip as any)()`,
+a cast `skip` binding, a callback cast to `any`, and `(v as typeof v).test.skip`
+are skips.
 
 ```js
 "no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "../fixtures", "@app/test"] }]

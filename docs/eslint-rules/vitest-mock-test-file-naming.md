@@ -21,7 +21,14 @@ vi.mock("@app/mail");
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+module mock whose `vi` or `jest` binding comes from a non-static `require`
+reports `unanalyzable` in a test file instead of deciding the filename.
+
+`import vt = require("vitest"); vt.vi.mock`, a cast `(vi.mock as typeof vi.mock)`,
+`(vi as typeof vi).mock`, and `vi["mock" as const]` are module mocks.
+`const { expect } = require("vitest"); expect.mock` is not. A `*.mock.test.*`
+file may contain those mocks. Another file's re-export stays unreported.
 
 ## Fix
 

@@ -3,9 +3,29 @@
 const { unwrapExpression } = require("./async-ast");
 const { literalString } = require("./logical-call");
 const { isReassigned, memberPropertyName, resolveVariable } = require("./async-target-bindings");
-const { importSpecifierName, requireSource } = require("./async-target-sources");
+const { importSpecifierName, requireResolution, requireSource } = require("./async-target-sources");
 
+const UNRESOLVED = Symbol("unresolved");
 const NODE_MODULES = new Set(["path", "os", "fs", "fs/promises", "child_process"]);
+const PATH_METHODS = new Set([
+  "appendFile",
+  "copyFile",
+  "cp",
+  "exists",
+  "existsSync",
+  "mkdir",
+  "mkdtemp",
+  "mkdtempSync",
+  "open",
+  "readFile",
+  "realpath",
+  "rename",
+  "rm",
+  "rmdir",
+  "stat",
+  "unlink",
+  "writeFile",
+]);
 const FRAMEWORK_GLOBALS = new Map([
   ["vi", "vitest.vi"],
   ["jest", "@jest/globals.jest"],
@@ -28,9 +48,9 @@ function importedBinding(definition) {
   if (node.importKind === "type" || parent.importKind === "type") return null;
   if (parent.type === "TSImportEqualsDeclaration") {
     const reference = parent.moduleReference;
-    return reference.type === "TSExternalModuleReference"
-      ? supportedModule(reference.expression.value)
-      : null;
+    if (reference.type !== "TSExternalModuleReference") return null;
+    const source = literalString(reference.expression);
+    return source === null ? UNRESOLVED : supportedModule(source);
   }
   const source = supportedModule(parent.source.value);
   if (!source || node.type !== "ImportSpecifier") return source;
@@ -64,10 +84,21 @@ function bindingResolver(context) {
   const globals = new Map();
   function resolve(input) {
     const node = unwrapExpression(input);
-    if (node?.type === "CallExpression") return supportedModule(requireSource(node, context));
+    if (node?.type === "CallExpression") {
+      const required = requireResolution(node, context);
+      if (required?.source === null) return UNRESOLVED;
+      return supportedModule(requireSource(node, context));
+    }
     if (node?.type === "MemberExpression") {
       const object = resolve(node.object);
       const member = memberPropertyName(node);
+      if (object === UNRESOLVED) {
+        const bare = member?.replace(/Sync$/, "");
+        return member === null || PATH_METHODS.has(bare) ? UNRESOLVED : null;
+      }
+      if (object && member === null && ["fs", "fs/promises", "path", "os"].includes(object)) {
+        return UNRESOLVED;
+      }
       return memberBinding(object, member);
     }
     if (node?.type !== "Identifier") return null;
@@ -91,9 +122,15 @@ function bindingResolver(context) {
     } else if (definition.type === "Variable" && definition.parent.kind === "const") {
       const { id, init } = definition.node;
       const value = resolve(init);
-      if (id.type === "Identifier") binding = value;
-      if (value && id.type === "ObjectPattern") {
-        binding = memberBinding(value, destructuredMember(id, node.name));
+      if (value === UNRESOLVED) binding = UNRESOLVED;
+      else if (id.type === "Identifier") binding = value;
+      else if (value && id.type === "ObjectPattern") {
+        const member = destructuredMember(id, node.name);
+        binding = member
+          ? memberBinding(value, member)
+          : ["fs", "fs/promises"].includes(value)
+            ? UNRESOLVED
+            : null;
       }
     }
     bindings.set(variable, binding);
@@ -108,4 +145,4 @@ function isFilesystemMock(node, binding) {
   return source === "fs" || source === "fs/promises";
 }
 
-module.exports = { bindingResolver, isFilesystemMock };
+module.exports = { UNRESOLVED, bindingResolver, isFilesystemMock };

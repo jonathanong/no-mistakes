@@ -30,17 +30,18 @@ function isImmediateObserver(node, declarator, context, isSameConst) {
         isSameConst(promiseChainBase(argument), declarator, context))
     );
   }
+  const callee = unwrapExpression(node.callee);
   if (
     node.type !== "CallExpression" ||
-    node.callee.type !== "MemberExpression" ||
-    unwrapExpression(node.callee.object).type !== "Identifier" ||
-    unwrapExpression(node.callee.object).name !== "Promise" ||
-    !PROMISE_AGGREGATES.has(literalPropertyName(node.callee)) ||
+    callee?.type !== "MemberExpression" ||
+    unwrapExpression(callee.object).type !== "Identifier" ||
+    unwrapExpression(callee.object).name !== "Promise" ||
+    !PROMISE_AGGREGATES.has(literalPropertyName(callee)) ||
     node.arguments.length !== 1
   ) {
     return false;
   }
-  const promise = unwrapExpression(node.callee.object);
+  const promise = unwrapExpression(callee.object);
   const variable = findVariable(context.sourceCode.getScope(promise), promise.name);
   if (variable?.defs.length) return false;
   const iterable = unwrapExpression(node.arguments[0]);

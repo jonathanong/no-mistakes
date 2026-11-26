@@ -6,6 +6,7 @@ const { collectPatternNames } = require("./ast-pattern-names");
 const {
   expressionName,
   frameworkBindingModule,
+  frameworkBindingOpaque,
   isFrameworkBinding,
 } = require("./module-mock-framework");
 
@@ -104,7 +105,9 @@ function isModuleMockMemberCall(node, context) {
   if (callee?.type !== "MemberExpression") return false;
   const method = memberPropertyName(callee);
   if (!MODULE_MOCK_METHODS.has(method)) return false;
-  if (!isFrameworkBinding(callee.object, context)) return false;
+  if (!isFrameworkBinding(callee.object, context)) {
+    return frameworkBindingOpaque(callee.object, context) ? { unanalyzable: true, method } : false;
+  }
   return {
     framework: frameworkBindingModule(callee.object, context),
     method,
