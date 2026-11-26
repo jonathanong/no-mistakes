@@ -249,9 +249,9 @@ cost $0.16-0.19. A total far below the estimate means runs errored — see
 
 ## Flows
 
-Every case carries a `tags:` field naming its flow. 85 generated cases across
-13 flows; 76 excluding the holdout. The 62 skill cases are the first 12 flows;
-the 23 `rules` cases load the `no-mistakes-rules` plugin instead.
+Every case carries a `tags:` field naming its flow. 88 generated cases across
+13 flows; 79 excluding the holdout. The 62 skill cases are the first 12 flows;
+the 26 `rules` cases load the `no-mistakes-rules` plugin instead.
 
 | tag | cases | what it covers | demand |
 | --- | --- | --- | --- |
@@ -267,7 +267,7 @@ the 23 `rules` cases load the `no-mistakes-rules` plugin instead.
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
 | `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
 | `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
-| `rules` | 23 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
+| `rules` | 26 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
 
 "Real traffic" means the phrasing was observed in mined session history.
 "Skill surface" means `SKILL.md` documents it but no comparable question
@@ -306,10 +306,10 @@ that says "use `rg` here, the graph won't help" is ideal.
 
 The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
 `rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
-topics (`testing`, `postgresql`, `queue`, `github-actions`) with 19 cases
-between them (`testing` has six, `github-actions` has three, and the others
-have five), plus four off-topic guards. Every case exposes all installed
-plugin skills.
+topics (`testing`, `postgresql`, `queue`, `github-actions`) with 22 cases
+between them (`postgresql` has eight, `testing` has six, `queue` has five, and
+`github-actions` has three), plus four off-topic guards. Every case exposes all
+installed plugin skills.
 
 - **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
   test, worker, workflow). The prompt never names the rule; breaking one
@@ -340,20 +340,66 @@ plugin fired at all.
 
 - `rules-postgresql-review-parent-key-update` checks whether the review traces
   the implicit parent lock to the child insert, identifies the deadlock, and
-  recommends taking the stronger parent lock first.
+  recommends taking the stronger parent lock first. Measured in the 2026-11-26
+  `rules-postgresql` pass below.
 - `rules-queue-review-job-self-overlap` checks whether the review identifies
   overlap between scheduled and manual runs across replicas and preserves
-  exclusion or makes concurrent writes safe.
+  exclusion or makes concurrent writes safe. Remains unmeasured (the 2026-11-24
+  pilot stopped at authentication; see
+  [HISTORY.md](HISTORY.md#2026-11-24--lock-review-cases-3879)).
 
-Both cases are unmeasured. The 2026-11-24 pilot stopped at authentication.
-See [HISTORY.md](HISTORY.md#2026-11-24--lock-review-cases-3879).
+### PostgreSQL query rules (`rules-postgresql`, 2026-11-26)
+
+Added three synthetic cases for duplicate keyed lookups of the same row and
+narrow base-table reads through composite views:
+
+- `rules-postgresql-review-duplicate-row-lookup` checks whether the review
+  flags two scalar subqueries looking up the same `members` row by
+  `t.assignee_id`, recommends one join projecting both columns, and leaves a
+  separate `t.reviewer_id` join alone.
+- `rules-postgresql-review-narrow-view-lookup` checks whether the review flags
+  joining a composite view (`user_directory`, which joins `organizations` and
+  runs a correlated `team_memberships` subquery) solely to read one base-table
+  column (`handle`), and recommends joining `users` with `deleted_at IS NULL`.
+- `rules-postgresql-exception-view-uses-joined-columns` checks that the review
+  does not over-flag a query that reads the view's joined `org_name` and
+  computed `team_count` columns.
+
+**Measured:** 2026-11-26 against base `ca2d93697c` (`origin/main`), Claude CLI
+2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, `runs: 3`, `-j 4`,
+zero errored runs and `partial: false` on both invocations. Base ran
+`--eval-dir evals-variants/rules-control --tag rules-postgresql --ablation none`
+(24 attempts; `$2.81` agent + `$1.24` judge = `$4.06`). Updated ran
+`--tag rules-postgresql --ablation with-without` (48 attempts; `$4.51` agent +
+`$1.91` judge = `$6.42`). Raw reports are archived at
+`~/.cache/no-mistakes/evals/pg-skill-2026-11-26/`.
+
+| Case | Base fired | Base content | Updated fired | Updated content | Without plugin | Δ (updated vs without) | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `postgresql-exception-index-timeout` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
+| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling (no over-flag) |
+| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
+| `postgresql-review-long-identifier` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 2/3 (0.67) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 | +1/3 vs base, +2/3 vs without |
+| `postgresql-review-parent-key-update` | 3/3 | 3/3 (1.00) | 2/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
+| `postgresql-write-advisory-lock` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 | +2/3 vs without |
+| `postgresql-write-offset-pagination` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
+| **Total (`rules-postgresql`)** | **24/24** | **23/24** | **23/24** | **24/24** | **20/24** | **+0.17** | |
+
+At `n = 3` per case, a 1-attempt gap (`3/3` vs `2/3` on
+`review-narrow-view-lookup` between updated and base) is within small-sample
+variation; the ceiling cases confirm trigger fidelity and zero regressions or
+over-flagging. See
+[HISTORY.md](HISTORY.md#2026-11-26--postgresql-duplicate-row-lookup-and-narrow-view-rules).
 
 ### Current trigger comparison
 
 The results below measure the earlier 16-skill inventory. The current plugin
-contains 15 skills after #3587. The two lock review cases and the three cases
-below were added subsequently and are pending measurement. The historical
-comparison still refers to its original case set. See [history](HISTORY.md).
+contains 15 skills after #3587. The `rules-queue-review-job-self-overlap` case
+and the three cases below were added subsequently and remain pending
+measurement; the four newer `rules-postgresql` cases are measured in the table
+above. The historical comparison still refers to its original case set. See
+[history](HISTORY.md).
 
 | Unmeasured case | What it checks |
 | --- | --- |
@@ -505,7 +551,7 @@ the Claude table.
 
 `python3 evals/codex_rules.py` prints `cases x arms x runs` and exits. It does
 not call a model. Dollars are unknown until a paid run; the preview says so.
-A full rules pass at the case default is 23 cases x 2 arms x 3 runs = 138
+A full rules pass at the case default is 26 cases x 2 arms x 3 runs = 156
 attempts. Pilot with one case before that:
 
 ```sh

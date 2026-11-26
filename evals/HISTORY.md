@@ -19,6 +19,60 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — PostgreSQL duplicate row lookup and narrow view rules
+
+Added two rules to `plugins/no-mistakes-rules/skills/postgresql-rules/SKILL.md`
+(`## Queries`) — MUST NOT look up the same row more than once in one statement
+through separate joins or scalar subqueries keyed by the same expression, and
+SHOULD NOT join or subquery a view containing joins or subqueries only to read
+one or two base-table columns — plus three synthetic cases in
+`evals/rules_cases.py`: `rules-postgresql-review-duplicate-row-lookup`,
+`rules-postgresql-review-narrow-view-lookup`, and
+`rules-postgresql-exception-view-uses-joined-columns`.
+
+**What ran.** Base commit `ca2d93697c` (`origin/main`), Claude CLI 2.1.332,
+agent `claude-sonnet-5-5`, judge `claude-opus-5-5`. After 1-attempt pilots on
+the three new cases (`--runs 1 --ablation with-without`, 6 attempts, `$0.54`
+agent cost, `partial: false`), ran two `--runs 3 -j 4` passes across all eight
+`rules-postgresql` cases in the same session, with zero errored runs and
+`partial: false` on both:
+
+- **Base (`origin/main` rules):** `bash scripts/run-evals.sh --eval-dir
+  evals-variants/rules-control --tag rules-postgresql --runs 3 --ablation none
+  -j 4 --no-publish --no-scaffold --trust-plugin` (24 attempts; `$2.81` agent +
+  `$1.24` judge = `$4.06`).
+- **Updated rules (with and without plugin):** `bash scripts/run-evals.sh
+  --tag rules-postgresql --runs 3 --ablation with-without -j 4 --no-publish
+  --no-scaffold --trust-plugin` (48 attempts; `$4.51` agent + `$1.91` judge =
+  `$6.42`).
+
+Raw JSON and HTML reports are archived outside git at
+`~/.cache/no-mistakes/evals/pg-skill-2026-11-26/`.
+
+| Case | Base fired | Base content | Updated fired | Updated content | Without plugin | Δ (updated vs without) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `postgresql-exception-index-timeout` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-review-long-identifier` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 2/3 (0.67) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 |
+| `postgresql-review-parent-key-update` | 3/3 | 3/3 (1.00) | 2/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-write-advisory-lock` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 |
+| `postgresql-write-offset-pagination` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+
+**What the run showed.** With the updated rules, every `rules-postgresql` case
+scored `3/3` (`24/24` content pass rate, zero regressions) and triggered
+`23/24` (`96%`; one `review-parent-key-update` run skipped `Skill` and still
+passed). On `review-narrow-view-lookup`, the failing base attempt and both
+failing without-plugin attempts approved the query without flagging the
+composite view join for a single base-table column, while all three updated
+runs flagged it and recommended joining `users` with `deleted_at IS NULL`
+(`3/3` vs `2/3` base and `1/3` without; at `n = 3`, a 1-count difference is
+within small-sample variation). `review-duplicate-row-lookup` and
+`exception-view-uses-joined-columns` are ceiling cases (`3/3` in all arms),
+confirming trigger firing and no over-flagging on legitimate multi-column view
+reads.
+
 ## 2026-11-24 — lock review cases (#3879)
 
 Added synthetic review cases for a child insert followed by a parent key
