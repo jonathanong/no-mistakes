@@ -5,7 +5,7 @@ use crate::codebase::rules::github_actions_download_integrity::words::{self, Wor
 mod dynamic;
 mod shell_c;
 
-pub(super) const MAX_NESTED_DEPTH: usize = 4;
+const MAX_NESTED_DEPTH: usize = 4;
 
 #[derive(Debug)]
 pub(super) struct Hit {
@@ -55,7 +55,7 @@ pub(super) fn scan_script(script: &str, compiled: &CompiledOptions) -> Vec<Hit> 
     hits
 }
 
-pub(super) fn scan_nested(
+fn scan_nested(
     script: &str,
     compiled: &CompiledOptions,
     line_offset: usize,
@@ -107,11 +107,34 @@ pub(super) fn scan_nested(
             hits,
         );
     }
+    for (sub_line, body) in &parsed.substitutions {
+        scan_nested_body(
+            body,
+            line_offset + sub_line,
+            "a command substitution",
+            depth,
+            compiled,
+            hits,
+        );
+    }
+}
+
+fn scan_nested_body(
+    body: &str,
+    line: usize,
+    kind: &str,
+    depth: usize,
+    compiled: &CompiledOptions,
+    hits: &mut Vec<Hit>,
+) {
     if depth < MAX_NESTED_DEPTH {
-        for (sub_line, body) in &parsed.substitutions {
-            let offset = line_offset + sub_line.saturating_sub(1);
-            scan_nested(body, compiled, offset, depth + 1, hits);
-        }
+        scan_nested(body, compiled, line.saturating_sub(1), depth + 1, hits);
+    } else {
+        let token = body.lines().next().unwrap_or_default().trim().to_owned();
+        let detail = format!(
+            "exceeds the shell nesting limit at {kind}, so configured command policies could not be checked there. Move the nested commands to a direct run step."
+        );
+        hits.push(unanalyzable(line, token, detail));
     }
 }
 

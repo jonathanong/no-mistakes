@@ -81,3 +81,9 @@ pub(crate) fn check_with_files_sources_and_facts(
 
 #[cfg(test)]
 mod tests;
+
+pub(super) fn validate_options(opts: &Options) -> Result<()> {
+    helpers::build_globset(&opts.source_globs)
+        .map_err(|error| anyhow::anyhow!("options.sourceGlobs: {error}"))?;
+    Ok(())
+}

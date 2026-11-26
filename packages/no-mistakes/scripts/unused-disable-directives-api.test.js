@@ -40,7 +40,7 @@ test(
 for (const [config, failures, advice] of [
   [".no-mistakes.yml", 0, 6],
   ["report.yml", 6, 0],
-  ["ignore.yml", 0, 0],
+  ["ignore.yml", 0, 1],
 ]) {
   test(
     `unused disable directives preserve CLI and async CJS/ESM parity: ${config}`,
@@ -60,13 +60,15 @@ for (const [config, failures, advice] of [
         (a, b) => a.line - b.line,
       );
       assert.ok(diagnostics.every((finding) => finding.file === "web/app/stale.ts"));
-      if (diagnostics.length) {
-        assert.deepEqual(
-          diagnostics.map((finding) => finding.line),
-          [1, 2, 4, 5, 7, 9],
-        );
+      assert.deepEqual(
+        diagnostics.map((finding) => finding.line),
+        config === "ignore.yml" ? [7] : [1, 2, 4, 5, 7, 9],
+      );
+      const unknown = diagnostics.find((finding) => finding.line === 7);
+      assert.equal(unknown.rule, "invalid-disable-directive");
+      assert.equal(unknown.target, "nextjs-no-cacheing");
+      if (config !== "ignore.yml") {
         assert.match(diagnostics[3].message, /disabled/);
-        assert.match(diagnostics[4].message, /unknown/);
       }
       for (const api of [cjs, esm]) {
         assert.deepEqual(await api.check(options), expected);

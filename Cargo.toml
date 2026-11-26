@@ -6,14 +6,14 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.109.122"
+version = "0.109.123"
 edition = "2021"
 rust-version = "1.97"
 license = "MIT"
 repository = "https://github.com/jonathanong/no-mistakes"
 
 [workspace.dependencies]
-no-mistakes-invocation = { version = "=0.109.122", path = "crates/no-mistakes-invocation" }
+no-mistakes-invocation = { version = "=0.109.123", path = "crates/no-mistakes-invocation" }
 
 [workspace.lints.cargo]
 unused_dependencies = "warn"

@@ -19,9 +19,8 @@ fn invalid_policy_options_return_actionable_errors() {
         ("parity-length", "array of length 2"),
         ("unknown-option", "unknown field"),
     ] {
-        let config =
-            crate::config::v2::load_v2_config(&root, Some(&root.join(format!("{case}.yml"))))
-                .unwrap();
+        let path = root.join(format!("{case}.yml"));
+        let config = serde_yaml::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
         let error = diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
             .err()
             .unwrap_or_else(|| panic!("{case} must reject invalid options"));

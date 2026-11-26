@@ -82,7 +82,10 @@ fn hygiene_report_fails_while_ignore_preserves_suppression() {
     assert_eq!(reported["advisories"], json!([]));
     let ignored = report(Some("ignore"), true);
     assert_eq!(ignored["rules"], json!([]));
-    assert_eq!(ignored["advisories"], json!([]));
+    let advisories = ignored["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 1, "{ignored}");
+    assert_eq!(advisories[0]["rule"], "invalid-disable-directive");
+    assert_eq!(advisories[0]["target"], "nextjs-no-cacheing");
     assert_eq!(
         ignored["suppressed"].as_array().unwrap().len(),
         3,

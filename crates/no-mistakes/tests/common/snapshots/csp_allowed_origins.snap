@@ -1,0 +1,644 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "duplicate-directive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://second-only.example.com' used for script-src is not allowed by CSP in src/duplicate.ts. Add 'https://second-only.example.com' to script-src in src/duplicate.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://second-only.example.com/dup.js\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 6,
+          "message": "Origin 'https://dev-only.example.com' used for script-src is not allowed by CSP in src/duplicate.ts. Add 'https://dev-only.example.com' to script-src in src/duplicate.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://dev-only.example.com/dev.js\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic-join-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/dynamic-join.ts",
+          "line": 2,
+          "message": "Dynamic CSP policy expression in src/dynamic-join.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return [",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic-join-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/dynamic-join.ts",
+          "line": 2,
+          "message": "Dynamic CSP policy expression in src/dynamic-join.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return [",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic-nonce-join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://unlisted-img.example.net' used for img-src is not allowed by CSP in src/nonce-join.ts. Add 'https://unlisted-img.example.net' to img-src in src/nonce-join.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted-img.example.net/b.png\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 7,
+          "message": "Origin 'https://unlisted-script.example.net' used for script-src is not allowed by CSP in src/nonce-join.ts. Add 'https://unlisted-script.example.net' to script-src in src/nonce-join.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://unlisted-script.example.net/c.js\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic-ternary": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/ternary.ts",
+          "line": 2,
+          "message": "Dynamic CSP policy expression in src/ternary.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return isDev",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "headers-meta-mixed-quotes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://unlisted.example.net' used for img-src is not allowed by CSP in public/index.html. Add 'https://unlisted.example.net' to img-src in public/index.html or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted.example.net/bad.png\" alt=\"\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "headers-text": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://unlisted.example.net' used for img-src is not allowed by CSP in public/_headers. Add 'https://unlisted.example.net' to img-src in public/_headers or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted.example.net/bad.png\" alt=\"\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed-static-dynamic-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/csp.ts",
+          "line": 10,
+          "message": "Dynamic CSP policy expression in src/csp.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return buildCsp({",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed-static-dynamic-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed-static-dynamic-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/csp.ts",
+          "line": 10,
+          "message": "Dynamic CSP policy expression in src/csp.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return buildCsp({",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multi-policy-files": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://second-only.example.com' used for script-src is not allowed by CSP in src/policy-a.headers, src/policy-b.headers. Add 'https://second-only.example.com' to script-src in src/policy-a.headers, src/policy-b.headers or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://second-only.example.com/dup.js\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 6,
+          "message": "Origin 'https://dev-only.example.com' used for script-src is not allowed by CSP in src/policy-a.headers, src/policy-b.headers. Add 'https://dev-only.example.com' to script-src in src/policy-a.headers, src/policy-b.headers or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://dev-only.example.com/dev.js\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multi-policy-strings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Origin 'https://second-only.example.com' used for script-src is not allowed by CSP in src/multi.ts. Add 'https://second-only.example.com' to script-src in src/multi.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://second-only.example.com/dup.js\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 6,
+          "message": "Origin 'https://dev-only.example.com' used for script-src is not allowed by CSP in src/multi.ts. Add 'https://dev-only.example.com' to script-src in src/multi.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://dev-only.example.com/dev.js\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parse-error-target-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/broken.ts",
+          "line": 1,
+          "message": "Target file src/broken.ts failed to parse and cannot be statically verified against CSP in src/csp.ts. Fix the syntax error or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "export const broken = ;",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse-error-target-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse-error-target-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/broken.ts",
+          "line": 1,
+          "message": "Target file src/broken.ts failed to parse and cannot be statically verified against CSP in src/csp.ts. Fix the syntax error or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "export const broken = ;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/violations.tsx",
+          "line": 10,
+          "message": "Origin 'https://unlisted-media.example.net' used for media-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-media.example.net' to media-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<video src=\"https://unlisted-media.example.net/clip.mp4\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 2,
+          "message": "Origin 'https://unlisted-api.example.net' used for connect-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-api.example.net' to connect-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://unlisted-api.example.net/v1/events\");"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 3,
+          "message": "Origin 'wss://unlisted-rt.example.net' used for connect-src is not allowed by CSP in src/csp.ts. Add 'wss://unlisted-rt.example.net' to connect-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void new WebSocket(\"wss://unlisted-rt.example.net/socket\");"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 6,
+          "message": "Origin 'https://unlisted-analytics.example.net' used for script-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-analytics.example.net' to script-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"https://unlisted-analytics.example.net/sdk.js\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 7,
+          "message": "Origin 'https://unlisted-fonts.example.net' used for style-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-fonts.example.net' to style-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link rel=\"stylesheet\" href=\"https://unlisted-fonts.example.net/app.css\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 8,
+          "message": "Origin 'https://unlisted-cdn.example.net' used for img-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-cdn.example.net' to img-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted-cdn.example.net/hero.png\" alt=\"\" />"
+        },
+        {
+          "file": "src/violations.tsx",
+          "line": 9,
+          "message": "Origin 'https://unlisted-widget.example.net' used for frame-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-widget.example.net' to frame-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<iframe src=\"https://unlisted-widget.example.net/embed\" title=\"widget\" />"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/page.tsx",
+          "line": 13,
+          "message": "Dynamic URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src={dynamicUrl} alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 14,
+          "message": "Malformed network URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a valid origin URL (for example 'https://example.com/path') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://bad host/x.png\" alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 15,
+          "message": "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for src/csp.ts. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link rel={dynamicRel} href=\"https://cdn.example.com/a.css\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 16,
+          "message": "Dynamic URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img {...spreadProps} alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 17,
+          "message": "Dynamic URL used for script-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script {...spreadProps} />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 18,
+          "message": "Dynamic URL used for frame-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<iframe src=\"https://embeds.example.com/ok\" {...spreadProps} title=\"player\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 19,
+          "message": "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for src/csp.ts. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link {...spreadProps} />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Dynamic URL used for connect-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(dynamicUrl);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 6,
+          "message": "Dynamic URL used for connect-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(`https://${host}/v1`);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 12,
+          "message": "Origin 'https://unlisted-proto.example.net' used for script-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-proto.example.net' to script-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"//unlisted-proto.example.net/sdk.js\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 3,
+          "message": "Origin 'https://[2001:db8::2]:8443' used for connect-src is not allowed by CSP in src/csp.ts. Add 'https://[2001:db8::2]:8443' to connect-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://[2001:db8::2]:8443/api\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 12,
+          "message": "Origin 'https://unlisted-proto.example.net' used for script-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-proto.example.net' to script-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"//unlisted-proto.example.net/sdk.js\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 3,
+          "message": "Origin 'https://[2001:db8::2]:8443' used for connect-src is not allowed by CSP in src/csp.ts. Add 'https://[2001:db8::2]:8443' to connect-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://[2001:db8::2]:8443/api\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 12,
+          "message": "Origin 'https://unlisted-proto.example.net' used for script-src is not allowed by CSP in src/csp.ts. Add 'https://unlisted-proto.example.net' to script-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script src=\"//unlisted-proto.example.net/sdk.js\" />"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 13,
+          "message": "Dynamic URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src={dynamicUrl} alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 14,
+          "message": "Malformed network URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a valid origin URL (for example 'https://example.com/path') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://bad host/x.png\" alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 15,
+          "message": "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for src/csp.ts. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link rel={dynamicRel} href=\"https://cdn.example.com/a.css\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 16,
+          "message": "Dynamic URL used for img-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img {...spreadProps} alt=\"\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 17,
+          "message": "Dynamic URL used for script-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<script {...spreadProps} />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 18,
+          "message": "Dynamic URL used for frame-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<iframe src=\"https://embeds.example.com/ok\" {...spreadProps} title=\"player\" />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 19,
+          "message": "Dynamic <link> rel/as attribute cannot be mapped to a CSP directive for src/csp.ts. Use static rel/as literals or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<link {...spreadProps} />",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 3,
+          "message": "Origin 'https://[2001:db8::2]:8443' used for connect-src is not allowed by CSP in src/csp.ts. Add 'https://[2001:db8::2]:8443' to connect-src in src/csp.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://[2001:db8::2]:8443/api\");"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 5,
+          "message": "Dynamic URL used for connect-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(dynamicUrl);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/page.tsx",
+          "line": 6,
+          "message": "Dynamic URL used for connect-src cannot be statically verified against CSP in src/csp.ts. Use a static origin literal (or a static origin prefix such as 'https://host/...') or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(`https://${host}/v1`);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "yaml-block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 6,
+          "message": "Origin 'https://unlisted-yaml.example.net' used for img-src is not allowed by CSP in config/csp.yml. Add 'https://unlisted-yaml.example.net' to img-src in config/csp.yml or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "<img src=\"https://unlisted-yaml.example.net/bad.png\" alt=\"\" />"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

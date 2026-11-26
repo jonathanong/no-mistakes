@@ -1,0 +1,5 @@
+rules:
+  - rule: github-actions-pinned-hash
+    scope: repository
+    options:
+      unanalyzable: report

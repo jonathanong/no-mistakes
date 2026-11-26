@@ -19,6 +19,7 @@ pub(super) fn validate_document(document: &ConfigDocument) -> Result<()> {
 }
 
 pub(super) fn finish(
+    root: &Path,
     config: &mut NoMistakesConfig,
     documents: &[ConfigDocument],
     path: &Path,
@@ -33,7 +34,14 @@ pub(super) fn finish(
             Some((path.to_path_buf(), line))
         })
     })?;
-    super::finish_config(config, path)?;
+    super::finish_config(
+        root,
+        config,
+        path,
+        documents
+            .iter()
+            .map(|doc| (doc.path.as_path(), doc.source.as_str())),
+    )?;
     for (name, policy) in &mut config.tests.vitest.projects {
         let key = ConfigPath::default()
             .key("tests")

@@ -18,6 +18,8 @@ no-mistakes symbols <FILE>... [--root <PATH>] [--tsconfig <FILE>] [--config <FIL
   [--mode list|signature-impact] [--symbol <SYMBOL>]
 ```
 
+Node callers can import `SymbolsMode` and `SymbolsInclude` from `no-mistakes`.
+
 Key options: `--root`, `--tsconfig`, `--config`, repeatable `--kind`, `--include
 exports|imports|both` (default `exports`), `--mode` (default `list`), `--symbol`,
 `--format`, `--json`, and `--timings`. Omitted `--tsconfig` uses the config

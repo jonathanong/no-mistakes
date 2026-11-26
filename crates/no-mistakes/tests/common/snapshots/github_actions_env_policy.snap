@@ -23,6 +23,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disabled_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml: job \"build\" step 1 sets forbidden env `NODE_OPTIONS`. Remove `NODE_OPTIONS` from `env:`. The env policy forbids it because it changes tool or shell behavior.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "NODE_OPTIONS: --inspect",
+          "target": "NODE_OPTIONS"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "dynamic-env": {
     "exitCode": 0,
     "report": {
@@ -114,6 +135,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "null": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 12,
+          "message": ".github/workflows/ci.yml: job \"example\" step 2 sets env `SAMPLE_MODE` to `enabled`. Set `SAMPLE_MODE` to ``. The env policy requires this value wherever it is set.",
+          "rule": "github-actions-env-policy",
+          "sourceLine": "SAMPLE_MODE: enabled",
+          "target": "SAMPLE_MODE"
+        }
+      ],
       "warnings": []
     }
   },

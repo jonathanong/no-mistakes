@@ -145,6 +145,40 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "old-control.md",
+          "line": 6,
+          "message": "docs/index.md: link text \"old-control.md\" does not match target basename \"new-control.md\"",
+          "rule": "markdown-link-display-text",
+          "sourceLine": "[old-control.md](new-control.md)",
+          "target": "new-control.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "duplicate_reference_keeps_first": {
     "exitCode": 0,
     "report": {

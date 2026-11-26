@@ -31,7 +31,7 @@ pub(crate) struct Options {
     pub(crate) unanalyzable_sql: String,
 }
 
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     paths: super::RuleGlobFilter,
     embedded: EmbeddedSqlOptions,
     safe_directive: String,
@@ -58,7 +58,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     )
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         paths: super::RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)

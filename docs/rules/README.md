@@ -5,7 +5,8 @@ These are configured `no-mistakes check` rules. Add them under `rules:` in
 
 Disable comments that suppress nothing produce advisory diagnostics by default.
 Comments naming unknown or disabled rules are reported separately. Configure
-`reportUnusedDisableDirectives: report` to fail or `ignore` to omit them; see
+`reportUnusedDisableDirectives: report` to fail the check. The `ignore` mode
+keeps unknown rule IDs visible as advice. See
 [suppression hygiene](../configuration/suppressions.md).
 
 ```yaml
@@ -65,6 +66,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`config-path-references`](config-path-references.md)                         | Validate path strings in structured config files, including well-known presets. |
 | [`csharp-max-lines-per-file`](csharp-max-lines-per-file.md)                   | Cap C# source/test file length by physical lines.                               |
 | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md)           | Ban async lambdas passed to void Action APIs such as Command.                   |
+| [`csp-allowed-origins`](csp-allowed-origins.md)                               | Flag static third-party browser origins missing from declared CSP directives.   |
 | [`declared-payload-compatibility`](declared-payload-compatibility.md) | Check explicitly declared producer/consumer JSON payload schemas. |
 | [`dependabot-cooldown-policy`](dependabot-cooldown-policy.md)                   | Require a minimum cooldown on Dependabot update entries.                       |
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, banned text, and per-path regex bans.      |
@@ -232,8 +234,9 @@ that names an unknown, disabled, or out-of-scope rule is
 `invalid-disable-directive`; one that suppresses nothing is
 `unused-disable-directive`. Both are advisories by default
 (`reportUnusedDisableDirectives: advise`) and never hide a real finding.
-`report` fails the check; `ignore` omits them. File directives apply even when a finding has no
-line, while line and next-line directives require an exact finding location.
+`report` fails the check. The `ignore` mode omits hygiene diagnostics except
+for unknown rule IDs. File directives apply even when a finding has no line.
+Line and next-line directives require an exact finding location.
 
 Each rule page says when a file-level directive is the practical option. Prefer
 repairing the input or narrowing rule configuration: a suppression intentionally

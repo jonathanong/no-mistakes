@@ -1,4 +1,4 @@
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod patterns;
 mod scan;
 

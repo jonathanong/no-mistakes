@@ -36,6 +36,11 @@ fn no_sparse_checkout_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "action"),
                 empty.clone(),
             ),
+            (
+                "disable_line",
+                rules_path(RULE, "fixture", "disable-line"),
+                empty.clone(),
+            ),
             // Post-suppression only: continuations.yml is fully suppressed.
             ("review_locations", review_root(), empty),
         ],

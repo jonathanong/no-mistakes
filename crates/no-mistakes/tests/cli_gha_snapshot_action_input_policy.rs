@@ -47,6 +47,11 @@ fn github_actions_action_input_policy_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "disabled-file"),
                 policy.clone(),
             ),
+            (
+                "disabled_next_line",
+                rules_path(RULE, "fixture", "suppressions"),
+                rules_path(RULE, "configs", "allowlist.yml"),
+            ),
             // 1 finding: a composite step keeps the wrong artifact lifetime.
             (
                 "composite",

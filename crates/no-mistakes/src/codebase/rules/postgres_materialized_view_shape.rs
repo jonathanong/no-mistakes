@@ -18,7 +18,7 @@ struct BaseTable {
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     min_additional_indexes: Option<u64>,
     window_functions: Vec<String>,
@@ -26,7 +26,7 @@ struct Options {
     allow: Vec<AllowEntry>,
 }
 
-struct Compiled {
+pub(in crate::codebase::rules) struct Compiled {
     path: String,
     additional: u64,
     functions: Vec<String>,
@@ -68,7 +68,7 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
         .collect()
 }
 
-fn compile(options: &Options) -> Result<Compiled> {
+pub(in crate::codebase::rules) fn compile(options: &Options) -> Result<Compiled> {
     require_catalog_path(RULE_ID, &options.schema_catalog_path)?;
     let mut seen = BTreeSet::new();
     for entry in &options.allow_base_tables {

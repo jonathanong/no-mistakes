@@ -3,7 +3,7 @@ use crate::queue::extract_model::EnqueuePriority;
 use crate::queue::graph_model::{CheckFinding, InternalProducer};
 use crate::queue::source::relative_string;
 use crate::queue::test_scope::ConfiguredTestScope;
-use crate::queue::types::QueueKey;
+use crate::queue::types::{Diagnostic, DiagnosticKind, QueueKey, Severity};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -17,14 +17,16 @@ pub(super) fn mixed_priority_findings(
     producers: &[InternalProducer],
     facts: &HashMap<PathBuf, FileFacts>,
     test_scope: &ConfiguredTestScope,
+    diagnostics: &mut Vec<Diagnostic>,
 ) -> Vec<CheckFinding> {
-    let flow_queues = flow_queue_definitions(facts, producers);
+    let producers = producers
+        .iter()
+        .filter(|producer| !test_scope.is_match(root, &producer.site.file))
+        .collect::<Vec<_>>();
+    let flow_queues = flow_queue_definitions(root, facts, &producers, test_scope);
     let opaque = opaque_queues(root, facts, &flow_queues, test_scope);
     let mut groups: HashMap<QueueKey, Vec<&InternalProducer>> = HashMap::new();
     for producer in producers {
-        if test_scope.is_match(root, &producer.site.file) {
-            continue;
-        }
         let Some(queue) = producer.queue.as_ref() else {
             continue;
         };
@@ -34,6 +36,16 @@ pub(super) fn mixed_priority_findings(
             None
         };
         let Some(queue) = resolved_flow_queue(queue, definition) else {
+            diagnostics.push(Diagnostic {
+                severity: Severity::Warning,
+                file: relative_string(root, &producer.site.file),
+                line: producer.site.line,
+                message: format!(
+                    "mixed-priority was not judged for queue {:?} because the flow queue has multiple definition files",
+                    queue.queue_name
+                ),
+                kind: DiagnosticKind::CheckAbstention,
+            });
             continue;
         };
         groups.entry(queue).or_default().push(producer);

@@ -15,6 +15,7 @@ fn test_reliability_check_json_snapshot() {
         "local-playwright",
         "local-playwright-default",
         "playwright-export-shapes",
+        "serial-disable-line",
         "wrapped-fixtures",
         "wrapped-fixtures-configured",
     ]
@@ -23,9 +24,11 @@ fn test_reliability_check_json_snapshot() {
             "workflow-action" | "blank-reason" => {
                 rules_path("test-no-retries", "fixture", "workflow-action")
             }
-            "malformed" | "static-shapes" | "playwright-export-shapes" | "followups" => {
-                rules_path("test-no-retries", "fixture", name)
-            }
+            "malformed"
+            | "static-shapes"
+            | "playwright-export-shapes"
+            | "followups"
+            | "serial-disable-line" => rules_path("test-no-retries", "fixture", name),
             "local-playwright" | "local-playwright-default" => {
                 rules_path("test-no-retries", "fixture", "local-playwright")
             }
@@ -41,6 +44,18 @@ fn test_reliability_check_json_snapshot() {
         )
     });
     assert_saved_fixture("test_reliability", &cases);
+}
+
+#[test]
+fn test_no_retries_line_suppression_json_matches_snapshot() {
+    assert_saved_fixture(
+        "test_no_retries_line_suppression",
+        &[(
+            "retries-disable-line",
+            rules_path("test-no-retries", "fixture", "retries-disable-line"),
+            rules_path("test-no-retries", "configs", "retries-disable-line.yml"),
+        )],
+    );
 }
 
 #[test]
@@ -93,4 +108,72 @@ fn test_reliability_rejects_invalid_scope_globs() {
         assert_eq!(output.status.code(), Some(2), "{name}: {error}");
         assert!(error.contains(diagnostic), "{name}: {error}");
     }
+}
+
+#[test]
+fn uncertain_playwright_factory_check_json_snapshot() {
+    let root = rules_path("test-no-retries", "fixture", "uncertain-factory");
+    let reports = super::check_json_snapshot::assert_saved_fixture_report(
+        "uncertain_playwright_factory",
+        &[("uncertain", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["uncertain"]["report"];
+    assert_eq!(reports["uncertain"]["exitCode"], 1);
+    assert!(report["rules"].as_array().unwrap().is_empty());
+    let incomplete = report["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 2);
+    assert!(incomplete.iter().all(|entry| {
+        entry["consumer"] == "test-no-retries"
+            && entry["message"]
+                .as_str()
+                .unwrap()
+                .contains("local factory return could not be traced statically")
+    }));
+}
+
+#[test]
+fn uncertain_star_playwright_factory_check_json_snapshot() {
+    let root = rules_path("test-no-retries", "fixture", "uncertain-star-factory");
+    let reports = super::check_json_snapshot::assert_saved_fixture_report(
+        "uncertain_star_playwright_factory",
+        &[
+            ("uncertain", root.clone(), root.join(".no-mistakes.yml")),
+            ("configured", root.clone(), root.join("configured.yml")),
+        ],
+        &[],
+        &[],
+    );
+    let report = &reports["uncertain"]["report"];
+    assert_eq!(reports["uncertain"]["exitCode"], 1);
+    assert!(report["rules"].as_array().unwrap().is_empty());
+    let incomplete = report["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 1);
+    assert!(incomplete[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("expression in fixture chain could not be traced statically"));
+    assert_eq!(reports["configured"]["exitCode"], 0);
+    assert!(reports["configured"]["report"]["incomplete"].is_null());
+}
+
+#[test]
+fn uncertain_playwright_receiver_check_json_snapshot() {
+    let root = rules_path("test-no-retries", "fixture", "review-uncertain-binding");
+    let reports = super::check_json_snapshot::assert_saved_fixture_report(
+        "uncertain_playwright_receiver",
+        &[("configured", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["configured"]["report"];
+    assert_eq!(reports["configured"]["exitCode"], 1);
+    let rules = report["rules"].as_array().unwrap();
+    assert_eq!(rules.len(), 4);
+    assert!(rules.iter().all(|entry| {
+        entry["file"] == "tests/local.spec.mts" && matches!(entry["line"].as_u64(), Some(10 | 13))
+    }));
+    let incomplete = report["incomplete"].as_array().unwrap();
+    assert_eq!(incomplete.len(), 5);
 }

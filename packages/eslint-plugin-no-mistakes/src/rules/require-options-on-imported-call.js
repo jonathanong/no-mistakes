@@ -2,6 +2,7 @@
 
 const { ruleSuppression } = require("../rule-suppression");
 const { rule } = require("../helpers");
+const { argumentAt } = require("./logical-call");
 const { createTargetMatcher } = require("./async-targets");
 const {
   compileImportedCallTargets,
@@ -35,7 +36,7 @@ function reportMissing(context, node, target, resolved, suppressed, fallback, re
   const key = requirementKey(target, fallback);
   const seen = reported.get(node);
   if (seen?.has(key)) return;
-  const optionsArg = args[target.optionsPosition - 1];
+  const optionsArg = argumentAt(args, target.optionsPosition - 1);
   const tooMany = exceedsMaxArguments(target, args);
   const badValues = invalidValueProperties(optionsArg, target, context.sourceCode);
   const present = hasRequiredOptions(optionsArg, target, context.sourceCode);
@@ -109,7 +110,7 @@ module.exports = Object.assign(
           selectors.record(node);
         },
         CallExpression(node) {
-          const resolved = matcher?.resolveCallTarget(node) || null;
+          const resolved = matcher?.resolveCallTarget(node, true) || null;
           if (matcher && resolved) {
             for (const target of matchingTargets(
               optionTargets,

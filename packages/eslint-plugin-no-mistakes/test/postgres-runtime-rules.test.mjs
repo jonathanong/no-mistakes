@@ -1434,6 +1434,31 @@ describe("postgres-no-unbounded-query-fanout", () => {
     );
   });
 
+  it("requires statically bounded operands for array spreads", () => {
+    recordIds(
+      fixture("postgres-no-unbounded-query-fanout/array-spread-repro.ts"),
+      "postgres-no-unbounded-query-fanout",
+      { executorNames: ["read"] },
+      "array-spread-repro.ts",
+      [
+        "unboundedFanout",
+        "unboundedFanout",
+        "unboundedFanout",
+        "unboundedFanout",
+        "unboundedFanout",
+        "unboundedFanout",
+        "unboundedFanout",
+      ],
+    );
+    recordIds(
+      fixture("postgres-no-unbounded-query-fanout/array-spread-bounded.ts"),
+      "postgres-no-unbounded-query-fanout",
+      { executorNames: ["read"] },
+      "array-spread-bounded.ts",
+      [],
+    );
+  });
+
   it("ignores maps without executors and non-map Promise.all", () => {
     const code = `
       ${IMPORT}
@@ -1575,10 +1600,10 @@ describe("explicit PostgreSQL executor selection", () => {
 });
 
 it("snapshots postgres runtime rule diagnostics", async () => {
-  // Registry-derived cases grow automatically; the other 91 scenarios are fixed.
+  // Registry-derived cases grow automatically; the other 93 scenarios are fixed.
   assert.equal(
     recorded.length,
-    91 + executorRules.length,
+    93 + executorRules.length,
     "Run the complete runtime file before updating snapshots",
   );
   const byRule = new Map();

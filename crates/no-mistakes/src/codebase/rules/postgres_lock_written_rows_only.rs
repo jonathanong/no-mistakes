@@ -39,7 +39,7 @@ impl CompiledOptions {
 }
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     schema_catalog_path: String,
     include: Vec<String>,
     exclude: Vec<String>,
@@ -58,7 +58,7 @@ struct Options {
     allow: Vec<Allow>,
     write_sets: Vec<WriteSet>,
 }
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     schema_catalog_path: Option<String>,
     paths: super::RuleGlobFilter,
     embedded: EmbeddedSqlOptions,
@@ -110,7 +110,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         scan::scan,
     )
 }
-fn compile(options: &Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile(options: &Options) -> Result<CompiledOptions> {
     policy::validate(options)?;
     let unanalyzable =
         match crate::codebase::postgres::unanalyzable_sql_mode(RULE_ID, &options.unanalyzable_sql)?

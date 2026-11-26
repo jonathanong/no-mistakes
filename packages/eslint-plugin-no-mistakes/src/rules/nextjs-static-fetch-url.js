@@ -17,9 +17,9 @@ module.exports = rule(
   },
   (context) => ({
     CallExpression(node) {
-      const args = fetchInvocation(node, context);
-      if (!args) return;
-      const url = args[0];
+      const invocation = fetchInvocation(node, context);
+      if (!invocation) return;
+      const url = invocation.arguments?.[0];
       if (!isStaticString(url)) {
         context.report({ node: url ?? node, messageId: "dynamic" });
       }

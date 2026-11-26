@@ -1,3 +1,4 @@
+// no-mistakes-disable-next-line nextjs-no-api-route: unknown rule
 export const dense_0 = "ordinary module payload outside raw route demand";
 export const dense_1 = "ordinary module payload outside raw route demand";
 export const dense_2 = "ordinary module payload outside raw route demand";

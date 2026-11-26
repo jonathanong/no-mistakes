@@ -35,7 +35,7 @@ pub(crate) fn extract_program(
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     excludes: Vec<String>,
 }
 

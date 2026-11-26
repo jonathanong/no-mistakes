@@ -4,7 +4,7 @@ mod argument_scope;
 mod arguments;
 pub(crate) use argument_scope::argument_facts_covered;
 pub use argument_scope::{configure_argument_facts, ArgumentFactScope};
-mod config;
+pub(in crate::codebase::rules) mod config;
 mod findings;
 mod root_files;
 mod roots;

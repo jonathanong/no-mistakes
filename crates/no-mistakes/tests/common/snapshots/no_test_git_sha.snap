@@ -101,6 +101,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/example.test.ts",
+          "line": 4,
+          "message": "tests/example.test.ts:4: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
+          "rule": "no-test-git-sha",
+          "sourceLine": "const sibling = \"0123456789abcdef0123456789abcdef01234567\";"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "tests_include": {
     "exitCode": 0,
     "report": {

@@ -15,14 +15,14 @@ reportUnusedDisableDirectives: advise
 | --- | --- |
 | `advise` (default) | Return non-failing diagnostics in `advisories`. |
 | `report` | Return diagnostics in `rules`; CLI `check` exits nonzero. |
-| `ignore` | Omit suppression hygiene diagnostics. |
+| `ignore` | Report unknown rule IDs in `advisories` and omit other hygiene diagnostics. |
 
 `unused-disable-directive` means the named check rule is enabled but the
 comment hid nothing. `invalid-disable-directive` separately identifies an
 unknown rule name, a known rule that is disabled, or an ineffective comment
 placement. Use the canonical rule ID,
-not a rule application's `name`. The structured finding's `target` contains
-that ID; its `rule` identifies the hygiene diagnostic.
+which is the configured `rule` value. The structured finding's `target` contains
+the ID and its `rule` identifies the hygiene diagnostic.
 
 For example, with `postgres-explicit-columns` enabled for this SQL file:
 
@@ -46,7 +46,9 @@ a file skipped by a rule's own `exclude` option (or an option such as
 `sqlInclude`) can still be reported as unused: the audit selects files from the
 declared roots and top-level filters, not from that rule's input options. A
 known rule outside its enabled application scope is reported as disabled or out
-of scope.
+of scope. With no rule applications, unknown IDs are still checked in
+the configured project scopes. If there are no projects, the check uses
+the existing repository source inventory.
 
 An unreadable file in the audit scope is not silently skipped: it produces an
 `unused-disable-directive` read-failure diagnostic at line 1 with
@@ -148,14 +150,17 @@ the union of their scopes. Rule-specific input options do not exclude files
 from that union.
 
 These diagnostics are added after suppression filtering; another disable
-comment cannot hide them. Configure `ignore` to turn the audit off.
+comment cannot hide them. Configure `ignore` to omit hygiene diagnostics other
+than unknown rule IDs, which remain advisory.
 
 The audit reuses the request's source store and retains comment metadata before
 analysis. Suppression filtering builds a request-scoped disable-comment index
 per source file, then looks up findings in that index instead of scanning
 the file's comments for every finding. Checks that otherwise need only paths
-can therefore read additional selected source text. `ignore` skips the audit
-work; suppression filtering for enabled checks retains its existing behavior.
+can therefore read additional selected source text. Under `ignore`, the audit
+still checks for unknown rule IDs and skips unused, disabled, and ineffective
+placement diagnostics; suppression filtering for enabled checks retains its
+existing behavior.
 
 CLI `check`, async `check()`, and `analyzeProject()` reports with
 `type: "check"` use the same repository setting and diagnostic channels.

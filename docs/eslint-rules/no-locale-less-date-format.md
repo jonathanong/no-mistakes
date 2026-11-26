@@ -54,9 +54,9 @@ formatDate(date);
   undecidable calls on configured methods or constructor namespaces: spread
   first arguments (`date.toLocaleString(...args)`,
   `new Intl.DateTimeFormat(...args)`), computed constructor lookups on a
-  configured namespace (`new Intl[name]()`), and `undefined` or configured
-  constructor references inside dynamic `with` or non-strict direct `eval`
-  scopes.
+  configured namespace (`new Intl[name]()`, including through a stable
+  constructor alias), and `undefined` or matched alias and constructor
+  references inside dynamic `with` or non-strict direct `eval` scopes.
 
 Invalid options—such as blank `methods` entries, non-dotted `constructors`
 entries, or unknown `unknownValues` strings—fail schema validation at config
@@ -94,11 +94,13 @@ export default [{
 ## Limits
 
 Direct helper calls such as `formatDate(date)` are never checked, even if the
-helper name matches a configured method. Optional calls and static string or
-expression-free template member keys are checked. Constructor entries match
-direct references such as `Intl.DateTimeFormat`. Dynamic method keys, qualified
-namespace references such as `globalThis.Intl`, detached aliases, and indirect
-`.call`/`.apply` invocations are outside the rule.
+helper name matches a configured method. Optional calls, static string and
+expression-free template member keys, and same-file `const` aliases of those
+keys are checked. Constructor entries match direct references such as
+`Intl.DateTimeFormat` and same-file `const` aliases of those references.
+TypeScript assertions on the aliases are transparent. Dynamic method keys,
+qualified namespaces such as `globalThis.Intl`, detached instance methods, and
+indirect `.call`/`.apply` invocations are outside the rule.
 A spread first argument, a dynamic computed member on a configured constructor
 namespace, and references in dynamic `with` or non-strict direct `eval` scopes
 stay unknown under the default `unknownValues: "ignore"` and report findings

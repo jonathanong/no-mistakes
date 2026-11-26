@@ -40,8 +40,9 @@ error.diagnostics?.hotFiles.map((file) => file.pass);
 collectDiagnostics("dependents");
 // @ts-expect-error Live polling is independent of collection.
 collectDiagnostics("diagnosticsSnapshot", { id: "run" });
-// @ts-expect-error Raw Markdown bindings do not return structured diagnostics.
-collectDiagnostics("testsComment", {});
+const markdown: Promise<DiagnosticsResult<string>> = collectDiagnostics("testsComment", {});
+const mermaid: Promise<DiagnosticsResult<string>> = collectDiagnostics("testsGraphMermaid", {});
+void [markdown, mermaid];
 // @ts-expect-error Unknown selectors are rejected.
 collectDiagnostics("unknown");
 void [optional, required, defaults, declared, symbols, signature, paths, graph, single, batch, sql, sqlBatch, extracted, ordering, complete];

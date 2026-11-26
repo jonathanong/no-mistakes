@@ -140,3 +140,14 @@ See [Analysis scope and shared facts](analysis-scope.md) for report scope overri
 request-scoped fact sharing, and ordinary importer resolution.
 
 [Node/N-API guide](../node-api.md)
+
+## Git and patch inputs
+
+Pass `base` when providing `head` to `testsPlan()` or `impactedChecks()`.
+Both APIs reject a head revision without a base. `testsPlan()` also accepts
+`fromGitDiff` as an alternative to explicit revisions.
+
+For `impactedChecks()`, use `diffFile` to read a patch file relative to the
+Node process's current working directory or `diff` to pass the patch text
+directly. These options and `diffStdin: true` and `diffCommand` are mutually
+exclusive. Conflicting sources reject before any patch input is read.

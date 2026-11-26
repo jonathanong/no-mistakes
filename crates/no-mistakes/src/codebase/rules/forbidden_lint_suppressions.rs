@@ -17,7 +17,7 @@ use std::{
     sync::Arc,
 };
 mod comments;
-mod options;
+pub(in crate::codebase::rules) mod options;
 pub(crate) use comments::{collect, Suppression};
 pub const RULE_ID: &str = "forbidden-lint-suppressions";
 

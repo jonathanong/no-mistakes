@@ -30,8 +30,14 @@ describe("required global and receiver selector aliases", () => {
       ]),
     );
   });
-  it("preserves binding, dynamic key, default and uncertain forwarding limits", () => {
-    assert.deepEqual(check("selector-alias-controls"), []);
+  it("reports opaque arguments on confirmed targets and skips unresolved callees", () => {
+    assert.deepEqual(
+      check("selector-alias-controls").map(({ line, messageId }) => [line, messageId]),
+      [
+        [20, "missingOptions"],
+        [21, "missingOptions"],
+      ],
+    );
     assert.deepEqual(check("selector-alias-suppressed"), []);
   });
   it("does not classify a property default that actually invokes another API", () => {

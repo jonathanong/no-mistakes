@@ -48,6 +48,7 @@ pub(super) fn collect_with_scope(
     let mut supplemental_plan = CheckFactPlan {
         nested_control_paths: Arc::clone(&plan.nested_control_paths),
         vitest_default_exclude_paths: Arc::clone(&plan.vitest_default_exclude_paths),
+        csp_allowed_origins_paths: Arc::clone(&plan.csp_allowed_origins_paths),
         test_reliability_paths: Arc::clone(&plan.test_reliability_paths),
         ..Default::default()
     };
@@ -122,6 +123,7 @@ fn collect_missing(
         .iter()
         .chain(plan.nested_control_paths.iter())
         .chain(plan.vitest_default_exclude_paths.iter())
+        .chain(plan.csp_allowed_origins_paths.iter())
         .chain(plan.test_reliability_paths.keys())
         .filter(|path| !facts.ts.contains_key(path))
         .cloned()

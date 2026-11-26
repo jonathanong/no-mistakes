@@ -17,7 +17,7 @@ const FORBIDDEN_KEYS: &[&str] = &["sparse-checkout", "sparse-checkout-cone-mode"
 pub(crate) struct Options {
     pub(crate) include: Vec<String>,
 }
-struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     include: super::path_filter::GlobMatcher,
 }
 
@@ -80,7 +80,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     super::sort_findings(&mut findings);
     Ok(findings)
 }
-fn compile_options(options: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile_options(options: Options) -> Result<CompiledOptions> {
     let include = if options.include.is_empty() {
         DEFAULT_INCLUDE
             .iter()

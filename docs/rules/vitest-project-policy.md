@@ -228,7 +228,7 @@ The rule reuses the Vitest config parser's lexical utilities and the request's
 source store and parsed-program cache. Static object/array literals, local
 constant bindings, supported config wrappers, explicit helper imports, and
 object spreads preserve source locations. Only explicit `extends: true` applies
-root inheritance here, excluding [`name`, `projects`, and root `globalSetup`](https://main.vitest.dev/guide/projects#configuration); version-specific inheritance defaults are not inferred.
+root inheritance here, excluding [`name`, `projects`, and root `globalSetup`](https://vitest.dev/guide/projects#configuration); version-specific inheritance defaults are not inferred.
 Root values are otherwise used for comparison only when requested.
 
 For effective `required`, `forbidden`, and `parity` policies, non-literal

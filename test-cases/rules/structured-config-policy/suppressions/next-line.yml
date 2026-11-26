@@ -1,0 +1,5 @@
+base: &base {color: green}
+shared: &shared {<<: *base}
+copy: *shared
+# no-mistakes-disable-next-line structured-config-policy
+runtime: {<<: 7}

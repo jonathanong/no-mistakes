@@ -806,6 +806,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control.yml",
+          "line": 4,
+          "message": "control.yml: failed to apply YAML merge keys (expected a mapping or list of mappings for merging, but found scalar)",
+          "rule": "structured-config-policy",
+          "sourceLine": "runtime: {<<: 7}"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "unknown_kind": {
     "exitCode": 1,
     "report": {

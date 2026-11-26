@@ -164,7 +164,7 @@ still report. The mock applies only to the root file that declares it; another
 root still follows the real implementation. Suppressions apply at the reported
 source line as usual. Factories registered with `vi.mock` or `jest.mock` are
 always included for the declaring root, including registrations inside uncalled
-helpers: [`vi.mock` is hoisted regardless of its position](https://v4.vitest.dev/api/vi#vi-mock).
+helpers: [`vi.mock` is hoisted regardless of its position](https://vitest.dev/api/vi#vi-mock).
 Only top-level registrations can prove full replacement; a nested mock keeps
 the real implementation reachable. Other registrations, including `vi.doMock`, include their
 factories only when the registration owner is reachable, using the normal call

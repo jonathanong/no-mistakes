@@ -118,29 +118,23 @@ fn finite_set_effort_total_count_can_exceed_max_for_compatible_source_sets() {
 #[test]
 fn finite_set_effort_propagates_source_and_remaining_rule_errors() {
     let root = fixture();
-    for (config, expected) in [
-        ("missing-source-ignore.yml", "absent.ts"),
-        ("remaining-rule-error.yml", "banned-paths"),
-    ] {
-        let report = run_all_with_options(
+    let run = |config: &str| {
+        run_all_with_options(
             root.clone(),
             Some(root.join(config)),
             None,
             false,
             false,
-            AnalysisOptions {
-                effort: None,
-                include_sql_verdicts: false,
-            },
+            AnalysisOptions::default(),
         )
-        .unwrap();
-        assert!(
-            report
-                .incomplete
-                .iter()
-                .any(|failure| failure.message.contains(expected)),
-            "{config}: {:?}",
-            report.incomplete
-        );
-    }
+    };
+    let report = run("missing-source-ignore.yml").unwrap();
+    assert!(report
+        .incomplete
+        .iter()
+        .any(|failure| failure.message.contains("absent.ts")));
+    let error = run("remaining-rule-error.yml")
+        .err()
+        .expect("invalid sibling options must abort");
+    assert!(error.to_string().contains("banned-paths"), "{error:#}");
 }

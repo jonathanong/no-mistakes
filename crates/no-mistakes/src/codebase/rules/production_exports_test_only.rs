@@ -1,4 +1,4 @@
-mod config;
+pub(in crate::codebase::rules) mod config;
 mod extends;
 mod nextjs;
 mod prerequisites;

@@ -5,7 +5,7 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 mod scan;
 mod text;
 

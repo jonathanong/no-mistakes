@@ -45,7 +45,7 @@ rules:
     message: Route paths must be static literals
     options:
       backendPattern: backend/api/**
-  - rule: no-dynamic-server-components
+  - rule: nextjs-no-caching
     projects:
       - web
-    message: No dynamic server components allowed
+    message: Require a declared caching policy

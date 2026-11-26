@@ -1,0 +1,38 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: names
+          file: names.yml
+          kind: yaml-sequence
+          key: values
+        - name: control
+          file: control.yml
+          kind: yaml-sequence
+          key: values
+        - name: file
+          file: disabled-file.yml
+          kind: yaml-sequence
+          key: values
+        - name: line
+          file: disabled-line.yml
+          kind: yaml-sequence
+          key: values
+        - name: nextLine
+          file: disabled-next-line.yml
+          kind: yaml-sequence
+          key: values
+      comparisons:
+        - left: names
+          right: control
+          mode: glob-coverage
+        - left: names
+          right: file
+          mode: glob-coverage
+        - left: names
+          right: line
+          mode: glob-coverage
+        - left: names
+          right: nextLine
+          mode: glob-coverage

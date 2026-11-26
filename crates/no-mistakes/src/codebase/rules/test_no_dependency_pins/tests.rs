@@ -267,9 +267,13 @@ fn custom_patterns_do_not_get_the_placeholder_exemption() {
     assert_eq!(pins, ["tool-0.0.0", "tool-2.0.0", "tool-3.0.0"]);
 }
 
+fn default_compiled_options() -> &'static CompiledOptions {
+    static DEFAULT: std::sync::OnceLock<CompiledOptions> = std::sync::OnceLock::new();
+    DEFAULT.get_or_init(|| compile_options(&Options::default()).unwrap())
+}
+
 fn default_pins(source: &str) -> Vec<String> {
-    let compiled = compile_options(&Options::default()).unwrap();
-    check_source("src/pin.test.mts", source, &compiled)
+    check_source("src/pin.test.mts", source, default_compiled_options())
         .into_iter()
         .filter_map(|finding| finding.import)
         .collect()
@@ -430,13 +434,14 @@ fn missing_file_and_action_ref_lookbehind() {
         ],
     )
     .unwrap();
-    assert!(findings.is_empty(), "{findings:#?}");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "src/missing.test.mts");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 
-    let compiled = compile_options(&Options::default()).unwrap();
     let findings = check_source(
         "src/start.test.mts",
         "actions/checkout@v4\n@actions/checkout@v4\n",
-        &compiled,
+        default_compiled_options(),
     );
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].line, 1);
@@ -480,6 +485,5 @@ fn regex_literals_with_line_terminators_are_not_pins() {
     let source =
         std::fs::read_to_string(fixture("regex-action-refs").join("defaults/line-terminators.txt"))
             .unwrap();
-    let options = compile_options(&Options::default()).unwrap();
-    assert!(check_source("regex.test.mts", &source, &options).is_empty());
+    assert!(check_source("regex.test.mts", &source, default_compiled_options()).is_empty());
 }

@@ -12,7 +12,7 @@ const GITHUB_MAX_MINUTES: u64 = 360;
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     include: Vec<String>,
     max_minutes: Option<u64>,
     allow: Vec<AllowEntry>,

@@ -12,6 +12,22 @@ pub(super) fn run(
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        REQUIRED_DOC_SECTION => required_local_docs::diagnostics_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        )
+        .map(|output| output.findings),
+        TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::diagnostics_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        )
+        .map(|output| output.findings),
         STRUCTURED_CONFIG_POLICY => structured_config_policy::diagnostics_with_files_and_sources(
             root,
             config,

@@ -60,7 +60,8 @@ fn imported_member_calls_keep_every_argument_shape_and_receiver_alias_visible() 
 fn standalone_low_preparation_reports_invalid_legacy_policy() {
     let root = fixture().join("effort-member-args");
     let files = vec![root.join("tests/member.test.ts")];
-    let config = crate::config::v2::load_v2_config(&root, Some(&root.join("invalid.yml"))).unwrap();
+    let config =
+        serde_yaml::from_str(&std::fs::read_to_string(root.join("invalid.yml")).unwrap()).unwrap();
     let sources = super::super::super::source_store_for_files(&files);
     let error = check_with_files_and_sources(&root, &config, &files, &sources).unwrap_err();
     assert!(error

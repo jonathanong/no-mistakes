@@ -2,6 +2,27 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "custom/widgets.yml",
+          "line": 6,
+          "message": "ast-grep ignore `custom/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- custom/missing.ts",
+          "target": "custom/missing.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "explicit_files": {
     "exitCode": 1,
     "report": {

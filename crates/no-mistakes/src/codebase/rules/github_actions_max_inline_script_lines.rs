@@ -13,7 +13,7 @@ pub const RULE_ID: &str = "github-actions-max-inline-script-lines";
 
 #[derive(Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-struct Options {
+pub(in crate::codebase::rules) struct Options {
     max_lines: usize,
 }
 
@@ -39,10 +39,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = super::run_rule_applications(config, RULE_ID, |rule| {
         let opts: Options = rule.try_rule_options()?;
-        anyhow::ensure!(
-            opts.max_lines > 0,
-            "{RULE_ID} maxLines must be a positive integer"
-        );
+        validate_options(&opts)?;
         let files = super::selected_rule_files(root, config, rule, files)?;
         Ok(files.par_iter().flat_map(|path| {
             let rel = relative_slash_path(root, path);
@@ -85,3 +82,11 @@ mod tests;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod alignment_tests;
+
+pub(super) fn validate_options(opts: &Options) -> Result<()> {
+    anyhow::ensure!(
+        opts.max_lines > 0,
+        "{RULE_ID} options.maxLines must be a positive integer"
+    );
+    Ok(())
+}

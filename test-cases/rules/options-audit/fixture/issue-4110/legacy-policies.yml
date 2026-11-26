@@ -1,0 +1,20 @@
+version: 2
+rules:
+  - rule: unique-exports
+    scope: repository
+    options:
+      unanalyzableSql: obsolete
+  - rule: postgres-lock-inventory
+    scope: repository
+    options:
+      executorNames: []
+      unanalyzable: report
+  - rule: swift-no-unguarded-darwin-import
+    scope: repository
+    include: ["[Swift"]
+  - rule: required-doc-section
+    scope: repository
+    include: ["[docs"]
+    options:
+      glob: "**/*.md"
+      requiredHeading: "## Usage"

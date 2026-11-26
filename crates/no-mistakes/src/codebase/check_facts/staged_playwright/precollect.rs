@@ -31,6 +31,7 @@ pub(super) fn cached_config_file_facts(
             .filter(|path| !precollected.contains_key(path))
             .filter_map(|path| {
                 let demanded = plan.vitest_default_exclude_paths.contains(path)
+                    || plan.csp_allowed_origins_paths.contains(path)
                     || plan.nested_control_paths.contains(path)
                     || plan.test_reliability_paths.contains_key(path);
                 if !demanded && !universe.contains(path) && !plan.legacy_symbol_paths.contains(path)

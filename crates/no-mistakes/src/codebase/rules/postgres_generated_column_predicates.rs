@@ -9,7 +9,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-mod compile;
+pub(in crate::codebase::rules) mod compile;
 use compile::compile_options;
 mod scan;
 mod validate;
@@ -28,7 +28,7 @@ pub(crate) struct ExtraGeneratedColumn {
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
