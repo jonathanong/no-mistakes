@@ -43,4 +43,4 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT leave work stranded in a non-terminal state when the event it waits for can be lost.
 - SHOULD NOT select work without a stable order when fairness or repeatability matters.
 - SHOULD NOT let one sweep's failure or backlog stop an independent sweep from making progress.
-- SHOULD NOT let one sweep's mutable state (a tally, budget, or cursor map) decide another sweep's work. See [bounded-iteration](https://github.com/jonathanong/skills/blob/main/skills/bounded-iteration/SKILL.md).
+- SHOULD NOT let one sweep's mutable state (a tally, budget, or cursor map) decide another sweep's work. See [bounded-iteration](https://github.com/jongleberry/ratchet-stack/blob/main/plugins/ratchet-backend/skills/bounded-iteration/SKILL.md).
