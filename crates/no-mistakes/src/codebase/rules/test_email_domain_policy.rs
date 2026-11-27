@@ -66,49 +66,42 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            anyhow::ensure!(
-                opts.banned_domains.is_some(),
-                "{RULE_ID}: bannedDomains is required"
-            );
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            if opts.banned_domains.as_ref().is_none_or(Vec::is_empty) {
-                return Ok(Vec::new());
-            }
-            let mut compiled = compile_options(&opts)?;
-            compiled.audit = Some(ExceptionAudit::new(
-                root,
-                config,
-                rule,
-                sources,
-                "allowedEmailPatterns",
-                &opts.allowed_email_patterns,
-            ));
-            let mut findings: Vec<_> = files
-                .par_iter()
-                .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
-                .collect();
-            findings.extend(compiled.audit.as_ref().unwrap().finish(sources, |path| {
-                let rel = relative_slash_path(root, path);
-                compiled.extensions.iter().any(|ext| rel.ends_with(ext))
-            }));
-            Ok(findings)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        anyhow::ensure!(
+            opts.banned_domains.is_some(),
+            "{RULE_ID}: bannedDomains is required"
+        );
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
+            .cloned()
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        if opts.banned_domains.as_ref().is_none_or(Vec::is_empty) {
+            return Ok(Vec::new());
+        }
+        let mut compiled = compile_options(&opts)?;
+        compiled.audit = Some(ExceptionAudit::new(
+            root,
+            config,
+            rule,
+            sources,
+            "allowedEmailPatterns",
+            &opts.allowed_email_patterns,
+        ));
+        let mut findings: Vec<_> = files
+            .par_iter()
+            .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
+            .collect();
+        findings.extend(compiled.audit.as_ref().unwrap().finish(sources, |path| {
+            let rel = relative_slash_path(root, path);
+            compiled.extensions.iter().any(|ext| rel.ends_with(ext))
+        }));
+        Ok(findings)
+    })
 }
 
 pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<CompiledOptions> {

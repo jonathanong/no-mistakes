@@ -66,47 +66,34 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let compiled = compile_options(&opts)?;
-            if compiled.threshold.is_none() {
-                return Ok(Vec::new());
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let compiled = compile_options(&opts)?;
+        if compiled.threshold.is_none() {
+            return Ok(Vec::new());
+        }
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
+            .cloned()
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let mut findings: Vec<_> = files
+            .par_iter()
+            .flat_map(|path| scan_file(root, path, &compiled, sources))
+            .collect();
+        if let Some(message) = rule.message.as_deref() {
+            for finding in &mut findings {
+                finding.message = format!("{message} {}", finding.message);
             }
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|path| {
-                    super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-                })
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let mut findings: Vec<_> = files
-                .par_iter()
-                .flat_map(|path| scan_file(root, path, &compiled, sources))
-                .collect();
-            if let Some(message) = rule.message.as_deref() {
-                for finding in &mut findings {
-                    finding.message = format!("{message} {}", finding.message);
-                }
-            }
-            if !defer_suppression {
-                super::suppression::suppress_rule_findings_with_sources(
-                    root,
-                    &mut findings,
-                    sources,
-                );
-            }
-            Ok(findings)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+        }
+        if !defer_suppression {
+            super::suppression::suppress_rule_findings_with_sources(root, &mut findings, sources);
+        }
+        Ok(findings)
+    })
 }
 
 pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<Compiled> {
