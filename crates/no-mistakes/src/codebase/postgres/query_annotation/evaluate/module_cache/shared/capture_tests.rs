@@ -94,23 +94,42 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
 }
 
 #[test]
-fn begin_shared_capture_skips_when_untrusted_mode_differs() {
+fn mismatched_mode_stays_pure_until_initialization_reads_the_flag() {
     let target = PathBuf::from("target.mts");
     let facts = QueryAnnotationFileFacts::default();
     let (ids, files) = empty_files(std::slice::from_ref(&target), &facts);
     let target_id = ids.id(&target);
     let resolve = |_: &str, _: &std::path::Path| None;
-    let shared = Arc::new(SharedInit {
-        untrusted_array_intrinsics: false,
-        eligible: [target_id].into_iter().collect(),
-        direct_deps: FxHashMap::default(),
-        entries: dashmap::DashMap::new(),
-    });
+    let make_shared = || {
+        Arc::new(SharedInit {
+            untrusted_array_intrinsics: false,
+            eligible: [target_id].into_iter().collect(),
+            direct_deps: FxHashMap::default(),
+            entries: dashmap::DashMap::new(),
+        })
+    };
+    let shared = make_shared();
     let mut eval = evaluator::new(&files, resolve, true);
     eval.modules.shared = Some(Arc::clone(&shared));
     let env = eval.environment_scope(Scope::default());
-    assert!(eval.begin_shared_capture(target_id, env).is_none());
-    assert!(shared.entries.get(&target_id).is_none());
+    let guard = eval.begin_shared_capture(target_id, env).unwrap();
+    eval.finish_shared_capture(target_id, env, guard);
+    assert!(matches!(
+        shared.entries.get(&target_id).as_deref(),
+        Some(SharedEntry::Pure(_))
+    ));
+
+    let shared = make_shared();
+    let mut eval = evaluator::new(&files, resolve, true);
+    eval.modules.shared = Some(Arc::clone(&shared));
+    let env = eval.environment_scope(Scope::default());
+    let guard = eval.begin_shared_capture(target_id, env).unwrap();
+    eval.modules.untrusted_intrinsic_reads += 1;
+    eval.finish_shared_capture(target_id, env, guard);
+    assert!(matches!(
+        shared.entries.get(&target_id).as_deref(),
+        Some(SharedEntry::Impure)
+    ));
 }
 
 #[test]

@@ -26,7 +26,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     || (collection && matches!(receiver, Value::Array(_)))
                     || self.handled_deletion_effect(callee, &target, path, *env);
                 // Preserve collection-specific failure reasons after guarding the fetch.
-                if collection && (!fetched || self.untrusted_array_intrinsics) {
+                if collection && (!fetched || self.observed_untrusted_array_intrinsics()) {
                     self.invalidate_live_builders();
                 }
                 let handled = handled && (collection || fetched);

@@ -27,10 +27,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: Environment,
     ) -> Option<SharedCaptureGuard> {
         let shared = self.modules.shared.as_ref()?;
-        if !shared.eligible.contains(&module_id)
-            || shared.entries.contains_key(&module_id)
-            || shared.untrusted_array_intrinsics != self.untrusted_array_intrinsics
-        {
+        if !shared.eligible.contains(&module_id) || shared.entries.contains_key(&module_id) {
             return None;
         }
         Some(SharedCaptureGuard {
@@ -46,7 +43,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         guard: SharedCaptureGuard,
     ) {
         let entries = &guard.shared.entries;
-        if !self.is_clean_init(env, guard.before) {
+        let read_other_mode = guard.before().untrusted != guard.shared.untrusted_array_intrinsics
+            && self.modules.untrusted_intrinsic_reads != guard.before().untrusted_reads;
+        if read_other_mode || !self.is_clean_init(env, guard.before()) {
             entries.entry(module_id).or_insert(SharedEntry::Impure);
             return;
         }

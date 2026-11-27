@@ -18,6 +18,7 @@ pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     pub(in crate::codebase::postgres::query_annotation) captured_inits:
         FxHashMap<ModuleId, Option<(Environment, Scope)>>,
     pub(in crate::codebase::postgres::query_annotation) untrusted_intrinsic_writes: u64,
+    pub(in crate::codebase::postgres::query_annotation) untrusted_intrinsic_reads: u64,
 }
 
 pub(in crate::codebase::postgres::query_annotation) mod shared;
@@ -40,6 +41,7 @@ impl ModuleCache {
             capture_on_init: FxHashMap::default(),
             captured_inits: FxHashMap::default(),
             untrusted_intrinsic_writes: 0,
+            untrusted_intrinsic_reads: 0,
         }
     }
 }
@@ -58,7 +60,8 @@ impl DerefMut for ModuleCache {
 
 #[derive(Clone, Copy)]
 pub(in crate::codebase::postgres::query_annotation) struct InitPuritySnapshot {
-    untrusted: bool,
+    pub(in crate::codebase::postgres::query_annotation) untrusted: bool,
+    pub(in crate::codebase::postgres::query_annotation) untrusted_reads: u64,
     untrusted_writes: u64,
     events: usize,
     invalidated: usize,
@@ -77,6 +80,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) -> InitPuritySnapshot {
         InitPuritySnapshot {
             untrusted: self.untrusted_array_intrinsics,
+            untrusted_reads: self.modules.untrusted_intrinsic_reads,
             untrusted_writes: self.modules.untrusted_intrinsic_writes,
             events: self.event_log.len(),
             invalidated: self.invalidated_builders.len(),

@@ -22,6 +22,12 @@ use crate::fx::FxHashSet;
 use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
+    pub(super) fn observed_untrusted_array_intrinsics(&mut self) -> bool {
+        self.modules.untrusted_intrinsic_reads =
+            self.modules.untrusted_intrinsic_reads.wrapping_add(1);
+        self.untrusted_array_intrinsics
+    }
+
     pub(super) fn mark_untrusted_array_intrinsics(&mut self) {
         self.untrusted_array_intrinsics = true;
         self.modules.untrusted_intrinsic_writes =
