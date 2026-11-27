@@ -178,8 +178,8 @@ Restore read access or fix the YAML syntax so the rule can verify the file. Vali
 still checked.
 
 Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray
-byte is still reported. A file that cannot be read for any other reason is
-skipped.
+byte is still reported. Other read failures in selected files follow the
+[unanalyzable policy](#unanalyzable-inputs).
 
 ## Related rules
 
