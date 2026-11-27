@@ -99,6 +99,10 @@ impl<'a> Rules<'a> {
     }
 }
 
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[path = "rules_compile_tests.rs"]
+mod compile_tests;
+
 fn compile_id<'a>(id: Option<&'a IdRule>, keyed: &mut Vec<KeyOptions>) -> Result<Id<'a>> {
     let Some(id) = id else {
         return Ok(Id::Path);
