@@ -583,9 +583,9 @@ implementation: inspect the measured source and fixtures, keep fixture preflight
 invariants, and repeat matched measurements in both base/head orders. Include a
 repeat of the same binary as a control for variation between runs.
 
-[Investigation #1171](https://github.com/jonathanong/no-mistakes/issues/1171)
+[Investigation #1171](https://github.com/jongleberry/no-mistakes/issues/1171)
 examined the language-frontend report on
-[the synthetic resolve-check fixture cleanup](https://github.com/jonathanong/no-mistakes/pull/1168#issuecomment-5969771786).
+[the synthetic resolve-check fixture cleanup](https://github.com/jongleberry/no-mistakes/pull/1168#issuecomment-5969771786).
 The report compared the expected base `ffc6bb12` with head `14df367b`, and both
 language jobs used `ubuntu-24.04-arm`. The measured language sources, benchmark
 adapter, and `fixtures/lang-frontends` corpus were unchanged. Every local run
@@ -624,9 +624,9 @@ without it, test mode runs each selected benchmark once without measurement.
 
 ### PostgreSQL finite-array control runs
 
-[Investigation #1327](https://github.com/jonathanong/no-mistakes/issues/1327)
+[Investigation #1327](https://github.com/jongleberry/no-mistakes/issues/1327)
 followed frontend timing and memory reports on the PostgreSQL stack. A matched
-local comparison used the final [finite-array change #1188](https://github.com/jonathanong/no-mistakes/pull/1188),
+local comparison used the final [finite-array change #1188](https://github.com/jongleberry/no-mistakes/pull/1188),
 base `eb9513395` and head `f7c719dee`. The frontend collectors, benchmark adapter,
 `SourceStore`, and `fixtures/lang-frontends` corpus were unchanged. Every run
 passed the preflight invariants: 117 files, 69 parsed files, and 125 edges.
@@ -654,7 +654,7 @@ frontend code.
 The comparison covers the final merged change, rather than the historical
 `f11dbed` and `dd055b5` report. It does not validate ARM64 CPU simulation, native
 frontend timings, or memory measurements. The expected-base edges memory report
-on [alias facts #1341](https://github.com/jonathanong/no-mistakes/pull/1341#issuecomment-5975440043)
+on [alias facts #1341](https://github.com/jongleberry/no-mistakes/pull/1341#issuecomment-5975440043)
 therefore remains a measurement that has not been validated, not a disproved regression.
 [CodSpeed documents that concurrent allocation ordering can vary allocation
 counts and peak memory](https://codspeed.io/docs/instruments/memory#limitations).
@@ -671,7 +671,7 @@ an unchanged language frontend control.
 ### PostgreSQL finite-array allocation controls
 
 The remaining memory and allocation-call-path work for
-[investigation #1327](https://github.com/jonathanong/no-mistakes/issues/1327)
+[investigation #1327](https://github.com/jongleberry/no-mistakes/issues/1327)
 used the same base `eb9513395` and final head `f7c719dee` as the timing controls.
 A temporary Linux allocation probe wrapped Rust's `System` allocator, counting
 successful allocation/reallocation calls and requested bytes, and tracking peak

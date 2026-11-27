@@ -86,7 +86,7 @@ The measured baseline is `bdcd31ae5a7d060cc5b4c7a795d0924882d57266`
 (version 0.109.29); the measured candidate is
 `3f9266460b3dd934ff37fb39179e8e02ea7cbb3d` (version 0.109.29).
 These tables retain the exact 0.109.29 comparison. The
-[PR report](https://github.com/jonathanong/no-mistakes/pull/3172) records the final
+[PR report](https://github.com/jongleberry/no-mistakes/pull/3172) records the final
 matched comparison after rebases over later runtime changes. Both library and
 executable artifacts were rebuilt (`fresh: false`)
 from their own worktrees with the same lockfile and release settings. The

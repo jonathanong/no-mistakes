@@ -2,7 +2,7 @@
 
 <!-- cspell:ignore supabase finalizer codegen -->
 
-Issue [#3052](https://github.com/jonathanong/no-mistakes/issues/3052) reproduces
+Issue [#3052](https://github.com/jongleberry/no-mistakes/issues/3052) reproduces
 on the public `supabase/supabase` repository at
 `b360605842ed537d137778765ec98f4c3482749a`, with only
 `unconstructed-error-class` enabled. The vendored
@@ -145,6 +145,6 @@ The initial remaining-repository parity result above belongs to the initial
 candidate. The final budget also catches `editor.main.js`, so removing only
 `tsWorker.js` does not establish complete analysis. Ordinary full-fact controls
 and existing rule snapshots remain unchanged. Final control results and the
-validation summary are reported in [PR #3056](https://github.com/jonathanong/no-mistakes/pull/3056).
+validation summary are reported in [PR #3056](https://github.com/jongleberry/no-mistakes/pull/3056).
 These are memory observations for aborted/incomplete analysis, not a claim of
 complete-workload throughput.

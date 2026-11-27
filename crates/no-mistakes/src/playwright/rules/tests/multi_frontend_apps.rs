@@ -1,7 +1,7 @@
 //! Regression coverage for
-//! <https://github.com/jonathanong/no-mistakes/issues/624> (findings dropped
+//! <https://github.com/jongleberry/no-mistakes/issues/624> (findings dropped
 //! or misattributed across multiple `type: nextjs` projects) and
-//! <https://github.com/jonathanong/no-mistakes/issues/625> (`src/app` route
+//! <https://github.com/jongleberry/no-mistakes/issues/625> (`src/app` route
 //! patterns coming out as `/src/app/...` instead of `/...`), using the
 //! shared fixture at `fixtures/playwright/multi-frontend-apps/`.
 

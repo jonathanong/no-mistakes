@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonathanong/no-mistakes.git",
+    "url": "git+https://github.com/jongleberry/no-mistakes.git",
     "directory": "packages/no-mistakes-win32-x64-msvc"
   },
   "files": [

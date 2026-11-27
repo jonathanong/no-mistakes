@@ -70,8 +70,8 @@ Use two independent checkouts and targets. The baseline needs only the
 benchmark files, fixtures, and target declaration from the candidate:
 
 ```sh
-git clone https://github.com/jonathanong/no-mistakes.git scopes-before
-git clone https://github.com/jonathanong/no-mistakes.git scopes-candidate
+git clone https://github.com/jongleberry/no-mistakes.git scopes-before
+git clone https://github.com/jongleberry/no-mistakes.git scopes-candidate
 git -C scopes-before checkout e7d7cb2bcfc17c4d2a59de717c190044f3358686
 git -C scopes-candidate checkout 7002bc1ba5920b550b61854952a4752f97e2f45b
 git -C scopes-before checkout 7002bc1ba5920b550b61854952a4752f97e2f45b -- \

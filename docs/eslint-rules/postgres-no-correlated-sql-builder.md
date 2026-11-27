@@ -15,7 +15,7 @@ publishes nothing.
 
 This rule is opt-in. It is not part of `configs.recommended` or `configs.strict`.
 It does not autofix. Ordinary object mutation stays in
-[issue #2219](https://github.com/jonathanong/no-mistakes/issues/2219).
+[issue #2219](https://github.com/jongleberry/no-mistakes/issues/2219).
 
 ## Disallowed
 

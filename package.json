@@ -3,14 +3,14 @@
   "version": "0.109.123",
   "private": true,
   "description": "Deterministic AST-based codebase intelligence for humans and AI agents",
-  "homepage": "https://github.com/jonathanong/no-mistakes#readme",
+  "homepage": "https://github.com/jongleberry/no-mistakes#readme",
   "bugs": {
-    "url": "https://github.com/jonathanong/no-mistakes/issues"
+    "url": "https://github.com/jongleberry/no-mistakes/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonathanong/no-mistakes.git"
+    "url": "git+https://github.com/jongleberry/no-mistakes.git"
   },
   "workspaces": [
     "packages/*"
