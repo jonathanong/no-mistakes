@@ -1,4 +1,4 @@
-use super::expr_norm::function::pure_name;
+use super::expr_norm::types::projection_expr_is_unproven;
 use super::expr_norm::ExprNormalizer;
 use super::join::record_lookup;
 use super::normalize::{extract_lookup_key, LookupKey};
@@ -167,7 +167,7 @@ fn projection_is_unproven(select: &Select) -> bool {
         }
 
         fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-            if matches!(expr, Expr::Function(function) if pure_name(function).is_none()) {
+            if projection_expr_is_unproven(expr) {
                 return ControlFlow::Break(());
             }
             ControlFlow::Continue(())

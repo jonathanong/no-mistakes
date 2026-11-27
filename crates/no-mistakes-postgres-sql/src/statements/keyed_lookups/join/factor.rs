@@ -4,7 +4,7 @@ use super::super::table::lookup_table;
 use super::super::{inspect_exprs, walk_query};
 use super::register_join_chain;
 use super::using_clause::UsingColumns;
-use crate::idents::{function_arg_expr, object_name_identity};
+use crate::idents::{function_arg_expr, ident_key, object_name_identity};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::TableFactor;
 use std::collections::BTreeMap;
@@ -34,6 +34,15 @@ pub(super) fn register_factor(
         } => {
             inspect_exprs(args.iter().filter_map(function_arg_expr), scopes, seen, out);
             Some(scopes.add_table(name, alias.as_ref()))
+        }
+        TableFactor::UNNEST {
+            alias, array_exprs, ..
+        } => {
+            inspect_exprs(array_exprs, scopes, seen, out);
+            let qualifier = alias
+                .as_ref()
+                .map_or_else(|| "unnest".to_owned(), |alias| ident_key(&alias.name));
+            Some(scopes.add_named_alias(qualifier))
         }
         TableFactor::Derived {
             subquery, alias, ..

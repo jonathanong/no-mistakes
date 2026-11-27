@@ -1,9 +1,7 @@
-use super::normalize::LookupKey;
-use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr};
+use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
 use crate::idents::visit_shallow_exprs;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{Expr, OrderByKind, Query};
-use std::collections::BTreeMap;
 
 pub(super) fn walk_query(
     query: &Query,
@@ -18,7 +16,7 @@ pub(super) fn walk_query_ordered(
     enclosing_order: &[&Expr],
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) {
+) -> LookupHistory {
     if let Some(with) = &query.with {
         for cte in &with.cte_tables {
             walk_query(&cte.query, scopes, out);
@@ -36,22 +34,23 @@ pub(super) fn walk_query_ordered(
         }
         _ => enclosing_order,
     };
-    walk_set_expr(&query.body, order, scopes, out);
-    inspect_limits(query, scopes, out);
+    let mut seen = walk_set_expr(&query.body, order, scopes, out);
+    inspect_limits(query, scopes, &mut seen, out);
+    seen
 }
 
 fn inspect_limits(
     query: &Query,
     scopes: &mut ScopeStack,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     if query.limit_clause.is_none() && query.fetch.is_none() {
         return;
     }
     let outer = scopes.snapshot();
-    let mut seen = BTreeMap::<LookupKey, _>::new();
     let targets = super::select_exprs::ProjectionTargets::default();
-    let mut visit = |expr: &Expr| subquery::inspect_expr(expr, &outer, &targets, &mut seen, out);
+    let mut visit = |expr: &Expr| subquery::inspect_expr(expr, &outer, &targets, seen, out);
     visit_shallow_exprs(&query.limit_clause, &mut visit);
     visit_shallow_exprs(&query.fetch, &mut visit);
     walk_nested_queries(&query.limit_clause, scopes, out);

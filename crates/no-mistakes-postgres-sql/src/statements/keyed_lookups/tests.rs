@@ -188,3 +188,26 @@ fn proves_using_bindings_and_distinguishes_reused_window_targets_from_frame_boun
         .collect();
     assert_eq!(sites, [(19, 20), (32, 33), (40, 41), (71, 72)]);
 }
+
+#[test]
+fn shares_lookup_history_for_unnest_and_query_limits_and_checks_projection_purity() {
+    let facts = fixture_facts("review-shared-query");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (3, 4),
+            (8, 9),
+            (14, 15),
+            (21, 22),
+            (28, 29),
+            (51, 52),
+            (56, 57)
+        ]
+    );
+}

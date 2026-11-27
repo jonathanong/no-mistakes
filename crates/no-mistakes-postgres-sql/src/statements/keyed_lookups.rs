@@ -21,6 +21,8 @@ use sqlparser::ast::{
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
 
+type LookupHistory = BTreeMap<LookupKey, (usize, usize)>;
+
 pub(crate) fn collect(statement: &Statement, out: &mut Vec<SqlDuplicateKeyedLookupFact>) {
     let mut scopes = ScopeStack::default();
     walk_statement(statement, &mut scopes, out);
@@ -65,7 +67,7 @@ fn walk_set_expr(
     order_exprs: &[&Expr],
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) {
+) -> LookupHistory {
     match body {
         SetExpr::Select(select) => walk_select(select, order_exprs, scopes, out),
         SetExpr::Query(query) => query::walk_query_ordered(query, order_exprs, scopes, out),
@@ -83,16 +85,21 @@ fn walk_set_expr(
                 out,
             );
             scopes.pop_frame();
+            seen
         }
         SetExpr::SetOperation { left, right, .. } => {
             walk_set_expr(left, &[], scopes, out);
             walk_set_expr(right, &[], scopes, out);
+            LookupHistory::new()
         }
         SetExpr::Update(statement)
         | SetExpr::Delete(statement)
         | SetExpr::Insert(statement)
-        | SetExpr::Merge(statement) => walk_statement(statement, scopes, out),
-        _ => {}
+        | SetExpr::Merge(statement) => {
+            walk_statement(statement, scopes, out);
+            LookupHistory::new()
+        }
+        _ => LookupHistory::new(),
     }
 }
 
@@ -101,7 +108,7 @@ fn walk_select(
     order_exprs: &[&Expr],
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) {
+) -> LookupHistory {
     scopes.push_frame();
     let mut seen = BTreeMap::new();
     for table in &select.from {
@@ -114,6 +121,7 @@ fn walk_select(
         walk_nested_queries(expr, scopes, out);
     }
     scopes.pop_frame();
+    seen
 }
 
 fn returning_exprs(items: Option<&[SelectItem]>) -> impl Iterator<Item = &Expr> {

@@ -1,9 +1,9 @@
 pub(super) mod function;
-mod types;
+pub(super) mod types;
 
 use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, unwrap_expr};
-use sqlparser::ast::{BinaryOperator, CastKind, Expr, Ident, InTarget, OrderByExpr, Value};
+use sqlparser::ast::{CastKind, Expr, Ident, InTarget, OrderByExpr, Value};
 
 pub(super) struct ExprNormalizer<'a> {
     self_qualifier: Option<&'a str>,
@@ -79,18 +79,11 @@ impl<'a> ExprNormalizer<'a> {
                 let inner = self.normalize(expr)?;
                 Some(format!("unary({op},{})", atom(&inner)))
             }
-            Expr::BinaryOp { left, op, right }
-                if !matches!(
-                    op,
-                    BinaryOperator::Custom(_) | BinaryOperator::PGCustomBinaryOperator(_)
-                ) =>
-            {
-                Some(format!(
-                    "bin({op},{},{})",
-                    atom(&self.normalize(left)?),
-                    atom(&self.normalize(right)?)
-                ))
-            }
+            Expr::BinaryOp { left, op, right } if !types::is_custom_operator(op) => Some(format!(
+                "bin({op},{},{})",
+                atom(&self.normalize(left)?),
+                atom(&self.normalize(right)?)
+            )),
             Expr::Function(function) => function::normalize(function, |arg| self.normalize(arg)),
             predicate if self.key_anchor.is_none() => self.predicate(predicate),
             _ => None,
