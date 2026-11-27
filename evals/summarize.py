@@ -75,13 +75,18 @@ def _fired(runs) -> int:
     )
 
 
-def _mean_score(runs) -> float:
-    """Mean weighted grader score per run, with `skill-fired` left out."""
+#: Graders that record which tool the answer used rather than how good it is.
+#: `content` scores leave them out so a gain from naming a command shows apart.
+USAGE_GRADERS = ("skill-fired", "names-graph-command")
+
+
+def _mean_score(runs, skip=("skill-fired",)) -> float:
+    """Mean weighted grader score per run, with `skip` graders left out."""
     per_run = []
     for r in runs:
         num = den = 0.0
         for g in r.get("graders", []):
-            if g["name"] == "skill-fired":
+            if g["name"] in skip:
                 continue
             weight = g.get("weight", 1)
             den += weight
@@ -116,9 +121,16 @@ def summarize(path: str) -> bool:
     report = json.loads(pathlib.Path(path).read_text())
     suite = report.get("suite", {})
     plugins = ", ".join(p.get("path", "?") for p in suite.get("plugins", []))
+    judge_cost = sum(
+        r.get("judgeCostUsd") or 0
+        for case in report["cases"]
+        for runs in case["arms"].values()
+        for r in runs
+    )
     print(f"\n=== {path}")
     print(
-        f"    ablation={suite.get('ablation')}  cost=${report.get('costUsd', 0):.2f}"
+        f"    ablation={suite.get('ablation')}  agent=${report.get('costUsd', 0):.2f}"
+        f"  judge=${judge_cost:.2f}"
         f"  partial={report.get('partial')} {report.get('partialReason') or ''}"
     )
     print(f"    plugin: {plugins}")
@@ -145,7 +157,10 @@ def summarize(path: str) -> bool:
         print("    !!  Per-case scores are shown where available. The aggregate is suppressed.")
         print()
 
-    print(f"    {'case':<38} {'fired':>7} {'with':>6} {'without':>8} {'delta':>7}")
+    print(
+        f"    {'case':<38} {'fired':>7} {'with':>6} {'without':>8} {'delta':>7}"
+        f" {'content':>8}"
+    )
 
     fired_total = runs_total = 0
     for case in report["cases"]:
@@ -175,7 +190,13 @@ def summarize(path: str) -> bool:
         row = f"    {case['name']:<38} {fired:>3}/{len(with_arm):<3} {with_score:>6.2f}"
         if without_arm:
             without_score = _mean_score(without_arm)
-            row += f" {without_score:>8.2f} {with_score - without_score:>+7.2f}"
+            content = _mean_score(with_arm, USAGE_GRADERS) - _mean_score(
+                without_arm, USAGE_GRADERS
+            )
+            row += (
+                f" {without_score:>8.2f} {with_score - without_score:>+7.2f}"
+                f" {content:>+8.2f}"
+            )
         else:
             row += f" {'-':>8} {'-':>7}"
         print(row)
