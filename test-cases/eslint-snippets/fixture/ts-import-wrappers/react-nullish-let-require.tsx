@@ -25,3 +25,11 @@ var varModule = require(moduleName);
 export function varDynamic(child: varModule.ReactNode) {
   return child ?? "fallback";
 }
+
+declare const list: { head: { next: unknown } };
+
+let node = list.head;
+node = node.next;
+
+var linked = mutual?.x;
+var mutual = linked?.y;
