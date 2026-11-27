@@ -166,6 +166,15 @@ fn rate_limit_delay_collect_handles_missing_graph_sessions_and_invalid_filters()
     )
     .is_err());
 
+    let plain = crate::codebase::analysis_session::AnalysisSession::disabled();
+    assert!(rate_limit_delay::collect(
+        &req(&root, &shared, &bad_filter_cfg, Some(&graph)),
+        Some(&plain),
+        &mut findings,
+        &mut advisories,
+    )
+    .is_err());
+
     bad_filter_cfg.rules[0].include.clear();
     rate_limit_delay::collect(
         &req(&root, &shared, &bad_filter_cfg, Some(&graph)),

@@ -6,5 +6,6 @@ export const worker = createWorker("jobs", async (job) => {
     case "page":
       enqueueJob(queue, "page", {}, { deduplication: { id: job.id } });
       enqueueJob(queue, "page", {}, { deduplication: { mode: "debounce", ttl: 5 } });
+      enqueueJob(queue, "page", {}, { deduplication: { mode: job.name, ttl: 5 } });
   }
 });

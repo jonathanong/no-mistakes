@@ -182,6 +182,7 @@ mod getter_import_kinds;
 mod callback_roots;
 mod env_diagnostic;
 
+mod dynamic_scope_paths;
 mod rest_and_guards;
 
 mod local_env_boundaries;

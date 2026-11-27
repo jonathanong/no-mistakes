@@ -35,6 +35,16 @@ fn detector_gaps_report_renamed_jobs_member_waits_and_wrapper_options() {
         "wrapper options should see debounce ttl, check: {:?}",
         report.check
     );
+    assert!(
+        report.diagnostics.iter().any(|diagnostic| {
+            diagnostic.file.ends_with("enqueues/wrapper-dedup.mts")
+                && diagnostic
+                    .message
+                    .contains("debounce-ttl was not judged because deduplication options")
+        }),
+        "a dynamic debounce mode should abstain, diagnostics: {:?}",
+        report.diagnostics
+    );
     assert_eq!(
         count(&report.check, "routes/member-wait.mts", "enqueue-and-wait"),
         2,
@@ -248,4 +258,10 @@ fn conflicting_factory_indexes_are_rejected_and_wait_scopes_narrow() {
         repo,
         std::slice::from_ref(&broken)
     ));
+}
+
+#[test]
+fn build_filter_rejects_an_invalid_glob() {
+    let error = crate::queue::graph_model::build_filter(&["[".to_string()]);
+    assert!(error.is_err(), "{error:?}");
 }

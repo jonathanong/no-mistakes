@@ -31,5 +31,6 @@ export function absentEdgeCases(
   if (flag) throw new GroupRateLimitError({ get retryAfterMs() { return undefined; } } as unknown as number);
   if (flag) throw new GroupRateLimitError({ __proto__: undefined } as unknown as number);
   if (flag) throw new GroupRateLimitError(getOpts() as unknown as number);
+  if (flag) throw new GroupRateLimitError(...arr);
   shadowed(5000);
 }
