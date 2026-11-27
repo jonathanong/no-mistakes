@@ -1,6 +1,6 @@
 # Improving the evals
 
-Gaps between `evals/` and the `jong-skills:evals` conventions, ordered by what each
+Gaps between `evals/` and the eval-suite conventions, ordered by what each
 would let the suite decide. Written 2026-11-26. Nothing here is built. Current
 scores are in [`evals/README.md`](../../evals/README.md), the run log in
 [`evals/HISTORY.md`](../../evals/HISTORY.md), the editing rules in
@@ -19,7 +19,7 @@ scores are in [`evals/README.md`](../../evals/README.md), the run log in
 | 7 | No tracking CSV | Scores live in prose across README and HISTORY, so trends and rows without a run are found by reading | One append-only `evals/results.csv` (date, commit, model, judge, case, arm, attempts, loaded, passed, cost) that `summarize.py` appends and the README table is built from | medium |
 | 8 | README holds history | Per-grader decompositions, old-model tables, and variant narratives sit in the README | Move to HISTORY.md; keep one table from one run | done in the structure PR, keep it that way |
 | 9 | Loading gaps in the rules plugin | Five of 19 measured rules cases loaded 0 or 1 of 3 times on 2026-11-26 (`queue-exception-enqueue-in-tx-receipt` 0/3, `testing-write-flaky-response-wait` 0/3, `testing-exception-raised-coverage-floor` 0/3, `queue-review-entity-only-dedup-id` 1/3, `testing-review-lowered-coverage-floor` 1/3) | Report loading as its own table, then try `describe` variants for queue and testing, six attempts or more per case | $5 per variant |
-| 10 | Rows without a current run | The tool-skill table is from 2026-11-21 and the `github-actions` and off-topic rows from 2026-11-17 | Re-run `--tag rules-github-actions rules-offtopic` (about $4) and the tool-skill flows (about $45) in one session | $50 |
+| 10 | Rows without a current run | The tool-skill table is from 2026-11-21 and the `github-actions` and off-topic guard rows from 2026-11-17 | Re-run `--tag rules-github-actions` and the off-topic guard tag (about $4) and the tool-skill flows (about $45) in one session | $50 |
 | 11 | Pilot results are not recorded | A pilot that fails a grader leaves no entry, so the next person repeats it | Add a HISTORY.md entry for any abandoned or auth-failed run | small |
 
 ## Grader weaknesses to fix
