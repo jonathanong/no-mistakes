@@ -82,7 +82,7 @@ export const registeredOrigins = [
   "https://cdn.example.com",
 ] as const;
 
-// src/csp.ts
+// src/registry.ts
 import { registeredOrigins } from "./origins";
 
 export function buildCsp() {
