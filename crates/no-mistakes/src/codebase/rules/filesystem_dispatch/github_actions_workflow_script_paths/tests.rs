@@ -348,6 +348,8 @@ fn checks_edge_cases_fixture_composites_include_and_unreadable_paths() {
         "scripts/dup.sh",
         "scripts/from-composite.sh",
         "scripts/deep.sh",
+        "via `.github/actions/opaque/action.yml`) has a non-string `run` value",
+        "via `.github/actions/opaque/action.yml`) uses dynamic local action",
         "Update on.pull_request.paths, on.push.paths-ignore",
     ] {
         assert!(

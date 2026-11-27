@@ -1,0 +1,6 @@
+name: Opaque composite
+runs:
+  using: composite
+  steps:
+    - run: 7
+    - uses: ./.github/actions/${{ matrix.nested }}

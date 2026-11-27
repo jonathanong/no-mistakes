@@ -43,7 +43,9 @@ When a workflow cannot be proven statically—invalid YAML, unreadable bytes,
 YAML merge keys or unrecognized `on:` / `paths:` shapes, dynamic `paths`
 expressions or unsupported extended globs, dynamic command names, `eval`, dynamic
 `bash -c`, dynamic script paths under `scriptDirs`, dynamic `working-directory`,
-unterminated shell syntax, or unreadable local composite actions—the rule
+unterminated shell syntax, unreadable local composite actions, a non-string
+`run` inside a local composite action, or a nested `./` action that is
+dynamic or cannot be resolved—the rule
 abstains from reporting a pass and records an `unanalyzable` diagnostic
 governed by `options.unanalyzable` (default `advise`).
 

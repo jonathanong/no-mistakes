@@ -86,9 +86,16 @@ fn walk_action(
         let Some(step) = step.as_mapping() else {
             continue;
         };
-        if let Some(script) = mapping_get(step, "run").and_then(Value::as_str) {
-            let dir = step_working_dir(step);
-            hits.extend(scripts::scan_script(script, dir, script_dirs));
+        if let Some(run_val) = mapping_get(step, "run") {
+            if let Some(script) = run_val.as_str() {
+                let dir = step_working_dir(step);
+                hits.extend(scripts::scan_script(script, dir, script_dirs));
+            } else {
+                hits.push(unanalyzable_hit(
+                    "run",
+                    "has a non-string `run` value; write a literal shell script so workflow path filters can be checked.",
+                ));
+            }
         }
         if let Some(nested) = mapping_get(step, "uses").and_then(Value::as_str) {
             if let Some(nested_dir) = normalize_local_uses(nested) {
@@ -101,10 +108,27 @@ fn walk_action(
                     visited,
                     hits,
                 );
+            } else if nested.trim().starts_with("./") {
+                hits.push(unanalyzable_hit(
+                    nested,
+                    &format!(
+                        "uses dynamic local action `{nested}`, which cannot be statically checked against workflow path filters."
+                    ),
+                ));
             }
         }
     }
     action_path
+}
+
+fn unanalyzable_hit(token: &str, detail: &str) -> ScriptHit {
+    ScriptHit {
+        line: 1,
+        kind: ScriptHitKind::Unanalyzable {
+            token: token.to_string(),
+            detail: detail.to_string(),
+        },
+    }
 }
 
 fn step_working_dir(step: &Mapping) -> WorkingDir {

@@ -32,3 +32,4 @@ jobs:
       - uses: ./.github/actions/no-steps
       - uses: ./
       - uses: ./.github/actions/outer
+      - uses: ./.github/actions/opaque
