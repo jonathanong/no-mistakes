@@ -31,3 +31,27 @@ export function constAssert(child: ReactNode) {
   const text = child as const;
   return (text as const) ?? null;
 }
+
+export function assertedAlias(props: { children: ReactNode }) {
+  const textProps = props as { children: string };
+  return textProps.children ?? "";
+}
+
+export function assertedMember(props: { children: ReactNode }) {
+  return (props as { children: string }).children ?? "";
+}
+
+export function assertedDestructure(props: { children: ReactNode }) {
+  const { children } = props as { children: string };
+  return children ?? "";
+}
+
+export function assertedNode(props: { children: ReactNode }) {
+  const nodeProps = props as { children: ReactNode };
+  return nodeProps.children ?? null;
+}
+
+export function assertedMissing(props: { children: ReactNode }) {
+  const textProps = props as Missing;
+  return textProps.children ?? "";
+}

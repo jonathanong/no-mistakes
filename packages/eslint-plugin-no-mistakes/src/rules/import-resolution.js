@@ -63,27 +63,26 @@ function importBindingFact(def) {
   const moduleName = def.parent?.source?.value;
   if (typeof moduleName !== "string") return { unresolved: true };
   const typeOnly = typeOnlyImport(def);
-  if (node?.type === "ImportNamespaceSpecifier") {
-    return { module: moduleName, kind: "namespace", imported: null, typeOnly };
-  }
-  if (node?.type === "ImportDefaultSpecifier") {
-    return { module: moduleName, kind: "default", imported: null, typeOnly };
-  }
+  if (node?.type === "ImportNamespaceSpecifier" || node?.type === "ImportDefaultSpecifier")
+    return {
+      module: moduleName,
+      kind: node.type === "ImportDefaultSpecifier" ? "default" : "namespace",
+      imported: null,
+      typeOnly,
+    };
   if (node?.type === "ImportSpecifier") {
     const imported = importedSpecifierName(node);
     if (!imported) return { unresolved: true };
-    if (imported === "default") {
+    if (imported === "default")
       return { module: moduleName, kind: "default", imported: null, typeOnly };
-    }
     return { module: moduleName, kind: "named", imported, typeOnly };
   }
   return { unresolved: true };
 }
 
 function patternLocal(value) {
-  let current = value;
-  while (current?.type === "AssignmentPattern") current = current.left;
-  return current?.type === "Identifier" ? current : null;
+  while (value?.type === "AssignmentPattern") value = value.left;
+  return value?.type === "Identifier" ? value : null;
 }
 
 function patternImported(pattern, name) {
@@ -137,6 +136,21 @@ function defMayBeImport(def, context, seen) {
   return Boolean(variable?.defs.some((item) => defMayBeImport(item, context, seen)));
 }
 
+function reassignedFact(def, variable, context, seen) {
+  const fact = (node) => node && importFact(node, context, seen);
+  if (fact(def.node.init)) return { unresolved: true };
+  for (const reference of variable.references ?? []) {
+    if (!reference.isWrite() || reference.init) continue;
+    const parent = reference.identifier?.parent;
+    const value =
+      parent?.type === "AssignmentExpression" &&
+      parent.left === reference.identifier &&
+      parent.right;
+    if (!value || fact(value)) return { unresolved: true };
+  }
+  return null;
+}
+
 function importFact(node, context, seen = new Set()) {
   const current = unwrapSequence(node);
   if (!current || !context?.sourceCode?.getScope) return null;
@@ -167,7 +181,7 @@ function importFact(node, context, seen = new Set()) {
   if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
   const kind = def.parent?.kind;
   if (def.type === "Variable" && def.node?.id?.type === "Identifier" && def.node.init) {
-    if (kind !== "const" && written) return { unresolved: true };
+    if (kind !== "const" && written) return reassignedFact(def, variable, context, seen);
     return importFact(def.node.init, context, seen);
   }
   return null;
@@ -187,16 +201,11 @@ function importSpellings(root, localPath, context) {
   if (fact.typeOnly) return { names: [], unresolved: false };
   if (fact.kind === "named" && fact.imported && fact.imported !== root.name) {
     if (localPath === root.name) return { names: [fact.imported], unresolved: false };
-    if (localPath.startsWith(`${root.name}.`)) {
-      return {
-        names: [`${fact.imported}${localPath.slice(root.name.length)}`],
-        unresolved: false,
-      };
-    }
+    if (localPath.startsWith(`${root.name}.`))
+      return { names: [`${fact.imported}${localPath.slice(root.name.length)}`], unresolved: false };
   }
-  if (fact.kind === "namespace" && localPath.startsWith(`${root.name}.`)) {
+  if (fact.kind === "namespace" && localPath.startsWith(`${root.name}.`))
     return { names: [localPath.slice(root.name.length + 1)], unresolved: false };
-  }
   return { names: [], unresolved: false };
 }
 

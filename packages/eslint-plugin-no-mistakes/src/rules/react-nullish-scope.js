@@ -1,17 +1,20 @@
 "use strict";
 
-const { literalString } = require("./module-mock-helpers");
 const { unwrapSequence } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const {
   assertedType,
   bindPatternNames,
   definePattern,
-  keyName,
   reactTypeStatus,
   typeAnnotation,
 } = require("../react-node-types");
-const { classifiedProps } = require("./react-nullish-props");
+const {
+  assertedObjectFacts,
+  classifiedProps,
+  memberExpressionStatus,
+  objectInitFacts,
+} = require("./react-nullish-props");
 
 const isObjectPattern = (node) => node && node.type === "ObjectPattern";
 const isIdentifier = (node) => node && node.type === "Identifier";
@@ -105,6 +108,8 @@ function createNullishState(context) {
   }
 
   function objectAliasProps(node) {
+    const asserted = assertedObjectFacts(node.init, facts);
+    if (asserted) return node.parent.kind === "const" ? asserted : null;
     const init = unwrapSequence(node.init);
     if (node.parent.kind !== "const" || init?.type !== "Identifier") return null;
     const source = resolveVariable(init, context);
@@ -173,16 +178,14 @@ function createNullishState(context) {
     if (node.id.type === "ArrayPattern")
       return bindPatternNames(node.id, (name) => defineBinding(name, scope));
     if (!isObjectPattern(node.id)) return;
-    const init = unwrapSequence(node.init);
-    const initProps = isIdentifier(init) ? lookupMembers(init, "objectTypes") : null;
-    const initUnresolved = isIdentifier(init) ? lookupMembers(init, "unresolvedMembers") : null;
+    const initFacts = objectInitFacts(node.init, facts, lookupMembers);
     const classified = classifiedProps(type, facts);
     definePattern(
       node.id,
-      classified.props || initProps,
+      classified.props || initFacts.props,
       (name) => defineBinding(name, scope),
       (name) => defineReactNode(name, scope),
-      classified.unresolved || initUnresolved,
+      classified.unresolved || initFacts.unresolved,
       (name) => defineUnresolved(name, scope),
     );
   }
@@ -192,13 +195,9 @@ function createNullishState(context) {
     if (asserted) return reactTypeStatus(asserted, facts);
     const current = unwrapSequence(node);
     if (isIdentifier(current)) return variableStatus(current.name);
-    if (current?.type !== "MemberExpression") return "no";
-    const object = unwrapSequence(current.object);
-    if (!isIdentifier(object)) return "no";
-    const key = current.computed ? literalString(current.property) : keyName(current.property);
-    if (key && lookupMembers(object, "objectTypes")?.has(key)) return "yes";
-    if (key && lookupMembers(object, "unresolvedMembers")?.has(key)) return "unresolved";
-    return "no";
+    return current?.type === "MemberExpression"
+      ? memberExpressionStatus(current, facts, lookupMembers)
+      : "no";
   }
 
   function enterFunction(node) {

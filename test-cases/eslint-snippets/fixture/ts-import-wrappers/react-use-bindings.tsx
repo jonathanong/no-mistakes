@@ -63,3 +63,15 @@ Written = null;
 export function writtenLetRequire() {
   return Written.use(Promise.resolve(1));
 }
+
+let local = (value: unknown) => value;
+local = (value: unknown) => value;
+export function localRewrite() {
+  return local(Promise.resolve(1));
+}
+
+let adopted = (value: unknown) => value;
+adopted = use;
+export function adoptedUse() {
+  return adopted(Promise.resolve(1));
+}
