@@ -99,7 +99,13 @@ placeholders remain typed parameters. Outside a loop or `CASE` arm, a non-litera
 statement. Outside a loop or `CASE` arm, an unsupported modifier after a
 decoded literal is also statement kind `other`. Inside those forms it has
 no typed statement.
-An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
+An unquoted `INTO` ends the command operand the same way `USING` does. The
+occurrence is classified from the decoded command. `INTO` adds no diagnostic
+of its own. Completeness still follows occurrence recognition, diagnostics,
+and statement checks. Outside a loop or `CASE` arm, the leftover modifier is
+statement kind `other`, which keeps that block incomplete. Inside a loop or
+`CASE` arm, a decoded `controlFlow` command can leave the block complete.
+This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
 INSERT assignment `complete` describes represented syntax independently of
