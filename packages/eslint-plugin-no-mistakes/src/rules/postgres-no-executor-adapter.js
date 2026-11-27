@@ -13,6 +13,7 @@ const {
 const { TS_ASSERTIONS, executorLeaves } = require("./postgres-no-executor-adapter-ref");
 const { classifyFunction } = require("./postgres-no-executor-adapter-forward");
 const { resolvePassed } = require("./postgres-no-executor-adapter-passed");
+const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 const { createReporters } = require("./postgres-no-executor-adapter-report");
 const { libraryAdapter } = require("./postgres-no-executor-adapter-library");
 const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
@@ -40,6 +41,8 @@ module.exports = rule(
         "This callback only forwards to {{executor}}. Call that executor on the SQL text (`{{direct}}`{{alias}}). Passing the function into a helper (`{{rejected}}`) does not connect the statement to the executor, so analysis cannot see it.",
       blocked:
         "This adapter hides {{executor}} from SQL analysis ({{reason}}). Call the executor on the SQL text (`{{direct}}`{{alias}}). `{{rejected}}` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+      unanalyzable:
+        "This passed executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the adapter can be judged. A dynamic module is not a clean result.",
       passed:
         "This call passes {{executor}} into a helper. Name the executor inside the helper{{form}} instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
     },
@@ -132,6 +135,10 @@ module.exports = rule(
         return;
       }
       const passed = resolvePassed(expr, context, bindings, options, new Set());
+      if (passed?.unanalyzable) {
+        reportUnanalyzable(context, argument, unanalyzablePolicy(context.options?.[0]));
+        return;
+      }
       if (!passed) return;
       if (passed.adapter) {
         if (wrapped && !passed.adapter.reason) passed.adapter.reason = "type assertion";

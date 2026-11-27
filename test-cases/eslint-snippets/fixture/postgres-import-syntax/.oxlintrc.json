@@ -1,0 +1,148 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "categories": {
+    "correctness": "off"
+  },
+  "rules": {
+    "eslint/no-unused-vars": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "pool-listener-ok.ts",
+        "pool-other.ts",
+        "pool-limits.ts",
+        "pool-import-equals.ts",
+        "pool-computed.ts",
+        "pool-dynamic.ts",
+        "pool-edges.ts",
+        "pool-named-unresolved.ts"
+      ],
+      "rules": {
+        "no-mistakes/postgres-pool-requires-error-listener": "error"
+      }
+    },
+    {
+      "files": [
+        "builder-local.ts",
+        "builder-limits.ts",
+        "builder-require.ts",
+        "builder-dynamic.ts",
+        "builder-edges.ts"
+      ],
+      "rules": {
+        "no-mistakes/postgres-no-async-sql-builder": [
+          "error",
+          { "builders": [{ "source": "@example/sql", "callees": ["sql"] }] }
+        ]
+      }
+    },
+    {
+      "files": ["builder-wrappers.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-async-sql-builder": [
+          "error",
+          { "builders": [{ "callees": ["sql"] }] }
+        ]
+      }
+    },
+    {
+      "files": [
+        "manual-other.ts",
+        "manual-limits.ts",
+        "manual-require.ts",
+        "manual-dynamic.ts",
+        "manual-written.ts"
+      ],
+      "rules": {
+        "no-mistakes/postgres-no-manual-transaction": [
+          "error",
+          { "importSpecifier": "@example/db" }
+        ]
+      }
+    },
+    {
+      "files": ["manual-scoped.ts", "manual-pattern.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-manual-transaction": [
+          "error",
+          { "importSpecifier": "./db", "executorTypeNames": ["Db"] }
+        ]
+      }
+    },
+    {
+      "files": [
+        "fanout-require.ts",
+        "fanout-wrapped.ts",
+        "fanout-dynamic.ts",
+        "fanout-reference.ts"
+      ],
+      "rules": {
+        "no-mistakes/postgres-no-unbounded-query-fanout": [
+          "error",
+          { "importSpecifier": "@example/db" }
+        ]
+      }
+    },
+    {
+      "files": ["registry-require.ts", "registry-dynamic.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-nonliteral-sql-registry-key": [
+          "error",
+          { "importSpecifier": "@example/db" }
+        ]
+      }
+    },
+    {
+      "files": ["registry-finite.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-nonliteral-sql-registry-key": [
+          "error",
+          { "importSpecifier": "./db" }
+        ]
+      }
+    },
+    {
+      "files": ["adapter-local.ts", "adapter-require.ts", "adapter-dynamic.ts", "adapter-named.ts"],
+      "rules": {
+        "no-mistakes/postgres-no-executor-adapter": ["error", { "importSpecifier": "@example/db" }]
+      }
+    },
+    {
+      "files": ["cursor-require.ts", "cursor-dynamic.ts", "cursor-local.ts"],
+      "rules": {
+        "no-mistakes/postgres-cursor-call-contract": [
+          "error",
+          { "modules": ["@example/cursors"], "executors": ["runCursor"] }
+        ]
+      }
+    },
+    {
+      "files": ["cursor-trusted.ts", "cursor-limits.ts", "cursor-edges.ts"],
+      "rules": {
+        "no-mistakes/postgres-cursor-call-contract": [
+          "error",
+          {
+            "modules": ["@example/cursors"],
+            "executors": ["runCursor"],
+            "trustedSqlTags": [{ "module": "@example/sql", "name": "sql" }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["cursor-instantiation.ts"],
+      "rules": {
+        "no-mistakes/postgres-cursor-call-contract": [
+          "error",
+          { "modules": ["@example/cursors"], "executors": ["openCursor"] }
+        ]
+      }
+    }
+  ]
+}

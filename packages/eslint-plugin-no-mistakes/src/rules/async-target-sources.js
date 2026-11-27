@@ -9,20 +9,24 @@ function importSpecifierName(specifier) {
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
-function requireSource(node, context) {
+function requireBinding(node, context) {
   const expression = unwrapExpression(node);
   if (expression?.type !== "CallExpression") return null;
   const callee = unwrapExpression(expression.callee);
-  const source = literalString(unwrapExpression(expression.arguments?.[0]));
   if (
     callee?.type !== "Identifier" ||
     callee.name !== "require" ||
-    source === null ||
     isLocalRequire(callee, context)
   ) {
     return null;
   }
-  return source;
+  const source = literalString(unwrapExpression(expression.arguments?.[0]));
+  return source === null ? { status: "unresolved" } : { status: "resolved", source };
 }
 
-module.exports = { importSpecifierName, requireSource };
+function requireSource(node, context) {
+  const binding = requireBinding(node, context);
+  return binding?.status === "resolved" ? binding.source : null;
+}
+
+module.exports = { importSpecifierName, requireBinding, requireSource };

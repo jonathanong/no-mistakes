@@ -11,6 +11,7 @@ import plugin, {
   type PostgresNonWritingCallee,
   type PostgresNoExecutorAdapterOptions,
   type PostgresPoolRequiresErrorListenerOptions,
+  type PostgresUnanalyzable,
 } from "../src/index.js";
 import pluginRequire = require("../src/index.js");
 
@@ -26,11 +27,17 @@ export const namedCallee: pluginRequire.PostgresNonWritingCallee = {
 // @ts-expect-error Exact import identities require an export name.
 export const invalidCallee: PostgresNonWritingCallee = { module: "@example/assertions" };
 
+export const postgresUnanalyzable: PostgresUnanalyzable = "advise";
 export const options: PostgresNoExecutorAdapterOptions = {
   importSpecifier: "@example/db",
   executorTypeNames: ["QueryExecutor"],
   nonWritingCallees: [nonWritingCallee, namedCallee],
   mode,
+  unanalyzable: postgresUnanalyzable,
+};
+export const invalidPostgresUnanalyzable: PostgresNoExecutorAdapterOptions = {
+  // @ts-expect-error Unanalyzable policy must be advise, report, or ignore.
+  unanalyzable: "warn",
 };
 export const dateFormatOptions: NoLocaleLessDateFormatOptions = {
   methods: ["toLocaleDateString"],
@@ -68,6 +75,11 @@ export const commonJsRule = pluginRequire.rules?.["postgres-no-executor-adapter"
 
 export const poolListenerOptions: PostgresPoolRequiresErrorListenerOptions = {
   extraModules: ["@example/pg-compatible"],
+  unanalyzable: "ignore",
+};
+export const invalidPoolUnanalyzable: PostgresPoolRequiresErrorListenerOptions = {
+  // @ts-expect-error Unanalyzable policy must be advise, report, or ignore.
+  unanalyzable: "warn",
 };
 export const defaultPoolListenerOptions: pluginRequire.PostgresPoolRequiresErrorListenerOptions =
   {};

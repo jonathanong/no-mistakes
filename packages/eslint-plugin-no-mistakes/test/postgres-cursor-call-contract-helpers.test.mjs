@@ -15,7 +15,6 @@ const {
   unwrap,
 } = require("../src/rules/postgres-cursor-ast");
 const {
-  importEqualsModule,
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,
@@ -23,6 +22,7 @@ const {
   namespaceCursorMember,
   namespaceImportMember,
 } = require("../src/rules/postgres-cursor-imports");
+const { resolveModuleBinding } = require("../src/rules/postgres-module-binding");
 
 const helpers = { findVariable, propertyName, unwrap };
 const config = { modules: new Set(["@db/cursors"]), executors: new Set(["runCursor"]) };
@@ -439,14 +439,23 @@ describe("cursor import detection", () => {
       namespaceCursorImport(contextFor(namespace), { type: "Literal", value: 1 }, helpers, config),
       false,
     );
-    assert.equal(
-      importEqualsModule({
-        type: "TSImportEqualsDeclaration",
-        importKind: "value",
-        moduleReference: { type: "TSExternalModuleReference", expression: identifier("dynamic") },
+    const equalsId = identifier("db");
+    const equalsDeclaration = {
+      type: "TSImportEqualsDeclaration",
+      importKind: "value",
+      id: equalsId,
+      moduleReference: { type: "TSExternalModuleReference", expression: identifier("dynamic") },
+    };
+    const equalsBinding = resolveModuleBinding(
+      equalsId,
+      contextFor({
+        name: "db",
+        defs: [{ type: "ImportBinding", node: equalsDeclaration }],
+        references: [],
       }),
-      null,
     );
+    assert.equal(equalsBinding?.status, "unresolved");
+    assert.equal(equalsBinding?.kind, "namespace");
     assert.equal(namespaceImportMember(contextFor(namespace), member, helpers, config), member);
     assert.equal(
       namespaceCursorMember(contextFor(namespace), member, helpers, config),

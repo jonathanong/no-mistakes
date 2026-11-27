@@ -1,14 +1,22 @@
 "use strict";
 
 const { isDiscardedSqlStatementAppend } = require("./postgres-cursor-append");
-const { namedCursorImport, namespaceCursorMember } = require("./postgres-cursor-imports");
+const {
+  namedCursorImport,
+  namespaceCursorMember,
+  sqlTagBindingStatus,
+} = require("./postgres-cursor-imports");
+
+const UNRESOLVED_QUERY = Object.freeze({ unresolved: true });
 
 function transparentParent(node) {
   let current = node;
   while (
     current.parent &&
     (current.parent.type === "ChainExpression" ||
+      current.parent.type === "ParenthesizedExpression" ||
       current.parent.type === "TSAsExpression" ||
+      current.parent.type === "TSInstantiationExpression" ||
       current.parent.type === "TSSatisfiesExpression" ||
       current.parent.type === "TSTypeAssertion" ||
       current.parent.type === "TSNonNullExpression") &&
@@ -69,11 +77,8 @@ function defaultSqlTagImport(specifier, declaration, source, config) {
   );
 }
 
-function exactSqlTag(context, tag, helpers, config) {
-  const identifier = helpers.unwrap(tag);
-  if (identifier?.type !== "Identifier") return false;
-  const variable = helpers.findVariable(context, identifier);
-  const definition = variable?.defs.find((candidate) => {
+function importedSqlTag(variable, config) {
+  return variable?.defs.find((candidate) => {
     const specifier = candidate.node;
     const declaration = candidate.parent || specifier.parent;
     const source = declaration?.source?.value;
@@ -83,20 +88,34 @@ function exactSqlTag(context, tag, helpers, config) {
       defaultSqlTagImport(specifier, declaration, source, config)
     );
   });
-  return Boolean(
-    definition && variable && !variable.references.some((reference) => reference.isWrite()),
-  );
+}
+
+function exactSqlTag(context, tag, helpers, config) {
+  const identifier = helpers.unwrap(tag);
+  if (identifier?.type === "Identifier") {
+    const variable = helpers.findVariable(context, identifier);
+    const importDef = variable?.defs.find((candidate) => candidate.type === "ImportBinding");
+    if (importDef && importDef.node?.type !== "TSImportEqualsDeclaration") {
+      return Boolean(
+        importedSqlTag(variable, config) &&
+        !variable.references.some((reference) => reference.isWrite()),
+      );
+    }
+  }
+  const bound = sqlTagBindingStatus(context, tag, helpers, config);
+  if (bound === "unresolved") return "unresolved";
+  if (bound === "trusted") return true;
+  return false;
 }
 
 function directQueryHead(context, node, helpers, config) {
   const value = helpers.unwrap(node);
   if (value?.type === "Literal") return typeof value.value === "string" ? value.value : null;
   if (value?.type === "TemplateLiteral") return firstQuasiText(value, true);
-  if (
-    value?.type === "TaggedTemplateExpression" &&
-    exactSqlTag(context, value.tag, helpers, config)
-  ) {
-    return firstQuasiText(value.quasi, false);
+  if (value?.type === "TaggedTemplateExpression") {
+    const tag = exactSqlTag(context, value.tag, helpers, config);
+    if (tag === "unresolved") return UNRESOLVED_QUERY;
+    if (tag === true) return firstQuasiText(value.quasi, false);
   }
   return null;
 }
@@ -114,7 +133,7 @@ function isCursorQueryArgument(context, identifier, helpers, config) {
 
 function queryHead(context, node, helpers, config) {
   const direct = directQueryHead(context, node, helpers, config);
-  if (direct !== null) return direct;
+  if (direct === UNRESOLVED_QUERY || typeof direct === "string") return direct;
   const value = helpers.unwrap(node);
   if (value?.type !== "Identifier") return null;
   const variable = helpers.findVariable(context, value);
@@ -141,6 +160,7 @@ function queryHead(context, node, helpers, config) {
 }
 
 module.exports = {
+  UNRESOLVED_QUERY,
   directCallParent,
   firstQuasiText,
   isTypeQuery,

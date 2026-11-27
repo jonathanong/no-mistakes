@@ -4,36 +4,32 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { findVariable, propertyName, unwrap } = require("./postgres-cursor-ast");
 const { matchesCursorFile, resolveCursorContractOptions } = require("./postgres-cursor-options");
+const { resolveModuleBinding } = require("./postgres-module-binding");
 const {
-  importEqualsModule,
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,
-  namespaceCursorImport,
   namespaceCursorMember,
-  namespaceImportMember,
 } = require("./postgres-cursor-imports");
 const {
-  directCallParent,
-  isTypeQuery,
-  queryHead,
-  transparentParent,
-} = require("./postgres-cursor-query");
+  reportDynamic,
+  reportFinding,
+  visitCursorIdentifier,
+  visitNamespaceMember,
+} = require("./postgres-cursor-call-visits");
+const { UNRESOLVED_QUERY, queryHead } = require("./postgres-cursor-query");
 
 const helpers = { findVariable, propertyName, unwrap };
 
-function isTypeOnlyExport(identifier) {
-  const specifier = identifier.parent;
-  return (
-    specifier?.type === "ExportSpecifier" &&
-    (specifier.exportKind === "type" || specifier.parent?.exportKind === "type")
-  );
-}
-
-function reExportsCursor(node, config) {
+function reExportsCursor(node, context, config) {
   if (node.exportKind === "type") return false;
   if (node.declaration?.type === "TSImportEqualsDeclaration") {
-    return isCursorModule(importEqualsModule(node.declaration), config);
+    const binding = resolveModuleBinding(node.declaration.id, context);
+    return (
+      binding?.status === "resolved" &&
+      binding.kind === "namespace" &&
+      isCursorModule(binding.source, config)
+    );
   }
   if (!isCursorModule(node.source?.value, config)) return false;
   if (node.type === "ExportAllDeclaration") return true;
@@ -43,48 +39,6 @@ function reExportsCursor(node, config) {
       return specifier.exportKind !== "type" && isCursorExecutor(name, config);
     }) === true
   );
-}
-
-function reportFinding(context, suppressed, descriptor) {
-  if (suppressed(descriptor.node)) return;
-  context.report(descriptor);
-}
-
-function visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed) {
-  const namedImport = namedCursorImport(context, node, helpers, options);
-  const namespaceImport = namespaceCursorImport(context, node, helpers, options);
-  if (!namedImport && !namespaceImport) return;
-  if (
-    node.parent?.type === "ImportSpecifier" ||
-    node.parent?.type === "ImportNamespaceSpecifier" ||
-    (node.parent?.type === "TSImportEqualsDeclaration" && node.parent.id === node) ||
-    isTypeQuery(node) ||
-    isTypeOnlyExport(node)
-  ) {
-    return;
-  }
-  const variable = helpers.findVariable(context, node);
-  if (!variable?.references.some((reference) => reference.identifier === node)) return;
-  const expression = transparentParent(node);
-  if (namespaceImport && namespaceImportMember(context, expression.parent, helpers, options)) {
-    return;
-  }
-  if (!directCallParent(node) && !reportedDirectUses.has(node)) {
-    reportedDirectUses.add(node);
-    reportFinding(context, suppressed, { messageId: "directUse", node });
-  }
-}
-
-function visitNamespaceMember(context, node, options, suppressed) {
-  const namespaceMember = namespaceImportMember(context, node, helpers, options);
-  if (!namespaceMember || isTypeQuery(node)) return;
-  if (namespaceMember.computed && helpers.propertyName(namespaceMember) == null) {
-    reportFinding(context, suppressed, { messageId: "staticNamespaceMember", node });
-    return;
-  }
-  if (namespaceCursorMember(context, node, helpers, options) && !directCallParent(node)) {
-    reportFinding(context, suppressed, { messageId: "directUse", node });
-  }
 }
 
 module.exports = rule(
@@ -118,6 +72,7 @@ module.exports = rule(
               },
             },
           },
+          unanalyzable: { enum: ["advise", "report", "ignore"] },
         },
       },
     ],
@@ -128,6 +83,8 @@ module.exports = rule(
         "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
       staticNamespaceMember:
         "PostgreSQL namespace members must use a static property name so cursor use can be verified.",
+      unanalyzable:
+        "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result.",
     },
   },
   (context) => {
@@ -138,13 +95,21 @@ module.exports = rule(
     return {
       CallExpression(node) {
         const callee = helpers.unwrap(node.callee);
-        const executor =
-          namedCursorImport(context, callee, helpers, options) ||
-          namespaceCursorMember(context, callee, helpers, options);
+        const named = namedCursorImport(context, callee, helpers, options);
+        const member = namespaceCursorMember(context, callee, helpers, options);
+        if (named === "unresolved" || member === "unresolved") {
+          reportDynamic(context, suppressed, node);
+          return;
+        }
+        const executor = named || member;
         if (!executor) return;
         const argument = node.arguments?.[0];
         const reportNode = argument ?? node;
         const head = argument ? queryHead(context, argument, helpers, options) : null;
+        if (head === UNRESOLVED_QUERY) {
+          reportDynamic(context, suppressed, reportNode);
+          return;
+        }
         if (head === null) {
           reportFinding(context, suppressed, { messageId: "staticQuery", node: reportNode });
           return;
@@ -154,18 +119,18 @@ module.exports = rule(
         }
       },
       Identifier(node) {
-        visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed);
+        visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed, helpers);
       },
       MemberExpression(node) {
-        visitNamespaceMember(context, node, options, suppressed);
+        visitNamespaceMember(context, node, options, suppressed, helpers);
       },
       ExportAllDeclaration(node) {
-        if (reExportsCursor(node, options)) {
+        if (reExportsCursor(node, context, options)) {
           reportFinding(context, suppressed, { messageId: "directUse", node });
         }
       },
       ExportNamedDeclaration(node) {
-        if (reExportsCursor(node, options)) {
+        if (reExportsCursor(node, context, options)) {
           reportFinding(context, suppressed, { messageId: "directUse", node });
         }
       },

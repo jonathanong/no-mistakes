@@ -4,14 +4,15 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const helpers = require("./postgres-runtime-helpers");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
+const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 
 const {
   executedQueryText,
   executorBindings,
+  callDisposition,
   executorOptionDefaults,
   executorOptionSchema,
   firstCallArgument,
-  isDatabaseCall,
   isManualTransactionText,
   isOwnerFile,
   sqlStatementBindings,
@@ -64,6 +65,8 @@ module.exports = Object.assign(
         }),
       ],
       messages: {
+        unanalyzable:
+          "This query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so a manual transaction can be judged. A dynamic module is not a clean result.",
         manualTransaction:
           "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
       },
@@ -83,10 +86,16 @@ module.exports = Object.assign(
         },
         CallExpression(node) {
           if (suppressed(node)) return;
-          if (!isDatabaseCall(node, bindings)) return;
+          const disposition = callDisposition(node, bindings);
           const argument = firstCallArgument(node, bindings);
           const text =
             executedQueryText(argument, statements, context) ?? constChainText(argument, context);
+          if (disposition === "unresolved") {
+            if (text != null && !isManualTransactionText(text)) return;
+            reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
+            return;
+          }
+          if (disposition !== "call") return;
           if (!isManualTransactionText(text)) return;
           context.report({ node, messageId: "manualTransaction" });
         },

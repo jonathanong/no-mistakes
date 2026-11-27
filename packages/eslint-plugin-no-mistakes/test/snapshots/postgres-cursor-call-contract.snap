@@ -725,6 +725,17 @@
         "messageId": "directUse",
         "ruleId": "no-mistakes/postgres-cursor-call-contract",
         "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 30,
+        "endLine": 3,
+        "file": "src/namespace-alias.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
       }
     ],
     "kind": "invalid",
@@ -1184,6 +1195,28 @@
         "line": 10,
         "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
         "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 20,
+        "endLine": 11,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 11,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 20,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/postgres-cursor-call-contract/import-equals-repro.ts",
+        "line": 12,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
         "ruleId": "no-mistakes/postgres-cursor-call-contract",
         "severity": 2
       }

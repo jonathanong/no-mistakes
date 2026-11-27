@@ -1,8 +1,13 @@
 "use strict";
 
+const { moduleNamespace, resolveModuleBinding } = require("./postgres-module-binding");
 const { stableFunction } = require("./postgres-no-executor-adapter-binding");
 const { classifyFunction } = require("./postgres-no-executor-adapter-forward");
-const { boundExecutor, logicalPassed } = require("./postgres-no-executor-adapter-logic");
+const {
+  boundExecutor,
+  logicalPassed,
+  propertyText,
+} = require("./postgres-no-executor-adapter-logic");
 const {
   TS_ASSERTIONS,
   constInitializer,
@@ -11,7 +16,12 @@ const {
 
 function unwrapPassed(node) {
   let current = node;
-  while (current && (TS_ASSERTIONS.has(current.type) || current.type === "ChainExpression")) {
+  while (
+    current &&
+    (TS_ASSERTIONS.has(current.type) ||
+      current.type === "ChainExpression" ||
+      current.type === "ParenthesizedExpression")
+  ) {
     current = current.expression;
   }
   return current;
@@ -59,6 +69,7 @@ function passedForm(direct, alias) {
 function combineConditional(consequent, alternate) {
   const known = [consequent, alternate].filter((part) => part);
   if (known.length === 0) return null;
+  if (known.some((part) => part.unanalyzable)) return { unanalyzable: true };
   const names = [
     ...new Set(
       known.flatMap((part) =>
@@ -75,10 +86,26 @@ function combineConditional(consequent, alternate) {
   };
 }
 
+function unresolvedPassed(node, context, options) {
+  if (node?.type === "MemberExpression") {
+    const name = propertyText(node, context);
+    if (!name || !options.executorNames.includes(name)) return false;
+    return moduleNamespace(node.object, context, options) === "unresolved";
+  }
+  if (node?.type !== "Identifier") return false;
+  const binding = resolveModuleBinding(node, context);
+  return Boolean(
+    binding?.status === "unresolved" &&
+    binding.kind === "named" &&
+    options.executorNames.includes(binding.name),
+  );
+}
+
 // An executor value, a const or stable function that carries one, bind, or
 // && / || / ??. Fresh objects and constructor arguments are visited by the rule.
 function resolvePassed(node, context, bindings, options, seen) {
   const current = unwrapPassed(node);
+  if (unresolvedPassed(current, context, options)) return { unanalyzable: true };
   if (
     current.type === "Identifier" ||
     current.type === "MemberExpression" ||

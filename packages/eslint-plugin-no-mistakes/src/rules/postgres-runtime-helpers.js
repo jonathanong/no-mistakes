@@ -1,10 +1,11 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { repoRelativeFilename } = require("./module-mock-helpers");
 const postgresExecutor = require("./postgres-executor");
 const postgresQueryText = require("./postgres-query-text");
 
-const { firstCallArgument, isDatabaseCall, memberPropertyName } = postgresExecutor;
+const { callDisposition, firstCallArgument, memberPropertyName } = postgresExecutor;
 const { childNodes, quasiText, resolveVariable, unwrapTs } = postgresQueryText;
 
 const SCREAMING_CASE = /^[A-Z][A-Z0-9_]*$/;
@@ -118,10 +119,26 @@ function mapCallArgument(node) {
   };
 }
 
+function databaseCallStatus(node, bindings) {
+  let unresolved = false;
+  const visit = (current) => {
+    if (!current || typeof current !== "object") return null;
+    if (current.type === "CallExpression") {
+      const disposition = callDisposition(current, bindings);
+      if (disposition === "call") return "call";
+      if (disposition === "unresolved") unresolved = true;
+    }
+    for (const child of childNodes(current)) {
+      if (visit(child) === "call") return "call";
+    }
+    return null;
+  };
+  if (visit(node) === "call") return "call";
+  return unresolved ? "unresolved" : null;
+}
+
 function containsDatabaseCall(node, bindings) {
-  if (!node || typeof node !== "object") return false;
-  if (isDatabaseCall(node, bindings)) return true;
-  return childNodes(node).some((child) => containsDatabaseCall(child, bindings));
+  return databaseCallStatus(node, bindings) === "call";
 }
 
 function functionFromDefinition(def) {
@@ -134,7 +151,7 @@ function functionFromDefinition(def) {
   ) {
     return node;
   }
-  const init = node.init;
+  const init = unwrapExpression(node.init);
   if (
     init &&
     (init.type === "FunctionExpression" ||
@@ -147,16 +164,20 @@ function functionFromDefinition(def) {
 }
 
 function callbackContainsExecutor(callback, bindings, context) {
-  callback = unwrapTs(callback);
+  callback = unwrapExpression(callback);
   if (!callback) return false;
   if (
     callback.type === "ArrowFunctionExpression" ||
     callback.type === "FunctionExpression" ||
     callback.type === "FunctionDeclaration"
   ) {
-    return containsDatabaseCall(callback, bindings);
+    const status = databaseCallStatus(callback, bindings);
+    if (status === "call") return true;
+    return status === "unresolved" ? "unresolved" : false;
   }
-  if (bindings?.resolveCall && bindings.resolveCall.reference(callback)) return true;
+  const reference = bindings?.resolveCall?.reference(callback);
+  if (reference === "unresolved") return "unresolved";
+  if (reference === true) return true;
   if (callback.type !== "Identifier") return false;
   if (!bindings?.resolveCall && bindings?.has(callback.name)) return true;
   if (!context) return false;
@@ -169,7 +190,9 @@ function callbackContainsExecutor(callback, bindings, context) {
     return false;
   for (const def of variable?.defs ?? []) {
     const fn = functionFromDefinition(def);
-    if (fn && containsDatabaseCall(fn, bindings)) return true;
+    const status = fn ? databaseCallStatus(fn, bindings) : null;
+    if (status === "call") return true;
+    if (status === "unresolved") return "unresolved";
   }
   return false;
 }

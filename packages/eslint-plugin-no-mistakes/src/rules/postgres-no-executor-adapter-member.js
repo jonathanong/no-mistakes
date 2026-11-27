@@ -1,5 +1,6 @@
 "use strict";
 
+const { moduleNamespace } = require("./postgres-module-binding");
 const { resolveVariable } = require("./postgres-query-text");
 const { memberPropertyName } = require("./postgres-executor");
 const { propertyText } = require("./postgres-no-executor-adapter-logic");
@@ -53,23 +54,17 @@ function isProvenQueryMember(node, context, bindings, options) {
 
 // `import * as db` then `db.read` is the named export. A non-const computed
 // identifier key is not that export. The module source has to be the configured module.
-function namespaceImport(identifier, context, importSpecifier) {
+function directNamespaceImport(identifier, context) {
   const variable = resolveVariable(identifier, context);
-  if (!variable || variable.defs.length !== 1) {
-    return false;
-  }
+  if (!variable || variable.defs.length !== 1) return false;
   const def = variable.defs[0];
-  if (def.type !== "ImportBinding" || def.node?.type !== "ImportNamespaceSpecifier") {
-    return false;
-  }
-  const declaration = def.parent;
-  if (declaration?.importKind === "type") {
-    return false;
-  }
-  if (importSpecifier && declaration?.source?.value !== importSpecifier) {
-    return false;
-  }
-  return true;
+  if (def.type !== "ImportBinding" || def.node?.type !== "ImportNamespaceSpecifier") return false;
+  return def.parent?.importKind !== "type";
+}
+
+function namespaceImport(node, context, importSpecifier) {
+  if (arguments.length < 3) return directNamespaceImport(node, context);
+  return moduleNamespace(node, context, { importSpecifier }) === true;
 }
 
 function namespaceExecutor(node, context, options) {

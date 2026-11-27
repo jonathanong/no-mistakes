@@ -3,6 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const {
+  callDisposition,
   executorBindings,
   executorOptionDefaults,
   executorOptionSchema,
@@ -10,6 +11,7 @@ const {
   isDatabaseCall,
 } = require("./postgres-executor");
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
+const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 
 const RULE_ID = "postgres-no-nonliteral-sql-registry-key";
 
@@ -67,8 +69,23 @@ function visitSql(node, visit) {
 }
 
 function finiteKey(property, object, context) {
-  if (property.type !== "TSAsExpression") return false;
-  const type = property.typeAnnotation;
+  let current = property;
+  while (
+    current &&
+    (current.type === "TSNonNullExpression" ||
+      current.type === "ParenthesizedExpression" ||
+      current.type === "ChainExpression")
+  ) {
+    current = current.expression;
+  }
+  if (
+    current?.type !== "TSAsExpression" &&
+    current?.type !== "TSSatisfiesExpression" &&
+    current?.type !== "TSTypeAssertion"
+  ) {
+    return false;
+  }
+  const type = current.typeAnnotation;
   if (type.type !== "TSTypeOperator" || type.operator !== "keyof") return false;
   const query = type.typeAnnotation;
   return (
@@ -103,6 +120,8 @@ module.exports = rule(
     },
     schema: [executorOptionSchema()],
     messages: {
+      unanalyzable:
+        "This query executor is not a static import, require, or import-equals binding, and its SQL is not a static string. Write the module specifier as a string literal so the registry key can be judged. A dynamic module is not a clean result.",
       dynamicKey:
         "{{registry}}[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default ({{rewrite}}). A runtime own-key check is not judged.",
     },
@@ -115,6 +134,12 @@ module.exports = rule(
 
     return {
       CallExpression(node) {
+        if (callDisposition(node, bindings) === "unresolved") {
+          const argument = firstCallArgument(node, bindings);
+          if (!argument || suppressed(node) || stringText(argument) != null) return;
+          reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
+          return;
+        }
         if (!isDatabaseCall(node, bindings)) return;
         const argument = firstCallArgument(node, bindings);
         if (!argument || suppressed(node)) return;

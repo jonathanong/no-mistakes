@@ -580,11 +580,18 @@ run(0 ?? read, account);
 | `trustedSqlTags`       | `[]`                                                       | Select SQL tags, including default imports, whose templates expose SQL in `"forwarding-only"` mode. |
 | `nonWritingCallees`    | `[]`                                                       | Trust exact imported non-writing callees in `"forwarding-only"` mode.                               |
 | `mode`                 | `"all"`                                                    | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL.                             |
+| `unanalyzable`         | `advise`                                                   | Report a dynamic module used as a configured executor. `ignore` omits only that finding.            |
 
 - `importSpecifier` identifies the database module and defaults to empty.
   Configure your database module explicitly. Named executor imports must come
   from that exact module. A subpath such as `@example/db/read` does not match
-  `@example/db` for `executorNames`.
+  `@example/db` for `executorNames`. `const db = require("@example/db")`,
+  `import db = require("@example/db")`, and `const { read: r } = db` are the
+  same namespace executors as `import * as db`. Passing `db.read` or `r`
+  reports `passed`. A dynamic `require(flag)` passed as `db.read` is
+  `unanalyzable`, including when a conditional selects it. A `let` destructure
+  of that require stays quiet. A local function with the same name stays quiet. `advise`
+  and `report` use the same message.
 - `executorNames` lists checked executor names. It defaults to `["query",
   "read", "write"]` with a configured module. Without a module, supply
   `executorNames` explicitly. An empty list selects no named executors. [Executor option validation](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/postgres-executor.js#L7-L21). A
@@ -595,7 +602,8 @@ run(0 ?? read, account);
   defaults to `[]`. `var` is not a scoped executor.
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
-  declaring function. It also proves supported helper argument slots described
+  declaring function. A computed type key is a member only when that key is a
+  literal. It also proves supported helper argument slots described
   above, including proven required options-object fields with typed linting.
   It defaults to `[]`.
 - `mode` is `"all"` by default. Set `"forwarding-only"` to report forwarding

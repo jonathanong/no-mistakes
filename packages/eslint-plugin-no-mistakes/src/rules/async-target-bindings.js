@@ -46,10 +46,10 @@ function staticImportSource(definition) {
   if (node.type === "TSImportEqualsDeclaration") {
     const reference = node.moduleReference;
     return reference.type === "TSExternalModuleReference"
-      ? literalString(reference.expression)
+      ? literalString(unwrapExpression(reference.expression))
       : null;
   }
-  const source = parent?.source?.value;
+  const source = (parent ?? node.parent)?.source?.value;
   return typeof source === "string" ? source : null;
 }
 

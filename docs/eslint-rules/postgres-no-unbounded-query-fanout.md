@@ -67,12 +67,18 @@ for (const id of userIds) {
   package. If the package root cannot be determined, relative imports do not match.
 - `chunkFunctionNames` lists approved chunk helpers and defaults to
   `["chunkArray"]`.
+- `unanalyzable` is `advise` (the default), `report`, or `ignore`. A dynamic
+  module whose mapped callback calls a configured executor is reported as
+  `unanalyzable` instead of `unboundedFanout`. `advise` and `report` use the
+  same message. `ignore` omits only that finding. A traced local stays quiet.
 
 ## Limits
 
 The executor calls above include same-file immutable `const` aliases,
-value namespace imports from the configured module, and `const { query } = db` (or
-another configured namespace export). String and expression-free template keys,
+value namespace imports from the configured module, `const db = require("@example/db")`,
+`import db = require("@example/db")`, and `const { query } = db` (or
+another configured namespace export). A TypeScript assertion or parentheses
+around a callback (`((id) => query(id)) as Fn`) is still that function. String and expression-free template keys,
 optional calls, TypeScript wrappers, comma callees, `.call`, and `.apply` with a
 literal array are supported. A configured namespace export named `call` or
 `apply` is matched as that executor before function forwarding.

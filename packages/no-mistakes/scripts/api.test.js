@@ -73,6 +73,26 @@ test("typed enqueue fake lint options are publicly declared", () => {
   assert.match(options[1], /moduleGlobs\?: string\[\];/);
 });
 
+test("postgres eslint options name the unanalyzable policy", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "..", "eslint-plugin-no-mistakes", "src", "index.d.ts"),
+    "utf8",
+  );
+  assert.match(
+    declarations,
+    /export type PostgresUnanalyzable = "advise" \| "report" \| "ignore";/,
+  );
+  const adapterOptions = declarations.match(
+    /export interface PostgresNoExecutorAdapterOptions \{([\s\S]*?)\n  \}/,
+  );
+  assert.ok(adapterOptions, "PostgresNoExecutorAdapterOptions must be exported");
+  assert.match(adapterOptions[1], /unanalyzable\?: PostgresUnanalyzable;/);
+  assert.match(
+    declarations,
+    /export interface PostgresPoolRequiresErrorListenerOptions \{[\s\S]*?unanalyzable\?: PostgresUnanalyzable;/,
+  );
+});
+
 test("forbidden dependency selectors and origin exceptions have public option types", () => {
   const declarations = readFileSync(join(packageRoot, "forbidden-dependency-types.d.ts"), "utf8");
   assert.match(declarations, /export interface ForbiddenDependencyException \{/);

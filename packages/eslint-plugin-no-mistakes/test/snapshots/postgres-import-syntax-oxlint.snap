@@ -1,0 +1,436 @@
+[
+  {
+    "code": "no-mistakes(postgres-no-executor-adapter)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-dynamic.ts",
+    "line": 8,
+    "message": "This passed executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the adapter can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-executor-adapter)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-dynamic.ts",
+    "line": 9,
+    "message": "This passed executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the adapter can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-executor-adapter)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-named.ts",
+    "line": 9,
+    "message": "This passed executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the adapter can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-executor-adapter)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-require.ts",
+    "line": 9,
+    "message": "This call passes db.read into a helper. Name the executor inside the helper (`db.read(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+  },
+  {
+    "code": "no-mistakes(postgres-no-executor-adapter)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-require.ts",
+    "line": 10,
+    "message": "This call passes r into a helper. Name the executor inside the helper (`r(sql`…`)`, or `const exec = r; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+  },
+  {
+    "code": "no-mistakes(postgres-no-executor-adapter)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-require.ts",
+    "line": 11,
+    "message": "This call passes e.read into a helper. Name the executor inside the helper (`e.read(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-dynamic.ts",
+    "line": 4,
+    "message": "This SQL builder is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the async builder can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-edges.ts",
+    "line": 6,
+    "message": "This SQL builder is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the async builder can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-edges.ts",
+    "line": 13,
+    "message": "This SQL builder is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the async builder can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-require.ts",
+    "line": 5,
+    "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-require.ts",
+    "line": 9,
+    "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-require.ts",
+    "line": 13,
+    "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-wrappers.ts",
+    "line": 4,
+    "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 21,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-wrappers.ts",
+    "line": 9,
+    "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered."
+  },
+  {
+    "code": "no-mistakes(postgres-no-async-sql-builder)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/builder-wrappers.ts",
+    "line": 13,
+    "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-dynamic.ts",
+    "line": 5,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 5,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 14,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 6,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 16,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 9,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 15,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 18,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 21,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 25,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 30,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 33,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 15,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-require.ts",
+    "line": 5,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 4,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-require.ts",
+    "line": 6,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-require.ts",
+    "line": 7,
+    "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 39,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-require.ts",
+    "line": 8,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-no-unbounded-query-fanout)",
+    "column": 7,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/fanout-dynamic.ts",
+    "line": 5,
+    "message": "This mapped query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the fan-out can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-unbounded-query-fanout)",
+    "column": 7,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/fanout-reference.ts",
+    "line": 5,
+    "message": "This mapped query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the fan-out can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-unbounded-query-fanout)",
+    "column": 7,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/fanout-reference.ts",
+    "line": 9,
+    "message": "This mapped query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the fan-out can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-unbounded-query-fanout)",
+    "column": 7,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/fanout-require.ts",
+    "line": 6,
+    "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first."
+  },
+  {
+    "code": "no-mistakes(postgres-no-unbounded-query-fanout)",
+    "column": 7,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/fanout-require.ts",
+    "line": 7,
+    "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first."
+  },
+  {
+    "code": "no-mistakes(postgres-no-unbounded-query-fanout)",
+    "column": 7,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/fanout-require.ts",
+    "line": 8,
+    "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first."
+  },
+  {
+    "code": "no-mistakes(postgres-no-unbounded-query-fanout)",
+    "column": 7,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/fanout-wrapped.ts",
+    "line": 5,
+    "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-dynamic.ts",
+    "line": 4,
+    "message": "This query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so a manual transaction can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-dynamic.ts",
+    "line": 6,
+    "message": "This query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so a manual transaction can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-pattern.ts",
+    "line": 4,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-pattern.ts",
+    "line": 16,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-require.ts",
+    "line": 5,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-require.ts",
+    "line": 6,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-require.ts",
+    "line": 7,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-scoped.ts",
+    "line": 4,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-scoped.ts",
+    "line": 8,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-scoped.ts",
+    "line": 9,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-written.ts",
+    "line": 5,
+    "message": "This query executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so a manual transaction can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-computed.ts",
+    "line": 3,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-computed.ts",
+    "line": 6,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-dynamic.ts",
+    "line": 4,
+    "message": "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-edges.ts",
+    "line": 4,
+    "message": "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-edges.ts",
+    "line": 7,
+    "message": "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-edges.ts",
+    "line": 11,
+    "message": "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-edges.ts",
+    "line": 14,
+    "message": "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-edges.ts",
+    "line": 17,
+    "message": "This PostgreSQL pool constructor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the error listener can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-edges.ts",
+    "line": 22,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-import-equals.ts",
+    "line": 5,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/pool-import-equals.ts",
+    "line": 6,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-no-nonliteral-sql-registry-key)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/registry-dynamic.ts",
+    "line": 6,
+    "message": "This query executor is not a static import, require, or import-equals binding, and its SQL is not a static string. Write the module specifier as a string literal so the registry key can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-nonliteral-sql-registry-key)",
+    "column": 19,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/registry-require.ts",
+    "line": 7,
+    "message": "COLS[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"id\": return \"id\"; default: throw new Error(\"unknown\"); } })((k))). A runtime own-key check is not judged."
+  },
+  {
+    "code": "no-mistakes(postgres-no-nonliteral-sql-registry-key)",
+    "column": 13,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/registry-require.ts",
+    "line": 8,
+    "message": "COLS[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"id\": return \"id\"; default: throw new Error(\"unknown\"); } })((k))). A runtime own-key check is not judged."
+  },
+  {
+    "code": "no-mistakes(postgres-no-nonliteral-sql-registry-key)",
+    "column": 18,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/registry-require.ts",
+    "line": 9,
+    "message": "COLS[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"id\": return \"id\"; default: throw new Error(\"unknown\"); } })((k))). A runtime own-key check is not judged."
+  }
+]

@@ -191,6 +191,15 @@ async function buildQuery(id: string) {
   other sources, and local bindings that shadow the import do not match.
   Without `source`, `callees` match the local identifier or member name as
   written, including those static keys.
+  `const sql = require("@example/sql")`, `const { sql } = require("@example/sql")`,
+  and `import sql = require("@example/sql")` match `source` the same way.
+  A call through `wrappedCall!()` and an async arrow wrapped in `satisfies`
+  are still that builder. A type-argument tag, `(db.sql<Row>)` followed by a
+  template, is the `sql` tag. A dynamic `require(flag).sql` inside an async
+  builder is `unanalyzable`.
+- `unanalyzable` is `advise` (the default), `report`, or `ignore`. `advise` and
+  `report` use the same message. `ignore` omits only that finding. A traced
+  local function with the same name stays quiet when `source` is set.
 
 ```js
 {

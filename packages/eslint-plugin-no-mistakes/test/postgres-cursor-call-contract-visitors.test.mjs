@@ -5,7 +5,7 @@ import { plugin } from "./helpers.mjs";
 const rule = plugin.rules["postgres-cursor-call-contract"];
 const options = { modules: ["@db/cursors"], executors: ["runCursor"] };
 
-function importVar(name, specifierType, imported = { name }) {
+function importVar(name, specifierType, imported = { type: "Identifier", name }) {
   const specifier = {
     type: specifierType,
     importKind: "value",
@@ -111,6 +111,35 @@ describe("postgres-cursor-call-contract visitors", () => {
       specifiers: [{ type: "ExportSpecifier", local: { value: "runCursor" } }],
     });
     assert.deepEqual(reports, [{ messageId: "directUse" }]);
+  });
+
+  it("reports an import-equals re-export through the shared binding", () => {
+    const id = { type: "Identifier", name: "db" };
+    const declaration = {
+      type: "TSImportEqualsDeclaration",
+      importKind: "value",
+      id,
+      moduleReference: {
+        type: "TSExternalModuleReference",
+        expression: {
+          type: "TSAsExpression",
+          expression: { type: "Literal", value: "@db/cursors" },
+        },
+      },
+    };
+    const reports = [];
+    const visitors = rule.create(
+      mockContext(
+        { name: "db", defs: [{ type: "ImportBinding", node: declaration }], references: [] },
+        reports,
+      ),
+    );
+    visitors.ExportNamedDeclaration({ type: "ExportNamedDeclaration", declaration });
+    assert.deepEqual(reports, [{ messageId: "directUse" }]);
+    reports.length = 0;
+    declaration.moduleReference.expression = { type: "Identifier", name: "flag" };
+    visitors.ExportNamedDeclaration({ type: "ExportNamedDeclaration", declaration });
+    assert.deepEqual(reports, []);
   });
 
   it("returns no visitors when unconfigured or excluded", () => {

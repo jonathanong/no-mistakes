@@ -17,6 +17,7 @@ const TAG_WRAPPERS = new Set([
   "ChainExpression",
   "ParenthesizedExpression",
   "TSAsExpression",
+  "TSInstantiationExpression",
   "TSNonNullExpression",
   "TSSatisfiesExpression",
   "TSTypeAssertion",
@@ -48,7 +49,7 @@ function isConfiguredSqlCall(node, builders, context) {
   // Callers only pass a call or a tagged template.
   const callee = node.type === "CallExpression" ? node.callee : node.tag;
   return builders.some(
-    (builder) => builder.callees.length > 0 && calleeMatches(callee, builder, context),
+    (builder) => builder.callees.length > 0 && calleeMatches(callee, builder, context) === true,
   );
 }
 
