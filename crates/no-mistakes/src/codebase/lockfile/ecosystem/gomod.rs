@@ -6,6 +6,7 @@ pub(crate) struct GoModError;
 enum Block {
     Module(bool),
     Requirements,
+    Replacements,
     Other,
 }
 
@@ -42,6 +43,8 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
                     }
                     Block::Module(_) => return Err(GoModError),
                     Block::Requirements => push_require(line, &mut out)?,
+                    Block::Replacements if replacement_fields(line) => {}
+                    Block::Replacements => return Err(GoModError),
                     Block::Other => {}
                 }
             }
@@ -57,11 +60,12 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
             "toolchain" if has_one_token(rest) => {}
             "require" if rest == "(" => block = Some(Block::Requirements),
             "require" => push_require(rest, &mut out)?,
-            "replace" | "exclude" | "retract" | "godebug" | "tool" | "ignore" if rest == "(" => {
+            "replace" if rest == "(" => block = Some(Block::Replacements),
+            "replace" if replacement_fields(rest) => {}
+            "exclude" | "retract" | "godebug" | "tool" | "ignore" if rest == "(" => {
                 block = Some(Block::Other);
             }
-            "replace" | "exclude" | "retract" | "godebug" | "tool" | "ignore"
-                if !rest.is_empty() => {}
+            "exclude" | "retract" | "godebug" | "tool" | "ignore" if !rest.is_empty() => {}
             _ => return Err(GoModError),
         }
     }
@@ -69,6 +73,11 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
         return Err(GoModError);
     }
     Ok(out)
+}
+
+fn replacement_fields(line: &str) -> bool {
+    line.split_once("=>")
+        .is_some_and(|(from, to)| !from.trim().is_empty() && !to.trim().is_empty())
 }
 
 fn has_one_token(rest: &str) -> bool {

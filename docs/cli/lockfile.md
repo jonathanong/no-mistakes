@@ -49,8 +49,8 @@ checksums recorded in `[metadata]`. `git+` is git and uses
 `checksum` or the source string. `path+` is a directory. A package with no
 source is the workspace. Poetry git uses `resolved_reference`, then
 `reference`. A Git subdirectory selector contributes to that fingerprint.
-Other Poetry packages use sorted file hashes, including the legacy
-`[metadata.files]` representation. A Poetry directory uses its source path as the fingerprint.
+Other Poetry packages use sorted file hashes, including legacy
+`[metadata.files]` and `[metadata.hashes]` representations. A Poetry directory uses its source path as the fingerprint.
 Poetry `url` and `file` sources are tarballs.
 uv git uses the commit in the URL fragment after `#`, then `rev`, and
 includes the Git subdirectory selector. uv
@@ -63,7 +63,8 @@ fingerprint. `Pipfile.lock` reads `default`,
 removed from `version`. A git or path entry may omit `version`; its
 fingerprint is `ref` or `path`. A Git subdirectory selector contributes to
 that fingerprint. File, URL, and other version-control sources
-may omit `version`. Their source URL and any non-Git revision form the fingerprint. A registry entry
+may omit `version`. Their source URL, non-Git revision, and subdirectory
+selector contribute to the fingerprint. A registry entry
 requires `version` and uses all sorted hashes. `go.mod` requires exactly one
 module declaration and reads `require` lines, including `// indirect` and revision
 names written in place of canonical versions.

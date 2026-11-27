@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use no_mistakes::codebase::lockfile::{self, PackageManager};
+use no_mistakes::codebase::lockfile::{self, git_ref_exists, PackageManager};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -91,7 +91,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {
-            let Some(c) = git_content(&git_root, head, &rel)? else {
+            let RefContent::Readable(c) = git_content(&git_root, head, &rel)? else {
                 continue;
             };
             c
@@ -104,7 +104,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
                 }
             }
         };
-        let Some(old_content) = git_content(&git_root, &args.base, &rel)? else {
+        let RefContent::Readable(old_content) = git_content(&git_root, &args.base, &rel)? else {
             continue;
         };
 

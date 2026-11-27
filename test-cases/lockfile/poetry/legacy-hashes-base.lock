@@ -1,0 +1,9 @@
+[[package]]
+name = "sample"
+version = "1.0.0"
+
+[metadata]
+lock-version = "1.0"
+
+[metadata.hashes]
+sample = ["sha256:aaa"]

@@ -27,27 +27,22 @@ fn find_git_root(dir: &Path) -> Result<Option<PathBuf>> {
     }
 }
 
-fn git_ref_exists(root: &Path, git_ref: &str) -> Result<bool> {
-    let mut command = std::process::Command::new("git");
-    command
-        .args(["rev-parse", "--verify", git_ref])
-        .current_dir(root);
-    Ok(no_mistakes::invocation::command_output(&mut command)?
-        .status
-        .success())
+enum RefContent {
+    Skip,
+    Readable(Option<String>),
 }
 
-fn git_content(git_root: &Path, git_ref: &str, rel: &str) -> Result<Option<Option<String>>> {
+fn git_content(git_root: &Path, git_ref: &str, rel: &str) -> Result<RefContent> {
     match lockfile::git_show_file(git_root, git_ref, rel) {
-        Ok(Some(content)) => Ok(Some(Some(content))),
-        Ok(None) if git_ref_exists(git_root, git_ref)? => Ok(Some(None)),
+        Ok(Some(content)) => Ok(RefContent::Readable(Some(content))),
+        Ok(None) if git_ref_exists(git_root, git_ref)? => Ok(RefContent::Readable(None)),
         Ok(None) => {
             eprintln!("warning: could not retrieve {rel} at ref {git_ref}");
-            Ok(None)
+            Ok(RefContent::Skip)
         }
         Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
             eprintln!("warning: {error}; skipping it");
-            Ok(None)
+            Ok(RefContent::Skip)
         }
         Err(error) => Err(error.into()),
     }

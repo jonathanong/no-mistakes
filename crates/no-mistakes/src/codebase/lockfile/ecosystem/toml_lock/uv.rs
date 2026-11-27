@@ -6,7 +6,7 @@ use serde::Deserialize;
 struct UvLock {
     #[serde(default)]
     version: Option<i64>,
-    #[serde(default)]
+    #[serde(default, alias = "distribution")]
     package: Vec<UvPackage>,
 }
 

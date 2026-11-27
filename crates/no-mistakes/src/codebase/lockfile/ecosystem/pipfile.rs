@@ -54,6 +54,8 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
     {
         let fingerprint = text(obj, "ref")
             .map_or_else(|| url.to_string(), |reference| format!("{url}#{reference}"));
+        let fingerprint =
+            super::source_fingerprint(&fingerprint, "subdirectory", text(obj, "subdirectory"));
         (ResolutionKind::Other, fingerprint, true)
     } else if let Some(url) = text(obj, "file").or_else(|| text(obj, "url")) {
         (ResolutionKind::Tarball, url.to_string(), true)

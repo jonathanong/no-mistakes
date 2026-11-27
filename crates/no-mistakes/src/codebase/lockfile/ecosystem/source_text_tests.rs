@@ -34,7 +34,11 @@ fn checked_text_lockfiles_reject_unrecognized_top_level_structures() {
         &fixture("gemfile", "unrecognized-header.lock")
     )
     .is_err());
-    for name in ["unknown-directive.mod", "conflict.mod"] {
+    for name in [
+        "unknown-directive.mod",
+        "conflict.mod",
+        "invalid-replacement.mod",
+    ] {
         assert!(packages_for_diff(PackageManager::Go, &fixture("gomod", name)).is_err());
     }
     assert!(packages_for_diff(
@@ -106,6 +110,13 @@ fn source_selectors_change_packages_without_changing_the_pin_or_hash() {
             "subdirectory",
             "abc123#subdirectory=packages/sample",
             ResolutionKind::Git,
+        ),
+        (
+            PackageManager::Pipfile,
+            "pipfile",
+            "hg-subdirectory",
+            "https://example.invalid/sample#abc123#subdirectory=packages/sample",
+            ResolutionKind::Other,
         ),
         (
             PackageManager::Uv,

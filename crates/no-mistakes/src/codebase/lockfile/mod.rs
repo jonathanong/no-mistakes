@@ -9,7 +9,7 @@ pub mod validate;
 pub mod yarn;
 
 pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};
-pub use revisions::{detect_lockfiles_at_refs, git_lockfile_path, git_show_file};
+pub use revisions::{detect_lockfiles_at_refs, git_lockfile_path, git_ref_exists, git_show_file};
 pub use validate::{packages_for_diff, packages_for_optional_diff};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

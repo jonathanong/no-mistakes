@@ -14,13 +14,3 @@ pub(super) fn find_git_root(dir: &Path) -> std::io::Result<Option<PathBuf>> {
         Ok(None)
     }
 }
-
-pub(super) fn git_ref_exists(root: &Path, git_ref: &str) -> std::io::Result<bool> {
-    let mut command = std::process::Command::new("git");
-    command
-        .args(["rev-parse", "--verify", git_ref])
-        .current_dir(root);
-    Ok(crate::invocation::command_output(&mut command)?
-        .status
-        .success())
-}

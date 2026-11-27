@@ -66,5 +66,27 @@ fn git_path_exists(root: &Path, reference: &str, rel: &str) -> io::Result<bool> 
         ])
         .current_dir(root);
     let output = crate::invocation::command_output(&mut command)?;
-    Ok(output.status.success() && !output.stdout.is_empty())
+    if output.status.success() {
+        return Ok(!output.stdout.is_empty());
+    }
+    if git_ref_exists(root, reference)? {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!(
+                "could not list `{rel}` at ref `{reference}`: {}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            ),
+        ));
+    }
+    Ok(false)
+}
+
+pub fn git_ref_exists(root: &Path, reference: &str) -> io::Result<bool> {
+    let mut command = Command::new("git");
+    command
+        .args(["rev-parse", "--verify", "--end-of-options", reference])
+        .current_dir(root);
+    Ok(crate::invocation::command_output(&mut command)?
+        .status
+        .success())
 }

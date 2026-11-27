@@ -43,18 +43,32 @@ struct PoetrySource {
 
 #[derive(Deserialize, Default)]
 struct PoetryMetadata {
+    #[serde(default, rename = "lock-version")]
+    lock_version: Option<String>,
+    #[serde(default)]
+    hashes: BTreeMap<String, Vec<String>>,
     #[serde(default)]
     files: BTreeMap<String, Vec<PoetryFile>>,
 }
 
 pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
     let lock: PoetryLock = toml::from_str(content).map_err(|_| TomlError)?;
-    if lock.package.is_empty() && lock.metadata.is_none() {
+    let lock_version = lock
+        .metadata
+        .as_ref()
+        .and_then(|metadata| metadata.lock_version.as_deref());
+    if lock.package.is_empty()
+        && !lock_version
+            .and_then(|version| version.split_once('.'))
+            .is_some_and(|(major, minor)| {
+                major.parse::<u64>().is_ok() && minor.parse::<u64>().is_ok()
+            })
+    {
         return Err(TomlError);
     }
     let mut packages: Vec<_> = lock.package.into_iter().map(package).collect();
     if let Some(metadata) = lock.metadata {
-        fill_metadata(&mut packages, &metadata.files);
+        fill_metadata(&mut packages, &metadata);
     }
     Ok(packages)
 }
@@ -103,16 +117,15 @@ fn fingerprint(
     artifact_hashes(files)
 }
 
-fn fill_metadata(packages: &mut [ResolvedPackage], files: &BTreeMap<String, Vec<PoetryFile>>) {
-    for package in packages {
-        let Some(entries) = files.get(&package.name) else {
-            continue;
-        };
-        if package.fingerprint.is_empty() {
-            let hash = artifact_hashes(entries);
-            if !hash.is_empty() {
-                package.fingerprint = hash;
-            }
+fn fill_metadata(packages: &mut [ResolvedPackage], metadata: &PoetryMetadata) {
+    for package in packages
+        .iter_mut()
+        .filter(|package| package.fingerprint.is_empty())
+    {
+        if let Some(hashes) = metadata.hashes.get(&package.name) {
+            package.fingerprint = super::super::hash_fingerprint(hashes.iter().map(String::as_str));
+        } else if let Some(files) = metadata.files.get(&package.name) {
+            package.fingerprint = artifact_hashes(files);
         }
     }
 }

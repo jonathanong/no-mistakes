@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 mod git;
-use git::{find_git_root, git_ref_exists};
-use lockfile::git_show_file;
+use git::find_git_root;
+use lockfile::{git_ref_exists, git_show_file};
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]

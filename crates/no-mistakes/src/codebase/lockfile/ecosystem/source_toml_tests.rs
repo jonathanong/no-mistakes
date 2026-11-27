@@ -151,3 +151,27 @@ fn distribution_hash_changes_are_visible_and_reordering_is_ignored() {
         assert_eq!(diff(&base, &packages("changed")).changed, ["sample"]);
     }
 }
+
+#[test]
+fn legacy_poetry_hashes_and_uv_distributions_are_read() {
+    let base = packages_for_diff(
+        PackageManager::Poetry,
+        &fixture("poetry", "legacy-hashes-base.lock"),
+    )
+    .unwrap();
+    let head = packages_for_diff(
+        PackageManager::Poetry,
+        &fixture("poetry", "legacy-hashes-head.lock"),
+    )
+    .unwrap();
+    assert_eq!(diff(&base, &head).changed, ["sample"]);
+    for name in ["missing-version.lock", "invalid-metadata.lock"] {
+        assert!(packages_for_diff(PackageManager::Poetry, &fixture("poetry", name)).is_err());
+    }
+    let packages = packages_for_diff(
+        PackageManager::Uv,
+        &fixture("uv", "legacy-distribution.lock"),
+    )
+    .unwrap();
+    expect(&packages, "sample", "1.0.0", "", ResolutionKind::Registry);
+}

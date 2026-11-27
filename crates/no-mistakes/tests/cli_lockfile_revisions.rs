@@ -105,3 +105,40 @@ fn a_git_tree_at_a_lockfile_path_is_reported_as_unreadable() {
     let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(report, serde_json::json!([]));
 }
+
+#[test]
+fn a_ref_pointing_to_a_blob_cannot_be_used_as_a_tree() {
+    let dir = empty_repo();
+    let root = dir.path();
+    std::fs::copy(ecosystem_lock("cargo/base.lock"), root.join("Cargo.lock")).unwrap();
+    git_commit(root, &["Cargo.lock"], "package data");
+
+    let blob = Command::new("git")
+        .args(["rev-parse", "HEAD:Cargo.lock"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    assert!(blob.status.success());
+    let blob = stdout(&blob);
+    let discovery = diff_revisions(root, blob.trim());
+    assert!(!discovery.status.success());
+    assert!(String::from_utf8_lossy(&discovery.stderr).contains("could not list"));
+
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        blob.trim(),
+        "--head",
+        "HEAD",
+        "--lockfile",
+        "Cargo.lock",
+    ]);
+    let warning = String::from_utf8_lossy(&output.stderr);
+    assert!(output.status.success(), "{warning}");
+    assert!(warning.contains("could not list `Cargo.lock`"), "{warning}");
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report, serde_json::json!([]));
+}
