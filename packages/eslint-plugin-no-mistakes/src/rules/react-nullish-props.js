@@ -19,7 +19,7 @@ function classifiedProps(type, facts) {
   const name = typeName(type);
   return {
     props: name ? facts.objectProps.get(name) || null : null,
-    unresolved: null,
+    unresolved: name ? facts.unresolvedObjectProps?.get(name) || null : null,
   };
 }
 

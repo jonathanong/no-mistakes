@@ -58,6 +58,9 @@ function importBindingFact(def) {
   if (node?.type === "ImportSpecifier") {
     const imported = importedSpecifierName(node);
     if (!imported) return { unresolved: true };
+    if (imported === "default") {
+      return { module: moduleName, kind: "default", imported: null, typeOnly };
+    }
     return { module: moduleName, kind: "named", imported, typeOnly };
   }
   return { unresolved: true };
@@ -91,13 +94,15 @@ function namespaceMember(base, imported) {
 function destructureFact(declarator, name, context, seen) {
   const imported = patternImported(declarator.id, name);
   if (imported === null) return null;
-  if (imported === undefined) return { unresolved: true };
   const required = requireModule(declarator.init, context);
-  if (required === null) return { unresolved: true };
-  if (typeof required === "string") {
-    return namespaceMember({ module: required, kind: "namespace", typeOnly: false }, imported);
+  if (required === undefined) {
+    const source = importFact(declarator.init, context, seen);
+    if (!source) return null;
+    if (imported === undefined || source.unresolved) return { unresolved: true };
+    return namespaceMember(source, imported);
   }
-  return namespaceMember(importFact(declarator.init, context, seen), imported);
+  if (imported === undefined || required === null) return { unresolved: true };
+  return namespaceMember({ module: required, kind: "namespace", typeOnly: false }, imported);
 }
 
 function factFromDef(def, name, context, seen) {
@@ -127,10 +132,10 @@ function importFact(node, context, seen = new Set()) {
     return { module: required, kind: "namespace", imported: null, typeOnly: false };
   }
   if (current.type !== "Identifier") return null;
-  if (seen.has(current.name)) return { unresolved: true };
-  seen.add(current.name);
   const variable = resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return null;
+  if (seen.has(variable)) return { unresolved: true };
+  seen.add(variable);
   if (
     variable.defs.length !== 1 &&
     !variable.defs.some((def) => defMayBeImport(def, context, new Set([current.name])))
@@ -140,7 +145,8 @@ function importFact(node, context, seen = new Set()) {
   if (variable.defs.length !== 1) return { unresolved: true };
   const def = variable.defs[0];
   const direct = factFromDef(def, current.name, context, seen);
-  if (direct) return direct;
+  const written = variable.references.some((reference) => reference.isWrite() && !reference.init);
+  if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
   if (
     def.type === "Variable" &&
     def.parent?.kind === "const" &&

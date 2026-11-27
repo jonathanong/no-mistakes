@@ -116,14 +116,15 @@ module.exports = Object.assign(
         },
         JSXOpeningElement(node) {
           if (!isScriptTag(node)) return;
-          if (!isNextFile) {
-            if (nextUnresolved && reportsUnanalyzable(context)) {
-              report(node, "unanalyzable");
-            }
-            return;
-          }
+          const structured = options.structuredDataComponent || options.structuredDataMessage;
           if (isJsonLdScript(node)) {
-            if (options.structuredDataComponent || options.structuredDataMessage) {
+            if (!isNextFile) {
+              if (structured && nextUnresolved && reportsUnanalyzable(context)) {
+                report(node, "unanalyzable");
+              }
+              return;
+            }
+            if (structured) {
               report(node, "structuredData", {
                 message:
                   options.structuredDataMessage ||
@@ -133,6 +134,10 @@ module.exports = Object.assign(
             return;
           }
           if (isAllowedInlineScript(node, options, patterns)) return;
+          if (!isNextFile) {
+            if (nextUnresolved && reportsUnanalyzable(context)) report(node, "unanalyzable");
+            return;
+          }
           report(node, "script");
         },
       };

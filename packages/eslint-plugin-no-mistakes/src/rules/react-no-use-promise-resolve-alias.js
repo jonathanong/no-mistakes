@@ -4,6 +4,15 @@ const { isTransparentExpression, unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { literalString } = require("./module-mock-helpers");
 
+function inTypeQuery(node) {
+  let current = node.parent;
+  while (current) {
+    if (current.type === "TSTypeQuery") return true;
+    current = current.parent;
+  }
+  return false;
+}
+
 function logicalParent(node) {
   let current = node.parent;
   while (isTransparentExpression(current)) current = current.parent;
@@ -41,7 +50,7 @@ function aliasUsesStayLocal(variable, context, seen = new Set()) {
     return false;
   seen.add(variable);
   return variable.references.every((reference) => {
-    if (reference.init) return true;
+    if (reference.init || inTypeQuery(reference.identifier)) return true;
     if (reference.isWrite() || crossesWith(reference.identifier, variable.scope, context))
       return false;
     const parent = logicalParent(reference.identifier);
@@ -69,6 +78,7 @@ function aliasUsesStayLocal(variable, context, seen = new Set()) {
 function globalUsesStayLocal(variable, context) {
   return variable.references.every((reference) => {
     if (reference.isTypeReference && !reference.isValueReference) return true;
+    if (inTypeQuery(reference.identifier)) return true;
     if (reference.isWrite()) return false;
     const parent = logicalParent(reference.identifier);
     if (parent?.type === "MemberExpression" && sameReference(parent.object, reference.identifier)) {

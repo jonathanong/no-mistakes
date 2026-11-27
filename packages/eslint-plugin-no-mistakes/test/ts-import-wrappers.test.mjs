@@ -161,6 +161,50 @@ describe("typescript import wrappers", () => {
         },
       ),
       eslintCase("wrapped jsx iife", "iife.tsx", "react-no-iife-in-jsx"),
+      eslintCase(
+        "nullable calls outside the getter",
+        "nullable-outer.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "named unresolved ReactNode members",
+        "react-nullish-members.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "local require is not React",
+        "react-nullish-local-require.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "react use binding shapes",
+        "react-use-bindings.tsx",
+        "react-no-use-promise-resolve",
+      ),
+      eslintCase(
+        "promise type query alias",
+        "promise-type-query.tsx",
+        "react-no-use-promise-resolve",
+      ),
+      eslintCase(
+        "exempt scripts before an unresolved import",
+        "src/script-exempt.tsx",
+        "nextjs-no-manual-script-tags",
+        {
+          allowInlineScriptIds: ["theme"],
+        },
+      ),
+      eslintCase(
+        "structured JSON-LD stays uncertain",
+        "src/script-exempt.tsx",
+        "nextjs-no-manual-script-tags",
+        { structuredDataComponent: "StructuredData", allowInlineScriptIds: ["theme"] },
+      ),
     ];
 
     expect(cases.find((item) => item.name === "ignored unresolved react require").findings).toEqual(
@@ -220,16 +264,52 @@ describe("typescript import wrappers", () => {
     expect(
       cases.find((item) => item.name === "wrapped jsx iife").findings.map((f) => f.line),
     ).toEqual([3, 4, 5]);
+    expect(
+      cases.find((item) => item.name === "nullable calls outside the getter").findings,
+    ).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "named unresolved ReactNode members")
+        .findings.map((finding) => finding.line),
+    ).toEqual([7, 11]);
+    expect(cases.find((item) => item.name === "local require is not React").findings).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "react use binding shapes")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [3, "resolve"],
+      [15, "unanalyzable"],
+      [22, "resolve"],
+      [35, "resolve"],
+    ]);
+    expect(
+      cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
+    ).toEqual([4]);
+    expect(
+      cases
+        .find((item) => item.name === "exempt scripts before an unresolved import")
+        .findings.map((finding) => finding.line),
+    ).toEqual([7]);
+    expect(
+      cases
+        .find((item) => item.name === "structured JSON-LD stays uncertain")
+        .findings.map((finding) => finding.line),
+    ).toEqual([3, 7]);
 
     const oxlint = {
       "react-use": oxlintOn(".oxlintrc-react-use.json", [
         "react-use-cjs.tsx",
         "react-use-wrappers.tsx",
         "react-use-unresolved.tsx",
+        "react-use-bindings.tsx",
+        "promise-type-query.tsx",
       ]),
       nullish: oxlintOn(".oxlintrc-nullish.json", [
         "react-nullish.tsx",
         "react-nullish-unresolved.tsx",
+        "react-nullish-members.tsx",
+        "react-nullish-local-require.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -243,7 +323,9 @@ describe("typescript import wrappers", () => {
         "src/import-equals-head.tsx",
         "src/dynamic-next.tsx",
         "src/plain.tsx",
+        "src/script-exempt.tsx",
       ]),
+      "script-structured": oxlintOn(".oxlintrc-script-structured.json", ["src/script-exempt.tsx"]),
       "script-ignore": oxlintOn(".oxlintrc-script-ignore.json", ["src/dynamic-next.tsx"]),
       "nullable-widget": oxlintOn(".oxlintrc-nullable-widget.json", [
         "nullable-cjs.ts",
@@ -251,6 +333,7 @@ describe("typescript import wrappers", () => {
       ]),
       "nullable-user": oxlintOn(".oxlintrc-nullable-user.json", ["nullable-satisfies.ts"]),
       "nullable-overload": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-overload.ts"]),
+      "nullable-outer": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-outer.ts"]),
       iife: oxlintOn(".oxlintrc-iife.json", ["iife.tsx"]),
     };
     assert.equal(

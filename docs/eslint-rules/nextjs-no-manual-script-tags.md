@@ -39,7 +39,9 @@ Both inline-id options default to no exemptions.
 `unanalyzable` is `"finding"` or `"ignore"`. It defaults to `"finding"`.
 Outside `app` and `pages`, a non-static `require`, `import()`, or
 `import = require` reports `unanalyzable` on each raw `<script>` because the
-module might be `next/`. `"ignore"` drops only that uncertain report. A static
+module might be `next/`. JSON-LD and an allowed inline id are checked first.
+JSON-LD still reports `unanalyzable` when a structured-data option is set.
+`"ignore"` drops only that uncertain report. A static
 `require("next/…")` or `import Name = require("next/…")` is a Next.js file.
 
 - `structuredDataComponent` is a nonempty component name to recommend instead

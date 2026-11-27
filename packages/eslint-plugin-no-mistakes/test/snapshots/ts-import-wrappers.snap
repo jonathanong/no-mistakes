@@ -20,6 +20,29 @@
       "rule": "nextjs-no-manual-script-tags"
     },
     {
+      "file": "src/script-exempt.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 51,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/script-exempt.tsx",
+          "line": 7,
+          "message": "Could not resolve whether this file imports Next.js. Use a static next/ import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "exempt scripts before an unresolved import",
+      "options": {
+        "allowInlineScriptIds": [
+          "theme"
+        ]
+      },
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
       "file": "src/dynamic-next.tsx",
       "findings": [],
       "name": "ignored dynamic next require",
@@ -71,6 +94,41 @@
       "findings": [],
       "name": "static non-next require",
       "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "src/script-exempt.tsx",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 64,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/script-exempt.tsx",
+          "line": 3,
+          "message": "Could not resolve whether this file imports Next.js. Use a static next/ import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 51,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/script-exempt.tsx",
+          "line": 7,
+          "message": "Could not resolve whether this file imports Next.js. Use a static next/ import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "structured JSON-LD stays uncertain",
+      "options": {
+        "allowInlineScriptIds": [
+          "theme"
+        ],
+        "structuredDataComponent": "StructuredData"
+      },
       "rule": "nextjs-no-manual-script-tags"
     },
     {
@@ -307,6 +365,43 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-local-require.tsx",
+      "findings": [],
+      "name": "local require is not React",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-members.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-members.tsx",
+          "line": 7,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-members.tsx",
+          "line": 11,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "named unresolved ReactNode members",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-import-type.tsx",
       "findings": [
         {
@@ -392,6 +487,77 @@
       "options": {
         "unanalyzable": "ignore"
       },
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "promise-type-query.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/promise-type-query.tsx",
+          "line": 4,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "promise type query alias",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "react-use-bindings.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 3,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 15,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 22,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 22,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 35,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 35,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "react use binding shapes",
+      "options": null,
       "rule": "react-no-use-promise-resolve"
     },
     {
@@ -503,6 +669,21 @@
         }
       ],
       "name": "commonjs nullable getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-outer.ts",
+      "findings": [],
+      "name": "nullable calls outside the getter",
       "options": {
         "getterCalleePatterns": [
           "^getWidget$"
@@ -706,6 +887,14 @@
         "options": null
       }
     ],
+    "nullable-outer": [
+      {
+        "file": "nullable-outer.ts",
+        "findings": [],
+        "name": "nullable-outer.ts",
+        "options": null
+      }
+    ],
     "nullable-overload": [
       {
         "file": "nullable-overload.ts",
@@ -790,6 +979,33 @@
     ],
     "nullish": [
       {
+        "file": "react-nullish-local-require.tsx",
+        "findings": [],
+        "name": "react-nullish-local-require.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish-members.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-members.tsx",
+            "line": 7,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-members.tsx",
+            "line": 11,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-members.tsx",
+        "options": null
+      },
+      {
         "file": "react-nullish-unresolved.tsx",
         "findings": [
           {
@@ -855,6 +1071,55 @@
       }
     ],
     "react-use": [
+      {
+        "file": "promise-type-query.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "promise-type-query.tsx",
+            "line": 4,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          }
+        ],
+        "name": "promise-type-query.tsx",
+        "options": null
+      },
+      {
+        "file": "react-use-bindings.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 3,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 15,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 22,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 35,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          }
+        ],
+        "name": "react-use-bindings.tsx",
+        "options": null
+      },
       {
         "file": "react-use-cjs.tsx",
         "findings": [
@@ -987,6 +1252,20 @@
         ],
         "name": "src/require-head.tsx",
         "options": null
+      },
+      {
+        "file": "src/script-exempt.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 29,
+            "file": "src/script-exempt.tsx",
+            "line": 7,
+            "message": "Could not resolve whether this file imports Next.js. Use a static next/ import."
+          }
+        ],
+        "name": "src/script-exempt.tsx",
+        "options": null
       }
     ],
     "script-ignore": [
@@ -994,6 +1273,29 @@
         "file": "src/dynamic-next.tsx",
         "findings": [],
         "name": "src/dynamic-next.tsx",
+        "options": null
+      }
+    ],
+    "script-structured": [
+      {
+        "file": "src/script-exempt.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 27,
+            "file": "src/script-exempt.tsx",
+            "line": 3,
+            "message": "Could not resolve whether this file imports Next.js. Use a static next/ import."
+          },
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 29,
+            "file": "src/script-exempt.tsx",
+            "line": 7,
+            "message": "Could not resolve whether this file imports Next.js. Use a static next/ import."
+          }
+        ],
+        "name": "src/script-exempt.tsx",
         "options": null
       }
     ]

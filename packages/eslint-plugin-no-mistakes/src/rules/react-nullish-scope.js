@@ -13,8 +13,10 @@ function createNullishState(context) {
   const scopes = [];
   // Loop shadows may share the sequential name scope; alias sources need binding identity.
   const objectBindings = new Map();
+  const unresolvedBindings = new Map();
   // Keep added alias facts lexical without removing legacy declared-name findings.
   const objectAliases = new Map();
+  const unresolvedAliases = new Map();
   let facts = {
     aliases: new Map(),
     objectProps: new Map(),
@@ -56,6 +58,7 @@ function createNullishState(context) {
     }
     if (classified.unresolved && classified.unresolved.size > 0) {
       scope.unresolvedMembers.set(identifier.name, classified.unresolved);
+      unresolvedBindings.set(resolveVariable(identifier, context), classified.unresolved);
     }
   }
 
@@ -83,15 +86,11 @@ function createNullishState(context) {
   }
 
   function lookupMembers(identifier, field) {
-    const alias =
-      field === "objectTypes" ? objectAliases.get(resolveVariable(identifier, context)) : null;
+    const aliases = field === "objectTypes" ? objectAliases : unresolvedAliases;
+    const alias = aliases.get(resolveVariable(identifier, context));
     const name = identifier.name;
     for (let index = scopes.length - 1; index >= 0; index -= 1) {
-      if (
-        field === "objectTypes" &&
-        scopes[index].bindings.has(name) &&
-        !scopes[index][field].has(name)
-      ) {
+      if (scopes[index].bindings.has(name) && !scopes[index][field].has(name)) {
         return alias || null;
       }
       const props = scopes[index][field].get(name);
@@ -116,7 +115,9 @@ function createNullishState(context) {
         : def.type === "Variable" &&
           def.parent.kind === "const" &&
           def.node.range[1] < init.range[0];
-    return initialized ? objectBindings.get(source) : null;
+    return initialized
+      ? { props: objectBindings.get(source), unresolved: unresolvedBindings.get(source) }
+      : null;
   }
 
   function defineParam(param) {
@@ -149,12 +150,13 @@ function createNullishState(context) {
       else if (!type && initStatus === "unresolved") defineUnresolved(node.id.name, scope);
       defineObjectType(node.id, type, scope);
       if (!type) {
-        const props = objectAliasProps(node);
-        if (props) {
-          const binding = resolveVariable(node.id, context);
-          objectAliases.set(binding, props);
-          objectBindings.set(binding, props);
+        const alias = objectAliasProps(node);
+        const binding = resolveVariable(node.id, context);
+        if (alias?.props) {
+          objectAliases.set(binding, alias.props);
+          objectBindings.set(binding, alias.props);
         }
+        if (alias?.unresolved) unresolvedAliases.set(binding, alias.unresolved);
       }
       return;
     }

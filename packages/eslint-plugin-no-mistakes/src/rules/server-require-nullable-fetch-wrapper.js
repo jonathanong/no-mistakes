@@ -2,7 +2,7 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { logicalCall, pathAllowed } = require("./module-mock-helpers");
+const { logicalCall, memberPropertyName, pathAllowed } = require("./module-mock-helpers");
 const { importSpellings, reportsUnanalyzable, rootIdentifier } = require("./import-resolution");
 const helpers = require("./nullable-fetch-wrapper-helpers");
 
@@ -47,6 +47,7 @@ function argumentContains(argument, target) {
 
 function wrapperState(node, wrapper, context) {
   let current = node.parent;
+  let unresolved = false;
   while (current) {
     if (current.type === "CallExpression") {
       const info = calleeNames(current.callee, context);
@@ -60,12 +61,12 @@ function wrapperState(node, wrapper, context) {
       const holds =
         current.arguments.some((argument) => argumentContains(argument, node)) ||
         (invoked?.arguments ?? []).some((argument) => argumentContains(argument, node));
-      if (holds && (info.unresolved || forwarded?.unresolved)) return "unresolved";
+      if (holds && (info.unresolved || forwarded?.unresolved)) unresolved = true;
     }
-    if (isFunctionBoundary(current)) return "outside";
+    if (isFunctionBoundary(current)) return unresolved ? "unresolved" : "outside";
     current = current.parent;
   }
-  return "outside";
+  return unresolved ? "unresolved" : "outside";
 }
 
 function insideWrapper(node, wrapper, context) {
@@ -170,7 +171,13 @@ module.exports = Object.assign(
           const wrapped = wrapperState(node, options.requiredWrapperCallee, context);
           if (wrapped === "inside") return;
           if (suppressed(node)) return;
-          if ((wrapped === "unresolved" || (!name && unresolved)) && reportsUnanalyzable(context)) {
+          const member = memberPropertyName(node.callee);
+          const knownOtherMember =
+            Boolean(member) && !getterPatterns.some((pattern) => pattern.test(member));
+          const uncertainGetter =
+            (Boolean(name) && wrapped === "unresolved") ||
+            (!name && unresolved && !knownOtherMember);
+          if (uncertainGetter && reportsUnanalyzable(context)) {
             context.report({
               node,
               messageId: "unanalyzable",

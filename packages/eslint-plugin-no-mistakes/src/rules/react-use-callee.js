@@ -15,11 +15,6 @@ function staticName(node, computed) {
   return literalString(current);
 }
 
-function variableDef(node, context) {
-  const variable = node?.type === "Identifier" ? resolveVariable(node, context) : null;
-  return variable?.defs.length === 1 ? variable.defs[0] : null;
-}
-
 function patternKey(pattern, name) {
   if (pattern?.type !== "ObjectPattern") return null;
   for (const property of pattern.properties) {
@@ -74,7 +69,12 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     if (namedUse(fact)) return "yes";
     if (fact?.unresolved) return "unresolved";
     if (fact) return "no";
-    const def = variableDef(callee, context);
+    const variable = resolveVariable(callee, context);
+    if (!variable || variable.defs.length === 0) {
+      return useNames.has(callee.name) ? "yes" : "no";
+    }
+    if (variable.defs.length !== 1) return "no";
+    const def = variable.defs[0];
     if (def?.type === "Variable" && def.node?.parent?.kind === "const" && def.node.init) {
       seen.add(callee.name);
       if (def.node.id.type === "Identifier") {
@@ -83,8 +83,7 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
       if (patternKey(def.node.id, callee.name) !== "use") return "no";
       return namespaceStatus(def.node.init, context);
     }
-    if (def) return "no";
-    return useNames.has(callee.name) ? "yes" : "no";
+    return "no";
   }
   if (
     callee?.type === "MemberExpression" &&

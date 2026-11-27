@@ -32,7 +32,7 @@ module.exports = rule(
     const state = createNullishState(context);
     return {
       Program(node) {
-        state.setFacts(createReactNodeFacts(node));
+        state.setFacts(createReactNodeFacts(node, context));
         state.pushScope("program");
       },
       "Program:exit": state.popScope,

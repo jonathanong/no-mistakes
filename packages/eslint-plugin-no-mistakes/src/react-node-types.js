@@ -1,7 +1,15 @@
 "use strict";
 
 const { literalString } = require("./rules/module-mock-helpers");
-const { unwrapExpression } = require("./rules/async-ast");
+const { importFact } = require("./rules/import-resolution");
+
+function syntacticRequire(init) {
+  if (init?.type !== "CallExpression" || init.optional || init.arguments?.length !== 1) return null;
+  if (init.callee?.type !== "Identifier" || init.callee.name !== "require") return null;
+  const moduleName = literalString(init.arguments[0]);
+  if (moduleName === null) return { unresolved: true };
+  return { module: moduleName, kind: "namespace", typeOnly: false };
+}
 const {
   definePattern,
   keyName,
@@ -10,12 +18,13 @@ const {
   typeName,
 } = require("./react-node-type-query");
 
-function createReactNodeFacts(program) {
+function createReactNodeFacts(program, context) {
   const reactNodeNames = new Set(["React.ReactNode"]);
   const unresolvedNamespaces = new Set();
   const unresolvedTypes = new Set();
   const aliases = new Map();
   const objectProps = new Map();
+  const unresolvedObjectProps = new Map();
   const typeFacts = () => ({ aliases, reactNodeNames, unresolvedNamespaces, unresolvedTypes });
 
   function topLevelDeclaration(statement) {
@@ -39,20 +48,23 @@ function createReactNodeFacts(program) {
     return expression && expression.type === "Identifier" ? expression.name : null;
   }
 
-  function isReactNodeType(type) {
-    return reactTypeStatus(type, typeFacts()) === "yes";
+  function absorb(target, source) {
+    if (!source) return;
+    for (const value of source) target.add(value);
   }
 
   function collectMembers(members) {
     const props = new Set();
+    const unresolved = new Set();
     for (const member of members || []) {
-      if (member.type !== "TSPropertySignature" || !isReactNodeType(typeAnnotation(member))) {
-        continue;
-      }
+      if (member.type !== "TSPropertySignature") continue;
       const name = keyName(member.key);
-      if (name) props.add(name);
+      if (!name) continue;
+      const status = reactTypeStatus(typeAnnotation(member), typeFacts());
+      if (status === "yes") props.add(name);
+      else if (status === "unresolved") unresolved.add(name);
     }
-    return props;
+    return { props, unresolved };
   }
 
   for (const statement of program.body || []) {
@@ -86,19 +98,14 @@ function createReactNodeFacts(program) {
     if (declaration.type !== "VariableDeclaration" || declaration.kind !== "const") continue;
     for (const declarator of declaration.declarations || []) {
       if (declarator.id?.type !== "Identifier") continue;
-      const call = unwrapExpression(declarator.init);
-      if (
-        call?.type !== "CallExpression" ||
-        call.optional ||
-        unwrapExpression(call.callee)?.type !== "Identifier" ||
-        unwrapExpression(call.callee)?.name !== "require" ||
-        call.arguments.length !== 1
-      ) {
-        continue;
+      const fact = context?.sourceCode?.getScope
+        ? importFact(declarator.init, context)
+        : syntacticRequire(declarator.init);
+      if (!fact || fact.typeOnly) continue;
+      if (fact.unresolved) unresolvedNamespaces.add(declarator.id.name);
+      else if (fact.module === "react" && (fact.kind === "namespace" || fact.kind === "default")) {
+        reactNodeNames.add(`${declarator.id.name}.ReactNode`);
       }
-      const moduleName = literalString(call.arguments[0]);
-      if (moduleName === "react") reactNodeNames.add(`${declarator.id.name}.ReactNode`);
-      else if (moduleName === null) unresolvedNamespaces.add(declarator.id.name);
     }
   }
 
@@ -125,33 +132,41 @@ function createReactNodeFacts(program) {
     objectsChanged = false;
     for (const statement of program.body || []) {
       const declaration = topLevelDeclaration(statement);
-      if (declaration.type === "TSInterfaceDeclaration") {
-        const props = collectMembers(declaration.body && declaration.body.body);
-        for (const heritage of declaration.extends || []) {
-          const inherited = objectProps.get(heritageName(heritage));
-          if (inherited) {
-            for (const prop of inherited) props.add(prop);
-          }
-        }
-        if (setChanged(objectProps.get(declaration.id.name), props)) {
-          objectProps.set(declaration.id.name, props);
-          objectsChanged = true;
-        }
-      }
-      if (
+      const literal =
         declaration.type === "TSTypeAliasDeclaration" &&
-        declaration.typeAnnotation.type === "TSTypeLiteral"
-      ) {
-        const props = collectMembers(declaration.typeAnnotation.members);
-        if (setChanged(objectProps.get(declaration.id.name), props)) {
-          objectProps.set(declaration.id.name, props);
-          objectsChanged = true;
-        }
+        declaration.typeAnnotation.type === "TSTypeLiteral";
+      if (declaration.type !== "TSInterfaceDeclaration" && !literal) continue;
+      const collected = collectMembers(
+        literal ? declaration.typeAnnotation.members : declaration.body && declaration.body.body,
+      );
+      const props = collected.props;
+      const unresolved = collected.unresolved;
+      absorb(props, objectProps.get(declaration.id.name));
+      absorb(unresolved, unresolvedObjectProps.get(declaration.id.name));
+      for (const heritage of declaration.extends || []) {
+        const inheritedName = heritageName(heritage);
+        absorb(props, objectProps.get(inheritedName));
+        absorb(unresolved, unresolvedObjectProps.get(inheritedName));
+      }
+      if (setChanged(objectProps.get(declaration.id.name), props)) {
+        objectProps.set(declaration.id.name, props);
+        objectsChanged = true;
+      }
+      if (setChanged(unresolvedObjectProps.get(declaration.id.name), unresolved)) {
+        unresolvedObjectProps.set(declaration.id.name, unresolved);
+        objectsChanged = true;
       }
     }
   }
 
-  return { aliases, objectProps, reactNodeNames, unresolvedNamespaces, unresolvedTypes };
+  return {
+    aliases,
+    objectProps,
+    reactNodeNames,
+    unresolvedNamespaces,
+    unresolvedObjectProps,
+    unresolvedTypes,
+  };
 }
 
 module.exports = {

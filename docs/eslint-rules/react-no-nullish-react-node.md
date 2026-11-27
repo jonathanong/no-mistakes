@@ -55,7 +55,7 @@ fallback; preserve an explicit `null` when it is meaningful.
 
 `props["children"]`, ``props[`children`]``, and `const node = children` are the same ReactNode value when the binding is declared in this file. A computed identifier key is not a static property name.
 
-`import React = require("react")`, `import("react").ReactNode`, `(children satisfies ReactNode)`, `props!.children`, and `const { children } = props!` are the same ReactNode value. A non-static `const React = require(moduleName)` or `import(moduleName).ReactNode` reports `unanalyzable`.
+`import React = require("react")`, `import("react").ReactNode`, `(children satisfies ReactNode)`, `props!.children`, and `const { children } = props!` are the same ReactNode value. A non-static `const React = require(moduleName)` or `import(moduleName).ReactNode` reports `unanalyzable`. A named interface property of that type does too, including through a `const` alias of the object. A shadowing parameter stops the lookup. A local function named `require` is not the module loader.
 
 String and expression-free template destructuring keys retain the declared prop
 type. An unannotated `const p = props` also retains it, including through more
