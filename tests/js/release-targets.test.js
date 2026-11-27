@@ -420,6 +420,28 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
 });
 
+test("both native API jobs run the compiled download-integrity regression when in scope", () => {
+  const { jobs } = readWorkflow(join(repoRoot, ".github", "workflows", "ci.yml"));
+  const scripts = join(repoRoot, "packages", "no-mistakes", "scripts");
+  const umbrella = readFileSync(join(scripts, "real-napi-api.test.js"), "utf8");
+  assert.match(umbrella, /require\("\.\/api-tests\/check-policy-native"\)/);
+  const policy = readFileSync(join(scripts, "api-tests", "check-policy-native.js"), "utf8");
+  assert.match(policy, /require\("\.\.\/github-actions-download-integrity-api\.test\.js"\)/);
+
+  for (const [name, platform] of [
+    ["native-api-tests", "windows"],
+    ["native-api-tests-macos", "macos"],
+  ]) {
+    const job = jobs[name];
+    assert.equal(job.if, `\${{ needs.changes.outputs.${platform} == 'true' }}`);
+    assert.equal(job.strategy.matrix.include.length, 1);
+    assert.ok(jobs["tests-gate"].needs.includes(name));
+    const run = job.steps.find((step) => step.id === "real-napi");
+    assert.equal(run.if, undefined);
+    assert.match(run.run, /node \.github\/scripts\/native-api-shards\.cjs/);
+  }
+});
+
 // Keep native build/test debug settings aligned without relying on Cargo to
 // reuse the preceding library build for integration tests.
 test("native CI omits debug metadata without weakening runtime checks", () => {

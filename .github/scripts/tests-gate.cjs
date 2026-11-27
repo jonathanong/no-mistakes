@@ -20,11 +20,7 @@ for (const [name, { result }] of Object.entries(jobs)) {
   const macos = macosJobs.has(name);
   const windows = windowsJobs.has(name);
   if (result === "skipped") {
-    if (
-      process.env.RUST_REQUIRED === "false" &&
-      (rustJobs.has(name) || macos || windows || name === "windows-smoke")
-    )
-      continue;
+    if (rustJobs.has(name) && process.env.RUST_REQUIRED === "false") continue;
     if (name === "standalone-pr" && process.env.MACOS_EVENT !== "pull_request") continue;
     if (
       (name === "standalone-build" || name === "standalone-shards") &&
@@ -32,9 +28,7 @@ for (const [name, { result }] of Object.entries(jobs)) {
     )
       continue;
     if (macos && process.env.MACOS_REQUIRED === "false") continue;
-    if (name === "macos-smoke" && process.env.MACOS_SMOKE_REQUIRED === "false") continue;
     if (windows && process.env.WINDOWS_REQUIRED === "false") continue;
-    if (name === "windows-smoke" && process.env.WINDOWS_REQUIRED === "true") continue;
   }
   if (mainPush && macos && result === "cancelled") continue;
   console.error(`${name}: ${result}`);

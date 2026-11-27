@@ -22,31 +22,6 @@ const producers = [
   "rust-coverage-build",
 ];
 
-test("macOS smoke replays runtime input timestamps only after restoring runtime artifacts", () => {
-  const all = steps(job("macos-smoke"));
-  const runtime = all.find((step) => step.startsWith("Restore native workspace artifacts"));
-  const build = all.find((step) => step.startsWith("Build native CLI and N-API addon"));
-  assert.match(runtime, /id: native-workspace-cache\b/);
-  assert.ok(
-    build.includes(
-      "NATIVE_WORKSPACE_CACHE_KEY: ${{ steps.native-workspace-cache.outputs.cache-matched-key }}",
-    ),
-  );
-  const commands = build.split("\n").map((line) => line.trim());
-  const replay = commands.findIndex((line) =>
-    line.startsWith("node .github/scripts/cargo-cache-inputs.cjs restore "),
-  );
-  assert.ok(replay > 0);
-  assert.deepEqual(commands.slice(replay - 2, replay), [
-    "PY",
-    'if [[ -n "$NATIVE_WORKSPACE_CACHE_KEY" ]]; then',
-  ]);
-  assert.deepEqual(commands.slice(replay + 1, replay + 3), [
-    "fi",
-    "node .github/scripts/build-native.cjs",
-  ]);
-});
-
 test("all large workspace snapshots restore on PRs but save only successful main builds", () => {
   for (const name of producers) {
     const body = job(name);
@@ -161,7 +136,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 24);
+  assert.equal(setups.length, 20);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);
@@ -175,55 +150,4 @@ test("pnpm stores restore on PRs but save only on main", () => {
     assert.doesNotMatch(step, /cache: true/);
     assert.doesNotMatch(step, /save-cache/);
   }
-});
-
-test("Windows smoke restores the workspace snapshot that main's Windows producer saves", () => {
-  const smoke = job("windows-smoke");
-  const restore = steps(smoke).find((step) => /uses: actions\/cache\/restore@/.test(step));
-  assert.ok(restore);
-  assert.doesNotMatch(smoke, /actions\/cache\/save@/);
-  const key = (step) =>
-    step
-      .match(/key: (native-runtime-workspace-v2-.*)\n/)[1]
-      .replaceAll("${{ matrix.target }}", "x86_64-pc-windows-msvc");
-  const producer = steps(job("native-build")).find((step) =>
-    /uses: actions\/cache\/restore@/.test(step),
-  );
-  assert.equal(key(restore), key(producer));
-  assert.equal(paths(restore), paths(producer));
-});
-
-test("macOS smoke builds the runtime CLI first, then compiles and runs no-mistakes-invocation without saving caches", () => {
-  const smoke = job("macos-smoke");
-  const all = steps(smoke);
-  const index = (name) => all.findIndex((step) => step.startsWith(name));
-  assert.doesNotMatch(smoke, /actions\/cache\/save@/);
-  const runtimeRestoreIndex = index("Restore native workspace artifacts built on main");
-  const buildIndex = index("Build native CLI and N-API addon");
-  const compileIndex = index("Compile macOS-dependent Rust tests");
-  const testsIndex = index("Run macOS-dependent Rust tests");
-  assert.ok(runtimeRestoreIndex >= 0, "Missing Restore native workspace artifacts step");
-  assert.ok(buildIndex >= 0, "Missing Build native CLI and N-API addon step");
-  assert.ok(compileIndex >= 0, "Missing Compile macOS-dependent Rust tests step");
-  assert.ok(testsIndex >= 0, "Missing Run macOS-dependent Rust tests step");
-  assert.ok(runtimeRestoreIndex < buildIndex);
-  assert.ok(buildIndex < compileIndex);
-  assert.ok(compileIndex < testsIndex);
-  assert.match(
-    all[testsIndex],
-    /NO_MISTAKES_CLI_BIN: \$\{\{ github\.workspace \}\}\/target\/debug\/no-mistakes/,
-  );
-  assert.doesNotMatch(all[compileIndex], /cargo-cache-inputs/);
-  assert.doesNotMatch(all[testsIndex], /cargo-cache-inputs/);
-});
-
-test("macOS smoke compiles its Rust tests in a bounded step of their own", () => {
-  const all = steps(job("macos-smoke"));
-  const timeout = (name) =>
-    Number(all.find((step) => step.startsWith(name)).match(/timeout-minutes: (\d+)/)[1]);
-  const compile = all.find((step) => step.startsWith("Compile macOS-dependent Rust tests"));
-  assert.match(compile, /smoke\.cjs macos rust-build/);
-  assert.ok(timeout("Compile macOS-dependent Rust tests") <= timeout("Build native CLI"));
-  assert.ok(timeout("Compile macOS-dependent Rust tests") <= 30, "step cap needs no suppression");
-  assert.equal(timeout("Run macOS-dependent Rust tests"), 5);
 });

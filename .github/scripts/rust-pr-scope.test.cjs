@@ -36,6 +36,8 @@ for (const file of [
   ".github/workflows/ci.yml",
   ".github/scripts/example.cjs",
   "packages/no-mistakes/index.js",
+  "packages/no-mistakes/scripts/github-actions-download-integrity-api.test.js",
+  "fixtures/napi/real-addon-dependencies/entry.ts",
   "docs/rules/example.md",
   "docs/example.markdown",
   "docs/node-api.md",
@@ -97,7 +99,8 @@ function gate(name, results, required, event = "pull_request") {
       ...process.env,
       RESULTS: JSON.stringify(results),
       RUST_REQUIRED: required,
-      MACOS_REQUIRED: "false",
+      MACOS_REQUIRED: required,
+      WINDOWS_REQUIRED: required,
       MACOS_EVENT: event,
       MACOS_REF: "refs/pull/1/merge",
     },
@@ -119,8 +122,13 @@ for (const [name, allowed, forbidden] of [
     assert.equal(gate(name, { changes: { result: "failure" } }, "false").status, 1);
   });
 }
-test("scope metadata is PR-only, fail-closed, and artifact merges skip with their producers", () => {
-  assert.match(workflow, /rust:.*github.event_name != 'pull_request'.*outputs.rust != 'false'/);
+test("Rust validation uses the same path scope on every event and merges skip with their producers", () => {
+  for (const scope of ["rust", "macos", "windows"]) {
+    assert.equal(
+      parse(workflow).jobs.changes.outputs[scope],
+      "${{ steps.rust-paths.outputs.rust != 'false' }}",
+    );
+  }
   for (const name of ["quality-rust", "rust-coverage-build", "docs-tests"])
     assert.match(job(name), /if: \$\{\{ needs.changes.outputs.rust == 'true' \}\}/);
   assert.match(

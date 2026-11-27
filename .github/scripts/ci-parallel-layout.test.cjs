@@ -85,7 +85,6 @@ for (const name of ["quality", "tests-gate"]) {
           env: {
             ...process.env,
             MACOS_REQUIRED: "",
-            MACOS_SMOKE_REQUIRED: "",
             MACOS_EVENT: dependency === "standalone-pr" ? "pull_request" : "push",
             MACOS_REF: "",
             RESULTS: JSON.stringify(input),
@@ -115,8 +114,6 @@ test("required names and every full test family remain in the aggregate", () => 
     "native-rust-tests-macos",
     "native-api-tests",
     "native-api-tests-macos",
-    "macos-smoke",
-    "windows-smoke",
     "tests",
     "standalone-build",
     "standalone-shards",
