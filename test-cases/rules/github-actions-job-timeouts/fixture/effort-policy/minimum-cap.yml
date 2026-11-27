@@ -10,4 +10,4 @@ rules:
     scope: repository
     options:
       effort: max
-      maxMinutes: 0
+      maxMinutes: 1

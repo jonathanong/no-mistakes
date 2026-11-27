@@ -1,0 +1,6 @@
+version: 2
+rules:
+- rule: github-actions-checkout-credentials
+  scope: repository
+  options:
+    defaultBranch: a..b

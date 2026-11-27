@@ -153,6 +153,12 @@
       "options": null
     },
     {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/suppression-file.test.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers-valid.test.ts",
       "findings": [],
       "kind": "valid",
@@ -509,6 +515,24 @@
           "endLine": 3,
           "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/renamed-fixture.test.ts",
           "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/suppression-control.test.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/suppression-control.test.mjs",
+          "line": 1,
           "message": "Use parallel tests instead of .sequential.",
           "messageId": "sequential",
           "ruleId": "no-mistakes/no-vitest-sequential",
