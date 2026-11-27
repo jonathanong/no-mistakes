@@ -54,5 +54,8 @@ fn parse_glob(root: &Path, raw: &str, path: &Path) -> Result<Option<(Glob, bool)
     let pattern = pattern.to_string_lossy();
     #[cfg(windows)]
     let pattern = pattern.replace('\\', "/");
+    if pattern != raw {
+        Glob::new(raw)?;
+    }
     Glob::new(&pattern).map(|glob| Some((glob, relative)))
 }

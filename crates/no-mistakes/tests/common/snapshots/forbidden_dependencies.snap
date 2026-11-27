@@ -288,6 +288,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "invalid_suppressed_glob": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid-suppressed-glob.yml:14: invalid options for rule `forbidden-dependencies` at options.forbiddenModules[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n../../configs/invalid-suppressed-glob.yml:20: invalid options for rule `forbidden-dependencies` at options.forbiddenModules[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
   "literal_directory_glob": {
     "exitCode": 1,
     "report": {
@@ -393,13 +397,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": ".no-mistakes.yml",
-          "line": 20,
-          "message": "forbidden-dependencies: invalid glob pattern in forbiddenModules: error parsing glob '[': unclosed character class; missing ']'",
-          "rule": "forbidden-dependencies",
-          "sourceLine": "- '['"
-        },
         {
           "file": "next-line-before-import.mts",
           "import": "import",

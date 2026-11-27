@@ -129,5 +129,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [],
       "warnings": []
     }
+  },
+  "malformed-normalized-selector": {
+    "exitCode": 2,
+    "stderr": "error: malformed-normalized-selector.yml:6: invalid options for rule `forbidden-dependencies` at options.roots[0]: invalid glob: error parsing glob '[/../src/**': unclosed character class; missing ']'\n"
   }
 }

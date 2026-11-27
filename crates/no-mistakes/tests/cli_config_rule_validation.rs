@@ -98,12 +98,22 @@ fn invalid_nested_rule_options_abort_before_analysis() {
         root.clone(),
         root.join("literal-selector.yml"),
     ));
+    cases.push((
+        "malformed-normalized-selector",
+        root.clone(),
+        root.join("malformed-normalized-selector.yml"),
+    ));
     let result = assert_saved_fixture_report("invalid_nested_rule_options", &cases, &[], &[]);
     for label in labels {
         assert_eq!(result[&label]["exitCode"], 2, "{label}: {result}");
         assert!(result[&label]["report"].is_null(), "{label}: {result}");
     }
     assert_eq!(result["literal-selector"]["exitCode"], 0);
+    assert_eq!(result["malformed-normalized-selector"]["exitCode"], 2);
+    assert!(result["malformed-normalized-selector"]["stderr"]
+        .as_str()
+        .unwrap()
+        .contains("options.roots[0]: invalid glob"));
 }
 
 #[test]

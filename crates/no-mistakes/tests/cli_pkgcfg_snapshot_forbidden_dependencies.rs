@@ -29,6 +29,11 @@ fn forbidden_dependencies_json_matches_snapshot() {
                 suppression.join(".no-mistakes.yml"),
             ),
             (
+                "invalid_suppressed_glob",
+                suppression,
+                cfg("invalid-suppressed-glob.yml"),
+            ),
+            (
                 "directory_root",
                 basic.clone(),
                 cfg("basic-directory-root.yml"),
