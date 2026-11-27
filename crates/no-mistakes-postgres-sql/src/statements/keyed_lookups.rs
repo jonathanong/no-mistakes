@@ -2,6 +2,7 @@ mod builtins;
 mod dml;
 mod expr_norm;
 mod function_clauses;
+mod grouping;
 mod join;
 mod normalize;
 mod query;
@@ -117,7 +118,14 @@ fn walk_select(
     }
     let outer = scopes.snapshot();
     let targets = select_exprs::SelectTargets::new(&select.projection);
-    for expr in select_exprs::inspectable(select, order_exprs, &targets) {
+    let group_by = grouping::targets(&select.group_by);
+    let having = select
+        .having
+        .as_ref()
+        .map(|expr| grouping::filter_having(expr, &group_by));
+    for expr in
+        select_exprs::inspectable(select, order_exprs, &targets, &group_by, having.as_deref())
+    {
         subquery::inspect_expr(expr, &outer, &targets, &mut seen, out);
         walk_nested_queries(expr, scopes, out);
     }

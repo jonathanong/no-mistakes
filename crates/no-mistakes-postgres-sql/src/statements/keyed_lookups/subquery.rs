@@ -42,20 +42,16 @@ pub(super) fn inspect_expr(
                 inspect_expr(operand, outer, targets, seen, out);
             }
             let mut cond_seen = seen.clone();
-            for (index, branch) in conditions.iter().enumerate() {
-                if index == 0 {
-                    inspect_expr(&branch.condition, outer, targets, seen, out);
-                    cond_seen = seen.clone();
-                } else {
-                    inspect_expr(&branch.condition, outer, targets, &mut cond_seen, out);
-                }
+            for branch in conditions {
+                inspect_expr(&branch.condition, outer, targets, &mut cond_seen, out);
                 let mut arm_seen = cond_seen.clone();
                 inspect_expr(&branch.result, outer, targets, &mut arm_seen, out);
+                merge_history(seen, arm_seen);
             }
             if let Some(else_expr) = else_result {
-                let mut else_seen = cond_seen;
-                inspect_expr(else_expr, outer, targets, &mut else_seen, out);
+                inspect_expr(else_expr, outer, targets, &mut cond_seen, out);
             }
+            merge_history(seen, cond_seen);
         }
         other => {
             let mut visit = |child: &Expr| inspect_expr(child, outer, targets, seen, out);
@@ -74,6 +70,12 @@ pub(super) fn inspect_expr(
                 visit_shallow_exprs(&function.within_group, &mut visit);
             }
         }
+    }
+}
+
+fn merge_history(seen: &mut super::LookupHistory, branch: super::LookupHistory) {
+    for (key, site) in branch {
+        seen.entry(key).or_insert(site);
     }
 }
 

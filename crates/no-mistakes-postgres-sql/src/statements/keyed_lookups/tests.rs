@@ -253,3 +253,28 @@ fn retains_lookup_identity_across_sorts_merge_categories_and_reused_targets() {
         [(3, 6), (18, 19), (24, 25), (31, 32), (47, 48), (64, 65)]
     );
 }
+
+#[test]
+fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
+    let facts = fixture_facts("review-grouping-case");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (8, 9),
+            (13, 14),
+            (26, 27),
+            (35, 36),
+            (41, 43),
+            (47, 49),
+            (61, 62),
+            (67, 68),
+            (72, 75)
+        ]
+    );
+}

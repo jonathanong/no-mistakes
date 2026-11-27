@@ -4,8 +4,7 @@ use super::windows::referenced_expressions;
 use crate::fx::FxHashSet;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
 use sqlparser::ast::{
-    CastKind, Distinct, Expr, GroupByExpr, Ident, Query, Select, SelectItem, SetExpr, VisitMut,
-    VisitorMut,
+    CastKind, Distinct, Expr, Ident, Query, Select, SelectItem, SetExpr, VisitMut, VisitorMut,
 };
 use std::cell::{OnceCell, RefCell};
 use std::ops::ControlFlow;
@@ -45,18 +44,13 @@ pub(super) fn inspectable<'a>(
     select: &'a Select,
     order_by: &'a [&'a Expr],
     select_targets: &'a SelectTargets<'a>,
+    grouping_targets: &'a [&'a Expr],
+    having: Option<&'a Expr>,
 ) -> impl Iterator<Item = &'a Expr> {
     let distinct_on = match &select.distinct {
         Some(Distinct::On(expressions)) => expressions.as_slice(),
         _ => &[],
     };
-    let mut grouping_targets = Vec::new();
-    if let GroupByExpr::Expressions(expressions, _) = &select.group_by {
-        for expr in expressions {
-            group_targets(expr, &mut grouping_targets);
-        }
-    }
-
     let projection = select.projection.iter().filter_map(select_item_expr);
 
     let clause_target = |expr| (expr, true);
@@ -66,24 +60,13 @@ pub(super) fn inspectable<'a>(
         .map(clause_target)
         .chain(projection.map(independent))
         .chain(select.selection.iter().map(independent))
-        .chain(grouping_targets.into_iter().map(clause_target))
-        .chain(select.having.iter().map(independent))
+        .chain(grouping_targets.iter().copied().map(clause_target))
+        .chain(having.into_iter().map(independent))
         .chain(referenced_expressions(select, distinct_on, order_by))
         .chain(order_by.iter().copied().map(clause_target))
         .filter_map(move |(expr, can_reuse)| {
             (!can_reuse || !select_targets.reuses(expr)).then_some(expr)
         })
-}
-
-fn group_targets<'a>(expr: &'a Expr, targets: &mut Vec<&'a Expr>) {
-    match unwrap_expr(expr) {
-        Expr::GroupingSets(sets) | Expr::Cube(sets) | Expr::Rollup(sets) => {
-            for member in sets.iter().flatten() {
-                group_targets(member, targets);
-            }
-        }
-        _ => targets.push(expr),
-    }
 }
 
 pub(super) fn target_identity(expr: &Expr) -> Expr {

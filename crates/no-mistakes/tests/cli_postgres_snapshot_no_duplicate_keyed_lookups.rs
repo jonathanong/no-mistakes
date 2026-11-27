@@ -26,6 +26,11 @@ fn postgres_no_duplicate_keyed_lookups_check_json_snapshot() {
         ("review_planning", "review-planning", "enabled-sql.yml"),
         ("review_edges", "review-edges", "enabled-sql.yml"),
         (
+            "review_grouping_case",
+            "review-grouping-case",
+            "enabled-sql.yml",
+        ),
+        (
             "review_clause_identity",
             "review-clause-identity",
             "enabled-sql.yml",

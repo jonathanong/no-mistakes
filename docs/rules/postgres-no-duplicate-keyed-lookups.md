@@ -52,7 +52,8 @@ The rule stays silent when the lookups are not proven to read the same row:
 - A lookup paired with a correlated aggregate (`COUNT(*)`, `SUM(...)`, etc.) or
   an `EXISTS (...)` test.
 - Mutually exclusive `CASE WHEN ... THEN (SELECT ...) ELSE (SELECT ...) END`
-  branches.
+  branches. A lookup in an arm can still repeat one in an independent
+  expression.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
@@ -67,7 +68,8 @@ The rule stays silent when the lookups are not proven to read the same row:
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 (including grouping sets), `ORDER BY`, and window partition and ordering
 clauses. An aggregate can also reuse an argument in its ordering clause. The
-rule counts an identical reused expression once.
+rule counts an identical reused expression once. A matching grouping
+expression is also reused inside `HAVING` outside function arguments.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.
