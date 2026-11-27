@@ -296,7 +296,9 @@ fn callable_alias_resolution_is_indexed_once_per_file() {
     let source = include_str!("../edge_calls.rs");
     let helpers = include_str!("../edge_calls/index_build.rs");
     let reachability = include_str!("../edge_import_reachability_traversal.rs");
-    let deferred = include_str!("../../extract_collector_deferred_aliases.rs");
+    let deferred = include_str!(
+        "../../../../../../no-mistakes-ts-facts/src/extract/extract_collector_deferred_aliases.rs"
+    );
 
     assert!(
         helpers.contains("fn index_callable_aliases("),

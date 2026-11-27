@@ -1,0 +1,167 @@
+//! Potential Node loader identities, never proof that a mutable call resolves.
+use super::TypeScriptModuleFacts;
+use crate::fx::FxHashMap;
+use oxc_ast::{ast::*, AstKind};
+use oxc_semantic::Semantic;
+use oxc_syntax::symbol::SymbolId;
+
+mod bindings;
+mod created;
+mod origins;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;
+
+#[derive(Debug, Clone)]
+pub struct NodeLoaderCall {
+    pub callee: String,
+    pub specifier: String,
+    pub computed: bool,
+}
+
+#[derive(Clone, Copy)]
+enum Origin {
+    GlobalRequire,
+    ModuleObject,
+    ModuleNamespace,
+    Factory,
+    Loader,
+}
+
+pub(super) struct Collector<'s, 'a> {
+    semantic: &'s Semantic<'a>,
+    bindings: FxHashMap<SymbolId, Option<Origin>>,
+}
+
+impl<'s, 'a> Collector<'s, 'a> {
+    pub(super) fn new(semantic: &'s Semantic<'a>) -> Self {
+        Self {
+            semantic,
+            bindings: FxHashMap::default(),
+        }
+    }
+
+    pub(super) fn collect(
+        &mut self,
+        call: &'s CallExpression<'a>,
+        facts: &mut TypeScriptModuleFacts,
+    ) {
+        if !matches!(self.origin(&call.callee), Some(Origin::Loader)) {
+            return;
+        }
+        let Some(argument) = call.arguments.first() else {
+            return;
+        };
+        let literal = argument
+            .as_expression()
+            .and_then(crate::extract::static_import_specifier);
+        let computed = literal.is_none();
+        let specifier = literal.unwrap_or_else(|| match argument.as_expression() {
+            Some(Expression::Identifier(id)) => id.name.to_string(),
+            _ => "<computed>".into(),
+        });
+        facts
+            .node_loader_calls
+            .entry(call.span.start)
+            .or_default()
+            .push(NodeLoaderCall {
+                callee: label(&call.callee),
+                specifier,
+                computed,
+            });
+    }
+}
+
+fn is_module(name: &str) -> bool {
+    matches!(name, "module" | "node:module")
+}
+
+fn module_argument(call: &CallExpression<'_>) -> bool {
+    call.arguments
+        .first()
+        .and_then(Argument::as_expression)
+        .and_then(crate::extract::static_import_specifier)
+        .is_some_and(|name| is_module(&name))
+}
+
+fn computed_name<'a>(member: &'a ComputedMemberExpression<'a>) -> Option<&'a str> {
+    let Expression::StringLiteral(name) = member.expression.get_inner_expression() else {
+        return None;
+    };
+    name.value.as_str()
+}
+
+fn member<'e, 'a>(expression: &'e Expression<'a>) -> Option<(&'e Expression<'a>, &'e str)> {
+    match expression {
+        Expression::StaticMemberExpression(member) => {
+            Some((&member.object, member.property.name.as_str()))
+        }
+        Expression::ComputedMemberExpression(member) => {
+            let Expression::StringLiteral(name) = member.expression.get_inner_expression() else {
+                return None;
+            };
+            Some((&member.object, name.value.as_str()?))
+        }
+        _ => None,
+    }
+}
+
+enum ChainLabel<'s, 'a> {
+    Suffix(String, &'s Expression<'a>),
+    Continue(&'s Expression<'a>),
+    Stop,
+}
+
+fn chain_label<'s, 'a>(chain: &'s ChainExpression<'a>) -> ChainLabel<'s, 'a> {
+    match &chain.expression {
+        ChainElement::CallExpression(call) => ChainLabel::Suffix("(...)".into(), &call.callee),
+        ChainElement::StaticMemberExpression(member) => {
+            ChainLabel::Suffix(format!(".{}", member.property.name), &member.object)
+        }
+        ChainElement::ComputedMemberExpression(member) => {
+            let Some(property) = computed_name(member) else {
+                return ChainLabel::Stop;
+            };
+            ChainLabel::Suffix(format!("[{property:?}]"), &member.object)
+        }
+        ChainElement::TSNonNullExpression(inner) => ChainLabel::Continue(&inner.expression),
+        ChainElement::PrivateFieldExpression(_) => ChainLabel::Stop,
+    }
+}
+
+fn label<'a>(mut expression: &'a Expression<'a>) -> String {
+    let mut suffixes = Vec::new();
+    let mut label = loop {
+        match expression.get_inner_expression() {
+            Expression::Identifier(id) => break id.name.to_string(),
+            Expression::CallExpression(call) => {
+                suffixes.push("(...)".into());
+                expression = &call.callee;
+            }
+            Expression::ChainExpression(chain) => match chain_label(chain) {
+                ChainLabel::Suffix(text, next) => {
+                    suffixes.push(text);
+                    expression = next;
+                }
+                ChainLabel::Continue(next) => expression = next,
+                ChainLabel::Stop => break "<Node loader>".into(),
+            },
+            member_expression => {
+                let Some((object, property)) = member(member_expression) else {
+                    break "<Node loader>".into();
+                };
+                suffixes.push(
+                    if matches!(member_expression, Expression::ComputedMemberExpression(_)) {
+                        format!("[{property:?}]")
+                    } else {
+                        format!(".{property}")
+                    },
+                );
+                expression = object;
+            }
+        }
+    };
+    for suffix in suffixes.into_iter().rev() {
+        label.push_str(&suffix);
+    }
+    label
+}

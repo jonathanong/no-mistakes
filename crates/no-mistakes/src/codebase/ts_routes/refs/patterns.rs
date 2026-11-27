@@ -129,49 +129,7 @@ fn extract_pattern_from_expression(expr: &Expression) -> Option<String> {
 
 include!("patterns_route_objects.rs");
 
-pub(crate) fn normalize_next_pathname_pattern(path: &str) -> String {
-    let leading_slash = path.starts_with('/');
-    let trailing_slash = path.ends_with('/') && path.len() > 1;
-    let segments: Vec<String> = path
-        .split('/')
-        .filter(|segment| !segment.is_empty())
-        .map(|segment| {
-            if segment.starts_with("[[...") && segment.ends_with("]]") {
-                "**".to_string()
-            } else if segment.starts_with("[...") && segment.ends_with(']') {
-                "*".to_string()
-            } else if segment.starts_with('[') && segment.ends_with(']') {
-                format!(":{}", &segment[1..segment.len() - 1])
-            } else {
-                segment.to_string()
-            }
-        })
-        .collect();
-
-    let mut normalized = if leading_slash {
-        format!("/{}", segments.join("/"))
-    } else {
-        segments.join("/")
-    };
-    if trailing_slash {
-        normalized.push('/');
-    }
-    normalized
-}
-
-/// Normalize a template literal to a route pattern (replaces `${...}` with `:param`).
-pub fn normalize_template(tpl: &TemplateLiteral) -> String {
-    let mut result = String::new();
-    for (i, quasi) in tpl.quasis.iter().enumerate() {
-        if quasi.value.cooked.is_some() {
-            result.push_str(crate::ast::template_quasi_text(quasi).as_ref());
-        }
-        if i < tpl.expressions.len() {
-            result.push_str(":param");
-        }
-    }
-    normalize_next_pathname_pattern(&result)
-}
+pub use no_mistakes_ts_facts::syntax_helpers::{normalize_next_pathname_pattern, normalize_template};
 
 /// Returns true if this reference should be skipped.
 pub fn should_skip(pattern: &str) -> bool {

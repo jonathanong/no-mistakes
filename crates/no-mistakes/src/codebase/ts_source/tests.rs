@@ -1,11 +1,12 @@
 use super::{
     deadline_checked_paths, discover_files, discover_files_from_visible, discover_source_files,
-    discover_source_files_from_visible, discover_visible_paths, format_parse_diagnostic,
-    git_visible_files, has_disable_comment, has_disable_file_comment, has_disable_line_comment,
-    is_skipped_dir, is_test_file, line_number, matching_disable_directive,
-    normalize_discovery_path, parse_git_tagged_paths, relative_slash_path, starts_with_use_client,
-    static_property_key_name, unwrap_ts_wrappers, walk_files, FrozenPathRemapper,
+    discover_source_files_from_visible, discover_visible_paths, git_visible_files,
+    has_disable_comment, has_disable_file_comment, has_disable_line_comment, is_skipped_dir,
+    is_test_file, line_number, matching_disable_directive, normalize_discovery_path,
+    parse_git_tagged_paths, relative_slash_path, starts_with_use_client, static_property_key_name,
+    unwrap_ts_wrappers, walk_files, FrozenPathRemapper,
 };
+use no_mistakes_ts_facts::syntax_helpers::format_parse_diagnostic;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, ObjectPropertyKind, Statement};
 use oxc_parser::Parser;

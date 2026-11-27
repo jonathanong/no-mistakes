@@ -16,13 +16,20 @@ rule:
     - pattern: oxc_parser::Parser::new($ALLOCATOR, $SOURCE, $SOURCE_TYPE)
 files:
   - "crates/no-mistakes/src/**"
+  - "crates/no-mistakes-ts-facts/src/**"
 ignores:
   - "crates/no-mistakes/src/**/tests/**"
   - "crates/no-mistakes/src/**/*_tests.rs"
   - "crates/no-mistakes/src/**/tests.rs"
   - "crates/no-mistakes/src/**/test_support.rs"
+  - "crates/no-mistakes-ts-facts/src/**/tests/**"
+  - "crates/no-mistakes-ts-facts/src/**/*_tests.rs"
+  - "crates/no-mistakes-ts-facts/src/**/tests.rs"
+  - "crates/no-mistakes-ts-facts/src/**/test_support.rs"
   - "crates/no-mistakes/src/ast.rs"
+  - "crates/no-mistakes-ts-facts/src/ast.rs"
   - "crates/no-mistakes/src/codebase/dependencies/extract.rs"
+  - "crates/no-mistakes-ts-facts/src/extract/mod.rs"
   - "crates/no-mistakes/src/codebase/rules/require_storybook_stories/config/story_patterns.rs"
   - "crates/no-mistakes/src/codebase/rules/server_route_client_boundary/ast/client.rs"
   - "crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/ast.rs"
