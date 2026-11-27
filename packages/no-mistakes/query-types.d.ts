@@ -112,6 +112,12 @@ export interface CallSite {
   argCount: number;
   hasSpread: boolean;
   args: ArgShape[];
+  /**
+   * True when the row is a proven name reference and the extractor did not
+   * record a call shape. `argCount`, `hasSpread`, and `args` are then empty
+   * and are not a proven zero-argument call.
+   */
+  referenceOnly?: boolean;
 }
 
 export interface CallSitesResult extends QueryDiagnostics {

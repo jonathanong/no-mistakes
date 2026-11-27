@@ -3,11 +3,8 @@ use super::render::{render, resolve_format, to_json, Report};
 use super::reverse::{find_export, symbols_from_prepared};
 use super::shared::{rel_str, resolve_target};
 use crate::cli::Format;
-use crate::codebase::dependencies::extract::InvocationKind;
-use crate::codebase::dependencies::graph::{CallRoot, DepGraph};
 use anyhow::Result;
 use is_terminal::IsTerminal;
-use rayon::prelude::*;
 use serde::Serialize;
 use std::collections::BTreeSet;
 use std::io::{self, Write};
@@ -52,6 +49,13 @@ struct CallSite {
     arg_count: usize,
     has_spread: bool,
     args: Vec<&'static str>,
+    /// Proven name reference. Argument fields are empty and are not a call shape.
+    #[serde(skip_serializing_if = "is_false")]
+    reference_only: bool,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 #[derive(Serialize)]
@@ -64,79 +68,16 @@ pub struct CallSitesReport {
     diagnostics: std::sync::Arc<QueryDiagnostics>,
 }
 
+mod language;
 pub(crate) mod prepared;
+mod sites;
 
-fn sites_for_file(
-    path: &Path,
-    targets: &crate::fx::FxHashSet<crate::codebase::dependencies::NodeId>,
-    root: &Path,
-    graph: &DepGraph,
-    facts: Option<&crate::codebase::ts_source::facts::TsFileFacts>,
-) -> Vec<CallSite> {
-    let Some(facts) = facts.filter(|facts| facts.parse_error.is_none()) else {
-        return Vec::new();
-    };
-    let offsets: crate::fx::FxHashSet<_> = graph
-        .call_sites_in_file(path)
-        .iter()
-        .filter(|site| site.invocation == InvocationKind::Call)
-        .filter(|site| site.target_nodes().any(|node| targets.contains(node)))
-        .map(|site| site.offset)
-        .collect();
-    facts
-        .call_sites
-        .iter()
-        .filter(|raw| offsets.contains(&raw.offset))
-        .map(|raw| CallSite {
-            file: rel_str(path, root),
-            line: raw.line,
-            caller: raw.caller.clone(),
-            arg_count: raw.arg_count,
-            has_spread: raw.has_spread,
-            args: raw.args.clone(),
-        })
-        .collect()
-}
-
-pub(crate) struct PreparedCallSitesProjection<'a> {
-    pub(crate) graph: &'a DepGraph,
-    pub(crate) facts: &'a crate::codebase::ts_source::facts::TsFactMap,
-    pub(crate) files: &'a [PathBuf],
-    pub(crate) diagnostics: &'a std::sync::Arc<QueryDiagnostics>,
-}
-
-fn project_sites(
-    root: &Path,
-    file: &Path,
-    export_name: &str,
-    projection: &PreparedCallSitesProjection<'_>,
-) -> Vec<CallSite> {
-    let targets = projection
-        .graph
-        .expand_call_roots(&[CallRoot::Function {
-            file: file.to_path_buf(),
-            symbol: export_name.to_string(),
-        }])
-        .into_iter()
-        .collect();
-    let mut sites: Vec<_> = projection
-        .files
-        .par_iter()
-        .flat_map(|path| {
-            sites_for_file(
-                path,
-                &targets,
-                root,
-                projection.graph,
-                projection.facts.get(path),
-            )
-        })
-        .collect();
-    sites.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
-    sites
-}
+pub(crate) use sites::PreparedCallSitesProjection;
 
 fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
+    if let Some(report) = language::from_args(args)? {
+        return Ok(report);
+    }
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
     let analysis = prepared::prepare(&target)?;
     let symbols = symbols_from_prepared(&target, &analysis.facts)?;
@@ -179,7 +120,7 @@ pub(crate) fn project_report(
     Ok(CallSitesReport {
         file: rel_str(file, root),
         export: export_name.to_string(),
-        call_sites: project_sites(root, file, canonical_export, &projection),
+        call_sites: sites::project_sites(root, file, canonical_export, &projection),
         diagnostics: projection.diagnostics.clone(),
     })
 }
@@ -189,6 +130,10 @@ impl Report for CallSitesReport {
         writeln!(w, "{}#{}", self.file, self.export)?;
         self.diagnostics.write_human(w)?;
         for site in &self.call_sites {
+            if site.reference_only {
+                writeln!(w, "  {}:{} {} reference", site.file, site.line, self.export)?;
+                continue;
+            }
             let caller = site.caller.as_deref().unwrap_or("(top-level)");
             let args = site.args.join(", ");
             writeln!(w, "  {}:{} {caller}({args})", site.file, site.line)?;

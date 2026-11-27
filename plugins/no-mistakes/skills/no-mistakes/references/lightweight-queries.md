@@ -88,6 +88,12 @@ Dynamic selection and aliases invalidated by reassignment can remain unresolved.
 no-mistakes call-sites src/api.mts handler --format json
 ```
 
+Configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and
+Dart files use the same three commands. Rows come from language reference facts
+in the canonical graph. Call sites set `referenceOnly` and leave argument
+fields empty; that is not a proven zero-argument call. PHP rows are `use`
+sites. Unproven calls stay absent.
+
 ## `registry-extension <file>`
 
 Best-effort, heuristic summary of the repeated "register an entry" shape in a

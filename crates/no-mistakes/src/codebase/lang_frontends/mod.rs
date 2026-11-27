@@ -14,6 +14,7 @@ mod python;
 mod ruby;
 mod rustlang;
 mod strip;
+pub(crate) use strip::{mask_strings, strip_comments_keep_strings};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

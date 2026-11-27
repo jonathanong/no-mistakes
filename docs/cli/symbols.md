@@ -55,3 +55,17 @@ Unrelated failures return exit 0; potentially relevant failures return exit 2.
 Use JSON or YAML to inspect completeness before consuming `--format paths`.
 
 Node API: `symbols(options)`.
+
+## Language files
+
+For a configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin,
+Elixir, or Dart file, `symbols` lists declarations from the same language facts
+that build the canonical graph. Each export is `kind: "declaration"` with the
+first source line that contains the name. Dotted names also match `\` and `::`
+spellings, then the last name segment. `--include imports` lists recorded
+import specifiers, not named bindings. `--kind` stays a TypeScript filter, so a
+language file passed with `--kind` has no exports. `--mode signature-impact`
+stays TypeScript and errors on a language file. Pass only language files, or
+only TypeScript files, in one call. The file must sit in the configured
+`tests.*.packages`, `modules`, `apps`, or `dotnet.projects` list.
+`Package.swift` is not a symbol target. A language file outside that list errors.
