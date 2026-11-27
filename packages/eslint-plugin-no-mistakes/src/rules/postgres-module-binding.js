@@ -1,10 +1,16 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
-const { isLocalRequire } = require("./async-target-bindings");
+const { isLocalRequire, isReassigned } = require("./async-target-bindings");
+const { requireSource } = require("./async-target-sources");
 const { literalString } = require("./logical-call");
 const { resolveVariable } = require("./postgres-query-text");
 const { staticKeyName } = require("./postgres-no-async-sql-builder-types");
+
+// requireSource and staticImportSource return a literal module string or null.
+// A dynamic specifier, a written binding, and a named import are null there,
+// and these rules have to report those as unresolved or as a named binding.
+// stableConstInitializer also stops at a non-const or a pattern.
 
 function resolved(kind, source, name) {
   return name === undefined
@@ -19,18 +25,19 @@ function unresolved(kind, name, source) {
   return binding;
 }
 
-function written(variable) {
-  return variable.references.some((reference) => reference.isWrite() && !reference.init);
-}
-
 function classifyRequire(node, context) {
   if (node?.type !== "CallExpression") return null;
   const callee = unwrapExpression(node.callee);
-  if (callee?.type !== "Identifier" || callee.name !== "require") return null;
-  if (isLocalRequire(callee, context)) return null;
-  const argument = node.arguments.length === 1 ? node.arguments[0] : null;
-  const source = argument ? literalString(unwrapExpression(argument)) : null;
-  return source === null ? unresolved("namespace") : resolved("namespace", source);
+  if (
+    callee?.type !== "Identifier" ||
+    callee.name !== "require" ||
+    isLocalRequire(callee, context)
+  ) {
+    return null;
+  }
+  if (node.arguments.length !== 1) return unresolved("namespace");
+  const source = requireSource(node, context);
+  return source ? resolved("namespace", source) : unresolved("namespace");
 }
 
 function importEqualsBinding(node) {
@@ -69,7 +76,7 @@ function moduleObject(binding) {
   return binding?.kind === "namespace" || binding?.kind === "default";
 }
 
-function destructuredBinding(definition, declarator, variable, context, seen) {
+function destructuredBinding(definition, declarator, context, seen) {
   const property = declarator.id.properties.find(
     (item) =>
       item.type === "Property" &&
@@ -82,7 +89,7 @@ function destructuredBinding(definition, declarator, variable, context, seen) {
   const object = resolveModuleBinding(declarator.init, context, seen);
   if (!moduleObject(object)) return null;
   if (object.status === "unresolved") return unresolved("named", key, object.source);
-  if (definition.parent?.kind !== "const" || written(variable)) return null;
+  if (definition.parent?.kind !== "const" || isReassigned(definition.name, context)) return null;
   return {
     status: "resolved",
     kind: "named",
@@ -104,20 +111,20 @@ function resolveModuleBinding(node, context, seen = new Set()) {
   seen.add(definition);
   const direct = specifierBinding(definition);
   if (direct) {
-    return direct.status === "resolved" && written(variable)
+    return direct.status === "resolved" && isReassigned(expression, context)
       ? unresolved(direct.kind, direct.name, direct.source)
       : direct;
   }
   if (definition.type !== "Variable" || !definition.node) return null;
   const declarator = definition.node;
   if (declarator.id?.type === "ObjectPattern") {
-    return destructuredBinding(definition, declarator, variable, context, seen);
+    return destructuredBinding(definition, declarator, context, seen);
   }
   if (declarator.id?.type !== "Identifier") return null;
   const init = resolveModuleBinding(declarator.init, context, seen);
   if (!moduleObject(init)) return null;
   if (init.status === "unresolved") return unresolved(init.kind, init.name, init.source);
-  if (definition.parent?.kind !== "const" || written(variable)) return null;
+  if (definition.parent?.kind !== "const" || isReassigned(declarator.id, context)) return null;
   return init;
 }
 
