@@ -472,14 +472,3 @@ fn shell_guard_skips_quoted_heredocs_and_scans_unquoted_heredocs() {
         assert_eq!(count(&with_env(&format!("{mutating}{guard}"))), 1, "{mutating}");
     }
 }
-
-fn check_source(rel: &str, source: &str) -> Vec<crate::codebase::rules::RuleFinding> {
-    if super::super::gha_kind(rel) != Some(false) {
-        return Vec::new();
-    }
-    let source = source.trim_start_matches('\u{feff}');
-    let Ok(value) = serde_yaml::from_str(source) else {
-        return Vec::new();
-    };
-    super::runs::check_parsed(rel, source, &value)
-}

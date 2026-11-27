@@ -6,8 +6,13 @@ use crate::codebase::rules::{
 use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 
-type Check =
-    fn(&Path, &NoMistakesConfig, &[PathBuf], &SourceStore, bool) -> anyhow::Result<AnalysisDiagnostics>;
+type Check = fn(
+    &Path,
+    &NoMistakesConfig,
+    &[PathBuf],
+    &SourceStore,
+    bool,
+) -> anyhow::Result<AnalysisDiagnostics>;
 
 fn fixture(mode: &str) -> (PathBuf, NoMistakesConfig) {
     let root = crate::codebase::ts_resolver::normalize_path(
@@ -34,12 +39,18 @@ fn parsed_workflow_checks_apply_or_defer_file_suppression() {
         let deferred = check(&root, &config, &files, &sources, true).unwrap();
         assert_eq!(deferred.findings.len(), 1);
         assert_eq!(deferred.advisories.len(), 2);
-        assert!(deferred.advisories.iter().any(|row| row.file.ends_with("/suppressed.yml")));
+        assert!(deferred
+            .advisories
+            .iter()
+            .any(|row| row.file.ends_with("/suppressed.yml")));
 
         let suppressed = check(&root, &config, &files, &sources, false).unwrap();
         assert_eq!(suppressed.findings, deferred.findings);
         assert_eq!(suppressed.advisories.len(), 1);
-        assert_eq!(suppressed.advisories[0].file, ".github/workflows/broken.yml");
+        assert_eq!(
+            suppressed.advisories[0].file,
+            ".github/workflows/broken.yml"
+        );
     }
 }
 

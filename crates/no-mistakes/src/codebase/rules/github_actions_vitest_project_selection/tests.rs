@@ -383,9 +383,7 @@ fn workflow_scan_reports_configured_files_only() {
         &compiled,
     )
     .is_empty());
-    assert!(
-        check_source(".github/workflows/broken.yml", "jobs: [", &compiled).is_empty()
-    );
+    assert!(check_source(".github/workflows/broken.yml", "jobs: [", &compiled).is_empty());
     assert!(check_source(
         ".github/actions/orders/action.yml",
         "name: Orders\ndescription: orders\nruns:\n  using: node20\n  main: index.js\n",
@@ -399,8 +397,7 @@ fn workflow_scan_reports_configured_files_only() {
     )
     .is_empty());
     let composite = "name: Widgets\ndescription: widgets\nruns:\n  using: composite\n  steps:\n    - run: pnpm exec vitest run --project widgets src/widgets.test.ts\n";
-    let hits =
-        check_source(".github/actions/widgets/action.yml", composite, &compiled);
+    let hits = check_source(".github/actions/widgets/action.yml", composite, &compiled);
     assert_eq!(hits.len(), 1, "{hits:?}");
     assert!(hits[0].message.contains("composite step 1"), "{hits:?}");
     assert_eq!(hits[0].target.as_deref(), Some("src/widgets.test.ts"));
@@ -479,7 +476,11 @@ fn yaml_lines_follow_the_located_script() {
     assert_eq!(scalar_name(&serde_yaml::Value::Null), "job");
 }
 
-fn check_source(rel: &str, source: &str, compiled: &super::options::Compiled) -> Vec<super::RuleFinding> {
+fn check_source(
+    rel: &str,
+    source: &str,
+    compiled: &super::options::Compiled,
+) -> Vec<super::RuleFinding> {
     let Some(action) = super::super::github_actions_workflow_files::gha_kind(rel) else {
         return Vec::new();
     };

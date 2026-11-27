@@ -7,13 +7,6 @@ pub mod github_actions_no_poll_wait_job {
     };
 }
 
-#[doc(hidden)]
-pub mod github_actions_pr_diff_range {
-    pub use super::super::github_actions_workflow_files::pr_diff_range::{
-        diagnostics_with_files_and_sources, RULE_ID,
-    };
-}
-
 pub mod github_actions_env_policy {
     pub use super::super::github_actions_workflow_files::env_policy::{
         diagnostics_with_files_and_sources, RULE_ID,

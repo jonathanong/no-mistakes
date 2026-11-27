@@ -5,8 +5,8 @@ use super::yaml::{
     nested_composite_message, step_label, uses_matches, wrapper_rel,
 };
 use super::{AnalysisDiagnostics, CompiledOptions, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use serde_yaml::{Mapping, Value};
 use std::path::{Path, PathBuf};

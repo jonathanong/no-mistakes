@@ -2,11 +2,11 @@ use super::super::job_lines::document::Document;
 use super::lines::{locate, parse, Seg};
 use super::scopes::{shape_detail, visit_action_scopes, visit_workflow_scopes, ScopeEvent};
 use super::{scalar_text, Policy, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, source_access};
-use crate::codebase::ts_source::SourceStore;
 use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::Unanalyzable;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::{Mapping, Value};
 use std::path::Path;
 

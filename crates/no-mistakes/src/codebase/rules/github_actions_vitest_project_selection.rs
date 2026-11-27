@@ -1,8 +1,8 @@
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::file_diagnostics::{self, InputUncertainty};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 

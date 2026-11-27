@@ -1,6 +1,6 @@
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::source_access;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
@@ -45,16 +45,18 @@ pub(super) fn parse_yaml(
     rule_id: &str,
     trim_bom: bool,
 ) -> Result<Arc<Value>, Box<RuleFinding>> {
-    sources.parse_loaded_yaml(path, source, trim_bom).map_err(|error| {
-        let mut finding = source_access::unanalyzable_source(
-            root,
-            path,
-            rule_id,
-            format_args!("YAML could not be parsed ({error})"),
-        );
-        finding.line = error.line();
-        Box::new(finding)
-    })
+    sources
+        .parse_loaded_yaml(path, source, trim_bom)
+        .map_err(|error| {
+            let mut finding = source_access::unanalyzable_source(
+                root,
+                path,
+                rule_id,
+                format_args!("YAML could not be parsed ({error})"),
+            );
+            finding.line = error.line();
+            Box::new(finding)
+        })
 }
 
 pub(super) fn scan_yaml_files(
@@ -65,14 +67,19 @@ pub(super) fn scan_yaml_files(
     select: &(dyn Fn(&str) -> Option<bool> + Sync),
     judge: &(dyn Fn(&str, &str, &Value, bool) -> Vec<RuleFinding> + Sync),
 ) -> (Vec<RuleFinding>, Vec<RuleFinding>) {
-    let chunks: Vec<_> = files.par_iter().filter_map(|path| {
-        let rel = relative_slash_path(root, path);
-        let action = select(&rel)?;
-        let source = super::read_language_source(sources, path)?;
-        Some(parse_yaml(root, path, sources, &source, rule_id, true).map(|value| {
-            judge(&rel, source.trim_start_matches('\u{feff}'), &value, action)
-        }))
-    }).collect();
+    let chunks: Vec<_> = files
+        .par_iter()
+        .filter_map(|path| {
+            let rel = relative_slash_path(root, path);
+            let action = select(&rel)?;
+            let source = super::read_language_source(sources, path)?;
+            Some(
+                parse_yaml(root, path, sources, &source, rule_id, true).map(|value| {
+                    judge(&rel, source.trim_start_matches('\u{feff}'), &value, action)
+                }),
+            )
+        })
+        .collect();
     let mut findings = Vec::new();
     let mut input_failures = Vec::new();
     for chunk in chunks {

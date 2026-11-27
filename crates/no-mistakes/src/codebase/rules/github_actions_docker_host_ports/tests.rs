@@ -1,7 +1,7 @@
 use super::{gha_kind, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 const WORKFLOW: &str = ".github/workflows/ci.yml";
