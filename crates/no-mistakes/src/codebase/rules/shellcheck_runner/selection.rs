@@ -1,5 +1,6 @@
 use super::candidates::{filtered_shell_files, filtered_shell_files_with_sources};
-use super::{run_shellcheck, Options, RuleFinding};
+use super::{run_shellcheck, Options};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
 use anyhow::Result;
 use std::path::{Path, PathBuf};

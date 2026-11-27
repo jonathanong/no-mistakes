@@ -1,4 +1,5 @@
-use super::{PreparedCompanionImportPlan, RuleFinding, RULE_ID};
+use super::{PreparedCompanionImportPlan, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_source::SourceStore;
 use crate::fx::{FxHashMap, FxHashSet};

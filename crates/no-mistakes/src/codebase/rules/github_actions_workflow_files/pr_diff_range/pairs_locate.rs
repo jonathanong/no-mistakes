@@ -4,7 +4,7 @@ use super::verdicts::Verdict;
 use super::RULE_ID;
 use crate::codebase::rules::github_actions_workflow_files::job_lines::document::Document;
 use crate::codebase::rules::github_actions_workflow_files::shell_words::Word;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn extract_flag_pair<'a>(
     command: &'a [Word],

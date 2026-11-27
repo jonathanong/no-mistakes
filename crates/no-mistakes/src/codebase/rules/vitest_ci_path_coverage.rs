@@ -5,7 +5,7 @@ mod projects;
 mod scan;
 mod workflow_filters;
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use projects::CoverageUnit;
 use serde::Deserialize;
 use std::collections::BTreeMap;

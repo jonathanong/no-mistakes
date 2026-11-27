@@ -1,7 +1,8 @@
 use super::super::{check, check_with_files, check_with_files_and_sources, RULE_ID};
 use super::{config_with_rule, fixture_root};
 use crate::codebase::rules::suppression::SuppressionDirectiveKind;
-use crate::codebase::rules::{source_store_for_files, RuleFinding};
+use crate::codebase::rules::source_store_for_files;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
 use std::path::PathBuf;

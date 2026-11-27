@@ -1,4 +1,5 @@
-use super::{pkg_rel, Options, RuleFinding, RULE_ID};
+use super::{pkg_rel, Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use serde_json::Value;
 use std::path::{Path, PathBuf};

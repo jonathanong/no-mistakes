@@ -1,4 +1,5 @@
-use super::{RuleFinding, FORBIDDEN_KEYS, RULE_ID};
+use super::{ FORBIDDEN_KEYS, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::{Mapping, Value};
 use std::path::Path;

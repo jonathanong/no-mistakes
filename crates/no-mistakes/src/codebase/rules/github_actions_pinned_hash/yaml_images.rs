@@ -1,4 +1,5 @@
-use super::{RuleFinding, RULE_ID};
+use super::RULE_ID;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::github_actions_workflow_files::job_lines::document::{Document, Kind};
 
 pub(super) fn append_images(content: &str, file: &str, findings: &mut Vec<RuleFinding>) {

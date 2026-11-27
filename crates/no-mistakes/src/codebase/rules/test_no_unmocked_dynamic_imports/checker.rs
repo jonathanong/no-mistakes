@@ -1,7 +1,7 @@
 use super::runtime::runtime_deps_excluding_mocks;
 use super::{ast, remap_resolved_path, runtime_deps, RULE_ID};
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_resolver::ImportResolution;
 use dashmap::DashMap;
 use std::collections::HashSet;

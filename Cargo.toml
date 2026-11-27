@@ -4,6 +4,7 @@ members = [
     "crates/no-mistakes-invocation",
     "crates/no-mistakes-postgres-sql",
     "crates/no-mistakes-ts-facts",
+    "crates/no-mistakes-rule-kernel",
 ]
 resolver = "2"
 
@@ -15,6 +16,7 @@ license = "MIT"
 repository = "https://github.com/jongleberry/no-mistakes"
 
 [workspace.dependencies]
+no-mistakes-rule-kernel = { version = "=0.109.123", path = "crates/no-mistakes-rule-kernel" }
 no-mistakes-invocation = { version = "=0.109.123", path = "crates/no-mistakes-invocation" }
 no-mistakes-postgres-sql = { version = "=0.109.123", path = "crates/no-mistakes-postgres-sql" }
 no-mistakes-ts-facts = { version = "=0.109.123", path = "crates/no-mistakes-ts-facts" }

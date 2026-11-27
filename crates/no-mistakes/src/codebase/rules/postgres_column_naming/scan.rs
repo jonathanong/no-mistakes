@@ -7,7 +7,7 @@ use super::RULE_ID;
 use crate::codebase::postgres::{
     catalog_finding, CatalogColumn, CatalogObjectRef, CatalogTable, SchemaCatalog,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 
 pub(super) fn scan(

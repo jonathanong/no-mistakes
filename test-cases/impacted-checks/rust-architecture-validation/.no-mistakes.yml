@@ -4,8 +4,10 @@ checks:
       include:
         - "crates/no-mistakes/src/**/*.rs"
         - "crates/no-mistakes-ts-facts/**/*.rs"
+        - "crates/no-mistakes-rule-kernel/**/*.rs"
         - crates/no-mistakes/Cargo.toml
         - crates/no-mistakes-ts-facts/Cargo.toml
+        - crates/no-mistakes-rule-kernel/Cargo.toml
         - Cargo.toml
         - Cargo.lock
         - rust-toolchain.toml

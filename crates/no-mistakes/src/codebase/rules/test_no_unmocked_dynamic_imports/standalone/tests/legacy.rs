@@ -1,5 +1,6 @@
 use super::super::checker::{check_dynamic_import, DynamicCheckContext};
-use super::super::{ast, config, reachable, RuleFinding, RULE_ID};
+use super::super::{ast, config, reachable, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::{
     imported_helpers, matching_test_files_with_filter, resolve_mock_specifiers, setup_mocks,
 };

@@ -1,4 +1,5 @@
-use super::{Options, RuleFinding};
+use super::Options;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 

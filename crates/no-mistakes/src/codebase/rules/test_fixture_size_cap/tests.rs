@@ -1,5 +1,5 @@
 use super::{compile_options, in_scope, is_script, Options, Scopes, RULE_ID};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::discover_files;
 use crate::config::v2::load_v2_config;
 use std::path::{Path, PathBuf};

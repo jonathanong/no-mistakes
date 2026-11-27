@@ -1,6 +1,7 @@
 use super::file_diagnostics::{self, InputUncertainty};
 use super::github_actions_workflow_files::gha_kind;
-use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
+use super::{analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{ensure, Result};

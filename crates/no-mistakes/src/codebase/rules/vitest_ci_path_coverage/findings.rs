@@ -1,4 +1,4 @@
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::{
     coverage_paths::CoveragePath, projects::CoverageUnit, workflow_filters::CiFilter, RULE_ID,
 };

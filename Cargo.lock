@@ -1312,6 +1312,7 @@ dependencies = [
  "nix 0.32.0",
  "no-mistakes-invocation",
  "no-mistakes-postgres-sql",
+ "no-mistakes-rule-kernel",
  "no-mistakes-ts-facts",
  "num_cpus",
  "oxc_allocator",
@@ -1378,6 +1379,16 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sqlparser",
+]
+
+[[package]]
+name = "no-mistakes-rule-kernel"
+version = "0.109.123"
+dependencies = [
+ "anyhow",
+ "globset",
+ "no-mistakes-ts-facts",
+ "serde",
 ]
 
 [[package]]

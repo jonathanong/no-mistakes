@@ -1,4 +1,5 @@
-use super::{matches_group, relative, CompiledGroup, RuleFinding, RULE_ID};
+use super::{matches_group, relative, CompiledGroup, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::markdown_facts::MarkdownFactMap;
 use crate::codebase::ts_source::FrozenPathRemapper;
 use anyhow::Result;

@@ -1,5 +1,5 @@
 use super::super::analysis_policy::AnalysisDiagnostics;
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::config::{RuntimeAsset, UnresolvedRoot};
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::ResolvedCallSite;

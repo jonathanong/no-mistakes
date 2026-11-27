@@ -1,6 +1,6 @@
 use crate::codebase::postgres::prepared::PreparedSqlFragment;
 use crate::codebase::postgres::statements::SqlFactSite;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::fx::{FxHashMap, FxHashSet};
 
 type Key = (String, usize, String, Option<String>);

@@ -1,5 +1,5 @@
 use super::support::{self, concurrency};
-use crate::codebase::rules::sort_findings;
+use no_mistakes_rule_kernel::finding::sort_findings;
 use crate::codebase::workflow_topology::load_workflow_topology;
 use crate::codebase::workflow_topology::model::{ConcurrencyValue, WorkflowTopology};
 use crate::codebase::workflow_topology::render_mermaid::render_workflow_topology_mermaid;

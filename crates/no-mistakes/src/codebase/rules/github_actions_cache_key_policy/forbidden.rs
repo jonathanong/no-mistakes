@@ -1,7 +1,8 @@
 use super::options::Options;
 use super::scan::Step;
 use super::text::norm_path;
-use super::{hit, RuleFinding};
+use super::hit;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn check(
     rel: &str,

@@ -6,7 +6,7 @@ use crate::codebase::postgres::{
     extract_locking_select_metadata_with_placeholders, EmbeddedSqlKind, LockingSelectMetadata,
     SchemaCatalog, SqlStatementFileFacts,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::borrow::Cow;
@@ -53,7 +53,7 @@ pub(super) fn scan_with_sources(
             })?;
         let rel = relative_slash_path(root, &file.path);
         let source =
-            crate::codebase::rules::read_language_source(sources, &file.path).unwrap_or_default();
+            no_mistakes_rule_kernel::source_access::read_language_source(sources, &file.path).unwrap_or_default();
         let statements = prepared.postgres_statements(path, Some(&opts.embedded))?;
         if facts.wants_sql_verdicts() {
             verdicts::record(&rel, &source, file, opts, catalog, Some(statements), facts);

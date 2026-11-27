@@ -1,7 +1,8 @@
 use super::{
-    rust_max_lines_per_file, rust_no_inline_allows, rust_no_inline_tests, RuleFinding,
+    rust_max_lines_per_file, rust_no_inline_allows, rust_no_inline_tests,
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS,
 };
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::has_disable_file_comment;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

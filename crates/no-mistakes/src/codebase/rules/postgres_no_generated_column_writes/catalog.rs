@@ -64,7 +64,7 @@ pub(super) fn stale_trigger_findings(
     tables: &LiveTables<'_>,
     columns: &[String],
     anchor: &ConfigAnchor,
-) -> Vec<crate::codebase::rules::RuleFinding> {
+) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     columns
         .iter()
         .enumerate()
@@ -96,7 +96,7 @@ pub(super) fn stale_extra_findings_from_tables(
     tables: &LiveTables<'_>,
     extras: &[ExtraGeneratedColumn],
     anchor: &ConfigAnchor,
-) -> Vec<crate::codebase::rules::RuleFinding> {
+) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     extras
         .iter()
         .enumerate()

@@ -1,7 +1,8 @@
 use super::hit::Hit;
 use super::line_scan::hits_from_lines;
 use super::value_walk::{hits_from_value, is_composite};
-use super::{RuleFinding, RULE_ID};
+use super::RULE_ID;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use regex::Regex;
 use serde_yaml::Value;
 

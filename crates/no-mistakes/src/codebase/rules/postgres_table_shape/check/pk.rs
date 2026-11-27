@@ -4,7 +4,7 @@ use super::keys::unqualified;
 use crate::codebase::postgres::{
     CatalogObjectRef, CatalogTable, SchemaCatalog, TriggerEvent, TriggerTiming,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn check_primary_key(
     findings: &mut Vec<RuleFinding>,

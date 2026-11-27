@@ -1,4 +1,5 @@
-use super::{RuleFinding, UsesSpec, RULE_ID};
+use super::{ UsesSpec, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::{Mapping, Value};
 use std::path::{Path, PathBuf};

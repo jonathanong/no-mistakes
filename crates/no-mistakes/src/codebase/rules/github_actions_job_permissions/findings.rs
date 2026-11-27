@@ -1,5 +1,5 @@
 use super::RULE_ID;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn inherited(rel: &str, line: usize, job: &str, grants: &[String]) -> RuleFinding {
     RuleFinding { causes: Vec::new(),

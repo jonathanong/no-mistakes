@@ -2,7 +2,7 @@ use super::options::Options;
 use super::scan::{scan_diagnostics, ScanContext};
 use super::RULE_ID;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;

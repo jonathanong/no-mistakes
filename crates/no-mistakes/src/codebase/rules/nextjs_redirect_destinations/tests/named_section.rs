@@ -1,6 +1,6 @@
 use super::super::extract::{extract_named_destinations_from_program, ExtractedDestinations};
 use super::super::scan::{check_named_section as check, NamedCheck};
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::BTreeSet;
 use std::path::Path;
 

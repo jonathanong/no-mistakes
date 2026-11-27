@@ -4,7 +4,7 @@ use super::pattern::{match_name, table_note};
 use super::policy::{denied_text, spelling_text, token_inside, tokens, underscore_text};
 use super::RULE_ID;
 use crate::codebase::postgres::{catalog_finding, CatalogObjectRef};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) struct NameCheck<'a> {
     pub(super) kind: &'a str,

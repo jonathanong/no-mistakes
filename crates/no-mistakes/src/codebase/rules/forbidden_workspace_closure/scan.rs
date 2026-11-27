@@ -1,4 +1,5 @@
-use super::{catalog, lockfile, options, selection, traversal, RuleFinding, RULE_ID};
+use super::{catalog, lockfile, options, selection, traversal, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::package_deps;
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use anyhow::Result;

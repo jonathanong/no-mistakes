@@ -4,7 +4,7 @@ use crate::codebase::postgres::{
     analyze_conflict_inserts_with_binds, order_prefix_matches, CanonicalIndex, CanonicalOrderKey,
     ResolvedArbiter, SchemaCatalog, SqlConflictInsertFact, SqlConflictTarget, SqlInsertSourceShape,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 mod order;
 mod sql;

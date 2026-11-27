@@ -1,6 +1,7 @@
 use super::{once_lock_slot, SourceStore};
 use crate::codebase::ts_source::DisableCommentIndex;
 use dashmap::DashMap;
+use no_mistakes_rule_kernel::suppression::SuppressionSources;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
@@ -23,4 +24,19 @@ impl SourceStore {
         })
         .clone()
     }
+}
+
+impl SuppressionSources for SourceStore {
+    type Index = SharedDisableComments;
+
+    fn load_index(&self, root: &Path, candidate: &Path, is_absolute: bool) -> Option<Self::Index> {
+        let path = if is_absolute {
+            self.trusted_regular_path(candidate)
+        } else {
+            self.validated_regular_path(root, candidate)
+        }?;
+        self.suppressions_for_path(&path)
+    }
+
+    const ALLOW_ABSOLUTE_PATHS: bool = true;
 }

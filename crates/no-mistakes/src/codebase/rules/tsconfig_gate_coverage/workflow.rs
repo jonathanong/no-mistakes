@@ -4,7 +4,8 @@ pub(super) mod local_actions;
 mod reusable;
 mod runtime;
 
-use super::{application::project_finding, command_scan, RuleFinding};
+use super::{application::project_finding, command_scan};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use serde_yaml::Value;
 use std::collections::BTreeSet;

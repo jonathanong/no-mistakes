@@ -1,5 +1,5 @@
 use super::analysis_policy::AnalysisDiagnostics;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::ts_resolver::normalize_path;

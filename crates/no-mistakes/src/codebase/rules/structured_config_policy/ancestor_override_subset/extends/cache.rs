@@ -31,7 +31,7 @@ mod tests;
 
 impl Walk<'_> {
     pub(super) fn load(&mut self, spec: &str, resolved: &Path) -> Option<Arc<Value>> {
-        let Some(source) = crate::codebase::rules::read_language_source(self.sources, resolved)
+        let Some(source) = no_mistakes_rule_kernel::source_access::read_language_source(self.sources, resolved)
         else {
             self.result.findings.push(finding(
                 self.nested_rel,

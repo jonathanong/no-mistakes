@@ -9,7 +9,7 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckFailure;
 use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use crate::codebase::postgres::embedded::TrustedSqlTag;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::{line_number, relative_slash_path};
 use crate::fx::fx_map;

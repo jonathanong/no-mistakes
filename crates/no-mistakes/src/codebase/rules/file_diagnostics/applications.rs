@@ -11,12 +11,6 @@ pub(crate) struct FileRuleInputs<'a> {
     pub defer_suppression: bool,
 }
 
-#[derive(Default, Debug)]
-pub(crate) struct ClassifiedInputFindings {
-    pub(crate) findings: Vec<RuleFinding>,
-    pub(crate) uncertainty: Vec<RuleFinding>,
-}
-
 pub(crate) fn classified_applications<O: DeserializeOwned + Default>(
     inputs: FileRuleInputs<'_>,
     rule_id: &str,

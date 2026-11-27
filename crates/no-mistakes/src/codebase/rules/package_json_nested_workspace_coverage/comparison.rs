@@ -1,6 +1,7 @@
 use super::manifests::{matching_dependencies, Manifest};
 use super::workspace;
-use super::{Options, RuleFinding, RULE_ID};
+use super::{Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};

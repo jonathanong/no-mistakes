@@ -1,6 +1,6 @@
 use super::super::{ci_filters_from_parsed_with_sources, CiFilter, WorkflowSelector};
 use crate::codebase::ci_workflows::ParsedWorkflowSet;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 fn fixture_root() -> PathBuf {

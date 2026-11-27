@@ -1,6 +1,6 @@
 use super::context::Context;
 use super::paths::frameworks;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{TestPlanEnvironment, TestPlanGroupType, TestPlanLimit};
 use crate::config::v2::NoMistakesConfig;
 

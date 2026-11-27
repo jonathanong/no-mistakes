@@ -1,5 +1,5 @@
 use super::super::super::RULE_ID;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 

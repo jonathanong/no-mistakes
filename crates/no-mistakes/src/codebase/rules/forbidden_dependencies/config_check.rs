@@ -1,6 +1,6 @@
 use super::{application_scope, check_rule_application, union_allowed_set, Options, RULE_ID};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, GraphFiles};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_resolver::TsConfig;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -57,6 +57,6 @@ fn check_with_config_tsconfig_and_files(
             application_scope(None, None, None),
         )?);
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    no_mistakes_rule_kernel::finding::sort_findings(&mut findings);
     Ok(findings)
 }

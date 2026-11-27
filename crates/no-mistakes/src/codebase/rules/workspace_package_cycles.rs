@@ -2,7 +2,7 @@ mod edges;
 mod range;
 mod scc;
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use crate::config::v2::NoMistakesConfig;

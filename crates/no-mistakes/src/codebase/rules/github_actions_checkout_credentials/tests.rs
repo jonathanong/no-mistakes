@@ -3,7 +3,7 @@ use super::{gha_kind, RULE_ID};
 
 #[path = "assume_write_tests.rs"]
 mod assume_write_tests;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};

@@ -8,7 +8,7 @@ use crate::codebase::postgres::{
     SqlVerdictStatus,
 };
 use crate::codebase::rules::postgres_no_transformed_uuid_predicates::evaluate::Columns;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::{collections::BTreeMap, path::Path};
 
 type Literals = BTreeMap<(Option<ApplicationKey>, (u32, u32)), TransformedLiteral>;

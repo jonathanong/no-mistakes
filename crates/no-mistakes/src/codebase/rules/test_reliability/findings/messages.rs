@@ -1,4 +1,5 @@
-use super::super::{Inputs, Location, RuleFinding};
+use super::super::{Inputs, Location};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::ts_source::has_disable_file_comment;
 use anyhow::Result;

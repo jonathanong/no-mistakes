@@ -1,4 +1,5 @@
-use super::{scan::finding, BannedShapes, RuleFinding, BANNED_FUNCTION_CALL};
+use super::{scan::finding, BannedShapes, BANNED_FUNCTION_CALL};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::{SqlFunctionClause, SqlStatementFileFacts};
 use serde::Deserialize;
 

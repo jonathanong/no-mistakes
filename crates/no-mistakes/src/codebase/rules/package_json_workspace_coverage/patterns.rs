@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::RULE_ID;
 use crate::codebase::glob_normalize;
 use crate::codebase::ts_source::relative_slash_path;

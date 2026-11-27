@@ -1,7 +1,8 @@
 use super::{AnalysisDiagnostics, DelegateRequest};
 use crate::codebase::rules::{
-    suppress_domain_findings_with_source_files, RuleFinding, SuppressionTarget,
+    suppress_domain_findings_with_source_files, SuppressionTarget,
 };
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 struct EntryFinding<'a> {
     finding: RuleFinding,

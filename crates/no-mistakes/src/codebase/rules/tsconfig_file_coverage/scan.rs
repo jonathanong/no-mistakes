@@ -1,4 +1,5 @@
-use super::{finding, CompiledOptions, RuleFinding};
+use super::{finding, CompiledOptions};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_resolver::{normalize_path, TsConfigCatalog};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces::IndexedWorkspaceMap;

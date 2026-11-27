@@ -1,5 +1,6 @@
 //! Diagnostics for migration chunks dropped by lenient PostgreSQL parsing.
-use super::{analysis_policy::AnalysisDiagnostics, selected_rule_files, RuleFinding};
+use super::{analysis_policy::AnalysisDiagnostics, selected_rule_files};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::postgres_sql_paths;
 use crate::codebase::ts_source::relative_slash_path;

@@ -1,8 +1,9 @@
 //! Reject unknown rule IDs and rule-entry keys before serde silently drops them.
 use super::super::schema::RuleDef;
-use crate::codebase::rules::rule_ids::{closest_rule_id, configurable_rule_ids};
+use crate::codebase::rules::rule_ids::configurable_rule_ids;
 use crate::config::source_locations::{ConfigLocations, ConfigPath};
 use anyhow::Result;
+use no_mistakes_rule_kernel::rule_ids::closest_rule_id;
 use serde_yaml::{Mapping, Value};
 use std::cell::OnceCell;
 use std::path::Path;

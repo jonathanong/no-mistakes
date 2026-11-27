@@ -3,7 +3,7 @@ use crate::codebase::dependencies::graph::{DepGraph, NodeId};
 use crate::codebase::rules::allow_audit::{stale_finding, CheckedScope};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::rules::forbidden_dependencies::Options;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use std::path::PathBuf;
 

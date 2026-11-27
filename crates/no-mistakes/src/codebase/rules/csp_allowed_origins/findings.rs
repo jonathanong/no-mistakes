@@ -1,5 +1,5 @@
 use super::{CspDirective, ParsedOrigin, RULE_ID};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 

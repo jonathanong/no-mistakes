@@ -1,5 +1,6 @@
 use super::effort::run_prepared;
-use super::{config, fixture, fixture_files, RuleFinding};
+use super::{config, fixture, fixture_files};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::analysis_policy::prepare_rule_analysis;
 use crate::codebase::rules::source_store_for_files;
 use crate::config::v2::NoMistakesConfig;

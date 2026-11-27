@@ -1,6 +1,7 @@
 use super::order::cmp_sql_rel;
 use super::redundancy::{describe_index, is_redundant_prefix, LiveIndex};
-use super::{sql_rel, CompiledOptions, RuleFinding, RULE_ID};
+use super::{sql_rel, CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 mod findings;
 use crate::codebase::postgres::{

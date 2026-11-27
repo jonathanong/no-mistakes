@@ -1,6 +1,6 @@
 use super::super::concurrency_scope::{self, ScopeClass};
 use super::support::{self, concurrency};
-use crate::codebase::rules::sort_findings;
+use no_mistakes_rule_kernel::finding::sort_findings;
 use crate::codebase::workflow_topology::model::{ConcurrencyValue, WorkflowTopology};
 
 fn messages(topology: &WorkflowTopology, yaml: &str) -> Vec<String> {

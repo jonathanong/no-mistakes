@@ -2,7 +2,7 @@ use super::compile::Compiled;
 use super::policy::{min_words_text, tokens, NameFlags};
 use super::scan_name::{consider, push, unqualified, NameCheck};
 use crate::codebase::postgres::{CatalogIndexInfo, CatalogObjectRef, CatalogTable, SchemaCatalog};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> Vec<RuleFinding> {
     let mut findings = Vec::new();

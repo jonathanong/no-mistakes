@@ -1,4 +1,5 @@
-use super::{Options, RuleFinding, RULE_ID};
+use super::{Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::NodeId;
 use crate::codebase::dependencies::{EdgeKind, RelationshipArg};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;

@@ -5,7 +5,8 @@ use crate::codebase::postgres::{
     EmbeddedSqlFileFacts, EmbeddedSqlOptions, SqlObligationVerdict, SqlStatementFileFacts,
     SqlVerdictStatus,
 };
-use crate::codebase::rules::{PostgresFindings, RuleFinding, VariantFindingDedup};
+use crate::codebase::rules::{PostgresFindings, VariantFindingDedup};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 /// Executor call that owns one prepared statement, shared with policy verdicts.
 #[derive(Clone)]

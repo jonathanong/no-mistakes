@@ -1,7 +1,8 @@
 mod raw_advice;
 mod sites;
 use super::evaluate::Columns;
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::{
     SqlFactSite, SqlTransformedColumnClause as Clause, SqlTransformedColumnUseFact,
@@ -57,7 +58,7 @@ pub(super) fn scan(
     for (execution, statement) in inputs.statements.into_iter().enumerate() {
         groups.begin_projection();
         let rel = relative_slash_path(root, &statement.path);
-        let source = crate::codebase::rules::read_language_source(sources, &statement.path);
+        let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, &statement.path);
         let mut residuals = std::collections::BTreeMap::new();
         for (site, line) in statement.parse_failure_sites() {
             residuals.insert(line, "invalid-sql");

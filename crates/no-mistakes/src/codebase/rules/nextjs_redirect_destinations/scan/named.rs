@@ -1,4 +1,4 @@
-use super::super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::super::extract::{ExtractedDestination, ExtractedDestinations};
 use super::super::routes::{destination_matches, should_skip_destination, strip_query_and_hash};
 use super::{contains_word, finding, word_line};

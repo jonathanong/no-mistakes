@@ -1,6 +1,7 @@
 use super::options::Compiled;
 use super::RULE_ID;
-use crate::codebase::rules::{github_actions_workflow_files as workflows, RuleFinding};
+use crate::codebase::rules::{github_actions_workflow_files as workflows};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
 use std::path::Path;

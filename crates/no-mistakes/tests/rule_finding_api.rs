@@ -27,7 +27,7 @@ fn public_rule_finding_keeps_its_seven_field_literal_json_and_value_traits() {
         format!("{finding:?}"),
         baseline("expected-debug.txt").trim()
     );
-    let same = finding.clone();
+    let same: no_mistakes_rule_kernel::finding::RuleFinding = finding.clone();
     assert_eq!(finding, same);
     assert_eq!(finding.cmp(&same), Ordering::Equal);
     assert_eq!(finding.partial_cmp(&same), Some(Ordering::Equal));

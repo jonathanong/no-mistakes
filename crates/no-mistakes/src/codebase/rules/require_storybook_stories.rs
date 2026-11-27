@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_sources_and_session, CheckFactMap,
     CheckFactPlan,

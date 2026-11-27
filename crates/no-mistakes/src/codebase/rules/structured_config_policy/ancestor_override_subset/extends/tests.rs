@@ -50,7 +50,7 @@ fn bounds_repeated_occurrences_in_a_fanout_graph() {
         nested.clone(),
     ];
     let sources = crate::codebase::rules::source_store_for_files(&files);
-    let source = crate::codebase::rules::read_source(&sources, &nested).unwrap();
+    let source = no_mistakes_rule_kernel::source_access::read_source(&sources, &nested).unwrap();
     let value =
         crate::codebase::structured_value::parse_structured_value(&nested, &source).unwrap();
     let assertion = ValueAssertion::default();
@@ -148,7 +148,7 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
         nested.clone(),
     ];
     let sources = crate::codebase::rules::source_store_for_files(&files);
-    let source = crate::codebase::rules::read_source(&sources, &nested).unwrap();
+    let source = no_mistakes_rule_kernel::source_access::read_source(&sources, &nested).unwrap();
     let value =
         crate::codebase::structured_value::parse_structured_value(&nested, &source).unwrap();
     let assertion = ValueAssertion::default();

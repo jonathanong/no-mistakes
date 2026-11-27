@@ -1,5 +1,6 @@
 use super::policy;
-use super::{check_with_files, scan, Options, RuleFinding, RULE_ID};
+use super::{check_with_files, scan, Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use serde_yaml::Value;
 use std::path::PathBuf;

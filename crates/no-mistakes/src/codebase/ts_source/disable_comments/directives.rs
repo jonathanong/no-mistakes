@@ -1,9 +1,4 @@
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum DisableDirective {
-    File { line: u32 },
-    Line { line: u32 },
-    NextLine { line: u32 },
-}
+pub use no_mistakes_rule_kernel::suppression::DisableDirective;
 
 /// Returns exact provenance for a supported suppression directive.
 ///

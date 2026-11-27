@@ -1,8 +1,9 @@
 use super::{env_policy, no_poll_wait_job, pr_diff_range};
 use crate::codebase::rules::{
     github_actions_cache_setup_policy, github_actions_no_insta_snapshot_updates,
-    github_actions_no_required_pr_path_filters, RuleFinding,
+    github_actions_no_required_pr_path_filters,
 };
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

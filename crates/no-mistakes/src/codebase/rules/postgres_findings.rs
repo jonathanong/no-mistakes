@@ -1,5 +1,5 @@
 pub(crate) mod site_identity;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct LocatedRuleFinding {

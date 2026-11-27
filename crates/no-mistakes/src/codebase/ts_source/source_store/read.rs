@@ -51,3 +51,13 @@ where
             .value(),
     )
 }
+
+impl no_mistakes_rule_kernel::source_access::RuleSources for SourceStore {
+    fn read_path(&self, path: &Path) -> SourceReadOutcome {
+        self.read_path(path)
+    }
+
+    fn read_source_path(&self, path: &Path) -> SourceReadOutcome {
+        self.read_source_path(path)
+    }
+}

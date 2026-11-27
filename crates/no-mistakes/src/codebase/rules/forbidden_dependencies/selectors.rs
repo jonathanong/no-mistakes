@@ -1,4 +1,5 @@
-use super::{helpers, Options, RuleFinding, RULE_ID};
+use super::{helpers, Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::ts_resolver::normalize_path;

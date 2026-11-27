@@ -3,7 +3,7 @@ use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     recovered_sql_may_select, EmbeddedSqlCall, OffsetUse, SqlOffsetFact,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::fx::FxHashMap;
 use anyhow::Result;

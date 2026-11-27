@@ -1,6 +1,6 @@
 use crate::codebase::rules::run_check;
 
-fn findings() -> Vec<crate::codebase::rules::RuleFinding> {
+fn findings() -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     run_check(&super::tests::fixture("workspace-exports"), None, None).unwrap()
 }
 

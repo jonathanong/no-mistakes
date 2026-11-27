@@ -1,5 +1,6 @@
 use super::references::reference_exists;
-use super::{Options, RuleFinding, RULE_ID};
+use super::{Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::{Path, PathBuf};

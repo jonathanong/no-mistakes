@@ -1,7 +1,8 @@
 use super::analysis_policy::AnalysisDiagnostics;
 use super::file_diagnostics::{self, InputUncertainty};
 use super::masked_source::FileAllow;
-use super::{source_access, RuleFinding};
+use super::source_access;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

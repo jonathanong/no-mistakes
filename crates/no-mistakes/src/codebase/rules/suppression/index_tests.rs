@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::ts_source::FileInventory;
 use crate::diagnostics::InvocationObserver;
+use std::{path::PathBuf, sync::Arc};
 
 fn fixture(path: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

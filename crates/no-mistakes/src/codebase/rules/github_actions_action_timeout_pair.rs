@@ -1,4 +1,5 @@
-use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
+use super::{analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
 use rayon::prelude::*;

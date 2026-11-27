@@ -2,7 +2,7 @@
 
 use super::entry_imports::{self, RuntimeImport};
 use super::manifest::{self, entry_path, published_entry};
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_resolver::{self, ImportResolver, TsConfig};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_json::Value;

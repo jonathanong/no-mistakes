@@ -34,8 +34,8 @@ pub(super) fn choose(
     mut compressed: super::AnalysisDiagnostics,
 ) -> super::AnalysisDiagnostics {
     for result in [&mut baseline, &mut compressed] {
-        crate::codebase::rules::sort_findings(&mut result.findings);
-        crate::codebase::rules::sort_findings(&mut result.advisories);
+        no_mistakes_rule_kernel::finding::sort_findings(&mut result.findings);
+        no_mistakes_rule_kernel::finding::sort_findings(&mut result.advisories);
     }
     let sources = session.and_then(|session| session.existing_sources_for(root));
     let visible_baseline = visible_counts(root, sources.as_deref(), &baseline);
@@ -61,7 +61,7 @@ fn visible_counts(
     let count = |findings: &[super::RuleFinding]| {
         let mut visible = findings.to_vec();
         if let Some(sources) = sources {
-            crate::codebase::rules::suppress_rule_findings_with_sources(
+            no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(
                 root,
                 &mut visible,
                 sources,

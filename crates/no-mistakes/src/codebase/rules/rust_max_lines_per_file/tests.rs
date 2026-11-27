@@ -1,6 +1,7 @@
 use super::tests_support::*;
 use super::*;
-use crate::codebase::rules::{path_filter, sort_findings, target_roots};
+use crate::codebase::rules::{path_filter, target_roots};
+use no_mistakes_rule_kernel::finding::sort_findings;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,

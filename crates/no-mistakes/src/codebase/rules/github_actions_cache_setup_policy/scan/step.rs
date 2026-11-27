@@ -1,5 +1,6 @@
 use super::super::options::{normalized_path, Compiled};
-use super::{RuleFinding, StepLocation};
+use super::StepLocation;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::github_actions_action_input_policy::policy::family_of;
 use regex::Regex;
 use serde_yaml::Value;

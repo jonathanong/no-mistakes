@@ -3,11 +3,12 @@ use super::{
     LineCommentScanState,
 };
 use crate::diagnostics::InvocationObserver;
+use no_mistakes_rule_kernel::suppression::SuppressionIndex;
 use rustc_hash::FxHashMap;
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, RwLock};
 
-pub(crate) struct DisableCommentIndex<S> {
+pub struct DisableCommentIndex<S> {
     source: S,
     observer: Option<Arc<InvocationObserver>>,
     header: OnceLock<HashMap<Box<str>, u32>>,
@@ -73,6 +74,12 @@ impl<S: AsRef<str>> DisableCommentIndex<S> {
         let mut lines = lock.write().expect("disable comment index lock poisoned");
         lines.scan_through(source, line, observer);
         lines.matching(rule, line)
+    }
+}
+
+impl<S: AsRef<str>> SuppressionIndex for DisableCommentIndex<S> {
+    fn matching(&self, rule: &str, line: Option<u32>, track_quotes: bool) -> Option<DisableDirective> {
+        self.matching(rule, line, track_quotes)
     }
 }
 

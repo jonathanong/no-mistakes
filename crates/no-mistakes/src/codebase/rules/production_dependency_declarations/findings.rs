@@ -1,7 +1,7 @@
 //! `RuleFinding` construction for `production-dependency-declarations`.
 
 use super::RULE_ID;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::Path;
 

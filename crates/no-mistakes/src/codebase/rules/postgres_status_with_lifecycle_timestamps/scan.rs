@@ -2,7 +2,7 @@ use super::{Compiled, RULE_ID};
 use crate::codebase::postgres::{
     catalog_finding, CatalogColumn, CatalogObjectRef, CatalogTable, SchemaCatalog,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 const ADVICE: &str = "keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table";
 

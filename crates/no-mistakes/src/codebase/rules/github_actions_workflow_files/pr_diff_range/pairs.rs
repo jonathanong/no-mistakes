@@ -10,7 +10,7 @@ use crate::codebase::rules::github_actions_script_expressions::StepRun;
 use crate::codebase::rules::github_actions_workflow_files::job_lines::document::Document;
 use crate::codebase::rules::github_actions_workflow_files::script_line::yaml_line;
 use crate::codebase::rules::github_actions_workflow_files::shell_words::commands;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::{Mapping, Value};
 use std::cell::OnceCell;
 use std::collections::BTreeMap;

@@ -4,10 +4,7 @@ use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::Result;
 use std::path::Path;
 
-pub(crate) enum InputUncertainty {
-    Read,
-    ReadOrParse,
-}
+pub(crate) use no_mistakes_rule_kernel::file_diagnostics::{sorted, InputUncertainty};
 
 pub(crate) fn application(
     root: &Path,
@@ -47,28 +44,14 @@ pub(crate) fn route_application(
     uncertain: impl Fn(&RuleFinding) -> bool,
 ) -> Result<AnalysisDiagnostics> {
     let policy = config.effective_rule_analysis(rule)?.unanalyzable;
-    let mut diagnostics = AnalysisDiagnostics::default();
-    for mut finding in findings {
-        if finding.rule == super::allow_audit::RULE_ID {
-            diagnostics.findings.push(finding);
-            continue;
-        }
-        if let Some(message) = &rule.message {
-            finding.message = message.clone();
-        }
-        if finding.target.as_deref() == Some("unanalyzable") && uncertain(&finding) {
-            diagnostics.unanalyzable(policy, finding);
-        } else {
-            diagnostics.findings.push(finding);
-        }
-    }
-    Ok(diagnostics)
-}
-
-pub(crate) fn sorted(mut diagnostics: AnalysisDiagnostics) -> AnalysisDiagnostics {
-    super::sort_findings(&mut diagnostics.findings);
-    super::sort_findings(&mut diagnostics.advisories);
-    diagnostics
+    Ok(
+        no_mistakes_rule_kernel::file_diagnostics::route_application(
+            policy,
+            rule.message.as_deref(),
+            findings,
+            uncertain,
+        ),
+    )
 }
 
 pub fn handles(rule: &str) -> bool {
@@ -127,4 +110,5 @@ pub fn diagnostics_with_files_and_sources(
 mod tests;
 
 mod applications;
-pub(crate) use applications::{classified_applications, ClassifiedInputFindings, FileRuleInputs};
+pub(crate) use applications::{classified_applications, FileRuleInputs};
+pub(crate) use no_mistakes_rule_kernel::file_diagnostics::ClassifiedInputFindings;

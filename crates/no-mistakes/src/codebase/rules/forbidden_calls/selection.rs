@@ -1,4 +1,4 @@
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::config::{self, Options, Traversal};
 use super::findings::finding_for_site_with_arguments;
 use super::roots;

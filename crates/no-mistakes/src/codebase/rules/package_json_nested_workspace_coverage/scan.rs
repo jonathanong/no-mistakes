@@ -1,6 +1,7 @@
 use super::comparison::{check_manifest, CheckContext};
 use super::manifests::{collect, dependency_fields, Manifest};
-use super::{Options, RuleFinding, RULE_ID};
+use super::{Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

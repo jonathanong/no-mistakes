@@ -2,7 +2,7 @@ use super::analysis;
 use crate::codebase::postgres::{
     analyze_conflict_inserts, EmbeddedSqlCall, SchemaCatalog, SqlBranchJudgment,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 /// A trailing interpolation cannot insert a conflict target into a clause that
 /// already says `ON CONFLICT DO NOTHING`. Order findings still depend on that tail.

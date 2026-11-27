@@ -1,4 +1,5 @@
-use super::super::{diagnostics_with_files_and_sources, RuleFinding};
+use super::super::diagnostics_with_files_and_sources;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::effort::run_prepared;
 use super::{config, fixture, fixture_files, run};
 

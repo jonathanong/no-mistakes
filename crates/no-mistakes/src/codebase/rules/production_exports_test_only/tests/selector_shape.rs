@@ -1,6 +1,6 @@
 use crate::codebase::rules::run_check;
 
-fn messages(case: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+fn messages(case: &str) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     run_check(&super::fixture(case), None, None).unwrap()
 }
 

@@ -8,7 +8,7 @@ use super::reachability::{self, FileImport};
 use super::Options;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::codebase::workspaces::{load_manual_workspace_from_source_store, ManualWorkspace};

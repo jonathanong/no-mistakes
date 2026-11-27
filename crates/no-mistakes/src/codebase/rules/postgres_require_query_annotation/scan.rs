@@ -1,7 +1,7 @@
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::sql_requires_query_annotation;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -52,7 +52,7 @@ pub(super) fn scan_with_sources(
             .with_context(|| format!("{RULE_ID} failed to collect embedded SQL facts"))?;
         let rel = relative_slash_path(root, &file.path);
         let source =
-            crate::codebase::rules::read_language_source(sources, &file.path).unwrap_or_default();
+            no_mistakes_rule_kernel::source_access::read_language_source(sources, &file.path).unwrap_or_default();
         let statements = file
             .calls
             .iter()

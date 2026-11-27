@@ -5,7 +5,7 @@ use super::paths::CanonicalInventory;
 use super::when::policy_applies;
 use super::{assert_value, AssertionKind, Options, RULE_ID};
 use crate::codebase::rules::file_diagnostics::ClassifiedInputFindings;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use std::path::{Path, PathBuf};

@@ -1,4 +1,5 @@
-use super::{field::Field, paths::Ref, RuleFinding, RULE_ID};
+use super::{field::Field, paths::Ref, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::source_locations::{ConfigLocations, ConfigPath, Segment};
 use crate::config::v2::NoMistakesConfig;

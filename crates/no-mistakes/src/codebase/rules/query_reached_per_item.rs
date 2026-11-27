@@ -1,6 +1,6 @@
 //! Per-item policies project parser-owned positions and canonical call traces.
 mod prerequisites;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite, TsFactLookup};
 use crate::codebase::ts_source::relative_slash_path;

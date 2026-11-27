@@ -2,7 +2,7 @@
 use super::{compile, finding, Options};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{SqlObligationVerdict, SqlVerdictStatus};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig, Unanalyzable};
 use anyhow::Result;

@@ -2,7 +2,8 @@ use super::assign::prepare_max_script;
 use super::judge::{scan_script, Hit};
 use super::runs::{check_workflow, Policy};
 use super::verify::command_verifies;
-use super::{gha_kind, words, RuleFinding, SkipAnnotationScope};
+use super::{gha_kind, words, SkipAnnotationScope};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::config::v2::Unanalyzable;
 

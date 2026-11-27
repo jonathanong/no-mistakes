@@ -1,5 +1,6 @@
 use super::{checkout, gha_kind, Options, RULE_ID};
-use crate::codebase::rules::{self, analysis_policy::AnalysisDiagnostics, RuleFinding};
+use crate::codebase::rules::{self, analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;

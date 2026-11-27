@@ -1,6 +1,7 @@
 use super::{
-    check_items, extract_program, CheckContext, FileFacts, NoMistakesConfig, Path, RuleFinding,
+    check_items, extract_program, CheckContext, FileFacts, NoMistakesConfig, Path,
 };
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use anyhow::Result;
 use rayon::prelude::*;
 use std::path::PathBuf;

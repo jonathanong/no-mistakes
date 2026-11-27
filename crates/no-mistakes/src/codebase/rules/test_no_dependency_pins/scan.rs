@@ -1,4 +1,5 @@
-use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
+use super::{CompiledOptions, CompiledPattern, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use assertion_ranges::{assertion_start, is_code, source_ranges_for_file, SourceRanges};
 use delimiters::{has_matching_raw_entry_delimiters, has_matching_version_delimiters};
 use raw_literal_arg::{

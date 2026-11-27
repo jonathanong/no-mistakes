@@ -9,8 +9,9 @@ use super::{
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics, path_filter::RulePathFilter, sort_findings,
+    analysis_policy::AnalysisDiagnostics, path_filter::RulePathFilter,
 };
+use no_mistakes_rule_kernel::finding::sort_findings;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Result};

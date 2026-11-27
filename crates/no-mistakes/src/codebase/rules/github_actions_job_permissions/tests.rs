@@ -1,5 +1,6 @@
 use super::{check, check_with_files_and_sources, diagnostics_with_files_and_sources, RULE_ID};
-use crate::codebase::rules::{source_store_for_files, RuleFinding};
+use crate::codebase::rules::source_store_for_files;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::discover_files;
 use crate::config::v2::NoMistakesConfig;
 use std::path::PathBuf;

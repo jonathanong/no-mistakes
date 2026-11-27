@@ -4,7 +4,7 @@ use super::{
 };
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::DepGraph;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::RuleDef;
 use std::path::Path;

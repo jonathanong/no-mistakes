@@ -1,5 +1,5 @@
 use super::{Dependency, PackageNode, RULE_ID};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use globset::GlobSet;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};

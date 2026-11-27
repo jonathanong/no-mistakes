@@ -1,6 +1,6 @@
 use super::analyze::check_source;
 use super::{compile_patterns, default_constant_contexts, Options, RULE_ID};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
 use std::path::Path;

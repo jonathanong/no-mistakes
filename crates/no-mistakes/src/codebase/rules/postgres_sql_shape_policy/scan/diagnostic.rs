@@ -1,4 +1,5 @@
-use super::{RuleFinding, RULE_ID};
+use super::RULE_ID;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(in crate::codebase::rules::postgres_sql_shape_policy) fn finding(
     file: &str,

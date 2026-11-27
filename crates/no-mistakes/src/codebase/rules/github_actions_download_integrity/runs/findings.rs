@@ -1,4 +1,5 @@
-use super::{Body, Hit, RuleFinding, StepRun, RULE_ID};
+use super::{Body, Hit, StepRun, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn workflow_finding(
     rel: &str,

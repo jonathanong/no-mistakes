@@ -1,6 +1,6 @@
 use super::{application_scope, check_rule_application, union_allowed_set, Options, RULE_ID};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use std::path::Path;
@@ -81,6 +81,6 @@ pub(crate) fn check_with_prepared_facts_and_graph(
             application_scope(inferred_roots, Some(&file_universe), prepared.sources),
         )?);
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    no_mistakes_rule_kernel::finding::sort_findings(&mut findings);
     Ok(findings)
 }

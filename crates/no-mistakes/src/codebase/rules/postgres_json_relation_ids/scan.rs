@@ -1,4 +1,5 @@
-use super::{CompiledOptions, RuleFinding, SourceStore, RULE_ID};
+use super::{CompiledOptions, SourceStore, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::statements::{SqlFactSite, SqlJsonWriteFact};
 use crate::codebase::postgres::{CatalogTable, SchemaCatalog, SqlWriteColumns};

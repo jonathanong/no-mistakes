@@ -1,4 +1,5 @@
-use super::{analysis_policy::AnalysisDiagnostics, path_filter::GlobMatcher, RuleFinding};
+use super::{analysis_policy::AnalysisDiagnostics, path_filter::GlobMatcher};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig, Unanalyzable};
@@ -166,8 +167,8 @@ pub fn diagnostics_with_files_sources_and_facts(
             }
         }
         if !defer_suppression {
-            super::suppress_rule_findings_with_sources(root, &mut findings, sources);
-            super::suppress_rule_findings_with_sources(root, &mut unanalyzable, sources);
+            super::suppress_rule_findings_with_sources(root, &mut findings, sources.as_ref());
+            super::suppress_rule_findings_with_sources(root, &mut unanalyzable, sources.as_ref());
         }
         diagnostics.findings.extend(findings);
         for finding in unanalyzable {

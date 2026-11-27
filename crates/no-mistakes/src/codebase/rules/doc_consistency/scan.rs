@@ -1,4 +1,4 @@
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::options::Options;
 use super::patterns::{self, CompiledPattern};
 use super::RULE_ID;

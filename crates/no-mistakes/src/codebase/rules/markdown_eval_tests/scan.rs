@@ -1,4 +1,5 @@
-use super::{is_eval_test, CompiledOptions, RuleFinding, RULE_ID};
+use super::{is_eval_test, CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};

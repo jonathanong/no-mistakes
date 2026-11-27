@@ -4,7 +4,7 @@ use crate::codebase::postgres::{
     catalog_finding, AllowList, CatalogObjectRef, PartitionKeyElement, RelationKind, SchemaCatalog,
     SqlRelationPredicateFact,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::BTreeSet;
 
 pub(super) fn catalog_findings(

@@ -1,5 +1,6 @@
 use super::yaml::{finding, has_key, is_expression, mapping_str, timeout_minutes, StepLocations};
-use super::{CompiledOptions, RuleFinding, GITHUB_MAX_MINUTES};
+use super::{CompiledOptions, GITHUB_MAX_MINUTES};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 

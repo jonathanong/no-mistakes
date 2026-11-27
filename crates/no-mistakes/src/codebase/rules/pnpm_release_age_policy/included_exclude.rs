@@ -1,5 +1,6 @@
 use super::policy::ExcludeEntry;
-use super::{rel, ClassifiedFinding, RuleFinding, RULE_ID};
+use super::{rel, ClassifiedFinding, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
 

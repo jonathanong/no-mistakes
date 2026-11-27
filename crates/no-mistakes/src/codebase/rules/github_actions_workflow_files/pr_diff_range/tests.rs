@@ -3,7 +3,7 @@ use super::runs::check_source_with_options;
 
 mod consistent_pairs;
 
-fn check_source(rel: &str, source: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+fn check_source(rel: &str, source: &str) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     check_source_with_options(rel, source, &CompiledOptions::default()).0
 }
 

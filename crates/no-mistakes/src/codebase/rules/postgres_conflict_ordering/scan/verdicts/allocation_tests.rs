@@ -19,7 +19,7 @@ fn disabled_ledger_constructs_no_records_and_allocates_nothing() {
         ..Default::default()
     })
     .unwrap();
-    let source = crate::codebase::rules::read_source(&sources, &path).unwrap();
+    let source = no_mistakes_rule_kernel::source_access::read_source(&sources, &path).unwrap();
     let embedded = facts.embedded_sql(&path, &opts.embedded).unwrap();
     let statements = crate::codebase::rules::index_sql_variants(
         facts

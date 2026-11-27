@@ -2,12 +2,12 @@ use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 
 #[derive(Debug)]
-pub(crate) struct GlobMatcher {
+pub struct GlobMatcher {
     globset: Option<GlobSet>,
 }
 
 impl GlobMatcher {
-    pub(crate) fn new(patterns: &[String], context: &str) -> Result<Self> {
+    pub fn new(patterns: &[String], context: &str) -> Result<Self> {
         let mut builder = GlobSetBuilder::new();
         let mut count = 0usize;
         for pattern in patterns {
@@ -41,11 +41,11 @@ impl GlobMatcher {
         Ok(Self { globset })
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.globset.is_none()
     }
 
-    pub(crate) fn is_match(&self, rel: &str) -> bool {
+    pub fn is_match(&self, rel: &str) -> bool {
         self.globset
             .as_ref()
             .is_some_and(|globset| globset.is_match(rel))

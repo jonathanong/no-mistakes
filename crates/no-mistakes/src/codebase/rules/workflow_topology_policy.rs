@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::workflow_topology::artifact_types::ArtifactMatchKind;
 use crate::config::v2::NoMistakesConfig;

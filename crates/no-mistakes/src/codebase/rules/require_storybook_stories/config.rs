@@ -78,7 +78,7 @@ pub(super) fn effective_story_patterns(
     if let Some(configs) = config.tests.storybook.configs.as_ref() {
         for config_path in configs.values() {
             let config_path = resolve_storybook_config_path(root, project_root, &config_path);
-            let Some(source) = crate::codebase::rules::read_language_source(sources, &config_path)
+            let Some(source) = no_mistakes_rule_kernel::source_access::read_language_source(sources, &config_path)
             else {
                 continue;
             };

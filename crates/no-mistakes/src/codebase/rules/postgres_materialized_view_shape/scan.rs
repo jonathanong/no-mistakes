@@ -4,7 +4,7 @@ use crate::codebase::postgres::statements::{bounded_view_selects, BOUNDED_VIEW_M
 use crate::codebase::postgres::{
     catalog_finding, CatalogIndexInfo, CatalogObjectRef, CatalogView, SchemaCatalog,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;

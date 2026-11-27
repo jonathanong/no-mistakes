@@ -1,4 +1,4 @@
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::source_locations::ConfigPath;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};

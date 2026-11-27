@@ -114,7 +114,7 @@ pub(super) fn test_filter_with_targets(
     for config_file in config_files.iter().filter(|_| alternatives.is_empty()) {
         let source = match sources {
             Some(sources) => {
-                crate::codebase::rules::read_language_source(sources, &config_file.path)
+                no_mistakes_rule_kernel::source_access::read_language_source(sources, &config_file.path)
                     .ok_or_else(|| {
                         anyhow::anyhow!("failed to read {}", config_file.path.display())
                     })?

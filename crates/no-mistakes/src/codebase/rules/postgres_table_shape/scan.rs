@@ -1,7 +1,7 @@
 use super::compile::{Banned, Shape};
 use super::{Compiled, RULE_ID};
 use crate::codebase::postgres::{catalog_finding, CatalogObjectRef, SchemaCatalog};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFinding> {
     let mut findings = Vec::new();

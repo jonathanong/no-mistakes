@@ -28,7 +28,7 @@ fn malformed_graph() -> (PathBuf, crate::codebase::dependencies::graph::DepGraph
     (root, graph)
 }
 
-fn findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+fn findings(case: &str) -> anyhow::Result<Vec<no_mistakes_rule_kernel::finding::RuleFinding>> {
     run_check(
         &malformed_root(),
         Some(&super::forbidden_calls_case(case)),

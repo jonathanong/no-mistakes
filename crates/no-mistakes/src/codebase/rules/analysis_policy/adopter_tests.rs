@@ -3,7 +3,7 @@ use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
 };
 use crate::codebase::dependencies::graph::TsFactLookup;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 fn run(config: &mut NoMistakesConfig) -> (AnalysisDiagnostics, usize) {
     let root = fixture();

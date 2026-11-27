@@ -1,4 +1,5 @@
-use super::{types::Component, RuleFinding, RULE_ID};
+use super::{types::Component, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn unanalyzable(component: Component) -> RuleFinding {
     RuleFinding { causes: Vec::new(),

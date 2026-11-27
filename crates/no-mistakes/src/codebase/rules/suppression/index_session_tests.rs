@@ -119,7 +119,7 @@ fn request_paths_use_shared_store_without_standalone_fallbacks() {
         let mut by_source = vec![finding("my-rule", "a.ts", 1)];
         suppress_rule_findings_with_source(&mut by_source, "kept\n");
         let mut no_store = vec![finding("no-sparse-checkout", ".github/workflows/ci.yml", 1)];
-        suppress_rule_findings_inner(&root, &mut no_store, None, &[]);
+        super::super::standalone::suppress_rule_findings_inner(&root, &mut no_store, &[]);
     });
     assert_eq!(
         standalone_observer

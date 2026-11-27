@@ -1,6 +1,6 @@
 use super::ValueAssertion;
 use super::{partial, value_at_key};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::file_diagnostics::ClassifiedInputFindings;
 use crate::codebase::rules::structured_config_policy::paths::CanonicalInventory;
 use crate::codebase::structured_value::PartialYaml;
@@ -102,7 +102,7 @@ pub(super) fn finding(file: &str, assertion: &ValueAssertion, message: String) -
     } else {
         assertion.key.clone()
     };
-    crate::codebase::rules::RuleFinding {
+    no_mistakes_rule_kernel::finding::RuleFinding {
         causes: Vec::new(),
         rule: super::RULE_ID.to_string(),
         file: file.to_string(),

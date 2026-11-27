@@ -1,4 +1,4 @@
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::config::{Options, Target, UnknownArguments, UnknownCalls};
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{KnownCallTargetRef, ResolvedCallSite};

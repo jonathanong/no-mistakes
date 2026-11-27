@@ -105,7 +105,7 @@ fn workspace_package_version_with_sources(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<String> {
     let content =
-        crate::codebase::rules::read_language_source(sources, &package_dir.join("package.json"))?;
+        no_mistakes_rule_kernel::source_access::read_language_source(sources, &package_dir.join("package.json"))?;
     serde_json::from_str::<PackageVersion>(&content)
         .ok()
         .and_then(|package| package.version)

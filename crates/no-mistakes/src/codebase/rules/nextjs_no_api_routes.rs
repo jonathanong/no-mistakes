@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::ts_source::{
     has_disable_file_comment, has_disable_line_comment, relative_slash_path,

@@ -1,4 +1,5 @@
-use crate::codebase::rules::{self, RuleFinding};
+use crate::codebase::rules::self;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

@@ -11,7 +11,7 @@ use crate::codebase::postgres::{
     recovered_sql_needs_insert_check, EmbeddedSqlCall, EmbeddedSqlKind,
 };
 use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_variant_directive;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -46,7 +46,7 @@ pub(super) fn scan_with_sources(
             })?;
         let rel = relative_slash_path(root, &file.path);
         let source =
-            crate::codebase::rules::read_language_source(sources, &file.path).unwrap_or_default();
+            no_mistakes_rule_kernel::source_access::read_language_source(sources, &file.path).unwrap_or_default();
         let statements = crate::codebase::rules::index_sql_variants(
             prepared.postgres_statements(path, Some(&opts.embedded))?,
         );

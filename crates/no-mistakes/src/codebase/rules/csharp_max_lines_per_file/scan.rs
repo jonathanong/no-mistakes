@@ -1,5 +1,5 @@
 use super::prepared::PreparedRule;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path, SourceStore};
 use anyhow::Result;
 use rayon::prelude::*;

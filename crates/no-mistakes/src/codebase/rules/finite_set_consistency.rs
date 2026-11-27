@@ -15,7 +15,7 @@ mod ts_array;
 mod ts_union;
 mod yaml;
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

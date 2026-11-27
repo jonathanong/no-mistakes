@@ -1,6 +1,7 @@
 use super::tests_support::*;
 use super::*;
-use crate::codebase::rules::{path_filter, rust_max_lines_per_file, sort_findings, target_roots};
+use crate::codebase::rules::{path_filter, rust_max_lines_per_file, target_roots};
+use no_mistakes_rule_kernel::finding::sort_findings;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,

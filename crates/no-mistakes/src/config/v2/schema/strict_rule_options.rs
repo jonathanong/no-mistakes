@@ -1,66 +1,48 @@
-use super::RuleDef;
 use crate::config::source_locations::ConfigPath;
 use serde::de::{Deserializer, Visitor};
 use serde_yaml::Value;
 use std::cell::RefCell;
 
-#[derive(Debug)]
-pub(crate) struct OptionLocation {
-    pub(crate) path: ConfigPath,
-    message: String,
-}
+pub(crate) use no_mistakes_rule_kernel::validate_options::OptionLocation;
 
-impl std::fmt::Display for OptionLocation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.message)
-    }
-}
+use super::RuleDef;
 
-impl std::error::Error for OptionLocation {}
-
-impl OptionLocation {
-    pub(crate) fn semantic(path: ConfigPath, message: String) -> anyhow::Error {
-        Self { path, message }.into()
-    }
-
-    pub(super) fn from_error(
-        rule: &RuleDef,
-        error: serde_path_to_error::Error<serde_yaml::Error>,
-        unknown: Option<String>,
-    ) -> anyhow::Error {
-        let mut path = ConfigPath::default().key("options");
-        for segment in error.path() {
-            path = match segment {
-                serde_path_to_error::Segment::Map { key } => path.key(key),
-                serde_path_to_error::Segment::Seq { index } => path.index(*index),
-                serde_path_to_error::Segment::Enum { variant } => path.key(variant),
-                serde_path_to_error::Segment::Unknown => break,
-            };
-        }
-        if let Some(key) = &unknown {
-            path = path.key(key);
-        }
-        let serde_path = error.path().to_string();
-        let location = match unknown {
-            Some(key) => format!("options.{key}"),
-            None if serde_path.is_empty() || serde_path == "." => "options".into(),
-            None => format!("options.{serde_path}"),
+pub(super) fn option_location_from_error(
+    rule: &RuleDef,
+    error: serde_path_to_error::Error<serde_yaml::Error>,
+    unknown: Option<String>,
+) -> anyhow::Error {
+    let mut path = ConfigPath::default().key("options");
+    for segment in error.path() {
+        path = match segment {
+            serde_path_to_error::Segment::Map { key } => path.key(key),
+            serde_path_to_error::Segment::Seq { index } => path.index(*index),
+            serde_path_to_error::Segment::Enum { variant } => path.key(variant),
+            serde_path_to_error::Segment::Unknown => break,
         };
-        let name = rule
-            .name
-            .as_deref()
-            .map(|name| format!(" application `{name}`"))
-            .unwrap_or_default();
-        Self {
-            path,
-            message: format!(
-                "invalid options for rule `{}`{name} at {location}: {}",
-                rule.rule,
-                error.inner()
-            ),
-        }
-        .into()
     }
+    if let Some(key) = &unknown {
+        path = path.key(key);
+    }
+    let serde_path = error.path().to_string();
+    let location = match unknown {
+        Some(key) => format!("options.{key}"),
+        None if serde_path.is_empty() || serde_path == "." => "options".into(),
+        None => format!("options.{serde_path}"),
+    };
+    let name = rule
+        .name
+        .as_deref()
+        .map(|name| format!(" application `{name}`"))
+        .unwrap_or_default();
+    OptionLocation::semantic(
+        path,
+        format!(
+            "invalid options for rule `{}`{name} at {location}: {}",
+            rule.rule,
+            error.inner()
+        ),
+    )
 }
 
 pub(super) struct WithKnownFields<'a> {

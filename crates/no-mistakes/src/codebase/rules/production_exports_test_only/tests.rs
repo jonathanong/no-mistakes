@@ -1,4 +1,5 @@
-use crate::codebase::rules::{run_check, RuleFinding};
+use crate::codebase::rules::run_check;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::PathBuf;
 
 mod advisory_grouping;

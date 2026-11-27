@@ -1,7 +1,7 @@
 use super::paths::frameworks;
 use super::{context::Context, field::Field};
 use crate::codebase::rules::path_filter::GlobMatcher;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::collections::BTreeSet;

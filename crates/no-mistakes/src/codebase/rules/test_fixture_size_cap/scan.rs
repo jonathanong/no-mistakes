@@ -3,7 +3,7 @@ use super::literals::{
     member_names, numeric_list,
 };
 use super::{in_scope, is_script, relative_file, Compiled, EachTableMode, RULE_ID};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers, SourceStore};
 use oxc_ast::ast::{Argument, CallExpression, Expression, NewExpression};
 use oxc_ast_visit::{walk, Visit};

@@ -5,34 +5,7 @@ use std::path::Path;
 mod json;
 mod yaml;
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum Segment {
-    Key(String),
-    Index(usize),
-}
-
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub(crate) struct ConfigPath(Vec<Segment>);
-
-impl ConfigPath {
-    pub(crate) fn key(mut self, key: impl Into<String>) -> Self {
-        self.0.push(Segment::Key(key.into()));
-        self
-    }
-
-    pub(crate) fn index(mut self, index: usize) -> Self {
-        self.0.push(Segment::Index(index));
-        self
-    }
-
-    pub(crate) fn pop(&mut self) -> Option<Segment> {
-        self.0.pop()
-    }
-
-    pub(crate) fn as_slice(&self) -> &[Segment] {
-        &self.0
-    }
-}
+pub(crate) use no_mistakes_rule_kernel::validate_options::{ConfigPath, Segment};
 
 pub(crate) struct ConfigLocations {
     nodes: Vec<Node>,

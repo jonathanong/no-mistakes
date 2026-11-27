@@ -2,7 +2,7 @@ use super::ast;
 use super::checker::DynamicImportKey;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};

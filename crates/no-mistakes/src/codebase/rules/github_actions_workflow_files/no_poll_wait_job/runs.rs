@@ -4,7 +4,7 @@ use crate::codebase::rules::github_actions_script_expressions::step_run_lines;
 use crate::codebase::rules::github_actions_workflow_files::gha_kind;
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::run_scripts;
 use crate::codebase::rules::github_actions_workflow_files::script_line::yaml_line;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 
 pub(super) fn check_source(

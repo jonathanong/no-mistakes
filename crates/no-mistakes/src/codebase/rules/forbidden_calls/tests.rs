@@ -58,7 +58,7 @@ fn forbidden_calls_case(name: &str) -> PathBuf {
     crate::test_support::rule_fixture_root("forbidden-calls").join(format!("cases/{name}.yml"))
 }
 
-fn coverage_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+fn coverage_findings(case: &str) -> anyhow::Result<Vec<no_mistakes_rule_kernel::finding::RuleFinding>> {
     run_check(&coverage_root(), Some(&forbidden_calls_case(case)), None)
 }
 

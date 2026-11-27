@@ -10,7 +10,7 @@ fn variant(name: &str) -> PathBuf {
         .join(name)
 }
 
-fn findings(name: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+fn findings(name: &str) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     let root = variant(name);
     let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let files = [root.join("src/query.ts")];

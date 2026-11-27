@@ -1,4 +1,5 @@
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::statements::SqlStarProjectionFact;
@@ -56,7 +57,7 @@ pub(super) fn scan(
     }
     for (file_index, file) in statements.into_iter().enumerate() {
         let rel = relative_slash_path(root, &file.path);
-        let source = crate::codebase::rules::read_language_source(sources, &file.path);
+        let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, &file.path);
         if opts.advise_unanalyzable && file_index < native_statement_count {
             crate::codebase::rules::native_sql_advice::record_parse_failures(
                 prepared,

@@ -1,6 +1,6 @@
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::postgres::collect_prepared_schema_facts;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
 use std::path::{Path, PathBuf};

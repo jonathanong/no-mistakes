@@ -32,7 +32,7 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckFailure;
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::postgres::embedded::TrustedSqlTag;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
