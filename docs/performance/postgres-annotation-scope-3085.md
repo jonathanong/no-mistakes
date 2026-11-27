@@ -1,11 +1,15 @@
 # PostgreSQL annotation scope: regression and native validation
 
-PR [#3088](https://github.com/jonathanong/no-mistakes/pull/3088) previously removed
-the earlier shared scalar module-initialization cache after downstream validation
-reported higher CPU cost. Scoped executor seeds still prune irrelevant roots, and
-excluded callers that can supply SQL arguments to selected helpers retain contextual
-evaluation. Multi-root profiles now reuse statically pure imported modules lazily
-through the per-profile `SharedInit` cache without throwaway initialization.
+Scoped executor seeds prune irrelevant roots. Excluded callers that can
+supply SQL arguments to selected helpers keep contextual evaluation. A profile
+with at least two roots, no failed SQL prerequisite sources, and at least one
+statically shared imported module builds a per-profile pure-module cache. Pure
+imported modules initialize once during ordinary evaluation and remap into each
+importing root. Impure or cyclic modules stay per root.
+
+[PR #3088](https://github.com/jongleberry/no-mistakes/pull/3088) is the baseline
+for the consumer comparison below. That change removed an earlier shared scalar
+module-initialization cache after downstream validation reported higher CPU cost.
 
 The reported consumer comparison used 0.109.6 versus 0.109.6 plus this PR's changes,
 an unchanged configuration, maximum effort, three interleaved runs per variant,
@@ -15,20 +19,22 @@ ranges of 695–720 versus 767–806 seconds, and peak RSS of 8.3 versus 8.5 GB.
 All 169 annotation findings were byte-identical. These are supplied downstream
 observations, not measurements reproduced by the public fixture.
 
-## Why the cache was removed
+## Why the earlier scalar cache was removed
 
-The cache rejected in-scope modules and excluded modules with imports. Thus an
-excluded test importing a large in-scope helper could retain exactly the same
-initialization work while paying for negative cache entries and shared-handle
-cloning in evaluator snapshots. A focused scalar-helper win did not establish a
-benefit for this graph shape. The cache, its frozen-frame installation, and its
-snapshot bookkeeping are removed rather than enabled by another configuration
-option. Initialization counts remain actual counts; retained callers are not
-reclassified to hide their work.
+The scalar cache from [PR #3088](https://github.com/jongleberry/no-mistakes/pull/3088)
+rejected in-scope modules and excluded modules with imports. An excluded test
+importing a large in-scope helper kept the same initialization work and also
+paid for negative cache entries and shared-handle cloning in evaluator
+snapshots. A focused scalar-helper win did not establish a benefit for this
+graph shape, so that cache, its frozen-frame installation, and its snapshot
+bookkeeping are not a configuration option. The per-profile pure-module cache
+above is separate and captures scopes during ordinary initialization.
+Initialization counts stay actual counts; retained callers are not reclassified
+to hide their work.
 
-The [earlier cached implementation measurements](https://github.com/jongleberry/no-mistakes/blob/c0f7a4a0ed3ae7d9a1a72e3fd209a2cc0406a1c2/docs/performance/postgres-annotation-scope-3085.md)
-and the historical JSON beside this page are superseded. They used different
-sources and release settings and are not acceptance evidence for this revision.
+The [cached implementation measurements](https://github.com/jongleberry/no-mistakes/blob/c0f7a4a0ed3ae7d9a1a72e3fd209a2cc0406a1c2/docs/performance/postgres-annotation-scope-3085.md)
+and the JSON beside this page used different sources and release settings.
+They are not acceptance evidence for this revision.
 
 ## Saved reproductions
 
@@ -42,9 +48,9 @@ sources and release settings and are not acceptance evidence for this revision.
   selected helper. Its 66 modules contain 306,751 source bytes and 7,245 lines.
   Scoped seeds reduce 65 roots to one.
 - [`annotation-excluded-shared-initials`](../../fixtures/performance/annotation-excluded-shared-initials):
-  the scalar-cache winning case remains a control. Multi-root profiles now reuse
-  statically pure shared modules through the per-profile shared-initialization
-  cache; see [CLI diagnostics](../cli/diagnostics.md).
+  scalar helpers shared across roots. Multi-root profiles reuse statically
+  pure shared modules through the per-profile shared-initialization cache;
+  see [CLI diagnostics](../cli/diagnostics.md).
 
 The first two fixtures use `.mts` files, with no JSX. Their configurations
 explicitly include source and test locations, then exclude the tests. Their
