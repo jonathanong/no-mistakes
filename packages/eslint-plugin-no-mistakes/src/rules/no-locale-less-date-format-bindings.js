@@ -38,6 +38,23 @@ function isUnreadModuleDef(def, sourceCode) {
   );
 }
 
+function hasProvenLocalAssignment(variable, read) {
+  const writes = variable.references.filter((reference) => reference.isWrite() && !reference.init);
+  if (writes.length !== 1) return false;
+  const [write] = writes;
+  const assignment = write.identifier.parent;
+  const statement = assignment.parent;
+  return (
+    write.from === read.from &&
+    assignment.type === "AssignmentExpression" &&
+    assignment.operator === "=" &&
+    unwrapExpression(assignment.right).type === "ObjectExpression" &&
+    statement.type === "ExpressionStatement" &&
+    ["Program", "BlockStatement"].includes(statement.parent.type) &&
+    statement.range[1] <= read.identifier.range[0]
+  );
+}
+
 function globalResolution(identifier, sourceCode, evalScopes) {
   let reference;
   for (let scope = sourceCode.getScope(identifier); scope; scope = scope.upper) {
@@ -48,8 +65,8 @@ function globalResolution(identifier, sourceCode, evalScopes) {
   if (variable?.scope?.type === "global" && variable.defs.length === 0) return "global";
   if (
     variable?.defs.length &&
-    !variable.references.some((reference) => reference.isWrite() && !reference.init) &&
-    variable.defs.every((def) => isUnreadModuleDef(def, sourceCode))
+    variable.defs.every((def) => isUnreadModuleDef(def, sourceCode)) &&
+    !hasProvenLocalAssignment(variable, reference)
   ) {
     return "module";
   }

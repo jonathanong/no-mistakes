@@ -46,8 +46,9 @@ formatDate(date);
   name is listed and `unknownValues` is `"finding"`, the rule reports
   `unanalyzable` for a missing locale when the namespace comes from an import,
   a global `require()` call or member access, or `import = require()`. Local
-  functions named `require`, reassigned bindings, and other local initializers
-  are outside this check.
+  functions named `require` and other local initializers are outside this
+  check. A direct assignment of a local object before the call in the same
+  statement list also stays quiet.
   An `Intl.*Format` constructor or call whose only use is an immediate
   `.resolvedOptions()` call (including any property read on its result, such as
   `Intl.DateTimeFormat().resolvedOptions().timeZone` or

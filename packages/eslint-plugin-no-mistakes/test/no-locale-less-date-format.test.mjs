@@ -227,7 +227,7 @@ const cases = [
       ],
       unknownValues: "finding",
     },
-    lines: [7, 11, 15, 17],
+    lines: [7, 11, 15, 17, 21, 29],
   },
   {
     name: "a same-file constructor alias still requires a locale",

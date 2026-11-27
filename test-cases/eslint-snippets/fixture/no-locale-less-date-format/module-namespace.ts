@@ -15,3 +15,16 @@ new IntlRequired.DateTimeFormat();
 new IntlRequired.DateTimeFormat();
 const IntlMember = require("@example/intl").Intl;
 new IntlMember.DateTimeFormat();
+
+function localAssignment() {
+  let Intl = require("@example/intl");
+  Intl.DateTimeFormat();
+  Intl = { DateTimeFormat() {} };
+  Intl.DateTimeFormat();
+}
+
+function branchAssignment(useLocal: boolean) {
+  let Intl = require("@example/intl");
+  if (useLocal) Intl = { DateTimeFormat() {} };
+  Intl.DateTimeFormat();
+}
