@@ -18,7 +18,8 @@ pub(super) fn reference_exists(
     let target = normalize_path(&base.join(reference));
     let root = normalize_path(root);
     let config_file = normalize_path(config_file);
-    if absolute_normalized_path(&target).starts_with(absolute_normalized_path(&root)) && tracked_reference_exists(&root, &target, rel_files) {
+    let contained = absolute_normalized_path(&target).starts_with(absolute_normalized_path(&root));
+    if contained && tracked_reference_exists(&root, &target, rel_files) {
         return Ok(true);
     }
     if opts.allow_globs && has_glob_metachar(reference) {

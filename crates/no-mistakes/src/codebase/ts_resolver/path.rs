@@ -3,9 +3,12 @@ pub use no_mistakes_ts_facts::path_norm::normalize_path;
 /// Lexically normalize `path` against the current directory when it is relative,
 /// so containment checks compare paths from the same base.
 pub fn absolute_normalized_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        return normalize_path(path);
+    }
     match std::env::current_dir() {
-        Ok(cwd) if path.is_relative() => normalize_path(&cwd.join(path)),
-        _ => normalize_path(path),
+        Ok(cwd) => normalize_path(&cwd.join(path)),
+        Err(_) => normalize_path(path),
     }
 }
 
