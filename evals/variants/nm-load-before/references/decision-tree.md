@@ -1,0 +1,272 @@
+# Decision tree: which tool, which flag?
+
+## Choosing a binary
+
+```
+What are you trying to find?
+│
+├─ Files this file imports (forward graph)
+│   └─ no-mistakes dependencies <file> [--depth N] [--relationship import]
+│
+├─ Runtime modules a Playwright route can conservatively reach
+│   └─ no-mistakes dependencies <route-file> --relationship route-import
+│
+├─ Files that import this file (reverse graph)
+│   └─ no-mistakes dependents <file> [--depth N] [--relationship import]
+│
+├─ Files that import a specific named export
+│   └─ no-mistakes dependents <file>#SYMBOL
+│
+├─ Named exports of a file (public API)
+│   └─ no-mistakes symbols <file>
+│
+├─ Named imports of a file (what it consumes)
+│   └─ no-mistakes symbols <file> --include imports
+│
+├─ React component traits / fetch checks
+│   └─ no-mistakes react analyze 'app/components/**/*.tsx'
+│   └─ no-mistakes react check 'app/components/**/*.tsx' --assert-no-fetch
+│
+├─ Queue producer/worker hops
+│   └─ no-mistakes queues edges [file] [--depth N]
+│   └─ no-mistakes queues related <file> [--direction deps|dependents|both]
+│   └─ no-mistakes queues check
+│
+├─ tRPC procedure hops
+│   └─ no-mistakes dependents <file> --relationship trpc
+│
+├─ Server route extraction / related files
+│   └─ no-mistakes server routes  (Express/Hono/Fastify/Koa/NestJS, language HTTP, Remix file routes)
+│   └─ no-mistakes server related <file> [--direction deps|dependents|both]
+│   └─ no-mistakes server edges [file] [--depth N]
+│
+├─ Configured Python/Go/Rust/Rails/PHP/Java/Kotlin/Elixir/Dart graphs
+│   └─ no-mistakes dependents <file> --relationship python|go|rust|ruby|php|java|kotlin|elixir|dart
+│
+├─ Tests to run after changing a file (preferred)
+│   └─ no-mistakes tests plan vitest --changed-file <file> --format paths
+│   └─ no-mistakes tests plan playwright --changed-file <file> --format paths
+│
+├─ Tests to run after changing a file (lower-level fallback)
+│   └─ no-mistakes dependents <file> --test vitest --format paths
+│   or no-mistakes dependents <file> --test playwright --format paths
+│
+├─ Explain why a test was selected
+│   └─ no-mistakes tests why <test> --plan plan.json
+│
+├─ Playwright route/selector coverage gate
+│   └─ no-mistakes playwright check --json
+│
+├─ Playwright tests covering a page/component
+│   └─ no-mistakes playwright related <file> --json
+│
+├─ What a Playwright test asserts (routes, selectors, fetches)
+│   └─ no-mistakes playwright tests <test-file> --json
+│
+├─ API calls made by a Next.js App Router route
+│   └─ no-mistakes fetches <route-or-file> --format json
+│
+├─ Which packages changed between two lockfile refs
+│   └─ no-mistakes lockfile diff --base <ref> --format json
+│
+├─ Which routes, queue jobs, or tRPC procedures reach a file
+│   └─ no-mistakes dependents <file> --relationship route
+│   └─ no-mistakes dependents <file> --relationship queue
+│   └─ no-mistakes dependents <file> --relationship trpc
+│   (requires .no-mistakes.yml with the relevant project/rule config)
+│
+├─ Which CI workflows invoke a Rust binary through supported Cargo commands
+│   └─ no-mistakes dependents src/bin/mybinary.rs --relationship ci
+│
+├─ Direct string-literal import specifiers
+│   └─ no-mistakes import-usages --root . --filter 'src/**' --format json
+│
+├─ Client query params versus handler reads
+│   └─ no-mistakes server contracts --format json
+│
+├─ Exact runner command for one known test file
+│   └─ no-mistakes tests targets vitest web/app/users/users.test.ts --format commands
+│
+├─ Effective resolved config
+│   └─ no-mistakes config resolve [--view declared]
+│
+├─ Workflow env definitions and references
+│   └─ no-mistakes ci env GITHUB_TOKEN --format json
+│
+├─ Entry-workflow jobs affected between two revisions
+│   └─ no-mistakes ci topology-impact --root . --base "$BASE_SHA" --head "$HEAD_SHA" --entry-workflow ci.yml
+│
+├─ Terraform/OpenTofu module outputs
+│   └─ no-mistakes infra outputs infra/modules/network --format json
+│
+├─ Tests covering a Terraform/OpenTofu file
+│   └─ no-mistakes infra test-for infra/envs/prod/main.tf --format paths
+│
+├─ SwiftPM test targets covering a Swift file
+│   └─ no-mistakes swift test-targets swift-clients/core/Sources/CoreAPI/Endpoint.swift --json
+│
+└─ Which local GitHub Actions jobs/steps, scripts, or artifacts reach a file
+    └─ no-mistakes dependents <file> --relationship workflow
+```
+
+## Choosing a --relationship flag
+
+| Flag value | What edges it follows |
+|---|---|
+| `call` | Statically resolved lexical call edges (opt-in; excluded from `all`) |
+| `assertion-owner` | Coverage dispatch to assertion-owner callable (opt-in; excluded from `all`) |
+| `import` | Static TS/JS imports, `import type`, string-literal dynamic `import()`, and string-literal `require()` |
+| `import-static` | Static TS/JS value imports only |
+| `import-type` | Type-only imports only |
+| `import-dynamic` | String-literal dynamic `import()` only |
+| `import-require` | String-literal CommonJS `require()` only |
+| `route-import` | Runtime static imports/re-exports and literal dynamic imports, conservatively including function-scoped imports for Playwright route reachability; excludes type-only imports and `require()` |
+| `workspace` | Cross-package npm workspace imports |
+| `package` | `package.json` dependency declarations to workspace entries or external module nodes |
+| `test` | source/test correspondence, Playwright route tests, Next layouts, and selector coverage |
+| `route` | route refs, Playwright route tests, and Next layouts |
+| `queue` | Queue enqueue/worker relationship → virtual queue job |
+| `trpc` | tRPC client call → virtual procedure → configured router file (opt-in; omitted from `all`) |
+| `md` | Markdown link → linked source file |
+| `ci` | CI workflow YAML → binary entry point |
+| `workflow` | GitHub Actions workflow → virtual job → virtual step, `needs`, local uses, static run targets, and same-run artifacts |
+| `workflow-job` | Workflow file → virtual job only |
+| `workflow-step` | Job/step structural path |
+| `workflow-needs` | Job structural path plus `needs` |
+| `workflow-uses` | Job/step structural path plus local reusable workflow/action use |
+| `workflow-run` | Job/step structural path plus static run/package-script targets |
+| `workflow-artifact` | Job/step structural path plus same-run artifact upload → download |
+| `resource` | TS/JS consumer to a tracked file read by a literal filesystem or static glob call (included in `all`) |
+| `http` | HTTP client call with a static path → backend route definition |
+| `process` | `spawn`/`exec`/Playwright `webServer` → spawned entry file |
+| `asset` | Explicit non-code asset import |
+| `react` | React component render relationship |
+| `dotnet` | C# `using`/type reference/project reference edges |
+| `swift` | Swift import/type reference/SwiftPM target dependency edges |
+| `python` | Python import and reference edges in configured packages |
+| `go` | Go import and reference edges in configured modules |
+| `rust` | Rust `use`/`mod` and path-dep edges in configured packages |
+| `ruby` | Ruby require and configured constant edges |
+| `php` | PHP `use` / Composer edges |
+| `java` | Java import and reference edges |
+| `kotlin` | Kotlin import and reference edges |
+| `elixir` | Elixir import and reference edges |
+| `dart` | Dart import and reference edges |
+| `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
+| `all` | All standard relationships, including `workflow`, except the opt-in `call`, `assertion-owner`, `route-import`, and `trpc` relationships (default) |
+
+Repeatable — `--relationship import --relationship workspace` follows both kinds.
+
+## Bounded flow slices
+
+`no-mistakes flow <file[#symbol]>` prints a compact slice of the canonical
+graph around one target: the target node, visited nodes, and typed edges. Use
+it when `dependents`/`dependencies` output is too large and one neighborhood is
+enough.
+
+- `--direction deps` (what the target consumes), `dependents` (importers), or
+  `both` for a small bidirectional slice. `call` edges are opt-in (add
+  `--relationship call`); for calls to an exported function use `call-sites`.
+- `--depth <N>` bounds the walk; keep it small (1-2) for readable output.
+- `--relationship workflow` adds GitHub Actions job and step nodes
+  (`workflow.yml#job:<job>`, `workflow.yml#job:<job>/step:<index>`; JSON kinds
+  `workflow-job` / `workflow-step`). `--relationship trpc` adds tRPC procedure
+  nodes (kind `trpc-procedure`).
+
+```bash
+no-mistakes flow src/api/users.mts#handler --direction both --depth 2 --format json
+no-mistakes flow .github/workflows/ci.yml --direction deps --relationship workflow --format json
+```
+
+See [flow](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/flow.md).
+
+## Output format selection
+
+| Format | When to use |
+|---|---|
+| `--format json` / `--json` | Feeding to another tool, agent parsing |
+| `--format paths` | Shell `$()` substitution, xargs |
+| `--format md` | Writing to a document |
+| `--format human` | Debugging interactively on a TTY |
+| `--format yml` | YAML pipelines |
+
+Default for commands that share the TTY switch (`dependencies`, `dependents`,
+`symbols`, `importers`, `exports-of`, `dead-exports`, `call-sites`,
+`resolve-check`, `import-usages`, `impacted-checks`, `ci impact`, `ci env`):
+`human` on a TTY, `json` when piped. `tests plan`, `tests impact`, and
+`tests targets` default to `json` on a TTY. `tests why` defaults to `text`
+and has no `--json`. `check`, `effects`, `react`, `queues`, `server`,
+`fetches`, `flow`, `infra`, and `swift` stay `human` when piped unless you
+pass `--format json` or `--json`. `ci topology` defaults to `json` (`json` or
+`mermaid` only). `config resolve` and `ci topology-impact` always print JSON
+and have no format switch. `playwright` has `--json` only.
+
+## Filtering results
+
+```bash
+# Only files matching a glob
+no-mistakes dependents src/auth.mts --filter 'backend/**/*.mts'
+
+# Collapse to folder level (trailing /)
+no-mistakes dependents src/auth.mts --filter 'backend/services/*/'
+
+# Combine multiple globs (OR)
+no-mistakes dependents src/auth.mts --filter 'backend/**' --filter 'integration-tests/**'
+```
+
+## Edge cases
+
+**When to use rg instead of no-mistakes dependents for callers:**
+`no-mistakes dependents` answers "who imports this file/symbol" with resolution-correct graph traversal. Use `rg` when you need the specific line of code where a symbol is called, or when a pattern may appear in non-import contexts (template strings, comments, dynamic lookups).
+
+**Payoff threshold — when does `no-mistakes` beat `rg`?**
+- ✅ Use `no-mistakes` when: the question spans >2 workspace directories,
+  involves >5 import hops, or requires transitive test-impact across a large
+  graph.
+- ⚡ Use `rg` when: you need the exact call line, the pattern may appear in
+  non-import contexts (comments, strings, dynamic lookups), or the file is
+  prose with no graph domain. For non-TS/JS structural questions: configured
+  Python/Go/Rust/… → `--relationship <lang>` · `.yml` → `ci`/`workflow` ·
+  `.tf` → `infra` · `.swift` → `swift` · Rust binary CI impact →
+  `--relationship ci` · CSS/JSON asset imports → `--relationship asset`.
+- For "what directly imports this one file?" in a single directory,
+  `no-mistakes importers <file>` is faster and prints static-import callers.
+  For complete impact including dynamic and CommonJS imports, use
+  `no-mistakes dependents <file>`.
+
+**When to pass --tsconfig explicitly:**
+Use `--tsconfig <pkg>/tsconfig.json` to force a single config while debugging an
+alias or reproducing a legacy result. Omit it for normal monorepo analysis so
+each source uses its owning package config.
+
+**When no-mistakes dependents returns fewer results than expected:**
+Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()` (those are unresolved in `resolve-check` but are not graph edges), or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.
+
+**Graph edge caveats:**
+See https://github.com/jongleberry/no-mistakes/blob/main/docs/graph-edges.md for
+every edge kind. Dynamic route paths, fetch URLs,
+queue names, process commands, and selector values are not guessed. Text-based
+selector coverage is approximate; exact configured test ID edges are stronger.
+`route-import` and `route` are different: the former follows the conservative
+runtime module closure used by Playwright, while the latter follows URL-route,
+route-test, and layout relationships.
+
+`workflow` is local and static: virtual nodes use `WORKFLOW#job:<job>` and
+`WORKFLOW#job:<job>/step:<zero-based-index>`, commands resolve only supported
+literal forms, and artifacts connect upload/download steps in the same run.
+Remote `uses`, `workflow_run`, dynamic shell syntax, and targets outside the
+tracked graph require a fallback such as `rg`. `ci` remains the separate
+legacy workflow-file-to-Rust-binary Cargo relationship.
+
+For configured coverage producers, enable `coverage-producer-assertion-owner` with exact function roots, assertion module/export identities, and genuine callback/process contracts; run `check --root <root> --format json`. Dynamic dispatch and traversal bounds follow `unanalyzable`, never assertion proof. A reached owner passes even if another call is an unmodeled module. Node assert default-member calls map to that export, and a bare `assert()` maps to `ok`, for the configured `assert`, `assert/strict`, `node:assert`, or `node:assert/strict` specifier.
+
+For production exports retained only by tests, configure `production-exports-only-used-by-tests` with explicit `productionRoots` and `testGlobs`/`testHelperRoots`, then run `check --root <root> --format json`. Set `ignoreExportsUsedInFile: true` when same-file value/type uses should count as production use (default `false`). For platform-consumed exports the graph cannot establish, set `platformConsumedExports` with exact root-relative file paths and exported names (`default` is explicit). Entries apply only to non-forwarded exports declared in that file; a configured export can settle a namespace consumer without inferring what the platform reads. Sibling exports and their uncertainty advisories remain in scope. Follow reported symbols through aliases/re-exports before removing exports or moving implementations to test helpers.
+
+For tests that enumerate the live repository (module-scope or test-body `readdirSync`/`glob` over workflow, config, or source trees), configure `test-no-live-repository-scan` with `severity: advisory` first, then run `check --root <root> --format json`. Move the repository-wide check to a static CI command and keep Vitest for bounded fixtures or `mkdtemp` roots; findings labelled `unresolved root` need a bounded root or a suppression, never silence. When the root is a parameter, the advisory names the blocking caller or route: fix that caller so it passes a const fixture path or an owned `mkdtemp` root, or replace the namespace, default, dynamic, `require`, `vi.mock`, non-direct, unnamed, or reassigned route. Do not build the root inside a production helper that takes it as a parameter. For `module.require` or imported `createRequire` loader fallbacks, rewrite to a statically named import so the bounded path can be proven. An env var or defaulted parameter the test sets to an owned root resolves on its own; shipped asset directories production reads at runtime are declared in `options.runtimeAssets` (with a `reason`) and listed as `runtime asset` advisories. Opt-in `options.analyzers` entries (`command` plus leading `args`) report `exec`, `execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, and `spawnSync` launches of that command, including a static shell string with a leading `cd <dir> &&` or `NAME=value` prefix, `spawn` or `spawnSync` with boolean `shell: true`, a `.js`, `.mjs`, or `.cjs` module path, repeated `pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`, `yarn`, `yarn run`, and `yarn dlx` wrappers (including `pnpm --reporter <value>` and `yarn --cwd <dir>`), and `node_modules/.bin` basenames, when `cwd` is the live working directory (target `analyzer subprocess`). An owned `mkdtemp` or fixture `cwd` is allowed. Subprocess commands that `analyzers` does not name stay out of scope.
+
+
+For two caller-prepared local trees, use `changes diff --base-root before
+--head-root after` instead of a Git comparison. Feed its JSON to `tests plan
+<framework> --changes changes.json`; inspect completeness, unclassified paths,
+and fallback reasons. Configure categories and ID rules explicitly. See
+[semantic routing](tests.md#keyed-changes-from-local-trees).

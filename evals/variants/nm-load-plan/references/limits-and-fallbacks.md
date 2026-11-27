@@ -1,0 +1,250 @@
+# Limits and fallbacks
+
+These patterns need extra care when using the module-graph tools. When you hit an unsupported shape, fall back to file-search.
+
+## baseUrl-only imports
+
+`compilerOptions.baseUrl` resolves bare specifiers that are not listed in
+`paths`. The resolver follows that setting, including extension and index-file
+candidates. Prefer `paths` for explicit aliases, especially when an alias is
+shared across workspace packages.
+
+```jsonc
+{
+  "compilerOptions": {
+    "baseUrl": "./src"
+    // import 'utils' resolves to './src/utils.ts' via baseUrl
+  }
+}
+```
+
+
+## Dynamic import()
+
+String-literal `import("...")` expressions are tracked as `dynamic-import` edges under `--relationship import`. Non-literal expressions are not graph edges.
+
+```ts
+const mod = await import('./heavy-module.mts');  // tracked
+const other = await import(moduleName);          // NOT a graph edge
+```
+
+`no-mistakes resolve-check` still lists those computed specifiers with
+`status: "unresolved"` and `computed: true`, so fail-closed consumers can see
+them without an `rg` scan.
+
+**Workaround for graph traversal of non-literals:** `rg "import\\(" src/` to find call sites.
+
+`--relationship route-import` uses the same literal-only resolution, but is
+more conservative about execution: it retains literal dynamic imports inside
+functions even when the ordinary import graph cannot prove that the function
+is called. It also includes runtime static imports/re-exports and excludes
+type-only imports and `require()`.
+
+## CJS require()
+
+String-literal `require("...")` calls, including expression-free templates such
+as ``require(`./mod`)``, are tracked as `require` edges under `--relationship import`.
+Non-literal calls are not graph edges. `resolve-check` reports them as unresolved
+computed imports.
+
+**Workaround for graph traversal of non-literals:** `rg "require(" src/` to find call sites.
+
+## package.json#exports subpaths
+
+For workspace packages, exact subpath entries and single-`*` patterns are resolved. More complex export maps are not.
+`resolve-check` uses this same visible workspace resolver: missing or blocked
+subpaths of recognized workspace packages are `unresolved`, while third-party
+and unmatched package names remain `external`.
+
+```json
+{
+  "exports": {
+    ".": "./src/index.mts",
+    "./utils": "./src/utils.mts",
+    "./*": "./src/*.mts"
+  }
+}
+```
+
+Use the opt-in `package-json-export-target-prefix` rule with `check` to catch
+missing `./` prefixes on direct and conditional Node export targets before
+any import site or build output exists.
+
+**Workaround for complex export maps:** `rg '@scope/pkg/'` to find importers.
+
+## Bare npm specifiers
+
+Imports of non-workspace npm packages (`express`, `react`) are represented as
+terminal module nodes. Their installed `node_modules` source is not parsed.
+Node built-ins such as `node:path` are ignored rather than represented as module
+nodes.
+
+This is usually fine — external packages are not project files. If you need to find all consumers of a specific external package, use `rg 'from .express.'`.
+
+## Non-TS/JS files in the graph
+
+TS/JS `import` edges only traverse `.mts`, `.ts`, `.tsx`, `.mjs`, `.js`,
+`.jsx` files. Configured language frontends are a different walk: Python, Go,
+Rust, Ruby, PHP, Java, Kotlin, Elixir, Dart, Swift, and .NET files emit their
+own edge kinds inside the packages listed in `.no-mistakes.yml`. Query those
+with `dependents --relationship python` (or `go`, `rust`, `ruby`, `php`,
+`java`, `kotlin`, `elixir`, `dart`, `swift`, `dotnet`) and
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart|swift|dotnet`.
+Use the graph first. Keep `rg` for unsupported dynamic forms those
+frontends skip, such as `importlib.import_module(module_name)` or a
+computed Flask/FastAPI route.
+
+Markdown files, CI YAML workflows, Terraform/OpenTofu, and process spawn
+configs participate via their own edge kinds (`md`, `ci`, `workflow`,
+`terraform`, `process`) and are not walked for TS/JS import-style edges.
+
+For GitHub Actions, configure
+[`github-actions-job-timeouts`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-job-timeouts.md)
+with `rejectJobAtOrAboveStepSum: true` to keep the job deadline below the sum
+of at least two steps' supported literal timeout bounds. Every step needs a
+supported literal bound for that comparison; conditional and matrix steps
+count, while reusable-workflow calls and composite internals are not expanded.
+`allow` entries only adjust caps and cannot bypass the sum check.
+
+Use [`github-actions-job-permissions`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-job-permissions.md)
+to find jobs that inherit explicit workflow-level token write permissions,
+including `id-token: write` and reusable-workflow callers. The rule does not
+guess repository or organization defaults; unresolved permission declarations
+follow the shared `unanalyzable` policy.
+
+**Workaround:** `rg` for prose, comments, and file types with no graph domain.
+`importers` stays the fast TS/JS-only reverse static-import scan.
+
+## Inline type qualifiers
+
+`import { type X } from "./types"` is tracked as a `type-import` edge. Mixed imports such as `import { type X, Y }` are tracked as regular `import` edges because the module contributes a value binding.
+
+## Namespace imports and symbol queries
+
+`import * as ns from '...'` matches ALL no-mistakes symbols in a `no-mistakes dependents <file>#SYMBOL` query. If you need to verify a specific symbol is actually used (not just the namespace), search the callers manually with `rg`.
+
+## Route, HTTP, queue, process, and selector dynamics
+
+Static literals produce graph edges:
+
+```ts
+router.push("/settings");
+await fetch("/api/users");
+await queue.add("sendWelcome", payload);
+spawn("scripts/seed.mts", []);
+page.locator('[data-testid="submit"]').click();
+```
+
+Dynamic values are skipped or reported as unsupported:
+
+```ts
+router.push(`/users/${id}`);
+await fetch(`/api/${resource}`);
+await queue.add(jobName, payload);
+spawn(scriptName, []);
+page.locator(`[data-testid="${id}"]`).click();
+```
+
+Use `rg` for dynamic call-site discovery and prefer static literals when the
+relationship should be visible to agents.
+
+Text-based Playwright selector edges are approximate. Prefer exact configured
+test ID attributes and literal locator values for strong route/component
+coverage.
+
+`check` can run the opt-in `react-no-nested-buttons-and-links` rule for native buttons and links in selected JSX and TSX files. Custom render paths and dynamic destinations are outside its scope.
+
+`check` can run the opt-in `swift-no-unguarded-darwin-import` rule on configured
+portable Swift test paths. It flags unconditional `Darwin` imports. Only
+`#if` and `#elseif` conditions the rule can verify count as guards. The rule
+classifies imports in branches without a provable guard as unanalyzable.
+
+## Structural / AST-pattern blast radius — use `ast-grep`
+
+`no-mistakes` answers **graph-aware** and **config-aware** queries. It does not
+ship a structural pattern matcher. For a pure structural blast-radius question —
+matching an AST shape regardless of the import graph — reach for
+[`ast-grep`](https://ast-grep.github.io) directly. Example: "which `.tsx` files
+have `onClick` on a non-`button` element?"
+
+```sh
+# Find JSX elements with an onClick handler (then filter by hand / tighten the pattern).
+ast-grep --lang tsx --pattern '<$EL onClick={$$$} />'
+
+# Or a quick textual approximation with ripgrep when ast-grep is unavailable:
+rg -l --glob '*.tsx' 'onClick='
+```
+
+Use `no-mistakes` instead when the question needs the dependency graph
+(`effects`, [`rsc-callers`](impact-recipes.md#rsc-caller-impact), `dependents`) or project configuration
+(`data-pw`, [`registry-extension`](lightweight-queries.md#registry-extension-file)). Use `ast-grep` when the question is purely
+"which files contain this syntactic shape?"
+
+For repeated query or cache calls hidden in helpers, enable
+[`query-reached-per-item`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/query-reached-per-item.md) with
+explicit effect families. It traces resolved per-item calls; dynamic targets
+cannot prove sink reachability. Use configured batch exemptions and reviewed
+callsite allowlists for rollout. For proven sequential page reads in counted,
+capped cursor loops, opt in to `options.exemptCappedCursorPageReads: true`;
+other calls and unproven dependencies remain reportable. It defaults to false.
+For a reviewed function-specific allowance, combine `file`, `function`, and
+`callee` so other functions in the same file continue reporting.
+CLI and async `check()` share the rule.
+Receiver targets retained as possible still participate when a newly recovered
+escape adds unknown evidence; a match does not prove one runtime callee.
+Escaped-array history uses source offsets, which can differ from execution order
+for hoisted functions.
+
+For separately compiled HTTP/queue payloads, opt in to
+`declared-payload-compatibility` and run `check --root <workspace> --format json`.
+It compares explicitly paired JSON Schema declarations, including required
+properties, primitive enums, and nested objects/arrays. Unsupported keywords and
+missing declarations are unproven findings. A passing declaration check does
+not prove runtime endpoints adopt the schemas.
+
+For `github-actions-local-action-checkout`, move a covering unconditional root
+checkout of the current repository before each unprepared local `uses: ./path`.
+Readiness is per action path and per job; an unconditional foreign root checkout
+invalidates every path. Conditional, nonroot, and noncovering self checkouts
+preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
+in-process queries. See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
+
+For `github-actions-no-required-pr-path-filters`, declare the workflows that supply
+required PR checks in `options.workflows` and select work inside those workflows.
+See [the rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-no-required-pr-path-filters.md).
+
+For `github-actions-run-command-policy`, declare `options.commands` with the
+exact command tokens, `valueFlags`, `whenAnyArgs`, `requireArgs`,
+`requireAnyArgs`, and `forbidArgPatterns` to enforce. Commands the shared
+script parser cannot analyze statically include dynamic commands, unterminated
+shell constructs, and bodies beyond the shell nesting limit. The same
+unanalyzable policy handles unreadable selected workflow files and invalid YAML.
+The default is `advise`. Set `options.unanalyzable: report` for findings or
+`ignore` to omit these diagnostics. See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-run-command-policy.md).
+
+For `dependabot-cooldown-policy`, set `options.minimumDays` and run
+`check --root <root> --format json`. Add `cooldown.default-days` and raise
+any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.
+Repair YAML when the rule appears in `incomplete`, then rerun the check.
+See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/dependabot-cooldown-policy.md).
+
+For `terraform-iam-no-undocumented-wildcards`, scope `check` to the
+Terraform or OpenTofu files that declare AWS IAM policy documents. Replace
+wildcard grants with explicit resource ARNs or explain a required wildcard in
+a suppression beside the `resources` attribute.
+See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/terraform-iam-no-undocumented-wildcards.md).
+
+For `no-cross-package-relative-imports`, scope the rule to the importing files
+that belong to declared workspace packages. Replace cross-package relative
+imports with a declared dependency and a public package specifier.
+See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/no-cross-package-relative-imports.md).
+
+## Fact extraction failures
+
+`check` isolates an unwinding panic during a single file's fact extraction.
+Its facts are discarded; other files continue. An unsuppressible `incomplete`
+entry with consumer `fact-extraction` names the file and panic message, and the
+CLI exits 1 even without ordinary findings. Report that analyzer bug instead
+of treating the partial report as complete. The async Node check APIs expose
+the same existing `CheckFailure` shape. Discovery, resolution, graph building,
+check execution, and process aborts remain outside this boundary.

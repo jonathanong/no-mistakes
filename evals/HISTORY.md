@@ -19,6 +19,102 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — gates for the `no-mistakes` description candidates A and B
+
+**Pre-registered**, committed before either candidate ran. No run in this entry.
+
+The [tool-skill control](#2026-11-26--tool-skill-control-all-eleven-flows-re-measured)
+shows the agent naming the skill and deferring it. Two candidates change only
+the `description:` line of `plugins/no-mistakes/skills/no-mistakes/SKILL.md`;
+the body and references are byte-identical to the shipped skill.
+
+- **A**, `evals/variants/nm-load-before/`: "Answers questions about how code
+  connects:" becomes "Load before answering any question about how code
+  connects:". The rules plugin's descriptions use this imperative form.
+- **B**, `evals/variants/nm-load-plan/`: A's opening widened to "Load before
+  answering, or planning how to answer, any question about how code
+  connects:", plus a closing sentence "Lists the exact commands to put in the
+  plan." B makes two changes, so a B win cannot say which part did it.
+
+Each runs `--ablation none --runs 3 -j 4` on all eleven flows, one invocation
+per flow, compared with the control's with arm (trigger counts are comparable
+across ablation modes). Margins are `a|obs` from `power.py`, conditioned on
+the realized control.
+
+1. **G1, the target:** summed should-fire loading over the 39 cases reaches
+   at least 48/117 (control 32/117, rise margin 16).
+2. **G2, no flow drops:** `before-edit` ≥ 8/18, `after-edit` ≥ 4/12,
+   `lang-graph` ≥ 4/12, `usage` ≥ 3/12, `ci` ≥ 0/12. The flows at 0 cannot
+   drop.
+3. **G3, `neg-hard`, both halves:** loading ≤ 4/12 (control 0/12), and
+   invented command forms ≤ 6/12 (control 2/12, `power.py --fabrication`).
+   Each flow's own negative case stays at or below 2/3 loaded (`before-edit`:
+   3/6). `safety-03-neg-json-flag` expects the skill to load and is not a
+   guard.
+4. **G4, content, read and not gated:** the candidate's with-arm content-only
+   score per flow beside the control's with arm. B's gain is judged on this
+   column, because its closing sentence can raise `names-graph-command`
+   without improving the answer.
+5. **Tie rule:** if both pass and B's summed loading is within 16 of A's, A
+   ships as the smaller change.
+6. **Holdout, last and only for a candidate that passes G1–G3:** `--tag
+   heldout`, cases 04–09 (07–09 never run), `--ablation none --runs 3`, shipped
+   description and the winner in the same session. The holdout uses the same
+   plan-mode, empty-sandbox setup, so it cannot catch a win that comes only
+   from that framing.
+
+A candidate that misses G1, G2 or G3 is rejected and recorded here only.
+
+## 2026-11-26 — tool-skill control: all eleven flows re-measured
+
+**Run:** `6047da1b16` (the `no-mistakes` skill and its cases as on main
+`24768fa692`), Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, `runs: 3` per arm, `--ablation with-without -j 4`, one
+invocation per flow, 318 attempts, zero errored and `partial: false` on all
+eleven. Cost `$49.83`: `$31.36` agent and `$18.46` judge. Reports outside git
+at `~/.cache/no-mistakes/evals/2026-11-26-skill-control/<flow>.json`. An
+unrelated release `rustc` build pushed host load to about 42 during
+`before-edit`; no attempt errored or timed out.
+
+This is the same-session control for the two description candidates below. It
+replaces the 2026-11-21 tool-skill numbers in the README.
+
+| flow | trigger (with-arm) | should-fire Δ | content-only Δ | negatives Δ |
+| --- | --- | --- | --- | --- |
+| `before-edit` | 12/18 (44-84%) | +0.23 | +0.15 | +0.00 |
+| `after-edit` | 7/12 (32-81%) | +0.11 | +0.00 | +0.00 |
+| `signature` | 0/12 (0-24%) | +0.06 | +0.08 | +0.00 |
+| `lang-graph` | 7/12 (32-81%) | +0.25 | +0.08 | +0.00 |
+| `usage` | 5/12 (19-68%) | +0.31 | +0.33 | — |
+| `queues` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
+| `ci` | 1/12 (1-35%) | +0.03 | +0.00 | +0.00 |
+| `duplication` | 0/9 (0-30%) | +0.00 | +0.00 | +0.00 |
+| `safety` | 0/6 (0-39%) | -0.17 | -0.17 | +0.00 |
+| `napi` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
+| `neg-hard` (guard) | 0/12 | n/a | n/a | +0.00 |
+
+Summed over the 39 should-fire cases the skill loaded on 32/117 with-arm
+attempts. `neg-hard` loaded 0/12, and 2/12 of its non-firing answers used an
+invented command form (`power.py --fabrication`).
+
+**What the failing attempts say.** Of the with-arm should-fire attempts that
+did not load the skill, most still named it: 12/12 on `queues`, 9/12 on
+`signature`, 5/5 on `lang-graph`, 4/5 on `after-edit`, 4/7 on `usage`, 3/6 on
+`before-edit`. Typical lines: "I'd use the `no-mistakes` skill, which resolves
+the import graph", "If I need a precise answer, use the `no-mistakes` skill."
+Most open with "I can't see the repo in this environment, so this is the
+search I'd run": the cases run in plan mode in an empty sandbox, and the agent
+puts loading the skill in the plan for later instead of loading it now. The
+description reaches the model and the model defers it. The `safety-01` miss
+(with 2/3, without 3/3) answered "You can, but I wouldn't pipe it straight
+into `bash` unless you add some safeguards" to piping the planner's output
+into a shell; the skill never loaded in that attempt, so it does not reflect
+the skill's text.
+
+`names-graph-command` still carries much of the should-fire Δ: the
+content-only column is lower than the should-fire column on `before-edit`,
+`after-edit` and `lang-graph`.
+
 ## 2026-11-26 — gates for the `testing-rules` config candidate (T1)
 
 **Pre-registered**, committed before the candidate ran. No run in this entry.

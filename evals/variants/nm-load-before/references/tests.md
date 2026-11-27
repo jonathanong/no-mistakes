@@ -1,0 +1,411 @@
+# `tests` command reference
+
+## When to use
+
+For declared Vitest/Playwright deadlines, use
+`no-mistakes check --root . --include-runner-config-deadlines --json`.
+The optional `runnerConfigDeadlines` report uses explicit runner config lists
+and their visible-file glob expansion. It distinguishes unrequested, prepared,
+and failed configs, and absent/known/unknown case, hook and fixture slots.
+Absence is not an SDK default; unknown evidence is not a finite-budget proof.
+Opaque roots retain a failure diagnostic, while aliases without mutation proof
+retain uncertainty. Ordinary findings and errors are unchanged. Node callers
+use `check({ includeRunnerConfigDeadlines: true })` or the same option on an
+`analyzeProject()` check report. See the
+[evidence contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/check.md#declared-runner-config-evidence).
+This does not enforce runtime registrations or a universal timeout cap.
+
+Use `tests plan` for all test selection — it is the preferred replacement for
+`dependents --test` in all repos, with or without a `testPlan:` block in
+`.no-mistakes.yml`. With no matching environment, Playwright's default groups
+are `direct`, then `coverage`, then `dependencies`. Every other framework uses
+`direct`, then `dependencies`, and rejects a `coverage` group. A configured
+environment can omit `coverage` and can add limits and global-config triggers.
+It also handles diff/deleted-file and lockfile cases that `dependents --test` misses.
+
+Use `tests why` when you need to explain which dependency path connects a
+changed file to a selected test. Use `tests impact` when you have a fixed set
+of changed files and only need impacted test paths with no environment or group
+config applied. Use `tests targets` when the test file is already known and
+you need its runner command.
+
+## `tests plan`
+
+Select tests to run from changed files, diffs, and configured environments.
+
+```sh
+# Changed-file selection (preferred)
+no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
+no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+no-mistakes tests plan python --changed-file app/users.py --format paths
+no-mistakes tests plan go --changed-file pkg/ping.go --format commands
+no-mistakes tests plan cargo --changed-file app/src/lib.rs --format commands
+no-mistakes tests plan rails --changed-file app/models/user.rb --format paths
+no-mistakes tests plan php --changed-file app/Http/Controllers/UserController.php --format commands
+no-mistakes tests plan java --changed-file src/main/java/com/example/User.java --format commands
+no-mistakes tests plan kotlin --changed-file src/main/kotlin/com/example/User.kt --format commands
+no-mistakes tests plan elixir --changed-file lib/my_app/user.ex --format commands
+no-mistakes tests plan dart --changed-file lib/user.dart --format commands
+no-mistakes tests plan jest --changed-file src/value.ts --format commands
+
+# Diff-based (from git)
+no-mistakes tests plan vitest --base origin/main --format json
+no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format json
+
+# Named environment (from .no-mistakes.yml testPlan)
+no-mistakes tests plan vitest --environment prePush --changed-file src/api.mts --format paths
+```
+
+Runner selection is applied to test endpoints before impact traversal:
+Vitest plans terminate only at Vitest-owned tests and Playwright plans only at
+Playwright-owned tests. Configured Vitest/Playwright project globs are closed
+and authoritative; generic filename fallback runs only when that runner has no
+recovered projects. Non-code dependencies still count—static Markdown or
+workflow resources referenced by a Vitest test remain valid impact paths.
+
+Key flags:
+- `--changed-file <FILE>` — explicit changed file path; repeatable.
+- `--changed-files <FILE>` — path to a file containing one changed path per line.
+- `--base <REF>` / `--head <REF>` — compute changed files from a git diff.
+  Also required as `--base <pre-change revision>` when changed files include
+  dependency manifests or lockfiles. Without it, the plan does not invent old
+  package versions. JSON then includes
+  `incomplete: [{ kind: "dependency-baseline-missing", files: [...] }]`
+  (`incomplete` on `testsPlan()`; import `TestPlanIncompleteness`).
+  `dotnet-dependency-no-baseline` uses that same kind for `.csproj`,
+  `Directory.Packages.props`, and NuGet lockfiles.
+  `swift-manifest-no-baseline` and `swift-resolved-no-baseline` use it for
+  `Package.swift` and `Package.resolved`.
+  `fallback_triggered: true` is not completeness. A dynamic Vitest
+  `setupFiles` fallback can still select only that project's tests.
+  Example: only `package.json`, `tooling/package.json`, and `pnpm-lock.yaml`
+  change, bumping `fixture-analyzer`. `app` has a dynamic setup, so the plan
+  selects `app/app.test.ts` and marks those three files incomplete. The same
+  command with `--base` at the committed pre-upgrade revision drops the marker
+  and also selects `tooling/direct.test.ts` (package → test) and
+  `tooling/indirect.test.ts` (package → `tooling/helper.ts` → test). Do not
+  infer a base, and do not expect the missing baseline to select the full suite.
+- `--from-git-diff <BASE...HEAD>` — single-argument sugar for `--base`/`--head`.
+  The lookup is `git -c core.quotePath=true diff --relative -M --unified=3
+  --no-color --no-ext-diff --no-textconv --src-prefix=a/ --dst-prefix=b/
+  <base>...<head>`. `git diff --relative --name-status -z <base>...<head>`
+  runs only when `--diff`, `--diff-stdin`, or `--diff-command` is also set
+  (three-dot only — bare `<base>` and `<base>...` both default head to `HEAD`;
+  two-dot `<base>..<head>` is rejected since it compares a different baseline).
+  Conflicts with `--base`/`--head`.
+- `--diff <FILE>` / `--diff-stdin` / `--diff-command <CMD>` — supply a diff
+  directly.
+- `--entrypoint <FILE>` — treat a file as the root regardless of changes.
+  An `--entrypoint` of `file#export` requires `--symbols`.
+- `--symbols` — required for a `file#export` entrypoint. A named framework
+  plan does not build symbol edges from this flag. Use `tests impact --symbols`
+  when the entrypoint itself must be a symbol node.
+- `--environment <NAME>` — pick an env group from `testPlan.environments`.
+- `--include-glob <GLOB>` — for configured framework plans, scope discovered
+  tests before planning. Use this when CI runs one package slice: limits,
+  fallback selection, group accounting, and execution targets then describe
+  only that slice.
+- `--limit-percent <N>` / `--limit-files <N>` — override `testPlan` limits.
+- `--global-config-fallback true|false` — run the full suite when a global
+  config file changes (package.json, tsconfig.json, etc.) or when a lockfile
+  diff cannot be parsed; does not trigger for ordinary source files that happen
+  to have no test dependents.
+- `--format paths|json|commands|explain|markdown|md` — `paths` for shell
+  substitution, `json` for agents, `commands` for runnable invocations,
+  `explain` for deterministic changed-file inventory (including files with no
+  selected tests), confidence, dependency-path, edge provenance, fallback, and
+  warning output, and `markdown` (alias `md`) for a rendered summary.
+- `--direct-test-owner` — requires a framework; selects changed framework-owned
+  tests plus only tests one reverse canonical graph edge away, with normal
+  execution targets. It bypasses test-plan groups, environment include/exclude,
+  limits, sampling, fallback, and explicit entrypoint traversal. Do not combine
+  it with `--entrypoint`, limit, or global fallback overrides; use `tests impact`
+  for an explicit entrypoint query. Canonical graph warnings are still reported
+  when dynamic resource calls could make reverse ownership incomplete.
+
+`fullSuiteTriggers.projects` can scope a configured trigger to runner projects:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths: ["migrations/**/*.sql", "!migrations/archive/**"]
+          targets: [database]
+```
+
+Here `database` is a Vitest project name. A match selects only tests owned by
+that target, reports `configured-trigger`, and does not mark the plan as a
+fallback. Environment filters and limits run afterward. Legacy `true` and path
+list entries remain broad fallbacks. Trigger paths are ordered: later `!`
+patterns exclude earlier matches and later positive patterns can re-include.
+
+If the matching changed file is a discovered test, a structured target trigger
+does not expand by default. The changed test and tests that depend on it still
+run through normal graph selection. Add `includeChangedTests: true` only to a
+structured trigger that intentionally expands from changed tests. Legacy
+full-suite trigger behavior is unchanged.
+
+Revision and inline-diff plans compare the root `.no-mistakes` config and
+`.no-mistakes/` fragments semantically per framework, so formatting-only edits
+and unrelated framework changes do not invalidate the selected framework.
+Changed-file-only input and unreadable old configuration fail open to the
+normal global-config fallback.
+
+CI path filters for config-dependent validation should include the four root
+config filenames and `.no-mistakes/**`, so edits to fragments run those jobs.
+See the [split-config migration guide](https://github.com/jongleberry/no-mistakes/blob/main/docs/migrations/split-no-mistakes-config.md)
+for a filter example and for replacing direct config readers with the merged
+declared view.
+
+For Playwright, a changed Next.js page selects specs that navigate to it — including
+specs whose navigation path interpolates an unresolvable value (e.g.
+`` `/user/${userId}` `` or `'/user/' + id`), which matches the page's dynamic
+`[param]` segment.
+
+Node API: `testsPlan(options)`.
+
+JSON plans and `testsPlan()` results expose `changed_files`, the complete
+sorted, deduplicated, root-relative inventory prepared by the same invocation.
+It is available even when `selected_tests` is empty and retains deleted paths
+plus both sides of detected renames and copies.
+
+In a TypeScript/JavaScript workspace, omit `tsconfig` so test impact follows
+the config that owns each importing file among the discovered configs;
+otherwise the root tsconfig. Passing `tsconfig` deliberately forces a
+single config for the whole plan.
+### Vitest setup dependency tracing
+
+`tests plan vitest` and `testsPlan()` statically trace each project's effective
+`setupFiles` and `globalSetup`, including their ordinary import/re-export
+closure. A changed setup dependency selects only tests owned by that Vitest
+project. Inline project fields inherit a root field only with `extends: true`;
+the default and `extends: false` keep the project independent. A string config
+in `test.projects` is likewise independent of its referencing config. A static
+inline `extends: './vite.config.js'` inherits the referenced config's setup
+fields before local values. Explicit values replace inherited fields and `[]`
+clears them.
+For supported inline objects, nested `test` owns `setupFiles` and
+`globalSetup`; same-named outer fields are ignored regardless of direct or
+static-spread declaration order.
+Workspace configs may export projects directly or through
+`defineWorkspace([...])`. Without `tests.vitest.configs`, root
+`vitest.workspace.*` and `vitest.projects.*` files, including `.json`, are
+discovered by default. Config globs include suffixes such as
+`vitest.config.unit.ts` and `vite.config.e2e.js`.
+When a root workspace/project-array source exists, it takes precedence over a
+sibling default `vitest.config.*`; list the config in the workspace to include
+it as a project.
+Exact folder project strings remain folders rather than resolving an `index`
+module. CommonJS workspace files may use direct literal
+`module.exports = require('./projects.cjs')`; chained or dynamic requires stay
+unsupported.
+`defineWorkspace` is static through named ESM imports, ESM namespaces, or a
+direct `require('vitest/config')` namespace; ESM defaults and CommonJS
+`.default` members remain unsupported dynamic forms.
+
+Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
+`vitest-setup-unresolved` warnings. An unavailable static inline config
+`extends` emits `vitest-config-extends-unresolved`. If relevant, planning safely selects the
+known owner scope (or the discovered Vitest framework set if no owner is known)
+and sets `fallback_triggered` without relying on `globalConfigFallback`. Its
+bounded helper closure follows ordinary static imports/re-exports and literal
+CommonJS `require(...)` or `require.resolve(...)` dependencies, retaining
+edits and deletions as owner triggers. Static CommonJS bindings support direct
+members, destructured aliases, and named `module.exports = { ... }` values;
+computed or non-literal forms are not followed.
+
+For `tests impact`, a malformed or unavailable optional Vitest config does not
+block unrelated native test impact. A successfully prepared Vitest config is
+still strict: discovery errors such as invalid include patterns are returned.
+
+Resolved setup edges use `via: ["vitest-setup"]`; optional aligned
+`via_details` records `{ type: "vitest-setup", field: "setupFiles" |
+"globalSetup" }`. `tests why` and `tests graph` expose the same structured
+`detail`.
+
+## `tests why`
+
+Explain the dependency path from a changed file to a selected test.
+
+```sh
+no-mistakes tests why tests/users.test.mts --plan plan.json
+no-mistakes tests why tests/users.test.mts --changed src/api.mts --format json
+```
+
+Key flags:
+- `--plan <FILE>` — path to a previously generated `tests plan` JSON file.
+- `--changed <FILE>` — changed file to compute the path from (without a prior plan).
+- `--format text|json`.
+
+Node API: `testsWhy(options)`.
+
+## `tests impact`
+
+Impacted tests for specific changed files (no `testPlan` config required).
+
+```sh
+no-mistakes tests impact src/utils.mts --format paths
+```
+
+Pass `--symbols`, then `file#symbol`, to start from an export. A `file#symbol`
+entrypoint without `--symbols` is an error.
+
+Formats: `json`, `paths`, `commands`, `markdown`, and `md`. Use `tests plan
+--format explain` when changed-file provenance needs a human-readable
+explanation; `tests impact` does not accept `explain`.
+
+Traversal follows `next/dynamic(() => import('./Foo'))` boundaries (Foo's tests
+surface at `medium` confidence). Two opt-in `tests.impact` config knobs refine
+output: `alwaysIncludeTests` surfaces suite-excluded stub tests (e.g.
+`**/*.mock.test.*`), and `registries` emits a `registry-hint` warning when the
+changed file is imported by a registry file (e.g. `auth-gated-code-splitting.mts`).
+
+Node API: `testsImpact(options)`.
+
+Literal runtime filesystem resources (`fs` reads/directories and supported
+static glob calls) are part of ordinary test impact. A plan JSON reason with
+`via: ["resource"]` may carry edge-aligned `via_details` containing the
+structured `{ type: "resource", consumer_file, call_sites: [{ call_kind,
+line }] }` detail. Dynamic paths, patterns, or cwd values are warnings, not
+guessed dependencies or implicit fallback triggers.
+
+## `tests comment`
+
+Render a plan JSON as a Markdown PR comment.
+
+```sh
+no-mistakes tests comment plan.json
+no-mistakes tests comment plan.json --out comment.md
+```
+
+Node API: `testsComment(options)`.
+
+## `tests targets`
+
+Resolve the exact runner command for a known test file. `commands` prints
+shell-quoted commands, deduped by configured execution target, using the same
+project, package, and environment construction as `tests plan`.
+
+```sh
+no-mistakes tests targets vitest web/app/users/users.test.ts --format json
+no-mistakes tests targets playwright tests/e2e/login.spec.ts --format commands
+```
+
+Node API: `testsTargets(options)`.
+
+## `testPlan` configuration
+
+In `.no-mistakes.yml`:
+
+```yaml
+testPlan:
+  vitest:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+        limit:
+          percent: 20
+          files: 30
+        globalConfigFallback: false
+      pull-request:
+        groups:
+          - type: direct
+          - type: sample
+        limit:
+          files: 50
+  playwright:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: coverage
+        limit:
+          percent: 30
+```
+
+`fullSuiteTriggers` and `environments` are nested under the framework key
+(`vitest` or `playwright`). Environment names default to `pre-push`.
+
+Group types: `direct`, `dependencies`, `sample` — for `vitest`;
+`direct`, `dependencies`, `coverage`, `sample` — for `playwright`.
+(`coverage` is a Playwright-only group type; vitest does not support it.)
+`direct` is changed tests plus tests one reverse import/`TestOf` hop from a
+changed file; it runs before `dependencies` so a tight limit cannot drop a
+direct importer in favor of a longer markdown or resource path.
+Consult https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/test-plan.md
+for the full schema.
+
+
+## `tests audit`
+
+Use `no-mistakes tests audit --plan audit-plan.json --observations audit-run.json`
+to compare a targeted plan with full-suite per-test-file execution observations.
+The plan needs a versioned envelope with explicit changed files/symbols and
+caller-recorded checkout/source/scope identities matching the observations.
+See [the artifact contract and producer recipe](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/tests-audit.md)
+before collecting traces. Whole-suite aggregate coverage is unsupported.
+`missed_observed_tests` is positive evidence of missed selection; complete traces
+without changed-code hits are investigation candidates. Missing or incomplete
+traces remain unknown. No observed misses, and passing test outcomes, never prove
+completeness. Async `testsAudit()` and `analyzeProject()` expose the same comparison.
+
+For Cargo plans, inspect `cargo-target-unresolved` warnings before executing
+commands: ambiguous helpers or disabled/missing manifest targets intentionally
+have empty `targets`. Package-wide fallback requires `tests.rust.packages`.
+Visible exact external Cargo target entries retain their selected declaring
+packages; shared entries can return several deterministic target selectors.
+This does not assign neighboring helper files to those packages.
+
+
+To preserve Vitest's discovery exclusions in literal `test.exclude` arrays,
+configure `vitest-default-excludes` with an explicit `options.config`,
+`options.files` globs for config factory modules, or both, and run
+`no-mistakes check --root . --format json`. The check covers the root config,
+inline projects, and `test`-shaped object literals in matched factory modules.
+To fix a missing exclusion, add the required string or spread
+`configDefaults.exclude` from `vitest/config` to keep the built-in defaults.
+When `requiredGlobs` is configured, keep those custom strings in `test.exclude`
+alongside the spread defaults.
+
+For source-only Vitest project settings, configure `vitest-project-policy` with
+an explicit `config`, `helpers` paths/globs, effective required/forbidden literal
+properties, parity pairs, and optional `requiredExcludeGlobs`, then run `no-mistakes check --root . --format json`.
+`requiredExcludeGlobs` is empty by default. When set, each literal `test.exclude`
+array must contain those exact strings. A missing `exclude` stays silent.
+Use `declared.forbiddenValues` to ban particular literal assignments or
+`declared.forbidLiteralKinds` to require computed values for selected properties.
+These inspect every object literal in config and matched helpers, including
+unimported helpers; identifiers, calls, and member expressions remain allowed.
+Helper globs select only the prepared visible-file inventory. Declared-only
+policies do not report dynamic projects as incomplete. For effective policies,
+inspect `incomplete` as well as findings: unresolved values require a static
+rewrite. This policy never executes config or discovers additional source files.
+
+
+### Keyed changes from local trees
+
+Use `changes diff --base-root before --head-root after --config changes.yml`
+to produce a schemaVersion 1 categorized report without Git or network access.
+Changed paths matched by no category's `paths` (such as ordinary source files)
+are recorded in `changedFiles` (omitted when empty), while `unclassified` holds
+only paths matched by a category's `paths` that every matching category excluded
+or no rule could classify. Pass the report JSON to
+`tests plan <framework> --changes ../changes.json` (relative `--changes` paths
+resolve against `--root`): `changedFiles` entries route through the import graph
+in union with any explicit `--changed-file` or `--base` inputs without
+triggering a full-suite fallback, unless an entry cannot be traced without a
+baseline (such as a lockfile, manifest, global config, or deleted file without
+`--base`). Missing files, invalid/incomplete reports, unknown categories, and
+`unclassified` paths select the full suite; inspect `fallback_reason` and
+warnings. Matchers use configured test-source globs and literal ID templates.
+With `assertPureJsonLoader: true` (user assertion that the loader is pure and
+returns parsed JSON unchanged) and an explicit loader call such as
+`loadFixture("{id}")`, `attributePaths` narrows selection to reads of changed
+fields and keeps any test with uncertain reads or loader uses. A trusted report
+can supersede a path trigger marked `supersededByChanges`; without the flag that
+trigger is unchanged. See [the shared changes schema](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/changes.md) for the shared schema.
+The async APIs are `changesDiff(options)` and `testsPlan({ changes, ...options })`.
