@@ -1,8 +1,8 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { logicalCall } = require("./module-mock-helpers");
+const { isIifeFunction } = require("./no-global-fetch-outside-helper-bindings");
 const helpers = require("./no-global-fetch-outside-helper-helpers");
 const { ruleSuppression } = require("../rule-suppression");
 
@@ -79,11 +79,6 @@ module.exports = Object.assign(
         for (const alias of clearedForwardAliases) active.delete(alias);
         for (const alias of aliases) active.add(alias);
         return active;
-      }
-
-      function isIifeFunction(node) {
-        const parent = unwrapTransparentParent(node)?.parent;
-        return parent?.type === "CallExpression" && unwrapExpression(parent.callee) === node;
       }
 
       function enterSwitch() {
