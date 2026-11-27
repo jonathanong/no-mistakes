@@ -17,6 +17,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT let a paginated read scan unbounded work for one page (for example, an ever-wider time window until a row matches); bound the work per page and return the cursor, since unbounded scans time out before the client reaches results or the end.
 - MUST NOT query a protected relation without its required predicates (tenant, soft-delete, partition key).
 - SHOULD NOT issue one query per item for an input-sized batch when one query can do the same work.
+- MUST NOT make statement shape depend on row count (one `UNION ALL` arm or one bind list per item); pass an array.
 - SHOULD NOT look up the same row more than once in one statement through separate joins or scalar subqueries keyed by the same expression; each extra lookup adds another probe per output row. Join it once and project every field from that row.
 - SHOULD NOT join or subquery a view that contains joins or subqueries only to read one or two base-table columns; the view's joins and subqueries still run for every output row. Join the base table with its required predicates.
 - MUST NOT use `NOT IN (SELECT …)`; NULLs silently drop rows. Use `NOT EXISTS`.
@@ -24,11 +25,14 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT` on a key the retry repeats, not a freshly generated one.
 - MUST NOT assign a non-DEFAULT value to a generated column.
 - SHOULD NOT write trigger-maintained columns unless the schema allows an explicit override.
+- SHOULD NOT `UPDATE t SET c = c` to fire a trigger; the assignment still writes a row version.
 - MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
 - SHOULD NOT use `COUNT(*) > 0` or `GROUP BY` to test existence or dedupe; use `EXISTS`.
 - SHOULD NOT cast or wrap an indexed column in a predicate (UUIDs, timestamps); compare the raw column to a bound.
+- SHOULD NOT keep predicate arms that cannot match (`AND FALSE` legs, `col IS NULL` on a `NOT NULL` column, comparing an id with foreign keys to other tables).
 - SHOULD NOT add `MATERIALIZED` CTEs, `LATERAL`, `UNION`, `DISTINCT`, or candidate pools unless `EXPLAIN ANALYZE` at realistic size beats the plain query.
 - SHOULD NOT upsert by overwriting every column; it resets an existing row to the inserter's values. Use `DO UPDATE SET` on the columns you own, or `DO NOTHING` then read the row.
+- SHOULD NOT upsert with `DO UPDATE SET k = EXCLUDED.k` on the conflict key only to get `RETURNING`; it writes a row version on every call. Use `DO NOTHING`, then read the row.
 
 ## Locks, transactions, connections
 
@@ -36,7 +40,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT lock or upsert several rows in unspecified order; `ORDER BY` the key, or use `SKIP LOCKED` for competing workers.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
-- MUST NOT take session-scoped advisory locks on a pooled connection; they outlive the transaction and stay with the connection.
+- MUST NOT take session-scoped advisory locks on a connection that returns to a shared pool; they outlive the transaction and stay with the connection.
 - MUST NOT read from a replica for read-after-write, locking, or lag-sensitive reads.
 - MUST NOT add `BEGIN`/`COMMIT` inside a migration whose runner already wraps it in a transaction.
 - MUST NOT run `EXPLAIN ANALYZE` on a write outside a rolled-back transaction.
@@ -63,6 +67,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT update append-only history rows, or delete them outside a retention policy.
 - SHOULD NOT add a `NOT NULL`, unique, or check constraint to an existing table without checking whether existing rows satisfy it.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
+- MUST NOT edit a migration after it has run in any shared environment.
+- SHOULD NOT create the same function or index in more than one migration; only the last definition survives.
 - MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.
 - SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying. A partitioned parent cannot build concurrently: build each partition's index concurrently, then create the parent index `ON ONLY` and attach them.
 
