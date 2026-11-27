@@ -26,7 +26,7 @@ function npm(args, timeoutMs = 120000) {
 }
 
 function view(run, spec, field, timeoutMs) {
-  const result = run(["view", spec, field, "--json"], timeoutMs);
+  const result = run(["view", spec, field, "--json", "--prefer-online"], timeoutMs);
   if (result.status !== 0) {
     let code;
     try { code = JSON.parse(result.stdout).error?.code; } catch {}
@@ -41,30 +41,7 @@ function view(run, spec, field, timeoutMs) {
   throw new Error(`Unexpected npm view result for ${spec} ${field}`);
 }
 
-const VISIBILITY_WINDOW_MS = 15 * 60 * 1000;
-
-async function confirmPublication(packageName, version, { run, sleep, now, windowMs }) {
-  const deadline = now() + windowMs;
-  let backoff = 1000;
-  while (now() < deadline) {
-    let visible = null;
-    try {
-      visible = view(run, `${packageName}@${version}`, "version", Math.min(120000, Math.max(1, Math.ceil(deadline - now()))));
-    } catch (error) {
-      if (!/^(?:E5\d\d|ECONNRESET|ECONNREFUSED|ETIMEDOUT)$/.test(error.code)) throw error;
-    }
-    if (visible === version) return;
-    if (visible !== null) throw new Error(`Unexpected version ${visible} for ${packageName}@${version}`);
-    const remaining = deadline - now();
-    if (remaining <= 0) break;
-    console.log(`Waiting for ${packageName}@${version} to appear in registry metadata`);
-    await sleep(Math.min(backoff, remaining));
-    backoff = Math.min(backoff * 2, 10000);
-  }
-  throw new Error(`npm publish ${packageName}@${version} succeeded but the version is missing from the packument after ${windowMs / 60000} minutes; possibly still propagating or staged but unpromoted. Stop this release, wait until npm view shows the version, then re-run the failed Publish job to resume the same tag. See docs/development/release.md.`);
-}
-
-async function publish(packageName, version, { run = npm, sleep = delay, now = () => performance.now(), windowMs = VISIBILITY_WINDOW_MS } = {}) {
+async function publish(packageName, version, { run = npm, sleep = delay } = {}) {
   for (let attempt = 1; attempt <= 3; attempt++) {
     const existing = view(run, `${packageName}@${version}`, "version");
     if (existing === version) {
@@ -81,7 +58,7 @@ async function publish(packageName, version, { run = npm, sleep = delay, now = (
       result = { status: 1, stdout: "", stderr: `${error.code}: ${error.message}` };
     }
     if (result.status === 0) {
-      await confirmPublication(packageName, version, { run, sleep, now, windowMs });
+      console.log(`npm accepted the upload for ${packageName}@${version}`);
       return;
     }
     // A failed response can follow a successful registry write.
@@ -97,7 +74,7 @@ async function publish(packageName, version, { run = npm, sleep = delay, now = (
   }
 }
 
-module.exports = { VISIBILITY_WINDOW_MS, distTag, publish };
+module.exports = { distTag, publish };
 if (require.main === module) {
   const [packageName, version] = process.argv.slice(2);
   if (!/^no-mistakes(?:-(?:darwin-arm64|linux-arm64-gnu|linux-x64-gnu|win32-x64-msvc))?$|^eslint-plugin-no-mistakes$/.test(packageName || "") || !version) {

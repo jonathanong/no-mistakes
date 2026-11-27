@@ -1,0 +1,19 @@
+#!/bin/bash
+case "$1" in
+  /publish-tools/.github/scripts/publish-npm.cjs)
+    [[ "$#" == 3 && "$2" == no-mistakes && "$3" == 0.109.8 ]] || exit 99
+    echo publish
+    exit "$TEST_PUBLISH_STATUS"
+    ;;
+  /publish-tools/packages/no-mistakes/scripts/wait-npm-tarball.js)
+    [[ "$#" == 7 &&
+        "$2" == --package && "$3" == no-mistakes &&
+        "$4" == --version && "$5" == 0.109.8 &&
+        "$6" == --timeout-ms && "$7" == 1500000 ]] || exit 99
+    echo verify
+    exit "$TEST_VERIFY_STATUS"
+    ;;
+  *)
+    exit 99
+    ;;
+esac

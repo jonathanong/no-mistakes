@@ -65,15 +65,16 @@ test("encodes scoped names and builds the default tarball URL", () => {
   );
 });
 
-test("returns the tarball once packument metadata and bytes match", async () => {
+test("returns the tarball once install metadata and bytes match", async () => {
   const body = Buffer.from("native-package");
   const shasum = createHash("sha1").update(body).digest("hex");
   const result = await waitForNpmTarball({
     name: "no-mistakes-darwin-arm64",
     version: "0.61.6",
     timeoutMs: 0,
-    fetchImpl: async (url) => {
+    fetchImpl: async (url, options) => {
       if (url.endsWith("/no-mistakes-darwin-arm64")) {
+        assert.equal(options.headers?.accept, "application/vnd.npm.install-v1+json");
         return jsonResponse(
           200,
           packument(

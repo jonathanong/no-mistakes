@@ -529,19 +529,16 @@ jobs:
     timeout-minutes: 100
     permissions:
       contents: read
-    # Cold macOS and Windows builds exceeded 45 minutes with full LTO and one
-    # codegen unit. Every target now uses ThinLTO and 16 units; the runtime cost
-    # was measured before this change. Set the overrides before rust-cache so
-    # the cache key matches the profile. NM_BUILD_TIMEOUT is 65 on Linux and 90
-    # on macOS and Windows.
     env:
       NM_TARGET: x86_64-unknown-linux-gnu
       NM_ADDON: libno_mistakes.so
       NM_BUILD_TIMEOUT: "65"
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
+    # Action pins and their version comments stay on each uses line.
     steps:
-      - name: Exclude workspace from Microsoft Defender
+      - &build-native-exclude-workspace-from-microsoft-defender
+        name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' }}
         timeout-minutes: 2
         continue-on-error: true
@@ -563,13 +560,14 @@ jobs:
       - name: Checkout release scripts
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &build-native-checkout-release-scripts
           ref: ${{ github.workflow_sha }}
           path: release-scripts
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Isolate release scripts
+      - &build-native-isolate-release-scripts
+        name: Isolate release scripts
         timeout-minutes: 1
         shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
@@ -577,25 +575,26 @@ jobs:
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
+        with: &build-native-download-prepared-source
           name: release-source
           path: prepared-release
 
-      - name: Extract prepared source
+      - &build-native-extract-prepared-source
+        name: Extract prepared source
         timeout-minutes: 2
         run: tar -xzf prepared-release/release-source.tgz
 
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
+        with: &build-native-install-rust
           toolchain: stable
           targets: ${{ env.NM_TARGET }}
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
-        with:
+        with: &build-native-cache-rust-build-artifacts
           prefix-key: v1-rust-release
           shared-key: release-${{ env.NM_TARGET }}
           cache-bin: "false"
@@ -603,7 +602,8 @@ jobs:
       # Full LTO on aarch64 Linux was SIGTERMed (exit 143) on the 16 GB
       # ubuntu-22.04-arm runner (run 40325778215). ThinLTO lowers that peak.
       # Swap stays so a cold compile still has headroom.
-      - name: Add swap
+      - &build-native-add-swap
+        name: Add swap
         if: ${{ runner.os == 'Linux' }}
         timeout-minutes: 5
         shell: bash
@@ -627,17 +627,20 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Build CLI and N-API addon
+      - &build-native-build-cli-and-n-api-addon
+        name: Build CLI and N-API addon
         timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
         shell: bash
         run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
 
-      - name: Stage CLI assets
+      - &build-native-stage-cli-assets
+        name: Stage CLI assets
         timeout-minutes: 2
         shell: bash
         run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
 
-      - name: Generate checksum (Unix)
+      - &build-native-generate-checksum-unix
+        name: Generate checksum (Unix)
         if: runner.os != 'Windows'
         timeout-minutes: 2
         shell: bash
@@ -648,7 +651,8 @@ jobs:
             shasum -a 256 "$artifact" > "$artifact.sha256"
           done
 
-      - name: Generate checksum (Windows)
+      - &build-native-generate-checksum-windows
+        name: Generate checksum (Windows)
         if: runner.os == 'Windows'
         timeout-minutes: 2
         shell: pwsh
@@ -662,7 +666,7 @@ jobs:
       - name: Upload CLI artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
+        with: &build-native-upload-cli-artifact
           name: release-cli-${{ env.NM_TARGET }}
           path: release-assets/*
           if-no-files-found: error
@@ -670,10 +674,11 @@ jobs:
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
+        with: &build-native-install-node-js
           node-version: 24
 
-      - name: Stage N-API addon
+      - &build-native-stage-n-api-addon
+        name: Stage N-API addon
         timeout-minutes: 2
         shell: bash
         run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
@@ -681,12 +686,13 @@ jobs:
       - name: Upload N-API artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
+        with: &build-native-upload-n-api-artifact
           name: release-napi-${{ env.NM_TARGET }}
           path: no-mistakes-napi-*.node
           if-no-files-found: error
 
-      - name: Require Cargo timings report
+      - &build-native-require-cargo-timings-report
+        name: Require Cargo timings report
         timeout-minutes: 1
         shell: bash
         run: |
@@ -702,7 +708,7 @@ jobs:
         timeout-minutes: 2
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
+        with: &build-native-upload-cargo-timings
           name: release-timings-${{ env.NM_TARGET }}
           path: target/cargo-timings/*.html
           if-no-files-found: error
@@ -715,11 +721,6 @@ jobs:
     timeout-minutes: 100
     permissions:
       contents: read
-    # Cold macOS and Windows builds exceeded 45 minutes with full LTO and one
-    # codegen unit. Every target now uses ThinLTO and 16 units; the runtime cost
-    # was measured before this change. Set the overrides before rust-cache so
-    # the cache key matches the profile. NM_BUILD_TIMEOUT is 65 on Linux and 90
-    # on macOS and Windows.
     env:
       NM_TARGET: aarch64-unknown-linux-gnu
       NM_ADDON: libno_mistakes.so
@@ -727,172 +728,66 @@ jobs:
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
     steps:
-      - name: Exclude workspace from Microsoft Defender
-        if: ${{ runner.os == 'Windows' }}
-        timeout-minutes: 2
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          powershell.exe -NoProfile -Command @'
-          $paths = @(
-            $env:GITHUB_WORKSPACE,
-            (Join-Path $env:USERPROFILE '.cargo'),
-            (Join-Path $env:USERPROFILE '.rustup')
-          )
-          foreach ($path in $paths) {
-            Add-MpPreference -ExclusionPath $path
-          }
-          '@
+      - *build-native-exclude-workspace-from-microsoft-defender
 
-      # Build scripts belong to the running workflow, even when the release
-      # source is an older tag. Never overlay current product source onto that tag.
       - name: Checkout release scripts
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.workflow_sha }}
-          path: release-scripts
-          persist-credentials: false
-          fetch-depth: 1
+        with: *build-native-checkout-release-scripts
 
-      - name: Isolate release scripts
-        timeout-minutes: 1
-        shell: bash
-        run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
+      - *build-native-isolate-release-scripts
 
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-source
-          path: prepared-release
+        with: *build-native-download-prepared-source
 
-      - name: Extract prepared source
-        timeout-minutes: 2
-        run: tar -xzf prepared-release/release-source.tgz
+      - *build-native-extract-prepared-source
 
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
-          toolchain: stable
-          targets: ${{ env.NM_TARGET }}
+        with: *build-native-install-rust
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
-        with:
-          prefix-key: v1-rust-release
-          shared-key: release-${{ env.NM_TARGET }}
-          cache-bin: "false"
+        with: *build-native-cache-rust-build-artifacts
 
-      # Full LTO on aarch64 Linux was SIGTERMed (exit 143) on the 16 GB
-      # ubuntu-22.04-arm runner (run 40325778215). ThinLTO lowers that peak.
-      # Swap stays so a cold compile still has headroom.
-      - name: Add swap
-        if: ${{ runner.os == 'Linux' }}
-        timeout-minutes: 5
-        shell: bash
-        run: |
-          set -euo pipefail
-          free -h
-          df -h /
-          avail_gb=$(( $(df --output=avail -B1 / | tail -1 | tr -dc '0-9') / 1073741824 ))
-          size_gb=16
-          if [ "$avail_gb" -lt $((size_gb + 4)) ]; then
-            size_gb=$((avail_gb - 4))
-          fi
-          if [ "$size_gb" -lt 1 ]; then
-            echo "not enough free disk for swap"
-            exit 0
-          fi
-          sudo swapoff -a || true
-          sudo fallocate -l "${size_gb}G" /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          free -h
+      - *build-native-add-swap
 
-      - name: Build CLI and N-API addon
-        timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
+      - *build-native-build-cli-and-n-api-addon
 
-      - name: Stage CLI assets
-        timeout-minutes: 2
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
+      - *build-native-stage-cli-assets
 
-      - name: Generate checksum (Unix)
-        if: runner.os != 'Windows'
-        timeout-minutes: 2
-        shell: bash
-        working-directory: release-assets
-        run: |
-          for artifact in *; do
-            [[ "$artifact" == *.sha256 ]] && continue
-            shasum -a 256 "$artifact" > "$artifact.sha256"
-          done
+      - *build-native-generate-checksum-unix
 
-      - name: Generate checksum (Windows)
-        if: runner.os == 'Windows'
-        timeout-minutes: 2
-        shell: pwsh
-        working-directory: release-assets
-        run: |
-          Get-ChildItem -File | Where-Object { $_.Name -notlike "*.sha256" } | ForEach-Object {
-            $hash = (Get-FileHash -Algorithm SHA256 -Path $_.Name).Hash.ToLowerInvariant()
-            "$hash  $($_.Name)" | Set-Content -Encoding ascii -NoNewline "$($_.Name).sha256"
-          }
+      - *build-native-generate-checksum-windows
 
       - name: Upload CLI artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-cli-${{ env.NM_TARGET }}
-          path: release-assets/*
-          if-no-files-found: error
+        with: *build-native-upload-cli-artifact
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *build-native-install-node-js
 
-      - name: Stage N-API addon
-        timeout-minutes: 2
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
+      - *build-native-stage-n-api-addon
 
       - name: Upload N-API artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-napi-${{ env.NM_TARGET }}
-          path: no-mistakes-napi-*.node
-          if-no-files-found: error
+        with: *build-native-upload-n-api-artifact
 
-      - name: Require Cargo timings report
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          reports=(target/cargo-timings/*.html)
-          if [ "${#reports[@]}" -eq 0 ]; then
-            echo "missing target/cargo-timings/*.html"
-            exit 1
-          fi
+      - *build-native-require-cargo-timings-report
 
       - name: Upload Cargo timings
         timeout-minutes: 2
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-timings-${{ env.NM_TARGET }}
-          path: target/cargo-timings/*.html
-          if-no-files-found: error
-
+        with: *build-native-upload-cargo-timings
 
   build-native-darwin:
     name: Build native for aarch64-apple-darwin
@@ -902,11 +797,6 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
-    # Cold macOS and Windows builds exceeded 45 minutes with full LTO and one
-    # codegen unit. Every target now uses ThinLTO and 16 units; the runtime cost
-    # was measured before this change. Set the overrides before rust-cache so
-    # the cache key matches the profile. NM_BUILD_TIMEOUT is 65 on Linux and 90
-    # on macOS and Windows.
     env:
       NM_TARGET: aarch64-apple-darwin
       NM_ADDON: libno_mistakes.dylib
@@ -914,172 +804,66 @@ jobs:
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
     steps:
-      - name: Exclude workspace from Microsoft Defender
-        if: ${{ runner.os == 'Windows' }}
-        timeout-minutes: 2
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          powershell.exe -NoProfile -Command @'
-          $paths = @(
-            $env:GITHUB_WORKSPACE,
-            (Join-Path $env:USERPROFILE '.cargo'),
-            (Join-Path $env:USERPROFILE '.rustup')
-          )
-          foreach ($path in $paths) {
-            Add-MpPreference -ExclusionPath $path
-          }
-          '@
+      - *build-native-exclude-workspace-from-microsoft-defender
 
-      # Build scripts belong to the running workflow, even when the release
-      # source is an older tag. Never overlay current product source onto that tag.
       - name: Checkout release scripts
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.workflow_sha }}
-          path: release-scripts
-          persist-credentials: false
-          fetch-depth: 1
+        with: *build-native-checkout-release-scripts
 
-      - name: Isolate release scripts
-        timeout-minutes: 1
-        shell: bash
-        run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
+      - *build-native-isolate-release-scripts
 
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-source
-          path: prepared-release
+        with: *build-native-download-prepared-source
 
-      - name: Extract prepared source
-        timeout-minutes: 2
-        run: tar -xzf prepared-release/release-source.tgz
+      - *build-native-extract-prepared-source
 
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
-          toolchain: stable
-          targets: ${{ env.NM_TARGET }}
+        with: *build-native-install-rust
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
-        with:
-          prefix-key: v1-rust-release
-          shared-key: release-${{ env.NM_TARGET }}
-          cache-bin: "false"
+        with: *build-native-cache-rust-build-artifacts
 
-      # Full LTO on aarch64 Linux was SIGTERMed (exit 143) on the 16 GB
-      # ubuntu-22.04-arm runner (run 40325778215). ThinLTO lowers that peak.
-      # Swap stays so a cold compile still has headroom.
-      - name: Add swap
-        if: ${{ runner.os == 'Linux' }}
-        timeout-minutes: 5
-        shell: bash
-        run: |
-          set -euo pipefail
-          free -h
-          df -h /
-          avail_gb=$(( $(df --output=avail -B1 / | tail -1 | tr -dc '0-9') / 1073741824 ))
-          size_gb=16
-          if [ "$avail_gb" -lt $((size_gb + 4)) ]; then
-            size_gb=$((avail_gb - 4))
-          fi
-          if [ "$size_gb" -lt 1 ]; then
-            echo "not enough free disk for swap"
-            exit 0
-          fi
-          sudo swapoff -a || true
-          sudo fallocate -l "${size_gb}G" /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          free -h
+      - *build-native-add-swap
 
-      - name: Build CLI and N-API addon
-        timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
+      - *build-native-build-cli-and-n-api-addon
 
-      - name: Stage CLI assets
-        timeout-minutes: 2
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
+      - *build-native-stage-cli-assets
 
-      - name: Generate checksum (Unix)
-        if: runner.os != 'Windows'
-        timeout-minutes: 2
-        shell: bash
-        working-directory: release-assets
-        run: |
-          for artifact in *; do
-            [[ "$artifact" == *.sha256 ]] && continue
-            shasum -a 256 "$artifact" > "$artifact.sha256"
-          done
+      - *build-native-generate-checksum-unix
 
-      - name: Generate checksum (Windows)
-        if: runner.os == 'Windows'
-        timeout-minutes: 2
-        shell: pwsh
-        working-directory: release-assets
-        run: |
-          Get-ChildItem -File | Where-Object { $_.Name -notlike "*.sha256" } | ForEach-Object {
-            $hash = (Get-FileHash -Algorithm SHA256 -Path $_.Name).Hash.ToLowerInvariant()
-            "$hash  $($_.Name)" | Set-Content -Encoding ascii -NoNewline "$($_.Name).sha256"
-          }
+      - *build-native-generate-checksum-windows
 
       - name: Upload CLI artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-cli-${{ env.NM_TARGET }}
-          path: release-assets/*
-          if-no-files-found: error
+        with: *build-native-upload-cli-artifact
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *build-native-install-node-js
 
-      - name: Stage N-API addon
-        timeout-minutes: 2
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
+      - *build-native-stage-n-api-addon
 
       - name: Upload N-API artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-napi-${{ env.NM_TARGET }}
-          path: no-mistakes-napi-*.node
-          if-no-files-found: error
+        with: *build-native-upload-n-api-artifact
 
-      - name: Require Cargo timings report
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          reports=(target/cargo-timings/*.html)
-          if [ "${#reports[@]}" -eq 0 ]; then
-            echo "missing target/cargo-timings/*.html"
-            exit 1
-          fi
+      - *build-native-require-cargo-timings-report
 
       - name: Upload Cargo timings
         timeout-minutes: 2
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-timings-${{ env.NM_TARGET }}
-          path: target/cargo-timings/*.html
-          if-no-files-found: error
-
+        with: *build-native-upload-cargo-timings
 
   build-native-windows:
     name: Build native for x86_64-pc-windows-msvc
@@ -1089,184 +873,73 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
-    # Cold macOS and Windows builds exceeded 45 minutes with full LTO and one
-    # codegen unit. Every target now uses ThinLTO and 16 units; the runtime cost
-    # was measured before this change. Set the overrides before rust-cache so
-    # the cache key matches the profile. NM_BUILD_TIMEOUT is 65 on Linux and 90
-    # on macOS and Windows.
     env:
       NM_TARGET: x86_64-pc-windows-msvc
       NM_ADDON: no_mistakes.dll
       NM_BUILD_TIMEOUT: "90"
-      CARGO_PROFILE_RELEASE_LTO: thin
+      CARGO_PROFILE_RELEASE_LTO: "false"
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
     steps:
-      - name: Exclude workspace from Microsoft Defender
-        if: ${{ runner.os == 'Windows' }}
-        timeout-minutes: 2
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          powershell.exe -NoProfile -Command @'
-          $paths = @(
-            $env:GITHUB_WORKSPACE,
-            (Join-Path $env:USERPROFILE '.cargo'),
-            (Join-Path $env:USERPROFILE '.rustup')
-          )
-          foreach ($path in $paths) {
-            Add-MpPreference -ExclusionPath $path
-          }
-          '@
+      - *build-native-exclude-workspace-from-microsoft-defender
 
-      # Build scripts belong to the running workflow, even when the release
-      # source is an older tag. Never overlay current product source onto that tag.
       - name: Checkout release scripts
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.workflow_sha }}
-          path: release-scripts
-          persist-credentials: false
-          fetch-depth: 1
+        with: *build-native-checkout-release-scripts
 
-      - name: Isolate release scripts
-        timeout-minutes: 1
-        shell: bash
-        run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
+      - *build-native-isolate-release-scripts
 
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-source
-          path: prepared-release
+        with: *build-native-download-prepared-source
 
-      - name: Extract prepared source
-        timeout-minutes: 2
-        run: tar -xzf prepared-release/release-source.tgz
+      - *build-native-extract-prepared-source
 
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
-          toolchain: stable
-          targets: ${{ env.NM_TARGET }}
+        with: *build-native-install-rust
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
-        with:
-          prefix-key: v1-rust-release
-          shared-key: release-${{ env.NM_TARGET }}
-          cache-bin: "false"
+        with: *build-native-cache-rust-build-artifacts
 
-      # Full LTO on aarch64 Linux was SIGTERMed (exit 143) on the 16 GB
-      # ubuntu-22.04-arm runner (run 40325778215). ThinLTO lowers that peak.
-      # Swap stays so a cold compile still has headroom.
-      - name: Add swap
-        if: ${{ runner.os == 'Linux' }}
-        timeout-minutes: 5
-        shell: bash
-        run: |
-          set -euo pipefail
-          free -h
-          df -h /
-          avail_gb=$(( $(df --output=avail -B1 / | tail -1 | tr -dc '0-9') / 1073741824 ))
-          size_gb=16
-          if [ "$avail_gb" -lt $((size_gb + 4)) ]; then
-            size_gb=$((avail_gb - 4))
-          fi
-          if [ "$size_gb" -lt 1 ]; then
-            echo "not enough free disk for swap"
-            exit 0
-          fi
-          sudo swapoff -a || true
-          sudo fallocate -l "${size_gb}G" /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          free -h
+      - *build-native-add-swap
 
-      - name: Build CLI and N-API addon
-        timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
+      - *build-native-build-cli-and-n-api-addon
 
-      - name: Stage CLI assets
-        timeout-minutes: 2
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
+      - *build-native-stage-cli-assets
 
-      - name: Generate checksum (Unix)
-        if: runner.os != 'Windows'
-        timeout-minutes: 2
-        shell: bash
-        working-directory: release-assets
-        run: |
-          for artifact in *; do
-            [[ "$artifact" == *.sha256 ]] && continue
-            shasum -a 256 "$artifact" > "$artifact.sha256"
-          done
+      - *build-native-generate-checksum-unix
 
-      - name: Generate checksum (Windows)
-        if: runner.os == 'Windows'
-        timeout-minutes: 2
-        shell: pwsh
-        working-directory: release-assets
-        run: |
-          Get-ChildItem -File | Where-Object { $_.Name -notlike "*.sha256" } | ForEach-Object {
-            $hash = (Get-FileHash -Algorithm SHA256 -Path $_.Name).Hash.ToLowerInvariant()
-            "$hash  $($_.Name)" | Set-Content -Encoding ascii -NoNewline "$($_.Name).sha256"
-          }
+      - *build-native-generate-checksum-windows
 
       - name: Upload CLI artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-cli-${{ env.NM_TARGET }}
-          path: release-assets/*
-          if-no-files-found: error
+        with: *build-native-upload-cli-artifact
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *build-native-install-node-js
 
-      - name: Stage N-API addon
-        timeout-minutes: 2
-        shell: bash
-        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
+      - *build-native-stage-n-api-addon
 
       - name: Upload N-API artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-napi-${{ env.NM_TARGET }}
-          path: no-mistakes-napi-*.node
-          if-no-files-found: error
+        with: *build-native-upload-n-api-artifact
 
-      - name: Require Cargo timings report
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          reports=(target/cargo-timings/*.html)
-          if [ "${#reports[@]}" -eq 0 ]; then
-            echo "missing target/cargo-timings/*.html"
-            exit 1
-          fi
+      - *build-native-require-cargo-timings-report
 
       - name: Upload Cargo timings
         timeout-minutes: 2
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: release-timings-${{ env.NM_TARGET }}
-          path: target/cargo-timings/*.html
-          if-no-files-found: error
-
+        with: *build-native-upload-cargo-timings
 
   publish-cargo:
     name: Publish Cargo crates
@@ -1406,7 +1079,7 @@ jobs:
             gh release create "$tag" dist/* --title "$tag" --generate-notes
           fi
 
-  # One package per job: publish and packument confirmation run in parallel,
+  # One package per job: publish and tarball confirmation run in parallel,
   # and each starts as soon as its own build and validation have succeeded.
 
   publish-native-linux-x64:
@@ -1428,7 +1101,7 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &publish-native-checkout-release-commit
           fetch-depth: 1
           persist-credentials: false
           ref: ${{ needs.prepare.outputs.release-sha }}
@@ -1436,57 +1109,52 @@ jobs:
       - name: Checkout publish tooling
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &publish-native-checkout-publish-tooling
           ref: ${{ github.workflow_sha }}
           path: publish-tools
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Isolate publish tooling
+      - &publish-native-isolate-publish-tooling
+        name: Isolate publish tooling
         timeout-minutes: 1
         run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
+        with: &publish-native-install-node-js
           node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Set up pnpm
         timeout-minutes: 2
         uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
+        with: &publish-native-set-up-pnpm
           install: false
-
-      - name: Install pnpm dependencies
-        timeout-minutes: 5
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
 
       - name: Download CLI release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
+        with: &publish-native-download-cli-release-assets
           name: release-cli-${{ env.NM_TARGET }}
           path: dist
 
       - name: Download N-API release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
+        with: &publish-native-download-n-api-release-assets
           name: release-napi-${{ env.NM_TARGET }}
           path: dist
 
-      - name: Stage platform package
+      - &publish-native-stage-platform-package
+        name: Stage platform package
         timeout-minutes: 5
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
-      - name: Publish npm platform package with OIDC
+      - &publish-native-publish-npm-platform-package-with-oidc
+        name: Publish npm platform package with OIDC
         timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
@@ -1510,69 +1178,38 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *publish-native-checkout-release-commit
 
       - name: Checkout publish tooling
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.workflow_sha }}
-          path: publish-tools
-          persist-credentials: false
-          fetch-depth: 1
+        with: *publish-native-checkout-publish-tooling
 
-      - name: Isolate publish tooling
-        timeout-minutes: 1
-        run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
+      - *publish-native-isolate-publish-tooling
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
+        with: *publish-native-install-node-js
 
       - name: Set up pnpm
         timeout-minutes: 2
         uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          install: false
-
-      - name: Install pnpm dependencies
-        timeout-minutes: 5
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
+        with: *publish-native-set-up-pnpm
 
       - name: Download CLI release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-cli-${{ env.NM_TARGET }}
-          path: dist
+        with: *publish-native-download-cli-release-assets
 
       - name: Download N-API release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-napi-${{ env.NM_TARGET }}
-          path: dist
+        with: *publish-native-download-n-api-release-assets
 
-      - name: Stage platform package
-        timeout-minutes: 5
-        shell: bash
-        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
+      - *publish-native-stage-platform-package
 
-      - name: Publish npm platform package with OIDC
-        timeout-minutes: 70
-        shell: bash
-        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
-
+      - *publish-native-publish-npm-platform-package-with-oidc
 
   publish-native-darwin:
     name: Publish no-mistakes-darwin-arm64
@@ -1593,69 +1230,38 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *publish-native-checkout-release-commit
 
       - name: Checkout publish tooling
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.workflow_sha }}
-          path: publish-tools
-          persist-credentials: false
-          fetch-depth: 1
+        with: *publish-native-checkout-publish-tooling
 
-      - name: Isolate publish tooling
-        timeout-minutes: 1
-        run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
+      - *publish-native-isolate-publish-tooling
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
+        with: *publish-native-install-node-js
 
       - name: Set up pnpm
         timeout-minutes: 2
         uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          install: false
-
-      - name: Install pnpm dependencies
-        timeout-minutes: 5
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
+        with: *publish-native-set-up-pnpm
 
       - name: Download CLI release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-cli-${{ env.NM_TARGET }}
-          path: dist
+        with: *publish-native-download-cli-release-assets
 
       - name: Download N-API release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-napi-${{ env.NM_TARGET }}
-          path: dist
+        with: *publish-native-download-n-api-release-assets
 
-      - name: Stage platform package
-        timeout-minutes: 5
-        shell: bash
-        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
+      - *publish-native-stage-platform-package
 
-      - name: Publish npm platform package with OIDC
-        timeout-minutes: 70
-        shell: bash
-        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
-
+      - *publish-native-publish-npm-platform-package-with-oidc
 
   publish-native-windows:
     name: Publish no-mistakes-win32-x64-msvc
@@ -1677,69 +1283,38 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *publish-native-checkout-release-commit
 
       - name: Checkout publish tooling
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.workflow_sha }}
-          path: publish-tools
-          persist-credentials: false
-          fetch-depth: 1
+        with: *publish-native-checkout-publish-tooling
 
-      - name: Isolate publish tooling
-        timeout-minutes: 1
-        run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
+      - *publish-native-isolate-publish-tooling
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
+        with: *publish-native-install-node-js
 
       - name: Set up pnpm
         timeout-minutes: 2
         uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          install: false
-
-      - name: Install pnpm dependencies
-        timeout-minutes: 5
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
+        with: *publish-native-set-up-pnpm
 
       - name: Download CLI release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-cli-${{ env.NM_TARGET }}
-          path: dist
+        with: *publish-native-download-cli-release-assets
 
       - name: Download N-API release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: release-napi-${{ env.NM_TARGET }}
-          path: dist
+        with: *publish-native-download-n-api-release-assets
 
-      - name: Stage platform package
-        timeout-minutes: 5
-        shell: bash
-        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
+      - *publish-native-stage-platform-package
 
-      - name: Publish npm platform package with OIDC
-        timeout-minutes: 70
-        shell: bash
-        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
-
+      - *publish-native-publish-npm-platform-package-with-oidc
 
   # Root publication waits for all four of these, so latest cannot point at a
   # version whose platform packages are still unverified.
@@ -1759,7 +1334,7 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &verify-npm-checkout-release-commit
           fetch-depth: 1
           persist-credentials: false
           ref: ${{ needs.prepare.outputs.release-sha }}
@@ -1767,10 +1342,11 @@ jobs:
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
+        with: &verify-npm-install-node-js
           node-version: 24
 
-      - name: Install and load published package
+      - &verify-npm-install-and-load-published-package
+        name: Install and load published package
         timeout-minutes: 12
         shell: bash
         run: |
@@ -1800,32 +1376,14 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *verify-npm-checkout-release-commit
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *verify-npm-install-node-js
 
-      - name: Install and load published package
-        timeout-minutes: 12
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ needs.prepare.outputs.version }}"
-          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$NM_PACKAGE" --version "$version"
-          work="$RUNNER_TEMP/npm-smoke"
-          mkdir -p "$work"
-          cd "$work"
-          npm install --omit=dev --no-fund --no-audit "$NM_PACKAGE@$version"
-          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
-            --package "$NM_PACKAGE" \
-            --version "$version"
-
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-darwin:
     name: Verify npm no-mistakes-darwin-arm64
@@ -1842,32 +1400,14 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *verify-npm-checkout-release-commit
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *verify-npm-install-node-js
 
-      - name: Install and load published package
-        timeout-minutes: 12
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ needs.prepare.outputs.version }}"
-          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$NM_PACKAGE" --version "$version"
-          work="$RUNNER_TEMP/npm-smoke"
-          mkdir -p "$work"
-          cd "$work"
-          npm install --omit=dev --no-fund --no-audit "$NM_PACKAGE@$version"
-          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
-            --package "$NM_PACKAGE" \
-            --version "$version"
-
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-windows:
     name: Verify npm no-mistakes-win32-x64-msvc
@@ -1884,32 +1424,14 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *verify-npm-checkout-release-commit
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *verify-npm-install-node-js
 
-      - name: Install and load published package
-        timeout-minutes: 12
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ needs.prepare.outputs.version }}"
-          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$NM_PACKAGE" --version "$version"
-          work="$RUNNER_TEMP/npm-smoke"
-          mkdir -p "$work"
-          cd "$work"
-          npm install --omit=dev --no-fund --no-audit "$NM_PACKAGE@$version"
-          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
-            --package "$NM_PACKAGE" \
-            --version "$version"
-
+      - *verify-npm-install-and-load-published-package
 
   publish-js:
     name: Publish root npm package
@@ -1992,32 +1514,14 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *verify-npm-checkout-release-commit
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *verify-npm-install-node-js
 
-      - name: Install and load published package
-        timeout-minutes: 12
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ needs.prepare.outputs.version }}"
-          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$NM_PACKAGE" --version "$version"
-          work="$RUNNER_TEMP/npm-smoke"
-          mkdir -p "$work"
-          cd "$work"
-          npm install --omit=dev --no-fund --no-audit "$NM_PACKAGE@$version"
-          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
-            --package "$NM_PACKAGE" \
-            --version "$version"
-
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-root-linux-arm:
     name: Verify npm no-mistakes (ubuntu-22.04-arm)
@@ -2034,32 +1538,14 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *verify-npm-checkout-release-commit
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *verify-npm-install-node-js
 
-      - name: Install and load published package
-        timeout-minutes: 12
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ needs.prepare.outputs.version }}"
-          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$NM_PACKAGE" --version "$version"
-          work="$RUNNER_TEMP/npm-smoke"
-          mkdir -p "$work"
-          cd "$work"
-          npm install --omit=dev --no-fund --no-audit "$NM_PACKAGE@$version"
-          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
-            --package "$NM_PACKAGE" \
-            --version "$version"
-
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-root-windows:
     name: Verify npm no-mistakes (windows-2025)
@@ -2076,32 +1562,14 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *verify-npm-checkout-release-commit
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *verify-npm-install-node-js
 
-      - name: Install and load published package
-        timeout-minutes: 12
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ needs.prepare.outputs.version }}"
-          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$NM_PACKAGE" --version "$version"
-          work="$RUNNER_TEMP/npm-smoke"
-          mkdir -p "$work"
-          cd "$work"
-          npm install --omit=dev --no-fund --no-audit "$NM_PACKAGE@$version"
-          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
-            --package "$NM_PACKAGE" \
-            --version "$version"
-
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-root-darwin:
     name: Verify npm no-mistakes (macos-15)
@@ -2119,32 +1587,14 @@ jobs:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.release-sha }}
+        with: *verify-npm-checkout-release-commit
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 24
+        with: *verify-npm-install-node-js
 
-      - name: Install and load published package
-        timeout-minutes: 12
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ needs.prepare.outputs.version }}"
-          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$NM_PACKAGE" --version "$version"
-          work="$RUNNER_TEMP/npm-smoke"
-          mkdir -p "$work"
-          cd "$work"
-          npm install --omit=dev --no-fund --no-audit "$NM_PACKAGE@$version"
-          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
-            --package "$NM_PACKAGE" \
-            --version "$version"
-
+      - *verify-npm-install-and-load-published-package
 
   publish-eslint:
     name: Publish ESLint package
