@@ -72,9 +72,9 @@ names written in place of canonical versions. An empty `require ()` block
 contributes no packages.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
-lines are dependencies. A `GIT` revision, its optional `glob` selector, and
-a `CHECKSUMS` `sha256` are
-fingerprints. A `PATH` entry uses its `remote` value and any `glob` selector as the
+lines are dependencies. A `GIT` revision contributes to its fingerprint along with any `glob`
+selector and enabled submodules. A matching `CHECKSUMS` entry supplies its `sha256`
+fingerprint. A `PATH` entry uses its `remote` value and any `glob` selector as the
 directory fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
 fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.
 Distribution references take precedence over checksums. A path source

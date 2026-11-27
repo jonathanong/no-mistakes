@@ -60,7 +60,8 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
             super::source_fingerprint(&fingerprint, "subdirectory", text(obj, "subdirectory"));
         (ResolutionKind::Other, fingerprint, true)
     } else if let Some(url) = text(obj, "file").or_else(|| text(obj, "url")) {
-        (ResolutionKind::Tarball, url.to_string(), true)
+        let fingerprint = super::source_fingerprint(url, "subdirectory", text(obj, "subdirectory"));
+        (ResolutionKind::Tarball, fingerprint, true)
     } else if editable {
         (ResolutionKind::Directory, String::new(), true)
     } else {

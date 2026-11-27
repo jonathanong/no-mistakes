@@ -1,0 +1,12 @@
+GIT
+  remote: https://example.invalid/sample.git
+  revision: abc123
+  submodules: true
+  glob: source/*.gemspec
+  specs:
+    sample (1.0.0)
+
+GEM
+  remote: https://packages.example.invalid
+  specs:
+    sample-registry (1.0.0)

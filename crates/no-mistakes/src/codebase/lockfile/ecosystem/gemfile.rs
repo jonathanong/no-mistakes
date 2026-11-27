@@ -21,6 +21,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
     let mut saw_header = false;
     let mut section_fingerprint = "";
     let mut source_glob = None;
+    let mut git_submodules = false;
     for raw in content.lines() {
         let line = raw.trim_end_matches('\r');
         let indent = line.chars().take_while(|ch| *ch == ' ').count();
@@ -37,6 +38,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         if indent == 0 && is_header(trimmed) {
             section_fingerprint = "";
             source_glob = None;
+            git_submodules = false;
             section = match trimmed {
                 "GEM" => Section::Specs(ResolutionKind::Registry),
                 "GIT" => Section::Specs(ResolutionKind::Git),
@@ -68,7 +70,12 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
             }
         }
         let source_field = match section {
-            Section::Specs(ResolutionKind::Git) => trimmed.strip_prefix("revision:"),
+            Section::Specs(ResolutionKind::Git) => {
+                if let Some(value) = trimmed.strip_prefix("submodules:") {
+                    git_submodules = value.trim() == "true";
+                }
+                trimmed.strip_prefix("revision:")
+            }
             Section::Specs(ResolutionKind::Directory | ResolutionKind::Other) => {
                 trimmed.strip_prefix("remote:")
             }
@@ -98,10 +105,14 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         let Some((name, version, _)) = spec(trimmed) else {
             return Err(GemfileError);
         };
+        let mut fingerprint = super::source_fingerprint(section_fingerprint, "glob", source_glob);
+        if git_submodules {
+            fingerprint.push_str("#submodules=true");
+        }
         out.push(ResolvedPackage {
             name: name.to_string(),
             version: version.to_string(),
-            fingerprint: super::source_fingerprint(section_fingerprint, "glob", source_glob),
+            fingerprint,
             kind,
         });
     }

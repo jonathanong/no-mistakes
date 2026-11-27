@@ -25,8 +25,8 @@ struct UvPackage {
 
 #[derive(Deserialize, Default)]
 struct UvSource {
-    #[serde(default, rename = "registry")]
-    _registry: Option<String>,
+    #[serde(default)]
+    registry: Option<String>,
     #[serde(default)]
     git: Option<String>,
     #[serde(default)]
@@ -111,6 +111,9 @@ fn resolution(
                 source.subdirectory.as_deref(),
             ),
         ));
+    }
+    if source.registry.is_none() {
+        return Err(TomlError);
     }
     Ok((
         ResolutionKind::Registry,

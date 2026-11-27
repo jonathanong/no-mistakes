@@ -34,46 +34,60 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
                 if matches!(active, Block::Module(false)) {
                     return Err(GoModError);
                 }
+                saw_module |= matches!(active, Block::Module(true));
                 block = None;
             } else {
-                match active {
-                    Block::Module(seen) if !*seen && has_one_token(line) => {
-                        *seen = true;
-                        saw_module = true;
-                    }
-                    Block::Module(_) => return Err(GoModError),
-                    Block::Requirements => push_require(line, &mut out)?,
-                    Block::Replacements if replacement_fields(line) => {}
-                    Block::Replacements => return Err(GoModError),
-                    Block::Other => {}
-                }
+                read_block_entry(active, line, &mut out)?;
             }
-            continue;
-        }
-        let end = line.find(|ch: char| ch.is_whitespace() || ch == '(');
-        let (directive, rest) = line.split_at(end.unwrap_or(line.len()));
-        let rest = rest.trim();
-        match directive {
-            "module" if !saw_module && rest == "(" => block = Some(Block::Module(false)),
-            "module" if !saw_module && has_one_token(rest) => saw_module = true,
-            "go" if has_one_token(rest) => {}
-            "toolchain" if has_one_token(rest) => {}
-            "require" if rest == "(" => block = Some(Block::Requirements),
-            "require" if inline_empty_block(rest) => {}
-            "require" => push_require(rest, &mut out)?,
-            "replace" if rest == "(" => block = Some(Block::Replacements),
-            "replace" if replacement_fields(rest) => {}
-            "exclude" | "retract" | "godebug" | "tool" | "ignore" if rest == "(" => {
-                block = Some(Block::Other);
-            }
-            "exclude" | "retract" | "godebug" | "tool" | "ignore" if !rest.is_empty() => {}
-            _ => return Err(GoModError),
+        } else {
+            block = read_directive(line, &mut saw_module, &mut out)?;
         }
     }
     if block.is_some() || !saw_module {
         return Err(GoModError);
     }
     Ok(out)
+}
+
+fn read_block_entry(
+    block: &mut Block,
+    line: &str,
+    out: &mut Vec<ResolvedPackage>,
+) -> Result<(), GoModError> {
+    match block {
+        Block::Module(seen) if !*seen && has_one_token(line) => *seen = true,
+        Block::Module(_) => return Err(GoModError),
+        Block::Requirements => push_require(line, out)?,
+        Block::Replacements if !replacement_fields(line) => return Err(GoModError),
+        Block::Replacements | Block::Other => {}
+    }
+    Ok(())
+}
+
+fn read_directive(
+    line: &str,
+    saw_module: &mut bool,
+    out: &mut Vec<ResolvedPackage>,
+) -> Result<Option<Block>, GoModError> {
+    let end = line.find(|ch: char| ch.is_whitespace() || ch == '(');
+    let (directive, rest) = line.split_at(end.unwrap_or(line.len()));
+    let rest = rest.trim();
+    match directive {
+        "module" if !*saw_module && rest == "(" => return Ok(Some(Block::Module(false))),
+        "module" if !*saw_module && has_one_token(rest) => *saw_module = true,
+        "go" | "toolchain" if has_one_token(rest) => {}
+        "require" | "replace" if inline_empty_block(rest) => {}
+        "require" if rest == "(" => return Ok(Some(Block::Requirements)),
+        "require" => push_require(rest, out)?,
+        "replace" if rest == "(" => return Ok(Some(Block::Replacements)),
+        "replace" if replacement_fields(rest) => {}
+        "exclude" | "retract" | "godebug" | "tool" | "ignore" if rest == "(" => {
+            return Ok(Some(Block::Other));
+        }
+        "exclude" | "retract" | "godebug" | "tool" | "ignore" if !rest.is_empty() => {}
+        _ => return Err(GoModError),
+    }
+    Ok(None)
 }
 
 fn inline_empty_block(rest: &str) -> bool {
