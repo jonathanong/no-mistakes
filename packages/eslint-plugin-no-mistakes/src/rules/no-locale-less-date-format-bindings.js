@@ -6,18 +6,26 @@ function isDynamicScope(scope, evalScopes) {
   return scope.type === "with" || scope.directCallToEvalScope || evalScopes.has(scope);
 }
 
-function readsRequireNamespace(node) {
+function readsRequireNamespace(node, sourceCode) {
   const expression = unwrapExpression(node);
-  if (expression?.type === "MemberExpression") return readsRequireNamespace(expression.object);
-  return (
-    expression?.type === "CallExpression" &&
-    expression.callee?.type === "Identifier" &&
-    expression.callee.name === "require"
-  );
+  if (expression?.type === "MemberExpression") {
+    return readsRequireNamespace(expression.object, sourceCode);
+  }
+  if (
+    expression?.type !== "CallExpression" ||
+    expression.callee?.type !== "Identifier" ||
+    expression.callee.name !== "require"
+  ) {
+    return false;
+  }
+  for (let scope = sourceCode.getScope(expression.callee); scope; scope = scope.upper) {
+    if (scope.set.get("require")?.defs.length) return false;
+  }
+  return true;
 }
 
 // See docs/eslint-rules/no-locale-less-date-format.md for the module/local split.
-function isUnreadModuleDef(def) {
+function isUnreadModuleDef(def, sourceCode) {
   const node = def.node;
   if (node?.type === "TSImportEqualsDeclaration") {
     return node.moduleReference?.type === "TSExternalModuleReference";
@@ -26,7 +34,7 @@ function isUnreadModuleDef(def) {
   return (
     def.type === "Variable" &&
     node?.type === "VariableDeclarator" &&
-    readsRequireNamespace(node.init)
+    readsRequireNamespace(node.init, sourceCode)
   );
 }
 
@@ -38,7 +46,8 @@ function globalResolution(identifier, sourceCode, evalScopes) {
   }
   const variable = reference?.resolved;
   if (variable?.scope?.type === "global" && variable.defs.length === 0) return "global";
-  if (variable?.defs.length && variable.defs.every(isUnreadModuleDef)) return "module";
+  if (variable?.defs.length && variable.defs.every((def) => isUnreadModuleDef(def, sourceCode)))
+    return "module";
   return "local";
 }
 

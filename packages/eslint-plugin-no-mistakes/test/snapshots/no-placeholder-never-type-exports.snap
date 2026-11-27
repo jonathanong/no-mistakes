@@ -1,5 +1,24 @@
 [
   {
+    "file": "ts-object-recall/ambient-placeholder-types.d.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 25,
+        "endLine": 8,
+        "file": "ts-object-recall/ambient-placeholder-types.d.ts",
+        "line": 8,
+        "message": "Do not export placeholder never types. Define the real type or remove the export.",
+        "messageId": "placeholder",
+        "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+        "severity": 2
+      }
+    ],
+    "name": "ambient modules resolve aliases in their own scope",
+    "options": null,
+    "rule": "no-placeholder-never-type-exports"
+  },
+  {
     "file": "ts-object-recall/placeholder-types.ts",
     "findings": [
       {

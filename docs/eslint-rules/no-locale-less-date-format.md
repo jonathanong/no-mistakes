@@ -45,8 +45,8 @@ formatDate(date);
   and `new` expressions. A shadowing local object stays quiet. When the dotted
   name is listed and `unknownValues` is `"finding"`, the rule reports
   `unanalyzable` for a missing locale when the namespace comes from an import,
-  a `require()` call or member access, or `import = require()`. Other local
-  initializers are outside this check.
+  an unshadowed `require()` call or member access, or `import = require()`.
+  Other local initializers are outside this check.
   An `Intl.*Format` constructor or call whose only use is an immediate
   `.resolvedOptions()` call (including any property read on its result, such as
   `Intl.DateTimeFormat().resolvedOptions().timeZone` or

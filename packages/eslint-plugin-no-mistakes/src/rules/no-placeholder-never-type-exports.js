@@ -7,29 +7,21 @@ function specifierName(specifier) {
   return specifier.local?.name || specifier.exported?.name || specifier.exported?.value;
 }
 
-function declaredTypes(program) {
-  const declared = new Map();
-  for (const statement of program.body) {
-    const declaration =
-      statement.type === "ExportNamedDeclaration" || statement.type === "ExportDefaultDeclaration"
-        ? statement.declaration
-        : statement;
-    if (declaration?.id?.type !== "Identifier") continue;
-    switch (declaration.type) {
-      case "TSTypeAliasDeclaration":
-        declared.set(
-          declaration.id.name,
-          declaration.typeAnnotation?.type === "TSNeverKeyword" ? "never" : "other",
-        );
-        break;
-      case "TSInterfaceDeclaration":
-      case "ClassDeclaration":
-      case "TSEnumDeclaration":
-      case "TSModuleDeclaration":
-        declared.set(declaration.id.name, "other");
+function declaredType(scope, name) {
+  while (scope) {
+    const definitions = scope.set.get(name)?.defs;
+    if (definitions?.length) {
+      if (definitions.some((definition) => definition.type === "ImportBinding")) return undefined;
+      return definitions.some(
+        ({ node }) =>
+          node.type === "TSTypeAliasDeclaration" && node.typeAnnotation?.type === "TSNeverKeyword",
+      )
+        ? "never"
+        : "other";
     }
+    scope = scope.upper;
   }
-  return declared;
+  return undefined;
 }
 
 module.exports = Object.assign(
@@ -47,6 +39,7 @@ module.exports = Object.assign(
     },
     (context) => {
       const suppressed = ruleSuppression(context, "no-placeholder-never-type-exports");
+      const { sourceCode } = context;
       const exportSpecifiers = [];
       function report(node, messageId) {
         if (!suppressed(node)) context.report({ node, messageId });
@@ -58,14 +51,13 @@ module.exports = Object.assign(
         );
       }
       return {
-        "Program:exit"(program) {
-          const declared = declaredTypes(program);
+        "Program:exit"() {
           for (const node of exportSpecifiers) {
             let never = false;
             let unread = false;
             for (const specifier of node.specifiers) {
               if (node.exportKind !== "type" && specifier.exportKind !== "type") continue;
-              const kind = declared.get(specifierName(specifier));
+              const kind = declaredType(sourceCode.getScope(specifier), specifierName(specifier));
               if (kind === "never") never = true;
               else if (kind !== "other") unread = true;
             }

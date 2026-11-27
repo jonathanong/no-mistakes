@@ -17,6 +17,11 @@ it("reports unanalyzable type re-exports and keeps a same-file never export", as
     [15, "placeholder"],
     [26, "placeholder"],
   ]);
+  const ambientFile = "ts-object-recall/ambient-placeholder-types.d.ts";
+  const ambientFindings = pluginFindings(fixture(ambientFile), rule, undefined, ambientFile);
+  expect(ambientFindings.map((finding) => [finding.line, finding.messageId])).toEqual([
+    [8, "placeholder"],
+  ]);
   await expect(
     snapshotDocument(
       snapshotCases([
@@ -24,6 +29,12 @@ it("reports unanalyzable type re-exports and keeps a same-file never export", as
           name: "same-file never stays a placeholder and unread re-exports are unanalyzable",
           file,
           findings,
+          rule,
+        },
+        {
+          name: "ambient modules resolve aliases in their own scope",
+          file: ambientFile,
+          findings: ambientFindings,
           rule,
         },
       ]),

@@ -28,7 +28,8 @@ This rule has no options.
 This rule checks direct exported `never` declarations and explicit type exports
 of same-file `never` aliases. Other same-file aliases, interfaces, classes,
 enums, and namespaces stay quiet, including declarations already exported
-from the file. It does not read another module. These forms report
+from the file. Ambient modules resolve declarations from their lexical scope.
+The rule only reads the current file. These forms report
 `unanalyzable`, because the rule cannot tell whether the exported type is
 `never`:
 
