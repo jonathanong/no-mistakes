@@ -450,3 +450,35 @@ fn assert_malformed_skip(root: &Path) {
     let entries: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
     assert!(entries.is_empty(), "{entries:?}");
 }
+
+#[test]
+fn lockfile_diff_warns_and_omits_an_unreadable_worktree_lockfile() {
+    let repo = empty_repo();
+    let root = repo.path();
+    let lock = root.join("Cargo.lock");
+    std::fs::copy(ecosystem_lock("cargo/base.lock"), &lock).unwrap();
+    git_commit(root, &["Cargo.lock"], "valid");
+    std::fs::copy(ecosystem_lock("cargo/unreadable.lock"), &lock).unwrap();
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--lockfile",
+        "Cargo.lock",
+        "--format",
+        "json",
+    ]);
+    assert!(output.status.success());
+    let warnings = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        warnings.contains("`Cargo.lock` could not be read"),
+        "{warnings}"
+    );
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&stdout(&output)).unwrap(),
+        serde_json::json!([])
+    );
+}

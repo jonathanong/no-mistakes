@@ -12,27 +12,22 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
     let mut in_require = false;
     let mut saw_module = false;
     for raw in content.lines() {
-        let line = strip_comment(raw).trim().to_string();
-        if line.is_empty() {
-            continue;
-        }
-        if line.starts_with("module ") || line.starts_with("go ") {
-            saw_module = true;
-        }
-        if line == "require (" {
-            in_require = true;
-            continue;
-        }
-        if in_require && line == ")" {
-            in_require = false;
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("require ") {
-            push_require(rest, &mut out)?;
-            continue;
-        }
+        let line = strip_comment(raw).trim();
         if in_require {
-            push_require(&line, &mut out)?;
+            if line == ")" {
+                in_require = false;
+            } else if !line.is_empty() {
+                push_require(line, &mut out)?;
+            }
+            continue;
+        }
+        let end = line.find(|ch: char| ch.is_whitespace() || ch == '(');
+        let (directive, rest) = line.split_at(end.unwrap_or(line.len()));
+        match directive {
+            "module" | "go" if !rest.trim().is_empty() => saw_module = true,
+            "require" if rest.trim() == "(" => in_require = true,
+            "require" => push_require(rest, &mut out)?,
+            _ => {}
         }
     }
     if in_require || (out.is_empty() && !saw_module) {
@@ -43,18 +38,32 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
 
 fn push_require(rest: &str, out: &mut Vec<ResolvedPackage>) -> Result<(), GoModError> {
     let mut parts = rest.split_whitespace();
-    let name = parts.next().ok_or(GoModError)?;
-    let version = parts.next().ok_or(GoModError)?;
-    if !version.starts_with('v') {
+    let name = token(parts.next().ok_or(GoModError)?)?;
+    let version = token(parts.next().ok_or(GoModError)?)?;
+    if name.is_empty() || !version.starts_with('v') || parts.next().is_some() {
         return Err(GoModError);
     }
     out.push(ResolvedPackage {
-        name: name.to_string(),
-        version: version.to_string(),
+        name,
+        version,
         fingerprint: String::new(),
         kind: ResolutionKind::Registry,
     });
     Ok(())
+}
+
+fn token(raw: &str) -> Result<String, GoModError> {
+    if raw.starts_with('"') {
+        return serde_json::from_str(raw).map_err(|_| GoModError);
+    }
+    if let Some(rest) = raw.strip_prefix('`') {
+        return rest
+            .strip_suffix('`')
+            .filter(|body| !body.contains('`'))
+            .map(str::to_string)
+            .ok_or(GoModError);
+    }
+    Ok(raw.to_string())
 }
 
 fn strip_comment(line: &str) -> &str {

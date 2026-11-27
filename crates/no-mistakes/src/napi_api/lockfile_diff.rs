@@ -148,7 +148,9 @@ fn diff_one_lockfile(
     };
     let new_content = match head {
         Some(head) => git_lockfile_content(git_root, head, &rel, "head")?,
-        None => std::fs::read_to_string(lf_path).unwrap_or_default(),
+        None => lockfile::read_worktree_lockfile(lf_path).map_err(|error| {
+            napi::Error::from_reason(format!("`{rel}` could not be read: {error}"))
+        })?,
     };
     let old_content = git_lockfile_content(git_root, base, &rel, "base")?;
     let old_pkgs = packages_for_entry(manager, &rel, &old_content)?;

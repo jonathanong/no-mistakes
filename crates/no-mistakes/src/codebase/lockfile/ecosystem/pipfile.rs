@@ -9,15 +9,17 @@ pub(crate) fn parse(content: &str) -> Vec<ResolvedPackage> {
 
 pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, PipfileError> {
     let root: serde_json::Value = serde_json::from_str(content).map_err(|_| PipfileError)?;
+    let categories = root.as_object().ok_or(PipfileError)?;
     let mut saw_section = false;
     let mut out = Vec::new();
-    for key in ["default", "develop"] {
-        if let Some(value) = root.get(key) {
-            let section = value.as_object().ok_or(PipfileError)?;
-            saw_section = true;
-            for (name, entry) in section {
-                out.push(parse_entry(name, entry)?);
-            }
+    for (name, value) in categories {
+        if name == "_meta" {
+            continue;
+        }
+        let section = value.as_object().ok_or(PipfileError)?;
+        saw_section = true;
+        for (name, entry) in section {
+            out.push(parse_entry(name, entry)?);
         }
     }
     if !saw_section {

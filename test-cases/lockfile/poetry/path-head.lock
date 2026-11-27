@@ -1,0 +1,14 @@
+[[package]]
+name = "sample-directory"
+version = "1.0.0"
+[package.source]
+type = "directory"
+url = "../example-b"
+
+[[package]]
+name = "sample-archive"
+version = "1.0.0"
+files = [{ file = "example.whl", hash = "sha256:sample" }]
+[package.source]
+type = "file"
+url = "../example.whl"

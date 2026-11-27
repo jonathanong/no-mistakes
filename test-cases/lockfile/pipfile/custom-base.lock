@@ -1,0 +1,7 @@
+{
+  "default": {},
+  "develop": {},
+  "docs": {
+    "sample-docs": { "version": "==1.0.0" }
+  }
+}

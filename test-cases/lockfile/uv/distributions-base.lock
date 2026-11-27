@@ -1,0 +1,17 @@
+version = 1
+
+[[package]]
+name = "sample-sdist"
+version = "1.0.0"
+sdist = { hash = "sha256:aaaa" }
+
+[[package]]
+name = "sample-wheel"
+version = "1.0.0"
+sdist = { hash = "sha256:aaaa" }
+wheels = [{ hash = "sha256:wheel" }]
+
+[[package]]
+name = "sample-archive"
+version = "1.0.0"
+source = { url = "https://packages.example.invalid/example.tar.gz" }

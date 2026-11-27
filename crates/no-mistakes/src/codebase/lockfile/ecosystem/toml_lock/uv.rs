@@ -18,7 +18,9 @@ struct UvPackage {
     #[serde(default)]
     source: Option<UvSource>,
     #[serde(default)]
-    wheels: Vec<UvWheel>,
+    wheels: Vec<UvDistribution>,
+    #[serde(default)]
+    sdist: Option<UvDistribution>,
 }
 
 #[derive(Deserialize, Default)]
@@ -28,15 +30,17 @@ struct UvSource {
     #[serde(default)]
     rev: Option<String>,
     #[serde(default)]
-    editable: Option<toml::Value>,
+    url: Option<String>,
     #[serde(default)]
-    directory: Option<toml::Value>,
+    editable: Option<String>,
+    #[serde(default)]
+    directory: Option<String>,
     #[serde(default, rename = "virtual")]
-    r#virtual: Option<toml::Value>,
+    r#virtual: Option<String>,
 }
 
 #[derive(Deserialize)]
-struct UvWheel {
+struct UvDistribution {
     #[serde(default)]
     hash: Option<String>,
 }
@@ -50,7 +54,12 @@ pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
 }
 
 fn package(pkg: UvPackage) -> ResolvedPackage {
-    let (kind, fingerprint) = resolution(pkg.source.as_ref(), &pkg.wheels);
+    let distribution_hash = pkg
+        .wheels
+        .iter()
+        .find_map(|wheel| wheel.hash.as_deref())
+        .or_else(|| pkg.sdist.as_ref().and_then(|sdist| sdist.hash.as_deref()));
+    let (kind, fingerprint) = resolution(pkg.source.as_ref(), distribution_hash);
     ResolvedPackage {
         name: pkg.name,
         version: pkg.version,
@@ -59,9 +68,15 @@ fn package(pkg: UvPackage) -> ResolvedPackage {
     }
 }
 
-fn resolution(source: Option<&UvSource>, wheels: &[UvWheel]) -> (ResolutionKind, String) {
+fn resolution(
+    source: Option<&UvSource>,
+    distribution_hash: Option<&str>,
+) -> (ResolutionKind, String) {
     let Some(source) = source else {
-        return (ResolutionKind::Registry, wheel_hash(wheels));
+        return (
+            ResolutionKind::Registry,
+            distribution_hash.unwrap_or_default().to_string(),
+        );
     };
     if let Some(git) = source.git.as_deref() {
         return (ResolutionKind::Git, git_pin(git, source.rev.as_deref()));
@@ -69,7 +84,16 @@ fn resolution(source: Option<&UvSource>, wheels: &[UvWheel]) -> (ResolutionKind,
     if source.editable.is_some() || source.directory.is_some() || source.r#virtual.is_some() {
         return (ResolutionKind::Directory, String::new());
     }
-    (ResolutionKind::Registry, wheel_hash(wheels))
+    if let Some(url) = source.url.as_deref() {
+        return (
+            ResolutionKind::Tarball,
+            distribution_hash.unwrap_or(url).to_string(),
+        );
+    }
+    (
+        ResolutionKind::Registry,
+        distribution_hash.unwrap_or_default().to_string(),
+    )
 }
 
 fn git_pin(url: &str, rev: Option<&str>) -> String {
@@ -78,11 +102,4 @@ fn git_pin(url: &str, rev: Option<&str>) -> String {
         .filter(|fragment| !fragment.is_empty())
         .map(str::to_string)
         .unwrap_or_else(|| rev.unwrap_or("").to_string())
-}
-
-fn wheel_hash(wheels: &[UvWheel]) -> String {
-    wheels
-        .iter()
-        .find_map(|wheel| wheel.hash.clone())
-        .unwrap_or_default()
 }

@@ -35,6 +35,8 @@ struct PoetrySource {
     reference: Option<String>,
     #[serde(default)]
     resolved_reference: Option<String>,
+    #[serde(default)]
+    url: Option<String>,
 }
 
 #[derive(Deserialize, Default)]
@@ -69,7 +71,7 @@ fn kind_of(source: Option<&PoetrySource>) -> ResolutionKind {
     match source.and_then(|source| source.kind.as_deref()) {
         Some("git") => ResolutionKind::Git,
         Some("directory") => ResolutionKind::Directory,
-        Some("url") => ResolutionKind::Tarball,
+        Some("url" | "file") => ResolutionKind::Tarball,
         _ => ResolutionKind::Registry,
     }
 }
@@ -87,6 +89,11 @@ fn fingerprint(
             if let Some(pin) = nonempty(&source.reference) {
                 return pin;
             }
+        }
+    }
+    if kind == ResolutionKind::Directory {
+        if let Some(path) = source.and_then(|source| nonempty(&source.url)) {
+            return path;
         }
     }
     first_hash(files)

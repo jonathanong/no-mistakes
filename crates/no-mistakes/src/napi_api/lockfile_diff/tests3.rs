@@ -69,6 +69,28 @@ fn lockfile_diff_json_impl_rejects_malformed_cargo_lock() {
     );
 }
 
+#[test]
+fn lockfile_diff_json_impl_distinguishes_unreadable_from_missing_worktree_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    setup_git_repo(root);
+    let lock = root.join("Cargo.lock");
+    std::fs::copy(ecosystem_lock("cargo/base.lock"), &lock).unwrap();
+    git_commit(root, "valid");
+
+    std::fs::copy(ecosystem_lock("cargo/unreadable.lock"), &lock).unwrap();
+    let error = diff_lock(root).unwrap_err();
+    assert!(
+        error.reason.contains("`Cargo.lock` could not be read"),
+        "{}",
+        error.reason
+    );
+
+    std::fs::remove_file(lock).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&diff_lock(root).unwrap()).unwrap();
+    assert!(!report[0]["removed"].as_array().unwrap().is_empty());
+}
+
 fn ecosystem_lock(name: &str) -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/lockfile")

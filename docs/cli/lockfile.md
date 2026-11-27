@@ -48,11 +48,13 @@ A `[package.dependencies]` table stays on that package. Cargo `registry+` and
 `checksum` or the source string. `path+` is a directory. A package with no
 source is the workspace. Poetry git uses `resolved_reference`, then
 `reference`. Other Poetry packages use the first file hash, including
-`[metadata.files]`. Poetry `directory` is a directory and `url` is a tarball.
+`[metadata.files]`. A Poetry directory uses its source path as the fingerprint.
+Poetry `url` and `file` sources are tarballs.
 uv git uses the commit in the URL fragment after `#`, then `rev`. uv
 `editable`, `directory`, and `virtual` sources are directories and may omit
-`version`. A uv registry package uses the first wheel hash. `Pipfile.lock`
-reads `default` and `develop`. The object key is the name. A leading `==` is
+`version`. uv uses the first wheel hash or falls back to the source-distribution
+hash. A direct URL source is a tarball. `Pipfile.lock` reads `default`,
+`develop`, and custom package categories. The object key is the name. A leading `==` is
 removed from `version`. A git or path entry may omit `version`; its
 fingerprint is `ref` or `path`. File, URL, and other version-control sources
 may omit `version`. Their source URL forms the fingerprint. A registry entry
@@ -66,7 +68,7 @@ fingerprints, and `PATH` is a directory. `composer.lock` reads `packages` and
 directory, and a git source with no dist is git.
 
 A malformed file of one of those managers is not an empty package list.
-`lockfile diff` warns and omits that file. The async
+`lockfile diff` warns and omits malformed or unreadable working-tree files. The async
 `lockfileDiff()` call rejects with the same description. `pom.xml`, Gradle
 lockfiles, `mix.lock`, and `pubspec.yaml` are not lockfile diffs.
 

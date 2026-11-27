@@ -24,6 +24,12 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         let line = raw.trim_end_matches('\r');
         let indent = line.chars().take_while(|ch| *ch == ' ').count();
         let trimmed = line.trim();
+        if ["<<<<<<<", "|||||||", "=======", ">>>>>>>"]
+            .iter()
+            .any(|marker| trimmed.starts_with(marker))
+        {
+            return Err(GemfileError);
+        }
         if trimmed.is_empty() {
             continue;
         }

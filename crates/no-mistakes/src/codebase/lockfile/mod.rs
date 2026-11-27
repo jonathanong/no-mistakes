@@ -134,6 +134,13 @@ pub fn binary_lockfile_warning(basename: &str) -> String {
     format!("`{basename}` is a binary lockfile and cannot be parsed for dependency changes")
 }
 
+pub fn read_worktree_lockfile(path: &std::path::Path) -> std::io::Result<String> {
+    match std::fs::read_to_string(path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
+        result => result,
+    }
+}
+
 pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPackage> {
     match manager {
         PackageManager::Npm => npm::parse(content),

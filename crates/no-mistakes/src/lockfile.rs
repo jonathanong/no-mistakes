@@ -103,7 +103,13 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             };
             c
         } else {
-            std::fs::read_to_string(lf_path).unwrap_or_default()
+            match lockfile::read_worktree_lockfile(lf_path) {
+                Ok(content) => content,
+                Err(error) => {
+                    eprintln!("warning: `{rel}` could not be read: {error}; skipping it");
+                    continue;
+                }
+            }
         };
         let Some(old_content) = git_content_or_empty(&git_root, &args.base, &rel)? else {
             eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);

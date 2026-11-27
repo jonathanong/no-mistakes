@@ -127,3 +127,86 @@ fn composer_null_development_section_preserves_production_packages() {
         ResolutionKind::Registry,
     );
 }
+
+#[test]
+fn checked_gemfile_rejects_conflict_markers() {
+    assert!(packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "conflicted.lock")
+    )
+    .is_err());
+}
+
+#[test]
+fn go_requirements_allow_tabs_and_quoted_tokens_but_reject_extra_tokens() {
+    let packages = packages_for_diff(PackageManager::Go, &fixture("gomod", "quoted.mod")).unwrap();
+    expect(
+        &packages,
+        "example.invalid/quoted",
+        "v1.2.3",
+        "",
+        ResolutionKind::Registry,
+    );
+    expect(
+        &packages,
+        "example.invalid/raw",
+        "v2.3.4",
+        "",
+        ResolutionKind::Registry,
+    );
+    assert!(packages_for_diff(PackageManager::Go, &fixture("gomod", "extra-token.mod")).is_err());
+}
+
+#[test]
+fn pipfile_custom_category_changes_are_reported() {
+    let base = packages_for_diff(
+        PackageManager::Pipfile,
+        &fixture("pipfile", "custom-base.lock"),
+    )
+    .unwrap();
+    let head = packages_for_diff(
+        PackageManager::Pipfile,
+        &fixture("pipfile", "custom-head.lock"),
+    )
+    .unwrap();
+    assert_eq!(diff(&base, &head).changed, ["sample-docs"]);
+}
+
+#[test]
+fn poetry_directory_path_changes_and_local_archive_kinds_are_reported() {
+    let base =
+        packages_for_diff(PackageManager::Poetry, &fixture("poetry", "path-base.lock")).unwrap();
+    let head =
+        packages_for_diff(PackageManager::Poetry, &fixture("poetry", "path-head.lock")).unwrap();
+    expect(
+        &base,
+        "sample-archive",
+        "1.0.0",
+        "sha256:sample",
+        ResolutionKind::Tarball,
+    );
+    assert_eq!(diff(&base, &head).changed, ["sample-directory"]);
+}
+
+#[test]
+fn uv_uses_source_hash_without_wheels_and_classifies_direct_archives() {
+    let base = packages_for_diff(
+        PackageManager::Uv,
+        &fixture("uv", "distributions-base.lock"),
+    )
+    .unwrap();
+    let head = packages_for_diff(
+        PackageManager::Uv,
+        &fixture("uv", "distributions-head.lock"),
+    )
+    .unwrap();
+    expect(
+        &base,
+        "sample-archive",
+        "1.0.0",
+        "https://packages.example.invalid/example.tar.gz",
+        ResolutionKind::Tarball,
+    );
+    assert_eq!(diff(&base, &head).changed, ["sample-sdist"]);
+    assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "invalid-source.lock")).is_err());
+}
