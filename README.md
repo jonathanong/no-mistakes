@@ -298,6 +298,17 @@ codex plugin add no-mistakes@ratchet-stack
 codex plugin add no-mistakes-rules@ratchet-stack
 ```
 
+If you added the former `harness-plugins` marketplace, remove its plugins and
+marketplace after adding `ratchet-stack`, so the old copies of the skills do not
+load alongside the new ones:
+
+```sh
+claude plugin marketplace remove harness-plugins
+codex plugin remove no-mistakes@harness-plugins
+codex plugin remove no-mistakes-rules@harness-plugins
+codex plugin marketplace remove harness-plugins
+```
+
 ### Example recipes
 
 | Goal | Command |
