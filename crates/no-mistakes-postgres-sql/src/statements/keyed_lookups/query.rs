@@ -50,7 +50,8 @@ fn inspect_limits(
     }
     let outer = scopes.snapshot();
     let mut seen = BTreeMap::<LookupKey, _>::new();
-    let mut visit = |expr: &Expr| subquery::inspect_expr(expr, &outer, &mut seen, out);
+    let targets = super::select_exprs::ProjectionTargets::default();
+    let mut visit = |expr: &Expr| subquery::inspect_expr(expr, &outer, &targets, &mut seen, out);
     visit_shallow_exprs(&query.limit_clause, &mut visit);
     visit_shallow_exprs(&query.fetch, &mut visit);
     walk_nested_queries(&query.limit_clause, scopes, out);

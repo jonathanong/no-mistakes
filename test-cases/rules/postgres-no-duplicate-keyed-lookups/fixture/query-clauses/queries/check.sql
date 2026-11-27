@@ -55,10 +55,10 @@ WINDOW w1 AS (
 
 SELECT o.id
 FROM orders o
-JOIN accounts a ON a.id = o.account_id AND pg_catalog.concat(a."x,self.y") <> ''
-JOIN accounts b ON b.id = o.account_id AND pg_catalog.concat(b.x, b.y) <> '';
+JOIN accounts a ON a.id = o.account_id AND pg_catalog.substr(a."x,self.y", 1) <> ''
+JOIN accounts b ON b.id = o.account_id AND pg_catalog.substr(b.x, b.y, 1) <> '';
 
 SELECT o.id
 FROM orders o
-JOIN accounts a ON a.id = o.account_id AND pg_catalog.concat(a."x,self.y") <> ''
-JOIN accounts b ON b.id = o.account_id AND pg_catalog.concat(b."x,self.y") <> '';
+JOIN accounts a ON a.id = o.account_id AND pg_catalog.substr(a."x,self.y", 1) <> ''
+JOIN accounts b ON b.id = o.account_id AND pg_catalog.substr(b."x,self.y", 1) <> '';

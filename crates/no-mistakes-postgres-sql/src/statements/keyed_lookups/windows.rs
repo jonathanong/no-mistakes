@@ -1,13 +1,15 @@
 use super::select_item_expr;
 use crate::fx::FxHashSet;
 use crate::idents::ident_key;
-use sqlparser::ast::{Expr, NamedWindowExpr, Query, Select, Visit, Visitor, WindowType};
+use sqlparser::ast::{
+    Expr, NamedWindowExpr, Query, Select, Visit, Visitor, WindowFrameBound, WindowSpec, WindowType,
+};
 use std::ops::ControlFlow;
 
 pub(super) fn referenced_expressions<'a>(
     select: &'a Select,
     order_by: &'a [&'a Expr],
-) -> impl Iterator<Item = &'a Expr> {
+) -> impl Iterator<Item = (&'a Expr, bool)> {
     let mut references = WindowReferences::default();
     if !select.named_window.is_empty() {
         for expr in select
@@ -39,11 +41,25 @@ pub(super) fn referenced_expressions<'a>(
             }
             _ => None,
         })
-        .flat_map(|spec| {
-            spec.partition_by
-                .iter()
-                .chain(spec.order_by.iter().map(|item| &item.expr))
-        })
+        .flat_map(window_expressions)
+}
+
+pub(super) fn window_expressions(spec: &WindowSpec) -> impl Iterator<Item = (&Expr, bool)> {
+    let frame_bounds = spec.window_frame.iter().flat_map(|frame| {
+        std::iter::once(&frame.start_bound)
+            .chain(frame.end_bound.iter())
+            .filter_map(|bound| match bound {
+                WindowFrameBound::Preceding(expr) | WindowFrameBound::Following(expr) => {
+                    expr.as_deref()
+                }
+                WindowFrameBound::CurrentRow => None,
+            })
+    });
+    spec.partition_by
+        .iter()
+        .chain(spec.order_by.iter().map(|item| &item.expr))
+        .map(|expr| (expr, true))
+        .chain(frame_bounds.map(|expr| (expr, false)))
 }
 
 #[derive(Default)]

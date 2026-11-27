@@ -176,3 +176,15 @@ fn skips_only_incomplete_statements_during_lookup_extraction() {
     assert!(facts.parse_failed);
     assert_eq!(lines, [1, 3]);
 }
+
+#[test]
+fn proves_using_bindings_and_distinguishes_reused_window_targets_from_frame_bounds() {
+    let facts = fixture_facts("review-window-using");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(sites, [(19, 20), (32, 33), (40, 41), (71, 72)]);
+}

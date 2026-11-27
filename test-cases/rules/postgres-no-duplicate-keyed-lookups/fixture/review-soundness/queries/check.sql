@@ -52,7 +52,7 @@ FROM orders o JOIN accounts a USING (id),
 
 SELECT a.name, b.tier
 FROM orders o JOIN accounts a USING (id),
-     extras x JOIN accounts b USING (id) JOIN accounts c USING (id);
+     accounts x JOIN accounts b USING (id) JOIN accounts c USING (id);
 
 SELECT
     (SELECT name FROM accounts a WHERE a.id = o.account_id),

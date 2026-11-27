@@ -3,7 +3,9 @@ use super::expr_norm::ExprNormalizer;
 use super::join::record_lookup;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::ScopeSnapshot;
+use super::select_exprs::ProjectionTargets;
 use super::table::lookup_table;
+use super::windows::window_expressions;
 use crate::idents::{
     ident_key, object_name_identity, relation_suffix_name, unwrap_expr, visit_child_exprs,
     visit_shallow_exprs,
@@ -11,7 +13,7 @@ use crate::idents::{
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Expr, FunctionArguments, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr,
-    Spanned, Visit, Visitor,
+    Spanned, Visit, Visitor, WindowType,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -19,6 +21,7 @@ use std::ops::ControlFlow;
 pub(super) fn inspect_expr(
     expr: &Expr,
     outer: &ScopeSnapshot,
+    targets: &ProjectionTargets<'_>,
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
@@ -35,26 +38,26 @@ pub(super) fn inspect_expr(
             ..
         } => {
             if let Some(operand) = operand {
-                inspect_expr(operand, outer, seen, out);
+                inspect_expr(operand, outer, targets, seen, out);
             }
             let mut cond_seen = seen.clone();
             for (index, branch) in conditions.iter().enumerate() {
                 if index == 0 {
-                    inspect_expr(&branch.condition, outer, seen, out);
+                    inspect_expr(&branch.condition, outer, targets, seen, out);
                     cond_seen = seen.clone();
                 } else {
-                    inspect_expr(&branch.condition, outer, &mut cond_seen, out);
+                    inspect_expr(&branch.condition, outer, targets, &mut cond_seen, out);
                 }
                 let mut arm_seen = cond_seen.clone();
-                inspect_expr(&branch.result, outer, &mut arm_seen, out);
+                inspect_expr(&branch.result, outer, targets, &mut arm_seen, out);
             }
             if let Some(else_expr) = else_result {
                 let mut else_seen = cond_seen;
-                inspect_expr(else_expr, outer, &mut else_seen, out);
+                inspect_expr(else_expr, outer, targets, &mut else_seen, out);
             }
         }
         other => {
-            let mut visit = |child: &Expr| inspect_expr(child, outer, seen, out);
+            let mut visit = |child: &Expr| inspect_expr(child, outer, targets, seen, out);
             visit_child_exprs(other, &mut visit);
             if let Expr::Function(function) = other {
                 for arguments in [&function.parameters, &function.args] {
@@ -62,7 +65,13 @@ pub(super) fn inspect_expr(
                         visit_shallow_exprs(&list.clauses, &mut visit);
                     }
                 }
-                visit_shallow_exprs(&function.over, &mut visit);
+                if let Some(WindowType::WindowSpec(spec)) = &function.over {
+                    for (expr, can_reuse) in window_expressions(spec) {
+                        if !can_reuse || !targets.reuses(expr) {
+                            visit(expr);
+                        }
+                    }
+                }
                 visit_shallow_exprs(&function.within_group, &mut visit);
             }
         }

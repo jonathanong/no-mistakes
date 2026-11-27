@@ -107,12 +107,12 @@ fn walk_select(
     for table in &select.from {
         register_table_with_joins(table, scopes, &mut seen, out);
     }
-    inspect_exprs(
-        select_exprs::inspectable(select, order_exprs),
-        scopes,
-        &mut seen,
-        out,
-    );
+    let outer = scopes.snapshot();
+    let targets = select_exprs::ProjectionTargets::new(&select.projection);
+    for expr in select_exprs::inspectable(select, order_exprs, &targets) {
+        subquery::inspect_expr(expr, &outer, &targets, &mut seen, out);
+        walk_nested_queries(expr, scopes, out);
+    }
     scopes.pop_frame();
 }
 
@@ -134,8 +134,9 @@ fn inspect_exprs<'a>(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     let outer = scopes.snapshot();
+    let targets = select_exprs::ProjectionTargets::default();
     for expr in exprs {
-        subquery::inspect_expr(expr, &outer, seen, out);
+        subquery::inspect_expr(expr, &outer, &targets, seen, out);
         walk_nested_queries(expr, scopes, out);
     }
 }

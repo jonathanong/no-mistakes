@@ -201,7 +201,7 @@ fn detects_values_group_by_chained_using_join_on_case_arm_and_merge_predicates()
             (SELECT tier FROM accounts WHERE id = o.account_id);
 
         SELECT o.id, a.name, b.tier
-        FROM orders o
+        FROM accounts o
         LEFT JOIN accounts a USING (account_id)
         LEFT JOIN accounts b USING (account_id);
 

@@ -1,9 +1,10 @@
 use super::super::normalize::LookupKey;
 use super::super::scope::ScopeStack;
+use super::super::table::lookup_table;
 use super::super::{inspect_exprs, walk_query};
 use super::register_join_chain;
 use super::using_clause::UsingColumns;
-use crate::idents::function_arg_expr;
+use crate::idents::{function_arg_expr, object_name_identity};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::TableFactor;
 use std::collections::BTreeMap;
@@ -55,5 +56,8 @@ pub(super) fn register_factor(
         }
         _ => None,
     };
-    UsingColumns::for_binding(binding)
+    UsingColumns::for_binding(
+        binding,
+        lookup_table(factor).map(|(name, _)| object_name_identity(name)),
+    )
 }

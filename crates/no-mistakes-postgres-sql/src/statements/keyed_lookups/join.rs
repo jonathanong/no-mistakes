@@ -53,9 +53,11 @@ fn inspect_join(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     let constraint = join_constraint(&join.join_operator);
-    if let Some((name, alias)) = lookup_table(&join.relation) {
+    let target =
+        lookup_table(&join.relation).map(|(name, alias)| (object_name_identity(name), alias));
+    if let Some((relation, alias)) = &target {
         if let Some((key, display)) =
-            join_lookup(name, alias, constraint, &scopes.snapshot(), using)
+            join_lookup(relation, *alias, constraint, &scopes.snapshot(), using)
         {
             let start = join.relation.span().start;
             let line = start.line.max(1) as usize;
@@ -64,7 +66,11 @@ fn inspect_join(
         }
     }
     register_factor(&join.relation, scopes, seen, out);
-    using.advance(&join.join_operator, constraint);
+    using.advance(
+        &join.join_operator,
+        constraint,
+        target.as_ref().map(|(relation, _)| relation.as_str()),
+    );
     if let Some(JoinConstraint::On(expr)) = constraint {
         inspect_exprs(std::iter::once(expr), scopes, seen, out);
     }
@@ -84,22 +90,21 @@ fn join_constraint(op: &JoinOperator) -> Option<&JoinConstraint> {
 }
 
 fn join_lookup(
-    name: &ObjectName,
+    relation: &str,
     alias: Option<&TableAlias>,
     constraint: Option<&JoinConstraint>,
     outer: &ScopeSnapshot,
     using: &UsingColumns,
 ) -> Option<(LookupKey, String)> {
-    let relation = object_name_identity(name);
     match constraint? {
         JoinConstraint::On(expr) => {
             let self_qualifier = match alias {
                 Some(alias) => ident_key(&alias.name),
-                None => relation_suffix_name(&relation),
+                None => relation_suffix_name(relation),
             };
-            extract_lookup_key(&relation, &self_qualifier, false, expr, outer, &[], None)
+            extract_lookup_key(relation, &self_qualifier, false, expr, outer, &[], None)
         }
-        JoinConstraint::Using(columns) => using_lookup(relation, columns, using),
+        JoinConstraint::Using(columns) => using_lookup(relation.to_owned(), columns, using),
         _ => None,
     }
 }

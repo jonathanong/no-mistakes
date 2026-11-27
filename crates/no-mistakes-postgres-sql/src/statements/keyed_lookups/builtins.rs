@@ -17,8 +17,6 @@ pub(super) const SAFE_PURE_FUNCTIONS: &[&str] = &[
     "octet_length",
     "replace",
     "split_part",
-    "concat",
-    "concat_ws",
     "abs",
     "ceil",
     "ceiling",

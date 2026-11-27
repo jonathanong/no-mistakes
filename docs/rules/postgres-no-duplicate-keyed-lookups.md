@@ -30,7 +30,9 @@ row-limit clauses.
   aliases (`accounts a1` vs `accounts a2`).
 - Repeated `JOIN` clauses (`INNER`, `LEFT`, `RIGHT`, `FULL`, `USING`) against
   the same relation on the same key, regardless of equality operand order
-  (`a.id = o.account_id` vs `o.account_id = a.id`).
+  (`a.id = o.account_id` vs `o.account_id = a.id`). For a chained
+  `USING` join, both inputs of the preceding merge must have a provably
+  identical column type, such as two aliases of the same relation.
 - A `JOIN` combined with a correlated scalar subquery against the same relation
   and key.
 - Equivalent PostgreSQL cast spellings (`o.raw_id::uuid` and
