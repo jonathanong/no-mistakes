@@ -1,0 +1,238 @@
+{
+  "nextjs-metadata-exports-location": [
+    {
+      "file": "app/cards/page.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/CardSuppressed.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/dynamic-suppressed.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/other.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/local.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/cards/page.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/Card.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "app/components/Card.tsx",
+          "line": 2,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/Generate.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "app/components/Generate.tsx",
+          "line": 4,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/reexport.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 42,
+          "endLine": 1,
+          "file": "app/components/reexport.ts",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/card.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 1,
+          "file": "app/components/card.js",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/generate.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 1,
+          "file": "app/components/generate.js",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/string.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 1,
+          "file": "app/components/string.js",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/module.js",
+      "findings": [
+        {
+          "column": 20,
+          "endColumn": 47,
+          "endLine": 1,
+          "file": "app/components/module.js",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/module-generate.js",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 4,
+          "endLine": 4,
+          "file": "app/components/module-generate.js",
+          "line": 2,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/spread.js",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 4,
+          "file": "app/components/spread.js",
+          "line": 4,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/dynamic.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 2,
+          "file": "app/components/dynamic.js",
+          "line": 2,
+          "message": "Could not resolve whether this CommonJS assignment exports metadata or generateMetadata. Use a static property name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/components/dynamic-module.js",
+      "findings": [
+        {
+          "column": 20,
+          "endColumn": 45,
+          "endLine": 2,
+          "file": "app/components/dynamic-module.js",
+          "line": 2,
+          "message": "Could not resolve whether this CommonJS assignment exports metadata or generateMetadata. Use a static property name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}
