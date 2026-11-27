@@ -236,7 +236,7 @@ suppression comments below apply to low findings and advisories too.
 At low effort, unmodeled helpers and tags, alias chains, imported SQL
 values, computed executor selections, unsupported factory executors or
 unproven type receivers, CommonJS loaders, and untyped wrapper callbacks
-such as `query(buildStatement())` follow `options.unanalyzable`. [Low effort routing](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_sql_cross_file/low.rs#L90-L128).
+such as `query(buildStatement())` follow `options.unanalyzable`. [Low effort routing](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_sql_cross_file/low.rs#L90-L128).
 
   - `report` (default): fails as a finding.
   - `advise`: a non-failing advisory.
@@ -245,7 +245,7 @@ such as `query(buildStatement())` follow `options.unanalyzable`. [Low effort rou
 Proven direct `process.env.*` relation violations remain findings under
 every policy. At max effort, the rule emits no uncertainty diagnostic for
 runtime-computed environment keys, unresolved imports, or cyclic aliases.
-[Max effort scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_unbounded_sql_identifier.rs#L76-L126).
+[Max effort scan](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_unbounded_sql_identifier.rs#L76-L126).
 
 ## Abstains
 
@@ -473,7 +473,7 @@ supported generated identifier shape, or an explicit trusted helper contract:
   not count. Unused entries produce `unused-allow-entry` on the configuration
   item; remove the entry or correct its module/name selector. The shared
   `reportUnusedAllowEntries` policy controls reporting (`advise` by default,
-  `report`, or `ignore`). [Default policy](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/schema.rs#L186-L192). This audit prevents stale trusted selectors from
+  `report`, or `ignore`). [Default policy](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/schema.rs#L186-L192). This audit prevents stale trusted selectors from
   silently missing their intended producers.
 - A known property returned by a resolved helper that selects a row from a
   closed literal record, including an exported `getIdentifiers(provider)`

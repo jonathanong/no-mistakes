@@ -18,7 +18,7 @@ Action files that cannot grant a token are skipped.
 The rule scans `jobs.*.steps` in `.github/workflows/*.{yml,yaml}`. A file in
 a subdirectory of `.github/workflows/` is not a workflow GitHub runs, so it
 is ignored. The rule excludes files under `.github/actions/` before reading
-their contents. Those files have no job permissions of their own. [Workflow selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/diagnostics.rs#L58-L63).
+their contents. Those files have no job permissions of their own. [Workflow selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/diagnostics.rs#L58-L63).
 
 Only actual `actions/checkout` steps are judged: a valid `pull_request_target`
 workflow without a checkout produces no finding. It reports a credential-
@@ -122,9 +122,8 @@ stays unknown when the option is on. Unknown option keys are rejected.
 branch. It has no default. For example, `defaultBranch: integration` accepts
 `with.ref: integration` and `with.ref: refs/heads/integration` when the checkout
 repository is statically the base repository. A `refs/heads/` prefix on the
-option is normalized. Empty names, expression-valued names, and `refs/pull/*`
-conventions are configuration errors; a PR ref cannot be whitelisted by this
-option. Bare 40- or 64-character hex values remain unknown because checkout
+option is normalized. Use a literal name that Git accepts as a branch. The
+loader rejects expressions, PR refs, and malformed branch names. Bare 40- or 64-character hex values remain unknown because checkout
 can interpret them as commit IDs; use `refs/heads/<configured-name>` for such
 a branch name. The semantic `${{ github.event.repository.default_branch }}` works
 without configuring a literal name. This option does not infer token permissions.
@@ -194,7 +193,7 @@ this conservative choice is intentional. See the
 [migration note](../migrations/github-actions-checkout-credentials-unanalyzable.md)
 for configuration and suppression examples.
 
-[reviewed-abstain]: https://github.com/jonathanong/no-mistakes/pull/2697#issuecomment-6383196957
+[reviewed-abstain]: https://github.com/jongleberry/no-mistakes/pull/2697#issuecomment-6383196957
 
 ## Valid example
 
@@ -326,7 +325,7 @@ Credential diagnostics name the file, job, step, and a static rewrite: set
 read-only permissions. For ref findings, the diagnostic recommends a base
 repository, a base-side ref, and literal false. Credential and ref verdicts
 are independent. A provable base checkout with the default token, read-only
-permissions, and literal or omitted persistence satisfies both. [Credential verdict](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/inputs.rs#L17-L37) and [ref diagnostics](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/checkout.rs#L51-L79).
+permissions, and literal or omitted persistence satisfies both. [Credential verdict](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/inputs.rs#L17-L37) and [ref diagnostics](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_checkout_credentials/checkout.rs#L51-L79).
 
 Invalid YAML reports its parser error and line;
 job and step are `unknown` because the document could not be parsed.

@@ -7,7 +7,7 @@ rust-version = "1.97"
 autotests = false
 license = "MIT"
 description = "Static analysis tools for codebase dependency and symbol queries"
-repository = "https://github.com/jonathanong/no-mistakes"
+repository = "https://github.com/jongleberry/no-mistakes"
 
 [lints]
 workspace = true

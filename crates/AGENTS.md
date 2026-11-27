@@ -21,7 +21,7 @@ Core check/evaluator optimizations must also follow [the crate rules](no-mistake
 - Change the algorithm before trimming copies: when a hot path stays dominant
   after copy/clone PRs, demand-prune inputs (recall-safe), compute shared
   summaries once bottom-up, or make restores cost writes, not state size.
-  Open work: [Perf milestones](https://github.com/jonathanong/no-mistakes/milestones).
+  Open work: [Perf milestones](https://github.com/jongleberry/no-mistakes/milestones).
 
 ### Prepared analysis, source-session ownership, and relationship projection
 

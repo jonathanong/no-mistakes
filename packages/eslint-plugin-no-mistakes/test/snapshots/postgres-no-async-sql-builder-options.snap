@@ -314,5 +314,33 @@
         ]
       }
     ]
+  },
+  {
+    "file": "literal-select.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 2,
+        "endLine": 3,
+        "file": "literal-select.ts",
+        "line": 1,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -9,7 +9,7 @@
 //! shapes must stay byte-for-byte compatible with, the same way `model.rs`
 //! is verified against `parse-workflow.mts`.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -131,7 +131,7 @@ pub enum ArtifactDeclaration {
     Download(ArtifactDownloadDeclaration),
 }
 
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum ArtifactMatchKind {
     Exact,

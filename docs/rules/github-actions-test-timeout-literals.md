@@ -12,13 +12,13 @@ in matching workflow tests.
 
 ## Options
 
-`include` defaults to workflow `.test.mts` and `.test.ts` files. Each `allow`
-entry requires `file`, exact trimmed `text`, and a non-empty `reason`; no other
-rule-specific options exist.
+Each `include` entry must be a valid glob. By default, the rule scans
+`.github/workflows/**/*.test.mts` and `.github/workflows/**/*.test.ts`.
 
-An allow entry with a missing or blank `file` is a configuration error, even
-when no workflow tests are selected. Stale entries with a file retain their
-existing diagnostic behavior.
+Each `allow` entry requires a non-blank `file`, `text`, and `reason`.
+Missing fields, blank values, and unknown fields fail config load with exit 2,
+including when no workflow tests are selected. Set `text` to the exact trimmed
+test line and `reason` to the justification for allowing it.
 
 ## Valid example
 
@@ -62,9 +62,8 @@ rules:
           reason: pins fromJSON branch values the timeout rule cannot resolve
 ```
 
-`include` defaults to `.github/workflows/**/*.test.mts` and `.github/workflows/**/*.test.ts`.
-`allow` keys are `${file}#${trimmed line}`. Empty `reason` is a finding.
-Unused `allow` entries for scanned files are findings.
+`allow` keys are `${file}#${trimmed line}`. Unused entries for scanned files
+are findings.
 
 Counterexample: a workflow test embeds `timeout-minutes: 15` in a string, or
 asserts `expect(step?.['timeout-minutes']).toBe(10)`.
@@ -102,7 +101,7 @@ expect(step?.['timeout-minutes']).toBe(10)
 
 The rule scans readable test sources for `timeout-minutes` fragments and
 `expect(...).toBe`, `toEqual`, `toStrictEqual`, and `toContain` assertions.
-It skips unreadable files and does not use `options.unanalyzable`. [Test source scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_test_timeout_literals/scan.rs#L8-L36).
+It skips unreadable files and does not use `options.unanalyzable`. [Test source scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_test_timeout_literals/scan.rs#L8-L36).
 
 Equality and containment assertions may span lines. Their finding starts at `expect(`; a reasoned allow entry for a multiline assertion uses the exact reported `target`, preserving internal newlines. The target includes the full source lines enclosing the matched timeout expression.
 

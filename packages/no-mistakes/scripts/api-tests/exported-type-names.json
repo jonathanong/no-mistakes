@@ -151,6 +151,8 @@
   "GithubActionsNoPollWaitJobOptions",
   "GithubActionsNoRequiredPrPathFiltersOptions",
   "GithubActionsPinnedHashOptions",
+  "GithubActionsPrDiffRangeOptions",
+  "GithubActionsRevisionPair",
   "GithubActionsRunCommandArg",
   "GithubActionsRunCommandArgScope",
   "GithubActionsRunCommandForbiddenPattern",
