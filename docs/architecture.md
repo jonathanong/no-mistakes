@@ -480,7 +480,7 @@ The ledger labels observed closure/helper events separately from full-collector
 counts derived from inspected nested helper call paths. Four-worker capacity is
 checked after stop; profiles must substantiate worker initialization/participation.
 
-All modes validate the same 118/70/67/7/6/49 fact and 143/14/118 edge/glob counts.
+All modes validate the same 149/70/67/7/6/49 fact and 143/14/149 edge/glob counts.
 Cold mode keeps edge/glob preflight after stop; the other modes validate their
 recorded prefix after stop. Request fact maps are destroyed within each helper;
 fixture data, global workers, and reusable regex pools remain alive at stop.
