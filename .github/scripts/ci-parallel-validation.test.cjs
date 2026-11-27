@@ -360,9 +360,7 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     "linux-api-tests",
     "timeout-policy-browser-tests",
     "native-build",
-    "native-build-macos",
     "native-test-build",
-    "native-test-build-macos",
     "native-rust-tests",
     "native-rust-tests-macos",
     "native-api-tests",
@@ -443,9 +441,9 @@ test("v2 workspace producers prefer matching manifests before compatible compile
   const producers = [
     "linux-runtime",
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
     "standalone-build",
     "rust-coverage-build",
   ];
@@ -483,9 +481,9 @@ test("v2 workspace producers prefer matching manifests before compatible compile
   );
   for (const name of [
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
   ]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);

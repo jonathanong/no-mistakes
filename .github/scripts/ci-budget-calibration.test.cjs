@@ -161,9 +161,7 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
 test("component job deadlines bound their steps while gates only aggregate results", () => {
   for (const name of [
     "native-build",
-    "native-build-macos",
     "native-test-build",
-    "native-test-build-macos",
     "native-rust-tests",
     "native-rust-tests-macos",
     "native-api-tests",
@@ -326,7 +324,7 @@ test("native build and test precompile deadlines use measured censored progress"
 
 test("macOS cold test precompile keeps the four-target archive inside the job", () => {
   const data = observed("macos-native-test-precompile-cold-cache");
-  const body = job("native-test-build-macos");
+  const body = job("native-rust-tests-macos");
   const precompile = stepBudget(body, precompileName);
   assert.equal(data.cache, "miss");
   assert.equal(data.stepLimitSeconds, 900);

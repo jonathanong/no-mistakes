@@ -119,10 +119,15 @@ test("native runtime download jobs outlive the download step and earlier step bo
     );
     if (downloadAt < 0) continue;
     covered.push(jobId);
+    const downloadsReusedBuildOnly =
+      steps[downloadAt].if === "${{ steps.build-artifact-source.outputs.reuse == 'true' }}";
     const required = steps.slice(0, downloadAt + 1).reduce((sum, step, index) => {
       const minutes = step["timeout-minutes"];
       assert.equal(typeof minutes, "number", `${jobId} step ${index} needs a literal timeout`);
-      return sum + minutes;
+      const skippedOnReuse = step.if?.includes(
+        "steps.build-artifact-source.outputs.reuse != 'true'",
+      );
+      return sum + (downloadsReusedBuildOnly && skippedOnReuse ? 0 : minutes);
     }, 0);
     const jobMinutes = job["timeout-minutes"];
     assert.equal(typeof jobMinutes, "number", `${jobId} needs a literal job timeout`);
