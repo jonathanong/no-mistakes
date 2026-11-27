@@ -1,3 +1,4 @@
+use serde_yaml::Value;
 use std::path::PathBuf;
 
 fn release_workflow() -> String {
@@ -169,8 +170,8 @@ fn validate_job_starts_isolated_catalog_postgres_after_disk_reclamation_before_t
 }
 
 #[test]
-fn native_releases_use_thin_lto_and_sixteen_codegen_units_before_cache_restore() {
-    let workflow = release_workflow();
+fn native_releases_set_target_profiles_before_cache_restore() {
+    let workflow: Value = serde_yaml::from_str(&release_workflow()).unwrap();
     let script = std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.github/scripts/cargo-release-build.sh"),
@@ -182,33 +183,56 @@ fn native_releases_use_thin_lto_and_sixteen_codegen_units_before_cache_restore()
     ));
     assert!(script.contains("crate-type = [\"rlib\", \"cdylib\"]"));
     assert!(!script.contains("--crate-type cdylib"));
-    let steps = job_body(&workflow, "build-native-linux-x64");
-    let (settings, step_body) = steps.split_once("\n    steps:").unwrap();
-    assert!(step_body.contains("fromJSON(env.NM_BUILD_TIMEOUT)"));
-    for (job, timeout, build_timeout) in [
-        ("build-native-linux-x64", "100", "65"),
-        ("build-native-linux-arm", "100", "65"),
-        ("build-native-darwin", "120", "90"),
-        ("build-native-windows", "120", "90"),
+    for (job, timeout, build_timeout, lto) in [
+        ("build-native-linux-x64", 100, "65", "thin"),
+        ("build-native-linux-arm", 100, "65", "thin"),
+        ("build-native-darwin", 120, "90", "thin"),
+        ("build-native-windows", 120, "90", "false"),
     ] {
-        let body = job_body(&workflow, job);
-        let (job_settings, job_steps) = body.split_once("\n    steps:").unwrap();
-        let cache = job_steps.find("Swatinem/rust-cache").unwrap();
-        let build = job_steps.find("cargo-release-build.sh").unwrap();
+        let native = &workflow["jobs"][job];
+        assert_eq!(native["timeout-minutes"].as_u64(), Some(timeout), "{job}");
+        let env = &native["env"];
+        assert_eq!(
+            env["CARGO_PROFILE_RELEASE_LTO"].as_str(),
+            Some(lto),
+            "{job}"
+        );
+        assert_eq!(
+            env["CARGO_PROFILE_RELEASE_CODEGEN_UNITS"].as_str(),
+            Some("16"),
+            "{job}"
+        );
+        assert_eq!(
+            env["NM_BUILD_TIMEOUT"].as_str(),
+            Some(build_timeout),
+            "{job}"
+        );
+
+        let steps = native["steps"].as_sequence().unwrap();
+        let cache = steps
+            .iter()
+            .position(|step| {
+                step["uses"]
+                    .as_str()
+                    .is_some_and(|action| action.starts_with("Swatinem/rust-cache@"))
+            })
+            .expect("native release must restore the Rust cache");
+        let build = steps
+            .iter()
+            .position(|step| {
+                step["run"]
+                    .as_str()
+                    .is_some_and(|run| run.contains("cargo-release-build.sh"))
+            })
+            .expect("native release must use the optimized build script");
         assert!(
             cache < build,
             "{job} must restore rust-cache before compiling"
         );
-        assert!(job_settings.contains(&format!("\n    timeout-minutes: {timeout}\n")));
-        for setting in [
-            "CARGO_PROFILE_RELEASE_LTO: thin",
-            "CARGO_PROFILE_RELEASE_CODEGEN_UNITS: \"16\"",
-            &format!("NM_BUILD_TIMEOUT: \"{build_timeout}\""),
-        ] {
-            assert!(job_settings.contains(&format!("      {setting}")));
-        }
-        assert!(!job_settings.contains("'fat'"));
-        assert!(!job_settings.contains("|| '1'"));
+        assert_eq!(
+            steps[build]["timeout-minutes"].as_str(),
+            Some("${{ fromJSON(env.NM_BUILD_TIMEOUT) }}"),
+            "{job}",
+        );
     }
-    assert!(settings.contains("CARGO_PROFILE_RELEASE_LTO: thin"));
 }

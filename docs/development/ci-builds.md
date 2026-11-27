@@ -798,8 +798,8 @@ working directory.
 
 ## Windows release build timings
 
-In [release run 46054077976](https://github.com/jongleberry/no-mistakes/actions/runs/46054077976/job/140692427880),
-the Windows native job took 46m39s. Defender exclusion succeeded in four
+On November 27, 2026, [release run 46054077976](https://github.com/jongleberry/no-mistakes/actions/runs/46054077976/job/140692427880)
+took 46m39s in its Windows native job. Defender exclusion succeeded in four
 seconds. Cache setup and a miss took 13 seconds, and Cargo began compiling
 16 seconds after updating the registry index. The run’s
 `release-timings-x86_64-pc-windows-msvc` artifact recorded 14m43s for the
@@ -813,11 +813,11 @@ also excluded the workspace from Defender and used the default MSVC linker.
 Its registry cache hit and its compiled workspace cache missed. Cargo took
 7m03s with the unoptimized development profile.
 
-Windows release builds now limit ThinLTO to the crate being compiled. This
-reduces cross-crate optimization work in the two serial compiler units and may
-change binary size or runtime performance. The optimized release profile still
+Windows release builds set `CARGO_PROFILE_RELEASE_LTO=false` to limit ThinLTO
+to the crate being compiled. This reduces cross-crate optimization work in the
+two serial compiler units and may change binary size or runtime performance. The optimized release profile still
 builds the CLI and addon together with the default MSVC linker and timings
-enabled. The next release's timing artifact provides the hosted comparison.
+enabled.
 [Cargo profile reference](https://doc.rust-lang.org/cargo/reference/profiles.html#lto).
 
 ## Release Rust resource budget
