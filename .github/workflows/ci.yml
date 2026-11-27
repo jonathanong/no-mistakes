@@ -1667,23 +1667,12 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run native CLI smoke test
+        id: native-cli
         timeout-minutes: 2
         shell: bash
         run: |
           chmod +x target/debug/no-mistakes* || true
           ./target/debug/no-mistakes${{ runner.os == 'Windows' && '.exe' || '' }} --version
-
-      - name: Install Rust
-        timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
-          toolchain: stable
-
-      - name: Run platform CLI invocation tests
-        timeout-minutes: 5
-        env:
-          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes.exe
-        run: node .github/scripts/smoke.cjs windows cli-rust
 
       - name: Run real N-API API test
         timeout-minutes: 10
@@ -1716,6 +1705,21 @@ jobs:
             target/native-api-shard.json
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
+
+      - name: Install Rust
+        id: cli-rust-toolchain
+        if: ${{ !cancelled() && steps.native-cli.outcome == 'success' }}
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Run platform CLI invocation tests
+        if: ${{ !cancelled() && steps.native-cli.outcome == 'success' && steps.cli-rust-toolchain.outcome == 'success' }}
+        timeout-minutes: 5
+        env:
+          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes.exe
+        run: node .github/scripts/smoke.cjs windows cli-rust
 
   # Keep the cold-build and test budgets on one runner. The existing step deadlines still apply.
   # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
@@ -1908,17 +1912,12 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run native CLI smoke test
+        id: native-cli
         timeout-minutes: 2
         shell: bash
         run: |
           chmod +x target/debug/no-mistakes* || true
           ./target/debug/no-mistakes${{ runner.os == 'Windows' && '.exe' || '' }} --version
-
-      - name: Run platform CLI invocation tests
-        timeout-minutes: 5
-        env:
-          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes
-        run: node .github/scripts/smoke.cjs macos cli-rust
 
       - name: Run real N-API API test
         timeout-minutes: 10
@@ -1952,6 +1951,13 @@ jobs:
             target/native-api-shard.json
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
+
+      - name: Run platform CLI invocation tests
+        if: ${{ !cancelled() && steps.native-cli.outcome == 'success' }}
+        timeout-minutes: 5
+        env:
+          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes
+        run: node .github/scripts/smoke.cjs macos cli-rust
 
 
   # PR-only macOS tier: one build, then an explicit OS-dependent test list from

@@ -161,7 +161,14 @@ test("native API jobs run the same CLI cases with the platform runtime on main a
     assert.match(step, /NO_MISTAKES_CLI_BIN:/);
     assert.ok(step.includes(`/target/debug/${binary}\n`));
     assert.ok(step.includes(`smoke.cjs ${os} cli-rust`));
-    assert.doesNotMatch(step, /if:|continue-on-error/);
+    assert.match(step, /if: .* !cancelled\(\) && steps\.native-cli\.outcome == 'success'/);
+    assert.doesNotMatch(step, /continue-on-error/);
+    assert.match(body, /name: Run native CLI smoke test\n +id: native-cli/);
+    assert.ok(
+      body.indexOf("Upload real N-API test durations") <
+        body.indexOf("Run platform CLI invocation tests"),
+    );
+    if (os === "windows") assert.match(step, /steps\.cli-rust-toolchain\.outcome == 'success'/);
     assert.deepEqual(
       cliCargoCommands(os),
       cargoCommands(os).filter((args) => args.includes("cli_smoke")),
