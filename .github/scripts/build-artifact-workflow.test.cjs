@@ -129,7 +129,12 @@ test("full macOS tests run on their builders and download only validated reused 
     for (const title of ["Validate build artifact source", build, upload, download, run])
       assert.ok(index(title) >= 0, `${name}: ${title}`);
     assert.match(body, /^    needs: changes$/m);
-    assert.ok(body.includes("timeout-minutes: 65"), name);
+    assert.ok(
+      body.includes(
+        name === "native-rust-tests-macos" ? "timeout-minutes: 20" : "timeout-minutes: 65",
+      ),
+      name,
+    );
     assert.ok(index("Validate build artifact source") < index(build), name);
     assert.ok(index(build) < index(upload) && index(upload) < index(run), name);
     assert.ok(index(download) < index(run), name);

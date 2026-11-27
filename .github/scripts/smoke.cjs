@@ -1,6 +1,5 @@
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
-const { profileArgs } = require("./native-rust-tests.cjs");
 const { cliFixture, napiFixture, platforms } = require("./smoke-tests.cjs");
 
 const root = path.resolve(__dirname, "../..");
@@ -16,10 +15,9 @@ function escape(name) {
 }
 
 function cargoCommands(os) {
-  const { label, rust } = platform(os);
+  const { rust } = platform(os);
   return rust.map(({ package: pkg = "no-mistakes", selector, args }) => [
     "test",
-    ...profileArgs(label, pkg),
     "--locked",
     "-p",
     pkg,
@@ -31,20 +29,12 @@ function cargoCommands(os) {
 // One --no-run invocation over every listed target, in the same profile and
 // package selection as cargoCommands, so the test step compiles nothing.
 function buildCommand(os) {
-  const { label, rust } = platform(os);
+  const { rust } = platform(os);
   const packages = new Set(rust.map(({ package: pkg = "no-mistakes" }) => pkg));
   if (packages.size !== 1) throw new Error(`smoke ${os} rust entries must share one package`);
   const [pkg] = packages;
   const selectors = new Map(rust.map(({ selector }) => [selector.join(" "), selector]));
-  return [
-    "test",
-    ...profileArgs(label, pkg),
-    "--locked",
-    "-p",
-    pkg,
-    "--no-run",
-    ...[...selectors.values()].flat(),
-  ];
+  return ["test", "--locked", "-p", pkg, "--no-run", ...[...selectors.values()].flat()];
 }
 
 function vitestArgs(os) {

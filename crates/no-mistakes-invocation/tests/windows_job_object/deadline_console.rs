@@ -1,4 +1,4 @@
-use no_mistakes::invocation::{command_output, install_test_deadline};
+use no_mistakes_invocation::{command_output, install_test_deadline};
 use std::fs::File;
 use std::io::{self, Read, Seek, Write};
 use std::os::windows::io::{AsHandle, AsRawHandle, FromRawHandle};
@@ -12,9 +12,9 @@ use windows_sys::Win32::System::Console::{
 };
 
 // Compile the exact production adapters in the small native Windows harness.
-#[path = "../../../no-mistakes-invocation/src/invocation/deadline/output/stdio/windows.rs"]
+#[path = "../../src/invocation/deadline/output/stdio/windows.rs"]
 mod console;
-#[path = "../../../no-mistakes-invocation/src/invocation/deadline/output/stdio/wide.rs"]
+#[path = "../../src/invocation/deadline/output/stdio/wide.rs"]
 mod wide;
 
 fn fixture() -> serde_json::Value {

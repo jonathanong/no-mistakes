@@ -1,15 +1,24 @@
 // The explicit OS-dependent tests that pull requests run on each native OS.
-// The full sharded suite runs on main. See docs/development/ci-builds.md.
+// The full native suite runs on main. See docs/development/ci-builds.md.
 
 const cliFixture = "fixtures/check/aggregate-agents-md-max-size";
 const napiFixture = "fixtures/napi/real-addon-dependencies";
+const invocationCrate = "crates/no-mistakes-invocation";
+const cliInvocation = `${invocationCrate}/tests/cli_invocation.rs`;
 
-// Per OS: `label` is the RUNNER_OS value (cargo profile selection). `rust` lists
-// Cargo integration-test targets or bin filters; `guards` pins test names or
+function cliTests(names) {
+  return {
+    package: "no-mistakes-invocation",
+    selector: ["--test", "cli_smoke"],
+    args: ["--", "--exact", ...names.map((name) => `cli_invocation::${name}`)],
+    guards: names.map((name) => ({ file: cliInvocation, text: `fn ${name}` })),
+  };
+}
+
+// Per OS: `rust` lists Cargo integration-test targets and filters; `guards` pins test names or
 // modules inside `file` so a rename fails the guard test. `api` lists Vitest
 // files and exact top-level test names that run against the built addon.
 const macos = {
-  label: "macOS",
   rust: [
     {
       package: "no-mistakes-invocation",
@@ -21,27 +30,16 @@ const macos = {
           text: 'name = "macos_invocation"\npath = "tests/macos_invocation.rs"',
         },
         {
-          file: "crates/no-mistakes-invocation/tests/macos_invocation.rs",
-          text: '#[path = "../../no-mistakes/tests/cli_invocation.rs"]\nmod cli_invocation;',
-        },
-        {
           file: "crates/no-mistakes-invocation/src/invocation/tests/blocked_fifo.rs",
           text: "fn watchdog_stops_blocked_fifo_read_and_names_check_phase",
         },
-        {
-          file: "crates/no-mistakes/tests/cli_invocation.rs",
-          text: "fn hung_fsmonitor_times_out_and_releases_the_invocation_lock",
-        },
-        {
-          file: "crates/no-mistakes/tests/cli_invocation.rs",
-          text: "fn lockfile_git_discovery_timeout_does_not_render_partial_output",
-        },
-        {
-          file: "crates/no-mistakes/tests/cli_invocation.rs",
-          text: "fn millisecond_invocation_budget_stops_blocked_config_loading",
-        },
       ],
     },
+    cliTests([
+      "hung_fsmonitor_times_out_and_releases_the_invocation_lock",
+      "lockfile_git_discovery_timeout_does_not_render_partial_output",
+      "millisecond_invocation_budget_stops_blocked_config_loading",
+    ]),
   ],
   api: [
     {
@@ -61,15 +59,13 @@ const macos = {
   ],
 };
 
-const jobObject = "crates/no-mistakes/tests/windows_job_object.rs";
-const consoleFile = "crates/no-mistakes/tests/windows_job_object/deadline_console.rs";
-const invocation = "crates/no-mistakes/tests/cli_invocation.rs";
-const nativePackage = "packages/no-mistakes/scripts/native-package.test.js";
+const jobObject = `${invocationCrate}/tests/windows_job_object.rs`;
+const consoleFile = `${invocationCrate}/tests/windows_job_object/deadline_console.rs`;
 
 const windows = {
-  label: "Windows",
   rust: [
     {
+      package: "no-mistakes-invocation",
       selector: ["--test", "windows_job_object"],
       args: ["--", "--test-threads=1"],
       guards: [
@@ -78,18 +74,7 @@ const windows = {
         { file: consoleFile, text: "fn native_console_ignores_the_oem_output_code_page" },
       ],
     },
-    {
-      selector: ["--test", "windows_invocation"],
-      args: [],
-      guards: [
-        { file: "crates/no-mistakes/tests/windows_invocation.rs", text: "mod cli_invocation;" },
-        {
-          file: invocation,
-          text: "fn invocation_help_documents_independent_timeouts_and_lock_failure",
-        },
-        { file: invocation, text: "fn ordinary_check_still_finishes_inside_its_timeout" },
-      ],
-    },
+    cliTests(["ordinary_check_still_finishes_inside_its_timeout"]),
   ],
   api: [
     {
@@ -98,17 +83,6 @@ const windows = {
         "compiled internal N-API lock serializes separate Node processes",
         "compiled internal N-API lock is released when a worker terminates",
         "compiled internal N-API rename preserves an existing destination and claims a vacant one",
-      ],
-    },
-    {
-      file: "packages/no-mistakes/scripts/check-policy-test-helpers.test.js",
-      names: ["healthy reports retain identity and drive and UNC paths retain their meaning"],
-    },
-    {
-      file: nativePackage,
-      names: [
-        "resolves the Windows executable from the same optional package",
-        "Windows verifies CLI presence without Unix execute-bit semantics",
       ],
     },
   ],

@@ -2,7 +2,7 @@
   "issue": 3514,
   "ci": {
     "nativeBuildStep": 2100,
-    "testPrecompileStep": 2100,
+    "testPrecompileStep": 420,
     "nativeBuildJob": 2700,
     "standaloneBuildStep": 780,
     "standaloneBuildJob": 1500,
@@ -11,17 +11,13 @@
     "qualityStep": 1800,
     "qualityJob": 2400,
     "docsStep": 1200,
-    "docsJob": 1800
+    "docsJob": 1800,
+    "platformRustStep": 300,
+    "platformRustCompileJob": 1200,
+    "platformRustWindowsJob": 720,
+    "platformRustMacosJob": 1200
   },
   "censored": [
-    {
-      "workflow": "ci",
-      "job": "native-rust-tests-macos",
-      "step": "Precompile native Rust test targets",
-      "seconds": 1333,
-      "run": 43919796161,
-      "source": "standalone macOS Rust precompile before build and test co-location"
-    },
     {
       "workflow": "ci",
       "job": "rust-coverage-build",

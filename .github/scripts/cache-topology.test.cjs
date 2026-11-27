@@ -18,7 +18,6 @@ const producers = [
   "linux-runtime",
   "native-build",
   "native-api-tests-macos",
-  "native-test-build",
   "standalone-build",
   "rust-coverage-build",
 ];
@@ -134,7 +133,6 @@ test("dependency caches are main-only, dependency-only and shared across compati
   for (const name of [
     "native-build",
     "native-api-tests-macos",
-    "native-test-build",
     "rust-coverage-build",
     "standalone-build",
   ]) {
@@ -163,7 +161,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 30);
+  assert.equal(setups.length, 24);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);
@@ -227,5 +225,5 @@ test("macOS smoke compiles its Rust tests in a bounded step of their own", () =>
   assert.match(compile, /smoke\.cjs macos rust-build/);
   assert.ok(timeout("Compile macOS-dependent Rust tests") <= timeout("Build native CLI"));
   assert.ok(timeout("Compile macOS-dependent Rust tests") <= 30, "step cap needs no suppression");
-  assert.equal(timeout("Run macOS-dependent Rust tests"), 15);
+  assert.equal(timeout("Run macOS-dependent Rust tests"), 5);
 });

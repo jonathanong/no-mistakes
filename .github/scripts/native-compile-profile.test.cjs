@@ -77,14 +77,14 @@ function runner(
         path.join(saved, `evidence/${archiveEvidence}.json`),
         path.join(root, "target/native-test-build-diagnostics/0/cargo-units.json"),
       );
-    if (archiveStatus || omitTarget)
-      fs.rmSync(path.join(root, "target/native-test-build-diagnostics/3"), { recursive: true });
+    if (omitTarget)
+      fs.rmSync(path.join(root, "target/native-test-build-diagnostics/0"), { recursive: true });
     return { status: archiveStatus };
   };
   return { calls, original, run };
 }
 
-test("runtime precedes the unchanged test archive in one target with Cargo reuse evidence", () => {
+test("runtime precedes the invocation-only test archive in one target with Cargo reuse evidence", () => {
   const input = fixture();
   const fake = runner(input.root);
   let clock = 0;
@@ -108,22 +108,14 @@ test("runtime precedes the unchanged test archive in one target with Cargo reuse
       report.phases.map((phase) => phase.elapsedSeconds),
       [1, 1],
     );
-    assert.equal(report.testBuilds.length, 4);
+    assert.equal(report.testBuilds.length, 1);
     assert.deepEqual(report.testBuilds[0].runtimeComparison.rootCounts.after, {
       fresh: 0,
-      compiled: 3,
-    });
-    assert.deepEqual(report.testBuilds[1].previousComparison.rootCounts.after, {
-      fresh: 2,
-      compiled: 1,
+      compiled: 2,
     });
     assert.deepEqual(report.testBuilds[0].runtimeComparison.rootLibraryCounts.after, {
       fresh: 0,
       compiled: 1,
-    });
-    assert.deepEqual(report.testBuilds[1].previousComparison.rootLibraryCounts.after, {
-      fresh: 1,
-      compiled: 0,
     });
     assert.equal(report.testBuilds[0].runtimeComparison.rootComparison.matching.length, 1);
     assert.equal(report.runtime.metadata.rustc.stdout, "rustc fixture");
@@ -156,7 +148,7 @@ for (const [options, message] of [
       assert.deepEqual(fs.readFileSync(path.join(input.root, manifest)), fake.original);
       if (options.runtimeEvidence) assert.equal(fake.calls.length, 1);
       else {
-        assert.equal(report.testBuilds.length, 4);
+        assert.equal(report.testBuilds.length, 1);
         assert.equal(report.testBuilds[0].runtimeComparison, undefined);
       }
     } finally {
@@ -188,7 +180,7 @@ test("an actual failed archive keeps empty partial evidence without comparisons"
     assert.deepEqual(report.testBuilds[0].units.units, []);
     assert.equal(report.testBuilds[0].runtimeComparison, undefined);
     assert.equal(report.manifestRestored, true);
-    assert.equal(report.testBuilds.length, 3);
+    assert.equal(report.testBuilds.length, 1);
   } finally {
     input.cleanup();
   }
@@ -222,7 +214,7 @@ test("test archive failures retain completed targets and the phase failure", () 
     const report = runProfile({ ...input, platform: "darwin", env, run: fake.run });
     assert.equal(report.exitCode, 17);
     assert.equal(report.phases[1].exitCode, 17);
-    assert.equal(report.testBuilds.length, 3);
+    assert.equal(report.testBuilds.length, 1);
     assert.equal(report.manifestRestored, true);
   } finally {
     input.cleanup();

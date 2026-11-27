@@ -22,12 +22,7 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
         .flatMap(stepNames)
         .filter((name) => name !== "Exclude workspace from Microsoft Defender"),
     );
-    if (run === "native-rust-tests") {
-      expected.delete("Cache Cargo registry sources");
-      expected.delete("Cache native workspace artifacts by source");
-      expected.delete("Save verified workspace artifacts");
-      expected.add("Cache Cargo dependencies");
-    }
+
     const names = stepNames(macos);
     assert.equal(names.length, expected.size, run);
     assert.deepEqual(new Set(names), expected, run);
@@ -38,15 +33,16 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
       const runners = [...body.matchAll(/^          (?:- |  )os: (.+)$/gm)];
       assert.ok(runners.length > 0);
       assert.ok(runners.every((row) => row[1] === os));
-      assert.match(body, /^      NO_MISTAKES_BUILD_NAPI: "1"$/m);
+      if (run === "native-rust-tests") assert.doesNotMatch(body, /NO_MISTAKES_BUILD_NAPI/);
+      else assert.match(body, /^      NO_MISTAKES_BUILD_NAPI: "1"$/m);
       assert.doesNotMatch(body, /^    if: .*docs-only/m);
     }
   }
 });
 
-test("native jobs use two Windows Rust shards and one job for each other native suite", () => {
+test("native jobs use one job for each native test suite", () => {
   for (const [name, windowsCount] of [
-    ["native-rust-tests", 2],
+    ["native-rust-tests", 1],
     ["native-api-tests", 1],
   ]) {
     for (const [suffix, count] of [

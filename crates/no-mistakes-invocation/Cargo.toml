@@ -52,3 +52,15 @@ rayon = "1.10"
 [[test]]
 name = "macos_invocation"
 path = "tests/macos_invocation.rs"
+
+[[test]]
+name = "windows_invocation"
+path = "tests/windows_invocation.rs"
+
+[[test]]
+name = "windows_job_object"
+path = "tests/windows_job_object.rs"
+
+[[test]]
+name = "cli_smoke"
+path = "tests/cli_smoke.rs"

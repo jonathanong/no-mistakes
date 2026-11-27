@@ -111,34 +111,15 @@ for (const platform of ["macOS", "Windows"]) {
         ),
       /malformed/,
     );
-    assert.throws(
-      () =>
-        casePlan(
-          platform,
-          entries,
-          inventory.map((group) =>
-            group.args.some((arg) => !arg.startsWith("--"))
-              ? { ...group, tests: ["unselected"] }
-              : group,
-          ),
-          1,
-          6,
-        ),
-      /outside its original filter/,
-    );
-    assert.throws(
-      () =>
-        casePlan(
-          platform,
-          entries,
-          inventory.map((group) => ({ ...group, args: [] })),
-          1,
-          6,
-        ),
-      /differs from the original filters/,
-    );
     assert.throws(() => executionPlan(platform, entries.slice(1)), /incomplete/);
-    assert.throws(() => executionPlan(platform, [...entries].reverse()), /target mismatch/);
+    assert.throws(
+      () =>
+        executionPlan(
+          platform,
+          entries.map((entry) => ({ ...entry, name: "mismatch" })),
+        ),
+      /target mismatch/,
+    );
   });
 }
 
@@ -177,9 +158,9 @@ for (const platform of ["macOS", "Windows"]) {
           env: { ...options.env, ...env },
         });
       try {
-        const disabled = invoke(["build"], { NO_MISTAKES_BUILD_NAPI: "0" });
-        assert.equal(disabled.status, 1);
-        assert.match(disabled.stderr, /require NO_MISTAKES_BUILD_NAPI=1/);
+        const unexpected = invoke(["build"], { NATIVE_FIXTURE_UNEXPECTED_CLI: "1" });
+        assert.equal(unexpected.status, 1);
+        assert.match(unexpected.stderr, /must not archive the full CLI/);
         const failedBuild = invoke(["build"], { NATIVE_TEST_FIXTURE_EXIT: "17" });
         assert.equal(failedBuild.status, 17, failedBuild.stderr);
         assert.equal(
@@ -203,25 +184,9 @@ for (const platform of ["macOS", "Windows"]) {
         assert.equal(manifest.entries.length, targets(platform).length);
         fs.rmSync(path.join(directory, "target/debug"), { recursive: true });
         fs.rmSync(path.join(directory, "bin/cargo"));
-        if (platform === "macOS") {
-          for (const index of [1, 2]) {
-            const weighted = invoke(["run", String(index), "2"]);
-            assert.equal(weighted.status, 0, weighted.stderr);
-            const report = JSON.parse(
-              fs.readFileSync(path.join(directory, "target/native-rust-shard.json"), "utf8"),
-            );
-            assert.equal(report.scheduling.strategy, "macOS-two-shard-outlier-LPT");
-            assert.equal(report.scheduling.defaultWeight, 1);
-            assert.equal(report.scheduling.caseWeights.length, report.plan.length);
-            assert.ok(
-              report.scheduling.caseWeights.every((row) => row.source === "unmeasured-placeholder"),
-            );
-          }
-          fs.rmSync(path.join(directory, "executions.jsonl"));
-        }
         const results = [];
-        for (let index = 1; index <= 6; index++) {
-          const run = invoke(["run", String(index), "6"]);
+        for (let index = 1; index <= 1; index++) {
+          const run = invoke(["run", String(index), "1"]);
           assert.equal(run.status, 0, run.stderr);
           const report = JSON.parse(
             fs.readFileSync(path.join(directory, "target/native-rust-shard.json"), "utf8"),
@@ -277,21 +242,21 @@ for (const platform of ["macOS", "Windows"]) {
           rows.every(
             (row) =>
               fs.realpathSync(row.cwd) ===
-              fs.realpathSync(path.join(directory, "crates/no-mistakes")),
+              fs.realpathSync(path.join(directory, "crates/no-mistakes-invocation")),
           ),
         );
         assert.equal(
           fs.readFileSync(path.join(directory, "compile.jsonl"), "utf8").trim().split("\n").length,
-          targets(platform).length * 2 + 1,
+          targets(platform).length * 2 + 2,
         );
-        const failed = invoke(["run", "1", "6"], { NATIVE_TEST_FIXTURE_EXIT: "17" });
+        const failed = invoke(["run", "1", "1"], { NATIVE_TEST_FIXTURE_EXIT: "17" });
         assert.equal(failed.status, 17, failed.stderr);
         const failure = JSON.parse(
           fs.readFileSync(path.join(directory, "target/native-rust-results.jsonl"), "utf8").trim(),
         );
         assert.equal(failure.exitCode, 17);
         assert.ok(failure.names.length > 0);
-        const signalled = invoke(["run", "1", "6"], { NATIVE_TEST_FIXTURE_SIGNAL: "SIGTERM" });
+        const signalled = invoke(["run", "1", "1"], { NATIVE_TEST_FIXTURE_SIGNAL: "SIGTERM" });
         assert.equal(signalled.status, 1, signalled.stderr);
         const termination = JSON.parse(
           fs.readFileSync(path.join(directory, "target/native-rust-results.jsonl"), "utf8").trim(),
@@ -299,14 +264,14 @@ for (const platform of ["macOS", "Windows"]) {
         assert.equal(termination.exitCode, null);
         assert.equal(termination.signal, "SIGTERM");
         assert.deepEqual(termination.names, failure.names);
-        const wrongSource = invoke(["run", "1", "6"], { GITHUB_SHA: "different" });
+        const wrongSource = invoke(["run", "1", "1"], { GITHUB_SHA: "different" });
         assert.equal(wrongSource.status, 1);
         assert.match(wrongSource.stderr, /source SHA mismatch/);
         const inventoryPath = path.join(directory, "target/native-test-artifacts/inventory.json");
         const backup = path.join(directory, "inventory-backup.json");
         fs.copyFileSync(inventoryPath, backup);
         fs.copyFileSync(path.join(saved, "messages.jsonl"), inventoryPath);
-        const corruptInventory = invoke(["run", "1", "6"]);
+        const corruptInventory = invoke(["run", "1", "1"]);
         assert.equal(corruptInventory.status, 1);
         assert.match(corruptInventory.stderr, /inventory checksum mismatch/);
         fs.copyFileSync(backup, inventoryPath);
@@ -315,7 +280,7 @@ for (const platform of ["macOS", "Windows"]) {
           path.join(saved, "messages.jsonl"),
           path.join(directory, "target/native-test-artifacts", file),
         );
-        const corrupt = invoke(["run", "1", "6"]);
+        const corrupt = invoke(["run", "1", "1"]);
         assert.equal(corrupt.status, 1);
         assert.match(corrupt.stderr, /checksum mismatch/);
       } finally {

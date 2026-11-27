@@ -20,9 +20,9 @@ function workspace(key, version) {
     ),
   );
 }
-function macosRustDependencies(key) {
-  return /^v\d+-rust-native-rust-tests-v1-aarch64-apple-darwin-Darwin-arm64-[a-f0-9]{8,64}-[a-f0-9]{8,64}$/.test(
-    key,
+function nativeRustDependencies(key) {
+  return key.match(
+    /^v\d+-rust-native-rust-tests-v1-(aarch64-apple-darwin-Darwin-arm64|x86_64-pc-windows-msvc-Windows_NT-x64)-[a-f0-9]{8,64}-[a-f0-9]{8,64}$/,
   );
 }
 function family(key, common = new Set()) {
@@ -54,8 +54,12 @@ function family(key, common = new Set()) {
   );
   if (benchmark)
     return { name: `dependencies:${benchmark[1]}:${benchmark[2]}:${benchmark[3]}`, preferred: 1 };
-  if (macosRustDependencies(key))
-    return { name: "dependencies:native-rust-tests-macos", preferred: 1 };
+  const native = nativeRustDependencies(key);
+  if (native)
+    return {
+      name: `dependencies:native-rust-tests-${native[1].startsWith("aarch64") ? "macos" : "windows"}`,
+      preferred: 1,
+    };
   let match = workspace(key, 2);
   if (match) return { name: match[1], preferred: 1 };
   match = sharedIdentity(key);
@@ -156,7 +160,7 @@ function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
   const expendable = caches.filter(
     (cache) =>
       cache.ref === "refs/heads/main" &&
-      (workspace(cache.key, 2) || macosRustDependencies(cache.key)) &&
+      (workspace(cache.key, 2) || nativeRustDependencies(cache.key)) &&
       !removed.has(cache.id) &&
       Number.isFinite(Date.parse(cache.last_accessed_at)),
   );

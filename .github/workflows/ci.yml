@@ -1256,9 +1256,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.rust == 'true' && needs.changes.outputs.windows == 'true' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    env:
-      NO_MISTAKES_BUILD_NAPI: "1"
+    timeout-minutes: 20
     permissions:
       contents: read
       actions: read
@@ -1269,8 +1267,6 @@ jobs:
           - name: Windows x64
             os: windows-2025
             target: x86_64-pc-windows-msvc
-            binary: ./target/debug/no-mistakes.exe
-            addon: target/debug/no_mistakes.dll
 
     outputs:
       artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
@@ -1303,36 +1299,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/build-artifact-source.cjs
 
-      - name: Set up pnpm and Node.js (attempt 1 of 2)
-        id: pnpm-setup
-        continue-on-error: true
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
-          install: false
-
-      - name: Back off before Node.js setup attempt 2 of 2
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          # A timed-out cache restore can leave a partial store; the retry skips the cache.
-          rm -rf "$HOME/setup-pnpm/store"
-          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
-          sleep 5
-      - name: Retry pnpm and Node.js setup
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: false
-          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
-          install: false
-
       - name: Install Rust
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: native-rust-toolchain
@@ -1341,56 +1307,23 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Cache Cargo registry sources
+      - name: Cache Cargo dependencies
         if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        continue-on-error: true
         timeout-minutes: 3
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
-          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
-          add-rust-environment-hash-key: false
-          cache-targets: false
+          shared-key: native-rust-tests-v1-x86_64-pc-windows-msvc
+          cache-targets: true
           cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - name: Cache native workspace artifacts by source
-        id: native-workspace-cache
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 3
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
-          restore-keys: |
-            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
-          path: |
-            target/debug
-            target/.rustc_info.json
-            ${{ runner.temp }}/nm-cargo-inputs
-
-      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Precompile native Rust test targets
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 35
-        shell: bash
-        env:
-          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
-        run: |
-          set -euo pipefail
-          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
-          node .github/scripts/native-test-archive.cjs build
-          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+        timeout-minutes: 7
+        run: node .github/scripts/native-test-archive.cjs build
 
-      - name: Save verified workspace artifacts
-        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 3
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: ${{ steps.native-workspace-cache.outputs.cache-primary-key }}
-          path: |
-            target/debug
-            target/.rustc_info.json
-            ${{ runner.temp }}/nm-cargo-inputs
       - name: Upload native-rust-archive
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
@@ -1469,9 +1402,7 @@ jobs:
     needs: [changes, native-test-build]
     if: ${{ needs.changes.outputs.windows == 'true' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    env:
-      NO_MISTAKES_BUILD_NAPI: "1"
+    timeout-minutes: 12
     permissions:
       contents: read
       actions: read
@@ -1482,11 +1413,7 @@ jobs:
           - os: windows-2025
             target: x86_64-pc-windows-msvc
             shard: 1
-            total: 2
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 2
-            total: 2
+            total: 1
 
     steps:
       - name: Exclude workspace from Microsoft Defender
@@ -1510,36 +1437,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up pnpm and Node.js (attempt 1 of 2)
-        id: pnpm-setup
-        continue-on-error: true
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
-          install: false
-
-      - name: Back off before Node.js setup attempt 2 of 2
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          # A timed-out cache restore can leave a partial store; the retry skips the cache.
-          rm -rf "$HOME/setup-pnpm/store"
-          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
-          sleep 5
-      - name: Retry pnpm and Node.js setup
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: false
-          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
-          install: false
-
       - name: Download native-rust-archive
         timeout-minutes: 6
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -1550,7 +1447,7 @@ jobs:
           path: target/native-test-artifacts
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 9
+        timeout-minutes: 5
         shell: bash
         run: node .github/scripts/native-test-archive.cjs run ${{ matrix.shard }} ${{ matrix.total }}
       - name: Retain native Rust case execution inventory
@@ -1566,8 +1463,6 @@ jobs:
           retention-days: 7
           compression-level: 1
 
-  # Keep the cold-build and test budgets on one runner. The existing step deadlines still apply.
-  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-rust-tests-macos:
     name: Native Rust tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: changes
@@ -1576,9 +1471,7 @@ jobs:
       group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('ci-macos-main-native-rust-tests-macos-{0}', matrix.shard) || format('ci-macos-{0}-native-rust-tests-macos-{1}', github.run_id, matrix.shard) }}
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 65
-    env:
-      NO_MISTAKES_BUILD_NAPI: "1"
+    timeout-minutes: 20
     permissions:
       contents: read
       actions: read
@@ -1606,37 +1499,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/build-artifact-source.cjs
 
-      - name: Set up pnpm and Node.js (attempt 1 of 2)
-        id: pnpm-setup
-        continue-on-error: true
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
-          install: false
-
-      - name: Back off before Node.js setup attempt 2 of 2
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 1
-        shell: bash
-        run: |
-          # A timed-out cache restore can leave a partial store; the retry skips the cache.
-          rm -rf "$HOME/setup-pnpm/store"
-          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
-          sleep 5
-
-      - name: Retry pnpm and Node.js setup
-        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 3
-        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
-          runtime: node@24
-          cache: false
-          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
-          install: false
-
       - name: Install Rust
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: native-rust-toolchain
@@ -1657,10 +1519,9 @@ jobs:
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Precompile native Rust test targets
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 35
+        timeout-minutes: 7
         shell: bash
         run: node .github/scripts/native-test-archive.cjs build
 
@@ -1703,7 +1564,7 @@ jobs:
 
       - name: Run platform-specific Rust tests
         id: native-rust-tests
-        timeout-minutes: 15
+        timeout-minutes: 5
         shell: bash
         run: node .github/scripts/native-test-archive.cjs run ${{ matrix.shard }} ${{ matrix.total }}
 
@@ -1845,8 +1706,6 @@ jobs:
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
 
-  # Keep the cold-build and test budgets on one runner. The existing step deadlines still apply.
-  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-api-tests-macos:
     name: Native API tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: changes
@@ -2207,12 +2066,12 @@ jobs:
         run: node .github/scripts/smoke.cjs macos cli ./target/debug/no-mistakes
 
       - name: Compile macOS-dependent Rust tests
-        timeout-minutes: 20
+        timeout-minutes: 5
         shell: bash
         run: node .github/scripts/smoke.cjs macos rust-build
 
       - name: Run macOS-dependent Rust tests
-        timeout-minutes: 15
+        timeout-minutes: 5
         shell: bash
         env:
           NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes
@@ -2375,7 +2234,9 @@ jobs:
         run: node .github/scripts/smoke.cjs windows cli ./target/debug/no-mistakes.exe
 
       - name: Run Windows-dependent Rust tests
-        timeout-minutes: 15
+        timeout-minutes: 5
+        env:
+          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes.exe
         run: node .github/scripts/smoke.cjs windows rust
 
       - name: Install pnpm dependencies
