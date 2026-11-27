@@ -75,3 +75,21 @@ adopted = use;
 export function adoptedUse() {
   return adopted(Promise.resolve(1));
 }
+
+declare const method: string;
+declare const moduleName: string;
+const dynamicReact = require(moduleName);
+export function dynamicModule() {
+  return dynamicReact[method](Promise.resolve(1));
+}
+export function dynamicReactKey() {
+  return React[method](Promise.resolve(1));
+}
+const localApi = {
+  use(value: unknown) {
+    return value;
+  },
+};
+export function localDynamic() {
+  return localApi[method](Promise.resolve(1));
+}

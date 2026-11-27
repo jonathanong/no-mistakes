@@ -436,6 +436,15 @@ describe("typescript import wrappers", () => {
     expect(
       cases.find((item) => item.name === "ignored unresolved ReactNode import").findings,
     ).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "unresolved ReactNode import")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "unanalyzable"],
+      [13, "unanalyzable"],
+      [23, "unanalyzable"],
+    ]);
     expect(cases.find((item) => item.name === "wrapped script attributes").findings).toEqual([]);
     expect(cases.find((item) => item.name === "ignored dynamic next require").findings).toEqual([]);
     expect(cases.find((item) => item.name === "static non-next require").findings).toEqual([]);
@@ -511,6 +520,8 @@ describe("typescript import wrappers", () => {
       [58, "resolve"],
       [64, "unanalyzable"],
       [76, "unanalyzable"],
+      [83, "unanalyzable"],
+      [86, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
@@ -599,6 +610,8 @@ describe("typescript import wrappers", () => {
     ).toEqual([
       [6, "wrapper"],
       [10, "unanalyzable"],
+      [18, "wrapper"],
+      [22, "unanalyzable"],
     ]);
     expect(
       cases
@@ -680,7 +693,11 @@ describe("typescript import wrappers", () => {
       cases
         .find((item) => item.name === "unresolved qualified getter terminal")
         .findings.map((finding) => [finding.line, finding.messageId]),
-    ).toEqual([[5, "unanalyzable"]]);
+    ).toEqual([
+      [5, "unanalyzable"],
+      [14, "wrapper"],
+      [18, "unanalyzable"],
+    ]);
     expect(
       cases
         .find((item) => item.name === "computed member of a namespace import")

@@ -92,13 +92,43 @@ function assertedType(node) {
   return null;
 }
 
-function reactTypeStatus(type, facts) {
+function containsNode(root, node) {
+  for (let current = node; current; current = current.parent) if (current === root) return true;
+  return false;
+}
+
+function localTypeStatus(node, name, facts, seen) {
+  let current = node?.parent;
+  while (current) {
+    const statements = Array.isArray(current.body)
+      ? current.body
+      : Array.isArray(current.body?.body)
+        ? current.body.body
+        : null;
+    for (const statement of statements ?? []) {
+      const declaration = statement.declaration ?? statement;
+      const typed =
+        declaration.type === "TSTypeAliasDeclaration" ||
+        declaration.type === "TSInterfaceDeclaration";
+      if (!typed || declaration.id?.name !== name || containsNode(declaration, node)) continue;
+      if (!containsNode(declaration.parent, node)) continue;
+      if (declaration.type === "TSInterfaceDeclaration") return "no";
+      if (seen.has(declaration)) return "unresolved";
+      seen.add(declaration);
+      return reactTypeStatus(declaration.typeAnnotation, facts, seen);
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
+function reactTypeStatus(type, facts, seen = new Set()) {
   const current = unwrapType(type);
   if (!current || !facts) return "no";
   if (current.type === "TSUnionType") {
     let unresolved = false;
     for (const part of current.types) {
-      const status = reactTypeStatus(part, facts);
+      const status = reactTypeStatus(part, facts, seen);
       if (status === "yes") return "yes";
       if (status === "unresolved") unresolved = true;
     }
@@ -115,12 +145,16 @@ function reactTypeStatus(type, facts) {
     return "no";
   }
   const name = typeName(current);
-  if (name && (facts.reactNodeNames.has(name) || facts.aliases.get(name) === true)) return "yes";
-  if (name && facts.unresolvedTypes?.has(name)) return "unresolved";
+  if (name && current.type === "TSTypeReference" && !name.includes(".")) {
+    const local = localTypeStatus(current, name, facts, seen);
+    if (local !== null) return local;
+  }
   const root = name?.split(".")[0];
-  if (root && facts.unresolvedNamespaces?.has(root) && name.endsWith(".ReactNode")) {
+  if (root && name.endsWith(".ReactNode") && facts.unresolvedNamespaces?.has(root)) {
     return "unresolved";
   }
+  if (name && (facts.reactNodeNames.has(name) || facts.aliases.get(name) === true)) return "yes";
+  if (name && facts.unresolvedTypes?.has(name)) return "unresolved";
   return "no";
 }
 

@@ -746,6 +746,28 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-unresolved.tsx",
+          "line": 13,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-unresolved.tsx",
+          "line": 23,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "unresolved ReactNode import",
@@ -940,6 +962,28 @@
           "endLine": 76,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
           "line": 76,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 50,
+          "endLine": 83,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 83,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 43,
+          "endLine": 86,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 86,
           "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
@@ -1362,6 +1406,28 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 18,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-member-alias.ts",
+          "line": 18,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 22,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-member-alias.ts",
+          "line": 22,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
         }
       ],
       "name": "member alias of a static require getter",
@@ -1515,6 +1581,28 @@
           "endLine": 5,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-qualified-member.ts",
           "line": 5,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 46,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-qualified-member.ts",
+          "line": 14,
+          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 48,
+          "endLine": 18,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-qualified-member.ts",
+          "line": 18,
           "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
@@ -1841,6 +1929,20 @@
             "file": "nullable-qualified-member.ts",
             "line": 5,
             "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-qualified-member.ts",
+            "line": 14,
+            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-qualified-member.ts",
+            "line": 18,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
           }
         ],
         "name": "nullable-qualified-member.ts",
@@ -2039,6 +2141,20 @@
             "column": 10,
             "file": "nullable-member-alias.ts",
             "line": 10,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-member-alias.ts",
+            "line": 18,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-member-alias.ts",
+            "line": 22,
             "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
           }
         ],
@@ -2348,6 +2464,20 @@
             "file": "react-nullish-unresolved.tsx",
             "line": 5,
             "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-unresolved.tsx",
+            "line": 13,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-unresolved.tsx",
+            "line": 23,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
           }
         ],
         "name": "react-nullish-unresolved.tsx",
@@ -2497,6 +2627,20 @@
             "column": 10,
             "file": "react-use-bindings.tsx",
             "line": 76,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 83,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 86,
             "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           }
         ],

@@ -1,7 +1,8 @@
 "use strict";
 
 const { unwrapExpression, unwrapSequence } = require("./async-ast");
-const { literalString, memberPropertyName } = require("./logical-call");
+const { memberFact } = require("./import-member");
+const { literalString } = require("./logical-call");
 const { resolveVariable } = require("./async-target-bindings");
 
 function reportsUnanalyzable(context) {
@@ -20,15 +21,7 @@ function isFreeRequire(node, context) {
 }
 
 function requiredMember(callee, context) {
-  const current = unwrapExpression(callee);
-  if (current?.type !== "MemberExpression") return null;
-  const object = unwrapExpression(current.object);
-  if (object?.type !== "CallExpression") return null;
-  const moduleName = requireModule(object, context);
-  if (moduleName === undefined) return null;
-  const property = memberPropertyName(current);
-  if (moduleName === null || !property) return { unresolved: true };
-  return { name: property, module: moduleName, kind: "named", imported: property, typeOnly: false };
+  return memberFact(callee, context, importFact, requireModule, namespaceMember);
 }
 
 // undefined: not a require. null: require whose module is not a static string.
@@ -200,7 +193,7 @@ function importSpellings(root, localPath, context) {
   if (fact.unresolved) return { names: [], unresolved: true };
   if (fact.typeOnly) return { names: [], unresolved: false };
   if (fact.kind === "named" && fact.imported && fact.imported !== root.name) {
-    if (localPath === root.name) return { names: [fact.imported], unresolved: false };
+    if (localPath === root.name) return { names: [fact.name || fact.imported], unresolved: false };
     if (localPath.startsWith(`${root.name}.`))
       return { names: [`${fact.imported}${localPath.slice(root.name.length)}`], unresolved: false };
   }

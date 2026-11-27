@@ -46,6 +46,12 @@ function isReactNamespace(node, context, seen = new Set()) {
   return namespaceStatus(node, context, seen) === "yes";
 }
 
+function valueKind(node, context) {
+  const variable = resolveVariable(node, context);
+  const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
+  return def?.type === "Variable" ? def.parent?.kind : null;
+}
+
 function namedUse(fact) {
   return Boolean(
     fact &&
@@ -65,7 +71,10 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
   }
   if (callee?.type === "Identifier") {
     const fact = importFact(callee, context);
-    if (namedUse(fact)) return "yes";
+    if (namedUse(fact)) {
+      const kind = valueKind(callee, context);
+      return kind === "let" || kind === "var" ? "unresolved" : "yes";
+    }
     if (fact?.unresolved) return "unresolved";
     if (fact) return "no";
     const variable = resolveVariable(callee, context);
@@ -93,13 +102,12 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     }
     return "no";
   }
-  if (
-    callee?.type === "MemberExpression" &&
-    staticName(callee.property, callee.computed) === "use"
-  ) {
-    return namespaceStatus(callee.object, context);
-  }
-  return "no";
+  if (callee?.type !== "MemberExpression") return "no";
+  const name = staticName(callee.property, callee.computed);
+  if (name === "use") return namespaceStatus(callee.object, context);
+  if (name) return "no";
+  const status = namespaceStatus(callee.object, context);
+  return status === "no" ? "no" : "unresolved";
 }
 
 function isReactUse(node, context, useNames, seen = new Set()) {
