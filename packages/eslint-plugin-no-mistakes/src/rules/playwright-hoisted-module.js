@@ -29,7 +29,10 @@ function createHoistedModuleState(context) {
     if (fact?.source !== "@playwright/test") return;
     playwrightFile = true;
     if (fact.status === "namespace") namespaces.add(id.name);
-    if (fact.status === "export" && ["describe", "it", "test"].includes(fact.exported)) {
+    if (
+      fact.status === "export" &&
+      (fact.exported === "default" || ["describe", "it", "test"].includes(fact.exported))
+    ) {
       testCalleeNames.add(id.name);
     }
   }

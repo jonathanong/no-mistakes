@@ -86,6 +86,7 @@
         "e2e/hoisted-opaque-quiet.spec.ts",
         "e2e/hoisted-opaque-write.spec.ts",
         "e2e/hoisted-default-alias.spec.ts",
+        "e2e/hoisted-cjs-default.spec.ts",
         "e2e/hoisted-opaque-local.spec.ts"
       ],
       "rules": {

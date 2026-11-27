@@ -505,6 +505,29 @@
       "rule": "playwright-defaults"
     },
     {
+      "file": "e2e/hoisted-cjs-default.spec.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 6,
+          "file": "e2e/hoisted-cjs-default.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "CommonJS default binding beforeAll reads a hoisted token",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
       "file": "e2e/hoisted-default-alias.spec.ts",
       "findings": [
         {
@@ -1869,6 +1892,21 @@
       "name": "defaulted test ids through wrappers (#4368)",
       "options": null,
       "rule": "playwright-defaults"
+    },
+    {
+      "file": "e2e/hoisted-cjs-default.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-cjs-default.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "CommonJS default binding beforeAll reads a hoisted token",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
     },
     {
       "file": "e2e/hoisted-default-alias.spec.ts",

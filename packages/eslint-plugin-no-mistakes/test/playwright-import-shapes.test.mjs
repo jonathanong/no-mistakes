@@ -283,6 +283,13 @@ const cases = [
     ],
   },
   {
+    name: "CommonJS default binding beforeAll reads a hoisted token",
+    rule: "playwright-no-hoisted-unique-token",
+    file: "e2e/hoisted-cjs-default.spec.ts",
+    options: { tokenFactories: ["makeToken"] },
+    expected: [[6, "hoisted"]],
+  },
+  {
     name: "default-import alias beforeAll reads a hoisted token",
     rule: "playwright-no-hoisted-unique-token",
     file: "e2e/hoisted-default-alias.spec.ts",
