@@ -67,11 +67,30 @@ declare namespace plugin {
     unanalyzable?: RuleUnanalyzable;
   }
 
+  export interface ModuleMockIntegrationExports {
+    specifiers?: string[];
+    sourcePathTemplates?: string[];
+    specifierPrefix?: string;
+    extensions?: string[];
+    reexportExtensions?: string[];
+    markerRegex?: string;
+  }
+
   export interface ModuleMockBoundaryOptions {
+    internalSpecifiers?: string[];
+    includePathPatterns?: string[];
+    excludePathPatterns?: string[];
+    requireLiteralSpecifiers?: boolean;
+    baseline?: [string, string, number][];
+    integrationExports?: ModuleMockIntegrationExports;
     unanalyzable?: RuleUnanalyzable;
   }
 
   export interface ModuleMockPreserveExportsOptions {
+    internalSpecifiers?: string[];
+    includePathPatterns?: string[];
+    excludePathPatterns?: string[];
+    baseline?: [string, string][];
     unanalyzable?: RuleUnanalyzable;
   }
 

@@ -11,12 +11,15 @@ const {
   hasSequentialOption,
   isUnshadowedNamespace,
   recordImportEquals,
-  reassignedDestructuredRunner,
   recordRequire,
   recordVitestImport,
   staticName,
   unresolvedSequential,
 } = require("./no-vitest-sequential-loads");
+const {
+  reassignedDestructuredRunner,
+  renamedNonRunner,
+} = require("./no-vitest-sequential-require");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
@@ -49,8 +52,10 @@ function chainInfo(node, context, seen = new Set()) {
     }
   }
   const names = [];
+  let vitestRequire = false;
   while (current?.type === "MemberExpression" || current?.type === "CallExpression") {
     if (current.type === "CallExpression") {
+      if (context && requireResolution(current, context)?.source === "vitest") vitestRequire = true;
       current = unwrap(current.callee);
       continue;
     }
@@ -59,7 +64,7 @@ function chainInfo(node, context, seen = new Set()) {
     const init = constInit(current, context, seen);
     if (init) current = unwrap(init);
   }
-  return { names, root: current?.type === "Identifier" ? current : null };
+  return { names, root: current?.type === "Identifier" ? current : null, vitestRequire };
 }
 
 function hasSequentialMember(node) {
@@ -83,13 +88,14 @@ function acceptsRunner(root, context, namespaces) {
   if (def.type === "Variable" && requireResolution(def.node?.init, context)?.source === null) {
     return false;
   }
-  if (reassignedDestructuredRunner(root, context)) return false;
+  if (reassignedDestructuredRunner(root, context) || renamedNonRunner(root, context)) return false;
   if (def.parent?.importKind === "type" || def.node?.importKind === "type") return false;
   if (def.type !== "ImportBinding") return true;
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
   if (def.node?.type === "ImportDefaultSpecifier") return def.parent?.source?.value !== "vitest";
   const imported = staticName(def.node?.imported, false);
   const source = def.parent?.source?.value;
+  if (source === "vitest" && !TEST_NAMES.has(imported)) return false;
   if (source && source !== "vitest" && TEST_NAMES.has(imported) && imported !== root.name)
     return false;
   return true;
@@ -116,12 +122,14 @@ function isSequentialCall(node, context, roots, namespaces) {
   const matches = (info) => {
     if (!info.root) return false;
     const accepted = acceptsRunner(info.root, context, namespaces);
+    const named = info.names.every((name) => name !== null);
     const known =
       (accepted && roots.has(info.root.name)) ||
       (isUnshadowedNamespace(info.root, context, namespaces) &&
-        info.names.every((name) => name !== null) &&
+        named &&
         info.names.some((name) => TEST_NAMES.has(name))) ||
-      destructuredTest(info.root, context, namespaces);
+      destructuredTest(info.root, context, namespaces) ||
+      (info.vitestRequire && named && info.names.some((name) => TEST_NAMES.has(name)));
     return known && (info.names.includes("sequential") || hasSequentialOption(node));
   };
   // A const alias of a non-runner still keeps the local runner name.
@@ -182,6 +190,9 @@ module.exports = Object.assign(
         },
         CallExpression(node) {
           pending.push(node);
+          if (!state.usesVitest && chainInfo(node.callee, context).vitestRequire) {
+            state.usesVitest = true;
+          }
         },
         "Program:exit"() {
           if (!isTestFile(context.filename) && !state.usesVitest) return;

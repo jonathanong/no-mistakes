@@ -535,10 +535,21 @@
         },
         {
           "column": 1,
-          "endColumn": 23,
-          "endLine": 8,
+          "endColumn": 34,
+          "endLine": 7,
           "file": "helper.js",
-          "line": 8,
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 10,
+          "file": "helper.js",
+          "line": 10,
           "message": "Use parallel tests instead of .sequential.",
           "messageId": "sequential",
           "ruleId": "no-mistakes/no-vitest-sequential",
@@ -1851,11 +1862,50 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "destructured-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "destructured-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 13,
+          "file": "destructured-dynamic.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "destructured-dynamic.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [

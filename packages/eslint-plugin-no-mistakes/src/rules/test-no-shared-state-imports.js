@@ -2,10 +2,11 @@
 
 const { unwrapExpression } = require("./async-ast");
 const { isReassigned } = require("./async-target-bindings");
-const { requireSource } = require("./async-target-sources");
+const { requireResolution, requireSource } = require("./async-target-sources");
 const { literalString } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const { reportUnanalyzable } = require("./rule-unanalyzable");
+const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["describe", "it", "test"]);
 
@@ -96,12 +97,25 @@ function recordTopLevelRequires(node, testCalleeNames, namespaces, testAliases, 
   }
 }
 
+function dynamicDestructuredTest(callee, context) {
+  if (callee?.type !== "Identifier") return false;
+  const variable = resolveVariable(callee, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return false;
+  const resolution = requireResolution(def.node.init, context);
+  if (!resolution || resolution.source !== null) return false;
+  return patternNames(def.node.id).some((entry) => entry.local.name === callee.name);
+}
+
 function reportOpaqueRegistration(call, context, suppressed, source) {
   const callee = unwrapExpression(call?.callee);
-  if (callee?.type !== "MemberExpression" || callee.computed) return;
-  const name = callee.property?.name;
-  if (name !== "test" && name !== "it" && name !== "describe") return;
-  if (isUnresolved(moduleLoad(callee.object, context)) && !suppressed(source)) {
+  const member =
+    callee?.type === "MemberExpression" && !callee.computed ? callee.property?.name : null;
+  const unresolvedMember =
+    (member === "test" || member === "it" || member === "describe") &&
+    isUnresolved(moduleLoad(callee.object, context));
+  if (!unresolvedMember && !dynamicDestructuredTest(callee, context)) return;
+  if (!suppressed(source)) {
     reportUnanalyzable(context, call.loc ? call : source, "this test registration");
   }
 }

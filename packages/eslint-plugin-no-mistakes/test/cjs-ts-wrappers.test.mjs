@@ -126,6 +126,7 @@ const groups = [
       "shadow-cast.test.ts",
       "named-callback.test.ts",
       "member-require.test.ts",
+      "destructured-dynamic.test.ts",
     ],
     valid: ["not-a-callee.test.ts", "suppressed.test.ts", "reassign.test.ts"],
   },
@@ -133,7 +134,7 @@ const groups = [
     rule: "test-no-shared-state",
     dir: "shared-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "destructured-dynamic.test.ts"],
   },
   {
     rule: "test-no-wall-time-assertions",

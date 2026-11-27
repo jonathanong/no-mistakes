@@ -29,7 +29,9 @@ test("user", () => {
   in parallel. Serial scopes already count these resets. [Suite cleanup](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/test-no-shared-state-cleanup.js#L12-L25) and [scope handling](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/test-no-shared-state-cleanup.js#L49-L57).
 - `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
   `.test`, `.it`, or `.describe` call whose receiver comes from a non-static
-  `require` reports `unanalyzable`.
+  `require` reports `unanalyzable`. A destructured `test`, `it`, or `describe`
+  from that require, such as `const { test: check } = require(specifier)`, reports
+  `unanalyzable`. A destructured `expect` does not.
 
 `const vt = require("vitest")`, `const { test } = require("vitest")`,
 `const check = require("vitest").test`,

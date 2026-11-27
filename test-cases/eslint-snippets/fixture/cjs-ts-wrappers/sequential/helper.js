@@ -4,5 +4,7 @@ const { test: t } = require("vitest");
 t.sequential("updates", () => {});
 const { expect: e } = require("vitest");
 e.sequential("not a runner", () => {});
+require("vitest").test.sequential("inline", () => {});
+require("vitest").expect.sequential("inline expect", () => {});
 const { describe: cjsDescribe } = require("vitest");
 cjsDescribe.sequential("suite", () => {});

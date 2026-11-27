@@ -20,8 +20,33 @@ export const invalidPolicy: RuleUnanalyzable = "warn";
 
 export const sequentialOptions: NoVitestSequentialOptions = { unanalyzable: policy };
 export const namingOptions: VitestMockTestFileNamingOptions = { unanalyzable: policy };
-export const boundaryOptions: ModuleMockBoundaryOptions = { unanalyzable: policy };
-export const preserveOptions: ModuleMockPreserveExportsOptions = { unanalyzable: policy };
+export const boundaryOptions: ModuleMockBoundaryOptions = {
+  unanalyzable: policy,
+  internalSpecifiers: ["@app/**"],
+  includePathPatterns: ["test/**"],
+  excludePathPatterns: ["dist/**"],
+  requireLiteralSpecifiers: true,
+  baseline: [["file.ts", "./mod", 1]],
+  integrationExports: {
+    specifiers: ["@app/**"],
+    sourcePathTemplates: ["src/{specifierSuffix}.ts"],
+    specifierPrefix: "@app/",
+    extensions: [".ts"],
+    reexportExtensions: [".ts"],
+    markerRegex: "marker",
+  },
+};
+export const preserveOptions: ModuleMockPreserveExportsOptions = {
+  unanalyzable: policy,
+  internalSpecifiers: ["@app/**"],
+  includePathPatterns: ["test/**"],
+  excludePathPatterns: ["dist/**"],
+  baseline: [["file.ts", "./mod"]],
+};
+export const invalidBoundaryBaseline: ModuleMockBoundaryOptions = {
+  // @ts-expect-error Boundary baseline entries are file, specifier, and count.
+  baseline: [["file.ts", "./mod"]],
+};
 export const delayedOptions: TestNoDelayedRejectsOptions = { unanalyzable: policy };
 export const messageOptions: TestNoErrorMessageMatchingOptions = { unanalyzable: policy };
 export const tempOptions: TestNoFixedTempPathsOptions = { unanalyzable: policy };

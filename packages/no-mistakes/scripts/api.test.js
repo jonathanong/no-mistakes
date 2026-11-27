@@ -64,6 +64,27 @@ test("github-actions-pinned-hash images option is publicly named", () => {
   );
 });
 
+test("module mock lint options name the keys each rule reads", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "..", "eslint-plugin-no-mistakes", "src", "index.d.ts"),
+    "utf8",
+  );
+  assert.match(declarations, /export interface ModuleMockIntegrationExports \{/);
+  const boundary = declarations.match(/export interface ModuleMockBoundaryOptions \{([^}]+)\}/);
+  assert.ok(boundary, "ModuleMockBoundaryOptions must be exported");
+  assert.match(boundary[1], /baseline\?: \[string, string, number\]\[\];/);
+  assert.match(boundary[1], /requireLiteralSpecifiers\?: boolean;/);
+  assert.match(boundary[1], /integrationExports\?: ModuleMockIntegrationExports;/);
+  assert.match(boundary[1], /unanalyzable\?: RuleUnanalyzable;/);
+  const preserve = declarations.match(
+    /export interface ModuleMockPreserveExportsOptions \{([^}]+)\}/,
+  );
+  assert.ok(preserve, "ModuleMockPreserveExportsOptions must be exported");
+  assert.match(preserve[1], /baseline\?: \[string, string\]\[\];/);
+  assert.match(preserve[1], /internalSpecifiers\?: string\[\];/);
+  assert.match(preserve[1], /unanalyzable\?: RuleUnanalyzable;/);
+});
+
 test("typed enqueue fake lint options are publicly declared", () => {
   const declarations = readFileSync(
     join(packageRoot, "..", "eslint-plugin-no-mistakes", "src", "index.d.ts"),

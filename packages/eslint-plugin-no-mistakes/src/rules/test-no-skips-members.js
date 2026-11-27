@@ -32,9 +32,6 @@ function propertyKey(property) {
   return literalString(property.key);
 }
 
-// The key that introduces the identifier, after defaults and nested objects.
-// `const { test: t = x } = require("vitest")` and
-// `const { runner: { test: t } = fallback } = require("vitest")` both yield `test`.
 function patternBindingName(pattern, name) {
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
