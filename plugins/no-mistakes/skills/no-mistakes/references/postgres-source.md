@@ -55,9 +55,10 @@ visible source text, not an executed statement. `dynamicExecute` is `EXECUTE`
 of a non-literal command (`format`, an identifier, or concatenation that is
 not wholly literal) and keeps `complete` false. Wholly literal `EXECUTE` is
 classified from the decoded command. A recognized command, including a parsed
-`SELECT`, is `dml` or `utility`, not `dynamicExecute`. A decoded command that
-does not classify is `unknown`, including an empty command (`EXECUTE ''`) and
-an invalid `U&` literal. A qualified name such as
+`SELECT`, is `dml` or `utility`. A decoded script that executes a non-literal
+command, such as `EXECUTE 'EXECUTE command'`, stays `dynamicExecute`. A decoded
+command that does not classify is `unknown`, including an empty command
+(`EXECUTE ''`) and an invalid `U&` literal. A qualified name such as
 `public.execute(...)` stays `dynamicExecute`.
 IF/ELSIF/ELSE branches expose typed conditions and nested statements;
 inspect every branch without assuming its condition is true. PostgreSQL 18 virtual generated columns retain their declared or
@@ -70,11 +71,13 @@ when no unsupported modifier remains, except inside `FOR`, `WHILE`,
 `FOREACH`, or a bare `LOOP`. There the command stays a visible occurrence,
 produces a diagnostic, and keeps the block incomplete, with no typed
 statement projection. An unsupported modifier, including unquoted `INTO`,
-is statement kind `other`.
+is statement kind `other`. A Unicode `U&` body and a national `N'` body are
+also statement kind `other`, with no `bodyEncoding`. Occurrence classification
+still reads those decoded commands.
 Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
 (`singleQuoted`, doubled quotes), and PostgreSQL `E` escape strings
-(`escapedString`) are decoded by the prepared tokenizer and parsed through the
-same SQL fact pipeline.
+(`escapedString`) are the projected literal forms. They are decoded by the
+prepared tokenizer and parsed through the same SQL fact pipeline.
 The enclosing statement and `literalSpan` retain original source coordinates;
 `decodedSql` owns nested command statement, expression, and diagnostic coordinates.
 Children preserve order and typed facts (including INSERT), without exposing an
