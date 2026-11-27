@@ -146,14 +146,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-lock-inventory",
           "sourceLine": "{",
           "target": "stale-baseline"
-        },
-        {
-          "file": "migrations/broken.sql",
-          "line": 1,
-          "message": "new PostgreSQL lock site (for-share, 6389383da622bf5649828ee33ac015a1#1). Remove the lock or record the reviewed site in the baseline",
-          "rule": "postgres-lock-inventory",
-          "sourceLine": "SELECT id FROM jobs FOR SHARE;",
-          "target": "for-share"
         }
       ],
       "warnings": []
@@ -175,14 +167,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-lock-inventory",
           "sourceLine": "{",
           "target": "stale-baseline"
-        },
-        {
-          "file": "migrations/broken.sql",
-          "line": 1,
-          "message": "new PostgreSQL lock site (for-share, 6389383da622bf5649828ee33ac015a1#1). Remove the lock or record the reviewed site in the baseline",
-          "rule": "postgres-lock-inventory",
-          "sourceLine": "SELECT id FROM jobs FOR SHARE;",
-          "target": "for-share"
         }
       ],
       "warnings": []

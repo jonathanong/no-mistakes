@@ -1,1 +1,1 @@
-SELECT id FROM jobs FOR SHARE;
+SELECT id FROM jobs;

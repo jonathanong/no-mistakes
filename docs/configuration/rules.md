@@ -166,8 +166,10 @@ invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
 
-[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options)
-always reports incomplete SQL and uses one analysis mode. Its rule options
+[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) uses
+one analysis mode and by default (`baselineUnanalyzed: false`) reports every
+incomplete SQL input; when `baselineUnanalyzed: true` is configured, it reports
+only growth above the recorded per-`(file, reason)` counts. Its rule options
 reject `unanalyzable` and `unanalyzableSql`.
 
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
