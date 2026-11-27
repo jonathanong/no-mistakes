@@ -36,7 +36,11 @@ pub(super) fn read(path: &Path) -> String {
     if path
         .extension()
         .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("mdx"))
+        .is_some_and(|ext| {
+            ["md", "mdx", "markdown"]
+                .iter()
+                .any(|extension| ext.eq_ignore_ascii_case(extension))
+        })
     {
         let resolved = path
             .canonicalize()

@@ -28,9 +28,9 @@ rule:
     - pattern: read($PATH)
     - all:
         - kind: macro_invocation
-        - regex: '(?i)^(?:std::|core::)?include_(?:str|bytes)![\s\S]*\.mdx?"#*\s*,?\s*\)\s*\)?$'
+        - regex: '(?i)^(?:std::|core::)?include_(?:str|bytes)![\s\S]*\.(?:mdx?|markdown)"#*\s*,?\s*\)\s*\)?$'
         - not:
-            regex: '"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)[^"]*\.[mM][dD][xX]?"#*\s*,?\s*\)\s*\)?$'
+            regex: '"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)[^"]*\.(?i:mdx?|markdown)"#*\s*,?\s*\)\s*\)?$'
     - pattern: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join($PATH)
     - pattern: Path::new(env!("CARGO_MANIFEST_DIR")).join($PATH)
 constraints:
@@ -39,7 +39,7 @@ constraints:
       - any:
           - kind: string_literal
           - kind: raw_string_literal
-      - regex: '(?i)\.mdx?"#*$'
+      - regex: '(?i)\.(?:mdx?|markdown)"#*$'
       - not:
           regex: '^(?:r#*)?"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)'
 files:

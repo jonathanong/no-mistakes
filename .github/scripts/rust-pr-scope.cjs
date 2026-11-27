@@ -14,7 +14,7 @@ const RUST_MARKDOWN_PREFIXES = [
   "fixtures/",
   "test-cases/",
 ];
-const MARKDOWN = /\.mdx?$/i;
+const MARKDOWN = /\.(?:mdx?|markdown)$/i;
 const DOC_TOOL_CONFIG = new Set(["cspell.config.yaml", ".lycheeignore"]);
 
 function isNonRustDocumentation(path) {

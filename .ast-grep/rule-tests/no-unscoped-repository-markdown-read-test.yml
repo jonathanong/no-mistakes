@@ -9,6 +9,7 @@ valid:
   - 'fn check() { let root = repo_root(); let _ = root.join("cspell.config.yaml"); }'
 invalid:
   - 'fn check() { let _ = read_root("README.md"); }'
+  - 'fn check() { let _ = read_root("evals/prompt.markdown"); }'
   - 'fn check() { let _ = repo_root().join("evals/prompt.md"); }'
   - 'fn check() { let root = repo_root(); let _ = read(&root.join("CONTRIBUTING.md")); }'
   - 'fn check() { let _ = std::fs::read_to_string("CONTRIBUTING.md"); }'
