@@ -87,9 +87,7 @@ Key options: `--root`, `--config`, `--tsconfig`, `--environment`
 
 Pass `--base <pre-change revision>` when the changed files include a package
 manifest or lockfile (`package.json`, `pnpm-lock.yaml`, `package-lock.json`,
-`yarn.lock`, `bun.lock`, `poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
-`Cargo.lock`, `Gemfile.lock`, `composer.lock`, and the other supported
-dependency inputs). Without
+`yarn.lock`, `bun.lock`, and the other supported dependency inputs). Without
 that baseline, the classifiers do not invent the previous versions. They keep
 the existing `package-manifest-no-baseline`, `lockfile-no-baseline`,
 `dotnet-dependency-no-baseline`, `swift-manifest-no-baseline`, and

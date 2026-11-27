@@ -44,7 +44,7 @@ pub(crate) fn analyze_lockfile_changes(
             continue;
         }
 
-        let Some(manager) = lockfile::detect_manager(basename) else {
+        let Some(manager) = lockfile::detect_planning_manager(basename) else {
             continue;
         };
 

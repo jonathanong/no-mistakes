@@ -54,8 +54,9 @@ uv git uses the commit in the URL fragment after `#`, then `rev`. uv
 `version`. A uv registry package uses the first wheel hash. `Pipfile.lock`
 reads `default` and `develop`. The object key is the name. A leading `==` is
 removed from `version`. A git or path entry may omit `version`; its
-fingerprint is `ref` or `path`. A registry entry requires `version` and uses
-the first hash. `go.mod` reads `require` lines, including `// indirect`.
+fingerprint is `ref` or `path`. File, URL, and other version-control sources
+may omit `version`. Their source URL forms the fingerprint. A registry entry
+requires `version` and uses the first hash. `go.mod` reads `require` lines, including `// indirect`.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
@@ -64,10 +65,7 @@ fingerprints, and `PATH` is a directory. `composer.lock` reads `packages` and
 directory, and a git source with no dist is git.
 
 A malformed file of one of those managers is not an empty package list.
-`lockfile diff` warns and omits that file. `tests plan` reports
-`lockfile-cargo-malformed`, `lockfile-poetry-malformed`, `lockfile-uv-malformed`,
-`lockfile-pipfile-malformed`, `lockfile-gomod-malformed`,
-`lockfile-gemfile-malformed`, or `lockfile-composer-malformed`. The async
+`lockfile diff` warns and omits that file. The async
 `lockfileDiff()` call rejects with the same description. `pom.xml`, Gradle
 lockfiles, `mix.lock`, and `pubspec.yaml` are not lockfile diffs.
 
@@ -95,7 +93,8 @@ Prints one package name per line (added + removed + changed).
 
 ## Integration with `tests plan`
 
-When `tests plan` detects a changed lockfile and `--base` is provided, it automatically
+When `tests plan` detects a changed npm-family lockfile and `--base` is
+provided, it automatically
 uses this diff logic to identify impacted packages and traces them to affected tests
 via `EdgeKind::PackageDependency` edges (from `package.json` → module node).
 

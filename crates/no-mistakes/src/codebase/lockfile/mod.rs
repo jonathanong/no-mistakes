@@ -8,6 +8,7 @@ pub mod validate;
 pub mod yarn;
 
 pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};
+pub use validate::packages_for_diff;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
@@ -116,6 +117,15 @@ pub fn detect_manager(basename: &str) -> Option<PackageManager> {
     }
 }
 
+pub fn detect_planning_manager(basename: &str) -> Option<PackageManager> {
+    detect_manager(basename).filter(|manager| {
+        matches!(
+            manager,
+            PackageManager::Npm | PackageManager::Pnpm | PackageManager::Yarn | PackageManager::Bun
+        )
+    })
+}
+
 pub fn is_binary_lockfile(basename: &str) -> bool {
     basename == "bun.lockb"
 }
@@ -138,22 +148,6 @@ pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPac
         PackageManager::Gemfile => ecosystem::parse_gemfile(content),
         PackageManager::Composer => ecosystem::parse_composer(content),
     }
-}
-
-/// npm-family parsers stay lenient. Other managers must validate first so a
-/// malformed file is not an empty package list.
-pub fn packages_for_diff(
-    manager: PackageManager,
-    content: &str,
-) -> Result<Vec<ResolvedPackage>, validate::LockfileValidationError> {
-    if matches!(
-        manager,
-        PackageManager::Npm | PackageManager::Pnpm | PackageManager::Yarn | PackageManager::Bun
-    ) {
-        return Ok(parse_lockfile(manager, content));
-    }
-    validate::validate_for_planning(manager, content)?;
-    Ok(parse_lockfile(manager, content))
 }
 
 pub fn diff(old: &[ResolvedPackage], new: &[ResolvedPackage]) -> LockfileDiff {

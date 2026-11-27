@@ -30,7 +30,7 @@ pub(super) fn trace_changed_files(context: TraceChangedContext<'_>, state: Trace
     // 4. Trace each changed file
     for changed in changed_files {
         let basename = changed.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if no_mistakes::codebase::lockfile::detect_manager(basename).is_some()
+        if no_mistakes::codebase::lockfile::detect_planning_manager(basename).is_some()
             || no_mistakes::codebase::lockfile::is_binary_lockfile(basename)
         {
             continue;

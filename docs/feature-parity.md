@@ -740,7 +740,7 @@ out of scope. Configure producer and consumer file globs through
 Rust v1 is a language frontend at the Swift/.NET bar: configured
 `tests.rust.packages` emit `rust-use` / `rust-mod` / `rust-package` edges,
 `tests plan cargo` selects crate tests, and static Axum / Actix / Rocket
-registrations emit `route` edges. Language `symbols` / `call-sites`,
+registrations emit `route` edges. Language `symbols` / `call-sites`
 and PostgreSQL rules over SQL in Rust code
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work.
 `Cargo.lock` diffs participate in `lockfile diff`.

@@ -1,5 +1,5 @@
 use super::ecosystem::TomlKind;
-use super::{bun, ecosystem, npm, pnpm, yarn, PackageManager};
+use super::{bun, ecosystem, npm, pnpm, yarn, PackageManager, ResolvedPackage};
 
 #[derive(Debug)]
 pub struct LockfileValidationError {
@@ -19,6 +19,22 @@ pub fn validate_for_planning(
         PackageManager::Npm => validate_npm(content),
         PackageManager::Yarn => validate_yarn(content),
         PackageManager::Bun => validate_bun(content),
+        _ => packages_for_diff(manager, content).map(drop),
+    }
+}
+
+/// Preserve npm-family diff behavior while checking ecosystem formats.
+pub fn packages_for_diff(
+    manager: PackageManager,
+    content: &str,
+) -> Result<Vec<ResolvedPackage>, LockfileValidationError> {
+    if content.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    match manager {
+        PackageManager::Npm | PackageManager::Pnpm | PackageManager::Yarn | PackageManager::Bun => {
+            Ok(super::parse_lockfile(manager, content))
+        }
         PackageManager::Poetry => toml(
             TomlKind::Poetry,
             content,
@@ -64,10 +80,8 @@ fn checked<T, E>(
     result: Result<T, E>,
     kind: &'static str,
     description: &'static str,
-) -> Result<(), LockfileValidationError> {
-    result
-        .map(|_| ())
-        .map_err(|_| LockfileValidationError { kind, description })
+) -> Result<T, LockfileValidationError> {
+    result.map_err(|_| LockfileValidationError { kind, description })
 }
 
 fn toml(
@@ -75,7 +89,7 @@ fn toml(
     content: &str,
     error_kind: &'static str,
     description: &'static str,
-) -> Result<(), LockfileValidationError> {
+) -> Result<Vec<ResolvedPackage>, LockfileValidationError> {
     checked(
         ecosystem::parse_toml_checked(kind, content),
         error_kind,

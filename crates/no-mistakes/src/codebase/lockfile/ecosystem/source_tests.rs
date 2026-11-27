@@ -38,6 +38,37 @@ fn pipfile_git_and_path_omit_version() {
 }
 
 #[test]
+fn pipfile_direct_sources_without_versions_keep_registry_packages() {
+    let packages = packages_for_diff(
+        PackageManager::Pipfile,
+        &fixture("pipfile", "direct-sources.lock"),
+    )
+    .unwrap();
+    for (name, source) in [
+        (
+            "sample-file",
+            "https://packages.example.invalid/archive.whl",
+        ),
+        (
+            "sample-url",
+            "https://packages.example.invalid/package.tar.gz",
+        ),
+        ("sample-hg", "https://vcs.example.invalid/hg"),
+        ("sample-svn", "https://vcs.example.invalid/svn"),
+        ("sample-bzr", "https://vcs.example.invalid/bzr"),
+    ] {
+        expect(&packages, name, "", source, ResolutionKind::Tarball);
+    }
+    expect(
+        &packages,
+        "sample-registry",
+        "1.0.0",
+        "sha256:abcd",
+        ResolutionKind::Registry,
+    );
+}
+
+#[test]
 fn poetry_commit_change_uses_resolved_reference() {
     let base =
         packages_for_diff(PackageManager::Poetry, &fixture("poetry", "pin-base.lock")).unwrap();
