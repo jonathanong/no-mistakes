@@ -295,3 +295,63 @@ fn checked_text_lockfiles_reject_unrecognized_top_level_structures() {
         ResolutionKind::Registry,
     );
 }
+
+#[test]
+fn gemfile_reads_plugin_source_specs() {
+    let base = packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "plugin-base.lock"),
+    )
+    .unwrap();
+    expect(
+        &base,
+        "sample-plugin-gem",
+        "1.0.0",
+        "https://packages.example.invalid",
+        ResolutionKind::Other,
+    );
+    let head = packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "plugin-head.lock"),
+    )
+    .unwrap();
+    assert_eq!(diff(&base, &head).changed, ["sample-plugin-gem"]);
+}
+
+#[test]
+fn go_accepts_one_valid_module_path_in_a_block() {
+    let packages =
+        packages_for_diff(PackageManager::Go, &fixture("gomod", "module-block.mod")).unwrap();
+    expect(
+        &packages,
+        "example.invalid/library",
+        "v1.0.0",
+        "",
+        ResolutionKind::Registry,
+    );
+    for name in ["empty-module-block.mod", "duplicate-module-block.mod"] {
+        assert!(packages_for_diff(PackageManager::Go, &fixture("gomod", name)).is_err());
+    }
+}
+
+#[test]
+fn python_git_subdirectories_contribute_to_dependency_identity() {
+    for (manager, dir) in [
+        (PackageManager::Uv, "uv"),
+        (PackageManager::Poetry, "poetry"),
+    ] {
+        let base = packages_for_diff(manager, &fixture(dir, "subdirectory-base.lock")).unwrap();
+        let head = packages_for_diff(manager, &fixture(dir, "subdirectory-head.lock")).unwrap();
+        expect(
+            &base,
+            "sample",
+            "1.0.0",
+            "abc123#subdirectory=packages/sample",
+            ResolutionKind::Git,
+        );
+        assert_eq!(diff(&base, &head).changed, ["sample"]);
+    }
+    assert!(
+        packages_for_diff(PackageManager::Uv, &fixture("uv", "invalid-registry.lock")).is_err()
+    );
+}

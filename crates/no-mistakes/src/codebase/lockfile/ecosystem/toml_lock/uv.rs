@@ -25,6 +25,8 @@ struct UvPackage {
 
 #[derive(Deserialize, Default)]
 struct UvSource {
+    #[serde(default, rename = "registry")]
+    _registry: Option<String>,
     #[serde(default)]
     git: Option<String>,
     #[serde(default)]
@@ -109,9 +111,17 @@ fn resolution(
 }
 
 fn git_pin(url: &str, rev: Option<&str>) -> String {
-    url.split_once('#')
+    let pin = url
+        .split_once('#')
         .map(|(_, fragment)| fragment)
         .filter(|fragment| !fragment.is_empty())
-        .map(str::to_string)
-        .unwrap_or_else(|| rev.unwrap_or("").to_string())
+        .unwrap_or_else(|| rev.unwrap_or_default())
+        .to_string();
+    let parsed = url::Url::parse(url).ok();
+    let subdirectory = parsed.as_ref().and_then(|url| {
+        url.query_pairs()
+            .find(|(key, _)| key == "subdirectory")
+            .map(|(_, value)| value)
+    });
+    super::git_fingerprint(pin, subdirectory.as_deref())
 }

@@ -37,6 +37,8 @@ struct PoetrySource {
     resolved_reference: Option<String>,
     #[serde(default)]
     url: Option<String>,
+    #[serde(default)]
+    subdirectory: Option<String>,
 }
 
 #[derive(Deserialize, Default)]
@@ -83,11 +85,9 @@ fn fingerprint(
 ) -> String {
     if kind == ResolutionKind::Git {
         if let Some(source) = source {
-            if let Some(pin) = nonempty(&source.resolved_reference) {
-                return pin;
-            }
-            if let Some(pin) = nonempty(&source.reference) {
-                return pin;
+            let pin = nonempty(&source.resolved_reference).or_else(|| nonempty(&source.reference));
+            if let Some(pin) = pin {
+                return super::git_fingerprint(pin, source.subdirectory.as_deref());
             }
         }
     }

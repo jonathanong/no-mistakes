@@ -3,6 +3,12 @@ use super::super::{ResolutionKind, ResolvedPackage};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct GoModError;
 
+enum Block {
+    Module(bool),
+    Requirements,
+    Other,
+}
+
 pub(crate) fn parse(content: &str) -> Vec<ResolvedPackage> {
     parse_checked(content).unwrap_or_default()
 }
@@ -22,11 +28,22 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
         {
             return Err(GoModError);
         }
-        if let Some(is_require) = block {
+        if let Some(active) = block.as_mut() {
             if line == ")" {
+                if matches!(active, Block::Module(false)) {
+                    return Err(GoModError);
+                }
                 block = None;
-            } else if is_require {
-                push_require(line, &mut out)?;
+            } else {
+                match active {
+                    Block::Module(seen) if !*seen && has_one_token(line) => {
+                        *seen = true;
+                        saw_module = true;
+                    }
+                    Block::Module(_) => return Err(GoModError),
+                    Block::Requirements => push_require(line, &mut out)?,
+                    Block::Other => {}
+                }
             }
             continue;
         }
@@ -34,13 +51,13 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
         let (directive, rest) = line.split_at(end.unwrap_or(line.len()));
         let rest = rest.trim();
         match directive {
+            "module" if rest == "(" => block = Some(Block::Module(false)),
             "module" | "go" if has_one_token(rest) => saw_module = true,
             "toolchain" if has_one_token(rest) => {}
-            "require" if rest != "(" => push_require(rest, &mut out)?,
-            "replace" | "exclude" | "retract" | "godebug" | "tool" | "ignore" | "require"
-                if rest == "(" =>
-            {
-                block = Some(directive == "require");
+            "require" if rest == "(" => block = Some(Block::Requirements),
+            "require" => push_require(rest, &mut out)?,
+            "replace" | "exclude" | "retract" | "godebug" | "tool" | "ignore" if rest == "(" => {
+                block = Some(Block::Other);
             }
             "replace" | "exclude" | "retract" | "godebug" | "tool" | "ignore"
                 if !rest.is_empty() => {}

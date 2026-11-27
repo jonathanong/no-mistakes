@@ -47,10 +47,12 @@ A `[package.dependencies]` table stays on that package. Cargo `registry+` and
 `sparse+` sources are registry and use `checksum`. `git+` is git and uses
 `checksum` or the source string. `path+` is a directory. A package with no
 source is the workspace. Poetry git uses `resolved_reference`, then
-`reference`. Other Poetry packages use the first file hash, including
+`reference`. A Git subdirectory selector contributes to that fingerprint.
+Other Poetry packages use the first file hash, including
 `[metadata.files]`. A Poetry directory uses its source path as the fingerprint.
 Poetry `url` and `file` sources are tarballs.
-uv git uses the commit in the URL fragment after `#`, then `rev`. uv
+uv git uses the commit in the URL fragment after `#`, then `rev`, and
+includes the Git subdirectory selector. uv
 `editable`, `directory`, and `virtual` sources use the directory path as
 their fingerprint and may omit `version`. uv uses the first wheel hash or
 falls back to the source-distribution hash. Direct URLs and local archives
@@ -59,11 +61,13 @@ are tarballs. `Pipfile.lock` reads `default`,
 removed from `version`. A git or path entry may omit `version`; its
 fingerprint is `ref` or `path`. File, URL, and other version-control sources
 may omit `version`. Their source URL and any non-Git revision form the fingerprint. A registry entry
-requires `version` and uses the first hash. `go.mod` reads `require` lines, including `// indirect`.
+requires `version` and uses the first hash. `go.mod` reads `require` lines, including `// indirect`, and accepts
+both inline and block module declarations.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
 fingerprints. A `PATH` entry uses its `remote` value as the directory
+fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
 fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.
 Distribution references take precedence over checksums. A path source
 uses its directory URL and any reference, and a git source with no dist is git.

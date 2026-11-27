@@ -28,3 +28,10 @@ pub(crate) fn parse_checked(
         TomlKind::Uv => uv::parse(content),
     }
 }
+
+fn git_fingerprint(pin: String, subdirectory: Option<&str>) -> String {
+    match subdirectory.filter(|value| !value.is_empty()) {
+        Some(path) => format!("{pin}#subdirectory={path}"),
+        None => pin,
+    }
+}

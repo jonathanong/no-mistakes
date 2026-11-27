@@ -39,6 +39,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
                 "GEM" => Section::Specs(ResolutionKind::Registry),
                 "GIT" => Section::Specs(ResolutionKind::Git),
                 "PATH" => Section::Specs(ResolutionKind::Directory),
+                "PLUGIN SOURCE" => Section::Specs(ResolutionKind::Other),
                 "CHECKSUMS" => Section::Checksums,
                 _ => Section::Other,
             };
@@ -58,7 +59,9 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         }
         let source_field = match section {
             Section::Specs(ResolutionKind::Git) => trimmed.strip_prefix("revision:"),
-            Section::Specs(ResolutionKind::Directory) => trimmed.strip_prefix("remote:"),
+            Section::Specs(ResolutionKind::Directory | ResolutionKind::Other) => {
+                trimmed.strip_prefix("remote:")
+            }
             _ => None,
         };
         if let Some(value) = source_field {
