@@ -64,8 +64,8 @@ description to reach a new subject is the change most likely to over-trigger.
 `queues` and most `duplication` attempts, and the description names none of
 those questions (does a helper already exist, where a job is enqueued or
 processed, calling the analyses from Node). A clause per flow is the next
-screen. It needs new held-out cases first, because all nine are spent, and
-for queues it needs the file-lookup framing that kept the earlier queue
+screen. It needs new held-out cases first, because 01–03 are spent and
+04–09 are reserved for candidate A's holdout, and for queues it needs the file-lookup framing that kept the earlier queue
 clause off `neg-hard-02` ([HISTORY](HISTORY.md#gates-for-the-queue-clause-984-item-6)).
 
 ### 4. Re-measure the negative-case Δ
