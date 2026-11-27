@@ -1,0 +1,253 @@
+{
+  "playwright": {
+    "summary": {
+      "totalRoutes": 2,
+      "coveredRoutes": 2,
+      "uncoveredRoutes": 0,
+      "totalSelectors": 0,
+      "coveredSelectors": 0,
+      "uncoveredSelectors": 0,
+      "duplicateSelectors": 0,
+      "totalFetchApis": 1,
+      "coveredFetchApis": 1,
+      "uncoveredFetchApis": 0
+    },
+    "route": {
+      "route": "/",
+      "file": "app/page.tsx",
+      "covered": true,
+      "tests": [
+        "tests/home.spec.ts"
+      ],
+      "testsDetail": [
+        {
+          "file": "tests/home.spec.ts"
+        },
+        {
+          "file": "tests/home.spec.ts",
+          "name": "also visits"
+        },
+        {
+          "file": "tests/home.spec.ts",
+          "name": "clicks relative href"
+        },
+        {
+          "file": "tests/home.spec.ts",
+          "name": "visits home page",
+          "describePath": [
+            "Home"
+          ]
+        }
+      ],
+      "urls": [
+        "/"
+      ]
+    },
+    "fetch": {
+      "method": "GET",
+      "path": "/api/health",
+      "covered": true,
+      "tests": [
+        "tests/home.spec.ts"
+      ],
+      "testsDetail": [
+        {
+          "file": "tests/home.spec.ts"
+        },
+        {
+          "file": "tests/home.spec.ts",
+          "name": "also visits"
+        },
+        {
+          "file": "tests/home.spec.ts",
+          "name": "clicks relative href"
+        },
+        {
+          "file": "tests/home.spec.ts",
+          "name": "visits home page",
+          "describePath": [
+            "Home"
+          ]
+        }
+      ],
+      "routeFiles": [
+        "app/page.tsx"
+      ]
+    },
+    "fetchEdge": {
+      "kind": "fetch",
+      "testFile": "tests/home.spec.ts",
+      "routeFile": "app/page.tsx",
+      "route": "/",
+      "method": "GET",
+      "path": "/api/health",
+      "side": "server",
+      "cached": false
+    },
+    "routeEdge": {
+      "kind": "route",
+      "testFile": "tests/home.spec.ts",
+      "testName": "visits home page",
+      "describePath": [
+        "Home"
+      ],
+      "routeFile": "app/page.tsx",
+      "route": "/",
+      "url": "/",
+      "hook": false,
+      "line": 3
+    },
+    "related": {
+      "tests": [
+        "tests/home.spec.ts"
+      ],
+      "fetch_apis": [
+        "GET /api/health"
+      ]
+    },
+    "test": {
+      "file": "tests/home.spec.ts",
+      "name": "visits home page",
+      "describePath": [
+        "Home"
+      ],
+      "testIds": [],
+      "htmlIds": [],
+      "routes": [
+        "/"
+      ],
+      "fetchApis": [
+        "GET /api/health"
+      ],
+      "locatorTexts": []
+    }
+  },
+  "serverRoutes": [
+    {
+      "file": "backend/api/v1/users.mts",
+      "line": 2,
+      "method": "get",
+      "route": "/api/v1/users",
+      "rawPath": "/api/v1/users",
+      "queryParams": [],
+      "framework": "heuristic"
+    },
+    {
+      "file": "backend/api/v1/users.mts",
+      "line": 3,
+      "method": "get",
+      "route": "/api/v1/users/*",
+      "rawPath": "/api/v1/users/:id",
+      "queryParams": [],
+      "framework": "heuristic"
+    }
+  ],
+  "skipPolicies": [
+    {
+      "/conditional": true,
+      "/mixed": true,
+      "/skipped": false
+    },
+    {
+      "/conditional": false,
+      "/mixed": true,
+      "/skipped": false
+    },
+    {
+      "/conditional": true,
+      "/mixed": true,
+      "/skipped": true
+    }
+  ],
+  "appRoutes": [
+    {
+      "route": "/control",
+      "file": "control-web/app/control/page.tsx",
+      "covered": true,
+      "tests": [
+        "tests/e2e/control.spec.ts"
+      ],
+      "testsDetail": [
+        {
+          "file": "tests/e2e/control.spec.ts",
+          "name": "control saves"
+        }
+      ],
+      "urls": [
+        "/control"
+      ]
+    }
+  ],
+  "appSelectors": [
+    {
+      "attribute": "data-testid",
+      "value": "control-save",
+      "file": "control-web/app/control/page.tsx",
+      "covered": true,
+      "unsupportedDynamic": false,
+      "tests": [
+        "tests/e2e/control.spec.ts"
+      ],
+      "testsDetail": [
+        {
+          "file": "tests/e2e/control.spec.ts",
+          "name": "control saves"
+        }
+      ],
+      "selectors": [
+        "getByTestId(control-save)"
+      ]
+    }
+  ],
+  "dataPw": {
+    "attributes": {
+      "value": "search-bar",
+      "attributes": [
+        "data-testid"
+      ],
+      "source": [
+        {
+          "file": "components/widget.tsx",
+          "line": 3,
+          "attribute": "data-testid"
+        }
+      ],
+      "test": []
+    },
+    "scan": {
+      "value": "search-bar",
+      "attributes": [
+        "data-pw",
+        "data-testid"
+      ],
+      "source": [
+        {
+          "file": "other/elsewhere.tsx",
+          "line": 4,
+          "attribute": "data-pw"
+        }
+      ],
+      "test": [
+        {
+          "file": "e2e/search.spec.ts",
+          "line": 5,
+          "attribute": "data-pw"
+        }
+      ]
+    },
+    "testOnly": {
+      "value": "search-bar",
+      "attributes": [
+        "data-pw",
+        "data-testid"
+      ],
+      "test": [
+        {
+          "file": "e2e/search.spec.ts",
+          "line": 5,
+          "attribute": "data-pw"
+        }
+      ]
+    }
+  }
+}

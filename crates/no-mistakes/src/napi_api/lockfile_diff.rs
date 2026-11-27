@@ -1,7 +1,7 @@
 use super::options::{parse_options_value, resolve_project_root, to_napi_error};
 use no_mistakes::codebase::lockfile::{self, PackageManager};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 mod git;
 use git::{detect_lockfiles_from_head, find_git_root, git_ref_exists, git_show_file};
@@ -13,6 +13,7 @@ pub(crate) struct LockfileDiffOptions {
     pub base: Option<String>,
     pub head: Option<String>,
     pub lockfile: Option<String>,
+    pub include_warnings: bool,
 }
 
 #[derive(Serialize)]
@@ -22,6 +23,13 @@ struct LockfileDiffEntry {
     added: Vec<String>,
     removed: Vec<String>,
     changed: Vec<String>,
+}
+
+#[derive(Serialize)]
+struct LockfileDiffWarning {
+    code: &'static str,
+    lockfile: String,
+    message: String,
 }
 
 fn git_io_to_napi(error: std::io::Error) -> napi::Error {
@@ -74,69 +82,34 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
     };
 
     let mut entries = Vec::new();
+    let mut warnings = Vec::new();
 
     for lf_path in &lf_paths {
         let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        let Some(manager) = lockfile::detect_manager(basename) else {
-            if lockfile::is_binary_lockfile(basename) {
-                return Err(napi::Error::from_reason(format!(
-                    "`{}` is a binary lockfile and cannot be parsed for dependency changes",
-                    basename
-                )));
-            }
-            continue;
-        };
         let rel = lf_path
             .strip_prefix(&git_root)
             .unwrap_or(lf_path)
             .to_string_lossy()
             .replace('\\', "/");
-        let new_content = if let Some(head) = options.head.as_deref() {
-            match git_show_file(&git_root, head, &rel).map_err(git_io_to_napi)? {
-                Some(content) => content,
-                None => {
-                    if !git_ref_exists(&git_root, head).map_err(git_io_to_napi)? {
-                        return Err(napi::Error::from_reason(format!(
-                            "Could not retrieve `{}` at ref `{}`; ensure the head ref exists in the git history",
-                            rel, head
-                        )));
-                    }
-                    // Ref is valid but file deleted at head — report all packages as removed
-                    String::new()
+        let Some(manager) = lockfile::detect_manager(basename) else {
+            if lockfile::is_binary_lockfile(basename) {
+                let message = lockfile::binary_lockfile_warning(basename);
+                if !options.include_warnings {
+                    return Err(napi::Error::from_reason(message));
                 }
+                warnings.push(LockfileDiffWarning {
+                    code: "binary-lockfile",
+                    lockfile: rel,
+                    message,
+                });
             }
-        } else {
-            std::fs::read_to_string(lf_path).unwrap_or_default()
+            continue;
         };
-        let old_content = if options.head.is_some() {
-            match git_show_file(&git_root, &base, &rel).map_err(git_io_to_napi)? {
-                Some(content) => content,
-                None => {
-                    if !git_ref_exists(&git_root, &base).map_err(git_io_to_napi)? {
-                        return Err(napi::Error::from_reason(format!(
-                            "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
-                            rel, base
-                        )));
-                    }
-                    // Valid base ref but file not at base — newly added at head
-                    String::new()
-                }
-            }
-        } else {
-            match git_show_file(&git_root, &base, &rel).map_err(git_io_to_napi)? {
-                Some(c) => c,
-                None => {
-                    if !git_ref_exists(&git_root, &base).map_err(git_io_to_napi)? {
-                        return Err(napi::Error::from_reason(format!(
-                            "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
-                            rel, base
-                        )));
-                    }
-                    // Valid base ref but file not at base — newly added lockfile; report all as added
-                    String::new()
-                }
-            }
+        let new_content = match options.head.as_deref() {
+            Some(head) => git_lockfile_content(&git_root, head, &rel, "head")?,
+            None => std::fs::read_to_string(lf_path).unwrap_or_default(),
         };
+        let old_content = git_lockfile_content(&git_root, &base, &rel, "base")?;
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
         let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
         let diff = lockfile::diff(&old_pkgs, &new_pkgs);
@@ -149,7 +122,31 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
         });
     }
 
-    Ok(crate::cli::json_string(&entries))
+    if options.include_warnings {
+        Ok(crate::cli::json_string(&serde_json::json!({
+            "entries": entries,
+            "warnings": warnings,
+        })))
+    } else {
+        Ok(crate::cli::json_string(&entries))
+    }
+}
+
+fn git_lockfile_content(
+    git_root: &Path,
+    reference: &str,
+    lockfile: &str,
+    kind: &str,
+) -> napi::Result<String> {
+    if let Some(content) = git_show_file(git_root, reference, lockfile).map_err(git_io_to_napi)? {
+        return Ok(content);
+    }
+    if !git_ref_exists(git_root, reference).map_err(git_io_to_napi)? {
+        return Err(napi::Error::from_reason(format!(
+            "Could not retrieve `{lockfile}` at ref `{reference}`; ensure the {kind} ref exists in the git history"
+        )));
+    }
+    Ok(String::new())
 }
 
 fn manager_name(m: PackageManager) -> &'static str {

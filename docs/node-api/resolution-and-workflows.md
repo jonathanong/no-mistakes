@@ -10,6 +10,9 @@ a less-specific mapping.
 `ci topology --format json` — it never throws on diagnostics (unlike the CLI,
 which writes each diagnostic to stderr, exits non-zero, and writes no graph
 to stdout); callers inspect the returned `diagnostics` array themselves.
+Pass `ciTopology({ root, format: "mermaid" })` to get the same diagram text as
+`ci topology --format mermaid`. The promise rejects with the topology diagnostics
+if the graph cannot be rendered.
 `createWorkflowTopologyIndex(topology)` builds a frozen, sorted query index
 (`directUpstreamJobIds`, `transitiveCalleeWorkflowPaths`,
 `artifactConsumersForProducerJob`, etc.) over that result — it is pure JS,

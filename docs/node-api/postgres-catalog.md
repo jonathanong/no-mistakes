@@ -65,13 +65,16 @@ Typed comment metadata preserves routine signatures, and ALTER INDEX metadata
 preserves attach-partition and rename operations. Plain newline-separated
 string constants are joined while source spans retain their original spelling.
 
-`generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas, currentDatabase })` asynchronously
+`generatePostgresCatalog({ connectionEnv, schema, coverage, searchPathSchemas, currentDatabase, output })` asynchronously
 returns the schema catalog that `schemaCatalogPath` reads, generated from a live
 PostgreSQL schema. `coverage` is `"complete"` (the default; every catalog rule
 accepts it) or `"ordering"` (only conflict and lock ordering accept it). It requires
-`psql` and keeps connection secrets in the named environment variable. The caller
-writes the returned object to disk. See [`postgres catalog`](../cli/postgres.md) for
-what a catalog holds, what it leaves out, and its limitations.
+`psql` and keeps connection secrets in the named environment variable. With
+`output: "catalog.json"`, the function atomically replaces that path and returns the
+same catalog object. Relative paths resolve from the Node process working directory.
+A failed query or write leaves any existing file intact. Omitting `output` returns
+the catalog in memory. See [`postgres catalog`](../cli/postgres-catalog.md) for
+catalog contents and limitations.
 
 Complete catalogs expose optional `PostgresCompleteCatalogTable.hasDescendants`
 with explicit inheritance and partition evidence from PostgreSQL. Older
