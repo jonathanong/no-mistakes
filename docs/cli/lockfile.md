@@ -47,10 +47,11 @@ A `[package.dependencies]` table stays on that package. Cargo `registry+` and
 `sparse+` sources are registry and use `checksum`, including legacy
 checksums recorded in `[metadata]`. `git+` is git and uses
 `checksum` or the source string. `path+` is a directory. A package with no
-source is the workspace. Poetry git uses `resolved_reference`, then
+source is the workspace. Cargo also reads legacy `[root]` records. Poetry git uses `resolved_reference`, then
 `reference`. A Git subdirectory selector contributes to that fingerprint.
 Other Poetry packages use sorted file hashes, including legacy
-`[metadata.files]` and `[metadata.hashes]` representations. A Poetry directory uses its source path as the fingerprint.
+`[metadata.files]` and `[metadata.hashes]` representations. For a local file
+dependency, the legacy file list contributes only the matching archive hash. A Poetry directory uses its source path as the fingerprint.
 Poetry `url` and `file` sources are tarballs.
 uv git uses the commit in the URL fragment after `#`, then `rev`, and
 includes the Git subdirectory selector. uv
@@ -67,7 +68,8 @@ may omit `version`. Their source URL, non-Git revision, and subdirectory
 selector contribute to the fingerprint. A registry entry
 requires `version` and uses all sorted hashes. `go.mod` requires exactly one
 module declaration and reads `require` lines, including `// indirect` and revision
-names written in place of canonical versions.
+names written in place of canonical versions. An empty `require ()` block
+contributes no packages.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision, its optional `glob` selector, and

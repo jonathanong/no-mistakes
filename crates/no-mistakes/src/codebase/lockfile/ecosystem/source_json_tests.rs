@@ -134,3 +134,22 @@ fn json_lockfiles_reject_invalid_optional_fields() {
     )
     .is_err());
 }
+
+#[test]
+fn pipfile_hashes_must_be_strings_and_noneditable_packages_use_them() {
+    for name in ["invalid-hashes.lock", "invalid-hash-entry.lock"] {
+        assert!(packages_for_diff(PackageManager::Pipfile, &fixture("pipfile", name)).is_err());
+    }
+    let packages = packages_for_diff(
+        PackageManager::Pipfile,
+        &fixture("pipfile", "not-editable.lock"),
+    )
+    .unwrap();
+    expect(
+        &packages,
+        "sample",
+        "1.0.0",
+        "sha256:sample",
+        ResolutionKind::Registry,
+    );
+}

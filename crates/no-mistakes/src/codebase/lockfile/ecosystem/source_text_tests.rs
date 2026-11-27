@@ -176,3 +176,13 @@ fn go_requires_a_module_and_retains_requested_revision_names() {
         ResolutionKind::Registry,
     );
 }
+
+#[test]
+fn go_accepts_inline_empty_require_blocks() {
+    let packages = packages_for_diff(
+        PackageManager::Go,
+        &fixture("gomod", "inline-empty-block.mod"),
+    )
+    .unwrap();
+    assert!(packages.is_empty());
+}

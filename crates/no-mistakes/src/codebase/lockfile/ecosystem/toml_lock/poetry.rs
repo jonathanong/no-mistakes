@@ -24,6 +24,8 @@ struct PoetryPackage {
 #[derive(Deserialize)]
 struct PoetryFile {
     #[serde(default)]
+    file: Option<String>,
+    #[serde(default)]
     hash: Option<String>,
 }
 
@@ -66,19 +68,26 @@ pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
     {
         return Err(TomlError);
     }
-    let mut packages: Vec<_> = lock.package.into_iter().map(package).collect();
-    if let Some(metadata) = lock.metadata {
-        fill_metadata(&mut packages, &metadata);
-    }
-    Ok(packages)
+    Ok(lock
+        .package
+        .into_iter()
+        .map(|pkg| package(pkg, lock.metadata.as_ref()))
+        .collect())
 }
 
-fn package(pkg: PoetryPackage) -> ResolvedPackage {
-    let kind = kind_of(pkg.source.as_ref());
+fn package(pkg: PoetryPackage, metadata: Option<&PoetryMetadata>) -> ResolvedPackage {
+    let source = pkg.source.as_ref();
+    let kind = kind_of(source);
+    let mut fingerprint = fingerprint(kind, source, &pkg.files);
+    if fingerprint.is_empty() {
+        if let Some(metadata) = metadata {
+            fingerprint = legacy_fingerprint(&pkg.name, source, metadata);
+        }
+    }
     ResolvedPackage {
         name: pkg.name,
         version: pkg.version,
-        fingerprint: fingerprint(kind, pkg.source.as_ref(), &pkg.files),
+        fingerprint,
         kind,
     }
 }
@@ -114,24 +123,33 @@ fn fingerprint(
             return path;
         }
     }
-    artifact_hashes(files)
+    artifact_hashes(files.iter())
 }
 
-fn fill_metadata(packages: &mut [ResolvedPackage], metadata: &PoetryMetadata) {
-    for package in packages
-        .iter_mut()
-        .filter(|package| package.fingerprint.is_empty())
-    {
-        if let Some(hashes) = metadata.hashes.get(&package.name) {
-            package.fingerprint = super::super::hash_fingerprint(hashes.iter().map(String::as_str));
-        } else if let Some(files) = metadata.files.get(&package.name) {
-            package.fingerprint = artifact_hashes(files);
-        }
+fn legacy_fingerprint(
+    name: &str,
+    source: Option<&PoetrySource>,
+    metadata: &PoetryMetadata,
+) -> String {
+    if let Some(hashes) = metadata.hashes.get(name) {
+        return super::super::hash_fingerprint(hashes.iter().map(String::as_str));
     }
+    let Some(files) = metadata.files.get(name) else {
+        return String::new();
+    };
+    let archive = source
+        .filter(|source| source.kind.as_deref() == Some("file"))
+        .and_then(|source| source.url.as_deref())
+        .and_then(|path| path.rsplit(['/', '\\']).next());
+    artifact_hashes(
+        files
+            .iter()
+            .filter(|file| archive.is_none_or(|name| file.file.as_deref() == Some(name))),
+    )
 }
 
-fn artifact_hashes(files: &[PoetryFile]) -> String {
-    super::super::hash_fingerprint(files.iter().filter_map(|file| file.hash.as_deref()))
+fn artifact_hashes<'a>(files: impl Iterator<Item = &'a PoetryFile>) -> String {
+    super::super::hash_fingerprint(files.filter_map(|file| file.hash.as_deref()))
 }
 
 fn nonempty(value: &Option<String>) -> Option<String> {

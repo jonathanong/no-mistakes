@@ -30,10 +30,12 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Pipfi
 
 fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage, PipfileError> {
     let obj = entry.as_object().ok_or(PipfileError)?;
-    let editable = obj.get("editable");
-    if editable.is_some_and(|value| !value.is_boolean()) {
-        return Err(PipfileError);
-    }
+    let editable = obj
+        .get("editable")
+        .map(|value| value.as_bool().ok_or(PipfileError))
+        .transpose()?
+        .unwrap_or_default();
+    let hashes = locked_hashes(obj.get("hashes"))?;
     let version = obj
         .get("version")
         .map(|value| value.as_str().ok_or(PipfileError))
@@ -59,17 +61,14 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
         (ResolutionKind::Other, fingerprint, true)
     } else if let Some(url) = text(obj, "file").or_else(|| text(obj, "url")) {
         (ResolutionKind::Tarball, url.to_string(), true)
-    } else if editable.is_some() {
+    } else if editable {
         (ResolutionKind::Directory, String::new(), true)
     } else {
-        let hashes = obj
-            .get("hashes")
-            .and_then(|value| value.as_array())
-            .into_iter()
-            .flatten()
-            .filter_map(|value| value.as_str());
-        let fingerprint = super::hash_fingerprint(hashes);
-        (ResolutionKind::Registry, fingerprint, false)
+        (
+            ResolutionKind::Registry,
+            super::hash_fingerprint(hashes.into_iter()),
+            false,
+        )
     };
     let version = version.ok_or(PipfileError).or_else(|err| {
         if version_optional {
@@ -84,6 +83,18 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
         fingerprint,
         kind,
     })
+}
+
+fn locked_hashes(value: Option<&serde_json::Value>) -> Result<Vec<&str>, PipfileError> {
+    let Some(value) = value else {
+        return Ok(Vec::new());
+    };
+    value
+        .as_array()
+        .ok_or(PipfileError)?
+        .iter()
+        .map(|hash| hash.as_str().ok_or(PipfileError))
+        .collect()
 }
 
 fn text<'a>(obj: &'a serde_json::Map<String, serde_json::Value>, key: &str) -> Option<&'a str> {

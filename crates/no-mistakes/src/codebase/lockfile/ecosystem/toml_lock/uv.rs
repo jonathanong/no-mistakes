@@ -67,7 +67,7 @@ fn package(pkg: UvPackage) -> Result<ResolvedPackage, TomlError> {
         .filter_map(|distribution| distribution.hash.as_deref());
     let fingerprint = super::super::hash_fingerprint(hashes);
     let distribution_hash = (!fingerprint.is_empty()).then_some(fingerprint.as_str());
-    let (kind, fingerprint) = resolution(pkg.source.as_ref(), distribution_hash);
+    let (kind, fingerprint) = resolution(pkg.source.as_ref(), distribution_hash)?;
     let version = match pkg.version {
         Some(version) => version,
         None if kind == ResolutionKind::Directory => String::new(),
@@ -84,15 +84,15 @@ fn package(pkg: UvPackage) -> Result<ResolvedPackage, TomlError> {
 fn resolution(
     source: Option<&UvSource>,
     distribution_hash: Option<&str>,
-) -> (ResolutionKind, String) {
+) -> Result<(ResolutionKind, String), TomlError> {
     let Some(source) = source else {
-        return (
+        return Ok((
             ResolutionKind::Registry,
             distribution_hash.unwrap_or_default().to_string(),
-        );
+        ));
     };
     if let Some(git) = source.git.as_deref() {
-        return (ResolutionKind::Git, git_pin(git, source.rev.as_deref()));
+        return Ok((ResolutionKind::Git, git_pin(git, source.rev.as_deref())?));
     }
     if let Some(path) = source
         .editable
@@ -100,35 +100,37 @@ fn resolution(
         .or(source.directory.as_deref())
         .or(source.r#virtual.as_deref())
     {
-        return (ResolutionKind::Directory, path.to_string());
+        return Ok((ResolutionKind::Directory, path.to_string()));
     }
     if let Some(archive) = source.url.as_deref().or(source.path.as_deref()) {
-        return (
+        return Ok((
             ResolutionKind::Tarball,
             super::super::source_fingerprint(
                 distribution_hash.unwrap_or(archive),
                 "subdirectory",
                 source.subdirectory.as_deref(),
             ),
-        );
+        ));
     }
-    (
+    Ok((
         ResolutionKind::Registry,
         distribution_hash.unwrap_or_default().to_string(),
-    )
+    ))
 }
 
-fn git_pin(url: &str, rev: Option<&str>) -> String {
+fn git_pin(url: &str, rev: Option<&str>) -> Result<String, TomlError> {
+    let url = url::Url::parse(url).map_err(|_| TomlError)?;
     let pin = url
-        .split_once('#')
-        .map(|(_, fragment)| fragment)
+        .fragment()
         .filter(|fragment| !fragment.is_empty())
         .unwrap_or_else(|| rev.unwrap_or_default());
-    let parsed = url::Url::parse(url).ok();
-    let subdirectory = parsed.as_ref().and_then(|url| {
-        url.query_pairs()
-            .find(|(key, _)| key == "subdirectory")
-            .map(|(_, value)| value)
-    });
-    super::super::source_fingerprint(pin, "subdirectory", subdirectory.as_deref())
+    let subdirectory = url
+        .query_pairs()
+        .find(|(key, _)| key == "subdirectory")
+        .map(|(_, value)| value);
+    Ok(super::super::source_fingerprint(
+        pin,
+        "subdirectory",
+        subdirectory.as_deref(),
+    ))
 }

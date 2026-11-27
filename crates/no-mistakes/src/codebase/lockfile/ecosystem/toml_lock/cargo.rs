@@ -9,6 +9,8 @@ struct CargoLock {
     #[serde(default)]
     package: Vec<CargoPackage>,
     #[serde(default)]
+    root: Option<CargoPackage>,
+    #[serde(default)]
     metadata: toml::Table,
 }
 
@@ -24,12 +26,13 @@ struct CargoPackage {
 
 pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
     let lock: CargoLock = toml::from_str(content).map_err(|_| TomlError)?;
-    if lock.version.is_none() && lock.package.is_empty() {
+    if lock.version.is_none() && lock.package.is_empty() && lock.root.is_none() {
         return Err(TomlError);
     }
     Ok(lock
         .package
         .into_iter()
+        .chain(lock.root)
         .map(|pkg| package(pkg, &lock.metadata))
         .collect())
 }

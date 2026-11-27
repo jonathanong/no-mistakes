@@ -1,0 +1,6 @@
+version = 1
+
+[[package]]
+name = "sample"
+version = "1.0.0"
+source = { git = "https://[#abc" }

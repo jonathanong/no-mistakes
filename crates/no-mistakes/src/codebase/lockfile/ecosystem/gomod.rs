@@ -59,6 +59,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
             "go" if has_one_token(rest) => {}
             "toolchain" if has_one_token(rest) => {}
             "require" if rest == "(" => block = Some(Block::Requirements),
+            "require" if inline_empty_block(rest) => {}
             "require" => push_require(rest, &mut out)?,
             "replace" if rest == "(" => block = Some(Block::Replacements),
             "replace" if replacement_fields(rest) => {}
@@ -73,6 +74,12 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
         return Err(GoModError);
     }
     Ok(out)
+}
+
+fn inline_empty_block(rest: &str) -> bool {
+    rest.strip_prefix('(')
+        .and_then(|rest| rest.strip_suffix(')'))
+        .is_some_and(|inside| inside.trim().is_empty())
 }
 
 fn replacement_fields(line: &str) -> bool {
