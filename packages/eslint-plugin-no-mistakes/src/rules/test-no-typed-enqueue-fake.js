@@ -84,6 +84,24 @@ module.exports = rule(
       );
     }
 
+    function unresolvedTypedTarget(params, lintContext) {
+      return Boolean(params?.some((param) => typeQueryUnresolved(param, lintContext)));
+    }
+
+    function typeQueryName(expr) {
+      let current = expr;
+      while (current?.type === "TSQualifiedName") current = current.left;
+      return current;
+    }
+
+    function typeQueryUnresolved(typeNode, lintContext) {
+      if (typeNode?.type === "TSTypeQuery") {
+        return isUnresolved(moduleLoad(typeQueryName(typeNode.exprName), lintContext));
+      }
+      if (typeNode?.type !== "TSTypeReference") return false;
+      return unresolvedTypedTarget(typeArgParams(typeNode), lintContext);
+    }
+
     function hasTypedEnqueueArg(params) {
       return Boolean(
         params?.some(
@@ -123,7 +141,9 @@ module.exports = rule(
           report(node);
         } else if (
           (method === "mocked" || method === "fn") &&
-          isUnresolved(moduleLoad(method === "mocked" ? argument : callee, context))
+          !suppressed(node) &&
+          (isUnresolved(moduleLoad(method === "mocked" ? argument : callee, context)) ||
+            (method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context)))
         ) {
           reportUnanalyzable(context, node, "this enqueue fake");
         }

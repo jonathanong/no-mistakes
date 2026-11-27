@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 
 function resolveVariable(node, context) {
@@ -13,6 +14,7 @@ function resolveVariable(node, context) {
 }
 
 function baseIdentifier(callee) {
+  callee = unwrapExpression(callee);
   if (callee?.type === "ChainExpression") return baseIdentifier(callee.expression);
   if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
     return baseIdentifier(callee.expressions.at(-1));

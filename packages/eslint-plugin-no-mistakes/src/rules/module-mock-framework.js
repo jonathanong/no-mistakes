@@ -133,7 +133,7 @@ function frameworkBindingOpaque(node, context, seen = new Set()) {
   if (!node || frameworkBindingModule(node, context)) return false;
   if (node.type === "MemberExpression") {
     const known = frameworkBindingModule(node.object, context);
-    if (known && memberPropertyName(node) === null) return true;
+    if (known && memberPropertyName(node) === null) return false;
     return frameworkBindingOpaque(node.object, context, seen);
   }
   if (node.type !== "Identifier" || seen.has(node.name)) return false;

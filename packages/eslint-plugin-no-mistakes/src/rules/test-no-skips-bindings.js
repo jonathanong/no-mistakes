@@ -113,7 +113,7 @@ function imported(node, context, namespace = false, seen = new Set()) {
       let init = unwrapExpression(declaration.init || {});
       const awaited = init.type === "AwaitExpression";
       if (awaited) init = unwrapExpression(init.argument);
-      const required = requireResolution(declaration.init, context);
+      const required = requireResolution(init, context);
       if (required) source = required.source;
       else if (init.type === "ImportExpression" && awaited) {
         source = init.source?.type === "Literal" ? init.source.value : null;

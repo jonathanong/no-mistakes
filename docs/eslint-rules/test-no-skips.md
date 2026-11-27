@@ -168,7 +168,7 @@ A configured namespace and `const loaded = require("./custom-test")` both
 export `test`, so `const { test } = loaded; test.skip` reports. `describe`
 from that namespace is not that `test`. `ctx.skip`, `(ctx.skip as any)()`,
 a cast `skip` binding, a callback cast to `any`, and `(v as typeof v).test.skip`
-are skips.
+are skips. `const { test: check } = await require("vitest"); check.skip` is that same skip.
 
 ```js
 "no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "../fixtures", "@app/test"] }]

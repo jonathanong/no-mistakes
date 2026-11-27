@@ -16,4 +16,4 @@ function reportUnanalyzable(context, node, subject) {
   return true;
 }
 
-module.exports = { UNANALYZABLE_SCHEMA, reportUnanalyzable, reportsUnanalyzable };
+module.exports = { UNANALYZABLE_SCHEMA, reportUnanalyzable };

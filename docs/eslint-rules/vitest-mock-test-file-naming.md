@@ -41,7 +41,7 @@ remove the `.mock.test` suffix when it no longer mocks a module. `vi.fn` and
 Immutable same-file aliases of `vi` or its runner namespace, and static `vi`
 destructuring (``const { [`vi`]: api } = runner``), retain module-mock identity. `const { mock } = runner.vi` also retains the mock method.
 Static `vi.mock["call"]` and literal-array ``vi.mock[`apply`]`` wrappers require
-the same `.mock.test` filename. Mutable aliases, shadowed parameters, and computed
+the same `.mock.test` filename. `.call` and `.apply` on a mock whose `vi` comes from a non-static `require` report `unanalyzable`. Mutable aliases, shadowed parameters, and computed
 identifier destructuring does not establish that identity. Rename the file or remove
 its module mocking; changing the spelling of the mock does not change isolation.
 

@@ -88,9 +88,14 @@ function isMockingCall(node, context) {
 }
 
 function opaqueMock(node, context) {
-  const callee = unwrapSequence(node.callee);
+  let callee = unwrapSequence(node.callee);
   if (callee?.type !== "MemberExpression") return false;
-  const method = propertyName(callee.property, callee.computed);
+  let method = propertyName(callee.property, callee.computed);
+  if (method === "call" || method === "apply") {
+    callee = unwrapSequence(callee.object);
+    if (callee?.type !== "MemberExpression") return false;
+    method = propertyName(callee.property, callee.computed);
+  }
   if (method === null || !MOCK_METHODS.has(method)) return false;
   if (isFrameworkBinding(callee.object, context)) return false;
   return frameworkBindingOpaque(callee.object, context);

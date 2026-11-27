@@ -76,7 +76,7 @@ test files with your linter's `files` globs and use a TypeScript parser in ESLin
 a renamed `vi` and `enqueue`, and `import vt = require("vitest")` with
 `import jobs = require("@example/jobs")` are the same fake.
 `(vi.mocked as typeof vi.mocked)(enqueueJob)`, `(vi as typeof vi).mocked(enqueueJob)`,
-and `(vi.fn<typeof enqueueJob>)()` are too.
+and `(vi.fn<typeof enqueueJob>)()` are too. A type-only `import type * as V from "vitest"` still recognizes `V.MockedFunction<typeof enqueue>`. A computed key such as `{ ["enqueueTask"]: name }` is not that export. `vi.fn<typeof jobs.enqueue>()` reports `unanalyzable` when `jobs` comes from a non-static `require`, and a suppression on that call silences it.
 
 ```js
 {

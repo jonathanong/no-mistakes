@@ -70,8 +70,7 @@ function recordRequire(declaration, state, context) {
     return;
   }
   for (const entry of patternTests(declaration.id)) {
-    if (entry.dynamic) state.opaque.add(entry.local.name);
-    else state.roots.add(entry.local.name);
+    if (!entry.dynamic) state.roots.add(entry.local.name);
   }
 }
 

@@ -103,10 +103,21 @@
       "findings": [
         {
           "column": 1,
-          "endColumn": 22,
-          "endLine": 6,
+          "endColumn": 28,
+          "endLine": 11,
           "file": "opaque-method.test.ts",
-          "line": 6,
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 30,
+          "endLine": 12,
+          "file": "opaque-method.test.ts",
+          "line": 12,
           "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/module-mock-boundary",
@@ -1041,6 +1052,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "shadow-cast.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "shadow-cast.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
@@ -1193,6 +1222,30 @@
           ]
         }
       ]
+    },
+    {
+      "file": "awaited.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "awaited.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
     }
   ],
   "test-no-skips:skips-ignore": [
@@ -1211,6 +1264,16 @@
     }
   ],
   "test-no-typed-enqueue-fake:enqueue-exact": [
+    {
+      "file": "tuple.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
     {
       "file": "cjs.test.ts",
       "findings": [
@@ -1266,6 +1329,39 @@
           "line": 4,
           "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "type-namespace.test.ts",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "type-namespace.test.ts",
+          "line": 4,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
           "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
           "severity": 2
         }
@@ -1363,17 +1459,6 @@
         },
         {
           "column": 1,
-          "endColumn": 20,
-          "endLine": 11,
-          "file": "shapes.test.ts",
-          "line": 11,
-          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
-          "messageId": "typedEnqueueFake",
-          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
-          "severity": 2
-        },
-        {
-          "column": 1,
           "endColumn": 18,
           "endLine": 20,
           "file": "shapes.test.ts",
@@ -1406,6 +1491,18 @@
   "test-no-wall-time-assertions:wall": [
     {
       "file": "fake-timers.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "local-fluent.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "late-fake-timers.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -1646,6 +1743,24 @@
           "endColumn": 1,
           "endLine": 4,
           "file": "dynamic.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic-forward.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "dynamic-forward.test.ts",
           "line": 1,
           "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
           "messageId": "unanalyzable",

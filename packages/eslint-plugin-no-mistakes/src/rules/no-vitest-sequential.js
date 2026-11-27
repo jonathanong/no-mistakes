@@ -166,7 +166,6 @@ module.exports = Object.assign(
       const suppressed = ruleSuppression(context, "no-vitest-sequential");
       const state = {
         namespaces: new Set(),
-        opaque: new Set(),
         roots: new Set(TEST_NAMES),
         usesVitest: false,
       };

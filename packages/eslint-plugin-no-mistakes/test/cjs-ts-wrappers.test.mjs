@@ -66,6 +66,7 @@ const groups = [
       "computed-key.test.ts",
       "import-equals.test.ts",
       "dynamic.test.ts",
+      "dynamic-forward.test.ts",
       "shapes.test.ts",
     ],
     valid: ["foo.mock.test.ts", "expect-only.test.ts"],
@@ -79,7 +80,13 @@ const groups = [
   {
     rule: "test-no-shared-state",
     dir: "shared",
-    invalid: ["cjs.test.ts", "wrappers.test.ts", "dynamic.test.ts", "shapes.test.ts"],
+    invalid: [
+      "cjs.test.ts",
+      "wrappers.test.ts",
+      "dynamic.test.ts",
+      "shapes.test.ts",
+      "shadow-cast.test.ts",
+    ],
     valid: ["not-a-callee.test.ts"],
   },
   {
@@ -98,7 +105,7 @@ const groups = [
       "shapes.test.ts",
       "decoy-timer.test.ts",
     ],
-    valid: ["fake-timers.test.ts"],
+    valid: ["fake-timers.test.ts", "local-fluent.test.ts", "late-fake-timers.test.ts"],
   },
   {
     rule: "test-no-wall-time-assertions",
@@ -133,7 +140,8 @@ const groups = [
     rule: "test-no-typed-enqueue-fake",
     dir: "enqueue-exact",
     options: [{ singleExportPattern: "^enqueue$" }],
-    invalid: ["cjs.test.ts", "dynamic.test.ts"],
+    invalid: ["cjs.test.ts", "dynamic.test.ts", "type-namespace.test.ts"],
+    valid: ["tuple.test.ts"],
   },
   {
     rule: "test-no-typed-enqueue-fake",
@@ -164,7 +172,7 @@ const groups = [
     rule: "test-no-skips",
     dir: "skips",
     options: [{ testModules: ["./custom-test"] }],
-    invalid: ["configured.test.ts", "wrappers.test.ts", "dynamic.test.ts"],
+    invalid: ["configured.test.ts", "wrappers.test.ts", "dynamic.test.ts", "awaited.test.ts"],
   },
   {
     rule: "test-no-skips",

@@ -97,7 +97,9 @@ function opaqueWallClock(node, context) {
   if (!MATCHERS.has(memberName(callee))) return false;
   let assertion = unwrap(callee.object);
   while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
-  if (assertion?.type !== "CallExpression") return false;
+  if (assertion?.type !== "CallExpression" || !isFrameworkExpect(assertion.callee, context)) {
+    return false;
+  }
   const argument = localOrigin(assertion.arguments?.[0], context);
   return (
     argument?.type === "BinaryExpression" &&
@@ -149,6 +151,7 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, "test-no-wall-time-assertions");
     let usesFakeTimers = false;
     const assertions = [];
+    const advisories = [];
     return {
       CallExpression(node) {
         if (usesFakeTimers) return;
@@ -158,11 +161,14 @@ module.exports = rule(
         } else if (isWallTimeAssertion(callee, context) && !suppressed(node)) {
           assertions.push(node);
         } else if (!suppressed(node) && opaqueWallClock(node, context)) {
-          reportUnanalyzable(context, node, "this elapsed-time assertion");
+          advisories.push(node);
         }
       },
       "Program:exit"() {
         if (usesFakeTimers) return;
+        for (const node of advisories) {
+          reportUnanalyzable(context, node, "this elapsed-time assertion");
+        }
         for (const node of assertions) context.report({ node, messageId: "wallTime" });
       },
     };

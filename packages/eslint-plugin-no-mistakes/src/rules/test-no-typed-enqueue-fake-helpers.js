@@ -38,7 +38,19 @@ function scopeContext(sourceCode) {
   return { sourceCode };
 }
 
-function namespaceModule(identifier, sourceCode) {
+function namespaceSource(def, allowTypeOnly) {
+  if (!allowTypeOnly) return staticImportSource(def);
+  if (def.node.type === "TSImportEqualsDeclaration") {
+    const reference = def.node.moduleReference;
+    return reference?.type === "TSExternalModuleReference"
+      ? literalString(reference.expression)
+      : null;
+  }
+  const source = def.parent?.source?.value;
+  return typeof source === "string" ? source : null;
+}
+
+function namespaceModule(identifier, sourceCode, allowTypeOnly = false) {
   const binding = referenceBinding(identifier, sourceCode);
   const def = importDefinition(binding);
   if (
@@ -46,9 +58,9 @@ function namespaceModule(identifier, sourceCode) {
     (def.node.type === "ImportNamespaceSpecifier" ||
       def.node.type === "TSImportEqualsDeclaration" ||
       def.node.type === "ImportDefaultSpecifier") &&
-    runtimeImport(def)
+    (allowTypeOnly || runtimeImport(def))
   ) {
-    return staticImportSource(def);
+    return namespaceSource(def, allowTypeOnly);
   }
   const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
   if (
@@ -67,7 +79,8 @@ function patternExportName(pattern, name) {
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
     if (value?.type !== "Identifier" || value.name !== name) continue;
-    if (!property.computed && property.key?.type === "Identifier") return property.key.name;
+    if (property.computed) continue;
+    if (property.key?.type === "Identifier") return property.key.name;
     return literalString(property.key);
   }
   return null;
@@ -118,7 +131,7 @@ function isFrameworkMockType(typeName, sourceCode) {
   }
   const binding = referenceBinding(typeName.left, sourceCode);
   if (!binding?.defs.length) return frameworkModules.has(typeName.left.name);
-  return mockTypeModules.has(namespaceModule(typeName.left, sourceCode));
+  return mockTypeModules.has(namespaceModule(typeName.left, sourceCode, true));
 }
 
 function resolveImportTarget(node, sourceCode) {
