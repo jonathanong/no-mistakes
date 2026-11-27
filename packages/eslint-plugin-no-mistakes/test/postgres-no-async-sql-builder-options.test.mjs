@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import tsParser from "@typescript-eslint/parser";
 import { expect, it } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { plugin } from "./helpers.mjs";
+import { fixture, plugin } from "./helpers.mjs";
 import { NAMES, RULE, reported, withSyncRead } from "./postgres-no-async-sql-builder-helpers.mjs";
 
 const languageOptions = {
@@ -137,6 +137,13 @@ const suite = {
         build();
       `),
       filename: "app.ts",
+      options: [NAMES],
+      languageOptions: { parser: tsParser },
+    },
+    // reports a saved literal builder passed to a synchronous reader.
+    {
+      code: fixture("postgres-no-async-sql-builder/literal-select.ts"),
+      filename: "literal-select.ts",
       options: [NAMES],
       languageOptions: { parser: tsParser },
     },

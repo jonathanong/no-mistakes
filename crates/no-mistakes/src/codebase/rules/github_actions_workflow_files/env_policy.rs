@@ -47,10 +47,15 @@ pub(crate) fn scalar_text(value: &Value) -> Option<String> {
 }
 
 pub(in crate::codebase::rules) fn compile(opts: &Options) -> Result<Policy> {
+    use crate::codebase::rules::validate_options::checks::{nonblank, option};
     crate::codebase::rules::file_matching::compile_globs(opts.include.iter().map(String::as_str))
         .context("options.include")?;
+    for (index, name) in opts.forbidden.iter().enumerate() {
+        nonblank(RULE_ID, option("forbidden").index(index), name)?;
+    }
     let mut required = BTreeMap::new();
     for (name, value) in &opts.required {
+        nonblank(RULE_ID, option("required").key(name), name)?;
         let Some(text) = scalar_text(value) else {
             bail!("{RULE_ID}: required.{name} must be a string, number, or boolean");
         };

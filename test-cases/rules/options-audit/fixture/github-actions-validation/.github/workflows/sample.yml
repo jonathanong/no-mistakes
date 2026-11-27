@@ -1,0 +1,17 @@
+name: Sample
+on: pull_request
+env:
+  WIDGET_MODE: safe
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - id: run-sample
+        run: echo sample
+        timeout-minutes: 11
+      - id: sample-action
+        uses: sample/example@0123456789abcdef0123456789abcdef01234567 # v1
+        with:
+          action-timeout-s: 90
+        timeout-minutes: 2

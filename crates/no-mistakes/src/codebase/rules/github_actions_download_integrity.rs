@@ -49,9 +49,13 @@ pub(in crate::codebase::rules) fn compile_hosts(opts: &Options) -> Result<Vec<St
             .collect(),
         Some(list) => list
             .iter()
-            .map(|host| {
+            .enumerate()
+            .map(|(index, host)| {
+                use super::validate_options::checks::{invalid, option};
                 url::configured_host(host).ok_or_else(|| {
-                    anyhow::anyhow!("{RULE_ID} options.trustedHosts entry `{host}` is not a host")
+                    invalid(RULE_ID, option("trustedHosts").index(index), format_args!(
+                        "trustedHosts entry `{host}` is not a host with an optional valid port"
+                    ))
                 })
             })
             .collect::<Result<_>>()?,
