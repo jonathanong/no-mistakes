@@ -1,6 +1,6 @@
 use super::shared;
+use crate::codebase::playwright_facts::test_patterns::Patterns;
 use crate::codebase::ts_resolver::ImportResolution;
-use crate::playwright::test_patterns::Patterns;
 use anyhow::Result;
 use oxc_ast::ast::Program;
 use oxc_span::GetSpan;

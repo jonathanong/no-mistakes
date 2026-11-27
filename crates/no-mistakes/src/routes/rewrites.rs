@@ -1,6 +1,5 @@
 use super::Route;
 use crate::config::v2::schema::RewriteRule;
-use crate::playwright::matcher;
 use std::path::PathBuf;
 
 pub fn normalize_nextjs_pattern(pattern: &str) -> String {
@@ -92,7 +91,7 @@ pub fn expand_rewrites(rewrites: &[RewriteRule], real_routes: &[Route]) -> Vec<R
     let route_segments: Vec<Vec<String>> = real_routes
         .iter()
         .map(|r| {
-            matcher::pattern_segments(&r.pattern)
+            segments(&r.pattern)
                 .into_iter()
                 .map(str::to_string)
                 .collect()
@@ -105,7 +104,7 @@ pub fn expand_rewrites(rewrites: &[RewriteRule], real_routes: &[Route]) -> Vec<R
         if norm_source == norm_dest {
             continue;
         }
-        let dest_segs = matcher::pattern_segments(&norm_dest);
+        let dest_segs = segments(&norm_dest);
         for (i, real) in real_routes.iter().enumerate() {
             let route_segs: Vec<&str> = route_segments[i].iter().map(String::as_str).collect();
             if destination_contained_by_route(&dest_segs, &route_segs) {
@@ -137,6 +136,14 @@ pub fn expand_rewrites_as_tuples(
         .into_iter()
         .map(|r| (r.file, r.pattern))
         .collect()
+}
+
+pub(crate) fn segments(path: &str) -> Vec<&str> {
+    if path == "/" || path.is_empty() {
+        Vec::new()
+    } else {
+        path.strip_prefix('/').unwrap_or(path).split('/').collect()
+    }
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]

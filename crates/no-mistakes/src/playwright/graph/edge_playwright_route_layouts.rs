@@ -2,7 +2,7 @@ use super::{Edge, EdgeKind, NodeId, PathInterner};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(super) fn collect_layout_chain_files_from_file_set(
+pub(crate) fn collect_layout_chain_files_from_file_set(
     route_file: &Path,
     frontend_root: &Path,
     all_files: &HashSet<PathBuf>,

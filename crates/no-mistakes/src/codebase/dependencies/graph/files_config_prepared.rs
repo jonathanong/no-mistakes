@@ -4,7 +4,7 @@ pub struct PreparedGraphConfig {
     options: Option<GraphConfigOptions>,
     playwright_failed: bool,
     playwright_preparation_failures: Vec<PlaywrightPreparationFailure>,
-    playwright_settings: Vec<crate::playwright::config::Settings>,
+    playwright_settings: Vec<crate::codebase::playwright_facts::Settings>,
     workspace: std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     workflow_documents: Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
     workflow_inputs:
@@ -36,17 +36,11 @@ impl PreparedGraphConfig {
         tsconfig: &crate::codebase::ts_resolver::TsConfig,
         visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
     ) -> anyhow::Result<Option<crate::codebase::check_facts::PlaywrightFactPlan>> {
-        let mut merged: Option<crate::codebase::check_facts::PlaywrightFactPlan> = None;
-        for settings in &self.playwright_settings {
-            let plan = merged.get_or_insert_with(Default::default);
-            crate::playwright::analysis::pipeline::extend_standalone_fact_plan(
-                plan,
-                root,
-                settings,
-                crate::playwright::analysis::types::UniqueSelectorPolicy::default(),
-                visible_paths,
-            )?;
-        }
+        let mut merged = (crate::codebase::playwright_hooks::hooks().graph_fact_plan)(
+            root,
+            &self.playwright_settings,
+            visible_paths,
+        )?;
         if let Some(plan) = merged.as_mut() {
             plan.configure_module_resolution(
                 std::sync::Arc::new(tsconfig.clone()),
@@ -121,8 +115,9 @@ fn prepare_graph_config_inner(
             test_filter,
         )
     });
+    let prepare_playwright = crate::codebase::playwright_hooks::hooks().graph_settings;
     let (playwright_settings, playwright_preparation_failures) =
-        prepare_playwright_settings(root, plan, config, visible_paths, partial)?;
+        prepare_playwright(root, plan, config, visible_paths, partial)?;
     Ok(PreparedGraphConfig {
         options,
         playwright_failed: playwright_settings.is_empty()
@@ -158,5 +153,3 @@ pub fn ts_fact_plan_and_context_for_plan_with_prepared(
 include!("files_config_prepared/partial.rs");
 
 include!("files_config_prepared/failure.rs");
-
-include!("files_config_prepared/settings.rs");

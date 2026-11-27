@@ -17,6 +17,8 @@ pub mod markdown_sections;
 pub mod md_links;
 pub(crate) mod package_analysis;
 pub mod package_deps;
+pub(crate) mod playwright_facts;
+pub(crate) mod playwright_hooks;
 pub mod pnpm_lock;
 pub mod postgres;
 pub mod queries;

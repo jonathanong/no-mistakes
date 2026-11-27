@@ -133,9 +133,9 @@ the historical `collect_playwright_route_edges` bug, which independently
 re-ran the entire app-wide route scan the `playwright` rule's own check
 pipeline already shares.
 
-`collect_routes_from_snapshot` is the Playwright snapshot entry point. Callers
-today live under `playwright/`. The rule still flags that name under `graph/**`
-so a later producer cannot bypass the shared cache.
+`collect_routes_from_snapshot` is the Playwright snapshot entry point. The rule
+covers the shared graph and Playwright graph producers so both use the
+request-scoped route cache.
 
 `edge_playwright_routes.rs` is the rule's `ignores:` entry. Its scan calls
 `collect_routes_from_visible_paths` inside the `compute_routes` closure

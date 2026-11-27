@@ -11,7 +11,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     fn integration_route_links(
         &self,
         source: &crate::config::v2::schema::RouteCoverageSource,
-    ) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+    ) -> Option<&Result<Vec<crate::codebase::playwright_facts::integration::RouteLink>, String>> {
         self.integration_route_links.get(source)
     }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
@@ -61,7 +61,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     fn get_playwright_test_files(
         &self,
         project: Option<&str>,
-    ) -> Option<Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>> {
+    ) -> Option<Arc<Vec<crate::codebase::playwright_facts::DiscoveredTestFile>>> {
         self.playwright_test_files_by_project
             .iter()
             .find(|(candidate, _)| candidate.as_deref() == project)
@@ -85,10 +85,10 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 
     fn get_or_compute_app_selector_occurrences(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         scan_html_ids: bool,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
-    ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>> {
         // `OnceLock::get_or_try_init` is not yet stable, so a fallible
         // `entry(..).or_insert_with(..)` closure is the only way to keep the
         // *compute itself* — not just the insert — inside the per-key lock:
@@ -111,7 +111,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 
     fn get_or_compute_playwright_routes(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         self.playwright_routes_cache
@@ -124,9 +124,9 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 
     fn get_or_compute_app_text_targets(
         &self,
-        settings: &crate::playwright::config::Settings,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
-    ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
+        settings: &crate::codebase::playwright_facts::Settings,
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>> {
         self.app_text_targets_cache
             .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(
                 settings,
@@ -142,7 +142,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 
     fn get_or_compute_route_reachable_files(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         self.route_reachable_files_cache

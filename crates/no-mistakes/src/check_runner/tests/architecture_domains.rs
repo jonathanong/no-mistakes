@@ -10,7 +10,7 @@ fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
     );
     let graph = concat!(
         include_str!("../../codebase/dependencies/graph/files_config_prepared.rs"),
-        include_str!("../../codebase/dependencies/graph/files_config_prepared/settings.rs")
+        include_str!("../../playwright/graph/settings.rs")
     );
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),

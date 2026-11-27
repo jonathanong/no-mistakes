@@ -1,4 +1,4 @@
-use crate::codebase::dependencies::graph::playwright_route_layouts::collect_layout_chain_files_from_file_set;
+use crate::playwright::graph::collect_layout_chain_files_from_file_set;
 
 #[test]
 fn integration_route_edges_preserve_the_real_vitest_entry_owner() {

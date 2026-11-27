@@ -1,4 +1,5 @@
 use super::collect::{collect_object_string_values, collect_string_leaves};
+pub(crate) use crate::codebase::playwright_facts::StaticExportValues;
 use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
     ObjectPropertyKind, Program, Statement,
@@ -6,25 +7,6 @@ use oxc_ast::ast::{
 use std::path::{Path, PathBuf};
 
 const DEFERRED_IMPORT_PREFIX: &str = "\0no-mistakes-playwright-import:";
-
-#[derive(Clone, Default)]
-pub(crate) struct StaticExportValues {
-    named: std::collections::HashMap<String, Vec<String>>,
-    default: Vec<String>,
-}
-
-impl StaticExportValues {
-    pub(crate) fn values(&self, exported_name: &str, is_default: bool) -> &[String] {
-        if is_default {
-            &self.default
-        } else {
-            self.named
-                .get(exported_name)
-                .map(Vec::as_slice)
-                .unwrap_or_default()
-        }
-    }
-}
 
 pub(crate) fn resolve_imported_values(
     local_name: &str,

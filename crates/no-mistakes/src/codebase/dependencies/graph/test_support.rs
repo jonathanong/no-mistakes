@@ -152,8 +152,8 @@ pub(super) fn collect_playwright_route_edges(
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
 ) -> Vec<Edge> {
-    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
-    collect_playwright_route_edges_from_snapshot(
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    crate::playwright::graph::collect_playwright_route_edges_from_snapshot(
         root,
         config_path,
         all_files,

@@ -2,6 +2,7 @@ use super::test_support::load_settings;
 use super::*;
 use crate::playwright::test_support::fixture_path;
 use load::helpers::is_playwright_config_name;
+use std::collections::BTreeMap;
 
 #[test]
 fn missing_default_config_uses_defaults() {

@@ -8,6 +8,8 @@ mod postgres_readable;
 mod sql_locations;
 mod sql_verdicts;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
+use crate::codebase::playwright_facts::text::AppTextTarget;
+use crate::codebase::playwright_facts::{selectors::AppSelector, StaticExportValues};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
@@ -18,8 +20,6 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::FileIdMap;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
-use crate::playwright::analysis::text_types::AppTextTarget;
-use crate::playwright::selectors::{AppSelector, StaticExportValues};
 use dashmap::DashMap;
 pub use sql_verdicts::{SqlApplicationFacts, SqlFactContext};
 use std::collections::HashMap;
@@ -29,7 +29,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 pub(crate) type PlaywrightTestFilesByProject = Arc<
     Vec<(
         Option<String>,
-        Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>,
+        Arc<Vec<crate::codebase::playwright_facts::DiscoveredTestFile>>,
     )>,
 >;
 type AppSelectorOccurrencesCache =
@@ -59,7 +59,8 @@ pub struct CheckFactMap {
         Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
     >,
     pub(crate) postgres: crate::codebase::postgres::prepared::PreparedPostgresFacts,
-    pub(crate) integration_route_links: crate::playwright::integration_routes::PreparedLinks,
+    pub(crate) integration_route_links:
+        crate::codebase::playwright_facts::integration::PreparedLinks,
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) graph_files_complete: bool,
@@ -180,7 +181,7 @@ pub(crate) struct CheckFileFacts {
     pub(crate) playwright_app_text_targets: HashMap<PlaywrightSettingsKey, Vec<AppTextTarget>>,
     pub(crate) playwright_static_exports: Option<StaticExportValues>,
     pub(crate) integration_route_occurrences:
-        Vec<crate::playwright::integration_routes::RouteOccurrence>,
+        Vec<crate::codebase::playwright_facts::integration::RouteOccurrence>,
     pub parse_error: Option<String>,
     pub(crate) legacy_symbol_parse_error: Option<String>,
     pub(crate) parsed: bool,

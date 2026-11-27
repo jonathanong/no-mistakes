@@ -133,7 +133,7 @@
         let owned_playwright_snapshot = (plan.playwright_routes || plan.playwright_selectors)
             .then(|| {
                 edge_inputs.visible_paths.is_none().then(|| {
-                    crate::playwright::fsutil::VisiblePathSnapshot::from_paths(
+                    crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
                         root,
                         graph_files.all(),
                     )

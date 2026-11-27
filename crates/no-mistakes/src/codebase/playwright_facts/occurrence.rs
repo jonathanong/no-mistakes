@@ -1,4 +1,43 @@
-use super::TestStatus;
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub enum TestStatus {
+    Active,
+    Conditional,
+    Skipped,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
+pub struct TestPolicy {
+    pub assert_conditional_tests: bool,
+    pub allow_skipped_tests: bool,
+}
+
+impl TestStatus {
+    pub fn merge(self, other: Self) -> Self {
+        if self.rank() >= other.rank() {
+            self
+        } else {
+            other
+        }
+    }
+
+    fn rank(self) -> u8 {
+        match self {
+            TestStatus::Active => 0,
+            TestStatus::Conditional => 1,
+            TestStatus::Skipped => 2,
+        }
+    }
+}
+
+impl TestPolicy {
+    pub fn allows(self, status: TestStatus) -> bool {
+        match status {
+            TestStatus::Active => true,
+            TestStatus::Conditional => !self.assert_conditional_tests,
+            TestStatus::Skipped => self.allow_skipped_tests,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum TestOccurrenceScope {

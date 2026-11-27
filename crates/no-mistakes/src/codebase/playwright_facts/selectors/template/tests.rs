@@ -1,4 +1,4 @@
-use crate::playwright::selectors::types::TemplatePattern;
+use super::super::TemplatePattern;
 
 #[test]
 fn malformed_template_is_treated_as_literal_pattern() {

@@ -1,12 +1,12 @@
 struct SelectorTextEdgeInputs<'a> {
     root: &'a Path,
-    settings: &'a crate::playwright::config::Settings,
+    settings: &'a crate::codebase::playwright_facts::Settings,
     inputs: &'a PlaywrightSelectorEdgeInputs<'a>,
     routes: &'a [crate::routes::Route],
     context: &'a crate::playwright::analysis::context::TestAnalysisContext<'a>,
     pending: Vec<crate::playwright::analysis::pipeline_test_analysis::PendingTestFileAnalysis>,
     has_eligible_text_locator: bool,
-    test_policy: crate::playwright::playwright_tests::TestPolicy,
+    test_policy: crate::codebase::playwright_facts::occurrence::TestPolicy,
 }
 
 fn finish_selector_text_edges(
@@ -71,8 +71,8 @@ fn finish_selector_text_edges(
 
 fn selector_wrapper_resolution(
     root: &Path,
-    settings: &crate::playwright::config::Settings,
-    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
+    settings: &crate::codebase::playwright_facts::Settings,
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
     route_import_candidate: Option<(&DepGraph, &crate::codebase::ts_resolver::TsConfig)>,
 ) -> Result<Option<crate::codebase::check_facts::PlaywrightModuleResolution>> {
     if settings.selector_wrappers.is_empty() {

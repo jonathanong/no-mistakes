@@ -1,4 +1,4 @@
-use crate::playwright::analysis::types::SelectorRef;
+use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -59,4 +59,11 @@ pub(crate) struct PlaywrightTextLocator {
 pub(crate) fn normalize_locator_text(value: &str) -> Option<String> {
     let normalized = value.split_whitespace().collect::<Vec<_>>().join(" ");
     (!normalized.is_empty()).then_some(normalized)
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct SelectorRef {
+    pub(crate) attribute: String,
+    pub(crate) value: String,
 }

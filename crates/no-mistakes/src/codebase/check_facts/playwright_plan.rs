@@ -1,5 +1,5 @@
-use crate::playwright::playwright_tests::TestPolicy;
-use crate::playwright::selectors::SelectorRegexes;
+use crate::codebase::playwright_facts::occurrence::TestPolicy;
+use crate::codebase::playwright_facts::selectors::SelectorRegexes;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -33,7 +33,7 @@ pub struct PlaywrightFactPlan {
 pub(crate) struct PlaywrightSourceFactPlan {
     pub(crate) app_source_files: Arc<crate::fx::PathSet>,
     pub(crate) selector_regexes: Arc<SelectorRegexes>,
-    pub(crate) settings: Arc<crate::playwright::config::Settings>,
+    pub(crate) settings: Arc<crate::codebase::playwright_facts::Settings>,
     pub(crate) visible_files: Arc<crate::fx::PathSet>,
     pub(crate) scan_html_ids: bool,
     pub(crate) settings_key: PlaywrightSettingsKey,
@@ -64,7 +64,7 @@ pub(crate) struct PlaywrightSettingsKey {
 }
 
 impl PlaywrightSettingsKey {
-    pub(crate) fn new(settings: &crate::playwright::config::Settings) -> Self {
+    pub(crate) fn new(settings: &crate::codebase::playwright_facts::Settings) -> Self {
         fn normalized<T: Clone + Ord>(values: &[T]) -> Vec<T> {
             let mut values = values.to_vec();
             values.sort();

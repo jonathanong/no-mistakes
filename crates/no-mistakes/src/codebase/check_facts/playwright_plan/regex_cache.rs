@@ -1,4 +1,6 @@
-use crate::playwright::selectors::{compile_selector_regexes_with_html_ids, SelectorRegexes};
+use crate::codebase::playwright_facts::selectors::{
+    compile_selector_regexes_with_html_ids, SelectorRegexes,
+};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "regex_cache_tests.rs"]

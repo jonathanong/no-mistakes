@@ -1,5 +1,5 @@
 impl TsFactLookup for TsFactMap {
-    fn integration_route_links(&self, source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+    fn integration_route_links(&self, source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::codebase::playwright_facts::integration::RouteLink>, String>> {
         self.integration_route_links.get(source)
     }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
@@ -12,10 +12,10 @@ impl TsFactLookup for TsFactMap {
 
     fn get_or_compute_app_selector_occurrences(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         scan_html_ids: bool,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
-    ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>> {
         self.app_selector_occurrences_cache
             .entry((self.playwright_scan_cache_key(settings), scan_html_ids))
             .or_insert_with(|| {
@@ -29,7 +29,7 @@ impl TsFactLookup for TsFactMap {
 
     fn get_or_compute_playwright_routes(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         self.playwright_routes_cache
@@ -40,9 +40,9 @@ impl TsFactLookup for TsFactMap {
 
     fn get_or_compute_app_text_targets(
         &self,
-        settings: &crate::playwright::config::Settings,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
-    ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
+        settings: &crate::codebase::playwright_facts::Settings,
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>> {
         self.app_text_targets_cache
             .entry(self.playwright_scan_cache_key(settings))
             .or_insert_with(|| {
@@ -56,7 +56,7 @@ impl TsFactLookup for TsFactMap {
 
     fn get_or_compute_route_reachable_files(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         // Settings alone are not enough: SharedTraversalContext can extend

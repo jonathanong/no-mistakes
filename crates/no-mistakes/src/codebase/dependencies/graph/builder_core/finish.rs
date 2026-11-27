@@ -102,10 +102,10 @@
                 .as_ref()
                 .expect("Playwright selector plan prepares a visible-path snapshot");
             let selector_edges = crate::perf_trace::trace("graph.playwright_selectors", || {
-                collect_playwright_selector_edges_with_graph(
+                (crate::codebase::playwright_hooks::hooks().selector_edges)(
                     root,
                     config_path,
-                    PlaywrightSelectorEdgeInputs {
+                    crate::codebase::playwright_hooks::PlaywrightSelectorEdgeInputs {
                         all_files: graph_files.all(),
                         facts,
                         partial_graph: plan.route_imports.then_some(&graph),

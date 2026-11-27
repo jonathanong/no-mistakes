@@ -84,7 +84,7 @@ impl TsFactMap {
 
     pub(crate) fn playwright_scan_cache_key(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
     ) -> (u64, crate::codebase::check_facts::PlaywrightSettingsKey) {
         (
             self.playwright_scan_generation,

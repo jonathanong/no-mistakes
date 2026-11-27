@@ -1,4 +1,4 @@
-use super::types::TemplatePattern;
+use super::TemplatePattern;
 
 impl TemplatePattern {
     pub fn new(raw: &str) -> Option<Self> {
@@ -76,7 +76,7 @@ impl TemplatePattern {
     }
 }
 
-pub(super) fn template_parts(source: &str) -> Vec<String> {
+fn template_parts(source: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut rest = source;
     while let Some(start) = rest.find("${") {

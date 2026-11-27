@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
 #
 # Flags the names `collect_routes`, `collect_routes_from_visible_paths`, and
-# `collect_routes_from_snapshot` under `codebase/dependencies/graph/**`.
+# `collect_routes_from_snapshot` under the shared and Playwright graph modules.
 # `get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a no-key
 # shared cache: every caller within one `no-mistakes check` invocation wants
 # the exact same app-wide Playwright route scan, so an edge producer must not
@@ -35,5 +35,6 @@ rule:
   regex: "^collect_routes(_from_visible_paths|_from_snapshot)?$"
 files:
   - "crates/no-mistakes/src/codebase/dependencies/graph/**"
+  - "crates/no-mistakes/src/playwright/graph/**"
 ignores:
-  - "crates/no-mistakes/src/codebase/dependencies/graph/edge_playwright_routes.rs"
+  - "crates/no-mistakes/src/playwright/graph/edge_playwright_routes.rs"

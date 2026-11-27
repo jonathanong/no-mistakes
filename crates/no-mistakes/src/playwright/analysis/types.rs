@@ -1,3 +1,4 @@
+pub(crate) use crate::codebase::playwright_facts::text::SelectorRef;
 use serde::Serialize;
 use std::path::Path;
 use std::sync::Arc;
@@ -65,13 +66,6 @@ pub(crate) struct DuplicateSelector {
     pub(crate) value: String,
     pub(crate) file: String,
     pub(crate) line: usize,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct SelectorRef {
-    pub(crate) attribute: String,
-    pub(crate) value: String,
 }
 
 mod coverage_report;

@@ -2,10 +2,10 @@
 /// Graph build must not call the standalone `analyze_with_policy` pipeline.
 fn collect_playwright_selector_edges_for_settings(
     root: &Path,
-    settings: &crate::playwright::config::Settings,
+    settings: &crate::codebase::playwright_facts::Settings,
     inputs: &PlaywrightSelectorEdgeInputs<'_>,
 ) -> Result<Vec<Edge>> {
-    let test_policy = crate::playwright::playwright_tests::TestPolicy {
+    let test_policy = crate::codebase::playwright_facts::occurrence::TestPolicy {
         assert_conditional_tests: false,
         allow_skipped_tests: false,
     };
@@ -64,16 +64,16 @@ fn collect_playwright_selector_edges_for_settings(
 }
 
 struct SelectorEdgeFinishInputs<'a> {
-    test_policy: crate::playwright::playwright_tests::TestPolicy,
-    selector_regexes: &'a crate::playwright::selectors::SelectorRegexes,
-    app_selectors: &'a [crate::playwright::selectors::AppSelector],
+    test_policy: crate::codebase::playwright_facts::occurrence::TestPolicy,
+    selector_regexes: &'a crate::codebase::playwright_facts::selectors::SelectorRegexes,
+    app_selectors: &'a [crate::codebase::playwright_facts::selectors::AppSelector],
     prepared: Vec<crate::playwright::analysis::pipeline_occurrences::PreparedTestFile>,
     demand: crate::playwright::analysis::pipeline_occurrences::TestOccurrenceDemand,
 }
 
 fn finish_selector_edges_for_settings(
     root: &Path,
-    settings: &crate::playwright::config::Settings,
+    settings: &crate::codebase::playwright_facts::Settings,
     inputs: &PlaywrightSelectorEdgeInputs<'_>,
     finish: SelectorEdgeFinishInputs<'_>,
 ) -> Result<Vec<Edge>> {

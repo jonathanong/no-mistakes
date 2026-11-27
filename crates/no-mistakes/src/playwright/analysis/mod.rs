@@ -30,5 +30,5 @@ pub(crate) mod test_occurrence_edges;
 pub(crate) mod tests_report;
 pub(crate) mod tests_report_types;
 pub(crate) mod text_edges;
-pub(crate) mod text_types;
+pub(crate) use crate::codebase::playwright_facts::text as text_types;
 pub(crate) mod types;

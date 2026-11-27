@@ -1,3 +1,5 @@
+use crate::routes::rewrites::segments;
+
 /// Returns true if `reference` matches `defined_pattern`.
 ///
 /// Reference preprocessing:
@@ -60,14 +62,6 @@ pub fn matches_segments<S: AsRef<str>>(reference: &[&str], defined_pattern: &[S]
     }
 
     reference.len() == defined_pattern.len()
-}
-
-fn segments(path: &str) -> Vec<&str> {
-    if path == "/" || path.is_empty() {
-        Vec::new()
-    } else {
-        path.strip_prefix('/').unwrap_or(path).split('/').collect()
-    }
 }
 
 fn segment_matches(reference: &str, defined_pattern: &str) -> bool {

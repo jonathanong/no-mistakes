@@ -1,8 +1,23 @@
-/// Build Playwright route-test edges from the graph's canonical candidate
-/// universe. The shared fact map supplies staged per-setting occurrences when
-/// available; malformed individual tests remain non-fatal for graph builds.
+use crate::codebase::analysis_session::PathInterner;
+use crate::codebase::check_facts::PlaywrightOccurrenceKey;
+use crate::codebase::dependencies::graph::{Edge, EdgeKind, NodeId, TsFactLookup};
+use crate::codebase::ts_source::VisiblePathSnapshot;
+use crate::playwright::analysis::{test_file, types::Edge as PlaywrightEdge};
+use crate::playwright::{
+    config::{load_settings_from_visible, Settings},
+    integration_routes,
+};
+use rayon::prelude::*;
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
+
 #[path = "edge_playwright_route_layouts.rs"]
 mod playwright_route_layouts;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+pub(crate) use playwright_route_layouts::collect_layout_chain_files_from_file_set;
 use playwright_route_layouts::route_and_layout_edges;
 
 /// Build Playwright route-test edges for every resolved frontend app.
@@ -12,13 +27,13 @@ use playwright_route_layouts::route_and_layout_edges;
 /// `Settings` per app (see `PreparedGraphConfig`), so a multi-`type:
 /// nextjs`-app repository's route edges aren't limited to a single
 /// arbitrarily-chosen app.
-fn collect_playwright_route_edges_from_snapshot(
+pub(crate) fn collect_playwright_route_edges_from_snapshot(
     root: &Path,
     config_path: Option<&Path>,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
-    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
-    prepared_settings: &[crate::playwright::config::Settings],
+    snapshot: &VisiblePathSnapshot,
+    prepared_settings: &[Settings],
     interner: &PathInterner,
 ) -> Vec<Edge> {
     if !prepared_settings.is_empty() {
@@ -34,14 +49,8 @@ fn collect_playwright_route_edges_from_snapshot(
         edges.dedup();
         return edges;
     }
-    let Ok(settings) = crate::playwright::config::load_settings_from_visible(
-        root,
-        config_path,
-        &[],
-        None,
-        None,
-        snapshot,
-    ) else {
+    let Ok(settings) = load_settings_from_visible(root, config_path, &[], None, None, snapshot)
+    else {
         return Vec::new();
     };
     collect_playwright_route_edges_for_settings(
@@ -53,8 +62,8 @@ fn collect_playwright_route_edges_for_settings(
     root: &Path,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
-    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
-    settings: &crate::playwright::config::Settings,
+    snapshot: &VisiblePathSnapshot,
+    settings: &Settings,
     interner: &PathInterner,
 ) -> Vec<Edge> {
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
@@ -117,19 +126,19 @@ fn collect_playwright_route_edges_for_settings(
         navigation_helpers: &settings.navigation_helpers,
         selector_wrappers: &settings.selector_wrappers,
         selector_regexes: &selector_regexes,
-        test_policy: crate::playwright::playwright_tests::TestPolicy {
+        test_policy: crate::codebase::playwright_facts::occurrence::TestPolicy {
             assert_conditional_tests: false,
             allow_skipped_tests: false,
         },
     };
 
-    let mut test_edges: Vec<crate::playwright::analysis::types::Edge> = test_files
+    let mut test_edges: Vec<PlaywrightEdge> = test_files
         .par_iter()
         .filter_map(|test_file| {
             match facts.and_then(|facts| facts.get_playwright_facts(&test_file.path)) {
                 Some(playwright) => {
                     let attributes = test_file.test_id_attributes();
-                    let key = crate::codebase::check_facts::PlaywrightOccurrenceKey::new(
+                    let key = PlaywrightOccurrenceKey::new(
                         &settings.navigation_helpers,
                         &settings.selector_wrappers,
                         &settings.selector_attributes,
@@ -138,12 +147,8 @@ fn collect_playwright_route_edges_for_settings(
                         &attributes,
                     );
                     playwright.select(&key).map(|occurrences| {
-                        crate::playwright::analysis::test_file::analyze_test_occurrences(
-                            test_file,
-                            &test_analysis,
-                            &occurrences,
-                        )
-                        .edges
+                        test_file::analyze_test_occurrences(test_file, &test_analysis, &occurrences)
+                            .edges
                     })
                 }
                 None => {
@@ -152,24 +157,21 @@ fn collect_playwright_route_edges_for_settings(
                     }) {
                         return None;
                     }
-                    crate::playwright::analysis::test_file::analyze_test_file(
-                        test_file,
-                        &test_analysis,
-                    )
-                    .ok()
-                    .map(|analysis| analysis.edges)
+                    test_file::analyze_test_file(test_file, &test_analysis)
+                        .ok()
+                        .map(|analysis| analysis.edges)
                 }
             }
         })
         .flatten()
         .collect();
-    if let Ok(integration) = crate::playwright::integration_routes::edges(root, settings, &routes, facts) {
+    if let Ok(integration) = integration_routes::edges(root, settings, &routes, facts) {
         test_edges.extend(integration);
     }
 
     let mut edges = Vec::new();
     for edge in test_edges {
-        let crate::playwright::analysis::types::Edge::Route {
+        let PlaywrightEdge::Route {
             test_file,
             route_file,
             ..

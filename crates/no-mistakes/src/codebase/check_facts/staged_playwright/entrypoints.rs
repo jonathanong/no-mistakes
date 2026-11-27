@@ -6,7 +6,7 @@ pub(crate) struct PrecollectedRouteFacts {
     pub(crate) ts: crate::codebase::ts_source::facts::TsFactMap,
     pub(crate) routes: std::collections::BTreeMap<
         PathBuf,
-        Vec<crate::playwright::integration_routes::RouteOccurrence>,
+        Vec<crate::codebase::playwright_facts::integration::RouteOccurrence>,
     >,
 }
 

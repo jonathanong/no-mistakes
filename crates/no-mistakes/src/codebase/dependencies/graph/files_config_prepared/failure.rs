@@ -10,7 +10,7 @@ pub struct PlaywrightPreparationFailure {
 impl PlaywrightPreparationFailure {
     pub(crate) fn new(
         root: &Path,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         file: Option<PathBuf>,
         project: Option<String>,
         config_name: Option<String>,

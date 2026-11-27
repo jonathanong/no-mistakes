@@ -100,7 +100,7 @@ fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
             graph: (graph_fact_files, fact_plan, fact_context),
             sources: std::sync::Arc::clone(&sources),
             collect_graph_facts,
-            playwright: if crate::playwright::integration_routes::configured(config) {
+            playwright: if crate::codebase::playwright_facts::integration::configured(config) {
                 preliminary_graph.playwright_fact_plan(root, tsconfig, visible_paths)?
             } else { None },
             preparation_plan: framework_plan,
