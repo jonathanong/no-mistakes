@@ -44,6 +44,13 @@ function selectRunFiles(files, selectedFiles) {
   return matched.size ? files.filter((file) => matched.has(file)) : files;
 }
 
+function readShardTestPattern() {
+  const { pattern } = JSON.parse(fs.readFileSync("target/native-api-shard.json", "utf8"));
+  if (typeof pattern !== "string" || pattern.length === 0)
+    throw new Error("native API shard plan requires a test filter");
+  return new RegExp(pattern);
+}
+
 function run(
   index,
   count,
@@ -110,4 +117,4 @@ if (require.main === module) {
     process.exitCode = error.status || 1;
   }
 }
-module.exports = { key, partition, run };
+module.exports = { key, partition, readShardTestPattern, run };
