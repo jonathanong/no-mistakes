@@ -108,7 +108,7 @@ test("dependency caches are main-only, dependency-only and shared across compati
     job("quality-rust"),
     /shared-key: \$\{\{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' \|\| 'linux-runtime-v1' \}\}/,
   );
-  assert.match(job("quality-rust"), /matrix.name != 'formatting'/);
+  assert.match(job("quality-rust"), /Check Rust formatting/);
   assert.match(job("quality-rust"), /flags: -D warnings --cfg coverage/);
   assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
   for (const name of [

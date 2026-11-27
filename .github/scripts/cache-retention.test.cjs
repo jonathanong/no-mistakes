@@ -498,3 +498,26 @@ test("budget eviction preserves the newest main macOS harness and evicts other w
   const active = plan([...versions, ...fixture.benchmarks], fixture.states, 0);
   assert.ok(!active.remove.some((cache) => [21, 22, 23].includes(cache.id)));
 });
+
+test("release caches and superseded populated pnpm lockfiles are pruned per target and runtime", () => {
+  const entries = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/cache-retention/release-and-pnpm-lockfiles.json"),
+      "utf8",
+    ),
+  );
+  const result = plan(entries, fixture.states);
+  assert.deepEqual(
+    result.remove.map((cache) => cache.id),
+    [201, 203, 205, 209],
+  );
+  assert.deepEqual(
+    result.kept.map((cache) => cache.id).sort((a, b) => a - b),
+    [202, 204, 206, 207, 208, 210],
+  );
+  assert.equal(
+    result.remove.some((cache) => cache.id === 211),
+    false,
+  );
+  assert.deepEqual(plan([...entries].reverse(), fixture.states).remove, result.remove);
+});

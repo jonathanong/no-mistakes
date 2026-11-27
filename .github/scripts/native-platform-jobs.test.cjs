@@ -86,23 +86,21 @@ test("native jobs keep six Windows shards and one macOS job per test suite", () 
   }
 });
 
-test("native aggregate requires all eight platform producer and consumer jobs and both smoke jobs", () => {
-  const body = job("native-tests");
+test("Tests with coverage requires all eight platform producer and consumer jobs and both smoke jobs", () => {
+  const body = job("tests-gate");
   const needs = body
     .match(/needs:\s*\[([^\]]+)\]/)[1]
     .split(",")
     .map((name) => name.trim())
-    .filter(Boolean)
-    .sort();
-  assert.deepEqual(
-    needs,
-    [
-      "changes",
-      "macos-smoke",
-      "windows-smoke",
-      ...families.flatMap((name) => [name, `${name}-macos`]),
-    ].sort(),
-  );
-  assert.match(body, /name: Native tests\n/);
+    .filter(Boolean);
+  for (const name of [
+    "changes",
+    "macos-smoke",
+    "windows-smoke",
+    ...families.flatMap((name) => [name, `${name}-macos`]),
+  ]) {
+    assert.ok(needs.includes(name), name);
+  }
+  assert.match(body, /name: Tests with coverage\n/);
   assert.match(body, /^    if: \$\{\{ !cancelled\(\) \}\}$/m);
 });

@@ -69,7 +69,7 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
   assert.doesNotMatch(workflowJob(source, "native-compile-profile"), /outputs\.macos/);
   assert.doesNotMatch(workflowJob(source, "native-compile-profile"), /ci-macos-main/);
   assert.match(workflowJob(source, "native-compile-profile"), /cancel-in-progress: false/);
-  assert.doesNotMatch(workflowJob(source, "tests-gate"), /MACOS_REQUIRED/);
+  assert.match(workflowJob(source, "tests-gate"), /MACOS_REQUIRED/);
   assert.match(
     source,
     /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| \(github\.event_name == 'workflow_dispatch' && format\('dispatch-\{0\}', github\.run_id\) \|\| github\.ref\) \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/,
@@ -110,20 +110,21 @@ test("pull requests run one macOS smoke job and the full macOS suite runs elsewh
     assert.match(workflowJob(source, name), /needs\.[^.]+\.result == 'success'/);
 });
 
-test("the native aggregate accepts a skipped full macOS tier only on pull requests", () => {
-  const native = workflowJob(source, "native-tests");
+test("Tests with coverage accepts a skipped full macOS tier only on pull requests", () => {
+  const native = workflowJob(source, "tests-gate");
   assert.match(native, /MACOS_REQUIRED: \$\{\{ needs\.changes\.outputs\.macos \}\}/);
   assert.match(native, /MACOS_EVENT: \$\{\{ github\.event_name \}\}/);
   assert.match(native, /MACOS_REF: \$\{\{ github\.ref \}\}/);
   const needs = native
     .match(/needs:\s*\[([^\]]+)\]/)[1]
     .split(",")
-    .map((name) => name.trim());
+    .map((name) => name.trim())
+    .filter(Boolean);
   assert.ok(needs.includes("changes"));
   assert.ok(needs.includes("macos-smoke"));
   assert.match(native, /MACOS_SMOKE_REQUIRED: \$\{\{ needs\.changes\.outputs\.macos-smoke \}\}/);
-  assert.match(native, /run: node \.github\/scripts\/native-tests-gate\.cjs/);
-  const script = path.join(__dirname, "native-tests-gate.cjs");
+  assert.match(native, /run: node \.github\/scripts\/tests-gate\.cjs/);
+  const script = path.join(__dirname, "tests-gate.cjs");
   const macosJobs = needs.filter((name) => name.endsWith("-macos"));
   assert.deepEqual(macosJobs.sort(), [
     "native-api-tests-macos",
@@ -326,14 +327,15 @@ test("pull requests run one Windows smoke job and the full Windows suite runs el
   }
   assert.doesNotMatch(workflowJob(source, "windows-smoke"), /concurrency:/);
 
-  const native = workflowJob(source, "native-tests");
+  const native = workflowJob(source, "tests-gate");
   assert.match(native, /WINDOWS_REQUIRED: \$\{\{ needs\.changes\.outputs\.windows \}\}/);
   const needs = native
     .match(/needs:\s*\[([^\]]+)\]/)[1]
     .split(",")
-    .map((name) => name.trim());
+    .map((name) => name.trim())
+    .filter(Boolean);
   assert.ok(needs.includes("windows-smoke"));
-  const script = path.join(__dirname, "native-tests-gate.cjs");
+  const script = path.join(__dirname, "tests-gate.cjs");
   const success = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
   const withResult = (names, result) => ({
     ...success,

@@ -6,6 +6,26 @@
 
 For job sizing, see the `github-actions-authoring` skill.
 
+Two setup-dominated, sub-2-minute policy checks are explicit exceptions because
+their runner queue wait and setup exceeded their check runtime and neither sits
+on any PR critical path (baseline 30-run non-cancelled PR medians: 15m04s
+non-Rust, 49m44s Rust):
+
+- `JavaScript policy` (`quality-js`): previously 4 `ubuntu-slim` jobs at 52s
+  median each (~38s checkout/pnpm setup for 2s–18s checks, plus 2m19s median
+  wait each); combined into one `ubuntu-latest` job (1-vCPU `ubuntu-slim`
+  runners timed out running `jscpd` over 5k+ files and `pnpm/setup` in runs
+  `45876467292` and `45876841273`). Later steps use `if: ${{ !cancelled() }}`
+  so formatting, lint, duplication, and spelling all report in one run.
+- `cargo fmt --all -- --check`: previously a separate `ubuntu-latest` matrix
+  entry in `quality-rust` (13s check, 26s total, 9m04s median wait); folded as
+  a post-Clippy `if: ${{ !cancelled() }}` step in `all-feature Clippy` (2m26s
+  + 13s = ~2m39s, well below the 5m57s sibling `PostgreSQL source identities`
+  matrix entry).
+
+Parallel test shards (`javascript-shards`, `linux-api-tests`,
+`rust-coverage-shards`, `standalone-shards`) remain parallel.
+
 ## Parallel CI layout and measured baseline
 
 The pull-request workflow splits compilation-heavy checks into producer and
@@ -18,8 +38,10 @@ The current validation graph is organized as follows:
 
 - Source policy/tooling tests, Rust quality checks, JavaScript policy checks,
   and documentation link checks run independently. Rust quality uses separate
-  matrix entries for each compiler/feature profile; JavaScript formatting,
-  lint, duplication, and spelling checks also run separately.
+  matrix entries for each compiler/feature profile, with `cargo fmt --check`
+  folded into the all-feature Clippy job; JavaScript formatting, lint,
+  duplication, and spelling checks run sequentially in one `ubuntu-latest` job
+  so they share one checkout and `pnpm install`.
 - JavaScript test shards use `ubuntu-latest`: the Oxlint plugin allocator
   aborts on `ubuntu-slim` in this suite, matching the
   [upstream allocator issue](https://github.com/oxc-project/oxc/issues/20331).
@@ -128,11 +150,10 @@ The current validation graph is organized as follows:
   an OS-only regression outside the smoke list surfaces on `main` after merge
   instead of on the pull request. The release workflow is a manual dispatch
   and does not read `main` CI results, so the maintainer must confirm `main` is
-  green, including the full macOS and Windows jobs, before dispatching a release. `Native tests` accepts the skipped
+  green, including the full macOS and Windows jobs, before dispatching a release. `Tests with coverage` directly aggregates the native, JavaScript, and standalone component jobs (via `.github/scripts/tests-gate.cjs`): it accepts the skipped
   full macOS jobs on a pull request and requires `macOS smoke` to succeed
-  when the macOS scope requests it. It accepts the skipped full Windows jobs
-  and requires `Windows smoke` when the Rust scope requests it on a pull request. `Tests with coverage` keeps requiring `Native tests` to
-  succeed, and the smoke jobs are not separate required checks. The release
+  when the macOS scope requests it, accepts the skipped full Windows jobs
+  and requires `Windows smoke` when the Rust scope requests it on a pull request, and the smoke jobs are not separate required checks. The release
   workflow does not use these outputs.
   A pull request likewise runs one `Windows smoke` job (`windows-smoke`,
   windows-2025) instead of the 14 full Windows jobs (`native-build`,
@@ -157,9 +178,9 @@ The current validation graph is organized as follows:
   manual dispatch, and other branches use a per-run group and do not join
   `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` use
   the workflow's per-ref group. The group names use the literal job id.
-  `Native tests` accepts a cancelled macOS job only for a push to `main`.
+  `Tests with coverage` accepts a cancelled macOS job only for a push to `main`.
   A superseded build is cancelled before its test job starts, so that test job
-  is skipped; `Native tests` accepts that skip only when the producer was
+  is skipped; `Tests with coverage` accepts that skip only when the producer was
   cancelled on a push to `main`. The macOS cache-retain jobs still require
   `success`, so a superseded run does not save a cache.
   The completed seed run `43378356388`
@@ -259,11 +280,13 @@ once for its test consumers. pnpm store snapshots also save on main only; the
 action may still write its separate small lockfile-verification records.
 
 The cache-retention workflow removes closed-PR caches, retired workspace
-versions, and superseded main snapshots of known families. Exact-compatible
-pnpm snapshots share all three content hashes; retention keeps the largest
-complete store, then the newest creation time and ID, rather than a newer
-partial store. Different lockfiles, platforms, architectures, and unknown key
-formats remain separate.
+versions, and superseded main snapshots of known families (including
+`v1-rust-release-*` release dependency caches and `pnpm-lockfile-verified-*`
+records). Exact-compatible pnpm snapshots share all three content hashes;
+retention keeps the largest complete store, then deduplicates populated stores
+per platform, architecture, and Node runtime so superseded lockfile generations
+do not crowd out workspace snapshots. Different platforms, architectures, Node
+runtimes, and unknown key formats remain separate.
 
 Cleanup runs after successful main producers, on PR closure, and when a
 main-push run of Test CI or Benchmarks finishes. A run can save caches before a
