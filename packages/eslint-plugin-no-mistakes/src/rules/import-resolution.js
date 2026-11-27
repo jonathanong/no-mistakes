@@ -120,7 +120,8 @@ function factFromDef(def, name, context, seen) {
 function defMayBeImport(def, context, seen) {
   if (def?.type === "ImportBinding") return true;
   if (def?.type !== "Variable" || !def.node?.init) return false;
-  const init = unwrapSequence(def.node.init);
+  let init = unwrapSequence(def.node.init);
+  while (init?.type === "MemberExpression") init = unwrapSequence(init.object);
   if (!init) return false;
   if (requireModule(init, context) !== undefined) return true;
   if (init.type !== "Identifier" || seen.has(init.name)) return false;

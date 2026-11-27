@@ -53,9 +53,14 @@ function valueKind(node, context) {
 }
 
 function constStringKey(node, context) {
-  if (node?.type !== "Identifier" || valueKind(node, context) !== "const") return null;
-  const init = resolveVariable(node, context)?.defs[0]?.node?.init;
+  const current = unwrapSequence(node);
+  if (current?.type !== "Identifier" || valueKind(current, context) !== "const") return null;
+  const init = resolveVariable(current, context)?.defs[0]?.node?.init;
   return init ? literalString(init) : null;
+}
+
+function selectorName(property, computed, context) {
+  return staticName(property, computed) || constStringKey(property, context);
 }
 
 function namedUse(fact) {
@@ -72,7 +77,7 @@ function namedUse(fact) {
 function reactUseStatus(node, context, useNames, seen = new Set()) {
   let callee = unwrapSequence(node);
   if (callee?.type === "MemberExpression") {
-    const name = staticName(callee.property, callee.computed);
+    const name = selectorName(callee.property, callee.computed, context);
     if (name === "call" || name === "apply") callee = unwrapSequence(callee.object);
   }
   if (callee?.type === "Identifier") {
@@ -109,8 +114,7 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     return "no";
   }
   if (callee?.type !== "MemberExpression") return "no";
-  const name =
-    staticName(callee.property, callee.computed) || constStringKey(callee.property, context);
+  const name = selectorName(callee.property, callee.computed, context);
   if (name === "use") return namespaceStatus(callee.object, context);
   if (name) return "no";
   const status = namespaceStatus(callee.object, context);
@@ -161,7 +165,7 @@ function isAliasedPromiseResolve(node, context) {
   );
 }
 
-function ordinaryUseCall(node) {
+function ordinaryUseCall(node, context) {
   const current = unwrapSequence(node);
   if (
     !current ||
@@ -176,17 +180,18 @@ function ordinaryUseCall(node) {
     callee?.type === "Identifier" ||
     (callee?.type === "MemberExpression" &&
       !callee.optional &&
-      !["call", "apply"].includes(staticName(callee.property, callee.computed)))
+      !["call", "apply"].includes(selectorName(callee.property, callee.computed, context)))
   );
 }
 
-function forwardedArgument(node) {
+function forwardedArgument(node, context) {
   const forwarded = unwrapSequence(node.callee);
-  const forwarding =
-    forwarded?.type === "MemberExpression" &&
-    ["call", "apply"].includes(staticName(forwarded.property, forwarded.computed));
-  if (!forwarding) return node.arguments[0];
-  if (staticName(forwarded.property, forwarded.computed) !== "apply") return node.arguments[1];
+  const name =
+    forwarded?.type === "MemberExpression"
+      ? selectorName(forwarded.property, forwarded.computed, context)
+      : null;
+  if (name !== "call" && name !== "apply") return node.arguments[0];
+  if (name !== "apply") return node.arguments[1];
   const list = unwrapSequence(node.arguments[1]);
   return list?.type === "ArrayExpression" ? list.elements?.[0] : undefined;
 }

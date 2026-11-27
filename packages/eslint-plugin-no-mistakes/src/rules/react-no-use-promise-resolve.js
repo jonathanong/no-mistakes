@@ -50,10 +50,10 @@ module.exports = Object.assign(
           if (suppressed(node)) return;
           const status = reactUseStatus(node.callee, context, useNames);
           if (status === "no") return;
-          const argument = forwardedArgument(node);
+          const argument = forwardedArgument(node, context);
           const resolved =
             isPromiseResolve(argument) ||
-            (ordinaryUseCall(node) && isAliasedPromiseResolve(node.arguments[0], context));
+            (ordinaryUseCall(node, context) && isAliasedPromiseResolve(node.arguments[0], context));
           if (status === "yes" && resolved) {
             context.report({ node, messageId: "resolve" });
             return;

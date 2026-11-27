@@ -139,15 +139,16 @@ function createNullishState(context) {
     } else if (target.type === "ArrayPattern" || target.type === "RestElement") {
       bindPatternNames(target, defineBinding);
     } else if (isObjectPattern(target)) {
-      const classified = classifiedProps(type, facts);
+      const members = destructureMemberFacts(type, null, facts, lookupMembers);
       definePattern(
         target,
-        classified.props,
+        members.props,
         defineBinding,
         defineReactNode,
-        classified.unresolved,
+        members.unresolved,
         defineUnresolved,
       );
+      if (members.allUnresolved) bindPatternNames(target, defineUnresolved);
     }
   }
 

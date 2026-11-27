@@ -114,3 +114,31 @@ var right = left?.y;
 export function memberCycle() {
   return left(Promise.resolve(1));
 }
+export function assertedUseKey() {
+  return React[useKey as "use"](Promise.resolve(1));
+}
+const forward = "call";
+export function constForward() {
+  return React.use[forward](null, Promise.resolve(1));
+}
+const memberOnce = require("react").use;
+export function onceMember() {
+  return memberOnce(Promise.resolve(1));
+}
+var memberRead = require("react").use;
+// oxlint-disable-next-line no-unassigned-vars
+var memberRead;
+export function repeatedMember() {
+  return memberRead(Promise.resolve(1));
+}
+const localObject = {
+  method(value: unknown) {
+    return value;
+  },
+};
+var localMember = localObject.method;
+// oxlint-disable-next-line no-unassigned-vars
+var localMember;
+export function repeatedLocalMember() {
+  return localMember(Promise.resolve(1));
+}

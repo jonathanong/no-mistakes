@@ -70,3 +70,7 @@ export function annotatedUnresolved(props: { children: ReactNode }) {
   const { children }: HiddenNode = props;
   return children ?? null;
 }
+
+export function annotatedParam({ children }: HiddenNode) {
+  return children ?? null;
+}
