@@ -7,6 +7,8 @@ valid:
   - 'fn check() { let _ = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/content.mdx")); }'
   - 'fn check() { let root = materialize_fixture(); let _ = fs::read(root.join("README.md")); }'
   - 'fn check() { let root = repo_root(); let _ = root.join("cspell.config.yaml"); }'
+  - 'fn check() { let _ = include_str!["../../docs/README.md"]; }'
+  - 'fn check() { let _ = include_bytes! { "../../docs/README.md" }; }'
 invalid:
   - 'fn check() { let _ = read_root("README.md"); }'
   - 'fn check() { let _ = read_root("evals/prompt.markdown"); }'
@@ -16,3 +18,7 @@ invalid:
   - 'fn check() { let _ = include_bytes!("../../README.md"); }'
   - 'fn check() { let _ = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../evals/prompt.mdx")); }'
   - 'fn check() { let _ = std::fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../README.md")); }'
+  - 'fn check() { let _ = include_str!["../../../README.md"]; }'
+  - 'fn check() { let _ = include_bytes! { "../../README.md" }; }'
+  - 'fn check() { let _ = include_str!("../../docs/../README.md"); }'
+  - 'fn check() { let _ = read(&repo_root().join("docs/subdir/../../README.md")); }'

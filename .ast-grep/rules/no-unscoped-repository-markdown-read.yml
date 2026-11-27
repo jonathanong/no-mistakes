@@ -27,21 +27,28 @@ rule:
     - pattern: read_to_string($PATH)
     - pattern: read($PATH)
     - all:
-        - kind: macro_invocation
-        - regex: '(?i)^(?:std::|core::)?include_(?:str|bytes)![\s\S]*\.(?:mdx?|markdown)"#*\s*,?\s*\)\s*\)?$'
-        - not:
-            regex: '"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)[^"]*\.(?i:mdx?|markdown)"#*\s*,?\s*\)\s*\)?$'
+        - matches: unscoped-markdown
+        - inside:
+            kind: macro_invocation
+            regex: '^(?:::)?(?:std::|core::)?include_(?:str|bytes)!'
+            stopBy: end
     - pattern: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join($PATH)
     - pattern: Path::new(env!("CARGO_MANIFEST_DIR")).join($PATH)
 constraints:
   PATH:
+    matches: unscoped-markdown
+utils:
+  unscoped-markdown:
     all:
       - any:
           - kind: string_literal
           - kind: raw_string_literal
       - regex: '(?i)\.(?:mdx?|markdown)"#*$'
       - not:
-          regex: '^(?:r#*)?"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)'
+          all:
+            - regex: '^(?:r#*)?"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)'
+            - not:
+                regex: '^(?:r#*)?"/?(?:\.\.?/)*[^./"][^"]*/\.\./'
 files:
   - "**/*.rs"
 ignores:

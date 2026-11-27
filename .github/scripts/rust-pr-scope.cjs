@@ -1,3 +1,5 @@
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
 const { readChangedFiles } = require("./pr-diff-scope.cjs");
 
 const INDEPENDENT_PREFIXES = [
@@ -6,14 +8,9 @@ const INDEPENDENT_PREFIXES = [
   "plugins/no-mistakes-rules/",
 ];
 
-const RUST_MARKDOWN_PREFIXES = [
-  "docs/",
-  "plugins/no-mistakes/skills/",
-  "plugins/no-mistakes-rules/skills/github-actions-rules/",
-  "crates/",
-  "fixtures/",
-  "test-cases/",
-];
+const RUST_MARKDOWN_PREFIXES = readFileSync(join(__dirname, "rust-markdown-inputs.txt"), "utf8")
+  .trim()
+  .split(/\r?\n/);
 const MARKDOWN = /\.(?:mdx?|markdown)$/i;
 const DOC_TOOL_CONFIG = new Set(["cspell.config.yaml", ".lycheeignore"]);
 

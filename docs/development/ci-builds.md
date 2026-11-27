@@ -258,7 +258,8 @@ setting up pnpm and keeps running in parallel with Rust compilation.
 Rust code and tests that read this repository's Markdown use `docs/`,
 `plugins/no-mistakes/skills/`, `plugins/no-mistakes-rules/skills/github-actions-rules/`,
 or `crates/`. Saved inputs under `fixtures/` and `test-cases/` also
-trigger Rust validation. The [AST rule](../../.ast-grep/rules/no-unscoped-repository-markdown-read.yml)
+trigger Rust validation. The [input list](../../.github/scripts/rust-markdown-inputs.txt)
+is shared by the selector and the Rust docs test helper. The [AST rule](../../.ast-grep/rules/no-unscoped-repository-markdown-read.yml)
 checks literal repository Markdown paths in Rust. Use Source policy and tooling
 tests for assertions about other repository Markdown, including the root README.
 

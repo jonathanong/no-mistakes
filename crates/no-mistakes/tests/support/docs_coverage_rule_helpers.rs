@@ -1,5 +1,7 @@
 use super::{rust_sources, BTreeSet, Path, PathBuf};
 
+const MARKDOWN_INPUTS: &str = include_str!("../../../../.github/scripts/rust-markdown-inputs.txt");
+
 pub(super) fn rule_ids_from_source(root: &Path) -> BTreeSet<String> {
     let rules_dir = root.join("crates/no-mistakes/src/codebase/rules");
     let mut sources = rust_sources(&rules_dir);
@@ -48,16 +50,9 @@ pub(super) fn read(path: &Path) -> String {
         let root = repo_root().canonicalize().unwrap();
         if let Ok(relative) = resolved.strip_prefix(root) {
             assert!(
-                [
-                    "docs",
-                    "plugins/no-mistakes/skills",
-                    "plugins/no-mistakes-rules/skills/github-actions-rules",
-                    "crates",
-                    "fixtures",
-                    "test-cases"
-                ]
-                .iter()
-                .any(|directory| relative.starts_with(directory)),
+                MARKDOWN_INPUTS
+                    .lines()
+                    .any(|directory| relative.starts_with(directory)),
                 "repository Markdown is outside Rust's CI input folders: {}",
                 relative.display()
             );

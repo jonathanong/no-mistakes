@@ -3,6 +3,7 @@ const { readFileSync } = require("node:fs");
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 const { test } = require("node:test");
+const { parse } = require("yaml");
 const { rustRequired, triggersRust } = require("./rust-pr-scope.cjs");
 const workflow = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
@@ -52,6 +53,22 @@ for (const file of [
 ]) {
   test(`Rust or unknown input runs Rust: ${file}`, () => assert.equal(triggersRust(file), true));
 }
+test("the AST guard and the Rust readers share the selector's Markdown input folders", () => {
+  const inputs = readFileSync(path.join(__dirname, "rust-markdown-inputs.txt"), "utf8")
+    .trim()
+    .split(/\r?\n/);
+  const rule = parse(
+    readFileSync(
+      path.join(__dirname, "../../.ast-grep/rules/no-unscoped-repository-markdown-read.yml"),
+      "utf8",
+    ),
+  );
+  const allowed = rule.utils["unscoped-markdown"].all.find(({ not }) => not).not.all[0].regex;
+  const prefixes = allowed.match(/\(\?:([^()]+)\)$/)[1].split("|");
+  assert.deepEqual(prefixes.sort(), [...inputs].sort());
+  for (const directory of inputs) assert.equal(triggersRust(`${directory}example.md`), true);
+});
+
 test("empty, mixed, deleted and renamed inputs stay conservative", () => {
   assert.equal(rustRequired([]), true);
   assert.equal(rustRequired([{ path: "README.md" }, { path: "cspell.config.yaml" }]), false);

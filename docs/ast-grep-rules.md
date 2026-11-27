@@ -65,6 +65,13 @@ that file, so review its diff for the regression the rule exists to catch.
 
 ## Rules
 
+### `no-unscoped-repository-markdown-read`
+
+Flags literal Markdown paths in Rust repository-root joins, file reads, and
+`include_str!` or `include_bytes!` calls when the path is outside the
+[Rust CI input folders](development/ci-builds.md#rust-markdown-inputs).
+The Rust docs test helper checks resolved paths for its dynamic reads.
+
 ### `no-ungated-directory-walk`
 
 Flags raw `std::fs::read_dir(...)`, `fs::read_dir(...)`, `WalkDir::new(...)`,
