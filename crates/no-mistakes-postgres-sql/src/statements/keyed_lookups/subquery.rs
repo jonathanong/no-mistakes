@@ -1,13 +1,13 @@
-use super::builtins::AGGREGATE_FUNCTIONS;
+use super::expr_norm::function::pure_name;
 use super::expr_norm::ExprNormalizer;
 use super::join::record_lookup;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::ScopeSnapshot;
+use super::table::lookup_table;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
-    Expr, GroupByExpr, LimitClause, ObjectNamePart, OrderByKind, Query, Select, SetExpr, Spanned,
-    TableFactor, Visit, Visitor,
+    Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr, Spanned, Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -61,7 +61,7 @@ fn extract_scalar_subquery(
     query: &Query,
     outer: &ScopeSnapshot,
 ) -> Option<(LookupKey, String, usize, usize)> {
-    if query.with.is_some() || query.fetch.is_some() {
+    if query.with.is_some() || query.fetch.is_some() || !query.locks.is_empty() {
         return None;
     }
     let limit = normalize_limit(query.limit_clause.as_ref(), outer)?;
@@ -73,22 +73,11 @@ fn extract_scalar_subquery(
         || !empty_group_by(&select.group_by)
         || select.from.len() != 1
         || !select.from[0].joins.is_empty()
-        || projection_has_aggregate(select)
+        || projection_is_unproven(select)
     {
         return None;
     }
-    let TableFactor::Table {
-        name,
-        alias,
-        args: None,
-        ..
-    } = &select.from[0].relation
-    else {
-        return None;
-    };
-    if alias.as_ref().is_some_and(|a| !a.columns.is_empty()) {
-        return None;
-    }
+    let (name, alias) = lookup_table(&select.from[0].relation)?;
     let selection = select.selection.as_ref()?;
     let relation = object_name_identity(name);
     let self_qualifier = match alias {
@@ -146,37 +135,23 @@ fn empty_group_by(group_by: &GroupByExpr) -> bool {
     )
 }
 
-fn projection_has_aggregate(select: &Select) -> bool {
-    struct AggregateFinder(bool);
-    impl Visitor for AggregateFinder {
+fn projection_is_unproven(select: &Select) -> bool {
+    struct CheckProjection;
+
+    impl Visitor for CheckProjection {
         type Break = ();
+
         fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-            ControlFlow::Continue(())
+            ControlFlow::Break(())
         }
+
         fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-            if let Expr::Function(function) = unwrap_expr(expr) {
-                let is_agg = function.over.is_some()
-                    || function.filter.is_some()
-                    || !function.within_group.is_empty()
-                    || matches!(
-                        function.name.0.last(),
-                        Some(ObjectNamePart::Identifier(ident))
-                            if is_aggregate_name(&ident.value)
-                    );
-                if is_agg {
-                    self.0 = true;
-                    return ControlFlow::Break(());
-                }
+            if matches!(expr, Expr::Function(function) if pure_name(function).is_none()) {
+                return ControlFlow::Break(());
             }
             ControlFlow::Continue(())
         }
     }
-    let mut finder = AggregateFinder(false);
-    let _ = select.projection.visit(&mut finder);
-    finder.0
-}
 
-fn is_aggregate_name(name: &str) -> bool {
-    let lower = name.to_ascii_lowercase();
-    AGGREGATE_FUNCTIONS.contains(&lower.as_str()) || lower.starts_with("regr_")
+    select.projection.visit(&mut CheckProjection).is_break()
 }

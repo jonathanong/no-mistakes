@@ -327,6 +327,67 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "review_soundness": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 10,
+          "message": "queries/check.sql:10: duplicate keyed lookup of `accounts` on `id = src.account_id` (already looked up at line 9); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "JOIN accounts b ON b.id = src.account_id;",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 15,
+          "message": "queries/check.sql:15: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 14); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "JOIN accounts b ON b.id = o.account_id;",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 21,
+          "message": "queries/check.sql:21: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 20); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "JOIN accounts b ON b.id = o.account_id;",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 3,
+          "message": "queries/check.sql:3: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 2); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT tier FROM accounts WHERE id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 55,
+          "message": "queries/check.sql:55: duplicate keyed lookup of `accounts` on `USING (id)` (already looked up at line 55); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "extras x JOIN accounts b USING (id) JOIN accounts c USING (id);",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 69,
+          "message": "queries/check.sql:69: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 68); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT b.tier FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "scalar_subqueries": {
     "exitCode": 1,
     "report": {

@@ -1,5 +1,8 @@
+mod using_clause;
+
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::{ScopeSnapshot, ScopeStack};
+use super::table::lookup_table;
 use super::{inspect_exprs, walk_query};
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
@@ -8,6 +11,7 @@ use sqlparser::ast::{
     TableWithJoins,
 };
 use std::collections::BTreeMap;
+use using_clause::{column_name, UsingColumns};
 
 pub(super) fn register_table_with_joins(
     table: &TableWithJoins,
@@ -15,10 +19,20 @@ pub(super) fn register_table_with_joins(
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
-    register_table_factor(&table.relation, scopes, out);
+    register_join_chain(table, scopes, seen, out);
+}
+
+fn register_join_chain(
+    table: &TableWithJoins,
+    scopes: &mut ScopeStack,
+    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) -> UsingColumns {
+    let mut using = register_factor(&table.relation, scopes, out);
     for join in &table.joins {
-        inspect_join(join, scopes, seen, out);
+        inspect_join(join, scopes, &mut using, seen, out);
     }
+    using
 }
 
 pub(super) fn register_table_factor(
@@ -26,71 +40,70 @@ pub(super) fn register_table_factor(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
-    match factor {
+    register_factor(factor, scopes, out);
+}
+
+fn register_factor(
+    factor: &TableFactor,
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) -> UsingColumns {
+    let binding = match factor {
         TableFactor::Table {
             name,
             alias,
             args: None,
             ..
-        } => {
-            scopes.add_table(name, alias.as_ref());
-        }
+        } => Some(scopes.add_table(name, alias.as_ref())),
         TableFactor::Derived {
             subquery, alias, ..
         } => {
             walk_query(subquery, scopes, out);
-            scopes.add_alias_only(alias.as_ref());
+            scopes.add_alias_only(alias.as_ref())
         }
         TableFactor::NestedJoin {
-            table_with_joins, ..
+            table_with_joins,
+            alias,
+            ..
         } => {
             let mut local_seen = BTreeMap::new();
-            register_table_with_joins(table_with_joins, scopes, &mut local_seen, out);
+            if alias.is_none() {
+                return register_join_chain(table_with_joins, scopes, &mut local_seen, out);
+            }
+            scopes.push_frame();
+            register_join_chain(table_with_joins, scopes, &mut local_seen, out);
+            scopes.pop_frame();
+            scopes.add_alias_only(alias.as_ref())
         }
         TableFactor::Table { alias, .. } | TableFactor::Function { alias, .. } => {
-            scopes.add_alias_only(alias.as_ref());
+            scopes.add_alias_only(alias.as_ref())
         }
-        _ => {}
-    }
+        _ => None,
+    };
+    UsingColumns::for_binding(binding)
 }
 
-pub(super) fn inspect_join(
+fn inspect_join(
     join: &Join,
     scopes: &mut ScopeStack,
+    using: &mut UsingColumns,
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
-    let before = scopes.snapshot();
-    let candidate = match &join.relation {
-        TableFactor::Table {
-            name,
-            alias,
-            args: None,
-            ..
-        } => join_lookup(join, name, alias.as_ref(), &before),
-        _ => None,
-    };
-    let mut using_provenance = Vec::new();
-    if let Some((key, key_display, line, column, provenance)) = candidate {
-        using_provenance = provenance;
-        record_lookup(key, key_display, line, column, seen, out);
-    }
-    register_table_factor(&join.relation, scopes, out);
-    let preserves_left_using = matches!(
-        join.join_operator,
-        JoinOperator::Join(_)
-            | JoinOperator::Inner(_)
-            | JoinOperator::Left(_)
-            | JoinOperator::LeftOuter(_)
-    );
-    for (col, binding) in using_provenance {
-        if preserves_left_using {
-            scopes.record_using_column(col, binding);
-        } else {
-            scopes.invalidate_using_column(&col);
+    let constraint = join_constraint(&join.join_operator);
+    if let Some((name, alias)) = lookup_table(&join.relation) {
+        if let Some((key, display)) =
+            join_lookup(name, alias, constraint, &scopes.snapshot(), using)
+        {
+            let start = join.relation.span().start;
+            let line = start.line.max(1) as usize;
+            let column = start.column.max(1) as usize;
+            record_lookup(key, display, line, column, seen, out);
         }
     }
-    if let Some(JoinConstraint::On(expr)) = join_constraint(&join.join_operator) {
+    register_table_factor(&join.relation, scopes, out);
+    using.advance(&join.join_operator, constraint);
+    if let Some(JoinConstraint::On(expr)) = constraint {
         inspect_exprs(std::iter::once(expr), scopes, seen, out);
     }
 }
@@ -108,67 +121,54 @@ fn join_constraint(op: &JoinOperator) -> Option<&JoinConstraint> {
     }
 }
 
-type JoinLookupResult = (LookupKey, String, usize, usize, Vec<(String, usize)>);
-
 fn join_lookup(
-    join: &Join,
     name: &ObjectName,
     alias: Option<&TableAlias>,
+    constraint: Option<&JoinConstraint>,
     outer: &ScopeSnapshot,
-) -> Option<JoinLookupResult> {
-    if alias.is_some_and(|a| !a.columns.is_empty()) {
-        return None;
-    }
-    let constraint = join_constraint(&join.join_operator)?;
+    using: &UsingColumns,
+) -> Option<(LookupKey, String)> {
     let relation = object_name_identity(name);
-    let self_qualifier = match alias {
-        Some(alias) => ident_key(&alias.name),
-        None => relation_suffix_name(&relation),
-    };
-    let start = join.relation.span().start;
-    let line = start.line.max(1) as usize;
-    let column = start.column.max(1) as usize;
-    match constraint {
+    match constraint? {
         JoinConstraint::On(expr) => {
-            let (key, display) =
-                extract_lookup_key(&relation, &self_qualifier, false, expr, outer, &[], None)?;
-            Some((key, display, line, column, Vec::new()))
+            let self_qualifier = match alias {
+                Some(alias) => ident_key(&alias.name),
+                None => relation_suffix_name(&relation),
+            };
+            extract_lookup_key(&relation, &self_qualifier, false, expr, outer, &[], None)
         }
-        JoinConstraint::Using(cols) => {
-            if cols.is_empty() {
-                return None;
-            }
-            let mut equalities = Vec::new();
-            let mut display = Vec::new();
-            let mut provenance = Vec::new();
-            for col in cols {
-                let name = col
-                    .0
-                    .last()
-                    .and_then(|part| part.as_ident())
-                    .map(ident_key)?;
-                let binding = outer.resolve_using_column(&name)?;
-                equalities.push((name.clone(), format!("b{binding}.{name}")));
-                provenance.push((name.clone(), binding));
-                display.push(name);
-            }
-            equalities.sort();
-            Some((
-                LookupKey {
-                    relation,
-                    equalities,
-                    residuals: Vec::new(),
-                    order_by: Vec::new(),
-                    limit: None,
-                },
-                format!("USING ({})", display.join(", ")),
-                line,
-                column,
-                provenance,
-            ))
-        }
+        JoinConstraint::Using(columns) => using_lookup(relation, columns, using),
         _ => None,
     }
+}
+
+fn using_lookup(
+    relation: String,
+    columns: &[ObjectName],
+    using: &UsingColumns,
+) -> Option<(LookupKey, String)> {
+    if columns.is_empty() {
+        return None;
+    }
+    let mut equalities = Vec::new();
+    let mut display = Vec::new();
+    for column in columns {
+        let name = column_name(column)?;
+        let binding = using.resolve(&name)?;
+        equalities.push((name.clone(), format!("b{binding}.{name}")));
+        display.push(name);
+    }
+    equalities.sort();
+    Some((
+        LookupKey {
+            relation,
+            equalities,
+            residuals: Vec::new(),
+            order_by: Vec::new(),
+            limit: None,
+        },
+        format!("USING ({})", display.join(", ")),
+    ))
 }
 
 pub(super) fn record_lookup(

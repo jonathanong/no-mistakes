@@ -5,14 +5,15 @@ mod join;
 mod normalize;
 mod scope;
 mod subquery;
+mod table;
 
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use join::{inspect_join, register_table_factor};
+use join::register_table_with_joins;
 use normalize::LookupKey;
 use scope::ScopeStack;
 use sqlparser::ast::{
-    CopySource, Expr, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement,
-    Visit, Visitor,
+    CopySource, Distinct, Expr, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr,
+    Statement, Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -109,20 +110,20 @@ fn walk_select(
 ) {
     scopes.push_frame();
     let mut seen = BTreeMap::new();
-    for table_with_joins in &select.from {
-        register_table_factor(&table_with_joins.relation, scopes, out);
-        for join in &table_with_joins.joins {
-            inspect_join(join, scopes, &mut seen, out);
-        }
+    for table in &select.from {
+        register_table_with_joins(table, scopes, &mut seen, out);
     }
+    let distinct_on = match &select.distinct {
+        Some(Distinct::On(exprs)) => exprs.as_slice(),
+        _ => &[],
+    };
     let group_by_exprs: &[Expr] = match &select.group_by {
         GroupByExpr::Expressions(exprs, _) => exprs.as_slice(),
         GroupByExpr::All(_) => &[],
     };
-    let exprs = select
-        .projection
+    let exprs = distinct_on
         .iter()
-        .filter_map(select_item_expr)
+        .chain(select.projection.iter().filter_map(select_item_expr))
         .chain(select.selection.iter())
         .chain(group_by_exprs.iter())
         .chain(select.having.iter())

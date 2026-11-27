@@ -49,8 +49,9 @@ The rule stays silent when the lookups are not proven to read the same row:
   branches.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
-  or unrecognized functions whose volatility is unknown, unresolved table column
-  alias lists, distinct `LIMIT` clauses, or ambiguous/unprovable expressions.
+  or unrecognized functions in keys or scalar projections, unresolved table
+  column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
+- Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.
@@ -144,7 +145,8 @@ query cardinality and behavior) before consolidating repeated joins or
 correlated scalar subqueries into a single join projecting every needed column.
 Preserve the original filtering semantics: use `INNER JOIN` when the original
 query excluded rows without a match, and `LEFT JOIN` when unmatched rows should
-remain in the result.
+remain in the result. For `RIGHT JOIN` and `FULL JOIN`, also verify which
+unmatched target rows survive and how many copies the original query returns.
 
 ## Suppression
 

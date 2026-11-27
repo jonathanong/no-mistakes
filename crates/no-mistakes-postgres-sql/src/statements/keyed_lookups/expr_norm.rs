@@ -1,4 +1,4 @@
-mod function;
+pub(super) mod function;
 
 use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, object_name_identity, unwrap_expr};
