@@ -76,7 +76,7 @@ at `~/.cache/no-mistakes/evals/2026-11-26-skill-control/<flow>.json`. An
 unrelated release `rustc` build pushed host load to about 42 during
 `before-edit`; no attempt errored or timed out.
 
-This is the same-session control for the two description candidates below. It
+This is the same-session control for the two description candidates above. It
 replaces the 2026-11-21 tool-skill numbers in the README.
 
 | flow | trigger (with-arm) | should-fire Δ | content-only Δ | negatives Δ |
@@ -160,7 +160,7 @@ Miss any of 1–3 and T1 is rejected and recorded here only.
 
 ## 2026-11-26 — rules control: `postgresql`, `queue`, `testing` re-measured
 
-The same-session control for the rules description candidates below. Claude CLI
+The same-session control for the rules description candidate above. Claude CLI
 2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, commit
 `af27b588f5` (rules plugin unchanged since), `runs: 3` per arm, `--ablation
 with-without -j 4 --no-publish --no-scaffold --trust-plugin --keep-temp`, one
@@ -182,8 +182,10 @@ Rows that moved against the 2026-11-26 entries below (same day, earlier):
 | --- | --- | --- | --- | --- |
 | `postgresql-write-advisory-lock` | 0/3 | 3/3 | 3/3 | loaded 3/3, without 0/3 |
 | `postgresql-review-parent-key-update` | 2/3 | 3/3 | 3/3 | loaded 3/3 |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 3/3 | 0/3 | without 1/3 |
 | `queue-review-entity-only-dedup-id` | 2/3 | 2/3 | 2/3 | loaded 1/3, with 3/3, without 1/3 |
 | `queue-review-job-self-overlap` | 1/3 | 3/3 | 3/3 | loaded 2/3 |
+| `queue-write-self-requeue` | 3/3 | 3/3 | 1/3 | without 2/3 |
 | `testing-exception-parsed-usage-text` | 3/3 | 1/3 | 0/3 | with 2/3 |
 | `testing-exception-raised-coverage-floor` | 0/3 | 3/3 | 3/3 | with 2/3 |
 | `testing-review-lowered-coverage-floor` | 0/3 | 3/3 | 3/3 | loaded 1/3, without 2/3 |

@@ -120,7 +120,9 @@ Ranges are 95% Wilson intervals. "Passed when loaded" counts attempts that
 called the topic skill and passed the content grader, out of those that did.
 An attempt that never loaded the skill is still graded on content, and counts
 in "passed overall". A case whose without-plugin arm passed 3/3 is a ceiling
-case: it shows the skill fires and does no harm, not that it helps.
+case: it cannot show the skill helps. Where it also loaded, it shows the
+skill does no harm; `postgresql-write-advisory-lock` and both coverage-floor
+cases did not load at all in this run, so they show neither.
 
 Readings: the skill helps on `github-actions-write-persist-credentials`,
 `postgresql-review-narrow-view-lookup`, `queue-write-bounded-sweep`,
@@ -293,9 +295,9 @@ One line per rules case:
   to clear noise. Run [`power.py`](power.py) before writing any gate
   ([derivation](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025)).
 - **A zero is not certain.** The exact one-sided 95% upper bounds on 0/12
-  (`signature`, `queues`, `ci`, `napi`, `neg-hard`), `duplication` 0/9 and
-  `safety` 0/6 are 22%, 28% and 39%. A zero rules out a high rate, nothing
-  more.
+  (`signature`, `queues`, `napi`, `neg-hard`), `duplication` 0/9 and
+  `safety` 0/6 are 22%, 28% and 39%; on `ci`'s 1/12 it is 34%. A zero rules
+  out a high rate, nothing more.
 - **Tuned flows overstate generalization.** The description was written
   against these flows; only a held-out case measures how it generalizes, and
   none is current.
