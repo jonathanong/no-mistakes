@@ -110,3 +110,20 @@ fn multiline_toml_string_does_not_invent_a_package() {
     );
     assert!(packages_for_diff(PackageManager::Cargo, &fixture("cargo", "syntax.lock")).is_err());
 }
+
+#[test]
+fn composer_null_development_section_preserves_production_packages() {
+    let packages = packages_for_diff(
+        PackageManager::Composer,
+        &fixture("composer", "no-dev.lock"),
+    )
+    .unwrap();
+    assert_eq!(packages.len(), 1);
+    expect(
+        &packages,
+        "example/sample",
+        "1.2.3",
+        "",
+        ResolutionKind::Registry,
+    );
+}

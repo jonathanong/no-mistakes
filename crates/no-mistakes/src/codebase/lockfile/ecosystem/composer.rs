@@ -12,7 +12,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Compo
     let mut saw_section = false;
     let mut out = Vec::new();
     for key in ["packages", "packages-dev"] {
-        if let Some(value) = root.get(key) {
+        if let Some(value) = root.get(key).filter(|value| !value.is_null()) {
             let packages = value.as_array().ok_or(ComposerError)?;
             saw_section = true;
             for entry in packages {

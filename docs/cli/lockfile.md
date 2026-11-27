@@ -61,7 +61,8 @@ requires `version` and uses the first hash. `go.mod` reads `require` lines, incl
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
 fingerprints, and `PATH` is a directory. `composer.lock` reads `packages` and
-`packages-dev`. `dist.reference` is the fingerprint, `dist.type` `path` is a
+`packages-dev`. A null development section contributes no packages.
+`dist.reference` is the fingerprint, `dist.type` `path` is a
 directory, and a git source with no dist is git.
 
 A malformed file of one of those managers is not an empty package list.
