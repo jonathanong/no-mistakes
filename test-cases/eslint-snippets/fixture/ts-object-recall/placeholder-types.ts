@@ -13,3 +13,14 @@ const value = 1;
 type LocalValue = string;
 export { type LocalValue, value };
 export { type LocalMissing, value as renamedValue };
+export type Visible = string;
+export type { Visible as PublicVisible };
+export interface Item {}
+export type { Item as PublicItem };
+class Service {}
+export type { Service };
+enum Kind { Example }
+export type { Kind };
+declare namespace Group {}
+export type { Group };
+export type { Missing as PublicMissingAlias };

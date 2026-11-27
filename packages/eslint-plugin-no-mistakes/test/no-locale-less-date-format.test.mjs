@@ -209,6 +209,7 @@ const cases = [
         "Intl.DateTimeFormat",
         "IntlEquals.DateTimeFormat",
         "IntlRequired.DateTimeFormat",
+        "IntlMember.DateTimeFormat",
       ],
     },
     lines: [],
@@ -222,10 +223,20 @@ const cases = [
         "Intl.DateTimeFormat",
         "IntlEquals.DateTimeFormat",
         "IntlRequired.DateTimeFormat",
+        "IntlMember.DateTimeFormat",
       ],
       unknownValues: "finding",
     },
-    lines: [7, 11, 15],
+    lines: [7, 11, 15, 17],
+  },
+  {
+    name: "a locale binding named undefined is an explicit argument",
+    file: "bound-undefined-locale.ts",
+    options: {
+      constructors: ["Intl.DateTimeFormat"],
+      unknownValues: "finding",
+    },
+    lines: [6],
   },
   {
     name: "an import equals alias of a local name stays quiet when unknownValues is finding",
@@ -261,7 +272,10 @@ it("snapshots configured locale checks and scope boundaries", async () => {
       findings.map((finding) => finding.line),
       item.name,
     ).toEqual(item.lines);
-    if (item.file === "module-namespace.ts" && item.lines.length) {
+    if (
+      ["module-namespace.ts", "bound-undefined-locale.ts"].includes(item.file) &&
+      item.lines.length
+    ) {
       expect(
         findings.map((finding) => finding.messageId),
         item.name,

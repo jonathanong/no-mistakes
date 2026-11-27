@@ -42,11 +42,11 @@ formatDate(date);
   Number and custom-object methods with that name.
 - `constructors` defaults to an empty list. Each entry selects a member of a
   global namespace by its dotted `Namespace.Member` name and checks both calls
-  and `new` expressions. A proven local object that shadows the namespace is
-  ignored. A namespace import, a `require()` call, or `import = require()` is
-  not that object: this file cannot read the module. When that dotted name is
-  listed and `unknownValues` is `"finding"`, the call reports `unanalyzable`
-  instead of a missing locale.
+  and `new` expressions. A shadowing local object stays quiet. When the dotted
+  name is listed and `unknownValues` is `"finding"`, the rule reports
+  `unanalyzable` for a missing locale when the namespace comes from an import,
+  a `require()` call or member access, or `import = require()`. Other local
+  initializers are outside this check.
   An `Intl.*Format` constructor or call whose only use is an immediate
   `.resolvedOptions()` call (including any property read on its result, such as
   `Intl.DateTimeFormat().resolvedOptions().timeZone` or
@@ -98,10 +98,12 @@ and `constructors` lists that dotted name:
 import * as Intl from "@example/intl";
 import IntlEquals = require("@example/intl");
 const IntlRequired = require("@example/intl");
+const IntlMember = require("@example/intl").Intl;
 
 new Intl.DateTimeFormat();
 new IntlEquals.DateTimeFormat();
 new IntlRequired.DateTimeFormat();
+new IntlMember.DateTimeFormat();
 ```
 
 ## Configuration

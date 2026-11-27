@@ -162,6 +162,10 @@ module.exports = rule(
       },
       "Program:exit"() {
         for (const item of pending) {
+          const undefinedState = item.undefinedIdentifier
+            ? globalResolution(item.undefinedIdentifier, sourceCode, evalScopes)
+            : "global";
+          if (undefinedState === "local" || undefinedState === "module") continue;
           const namespaceState = item.namespace
             ? globalResolution(item.namespace, sourceCode, evalScopes)
             : "global";
@@ -170,10 +174,6 @@ module.exports = rule(
             continue;
           }
           if (namespaceState === "local") continue;
-          const undefinedState = item.undefinedIdentifier
-            ? globalResolution(item.undefinedIdentifier, sourceCode, evalScopes)
-            : "global";
-          if (undefinedState === "local") continue;
           let aliasScope = item.usesAlias ? sourceCode.getScope(item.node) : null;
           while (aliasScope && !isDynamicScope(aliasScope, evalScopes))
             aliasScope = aliasScope.upper;

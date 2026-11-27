@@ -13,3 +13,5 @@ new IntlEquals.DateTimeFormat();
 // no-mistakes-disable-next-line no-locale-less-date-format -- module is outside this file
 new IntlRequired.DateTimeFormat();
 new IntlRequired.DateTimeFormat();
+const IntlMember = require("@example/intl").Intl;
+new IntlMember.DateTimeFormat();

@@ -525,7 +525,9 @@ expressions. `allowUndefinedLocale` defaults to `false` and permits explicit
 undefined values when enabled, while missing arguments still report.
 `unknownValues` defaults to `"ignore"`; `"finding"` reports spread first
 arguments, computed members on configured constructor namespaces, and dynamic
-`with`/direct-`eval` scopes. Supports `no-mistakes-disable-*` directives.
+`with`/direct-`eval` scopes. It reports `unanalyzable` for an omitted locale
+when a configured constructor namespace comes from an unread import or
+`require()`. Supports `no-mistakes-disable-*` directives.
 Use flat-config `files`/`ignores` for scope. Direct helper calls are not checked.
 The plugin exports `NoLocaleLessDateFormatOptions` for TypeScript configuration.
 See [the rule reference](eslint-rules/no-locale-less-date-format.md).

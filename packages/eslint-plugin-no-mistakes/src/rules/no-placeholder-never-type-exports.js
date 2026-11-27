@@ -7,6 +7,31 @@ function specifierName(specifier) {
   return specifier.local?.name || specifier.exported?.name || specifier.exported?.value;
 }
 
+function declaredTypes(program) {
+  const declared = new Map();
+  for (const statement of program.body) {
+    const declaration =
+      statement.type === "ExportNamedDeclaration" || statement.type === "ExportDefaultDeclaration"
+        ? statement.declaration
+        : statement;
+    if (declaration?.id?.type !== "Identifier") continue;
+    switch (declaration.type) {
+      case "TSTypeAliasDeclaration":
+        declared.set(
+          declaration.id.name,
+          declaration.typeAnnotation?.type === "TSNeverKeyword" ? "never" : "other",
+        );
+        break;
+      case "TSInterfaceDeclaration":
+      case "ClassDeclaration":
+      case "TSEnumDeclaration":
+      case "TSModuleDeclaration":
+        declared.set(declaration.id.name, "other");
+    }
+  }
+  return declared;
+}
+
 module.exports = Object.assign(
   rule(
     {
@@ -22,7 +47,6 @@ module.exports = Object.assign(
     },
     (context) => {
       const suppressed = ruleSuppression(context, "no-placeholder-never-type-exports");
-      const declared = new Map();
       const exportSpecifiers = [];
       function report(node, messageId) {
         if (!suppressed(node)) context.report({ node, messageId });
@@ -34,16 +58,8 @@ module.exports = Object.assign(
         );
       }
       return {
-        "Program > TSTypeAliasDeclaration"(node) {
-          declared.set(
-            node.id.name,
-            node.typeAnnotation?.type === "TSNeverKeyword" ? "never" : "other",
-          );
-        },
-        "Program > TSInterfaceDeclaration"(node) {
-          if (node.id?.name) declared.set(node.id.name, "other");
-        },
-        "Program:exit"() {
+        "Program:exit"(program) {
+          const declared = declaredTypes(program);
           for (const node of exportSpecifiers) {
             let never = false;
             let unread = false;

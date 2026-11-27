@@ -6,8 +6,9 @@ function isDynamicScope(scope, evalScopes) {
   return scope.type === "with" || scope.directCallToEvalScope || evalScopes.has(scope);
 }
 
-function isRequireCall(node) {
+function readsRequireNamespace(node) {
   const expression = unwrapExpression(node);
+  if (expression?.type === "MemberExpression") return readsRequireNamespace(expression.object);
   return (
     expression?.type === "CallExpression" &&
     expression.callee?.type === "Identifier" &&
@@ -22,7 +23,11 @@ function isUnreadModuleDef(def) {
     return node.moduleReference?.type === "TSExternalModuleReference";
   }
   if (def.type === "ImportBinding") return true;
-  return def.type === "Variable" && node?.type === "VariableDeclarator" && isRequireCall(node.init);
+  return (
+    def.type === "Variable" &&
+    node?.type === "VariableDeclarator" &&
+    readsRequireNamespace(node.init)
+  );
 }
 
 function globalResolution(identifier, sourceCode, evalScopes) {
