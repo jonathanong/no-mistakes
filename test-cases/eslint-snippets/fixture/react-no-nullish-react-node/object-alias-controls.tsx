@@ -1,12 +1,6 @@
 import type { ReactNode } from "react";
 type Props = { children: ReactNode };
 
-export function dynamic(props: Props, children: string) {
-  // An identifier key is not a static property name, so slot is not ReactNode.
-  const { [children]: slot } = props;
-  return slot ?? null;
-}
-
 export function shadowed(props: Props) {
   function inner(props: { children: string | undefined }) {
     const p = props;
@@ -88,15 +82,13 @@ export function functionShadow(props: Props) {
   }
 }
 
-export function parameterInitializer(props: Props, value = (() => {
-  // Initializers can run before later parameters are initialized.
-  const p = props;
-  return p.children ?? null;
-})()) {
+export function parameterInitializer(
+  props: Props,
+  value = (() => {
+    // Initializers can run before later parameters are initialized.
+    const p = props;
+    return p.children ?? null;
+  })(),
+) {
   return value;
-}
-
-export function dynamicTemplate(props: Props) {
-  const { [`children${""}`]: slot } = props;
-  return slot ?? null;
 }

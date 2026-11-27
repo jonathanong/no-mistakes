@@ -80,3 +80,11 @@ export function namedExpression(node: Hidden.ReactNode) {
     return node ?? null;
   };
 }
+
+export function parameterProperty(node: Hidden.ReactNode) {
+  return new (class {
+    constructor(private node: string) {
+      return node ?? null;
+    }
+  })();
+}

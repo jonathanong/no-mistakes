@@ -27,6 +27,8 @@ const suite = {
     aliasCase("object-alias-controls"),
   ],
   invalid: [
+    // 3 nullish, 2 unanalyzable.
+    aliasCase("object-alias-computed-keys"),
     // 5 nullish.
     aliasCase("object-aliases"),
     // 3 nullish.

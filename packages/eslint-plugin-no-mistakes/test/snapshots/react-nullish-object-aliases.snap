@@ -40,6 +40,68 @@
         },
         {
           "column": 10,
+          "endColumn": 22,
+          "endLine": 12,
+          "file": "fixture.tsx",
+          "line": 12,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 19,
+          "file": "fixture.tsx",
+          "line": 19,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 24,
+          "file": "fixture.tsx",
+          "line": 24,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 29,
+          "file": "fixture.tsx",
+          "line": 29,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "fixture.tsx",
+          "line": 7,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
           "endColumn": 28,
           "endLine": 12,
           "file": "fixture.tsx",

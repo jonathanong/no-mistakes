@@ -203,6 +203,7 @@ module.exports = {
   isReactNamespace,
   isReactUse,
   ordinaryUseCall,
+  constStringKey,
   patternKey,
   reactUseStatus,
   staticName,

@@ -1,6 +1,7 @@
 "use strict";
 
 const { literalString } = require("./rules/module-mock-helpers");
+const { constStringKey } = require("./rules/react-use-callee");
 
 function keyName(node) {
   if (!node) return null;
@@ -8,13 +9,10 @@ function keyName(node) {
   return node.type === "Literal" ? String(node.value) : null;
 }
 
+const UNWRAP_TYPES = new Set(["TSParenthesizedType", "TSOptionalType", "TSRestType"]);
+
 function unwrapType(node) {
-  return node &&
-    (node.type === "TSParenthesizedType" ||
-      node.type === "TSOptionalType" ||
-      node.type === "TSRestType")
-    ? unwrapType(node.typeAnnotation)
-    : node;
+  return UNWRAP_TYPES.has(node?.type) ? unwrapType(node.typeAnnotation) : node;
 }
 
 function qualifierText(node) {
@@ -41,14 +39,7 @@ function typeName(node) {
       ? "React.ReactNode"
       : null;
   }
-  if (current.type !== "TSTypeReference") return null;
-  const name = current.typeName;
-  if (name.type === "Identifier") return name.name;
-  return name.type === "TSQualifiedName" &&
-    name.left.type === "Identifier" &&
-    name.right.type === "Identifier"
-    ? `${name.left.name}.${name.right.name}`
-    : null;
+  return current.type === "TSTypeReference" ? qualifierText(current.typeName) : null;
 }
 
 function typeAnnotation(node) {
@@ -111,7 +102,11 @@ function localTypeStatus(node, name, facts, seen) {
         declaration.type === "TSTypeAliasDeclaration" ||
         declaration.type === "TSInterfaceDeclaration";
       if (!typed || declaration.id?.name !== name || containsNode(declaration, node)) continue;
-      if (!containsNode(declaration.parent, node)) continue;
+      const scope =
+        declaration.parent?.type === "ExportNamedDeclaration"
+          ? declaration.parent.parent
+          : declaration.parent;
+      if (!containsNode(scope, node)) continue;
       if (declaration.type === "TSInterfaceDeclaration") return "no";
       if (seen.has(declaration)) return "unresolved";
       const next = new Set(seen);
@@ -189,17 +184,22 @@ function definePattern(
   defineReactNode,
   unresolved,
   defineUnresolved,
+  context,
 ) {
   if (!pattern || pattern.type !== "ObjectPattern") return;
   bindPatternNames(pattern, defineBinding);
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
-    const name = property.computed ? literalString(property.key) : keyName(property.key);
+    const name = property.computed
+      ? literalString(property.key) || (context && constStringKey(property.key, context))
+      : keyName(property.key);
     const value =
       property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
     if (value?.type !== "Identifier") continue;
     if (name && props?.has(name)) defineReactNode(value.name);
     else if (name && unresolved?.has(name)) defineUnresolved?.(value.name);
+    else if (!name && property.computed && (props?.size || unresolved?.size))
+      defineUnresolved?.(value.name);
   }
 }
 

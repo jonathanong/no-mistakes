@@ -32,3 +32,8 @@ type Right = Left;
 function aliasCycle(value: Left) {
   return value ?? "";
 }
+export type ExportedLeft = ExportedRight;
+export type ExportedRight = ExportedLeft;
+function exportedAliasCycle(value: ExportedLeft) {
+  return value ?? "";
+}

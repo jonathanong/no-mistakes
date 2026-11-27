@@ -17,3 +17,9 @@ export async function inlineChain(): Promise<Widget | null> {
 export async function inlineDynamic(): Promise<Widget | null> {
   return require(moduleName).api.getWidget("1");
 }
+
+const getWidget = require("./data").api.getWidget;
+
+export async function sameName(): Promise<Widget | null> {
+  return getWidget("1");
+}

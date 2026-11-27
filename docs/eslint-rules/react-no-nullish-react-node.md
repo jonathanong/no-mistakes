@@ -52,7 +52,7 @@ fallback; preserve an explicit `null` when it is meaningful.
 
 `props["children"]`, ``props[`children`]``, and `const node = children` are the same ReactNode value when the binding is declared in this file. A computed identifier key is not a static property name.
 
-`import React = require("react")`, `import { default as React } from "react"`, `import { "default" as React } from "react"`, `let React = require("react")`, `var React = require("react")`, `import("react").ReactNode`, `(children satisfies ReactNode)`, `props!.children`, and `const { children } = props!` are the same ReactNode value. A non-static `const React = require(moduleName)`, `let React = require(moduleName)`, `var React = require(moduleName)`, or `import(moduleName).ReactNode`, a later write to that `let` or `var`, or `import React = Other` used as `React.ReactNode`, reports `unanalyzable`. An inner `type Slot = string` does not keep an outer unresolved `Slot`. `type Value = Plain | Plain` is not a cycle, and `type Left = Right; type Right = Left` reports `unanalyzable`. A named interface property of that type does too, including through a `const` alias of the object and a further `const` alias of that alias. A shadowing parameter stops the lookup. A local function named `require` is not the module loader. A variable with its own type annotation is not inferred from the initializer, so `const text: string = children as string` is not a ReactNode. `const { children }: Record<"children", unknown> = props` is not ReactNode either, and an annotation the rule cannot resolve reports `unanalyzable`, including a destructured parameter. An interface property that overrides an inherited ReactNode uses the override, and a named function expression is that function rather than an outer parameter. An `as` or angle-bracket assertion uses that type instead of the source, so `const text = child as string` and `(child as string) ?? ""` are not ReactNode, and `const node = value as ReactNode` is. `as const`, `satisfies`, and `!` still read the inner value. `const textProps = props as { children: string }`, `(props as { children: string }).children`, and `const { children } = props as { children: string }` use that asserted type, and an assertion the rule cannot classify does not fall back to the source props.
+`import React = require("react")`, `import { default as React } from "react"`, `import { "default" as React } from "react"`, `let React = require("react")`, `var React = require("react")`, `import("react").ReactNode`, `(children satisfies ReactNode)`, `props!.children`, and `const { children } = props!` are the same ReactNode value. A non-static `const React = require(moduleName)`, `let React = require(moduleName)`, `var React = require(moduleName)`, or `import(moduleName).ReactNode`, a later write to that `let` or `var`, or `import React = Other` used as `React.ReactNode`, reports `unanalyzable`. An inner `type Slot = string` does not keep an outer unresolved `Slot`. `type Value = Plain | Plain` is not a cycle, and `type Left = Right; type Right = Left` reports `unanalyzable`, including when both aliases are exported. A named interface property of that type does too, including through a `const` alias of the object and a further `const` alias of that alias. A shadowing parameter stops the lookup. A local function named `require` is not the module loader. A variable with its own type annotation is not inferred from the initializer, so `const text: string = children as string` is not a ReactNode. `const { children }: Record<"children", unknown> = props` is not ReactNode either, and an annotation the rule cannot resolve reports `unanalyzable`, including a destructured parameter. An interface property that overrides an inherited ReactNode uses the override, a named function expression is that function rather than an outer parameter, and a constructor parameter property is that parameter rather than an outer binding of the same name. An `as` or angle-bracket assertion uses that type instead of the source, so `const text = child as string` and `(child as string) ?? ""` are not ReactNode, and `const node = value as ReactNode` is. `as const`, `satisfies`, and `!` still read the inner value. `const textProps = props as { children: string }`, `(props as { children: string }).children`, and `const { children } = props as { children: string }` use that asserted type, and an assertion the rule cannot classify does not fall back to the source props.
 
 String and expression-free template destructuring keys retain the declared prop
 type. An unannotated `const p = props` also retains it, including through more
@@ -64,9 +64,11 @@ also left unknown.
 An alias source and reads of that alias use its lexical binding's prop type; a
 same-named loop or catch local does not inherit the alias's type. Declared-type
 name facts keep their existing conservative reporting. A computed destructuring
-key counts only when it is a static literal, so an identifier key does not take
-the ReactNode prop spelled like that identifier. A computed key in a type
-literal or interface follows the same rule. A rest element, a name nested
+key counts only when it is a static literal, including `as const` and a `const`
+string binding. An identifier key does not take the ReactNode prop spelled like
+that identifier. When that object has a ReactNode or unresolved prop, a key
+that is not static is `unanalyzable`. A computed key in a type
+literal or interface counts only when it is a static literal. A rest element, a name nested
 in an object or array pattern, an array-pattern parameter, a rest parameter,
 and `const [name] = ...` stop the lookup and do not inherit an outer ReactNode.
 
@@ -74,7 +76,7 @@ and `const [name] = ...` stop the lookup and do not inherit an outer ReactNode.
 import type { ReactNode } from "react";
 export function Unknown(props: { children: ReactNode }, children: string) {
   const { [children]: slot } = props;
-  return slot ?? null; // The runtime key need not be "children".
+  return slot ?? null; // unanalyzable: the runtime key need not be "children".
 }
 ```
 

@@ -445,6 +445,7 @@ describe("typescript import wrappers", () => {
       [13, "unanalyzable"],
       [23, "unanalyzable"],
       [33, "unanalyzable"],
+      [38, "unanalyzable"],
     ]);
     expect(cases.find((item) => item.name === "wrapped script attributes").findings).toEqual([]);
     expect(cases.find((item) => item.name === "ignored dynamic next require").findings).toEqual([]);
@@ -708,6 +709,7 @@ describe("typescript import wrappers", () => {
       [5, "unanalyzable"],
       [14, "wrapper"],
       [18, "unanalyzable"],
+      [24, "wrapper"],
     ]);
     expect(
       cases

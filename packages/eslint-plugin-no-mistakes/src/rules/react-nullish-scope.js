@@ -49,15 +49,13 @@ function createNullishState(context) {
     });
   }
 
-  function defineReactNode(name, scope = currentScope()) {
+  function defineNamed(field, name, scope = currentScope()) {
     scope.bindings.add(name);
-    scope.reactNodes.add(name);
+    scope[field].add(name);
   }
 
-  function defineUnresolved(name, scope = currentScope()) {
-    scope.bindings.add(name);
-    scope.unresolved.add(name);
-  }
+  const defineReactNode = (name, scope) => defineNamed("reactNodes", name, scope);
+  const defineUnresolved = (name, scope) => defineNamed("unresolved", name, scope);
 
   function defineObjectType(identifier, type, scope = currentScope()) {
     scope.bindings.add(identifier.name);
@@ -131,8 +129,7 @@ function createNullishState(context) {
   }
 
   function defineParam(param) {
-    const parameter = param.type === "TSParameterProperty" ? param.parameter : param;
-    const target = parameter.type === "AssignmentPattern" ? parameter.left : parameter;
+    const target = (param.parameter ?? param).left ?? param.parameter ?? param;
     const type = typeAnnotation(param) || typeAnnotation(target);
     if (isIdentifier(target)) {
       noteType(target.name, type);
@@ -148,6 +145,7 @@ function createNullishState(context) {
         defineReactNode,
         members.unresolved,
         defineUnresolved,
+        context,
       );
       if (members.allUnresolved) bindPatternNames(target, defineUnresolved);
     }
@@ -188,6 +186,7 @@ function createNullishState(context) {
       (name) => defineReactNode(name, scope),
       members.unresolved,
       (name) => defineUnresolved(name, scope),
+      context,
     );
     if (members.allUnresolved) bindPatternNames(node.id, (name) => defineUnresolved(name, scope));
   }
