@@ -100,3 +100,76 @@ fn configured_language_http_clients_match_route_files() {
         );
     }
 }
+
+#[test]
+fn cross_language_and_parameterized_client_routes_keep_their_report_patterns() {
+    let root = lang_fixture("http-clients");
+    for route in ["go/routes.go", "dotnet/Routes.cs"] {
+        let report: serde_json::Value = serde_json::from_str(
+            &crate::napi_api::dependents_json_impl(serde_json::json!({
+                "root": root,
+                "files": [route],
+                "relationships": ["http"]
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        assert!(report["files"].as_array().unwrap().iter().any(|file| {
+            file["path"].as_str().is_some_and(|path| path.replace('\\', "/") == "python/client.py")
+        }), "{route}: {report}");
+    }
+    let edges: Vec<serde_json::Value> = serde_json::from_str(
+        &crate::napi_api::server_route_edges_json_impl(serde_json::json!({"root": root})).unwrap(),
+    )
+    .unwrap();
+    for route in ["/shared/client-check", "/customers/{customer_id}", "/members/{id:int}"] {
+        assert!(edges.iter().any(|edge| {
+            edge["kind"] == "client-call"
+                && edge["to"] == route
+                && edge["from"].as_str().is_some_and(|path| path.replace('\\', "/") == "python/client.py")
+        }), "{route}: {edges:?}");
+    }
+}
+
+#[test]
+fn server_edge_filters_exclude_unselected_language_client_sources() {
+    let root = lang_fixture("http-clients");
+    let edges: Vec<serde_json::Value> = serde_json::from_str(
+        &crate::napi_api::server_route_edges_json_impl(serde_json::json!({
+            "root": root,
+            "filters": ["go/routes.go", "go/client.go"]
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let clients: Vec<_> = edges.iter()
+        .filter(|edge| edge["kind"] == "client-call")
+        .map(|edge| edge["from"].as_str().unwrap().replace('\\', "/"))
+        .collect();
+    assert_eq!(clients, ["go/client.go"], "{edges:?}");
+}
+
+#[test]
+fn dotnet_only_edge_plan_omits_http_calls() {
+    let root = lang_fixture("http-clients");
+    let files = lang_files(&root);
+    let options = GraphConfigOptions {
+        dotnet_projects: vec![crate::codebase::dotnet::DotnetConfigProject {
+            name: "api".to_string(),
+            project: "dotnet/Api.csproj".to_string(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: false,
+        }],
+        ..Default::default()
+    };
+    let edges = collect_dotnet_edges(
+        &root,
+        &files,
+        Some(&options),
+        None,
+        None,
+        &PathInterner::default(),
+    );
+    assert!(edges.iter().all(|(_, _, kind)| *kind != EdgeKind::HttpCall));
+}

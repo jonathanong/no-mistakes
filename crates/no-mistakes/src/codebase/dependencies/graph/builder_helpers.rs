@@ -74,7 +74,6 @@ fn collect_http_process_edges(
             &inputs.interner,
         ));
         edges.extend(collect_lang_http_client_edges(inputs, session));
-        edges.extend(dotnet_http_edges_for_plan(inputs, session));
     }
     if inputs.plan.process {
         edges.extend(collect_process_spawn_edges(

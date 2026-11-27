@@ -3,8 +3,13 @@ use regex::Regex;
 #[path = "http_client_regex.rs"]
 mod regexes;
 
-pub(crate) fn extract_python(source: &str) -> Vec<String> {
-    paths_from(source, &[regexes::python()])
+pub(crate) fn extract_python(source: &str, masked: &str) -> Vec<String> {
+    let mut positions = source.char_indices().zip(masked.chars());
+    paths_from_matching(source, &[regexes::python()], |start| {
+        positions
+            .find(|((offset, _), _)| *offset == start)
+            .is_some_and(|(_, code)| code != ' ')
+    })
 }
 
 pub(crate) fn extract_go(source: &str) -> Vec<String> {
@@ -43,13 +48,21 @@ pub(crate) fn extract_dotnet(source: &str) -> Vec<String> {
 }
 
 fn paths_from(source: &str, patterns: &[&Regex]) -> Vec<String> {
+    paths_from_matching(source, patterns, |_| true)
+}
+
+fn paths_from_matching(
+    source: &str,
+    patterns: &[&Regex],
+    mut in_code: impl FnMut(usize) -> bool,
+) -> Vec<String> {
     let mut paths = Vec::new();
     for pattern in patterns {
-        paths.extend(
-            pattern
-                .captures_iter(source)
-                .filter_map(|cap| static_path(first_group(&cap))),
-        );
+        paths.extend(pattern.captures_iter(source).filter_map(|cap| {
+            in_code(cap.get(0)?.start())
+                .then(|| static_path(first_group(&cap)))
+                .flatten()
+        }));
     }
     paths.sort();
     paths.dedup();
@@ -66,7 +79,7 @@ fn first_group<'a>(cap: &'a regex::Captures<'a>) -> Option<&'a str> {
 
 fn static_path(raw: Option<&str>) -> Option<String> {
     let raw = raw?;
-    if raw.starts_with("//") || raw.contains(['$', '{', '%']) {
+    if raw.starts_with("//") || raw.contains(['$', '{']) || !valid_percent_encoding(raw) {
         return None;
     }
     if raw.starts_with('/') {
@@ -77,6 +90,18 @@ fn static_path(raw: Option<&str>) -> Option<String> {
         return None;
     }
     Some(normalize_route_pattern(url.path()))
+}
+
+fn valid_percent_encoding(path: &str) -> bool {
+    path.as_bytes()
+        .iter()
+        .enumerate()
+        .filter(|(_, byte)| **byte == b'%')
+        .all(|(index, _)| {
+            path.as_bytes()
+                .get(index + 1..index + 3)
+                .is_some_and(|pair| pair.iter().all(u8::is_ascii_hexdigit))
+        })
 }
 
 fn loopback_host(host: Option<url::Host<&str>>) -> bool {
@@ -95,14 +120,21 @@ pub(crate) fn normalize_route_pattern(raw: &str) -> String {
     } else {
         path
     };
-    if path.is_empty() {
-        return "/".to_string();
+    let mut normalized = String::new();
+    for segment in path.trim_start_matches('/').split('/') {
+        normalized.push('/');
+        if let Some(parameter) = segment
+            .strip_prefix('{')
+            .and_then(|part| part.strip_suffix('}'))
+        {
+            let name = parameter.split(':').next().unwrap_or(parameter);
+            normalized.push(':');
+            normalized.push_str(name);
+        } else {
+            normalized.push_str(segment);
+        }
     }
-    if path.starts_with('/') {
-        path.to_string()
-    } else {
-        format!("/{path}")
-    }
+    normalized
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

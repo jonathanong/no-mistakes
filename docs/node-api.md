@@ -462,9 +462,10 @@ remain failures. See
 
 `dependents({ relationships: ["http"] })` includes static language HTTP
 client literals for configured Python, Go, Rust, Rails, PHP, Java, Kotlin,
-Elixir, and .NET packages as `http` edges to the matching route file.
-`serverRouteEdges` reports those same literals as `client-call`. Computed URLs
-are non-edges. Both entrypoints are the async functions the CLI JSON commands
+Elixir, and .NET packages. Root-relative paths and literal HTTP(S) URLs on
+loopback hosts create `http` edges to matching routes across configured
+languages. `serverRouteEdges` reports those same literals as `client-call`.
+Computed URLs and URLs on other hosts produce no edge. Both entrypoints are the async functions the CLI JSON commands
 call.
 
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |

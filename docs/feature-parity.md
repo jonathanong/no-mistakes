@@ -531,7 +531,7 @@ spread, and mutable definitions abstain. See [queue configuration](configuration
 files, the same way TS `fetch` and Swift `Endpoint` literals do. Configured
 Python (`requests` / `httpx`), Go (`net/http`), Rust (`reqwest`), Rails
 (`Faraday`, `HTTParty`, `RestClient`, `Net::HTTP`), PHP (`Http::` and
-`->request`), Java and Kotlin (`getForObject` / `URI.create` / `.uri`), Elixir
+`->request`), Java and Kotlin (`getForObject` / `.uri`), Elixir
 (`HTTPoison` / `Req` / `Tesla`), and .NET (`GetAsync` / `HttpRequestMessage`)
 literals do the same. `server edges` reports them as `client-call`. Computed,
 concatenated, and interpolated URLs stay non-edges. Dart stays on `Uri.parse` /
@@ -858,7 +858,7 @@ wildcard translation are non-edges. Same-file controller methods do not emit
 | Package identity | workspace packages  | configured `tests.java.packages`                                                                            |
 | Tests            | `tests plan vitest` | `tests plan java` over `*Test.java` / `*Tests.java` / `*IT.java`; `mvn test [-f <package>/pom.xml] -Dtest=` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals                                                           |
-| HTTP clients     | `fetch` `http` edge | `getForObject` / `URI.create` / `.uri` static literals; computed URLs are non-edges                         |
+| HTTP clients     | `fetch` `http` edge | `getForObject` / `.uri` static literals; computed URLs are non-edges                         |
 | Queues           | BullMQ              | no                                                                                                          |
 | Lockfile         | npm-family          | later (`pom.xml` native fallback only)                                                                      |
 
@@ -896,7 +896,7 @@ Spring HTTP v1 reuses the Java mapping literals on `.kt` files, matching
 | Package identity | workspace packages  | configured `tests.kotlin.packages`                                                                 |
 | Tests            | `tests plan vitest` | `tests plan kotlin` over `*Test.kt` / `*Tests.kt` / `*IT.kt`; `gradle [-p <package>] test --tests` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals on `.kt`                                         |
-| HTTP clients     | `fetch` `http` edge | `getForObject` / `URI.create` / `.uri` static literals; computed URLs are non-edges                |
+| HTTP clients     | `fetch` `http` edge | `getForObject` / `.uri` static literals; computed URLs are non-edges                |
 | Queues           | BullMQ              | no                                                                                                 |
 | Lockfile         | npm-family          | later (`build.gradle.kts` native fallback only)                                                    |
 

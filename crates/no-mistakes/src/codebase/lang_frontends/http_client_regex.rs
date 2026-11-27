@@ -94,8 +94,8 @@ pub(super) fn jvm() -> &'static Regex {
     RE.get_or_init(|| {
         Regex::new(
             r#"(?x)
-            \.(?:getForObject|getForEntity|postForObject|postForEntity|exchange)\(\s*"([^"]+)"\s*[,)]
-            |\bURI\.create\(\s*"([^"]+)"\s*\)
+            \.(?:getForObject|getForEntity|postForObject|postForEntity|exchange)\(\s*
+                (?:"([^"]+)"|URI\.create\(\s*"([^"]+)"\s*\))\s*[,)]
             |\.uri\(\s*"([^"]+)"\s*[,)]
             "#,
         )

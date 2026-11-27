@@ -56,6 +56,7 @@ fn merge_configured_lang_routes(
                 &file.path,
                 &file.http_calls,
                 facts,
+                cli_filter,
                 Some(&test_filter),
             );
         }
@@ -105,6 +106,7 @@ fn merge_dotnet_routes(
             &file.path,
             &file.http_calls,
             facts,
+            cli_filter,
             Some(&test_filter),
         );
     }
@@ -115,9 +117,14 @@ fn merge_http_clients(
     path: &Path,
     calls: &[String],
     facts: &mut HashMap<PathBuf, FileFacts>,
+    cli_filter: Option<&GlobSet>,
     test_filter: Option<&TestFileFilter>,
 ) {
-    if calls.is_empty() || test_filter.is_some_and(|filter| filter.is_match(root, path)) {
+    let rel = path.strip_prefix(root).unwrap_or(path);
+    if calls.is_empty()
+        || cli_filter.is_some_and(|filter| !filter.is_match(rel))
+        || test_filter.is_some_and(|filter| filter.is_match(root, path))
+    {
         return;
     }
     facts

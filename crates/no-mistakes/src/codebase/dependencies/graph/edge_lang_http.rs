@@ -6,42 +6,42 @@ fn collect_lang_http_client_edges(
         return Vec::new();
     };
     let config = lang_config_from_options(options);
-    if config_is_empty(&config) {
-        return Vec::new();
+    let facts = (!config_is_empty(&config)).then(|| {
+        let files = inputs.graph_files.all_shared();
+        let sources = graph_edge_sources(session, inputs);
+        session.lang_frontend_facts(inputs.root, &files, &config, &sources)
+    });
+    let mut files = Vec::new();
+    if let Some(facts) = &facts {
+        files.extend(
+            crate::codebase::lang_frontends::each_lang_map(facts)
+                .into_iter()
+                .flat_map(|map| map.files.values())
+                .map(|file| HttpClientFile {
+                    path: file.path.as_path(),
+                    calls: &file.http_calls,
+                    routes: &file.route_handlers,
+                }),
+        );
     }
-    let files = inputs.graph_files.all_shared();
-    let sources = graph_edge_sources(session, inputs);
-    let facts = session.lang_frontend_facts(inputs.root, &files, &config, &sources);
-    let mut edges = Vec::new();
-    for map in [
-        &facts.python,
-        &facts.go,
-        &facts.rust,
-        &facts.ruby,
-        &facts.php,
-        &facts.java,
-        &facts.kotlin,
-        &facts.elixir,
-    ] {
-        edges.extend(http_edges_for_lang_map(map, &inputs.interner));
-    }
-    edges
+    extend_dotnet_http_client_files(inputs.dotnet_facts, &mut files);
+    http_edges_for_client_files(&files, &inputs.interner)
 }
 
-fn http_edges_for_lang_map(
-    map: &crate::codebase::lang_frontends::LangFactMap,
-    interner: &PathInterner,
-) -> Vec<Edge> {
-    let files: Vec<HttpClientFile<'_>> = map
-        .files
-        .values()
-        .map(|file| HttpClientFile {
-            path: file.path.as_path(),
-            calls: &file.http_calls,
-            routes: &file.route_handlers,
-        })
-        .collect();
-    http_edges_for_client_files(&files, interner)
+fn extend_dotnet_http_client_files<'a>(
+    facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
+    files: &mut Vec<HttpClientFile<'a>>,
+) {
+    files.extend(
+        facts
+            .into_iter()
+            .flat_map(|facts| facts.files.values())
+            .map(|file| HttpClientFile {
+                path: file.path.as_path(),
+                calls: &file.http_calls,
+                routes: &file.route_handlers,
+            }),
+    );
 }
 
 struct HttpClientFile<'a> {
