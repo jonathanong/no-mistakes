@@ -28,19 +28,14 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Pipfi
 
 fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage, PipfileError> {
     let obj = entry.as_object().ok_or(PipfileError)?;
-    let version_raw = obj
-        .get("version")
-        .and_then(|value| value.as_str())
-        .ok_or(PipfileError)?;
-    let version = version_raw
-        .strip_prefix("==")
-        .unwrap_or(version_raw)
-        .to_string();
-    let (kind, fingerprint) = if let Some(git) = text(obj, "git") {
+    let version = text(obj, "version").map(|raw| raw.strip_prefix("==").unwrap_or(raw).to_string());
+    let (kind, fingerprint, version_optional) = if let Some(git) = text(obj, "git") {
         let fingerprint = text(obj, "ref").unwrap_or(git).to_string();
-        (ResolutionKind::Git, fingerprint)
+        (ResolutionKind::Git, fingerprint, true)
     } else if let Some(path) = text(obj, "path") {
-        (ResolutionKind::Directory, path.to_string())
+        (ResolutionKind::Directory, path.to_string(), true)
+    } else if obj.contains_key("editable") {
+        (ResolutionKind::Directory, String::new(), true)
     } else {
         let fingerprint = obj
             .get("hashes")
@@ -49,8 +44,15 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
             .and_then(|value| value.as_str())
             .unwrap_or("")
             .to_string();
-        (ResolutionKind::Registry, fingerprint)
+        (ResolutionKind::Registry, fingerprint, false)
     };
+    let version = version.ok_or(PipfileError).or_else(|err| {
+        if version_optional {
+            Ok(String::new())
+        } else {
+            Err(err)
+        }
+    })?;
     Ok(ResolvedPackage {
         name: name.to_string(),
         version,

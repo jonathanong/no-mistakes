@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "hash": { "sha256": "abc" },
+    "pipfile-spec": 6,
+    "requires": { "python_version": "3.11" }
+  },
+  "default": {
+    "sample-git": {
+      "git": "https://example.invalid/sample-git.git",
+      "ref": "abc123"
+    }
+  },
+  "develop": {
+    "sample-path": {
+      "editable": true,
+      "path": "."
+    }
+  }
+}

@@ -1,0 +1,25 @@
+version = 1
+revision = 1
+
+[[package]]
+name = "sample-app"
+source = { virtual = "." }
+
+[[package]]
+name = "sample-dir"
+version = "0.1.0"
+source = { directory = "lib/sample-dir" }
+
+[[package]]
+name = "sample-edit"
+source = { editable = true }
+
+[[package]]
+name = "sample-git"
+version = "0.4.0"
+source = { git = "https://example.invalid/sample-git.git#bbb222", rev = "main" }
+
+[[package]]
+name = "sample-rev"
+version = "0.2.0"
+source = { git = "https://example.invalid/sample-rev.git", rev = "ddd444" }

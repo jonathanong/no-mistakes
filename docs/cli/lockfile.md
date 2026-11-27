@@ -41,15 +41,22 @@ an empty `entries` array and a warning with `code: "binary-lockfile"`,
 `lockfile`, and `message`. Without `includeWarnings`, the Node promise rejects
 for explicit binary lockfiles and returns an array for supported lockfiles.
 
-`poetry.lock`, `uv.lock`, and `Cargo.lock` contribute one package per
-`[[package]]` table: name, version, and the first hash or Cargo `checksum`.
+`poetry.lock`, `uv.lock`, and `Cargo.lock` are parsed as TOML. Each
+`[[package]]` table contributes one package: name, version, and a fingerprint.
 A `[package.dependencies]` table stays on that package. Cargo `registry+` and
-`sparse+` sources are registry, `git+` is git, `path+` is a directory, and a
-package with no source is the workspace. Poetry and uv git, directory, and
-URL sources set the same resolution kind. `Pipfile.lock` reads `default` and
-`develop`; the object key is the name, a leading `==` is removed from the
-version, and the first hash is the fingerprint. `go.mod` reads `require`
-lines, including `// indirect`. `replace`, `exclude`, `retract`, and `go.sum`
+`sparse+` sources are registry and use `checksum`. `git+` is git and uses
+`checksum` or the source string. `path+` is a directory. A package with no
+source is the workspace. Poetry git uses `resolved_reference`, then
+`reference`. Other Poetry packages use the first file hash, including
+`[metadata.files]`. Poetry `directory` is a directory and `url` is a tarball.
+uv git uses the commit in the URL fragment after `#`, then `rev`. uv
+`editable`, `directory`, and `virtual` sources are directories and may omit
+`version`. A uv registry package uses the first wheel hash. `Pipfile.lock`
+reads `default` and `develop`. The object key is the name. A leading `==` is
+removed from `version`. A git or path entry may omit `version`; its
+fingerprint is `ref` or `path`. A registry entry requires `version` and uses
+the first hash. `go.mod` reads `require` lines, including `// indirect`.
+`replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
 fingerprints, and `PATH` is a directory. `composer.lock` reads `packages` and
