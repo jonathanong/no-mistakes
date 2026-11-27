@@ -10,7 +10,9 @@ pub(super) fn resolve_entrypoint(root: &Path, configured: &str) -> Option<PathBu
         root.join(configured)
     };
     let path = crate::codebase::ts_resolver::normalize_path(&path);
-    path.starts_with(root).then_some(path)
+    use crate::codebase::ts_resolver::is_within;
+    is_within(&path, root)
+        .then_some(path)
 }
 
 pub(super) fn runtime_edge_kinds() -> HashSet<EdgeKind> {

@@ -20,3 +20,13 @@ fn selected_malformed_source_is_not_reported_unreachable() {
     assert!(error.to_string().contains("broken.ts"), "{error:#}");
     assert!(require_sources(&graph, [&clean]).is_ok());
 }
+
+#[test]
+fn entrypoints_with_empty_normalized_root_reject_parent_escapes() {
+    let root = Path::new(".");
+    assert!(resolve_entrypoint(root, "../outside.ts").is_none());
+    assert_eq!(
+        resolve_entrypoint(root, "worker/src/index.mts"),
+        Some(PathBuf::from("worker/src/index.mts"))
+    );
+}

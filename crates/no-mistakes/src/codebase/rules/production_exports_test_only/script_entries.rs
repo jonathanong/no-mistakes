@@ -1,7 +1,7 @@
 #[path = "script_entry_commands.rs"]
 mod commands;
 
-use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::ts_resolver::{is_within, normalize_path};
 use crate::codebase::ts_source::SourceStore;
 use crate::fx::{fx_set, FxHashSet};
 use std::path::{Path, PathBuf};
@@ -96,7 +96,7 @@ fn resolve_entry(package_dir: &Path, root: &Path, raw: &str) -> Option<PathBuf> 
         package_dir.join(raw_path)
     };
     let path = normalize_path(&joined);
-    (path.starts_with(root) && path.is_file()).then_some(path)
+    (is_within(&path, root) && path.is_file()).then_some(path)
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

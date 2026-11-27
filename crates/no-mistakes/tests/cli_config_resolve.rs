@@ -61,3 +61,37 @@ fn config_resolve_prints_vitest_and_per_framework_triggers() {
         false
     );
 }
+
+fn resolve_in(dir: &PathBuf, extra: &[&str]) -> Output {
+    Command::new(bin())
+        .current_dir(dir)
+        .args(["config", "resolve", "--root", "."])
+        .args(extra)
+        .output()
+        .expect("no-mistakes should run")
+}
+
+#[test]
+fn config_resolve_accepts_platform_exports_with_relative_dot_root() {
+    let dir = repository_fixture("config", "relative-root-platform-exports");
+    let output = resolve_in(&dir, &[]);
+
+    assert!(
+        output.status.success(),
+        "relative root should validate: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
+fn config_resolve_rejects_platform_exports_escaping_relative_dot_root() {
+    let dir = repository_fixture("config", "relative-root-platform-exports");
+    let output = resolve_in(&dir, &["--config", "escape.yml"]);
+
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("file must stay within the root"),
+        "{stderr}"
+    );
+}

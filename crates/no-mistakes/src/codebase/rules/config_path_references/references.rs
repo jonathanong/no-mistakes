@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::ts_resolver::{is_within, normalize_path};
 use crate::codebase::ts_source::relative_slash_path;
 use globset::Glob;
 
@@ -16,11 +16,14 @@ pub(super) fn reference_exists(
         config_file.parent().unwrap_or(root).to_path_buf()
     };
     let target = normalize_path(&base.join(reference));
-    if target.starts_with(root) && tracked_reference_exists(root, &target, rel_files) {
+    let root = normalize_path(root);
+    let config_file = normalize_path(config_file);
+    let contained = is_within(&target, &root);
+    if contained && tracked_reference_exists(&root, &target, rel_files) {
         return Ok(true);
     }
     if opts.allow_globs && has_glob_metachar(reference) {
-        let pattern = reference_pattern(root, config_file, opts, reference);
+        let pattern = reference_pattern(&root, &config_file, opts, reference);
         let glob = Glob::new(&pattern)?;
         let matcher = glob.compile_matcher();
         return Ok(rel_files.iter().any(|rel| matcher.is_match(rel)));

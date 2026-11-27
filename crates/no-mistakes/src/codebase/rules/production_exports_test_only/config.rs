@@ -1,7 +1,7 @@
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use crate::codebase::rules::path_filter::GlobMatcher;
-use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::ts_resolver::{is_within, normalize_path};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::RuleDef;
 use crate::fx::FxHashSet;
@@ -70,7 +70,7 @@ impl Selection {
                 bail!("{RULE_ID}: options.platformConsumedExports file must be a nonempty root-relative file path");
             }
             let file = normalize_path(&root.join(&entry.file));
-            if !file.starts_with(root) {
+            if !is_within(&file, root) {
                 bail!("{RULE_ID}: options.platformConsumedExports file must stay within the root");
             }
             if entry.exports.is_empty() || entry.exports.iter().any(|name| name.trim().is_empty()) {
