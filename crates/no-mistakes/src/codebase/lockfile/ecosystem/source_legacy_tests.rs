@@ -72,8 +72,10 @@ fn composer_compares_unpinned_distribution_urls() {
 }
 
 #[test]
-fn cargo_rejects_nonpositive_lockfile_format_markers() {
-    for name in ["negative-version.lock", "zero-version.lock"] {
-        assert!(packages_for_diff(PackageManager::Cargo, &fixture("cargo", name)).is_err());
+fn cargo_and_uv_reject_nonpositive_lockfile_format_markers() {
+    for (manager, dir) in [(PackageManager::Cargo, "cargo"), (PackageManager::Uv, "uv")] {
+        for name in ["negative-version.lock", "zero-version.lock"] {
+            assert!(packages_for_diff(manager, &fixture(dir, name)).is_err());
+        }
     }
 }

@@ -1,4 +1,6 @@
 use super::super::{ResolutionKind, ResolvedPackage};
+use regex::Regex;
+use std::sync::OnceLock;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct GoModError;
@@ -97,8 +99,21 @@ fn inline_empty_block(rest: &str) -> bool {
 }
 
 fn replacement_fields(line: &str) -> bool {
-    line.split_once("=>")
-        .is_some_and(|(from, to)| !from.trim().is_empty() && !to.trim().is_empty())
+    static REPLACEMENT: OnceLock<Regex> = OnceLock::new();
+    REPLACEMENT
+        .get_or_init(|| {
+            let atom = r#""(?:[^"\\]|\\.)*"|`[^`]*`|[^\s"`()\[\]{},]+"#;
+            let operands = format!(r"({atom})(?:\s+({atom}))?");
+            Regex::new(&format!(r"^{operands}\s+=>\s+{operands}$")).expect("Go module replacement")
+        })
+        .captures(line)
+        .is_some_and(|parts| {
+            parts
+                .iter()
+                .skip(1)
+                .flatten()
+                .all(|part| part.as_str() != "=>")
+        })
 }
 
 fn has_one_token(rest: &str) -> bool {

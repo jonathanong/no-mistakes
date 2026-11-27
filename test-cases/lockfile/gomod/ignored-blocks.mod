@@ -9,3 +9,4 @@ replace (
 )
 
 require example.invalid/library v1.2.3
+replace example.invalid/other v1.0.0 => "../shared library"

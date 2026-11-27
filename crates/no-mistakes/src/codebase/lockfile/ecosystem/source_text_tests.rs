@@ -38,6 +38,9 @@ fn checked_text_lockfiles_reject_unrecognized_top_level_structures() {
         "unknown-directive.mod",
         "conflict.mod",
         "invalid-replacement.mod",
+        "excess-replacement-operands.mod",
+        "excess-replacement-target.mod",
+        "multiple-replacement-arrows.mod",
     ] {
         assert!(packages_for_diff(PackageManager::Go, &fixture("gomod", name)).is_err());
     }
