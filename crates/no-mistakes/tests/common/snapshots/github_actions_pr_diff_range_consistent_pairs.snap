@@ -1,0 +1,302 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 10,
+          "message": ".github/workflows/unanalyzable.yml:10: job `unknown_checkout` step 2 uses `HEAD` or `HEAD^1` after an `actions/checkout` step whose `with.ref` cannot be classified statically; use a literal merge-commit checkout or explicit base/head SHAs, or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 HEAD",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 15,
+          "message": ".github/workflows/unanalyzable.yml:15: job `dynamic_diff` step 2 uses a revision expression or variable that cannot be classified statically, so base/merge pair consistency cannot be proven; pass explicit GitHub event SHAs or `HEAD^1`/`HEAD`, or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only ${{ github.event.pull_request.base.sha }} \"$DYNAMIC_HEAD\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 20,
+          "message": ".github/workflows/unanalyzable.yml:20: job `dynamic_env` (env pair `DIFF_BASE` / `DIFF_HEAD`) uses a revision expression or variable that cannot be classified statically, so base/merge pair consistency cannot be proven; pass explicit GitHub event SHAs or `HEAD^1`/`HEAD`, or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "DIFF_HEAD: ${{ github.event.pull_request.head.sha }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 25,
+          "message": ".github/workflows/unanalyzable.yml:25: job `non_mapping_env` (env) sets `env` to a non-mapping or YAML-merged value, so configured `revisionPairs` environment pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "env: ${{ inputs.env }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 32,
+          "message": ".github/workflows/unanalyzable.yml:32: job `non_mapping_with` step 1 (with) sets `with` to a non-mapping or YAML-merged value, so configured `revisionPairs` input pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "with: ${{ inputs.with }}",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 13,
+          "message": ".github/workflows/mismatched.yml:13: job `baseref_two_arg_head_sha` step 2 diffs the pull request base against the head with a two-dot or two-argument range, which also lists base-branch changes made after the branch point. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only origin/${{ github.base_ref }} ${{ github.event.pull_request.head.sha }}",
+          "target": "baseref_two_arg_head_sha"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 18,
+          "message": ".github/workflows/mismatched.yml:18: job `merge_parent_with_head_sha` step 2 pairs merge-commit parent `HEAD^1` with a non-merge pull request head revision. Use `HEAD^1` with `HEAD` on a merge-commit checkout, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 ${{ github.event.pull_request.head.sha }}",
+          "target": "merge_parent_with_head_sha"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 25,
+          "message": ".github/workflows/mismatched.yml:25: job `pr_head_checkout_merge_parent` step 2 diffs `HEAD^1` against `HEAD` after checking out a non-merge revision (`actions/checkout` `with.ref`). On a PR head checkout, `HEAD^1` only diffs the last commit instead of the whole pull request. Check out the merge commit or use a three-dot diff between the PR base and head SHAs.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 HEAD",
+          "target": "pr_head_checkout_merge_parent"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 30,
+          "message": ".github/workflows/mismatched.yml:30: job `mismatched_pairs` (env pair `DIFF_BASE` / `DIFF_HEAD`) pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "DIFF_HEAD: ${{ github.sha }}",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 36,
+          "message": ".github/workflows/mismatched.yml:36: job `mismatched_pairs` step 2 (input pair `base-rev` / `head-rev`) pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "head-rev: HEAD",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 37,
+          "message": ".github/workflows/mismatched.yml:37: job `mismatched_pairs` step 3 (flag pair `--base` / `--head`) pairs merge-commit parent `HEAD^1` with a non-merge pull request head revision. Use `HEAD^1` with `HEAD` on a merge-commit checkout, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: node scripts/check.mjs --base HEAD^1 --head \"${{ github.event.pull_request.head.sha }}\"",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 8,
+          "message": ".github/workflows/mismatched.yml:8: job `base_sha_with_github_sha` step 2 pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.sha }}",
+          "target": "base_sha_with_github_sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 16,
+          "message": "directive for `github-actions-pr-diff-range` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "- run: git diff --name-only HEAD^1 HEAD # no-mistakes-disable-line github-actions-pr-diff-range",
+          "target": "github-actions-pr-diff-range"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 13,
+          "message": ".github/workflows/mismatched.yml:13: job `baseref_two_arg_head_sha` step 2 diffs the pull request base against the head with a two-dot or two-argument range, which also lists base-branch changes made after the branch point. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only origin/${{ github.base_ref }} ${{ github.event.pull_request.head.sha }}",
+          "target": "baseref_two_arg_head_sha"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 18,
+          "message": ".github/workflows/mismatched.yml:18: job `merge_parent_with_head_sha` step 2 pairs merge-commit parent `HEAD^1` with a non-merge pull request head revision. Use `HEAD^1` with `HEAD` on a merge-commit checkout, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 ${{ github.event.pull_request.head.sha }}",
+          "target": "merge_parent_with_head_sha"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 25,
+          "message": ".github/workflows/mismatched.yml:25: job `pr_head_checkout_merge_parent` step 2 diffs `HEAD^1` against `HEAD` after checking out a non-merge revision (`actions/checkout` `with.ref`). On a PR head checkout, `HEAD^1` only diffs the last commit instead of the whole pull request. Check out the merge commit or use a three-dot diff between the PR base and head SHAs.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 HEAD",
+          "target": "pr_head_checkout_merge_parent"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 30,
+          "message": ".github/workflows/mismatched.yml:30: job `mismatched_pairs` (env pair `DIFF_BASE` / `DIFF_HEAD`) pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "DIFF_HEAD: ${{ github.sha }}",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 36,
+          "message": ".github/workflows/mismatched.yml:36: job `mismatched_pairs` step 2 (input pair `base-rev` / `head-rev`) pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "head-rev: HEAD",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 37,
+          "message": ".github/workflows/mismatched.yml:37: job `mismatched_pairs` step 3 (flag pair `--base` / `--head`) pairs merge-commit parent `HEAD^1` with a non-merge pull request head revision. Use `HEAD^1` with `HEAD` on a merge-commit checkout, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: node scripts/check.mjs --base HEAD^1 --head \"${{ github.event.pull_request.head.sha }}\"",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 8,
+          "message": ".github/workflows/mismatched.yml:8: job `base_sha_with_github_sha` step 2 pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.sha }}",
+          "target": "base_sha_with_github_sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 13,
+          "message": ".github/workflows/mismatched.yml:13: job `baseref_two_arg_head_sha` step 2 diffs the pull request base against the head with a two-dot or two-argument range, which also lists base-branch changes made after the branch point. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only origin/${{ github.base_ref }} ${{ github.event.pull_request.head.sha }}",
+          "target": "baseref_two_arg_head_sha"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 18,
+          "message": ".github/workflows/mismatched.yml:18: job `merge_parent_with_head_sha` step 2 pairs merge-commit parent `HEAD^1` with a non-merge pull request head revision. Use `HEAD^1` with `HEAD` on a merge-commit checkout, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 ${{ github.event.pull_request.head.sha }}",
+          "target": "merge_parent_with_head_sha"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 25,
+          "message": ".github/workflows/mismatched.yml:25: job `pr_head_checkout_merge_parent` step 2 diffs `HEAD^1` against `HEAD` after checking out a non-merge revision (`actions/checkout` `with.ref`). On a PR head checkout, `HEAD^1` only diffs the last commit instead of the whole pull request. Check out the merge commit or use a three-dot diff between the PR base and head SHAs.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 HEAD",
+          "target": "pr_head_checkout_merge_parent"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 30,
+          "message": ".github/workflows/mismatched.yml:30: job `mismatched_pairs` (env pair `DIFF_BASE` / `DIFF_HEAD`) pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "DIFF_HEAD: ${{ github.sha }}",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 36,
+          "message": ".github/workflows/mismatched.yml:36: job `mismatched_pairs` step 2 (input pair `base-rev` / `head-rev`) pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "head-rev: HEAD",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 37,
+          "message": ".github/workflows/mismatched.yml:37: job `mismatched_pairs` step 3 (flag pair `--base` / `--head`) pairs merge-commit parent `HEAD^1` with a non-merge pull request head revision. Use `HEAD^1` with `HEAD` on a merge-commit checkout, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: node scripts/check.mjs --base HEAD^1 --head \"${{ github.event.pull_request.head.sha }}\"",
+          "target": "mismatched_pairs"
+        },
+        {
+          "file": ".github/workflows/mismatched.yml",
+          "line": 8,
+          "message": ".github/workflows/mismatched.yml:8: job `base_sha_with_github_sha` step 2 pairs a pull request base revision with the merge commit (`github.sha` or `HEAD`). Those revisions belong to different pairs and can include unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.sha }}",
+          "target": "base_sha_with_github_sha"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 10,
+          "message": ".github/workflows/unanalyzable.yml:10: job `unknown_checkout` step 2 uses `HEAD` or `HEAD^1` after an `actions/checkout` step whose `with.ref` cannot be classified statically; use a literal merge-commit checkout or explicit base/head SHAs, or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only HEAD^1 HEAD",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 15,
+          "message": ".github/workflows/unanalyzable.yml:15: job `dynamic_diff` step 2 uses a revision expression or variable that cannot be classified statically, so base/merge pair consistency cannot be proven; pass explicit GitHub event SHAs or `HEAD^1`/`HEAD`, or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only ${{ github.event.pull_request.base.sha }} \"$DYNAMIC_HEAD\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 20,
+          "message": ".github/workflows/unanalyzable.yml:20: job `dynamic_env` (env pair `DIFF_BASE` / `DIFF_HEAD`) uses a revision expression or variable that cannot be classified statically, so base/merge pair consistency cannot be proven; pass explicit GitHub event SHAs or `HEAD^1`/`HEAD`, or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "DIFF_HEAD: ${{ github.event.pull_request.head.sha }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 25,
+          "message": ".github/workflows/unanalyzable.yml:25: job `non_mapping_env` (env) sets `env` to a non-mapping or YAML-merged value, so configured `revisionPairs` environment pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "env: ${{ inputs.env }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/unanalyzable.yml",
+          "line": 32,
+          "message": ".github/workflows/unanalyzable.yml:32: job `non_mapping_with` step 1 (with) sets `with` to a non-mapping or YAML-merged value, so configured `revisionPairs` input pairs cannot be verified statically; use a literal mapping or suppress this line.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "with: ${{ inputs.with }}",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

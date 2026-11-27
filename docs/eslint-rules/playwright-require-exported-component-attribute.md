@@ -61,6 +61,10 @@ export { Button } from "./button";
 export function Stack() { return <div />; }
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-require-interactive-test-id`](playwright-require-interactive-test-id.md)
