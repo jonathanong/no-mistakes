@@ -72,10 +72,12 @@ statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload
 when no unsupported modifier remains, except inside `FOR`, `WHILE`,
 `FOREACH`, or a bare `LOOP`. There the command stays a visible occurrence,
 produces a diagnostic, and keeps the block incomplete, with no typed
-statement projection. An unsupported modifier, including unquoted `INTO`,
-is statement kind `other`. A Unicode `U&` body and a national `N'` body are
-also statement kind `other`, with no `bodyEncoding`. Occurrence classification
-still reads those decoded commands.
+statement projection. Outside a loop, an unsupported modifier, including
+unquoted `INTO`, is statement kind `other`. A Unicode `U&` body and a national
+`N'` body are also statement kind `other`, with no `bodyEncoding`. Inside
+`FOR`, `WHILE`, `FOREACH`, or a bare `LOOP`, those commands stay occurrences
+and have no typed statement. Occurrence classification still reads the
+decoded command.
 Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
 (`singleQuoted`, doubled quotes), and PostgreSQL `E` escape strings
 (`escapedString`) are the projected literal forms. They are decoded by the
@@ -91,8 +93,9 @@ original source spans, without resolving runtime values; `$1` and other command
 placeholders remain typed parameters. Outside a loop, a non-literal command
 (`format` or an identifier) is statement kind `other` and occurrence kind
 `dynamicExecute`. Inside `FOR`, `WHILE`, `FOREACH`, or a bare `LOOP`, it is
-occurrence kind `dynamicExecute` and has no typed statement. An
-unsupported modifier after a decoded literal is also statement kind `other`.
+occurrence kind `dynamicExecute` and has no typed statement. Outside a loop,
+an unsupported modifier after a decoded literal is also statement kind
+`other`. Inside those loops it has no typed statement.
 An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
