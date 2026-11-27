@@ -311,7 +311,7 @@ test("parallel Rust quality retains all-feature, default-feature and no-default 
 test("package verification remains independent and required", () => {
   const packages = workflowJob("packages");
   assert.equal(jobBudgetSeconds(packages), current.packageJob);
-  assert.match(packages, /run: cargo publish --dry-run --locked -p no-mistakes\n/);
+  assert.match(packages, /run: cargo publish --dry-run --locked --workspace\n/);
   assert.match(packages, /run: pnpm run pack:check\n/);
   assert.doesNotMatch(workflowJob("quality"), /cargo publish|pnpm run pack:check/);
   assert.match(workflowJob("tests-gate"), /needs:\s*\[[^\]]*packages/);

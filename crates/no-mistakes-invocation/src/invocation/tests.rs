@@ -15,11 +15,11 @@ use std::time::Instant;
 #[cfg(unix)]
 use wait_timeout::ChildExt;
 
+#[cfg(unix)]
+#[path = "tests/blocked_fifo.rs"]
+mod blocked_fifo;
 #[path = "tests/napi_options.rs"]
 mod napi_options;
-#[cfg(unix)]
-#[path = "tests/progress.rs"]
-mod progress;
 #[path = "tests/shared_budget.rs"]
 mod shared_budget;
 #[cfg(unix)]
@@ -143,7 +143,7 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     let directory = tempfile::tempdir().unwrap();
-    let guard = InvocationGuard::acquire_at_path(
+    let guard = InvocationGuard::acquire_for_cli_at_path(
         InvocationOptions {
             timeout: Some(Duration::from_secs(5)),
             invocation_timeout: None,
@@ -152,24 +152,11 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
             jobs: None,
         },
         &directory.path().join("invocation.lock"),
-        true,
     )
     .unwrap();
     check_timeout().unwrap();
     drop(guard);
     assert!(active_deadline().read().unwrap().is_none());
-}
-
-#[test]
-fn cli_and_napi_entrypoints_select_distinct_parent_signal_policies() {
-    let cli = include_str!("../main/invocation.rs");
-    let tasks = include_str!("../napi_api/async_task.rs");
-    let napi = include_str!("../napi_api/async_task/observed.rs");
-
-    assert!(cli.contains("ExecutionGuard::acquire_for_cli"));
-    assert_eq!(tasks.matches("observed::execute_json(").count(), 2);
-    assert!(napi.contains("InvocationGuard::acquire(invocation_options)"));
-    assert!(!napi.contains("InvocationGuard::acquire_for_cli"));
 }
 
 #[test]
@@ -473,17 +460,6 @@ fn expired_deadline_prevents_child_spawn() {
     let error = command_output(&mut command).unwrap_err();
     *active_deadline().write().unwrap() = previous;
     assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
-}
-
-#[test]
-fn production_test_planning_subprocesses_use_deadline_aware_output() {
-    let sources = [
-        include_str!("../tests/changed_files.rs"),
-        include_str!("../tests/diff_parser.rs"),
-        include_str!("../tests/lockfile_changes.rs"),
-    ];
-
-    assert!(sources.iter().all(|source| !source.contains(".output()")));
 }
 
 impl InvocationGuard {

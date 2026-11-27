@@ -9,12 +9,15 @@
 use super::process_tree::{configure_process_group, ProcessTree};
 use super::{fold_cleanup_error, receive_reader, PipeReader, CLEANUP_TIMEOUT};
 use crate::invocation::deadline::remaining_timeout;
-use reading::{decode_line, line_too_long, read_bounded, read_chunks};
+use drain::drain_lines;
+use reading::{read_bounded, read_chunks};
 use std::io::Read;
 use std::process::{Command, ExitStatus, Stdio};
-use std::sync::mpsc::{self, Receiver};
+use std::sync::mpsc;
 use wait_timeout::ChildExt;
 
+#[path = "stream/drain.rs"]
+mod drain;
 #[path = "stream/reading.rs"]
 mod reading;
 
@@ -33,9 +36,9 @@ const STDERR_CAP_BYTES: usize = 64 * 1024;
 type LineHandler<'a> = dyn FnMut(&str) -> std::io::Result<()> + 'a;
 
 #[derive(Debug)]
-pub(crate) struct StreamOutcome {
-    pub(crate) status: ExitStatus,
-    pub(crate) stderr: Vec<u8>,
+pub struct StreamOutcome {
+    pub status: ExitStatus,
+    pub stderr: Vec<u8>,
 }
 
 /// Run `command`, feeding each line of its stdout (without the trailing
@@ -45,7 +48,7 @@ pub(crate) struct StreamOutcome {
 /// growing the buffer without bound — the pathological-line diagnostic.
 /// On any error the child's whole process tree is terminated and reaped
 /// before returning, matching `command_output`'s cancellation contract.
-pub(crate) fn stream_command_lines(
+pub fn stream_command_lines(
     command: &mut Command,
     max_line_bytes: usize,
     on_line: &mut LineHandler<'_>,
@@ -167,68 +170,6 @@ fn terminate_and_reap(
     let cleanup_error = process_tree.terminate(child).err();
     let _ = child.wait_timeout(CLEANUP_TIMEOUT);
     fold_cleanup_error(error, cleanup_error)
-}
-
-/// Consume chunks from `rx`, splitting on `\n` (stripping a trailing `\r` so
-/// CRLF patches parse the same as LF ones) and calling `on_line` per
-/// complete line. Recomputes the deadline before every receive, mirroring
-/// `child::receive_reader`, so a slow multi-chunk stream is bounded by the
-/// invocation's total remaining time, not a single fixed read timeout.
-fn drain_lines(
-    rx: &Receiver<std::io::Result<Vec<u8>>>,
-    max_line_bytes: usize,
-    on_line: &mut LineHandler<'_>,
-) -> std::io::Result<()> {
-    let mut pending: Vec<u8> = Vec::new();
-    loop {
-        let chunk = match remaining_timeout()? {
-            Some(remaining) => match rx.recv_timeout(remaining) {
-                Ok(chunk) => chunk,
-                Err(mpsc::RecvTimeoutError::Timeout) => {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::TimedOut,
-                        "no-mistakes command deadline elapsed while reading child output",
-                    ));
-                }
-                Err(mpsc::RecvTimeoutError::Disconnected) => break,
-            },
-            None => match rx.recv() {
-                Ok(chunk) => chunk,
-                Err(_) => break,
-            },
-        };
-        pending.extend_from_slice(&chunk?);
-        loop {
-            match pending.iter().position(|&b| b == b'\n') {
-                // A completed line is still rejected if IT ALONE exceeds the
-                // cap — bounding per-line memory means bounding the whole
-                // line's length, not just the still-accumulating case below.
-                // Checking only after this inner loop would miss a line that
-                // crosses the cap and receives its terminating `\n` within
-                // the same chunk (pending briefly holds the full oversized
-                // line, but this loop drains and clears it before that
-                // after-the-fact check ever runs).
-                // Apply the cap to the line content without its terminating
-                // newline, matching the `max_line_bytes` doc comment.
-                Some(pos) if pos > max_line_bytes => return Err(line_too_long(max_line_bytes)),
-                Some(pos) => {
-                    let line: Vec<u8> = pending.drain(..=pos).collect();
-                    on_line(&decode_line(&line[..line.len() - 1]))?;
-                }
-                None => break,
-            }
-        }
-        if pending.len() > max_line_bytes {
-            return Err(line_too_long(max_line_bytes));
-        }
-    }
-    // The in-loop check above already validates `pending` before every
-    // `break`, so reaching here means any leftover unterminated line (an
-    // EOF without a final newline) is already known to be within bounds.
-    if !pending.is_empty() {
-        on_line(&decode_line(&pending))?;
-    }
-    Ok(())
 }
 
 // These tests intentionally exercise POSIX shell process and pipe behavior.

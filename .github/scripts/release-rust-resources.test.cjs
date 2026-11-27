@@ -15,7 +15,7 @@ const commands = {
   "Run Rust tests (unit)": `bash "${tools}rust-validation.sh" test-unit`,
   "Run Rust tests (integration)": `bash "${tools}rust-validation.sh" test-integration`,
   "Run Rust doctests": `bash "${tools}rust-validation.sh" doc`,
-  "Check Cargo packages": "cargo publish --dry-run --locked -p no-mistakes",
+  "Check Cargo packages": "cargo publish --dry-run --locked --workspace",
 };
 const settings = {
   CARGO_BUILD_JOBS: "1",

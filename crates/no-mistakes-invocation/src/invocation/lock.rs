@@ -126,7 +126,7 @@ fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Opt
         Some(holder) => holder.describe(),
         None => "another no-mistakes invocation".to_string(),
     };
-    crate::diagnostics::print_stderr(format_args!(
+    crate::hooks::print_stderr(format_args!(
         "waiting for lock held by {holder} for {secs}s"
     ));
 }

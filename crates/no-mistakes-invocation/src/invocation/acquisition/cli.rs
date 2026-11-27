@@ -18,4 +18,11 @@ impl InvocationGuard {
     ) -> Result<Self> {
         Self::acquire_resolving_path_with_output(options, true, lock_path, output)
     }
+    #[doc(hidden)]
+    pub fn acquire_for_cli_at_path(
+        options: InvocationOptions,
+        path: &std::path::Path,
+    ) -> Result<Self> {
+        Self::acquire_resolving_path(options, true, || Ok(path.to_path_buf()))
+    }
 }

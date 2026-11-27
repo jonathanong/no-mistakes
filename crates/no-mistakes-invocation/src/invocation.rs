@@ -24,7 +24,8 @@ mod lock_status;
 mod napi_options;
 
 pub use child::command_output;
-pub(crate) use child::stream::stream_command_lines;
+#[doc(hidden)]
+pub use child::stream::{stream_command_lines, StreamOutcome};
 pub use deadline::{check_timeout, commit_timeout, set_timeout_phase};
 pub use error::{
     error_report, exit_code, timeout_exit_code, InvocationError, InvocationErrorKind,
@@ -41,9 +42,13 @@ use std::time::Duration;
 const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
 const MAX_INVOCATION_TIMEOUT_MS: u64 = (1_u64 << 53) - 1;
 
-// Windows native CI compiles this helper into the ordinary rlib so the Job
-// Object integration test can install a deadline without `--cfg test`.
-#[cfg(any(test, feature = "test-instrumentation", windows))]
+// Compiled into the ordinary rlib so workspace unit tests and Windows Job Object
+// integration tests can install a deadline without feature unification changes.
+#[doc(hidden)]
+pub fn acquire_lock_at_path(path: &std::path::Path) -> anyhow::Result<File> {
+    lock::acquire_lock(path, None, false)
+}
+
 #[doc(hidden)]
 pub fn install_test_deadline(timeout: Duration) -> anyhow::Result<impl Drop> {
     let serial = deadline_test_lock()
@@ -57,18 +62,15 @@ pub fn install_test_deadline(timeout: Duration) -> anyhow::Result<impl Drop> {
     })
 }
 
-#[cfg(any(test, feature = "test-instrumentation", windows))]
 struct TestDeadlineGuard {
     _deadline: DeadlineGuard,
     _serial: std::sync::MutexGuard<'static, ()>,
 }
 
-#[cfg(any(test, feature = "test-instrumentation", windows))]
 impl Drop for TestDeadlineGuard {
     fn drop(&mut self) {}
 }
 
-#[cfg(any(test, feature = "test-instrumentation", windows))]
 fn deadline_test_lock() -> &'static std::sync::Mutex<()> {
     static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
     LOCK.get_or_init(|| std::sync::Mutex::new(()))

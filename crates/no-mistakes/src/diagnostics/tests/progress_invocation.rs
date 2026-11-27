@@ -1,6 +1,14 @@
-use super::*;
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Deadline and instrumentation tests require a real monotonic clock."
+)]
+use crate::invocation::{InvocationGuard, InvocationOptions};
+use std::path::Path;
+use std::process::Command;
+use std::time::Duration;
+use wait_timeout::ChildExt;
 
-#[path = "progress/deadline_child.rs"]
+#[path = "progress_invocation/deadline_child.rs"]
 mod deadline_child;
 use deadline_child::ReadableDeadlineChild;
 
@@ -52,7 +60,7 @@ fn progress_survives_sigkill_and_sigterm_preserves_default_signal_exit_status() 
         let mut child = Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
-                "invocation::tests::progress::active_progress_signal_subprocess_helper",
+                "diagnostics::tests::progress_invocation::active_progress_signal_subprocess_helper",
                 "--nocapture",
             ])
             .env("NO_MISTAKES_PROGRESS_SIGNAL_MODE", mode)
@@ -171,7 +179,7 @@ fn unread_full_stderr_never_blocks_progress_cleanup_signal_or_internal_timeout()
         let mut child = Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
-                "invocation::tests::progress::blocked_progress_stderr_subprocess_helper",
+                "diagnostics::tests::progress_invocation::blocked_progress_stderr_subprocess_helper",
                 "--nocapture",
             ])
             .env("NO_MISTAKES_BLOCKED_PROGRESS_MODE", mode)
@@ -234,14 +242,13 @@ fn progress_waiting_for_lock_subprocess_helper() {
     let _heartbeat =
         ProgressGuard::install(std::sync::Arc::clone(&observer), Duration::from_secs(3600));
     observer.trace("invocation.prepare", TimingKind::Serial, || {
-        let _execution = InvocationGuard::acquire_at_path(
+        let _execution = InvocationGuard::acquire_for_cli_at_path(
             InvocationOptions {
                 timeout: None,
                 invocation_timeout: None,
                 ..InvocationOptions::default()
             },
             Path::new(&path),
-            true,
         )
         .unwrap();
         panic!("externally held lock unexpectedly acquired");
@@ -256,11 +263,11 @@ fn sigterm_while_waiting_for_lock_flushes_before_first_heartbeat() {
     use std::process::Stdio;
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("held.lock");
-    let _lock = acquire_lock(&path, None, false).unwrap();
+    let _lock = crate::invocation::acquire_lock_at_path(&path).unwrap();
     let mut child = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
-            "invocation::tests::progress::progress_waiting_for_lock_subprocess_helper",
+            "diagnostics::tests::progress_invocation::progress_waiting_for_lock_subprocess_helper",
             "--nocapture",
         ])
         .env("NO_MISTAKES_PROGRESS_HELD_LOCK", &path)
@@ -362,7 +369,7 @@ fn run_readable_watchdog(observer: Option<&crate::diagnostics::InvocationObserve
 fn readable_watchdog_output_preserves_timeout_with_and_without_diagnostics() {
     for mode in ["plain", "timings", "progress"] {
         let (status, output) = ReadableDeadlineChild::spawn(
-            "invocation::tests::progress::readable_stderr_deadline_subprocess_helper",
+            "diagnostics::tests::progress_invocation::readable_stderr_deadline_subprocess_helper",
             mode,
         )
         .run()
@@ -405,7 +412,7 @@ fn readable_watchdog_no_readiness_subprocess_helper() {
 #[test]
 fn readable_watchdog_reports_child_stderr_and_timing_on_readiness_failure() {
     let diagnostic = ReadableDeadlineChild::spawn(
-        "invocation::tests::progress::readable_watchdog_no_readiness_subprocess_helper",
+        "diagnostics::tests::progress_invocation::readable_watchdog_no_readiness_subprocess_helper",
         "progress",
     )
     .run()

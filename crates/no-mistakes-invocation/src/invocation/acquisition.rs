@@ -70,7 +70,7 @@ impl InvocationGuard {
         // Progress must capture termination during lock waiting, before the
         // first heartbeat. Retaining this guard also cleans up acquisition errors.
         let early_signals = if forward_parent_signals
-            && crate::diagnostics::current().is_some_and(|observer| observer.progress_enabled())
+            && crate::hooks::current_observer().is_some_and(|observer| observer.progress_enabled())
         {
             Some(child::ParentSignalForwardingGuard::install(true)?)
         } else {
