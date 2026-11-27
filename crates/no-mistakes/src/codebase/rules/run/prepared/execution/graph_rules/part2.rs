@@ -51,7 +51,7 @@ pub(super) fn collect(
         {
             let result = (|| -> Result<()> {
                 findings.extend(crate::perf_trace::rule(
-                    "analysis.rules.postgres()-no-mutable-sql-registry",
+                    "analysis.rules.postgres-no-mutable-sql-registry",
                     || {
                         crate::codebase::rules::postgres_no_mutable_sql_registry::check_with_graph(
                             root,
@@ -91,7 +91,7 @@ pub(super) fn collect(
         {
             let result = (|| -> Result<()> {
                 findings.extend(crate::perf_trace::rule(
-            "analysis.rules.postgres()-no-unbounded-sql-identifier",
+            "analysis.rules.postgres-no-unbounded-sql-identifier",
             || {
                 crate::codebase::rules::postgres_no_unbounded_sql_identifier::check_with_graph(
                     root,

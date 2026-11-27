@@ -332,6 +332,8 @@ mod cli_postgres_snapshot_declared_bounds;
 
 #[path = "cli_postgres_option_validation.rs"]
 mod cli_postgres_option_validation;
+#[path = "cli_postgres_rule_timings.rs"]
+mod cli_postgres_rule_timings;
 #[path = "cli_postgres_snapshot_materialized_view_shape.rs"]
 mod cli_postgres_snapshot_materialized_view_shape;
 #[path = "cli_postgres_unused_disables.rs"]
