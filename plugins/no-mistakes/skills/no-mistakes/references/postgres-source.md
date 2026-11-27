@@ -55,11 +55,13 @@ visible source text, not an executed statement. `dynamicExecute` is `EXECUTE`
 of a non-literal command (`format`, an identifier, or concatenation that is
 not wholly literal) and keeps `complete` false. Wholly literal `EXECUTE` is
 classified from the decoded command. A recognized command, including a parsed
-`SELECT`, is `dml` or `utility`. A decoded script that executes a non-literal
-command, such as `EXECUTE 'EXECUTE command'`, stays `dynamicExecute`. A decoded
+`SELECT`, is `dml`, `utility`, or `controlFlow`. A decoded script that
+executes a non-literal command, such as `EXECUTE 'EXECUTE command'`, stays
+`dynamicExecute`. A decoded
 command that does not classify is `unknown`, including an empty command
-(`EXECUTE ''`) and an invalid `U&` literal. A qualified name such as
-`public.execute(...)` stays `dynamicExecute`.
+(`EXECUTE ''`) and an invalid `U&` literal. In a `FOR ... IN` query header,
+`public.execute(...)` is `dynamicExecute`. In statement position, such as
+`PERFORM public.execute()`, the statement is `unknown`.
 IF/ELSIF/ELSE branches expose typed conditions and nested statements;
 inspect every branch without assuming its condition is true. PostgreSQL 18 virtual generated columns retain their declared or
 default storage. Unrecognized procedural forms remain explicit. UTF-8 offsets are zero-based; Unicode line/columns are one-based,
@@ -86,8 +88,10 @@ SQL remains diagnostic. Wholly literal `||` concatenations use the same nested
 pipeline and expose `bodyEncoding: "concatenated"`; `literalSpan` covers the full
 command expression. `using` retains ordered parameter expressions and their
 original source spans, without resolving runtime values; `$1` and other command
-placeholders remain typed parameters. A non-literal command (`format` or an
-identifier) is statement kind `other` and occurrence kind `dynamicExecute`. An
+placeholders remain typed parameters. Outside a loop, a non-literal command
+(`format` or an identifier) is statement kind `other` and occurrence kind
+`dynamicExecute`. Inside `FOR`, `WHILE`, `FOREACH`, or a bare `LOOP`, it is
+occurrence kind `dynamicExecute` and has no typed statement. An
 unsupported modifier after a decoded literal is also statement kind `other`.
 An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
