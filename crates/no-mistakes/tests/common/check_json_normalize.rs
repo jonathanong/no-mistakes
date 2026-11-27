@@ -104,6 +104,7 @@ fn normalize_text(text: &str, roots: &[String]) -> String {
     // emitted the repository-relative path.
     let text = text.replace("<root>/", "");
     let text = io_errors().replace_all(&text, "<io-error>");
+    let text = rust_parse_errors().replace_all(&text, "cannot parse Rust: <rust-parse-error>;");
     let text = redact_temp(&text);
     let text = pids().replace_all(&text, "$1 <pid>");
     timings().replace_all(&text, "<timing>").into_owned()
@@ -148,6 +149,13 @@ fn io_errors() -> &'static regex::Regex {
             r" \(os error \d+\)",
         ))
         .expect("io error pattern")
+    })
+}
+
+fn rust_parse_errors() -> &'static regex::Regex {
+    static PATTERN: OnceLock<regex::Regex> = OnceLock::new();
+    PATTERN.get_or_init(|| {
+        regex::Regex::new(r"cannot parse Rust: [^;\n]+;").expect("rust parse error pattern")
     })
 }
 

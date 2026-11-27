@@ -26,7 +26,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/invalid.rs",
           "line": 1,
-          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
           "sourceLine": "#[cfg(test)]",
           "target": "unanalyzable"
@@ -143,7 +143,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "invalid.rs",
           "line": 1,
-          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
           "sourceLine": "#[allow(dead_code)]",
           "target": "unanalyzable"
@@ -266,7 +266,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "invalid.rs",
           "line": 1,
-          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
           "sourceLine": "#[allow(dead_code)]",
           "target": "unanalyzable"
@@ -327,7 +327,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "invalid.rs",
           "line": 1,
-          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
           "sourceLine": "#[allow(dead_code)]",
           "target": "unanalyzable"
