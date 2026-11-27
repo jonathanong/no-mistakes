@@ -6,11 +6,9 @@ use std::collections::BTreeMap;
 mod catalogs;
 mod encoding;
 mod nuget;
-mod packages;
 mod strings;
 
 pub(crate) use nuget::nuget_entries;
-pub(super) use packages::diff_packages;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -86,8 +84,8 @@ pub(crate) fn diff_with_presence(
     options.validate()?;
     let format = options.format;
     match format {
-        KeyFormat::Pnpm => diff_parsed(format, old, new, packages::pnpm_entries),
-        KeyFormat::Npm => diff_parsed(format, old, new, packages::npm_entries),
+        KeyFormat::Pnpm => (super::package_analysis::hooks().diff_pnpm_keys)(old, new),
+        KeyFormat::Npm => (super::package_analysis::hooks().diff_npm_keys)(old, new),
         KeyFormat::Swift => diff_parsed(format, old, new, |source| {
             let pins = parse_resolved_pins(source)
                 .map_err(|error| anyhow::anyhow!("invalid Swift lockfile: {error:?}"))?;
@@ -108,7 +106,7 @@ pub(crate) fn diff_with_presence(
     }
 }
 
-fn diff_parsed<V: PartialEq>(
+pub(super) fn diff_parsed<V: PartialEq>(
     format: KeyFormat,
     old: Option<&[u8]>,
     new: Option<&[u8]>,

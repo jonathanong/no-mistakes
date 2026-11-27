@@ -7,7 +7,7 @@ pub(crate) struct FrameworkCatalogPreparation<'a> {
     pub(crate) tsconfig: &'a TsConfig,
     pub(crate) config: &'a crate::config::v2::NoMistakesConfig,
     pub(crate) codebase_config: &'a crate::codebase::config::Config,
-    pub(crate) workspace: &'a std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    pub(crate) workspace: &'a std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     pub(crate) root_visible_paths: &'a [PathBuf],
     pub(crate) visible_paths: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     pub(crate) sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,

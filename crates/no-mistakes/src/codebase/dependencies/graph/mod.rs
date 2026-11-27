@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 use crate::codebase::analysis_session::PathInterner;
+use crate::codebase::package_analysis::load_indexed_from_files;
 use crate::edge_index::{CanonicalEdge, EdgeIndex};
 use crate::fx::{fx_map, fx_set, FxHashMap, FxHashSet};
 
@@ -115,7 +116,6 @@ include!("edge_symbols_local_scopes.rs");
 include!("edge_symbols_targets.rs");
 include!("edge_symbols_fallbacks.rs");
 include!("edge_symbols_scoped_imports.rs");
-include!("edge_package_manifest.rs");
 include!("edge_tests_md.rs");
 include!("edge_ci.rs");
 include!("edge_workflow_commands.rs");

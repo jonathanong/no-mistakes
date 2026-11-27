@@ -3,7 +3,7 @@ impl<'a> ImportResolver<'a> {
         &self,
         specifier: &str,
         importing_file: &Path,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> ImportClassification {
         let key = self.classification_key(specifier, importing_file);

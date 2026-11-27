@@ -11,7 +11,7 @@ pub(crate) struct PreparedResolveCheckResolution<'a> {
     pub source_store: &'a crate::codebase::ts_source::SourceStore,
     pub explicit_tsconfig: Option<&'a crate::codebase::ts_resolver::TsConfig>,
     pub session: &'a crate::codebase::analysis_session::AnalysisSession,
-    pub workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    pub workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 }
 
 /// Resolve checks for a file closure whose imports were already collected by

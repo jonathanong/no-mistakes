@@ -29,7 +29,7 @@ impl TsConfigCatalog {
         candidate_roots: &[PathBuf],
         visible_paths: &[PathBuf],
         sources: &crate::codebase::ts_source::SourceStore,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     ) -> Self {
         CatalogBuilder::new(
             root,

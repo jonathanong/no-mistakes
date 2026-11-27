@@ -122,7 +122,7 @@ pub struct NodeEntry {
 }
 
 type EdgeMap = FxHashMap<NodeId, Vec<(NodeId, EdgeKind)>>;
-type Edge = (NodeId, NodeId, EdgeKind);
+pub(crate) type Edge = (NodeId, NodeId, EdgeKind);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ResourceCallSite {

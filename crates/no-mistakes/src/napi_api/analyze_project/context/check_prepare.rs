@@ -7,14 +7,12 @@ impl SharedCheckContext {
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
         config: &crate::config::v2::NoMistakesConfig,
         tsconfig: &crate::codebase::ts_resolver::TsConfig,
-        workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+        workspace: std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     ) -> Result<Self> {
         use crate::check_runner::enabled::{
             fact_plan, integration_configured, ConfiguredChecks, EnabledChecks,
         };
-        use crate::check_tasks::{
-            filesystem_rules_configured, queues_configured, unique_exports_configured,
-        };
+        use crate::check_tasks as tasks;
         let SharedCheckPreparationOptions {
             config_path,
             tsconfig_path,
@@ -46,10 +44,10 @@ impl SharedCheckContext {
         )?;
         crate::check_runner::prepared::failures::record(&session, &prepared);
         let config = &prepared.config;
-        let queues_enabled = queues_configured(config);
-        let unique_exports_enabled = unique_exports_configured(config);
+        let queues_enabled = tasks::queues_configured(config);
+        let unique_exports_enabled = tasks::unique_exports_configured(config);
         let enabled = ConfiguredChecks::from_config(config);
-        let filesystem_rules_enabled = filesystem_rules_configured(config);
+        let filesystem_rules_enabled = tasks::filesystem_rules_configured(config);
         let playwright_rules_enabled = crate::playwright::rules::configured(config);
         let graph_plan = crate::codebase::rules::try_canonical_graph_plan(config)?;
         let graph_requires_full_file_universe =
@@ -92,7 +90,7 @@ impl SharedCheckContext {
             )?;
         plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
         plan.production_import_paths =
-            crate::codebase::rules::production_dependency_declarations::required_import_fact_files(
+            (crate::codebase::package_analysis::hooks().production_import_files)(
                 &root,
                 config,
                 prepared.visible_paths.paths_for(&root).as_ref(),

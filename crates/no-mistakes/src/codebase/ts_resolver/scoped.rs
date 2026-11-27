@@ -118,12 +118,11 @@ impl<'a> ScopedImportResolver<'a> {
         self.resolver_for(importing_file)
             .resolution_candidates(specifier, importing_file)
     }
-
     pub(crate) fn classify_import(
         &self,
         specifier: &str,
         importing_file: &ScopedPath,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         if let Some(resolver) = self.fixed_resolver_for(importing_file) {

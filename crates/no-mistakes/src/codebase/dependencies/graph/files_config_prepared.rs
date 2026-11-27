@@ -5,7 +5,7 @@ pub struct PreparedGraphConfig {
     playwright_failed: bool,
     playwright_preparation_failures: Vec<PlaywrightPreparationFailure>,
     playwright_settings: Vec<crate::playwright::config::Settings>,
-    workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     workflow_documents: Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
     workflow_inputs:
         Option<std::sync::Arc<crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>>,
@@ -57,7 +57,7 @@ impl PreparedGraphConfig {
         }
         Ok(merged)
     }
-    pub(crate) fn workspace(&self) -> &crate::codebase::workspaces::IndexedWorkspaceMap {
+    pub(crate) fn workspace(&self) -> &crate::codebase::workspace_resolution::IndexedWorkspaceMap {
         self.workspace.as_ref()
     }
 
@@ -131,7 +131,7 @@ fn prepare_graph_config_inner(
         playwright_settings,
         workspace: workspace.unwrap_or_else(|| {
             std::sync::Arc::new(
-                crate::codebase::workspaces::load_indexed_from_source_store(
+                crate::codebase::package_analysis::load_indexed_from_source_store(
                     root,
                     &visible_paths.source_store_for(root),
                 )

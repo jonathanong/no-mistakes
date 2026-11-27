@@ -38,7 +38,7 @@ impl<'a> CatalogBuilder<'a> {
         candidate_roots: &[PathBuf],
         visible_paths: &[PathBuf],
         sources: Option<&'a crate::codebase::ts_source::SourceStore>,
-        workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
+        workspace: Option<&'a crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     ) -> Self {
         let root = normalize_path(root);
         let root_real = real_path(&root).unwrap_or(root.clone());
@@ -59,7 +59,7 @@ impl<'a> CatalogBuilder<'a> {
                     .collect::<Vec<_>>()
             })
             .or_else(|| {
-                crate::codebase::workspaces::load_from_files(&root, visible_paths)
+                crate::codebase::package_analysis::load_from_files(&root, visible_paths)
                     .map(|workspace| {
                         workspace
                             .packages

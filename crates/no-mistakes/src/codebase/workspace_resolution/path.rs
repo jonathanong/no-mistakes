@@ -1,4 +1,4 @@
-fn try_resolve(path: &Path) -> Option<PathBuf> {
+pub(super) fn try_resolve(path: &Path) -> Option<PathBuf> {
     try_resolve_inner(path, None)
 }
 
@@ -43,7 +43,7 @@ fn try_resolve_inner(
     None
 }
 
-fn workspace_path_is_file(
+pub(super) fn workspace_path_is_file(
     path: &Path,
     visible_files: Option<&dyn VisiblePathLookup>,
 ) -> bool {
@@ -51,4 +51,14 @@ fn workspace_path_is_file(
         || path.is_file(),
         |visible| visible.contains_visible(&normalize_path(path)),
     )
+}
+
+pub(super) fn resolve_workspace_path(
+    path: &Path,
+    visible_files: Option<&dyn VisiblePathLookup>,
+) -> Option<PathBuf> {
+    match visible_files {
+        Some(visible) => try_resolve_from_visible(path, visible),
+        None => try_resolve(path),
+    }
 }

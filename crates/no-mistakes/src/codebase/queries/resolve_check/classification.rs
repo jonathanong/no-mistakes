@@ -24,7 +24,7 @@ pub(super) fn classify(
     imp: &ExtractedImport,
     target: &super::super::shared::Target,
     resolver: &ImportResolver,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> ImportRow {
     classify_for_importer(
         imp,
@@ -41,7 +41,7 @@ fn classify_for_importer(
     importing_file: &Path,
     root: &Path,
     resolver: &ImportResolver,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> ImportRow {
     if imp.computed {
@@ -92,7 +92,7 @@ pub(super) fn classify_prepared(
     importing_file: &Path,
     root: &Path,
     resolver: &ImportResolver,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> ImportRow {
     classify_for_importer(imp, importing_file, root, resolver, workspace, visible)

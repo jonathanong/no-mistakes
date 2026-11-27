@@ -1,8 +1,9 @@
 use crate::codebase::{
     analysis_session::AnalysisSession,
+    package_analysis::load_indexed_from_source_store,
     ts_resolver::{resolve_tsconfig_from_visible_and_sources, TsConfig},
     ts_source::SourceStore,
-    workspaces::{load_indexed_from_source_store, IndexedWorkspaceMap},
+    workspace_resolution::IndexedWorkspaceMap,
 };
 use std::{path::Path, sync::Arc};
 pub(super) fn tsconfig_for(

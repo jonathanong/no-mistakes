@@ -15,6 +15,7 @@ pub(crate) mod lang_frontends;
 pub mod lockfile;
 pub mod markdown_sections;
 pub mod md_links;
+pub(crate) mod package_analysis;
 pub mod package_deps;
 pub mod pnpm_lock;
 pub mod postgres;
@@ -42,6 +43,7 @@ pub mod ts_symbols;
 pub(crate) mod ts_trpc;
 pub mod unique_exports;
 pub mod workflow_topology;
+pub(crate) mod workspace_resolution;
 pub mod workspaces;
 
 pub use dependencies::{Direction, TraverseArgs, TraverseProjection};

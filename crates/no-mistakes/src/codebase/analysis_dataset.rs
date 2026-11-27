@@ -1,3 +1,6 @@
+use super::{
+    package_analysis::load_indexed_from_source_store, workspace_resolution::IndexedWorkspaceMap,
+};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -16,7 +19,7 @@ pub(crate) struct AnalysisDataset {
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
     visible_paths: Arc<super::ts_source::VisiblePathSnapshot>,
     root_sources: Arc<super::ts_source::SourceStore>,
-    workspace: std::sync::OnceLock<Arc<super::workspaces::IndexedWorkspaceMap>>,
+    workspace: std::sync::OnceLock<Arc<IndexedWorkspaceMap>>,
     config_path: ManifestCache<crate::config::v2::discover::ConfigSelection>,
     config: ManifestCache<crate::config::v2::NoMistakesConfig>,
     tsconfig: ManifestCache<super::ts_resolver::TsConfig>,
@@ -166,17 +169,12 @@ impl AnalysisDataset {
             .map_err(|error| anyhow::anyhow!(error.to_string()))
     }
 
-    pub(crate) fn workspace(&self) -> Arc<super::workspaces::IndexedWorkspaceMap> {
+    pub(crate) fn workspace(&self) -> Arc<IndexedWorkspaceMap> {
         self.workspace
             .get_or_init(|| {
                 self.increment("workspace.builds", 1);
-                match super::workspaces::load_indexed_from_source_store(
-                    &self.root,
-                    &self.root_sources,
-                ) {
-                    Ok(workspace) => Arc::new(workspace),
-                    Err(_) => Arc::new(super::workspaces::IndexedWorkspaceMap::default()),
-                }
+                let loaded = load_indexed_from_source_store(&self.root, &self.root_sources);
+                Arc::new(loaded.unwrap_or_default())
             })
             .clone()
     }

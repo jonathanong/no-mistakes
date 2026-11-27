@@ -4,7 +4,7 @@ use super::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile};
 use crate::codebase::symbols::export_kind_str;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolverFacade};
 use crate::codebase::ts_symbols::{Export, ExportKind};
-use crate::codebase::workspaces::WorkspaceMap;
+use crate::codebase::workspace_resolution::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 

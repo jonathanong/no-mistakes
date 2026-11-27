@@ -14,7 +14,7 @@ struct ExternalStarProjection<'a> {
     input: &'a GraphEdgeBuildInputs<'a>,
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
-    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     session: &'a crate::codebase::analysis_session::AnalysisSession,
     sources: &'a SourceStore,
     demand: dashmap::DashMap<PathBuf, bool, rustc_hash::FxBuildHasher>,
@@ -31,7 +31,7 @@ impl<'a> ExternalStarProjection<'a> {
         input: &'a GraphEdgeBuildInputs<'a>,
         facts: &'a dyn TsFactLookup,
         resolver: &'a dyn ImportResolution,
-        workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         session: &'a crate::codebase::analysis_session::AnalysisSession,
         sources: &'a SourceStore,
     ) -> Self {

@@ -2,7 +2,7 @@ fn scoped_import_map_with_graph_files(
     imports: &[ExtractedImport],
     path: &Path,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
@@ -44,7 +44,7 @@ fn import_target_with_graph_files(
     kind: ImportKind,
     path: &Path,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> Option<(NodeId, EdgeKind)> {

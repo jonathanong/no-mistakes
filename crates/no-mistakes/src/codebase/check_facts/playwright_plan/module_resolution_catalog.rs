@@ -54,7 +54,7 @@ impl CatalogModuleResolver {
         &self,
         specifier: &str,
         importer: &Path,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     ) -> CatalogClassification {
         let importer = self.interner.intern_path(importer);
         let specifier_key = self.interner.intern_str(specifier);

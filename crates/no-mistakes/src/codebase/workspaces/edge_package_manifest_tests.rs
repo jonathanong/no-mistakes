@@ -1,4 +1,7 @@
 use super::*;
+use crate::codebase::package_analysis;
+#[cfg(unix)]
+use crate::codebase::ts_resolver::VisiblePathLookup;
 
 #[test]
 fn package_edges_reuse_workspace_manifest_metadata_without_rereading() {
@@ -14,7 +17,7 @@ fn package_edges_reuse_workspace_manifest_metadata_without_rereading() {
     let reads_after_workspace_load = sources.physical_read_count();
     let graph_files = GraphFiles::from_files(files.clone());
 
-    let edges = collect_workspace_manifest_edges(
+    let edges = (package_analysis::hooks().manifest_edges)(
         &files,
         &workspace,
         &graph_files,
@@ -41,7 +44,10 @@ fn workspace_manifest_edges_remap_canonical_entries_to_visible_paths() {
     let manifest = PathBuf::from("/workspace/app/package.json");
     let graph_files = GraphFiles::from_files(vec![via_link.clone()]);
     assert!(!graph_files.contains_visible(&via_real));
-    assert_eq!(graph_files.visible_path(&via_real), Some(via_link.as_path()));
+    assert_eq!(
+        graph_files.visible_path(&via_real),
+        Some(via_link.as_path())
+    );
 
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
         crate::codebase::workspaces::WorkspacePackage {
@@ -54,7 +60,7 @@ fn workspace_manifest_edges_remap_canonical_entries_to_visible_paths() {
     ])
     .with_manifest_dependency_names(manifest.clone(), vec!["@x/linked".to_string()]);
 
-    let edges = collect_workspace_manifest_edges(
+    let edges = (package_analysis::hooks().manifest_edges)(
         std::slice::from_ref(&manifest),
         &workspace,
         &graph_files,

@@ -25,7 +25,7 @@ pub(crate) trait ImportResolverFacade: Sync {
         &self,
         specifier: &str,
         importing_file: &Path,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification;
 
@@ -57,7 +57,7 @@ impl<'a> ImportResolverFacade for ImportResolver<'a> {
         &self,
         specifier: &str,
         importing_file: &Path,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         ImportResolver::classify_import(self, specifier, importing_file, workspace, visible_files)
@@ -85,7 +85,7 @@ impl ImportResolverFacade for ScopedImportResolver<'_> {
         &self,
         specifier: &str,
         importing_file: &Path,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         ScopedImportResolver::classify_import(
@@ -115,14 +115,14 @@ impl ImportResolverFacade for ScopedImportResolver<'_> {
 /// workspace entry outside the graph stays unresolved.
 pub(crate) struct WorkspaceFallbackResolver<'a> {
     inner: &'a dyn ImportResolverFacade,
-    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visible: &'a dyn VisiblePathLookup,
 }
 
 impl<'a> WorkspaceFallbackResolver<'a> {
     pub(crate) fn new(
         inner: &'a dyn ImportResolverFacade,
-        workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible: &'a dyn VisiblePathLookup,
     ) -> Self {
         Self {
@@ -160,7 +160,7 @@ impl ImportResolverFacade for WorkspaceFallbackResolver<'_> {
         &self,
         specifier: &str,
         importing_file: &Path,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         self.inner

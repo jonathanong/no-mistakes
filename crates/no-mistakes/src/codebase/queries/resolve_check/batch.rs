@@ -23,7 +23,7 @@ pub struct BatchResolveCheckReport {
 fn compute_target(
     target: &super::super::shared::Target,
     imports: &[ExtractedImport],
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> Result<ResolveCheckReport> {
     let resolver = ImportResolver::new_in_session(
         target.tsconfig()?,

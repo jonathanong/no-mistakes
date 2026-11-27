@@ -5,7 +5,7 @@ struct ExportedValueEdgeInputs<'a> {
     symbols: &'a crate::codebase::ts_symbols::FileSymbols,
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
-    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &'a GraphFiles,
     http_route_defs: &'a [(PathBuf, String)],

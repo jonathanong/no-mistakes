@@ -26,7 +26,7 @@ struct GraphEdgeBuildInputs<'a> {
     tsconfig: &'a TsConfig,
     tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     plan: GraphBuildPlan,
-    workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: Option<&'a crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     graph_files: &'a GraphFiles,
     config_options: Option<&'a GraphConfigOptions>,
     playwright_settings: &'a [crate::playwright::config::Settings],

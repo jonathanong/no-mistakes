@@ -123,10 +123,9 @@
             || plan.calls
             || plan.extends;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
-            crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
-                .unwrap_or_default()
+            load_indexed_from_files(root, graph_files.all()).unwrap_or_default()
         });
-        let empty_workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
+        let empty_workspace = crate::codebase::workspace_resolution::IndexedWorkspaceMap::default();
         let workspace = supplied_workspace
             .or(owned_workspace.as_ref())
             .unwrap_or(&empty_workspace);

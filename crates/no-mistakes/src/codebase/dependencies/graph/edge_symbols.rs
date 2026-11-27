@@ -3,7 +3,7 @@ fn collect_symbol_edges(
     graph_files: SymbolGraphFiles<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     config_options: Option<&GraphConfigOptions>,
     interner: &PathInterner,
 ) -> Vec<Edge> {
@@ -37,7 +37,7 @@ struct SymbolFileEdgeInputs<'a> {
     path: &'a Path,
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
-    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &'a GraphFiles,
     http_route_defs: &'a [(PathBuf, String)],

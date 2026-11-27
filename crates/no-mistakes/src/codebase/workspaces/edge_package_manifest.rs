@@ -1,6 +1,12 @@
-fn collect_workspace_manifest_edges(
+use crate::codebase::analysis_session::PathInterner;
+use crate::codebase::dependencies::graph::{Edge, EdgeKind, GraphFiles, NodeId};
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
+use rayon::prelude::*;
+use std::{collections::HashMap, path::PathBuf};
+
+pub(crate) fn collect_workspace_manifest_edges(
     all_files: &[PathBuf],
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> Vec<Edge> {
@@ -43,4 +49,5 @@ fn collect_workspace_manifest_edges(
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[path = "edge_package_manifest_tests.rs"]
 mod edge_package_manifest_tests;

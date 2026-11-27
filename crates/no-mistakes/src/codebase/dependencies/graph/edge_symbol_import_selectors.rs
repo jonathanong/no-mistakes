@@ -5,7 +5,7 @@ fn collect_symbol_import_selectors(
     input: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<Edge>, SelectorImportSites) {
     let sources = graph_edge_sources(session, input);

@@ -71,7 +71,7 @@ impl SharedTraversalContext {
         self.session.clone()
     }
 
-    pub(crate) fn workspace(&self) -> &crate::codebase::workspaces::IndexedWorkspaceMap {
+    pub(crate) fn workspace(&self) -> &crate::codebase::workspace_resolution::IndexedWorkspaceMap {
         self.prepared_graph.workspace()
     }
 }
